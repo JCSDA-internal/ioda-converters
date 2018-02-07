@@ -3,9 +3,9 @@
 from __future__ import print_function
 import ncepbufr
 import numpy as np
-import netCDF4
 import sys
 import os
+import netCDF4
 from netCDF4 import Dataset
 import struct
 
@@ -81,7 +81,8 @@ def ReadBufrData(Dname, Btype, Dtype):
 
         if (Dtype == 'string'):
             # convert to list of strings
-            # assume that an ID is a 1D array of numbers
+            # assume that an ID is a 1D array of float with only one
+            # entry
             #
             # The bytes.join().decode() method wants the byte values
             # < 127 so that they can be mapped to the old style ascii
@@ -90,19 +91,16 @@ def ReadBufrData(Dname, Btype, Dtype):
             # all values > 127 with a blank character. Then convert
             # the byte lists to strings. Replace byte value
             # equal to zero with a blank as well.
-            TempStrList = []
-            for i in range(Dnum.size):
-                ByteList = list(struct.unpack('8c', Dnum[i]))
+            ByteList = list(struct.unpack('8c', Dnum[0]))
 
-                # replace chars < 1 and > 127 with blank space
-                for j in range(len(ByteList)):
-                    ByteVal = struct.unpack('@B', ByteList[j])[0]
-                    if ( (ByteVal < 1) or (ByteVal > 127)):
-                        ByteList[j] = b' '
+            # replace chars < 1 and > 127 with blank space
+            for j in range(len(ByteList)):
+                ByteVal = struct.unpack('@B', ByteList[j])[0]
+                if ( (ByteVal < 1) or (ByteVal > 127)):
+                    ByteList[j] = b' '
 
-                TempStr = bytes.join(b'', ByteList).decode('ascii') 
-                TempStrList.append(TempStr)
-            Dval = np.array(TempStrList, dtype='S8')
+            TempStr = bytes.join(b'', ByteList).decode('ascii') 
+            Dval = np.array(TempStr, dtype='S8')
         elif (Dtype == 'integer'):
             # convert missing vals to MissingInt
             Dval = Dnum.astype(np.integer)
@@ -114,6 +112,71 @@ def ReadBufrData(Dname, Btype, Dtype):
 
     return Dval
 
+def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname, NeventsDname, StrDname):
+    # This routine will create a variable in the output netCDF file
+    #
+    # The dimensions are set according to the Dtype and Btype inputs.
+    #
+    #   Dtype       Dims
+    #  'string'  [nobs, nstring]
+    #  'integer' [nobs, nlevs]
+    #  'float'   [nobs, nlevs]
+    #
+    # If Btype is 'event', then append the nevents dim on the end
+    # of the dim specification.
+    #
+    #  'string'  [nobs, nstring, nevents]
+    #  'integer' [nobs, nlevs, nevents]
+    #  'float'   [nobs, nlevs, nevents]
+    #
+    if (Dtype == 'string'):
+        Vtype = 'S1'
+        DimSpec = [NobsDname, StrDname]
+    elif (Dtype == 'integer'):
+        Vtype = 'u4'
+        DimSpec = [NobsDname, NlevsDname]
+    elif (Dtype == 'float'):
+        Vtype = 'f4'
+        DimSpec = [NobsDname, NlevsDname]
+
+    if (Btype == 'data'):
+        Vname = Dname
+    elif (Btype == 'event'):
+        Vname = "{0:s}_benv".format(Dname)
+        DimSpec.append(NeventsDname)
+
+    Fid.createVariable(Vname, Vtype, DimSpec, zlib=False)
+
+def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen):
+    # This routine will write into a variable in the output netCDF file
+
+    # Set the variable name according to Btype
+    if (Btype == 'data'):
+        Vname = Dname
+    elif (Btype == 'event'):
+        Vname = "{0:s}_benv".format(Dname)
+
+    # For the string data, convert to a numpy character array
+    if ((Dval.dtype.char == 'S') or (Dval.dtype.char == 'U')):
+        StrSpec = "S{0:d}".format(MaxStringLen)
+        Value = netCDF4.stringtochar(Dval.astype(StrSpec))
+    else:
+        Value = Dval.copy()
+
+    # Find the dimension size of the value and use that to write out
+    # the variable.
+    Ndims = Value.ndim
+    if (Ndims == 1):
+        Nlevs = Value.shape[0]
+        Fid[Vname][Nobs,0:Nlevs] = Value
+    elif (Ndims == 2):
+        Nlevs, N2 = Value.shape
+        Fid[Vname][Nobs,0:Nlevs,0:N2] = Value
+    elif (Ndims == 3):
+        Nlevs, N2, N3 = Value.shape
+        Fid[Vname][Nobs,Nlevs,0:N2,0:N3] = Value
+    
+
 ###########################################################################
 # MAIN
 ###########################################################################
@@ -121,13 +184,16 @@ def ReadBufrData(Dname, Btype, Dtype):
 # ObsList holds the list of message types for a given obs type. The format 
 # for each element of the list is:
 #
-#  <obs_type> : [ <list_of_bufr_message_types>, <list_of_bufr_data_types>,
-#                 <list_of_bufr_event_types> ]
+#  <obs_type> : [ <level_type> <list_of_bufr_message_types>,
+#                 <list_of_bufr_data_types>, <list_of_bufr_event_types> ]
 #
 ObsList = {
     # Aircraft with conventional obs
     # Specs are from GSI read_prepbufr.f90
     'Aircraft': [
+        # level type (single or multi)
+        'single', 
+
         # BUFR message types
         [ 'AIRCFT', 'AIRCAR' ],
 
@@ -219,56 +285,118 @@ print("  Output netCDF file: {0:s}".format(NetcdfFname))
 print("")
 
 # Set up selection lists
-MessageList = ObsList[ObsType][0]
-DataList    = ObsList[ObsType][1]
-EventList   = ObsList[ObsType][2]
+LevelType   = ObsList[ObsType][0]
+MessageList = ObsList[ObsType][1]
+DataList    = ObsList[ObsType][2]
+EventList   = ObsList[ObsType][3]
 
 # open files
 bufr = ncepbufr.open(PrepbufrFname)
+nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 
+# Create the dimensions and variables in the output netcdf files.
+#
+# ReadBurfData will return a 1D array for non events,
+# and a 2D array for events.
+#
+#   Non-event: data[nlevs]
+#     nlevs is the nubmer of levels
+#
+#   Event: data[nlevs, nevents]
+#     nlevs is the nubmer of levels
+#     nevents is the number of event codes
+#
+# Each variable will add a dimension (in the front) to hold
+# each observation (subset). This results in:
+#
+#   Non-event: data[nobs,nlevs]
+#   Event: data[nobs,nlevs,nevents]
+#
+# Make the dimensions adjustable so different sizes of data pieces
+# can be accommodated.
+#
+# Make a dimension for string data type variables. These have to be
+# stored as character arrays.
+MaxStringLen = 10
+
+NobsDname = "nobs"
+NlevsDname = "nlevs"
+NeventsDname = "nevents"
+StrDname = "nstring"
+
+# dims plus corresponding vars to hold coordinate values
+nc.createDimension(NobsDname, None)
+nc.createDimension(NlevsDname, None)
+nc.createDimension(NeventsDname, None)
+nc.createDimension(StrDname, MaxStringLen)
+
+# coordinates
+#   these are just counts so use unsigned ints
+nc.createVariable(NobsDname, 'u4', (NobsDname))
+nc.createVariable(NlevsDname, 'u4', (NlevsDname))
+nc.createVariable(NeventsDname, 'u4', (NeventsDname))
+nc.createVariable(StrDname, 'u4', (StrDname))
+
+# variables
+MtypeVname = "msg_type"
+MtypeDtype = "string"
+MdateVname = "msg_date"
+MdateDtype = "string"
+CreateNcVar(nc, MtypeVname, 'data', MtypeDtype,
+            NobsDname, NlevsDname, NeventsDname, StrDname)
+CreateNcVar(nc, MdateVname, 'data', MdateDtype,
+            NobsDname, NlevsDname, NeventsDname, StrDname)
+
+for Dname in DataList:
+    CreateNcVar(nc, Dname, 'data', DataTypes[Dname],
+                NobsDname, NlevsDname, NeventsDname, StrDname)
+
+for Ename in EventList:
+    CreateNcVar(nc, Ename, 'event', DataTypes[Ename],
+                NobsDname, NlevsDname, NeventsDname, StrDname)
+
+# Walk through the BUFR file grabbing the data pieces from the
+# selected messages, and recording those pieces into the output
+# netCDF file.
 NumMsgs = 0
 NumSelectedMsgs = 0
-NumDataSubsets = 0
-NumEventSubsets = 0
+NumObs = 0
+NumLevels = 0
 while (bufr.advance() == 0): 
     NumMsgs += 1
 
     # Select only the messages that belong to this observation type
     if (bufr.msg_type in MessageList):
-        NumSelectedMsgs += 1
+        # Record the message type and date in the netCDF file
+        WriteNcVar(nc, NumObs, MtypeVname, 'data', np.array(bufr.msg_type), MaxStringLen)
+        WriteNcVar(nc, NumObs, MdateVname, 'data', np.array(bufr.msg_date), MaxStringLen)
 
-        # Load each subset and grab the data for each item in DataList
-        # and EventList. The bufr.read_subset() method will return
-        # a 2D array for non events, and a 3D array for events.
-        #
-        #   Non-event: data[nm, nlev]
-        #     nm is the number of mnemonics
-        #     nlev is the nubmer of levels
-        #
-        #   Event: data[nm, nlev, nec]
-        #      nm and nlev as for non-event
-        #      nec is the number of event codes
-        #
-        # Since we are calling these routines with one mnemonic at a time
-        # squeeze off the first dimension (it will always be size one).
-        #
+        # Write out obs into the netCDF file as they are read from
+        # the BUFR file. Need to start with index zero in the netCDF
+        # file so don't increment the counter until after the write.
         while (bufr.load_subset() == 0):
             for Dname in DataList:
-                NumDataSubsets += 1
                 Dval = ReadBufrData(Dname, 'data', DataTypes[Dname])
-                print("DEBUG: Read Data: ", Dname, Dval, Dval.shape)
+                WriteNcVar(nc, NumObs, Dname, 'data', Dval, MaxStringLen)
 
             for Ename in EventList:
-                NumEventSubsets += 1
-                Eval = ReadBufrData(Dname, 'event', DataTypes[Dname])
-                print("DEBUG: Event Data: ", Ename, Eval, Eval.shape)
-        
+                Eval = ReadBufrData(Ename, 'event', DataTypes[Ename])
+                WriteNcVar(nc, NumObs, Ename, 'event', Eval, MaxStringLen)
 
-print("{0:d} messages selected out of {1:d} messages in the file".format(
-      NumSelectedMsgs, NumMsgs))
-print("  {0:d} data subsets selcted".format(NumDataSubsets))
-print("  {0:d} event subsets selcted".format(NumEventSubsets))
+            NumObs += 1
+
+        NumSelectedMsgs += 1
+
+# Fill in coordinate values
+nc[NobsDname][0:NumObs] = np.arange(NumObs) + 1
+
+nc.virtmp_code = bufr.get_program_code('VIRTMP')
+
+print("{0:d} messages selected out of {1:d} total messages".format(NumSelectedMsgs, NumMsgs))
+print("  {0:d} observations read".format(NumObs))
 
 
 bufr.close()
 
+nc.sync()
+nc.close()
