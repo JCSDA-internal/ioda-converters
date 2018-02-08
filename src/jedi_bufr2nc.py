@@ -133,7 +133,7 @@ def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname, NeventsDname, S
         Vtype = 'S1'
         DimSpec = [NobsDname, StrDname]
     elif (Dtype == 'integer'):
-        Vtype = 'u4'
+        Vtype = 'i4'
         DimSpec = [NobsDname, NlevsDname]
     elif (Dtype == 'float'):
         Vtype = 'f4'
@@ -341,7 +341,7 @@ nc.createVariable(StrDname, 'u4', (StrDname))
 MtypeVname = "msg_type"
 MtypeDtype = "string"
 MdateVname = "msg_date"
-MdateDtype = "string"
+MdateDtype = "integer"
 CreateNcVar(nc, MtypeVname, 'data', MtypeDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname)
 CreateNcVar(nc, MdateVname, 'data', MdateDtype,
@@ -361,20 +361,23 @@ for Ename in EventList:
 NumMsgs = 0
 NumSelectedMsgs = 0
 NumObs = 0
-NumLevels = 0
 while (bufr.advance() == 0): 
     NumMsgs += 1
+    MsgType = np.array(bufr.msg_type)
+    MsgDate = np.array([bufr.msg_date])
 
     # Select only the messages that belong to this observation type
     if (bufr.msg_type in MessageList):
-        # Record the message type and date in the netCDF file
-        WriteNcVar(nc, NumObs, MtypeVname, 'data', np.array(bufr.msg_type), MaxStringLen)
-        WriteNcVar(nc, NumObs, MdateVname, 'data', np.array(bufr.msg_date), MaxStringLen)
-
         # Write out obs into the netCDF file as they are read from
         # the BUFR file. Need to start with index zero in the netCDF
         # file so don't increment the counter until after the write.
         while (bufr.load_subset() == 0):
+            # Record message type and date with each subset. This is
+            # inefficient in storage (lots of redundancy), but is the
+            # expected format for now.
+            WriteNcVar(nc, NumObs, MtypeVname, 'data', MsgType, MaxStringLen)
+            WriteNcVar(nc, NumObs, MdateVname, 'data', MsgDate, MaxStringLen)
+
             for Dname in DataList:
                 Dval = ReadBufrData(Dname, 'data', DataTypes[Dname])
                 WriteNcVar(nc, NumObs, Dname, 'data', Dval, MaxStringLen)
@@ -387,13 +390,25 @@ while (bufr.advance() == 0):
 
         NumSelectedMsgs += 1
 
-# Fill in coordinate values
-nc[NobsDname][0:NumObs] = np.arange(NumObs) + 1
+
+# Fill in coordinate values. Simply put in the numbers 1 through N for each
+# dimension variable according to that dimension's size.
+FileNumObs    = nc.dimensions[NobsDname].size
+FileNumLevels = nc.dimensions[NlevsDname].size
+FileNumEvents = nc.dimensions[NeventsDname].size
+FileStringLen = nc.dimensions[StrDname].size
+
+nc[NobsDname][0:FileNumObs]       = np.arange(FileNumObs) + 1
+nc[NlevsDname][0:FileNumLevels]   = np.arange(FileNumLevels) + 1
+nc[NeventsDname][0:FileNumEvents] = np.arange(FileNumEvents) + 1
+nc[StrDname][0:FileStringLen]     = np.arange(FileStringLen) + 1
+
 
 nc.virtmp_code = bufr.get_program_code('VIRTMP')
 
 print("{0:d} messages selected out of {1:d} total messages".format(NumSelectedMsgs, NumMsgs))
-print("  {0:d} observations read".format(NumObs))
+print("  {0:d} observations read from input BUFR file".format(NumObs))
+print("  {0:d} observations recorded in output netCDF file".format(FileNumObs))
 
 
 bufr.close()
