@@ -112,7 +112,8 @@ def ReadBufrData(Dname, Btype, Dtype):
 
     return Dval
 
-def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname, NeventsDname, StrDname):
+def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname,
+                NeventsDname, StrDname, MaxStringLen):
     # This routine will create a variable in the output netCDF file
     #
     # The dimensions are set according to the Dtype and Btype inputs.
@@ -132,20 +133,24 @@ def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname, NeventsDname, S
     if (Dtype == 'string'):
         Vtype = 'S1'
         DimSpec = [NobsDname, StrDname]
+        ChunkSpec = [1, MaxStringLen]
     elif (Dtype == 'integer'):
         Vtype = 'i4'
         DimSpec = [NobsDname, NlevsDname]
+        ChunkSpec = [1, 1]
     elif (Dtype == 'float'):
         Vtype = 'f4'
         DimSpec = [NobsDname, NlevsDname]
+        ChunkSpec = [1, 1]
 
     if (Btype == 'data'):
         Vname = Dname
     elif (Btype == 'event'):
         Vname = "{0:s}_benv".format(Dname)
         DimSpec.append(NeventsDname)
+        ChunkSpec.append(1)
 
-    Fid.createVariable(Vname, Vtype, DimSpec, zlib=False)
+    Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec, zlib=False)
 
 def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen):
     # This routine will write into a variable in the output netCDF file
@@ -332,10 +337,10 @@ nc.createDimension(StrDname, MaxStringLen)
 
 # coordinates
 #   these are just counts so use unsigned ints
-nc.createVariable(NobsDname, 'u4', (NobsDname))
-nc.createVariable(NlevsDname, 'u4', (NlevsDname))
-nc.createVariable(NeventsDname, 'u4', (NeventsDname))
-nc.createVariable(StrDname, 'u4', (StrDname))
+nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[1])
+nc.createVariable(NlevsDname, 'u4', (NlevsDname), chunksizes=[1])
+nc.createVariable(NeventsDname, 'u4', (NeventsDname), chunksizes=[1])
+nc.createVariable(StrDname, 'u4', (StrDname), chunksizes=[1])
 
 # variables
 MtypeVname = "msg_type"
@@ -343,17 +348,17 @@ MtypeDtype = "string"
 MdateVname = "msg_date"
 MdateDtype = "integer"
 CreateNcVar(nc, MtypeVname, 'data', MtypeDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname)
+            NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
 CreateNcVar(nc, MdateVname, 'data', MdateDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname)
+            NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
 
 for Dname in DataList:
     CreateNcVar(nc, Dname, 'data', DataTypes[Dname],
-                NobsDname, NlevsDname, NeventsDname, StrDname)
+                NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
 
 for Ename in EventList:
     CreateNcVar(nc, Ename, 'event', DataTypes[Ename],
-                NobsDname, NlevsDname, NeventsDname, StrDname)
+                NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
 
 # Walk through the BUFR file grabbing the data pieces from the
 # selected messages, and recording those pieces into the output
