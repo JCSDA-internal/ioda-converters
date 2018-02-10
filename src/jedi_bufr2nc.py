@@ -13,7 +13,61 @@ import struct
 # SUBROUTINES
 ###########################################################################
 
-def ReadBufrData(Dname, Btype, Dtype):
+def SetDimsFromBufrFile(PrepbufrFname, MessageList, DataList, EventList, DataTypes):
+    # This routine will read the BUFR file and figure out the sizes
+    # required for the netCDF file dimensions.
+
+    bufr = ncepbufr.open(PrepbufrFname)
+
+    MaxLevels = 0
+    MaxEvents = 0
+    MaxStringLen = 0
+    MaxObs = 0
+
+    while (bufr.advance() == 0): 
+        # Select only the messages that belong to this observation type
+        if (bufr.msg_type in MessageList):
+            # Look at all subsets, but only pick out the desired data/event pieces
+            while (bufr.load_subset() == 0):
+
+                for Dname in DataList:
+                    Dval = ReadBufrData(bufr, Dname, 'data', DataTypes[Dname])
+
+                    # Find number of levels in this piece. Dval will either be a scalar,
+                    # or a 1D array whose size is the number of levels.
+                    if (Dval.ndim == 0):
+                        # scalar value, which implies single level
+                        Nlev = 1
+                    elif (Dval.ndim > 0):
+                        Nlev = Dval.shape[0]
+
+                    if (DataTypes[Dname] == 'string'):
+                        if (Dval.itemsize > MaxStringLen):
+                            MaxStringLen = Dval.itemsize
+
+                    if (Nlev > MaxLevels):
+                        MaxLevels = Nlev
+
+                for Ename in EventList:
+                    Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
+
+                    # Find number of levels in this piece. Eval will either be a 2D array
+                    # whose shape is (Nlev, Nevent).
+                    Nlev, Nevent = Eval.shape
+
+                    if (Nlev > MaxLevels):
+                        MaxLevels = Nlev
+                    if (Nevent > MaxEvents):
+                        MaxEvents = Nevent
+
+                MaxObs += 1
+
+
+    bufr.close()
+
+    return MaxLevels, MaxEvents, MaxStringLen, MaxObs
+
+def ReadBufrData(Fid, Dname, Btype, Dtype):
     # This routine will read one data piece (one mnemonic) from the BUFR file.
     #
     # The bufr.read_subset() method will return a 2D array
@@ -30,7 +84,7 @@ def ReadBufrData(Dname, Btype, Dtype):
     # Since we are calling these routines with one mnemonic at a time
     # squeeze off the first dimension (it will always be size one).
     #
-    # bufr.read_subset() will return a floating point number (for any
+    # Fid.read_subset() will return a floating point number (for any
     # type) or an empty list if the mnemonic didn't exist. For strings
     # (Dtype = 'string') read the floating point number as characters. Otherwise
     # convert to integer or leave alone.
@@ -43,7 +97,7 @@ def ReadBufrData(Dname, Btype, Dtype):
     # Check for valid Btype and Dtype
     if ((Btype != 'data') and (Btype != 'event') and
         (Btype != 'rep') and (Btype != 'seq')):
-        print("ERROR: ReadBufrData: unrecognized bufr type: ", Btype)
+        print("ERROR: ReadBufrData: unrecognized BUFR type: ", Btype)
         sys.exit(-1)
 
     if ((Dtype != 'string') and (Dtype != 'integer') and
@@ -63,7 +117,7 @@ def ReadBufrData(Dname, Btype, Dtype):
         Sflag = True
 
     # Dnum will be a numpy array of floats
-    Dnum = np.squeeze(bufr.read_subset(Dname, events=Eflag, rep=Rflag, seq=Sflag ).data, axis=0)
+    Dnum = np.squeeze(Fid.read_subset(Dname, events=Eflag, rep=Rflag, seq=Sflag ).data, axis=0)
 
     # Make sure return value is a numpy.array type.
     if (Dnum.size == 0):
@@ -112,8 +166,9 @@ def ReadBufrData(Dname, Btype, Dtype):
 
     return Dval
 
-def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname,
-                NeventsDname, StrDname, MaxStringLen):
+def CreateNcVar(Fid, Dname, Btype, Dtype,
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs):
     # This routine will create a variable in the output netCDF file
     #
     # The dimensions are set according to the Dtype and Btype inputs.
@@ -133,24 +188,25 @@ def CreateNcVar(Fid, Dname, Btype, Dtype, NobsDname, NlevsDname,
     if (Dtype == 'string'):
         Vtype = 'S1'
         DimSpec = [NobsDname, StrDname]
-        ChunkSpec = [1, MaxStringLen]
+        ChunkSpec = [MaxObs, MaxStringLen]
     elif (Dtype == 'integer'):
         Vtype = 'i4'
         DimSpec = [NobsDname, NlevsDname]
-        ChunkSpec = [1, 1]
+        ChunkSpec = [MaxObs, MaxLevels]
     elif (Dtype == 'float'):
         Vtype = 'f4'
         DimSpec = [NobsDname, NlevsDname]
-        ChunkSpec = [1, 1]
+        ChunkSpec = [MaxObs, MaxLevels]
 
     if (Btype == 'data'):
         Vname = Dname
     elif (Btype == 'event'):
         Vname = "{0:s}_benv".format(Dname)
         DimSpec.append(NeventsDname)
-        ChunkSpec.append(1)
+        ChunkSpec.append(MaxEvents)
 
-    Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec, zlib=False)
+    Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
+        zlib=True, shuffle=True, complevel=6)
 
 def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen):
     # This routine will write into a variable in the output netCDF file
@@ -189,16 +245,13 @@ def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen):
 # ObsList holds the list of message types for a given obs type. The format 
 # for each element of the list is:
 #
-#  <obs_type> : [ <level_type> <list_of_bufr_message_types>,
+#  <obs_type> : [ <list_of_bufr_message_types>,
 #                 <list_of_bufr_data_types>, <list_of_bufr_event_types> ]
 #
 ObsList = {
     # Aircraft with conventional obs
     # Specs are from GSI read_prepbufr.f90
     'Aircraft': [
-        # level type (single or multi)
-        'single', 
-
         # BUFR message types
         [ 'AIRCFT', 'AIRCAR' ],
 
@@ -290,17 +343,39 @@ print("  Output netCDF file: {0:s}".format(NetcdfFname))
 print("")
 
 # Set up selection lists
-LevelType   = ObsList[ObsType][0]
-MessageList = ObsList[ObsType][1]
-DataList    = ObsList[ObsType][2]
-EventList   = ObsList[ObsType][3]
+MessageList = ObsList[ObsType][0]
+DataList    = ObsList[ObsType][1]
+EventList   = ObsList[ObsType][2]
 
-# open files
-bufr = ncepbufr.open(PrepbufrFname)
+# It turns out that using multiple unlimited dimensions in the netCDF file
+# can be very detrimental to the file's size, and can also be detrimental
+# to the runtime for creating the file.
+#
+# In order to mitigate this, we want to use fixed size dimensions instead.
+# We could just set the dimension sizes to values we expect to not be exceeded,
+# but that could turn out to be wasteful. Instead, we can read the BUFR file
+# in the same manner as when we record it and look at all the data to determine
+# what the dimension sizes should be. Unfortunately, there is not an easier
+# way to determine the required dimension sizes due to the high flexibility
+# of the format for storing obs in the BUFR file.
+
+# Make a pass through the BUFR file to set the dimension sizes
+print("Finding dimension sizes from BUFR file")
+MaxLevels, MaxEvents, MaxStringLen, MaxObs = SetDimsFromBufrFile(
+    PrepbufrFname, MessageList, DataList, EventList, DataTypes)
+print("")
+
+print("Dimension sizes for output netCDF file")
+print("  Maximum number of levels: {}".format(MaxLevels))
+print("  Maximum number of events: {}".format(MaxEvents))
+print("  Maximum number of characters in strings: {}".format(MaxStringLen))
+print("  Maximum number of observations: {}".format(MaxObs))
+print("")
+
+# Create the dimensions and variables in the netCDF file in preparation for
+# recording the selected observations.
 nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 
-# Create the dimensions and variables in the output netcdf files.
-#
 # ReadBurfData will return a 1D array for non events,
 # and a 2D array for events.
 #
@@ -317,30 +392,27 @@ nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 #   Non-event: data[nobs,nlevs]
 #   Event: data[nobs,nlevs,nevents]
 #
-# Make the dimensions adjustable so different sizes of data pieces
-# can be accommodated.
-#
-# Make a dimension for string data type variables. These have to be
-# stored as character arrays.
-MaxStringLen = 10
-
 NobsDname = "nobs"
 NlevsDname = "nlevs"
 NeventsDname = "nevents"
 StrDname = "nstring"
 
-# dims plus corresponding vars to hold coordinate values
-nc.createDimension(NobsDname, None)
-nc.createDimension(NlevsDname, None)
-nc.createDimension(NeventsDname, None)
+# dimsensions plus corresponding vars to hold coordinate values
+nc.createDimension(NlevsDname, MaxLevels)
+nc.createDimension(NeventsDname, MaxEvents)
 nc.createDimension(StrDname, MaxStringLen)
+nc.createDimension(NobsDname, MaxObs)
 
 # coordinates
 #   these are just counts so use unsigned ints
-nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[1])
-nc.createVariable(NlevsDname, 'u4', (NlevsDname), chunksizes=[1])
-nc.createVariable(NeventsDname, 'u4', (NeventsDname), chunksizes=[1])
-nc.createVariable(StrDname, 'u4', (StrDname), chunksizes=[1])
+#
+# Use chunk sizes that match the dimension sizes. Don't want a total chunk
+# size to exceed ~ 1MB, but if that is true, the data size is getting too
+# big anyway (a dimension size is over a million items!).
+nc.createVariable(NlevsDname, 'u4', (NlevsDname), chunksizes=[MaxLevels])
+nc.createVariable(NeventsDname, 'u4', (NeventsDname), chunksizes=[MaxEvents])
+nc.createVariable(StrDname, 'u4', (StrDname), chunksizes=[MaxStringLen])
+nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[MaxObs])
 
 # variables
 MtypeVname = "msg_type"
@@ -348,21 +420,27 @@ MtypeDtype = "string"
 MdateVname = "msg_date"
 MdateDtype = "integer"
 CreateNcVar(nc, MtypeVname, 'data', MtypeDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
+            NobsDname, NlevsDname, NeventsDname, StrDname,
+            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 CreateNcVar(nc, MdateVname, 'data', MdateDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
+            NobsDname, NlevsDname, NeventsDname, StrDname,
+            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for Dname in DataList:
     CreateNcVar(nc, Dname, 'data', DataTypes[Dname],
-                NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for Ename in EventList:
     CreateNcVar(nc, Ename, 'event', DataTypes[Ename],
-                NobsDname, NlevsDname, NeventsDname, StrDname, MaxStringLen)
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
-# Walk through the BUFR file grabbing the data pieces from the
-# selected messages, and recording those pieces into the output
-# netCDF file.
+# Make a second pass through the BUFR file, this time to record
+# the selected observations.
+#
+bufr = ncepbufr.open(PrepbufrFname)
+
 NumMsgs = 0
 NumSelectedMsgs = 0
 NumObs = 0
@@ -384,36 +462,31 @@ while (bufr.advance() == 0):
             WriteNcVar(nc, NumObs, MdateVname, 'data', MsgDate, MaxStringLen)
 
             for Dname in DataList:
-                Dval = ReadBufrData(Dname, 'data', DataTypes[Dname])
+                Dval = ReadBufrData(bufr, Dname, 'data', DataTypes[Dname])
                 WriteNcVar(nc, NumObs, Dname, 'data', Dval, MaxStringLen)
 
             for Ename in EventList:
-                Eval = ReadBufrData(Ename, 'event', DataTypes[Ename])
+                Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
                 WriteNcVar(nc, NumObs, Ename, 'event', Eval, MaxStringLen)
 
             NumObs += 1
+
 
         NumSelectedMsgs += 1
 
 
 # Fill in coordinate values. Simply put in the numbers 1 through N for each
 # dimension variable according to that dimension's size.
-FileNumObs    = nc.dimensions[NobsDname].size
-FileNumLevels = nc.dimensions[NlevsDname].size
-FileNumEvents = nc.dimensions[NeventsDname].size
-FileStringLen = nc.dimensions[StrDname].size
-
-nc[NobsDname][0:FileNumObs]       = np.arange(FileNumObs) + 1
-nc[NlevsDname][0:FileNumLevels]   = np.arange(FileNumLevels) + 1
-nc[NeventsDname][0:FileNumEvents] = np.arange(FileNumEvents) + 1
-nc[StrDname][0:FileStringLen]     = np.arange(FileStringLen) + 1
+nc[NobsDname][0:MaxObs]       = np.arange(MaxObs) + 1
+nc[NlevsDname][0:MaxLevels]   = np.arange(MaxLevels) + 1
+nc[NeventsDname][0:MaxEvents] = np.arange(MaxEvents) + 1
+nc[StrDname][0:MaxStringLen]  = np.arange(MaxStringLen) + 1
 
 
 nc.virtmp_code = bufr.get_program_code('VIRTMP')
 
 print("{0:d} messages selected out of {1:d} total messages".format(NumSelectedMsgs, NumMsgs))
-print("  {0:d} observations read from input BUFR file".format(NumObs))
-print("  {0:d} observations recorded in output netCDF file".format(FileNumObs))
+print("  {0:d} observations recorded in output netCDF file".format(MaxObs))
 
 
 bufr.close()
