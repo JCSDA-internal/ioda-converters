@@ -62,6 +62,15 @@ def SetDimsFromBufrFile(PrepbufrFname, MessageList, DataList, EventList, DataTyp
 
                 MaxObs += 1
 
+    # MaxEvents will usually be set to 255 due to an array limit in the Fortran
+    # interface. In practice, there are typically a handful of events (4 or 5) since
+    # the events are related to the steps that are gone through to convert a raw
+    # BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
+    # a safe limit (instead of 255) for the max number of events, so set MaxEvents
+    # to 20 to help conserve file space. Leave the code in above that sets MaxEvents
+    # in case we decide to get rid of the override below. Note that the code above isn't
+    # detrimental to execution time since the number of levels has to still be checked.
+    MaxEvents = 20
 
     bufr.close()
 
@@ -208,7 +217,7 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
         zlib=True, shuffle=True, complevel=6)
 
-def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen):
+def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen, MaxEvents):
     # This routine will write into a variable in the output netCDF file
 
     # Set the variable name according to Btype
@@ -222,7 +231,12 @@ def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen):
         StrSpec = "S{0:d}".format(MaxStringLen)
         Value = netCDF4.stringtochar(Dval.astype(StrSpec))
     else:
-        Value = Dval.copy()
+        if (Btype == 'event'):
+            # Trim the dimension representing events to 0:MaxEvents.
+            # This will be the last dimension of a 2D array [nlev, nevent].
+            Value = Dval[:,0:MaxEvents].copy()
+        else:
+            Value = Dval.copy()
 
     # Find the dimension size of the value and use that to write out
     # the variable.
@@ -458,16 +472,16 @@ while (bufr.advance() == 0):
             # Record message type and date with each subset. This is
             # inefficient in storage (lots of redundancy), but is the
             # expected format for now.
-            WriteNcVar(nc, NumObs, MtypeVname, 'data', MsgType, MaxStringLen)
-            WriteNcVar(nc, NumObs, MdateVname, 'data', MsgDate, MaxStringLen)
+            WriteNcVar(nc, NumObs, MtypeVname, 'data', MsgType, MaxStringLen, MaxEvents)
+            WriteNcVar(nc, NumObs, MdateVname, 'data', MsgDate, MaxStringLen, MaxEvents)
 
             for Dname in DataList:
                 Dval = ReadBufrData(bufr, Dname, 'data', DataTypes[Dname])
-                WriteNcVar(nc, NumObs, Dname, 'data', Dval, MaxStringLen)
+                WriteNcVar(nc, NumObs, Dname, 'data', Dval, MaxStringLen, MaxEvents)
 
             for Ename in EventList:
                 Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
-                WriteNcVar(nc, NumObs, Ename, 'event', Eval, MaxStringLen)
+                WriteNcVar(nc, NumObs, Ename, 'event', Eval, MaxStringLen, MaxEvents)
 
             NumObs += 1
 
