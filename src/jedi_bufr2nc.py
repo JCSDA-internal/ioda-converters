@@ -51,7 +51,7 @@ def SetDimsFromBufrFile(PrepbufrFname, MessageList, DataList, EventList, DataTyp
                 for Ename in EventList:
                     Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
 
-                    # Find number of levels in this piece. Eval will either be a 2D array
+                    # Find number of levels in this piece. Eval will be a 2D array
                     # whose shape is (Nlev, Nevent).
                     Nlev, Nevent = Eval.shape
 
