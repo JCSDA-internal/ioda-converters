@@ -1,4 +1,4 @@
-program prepbufr_decode_all
+program pb_decode
 !
 ! read all observations out from prepbufr. 
 ! read bufr table from prepbufr file
@@ -22,10 +22,26 @@ program prepbufr_decode_all
  equivalence(rstation_id,c_sid)
 
  integer        :: i,k,iret
+
+ character (len=80) :: pb_table_fname, pb_data_fname
+ integer            :: argc
 !
 !
- open(24,file='prepbufr.table')
- open(unit_in,file='prepbufr',form='unformatted',status='old')
+
+ ! Grab the bufr table file and bufr data file names from the
+ ! command line.
+ argc = command_argument_count()
+ if (argc .lt. 2) then
+    print*, "ERROR: must supply exactly two arguments"
+    print*, ""
+    print*, "USAGE: pb_decode <input_bufr_file> <output_bufr_table_file>"
+    call exit(-1)
+ endif
+ call get_command_argument(1,pb_data_fname)
+ call get_command_argument(2,pb_table_fname)
+
+ open(24,file=pb_table_fname)
+ open(unit_in,file=pb_data_fname,form='unformatted',status='old')
  call openbf(unit_in,'IN',unit_in)
  call dxdump(unit_in,24)
  call datelen(10)
