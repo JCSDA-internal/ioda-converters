@@ -1,1 +1,1 @@
-install (PROGRAMS jedi_bufr2nc.py DESTINATION bin)
+install (PROGRAMS bufr2nc.py DESTINATION bin)
