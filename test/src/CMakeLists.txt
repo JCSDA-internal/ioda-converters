@@ -2,10 +2,11 @@
 # the link_directories command needs to go before all targets that require libbufr.a
 link_directories (/Users/stephenh/projects/py-ncepbufr/src)
 
-add_executable (prepbufr_decode_all prepbufr_decode_all.f90)
-add_executable (prepbufr_decode_all_evn prepbufr_decode_all_evn.f90)
+add_executable (pb_decode pb_decode.f90)
+add_executable (pb_decode_events pb_decode_events.f90)
 
-target_link_libraries (prepbufr_decode_all bufr)
-target_link_libraries (prepbufr_decode_all_evn bufr)
+target_link_libraries (pb_decode bufr)
+target_link_libraries (pb_decode_events bufr)
 
-install (TARGETS prepbufr_decode_all prepbufr_decode_all_evn DESTINATION bin)
+install (TARGETS pb_decode pb_decode_events DESTINATION bin)
+install (PROGRAMS bufrtest.py DESTINATION bin)
