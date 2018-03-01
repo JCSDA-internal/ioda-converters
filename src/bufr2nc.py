@@ -15,61 +15,25 @@ import bufr2ncConfig as conf
 # SUBROUTINES
 ###########################################################################
 
-def SetDimsFromBufrFile(PrepbufrFname, MessageRe, DataList, EventList, DataTypes):
-    # This routine will read the BUFR file and figure out the sizes
-    # required for the netCDF file dimensions.
+def FindNumObsFromBufrFile(PrepbufrFname, MessageRe):
+    # This routine will read the BUFR file and figure out how many observations
+    # will be read when recording data.
 
     bufr = ncepbufr.open(PrepbufrFname)
 
-    MaxLevels = 0
-    MaxEvents = 0
-    MaxStringLen = 0
+    # The number of observations will be equal to the total number of subsets
+    # contained in the selected messages.
     MaxObs = 0
-
     while (bufr.advance() == 0): 
         # Select only the messages that belong to this observation type
         if (re.search(MessageRe, bufr.msg_type)):
-
-            # Look at all subsets, but only pick out the desired data/event pieces
-            while (bufr.load_subset() == 0):
-
-                for Dname in DataList:
-                    #Dval = ReadBufrData(bufr, Dname, 'data', DataTypes[Dname])
-                    Dval = bufr.read_subset(Dname).data
-                    #Dval = np.array([[ 0 ], [ 1 ], [ 2 ]])
-
-                    # Find number of levels in this piece. Dval will either be a scalar,
-                    # or a 1D array whose size is the number of levels.
-                    if (Dval.ndim == 0):
-                        # scalar value, which implies single level
-                        Nlev = 1
-                    elif (Dval.ndim > 0):
-                        Nlev = Dval.shape[0]
-
-                    if (DataTypes[Dname] == 'string'):
-                        if (Dval.itemsize > MaxStringLen):
-                            MaxStringLen = Dval.itemsize
-
-                    if (Nlev > MaxLevels):
-                        MaxLevels = Nlev
-
-                for Ename in EventList:
-                    Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
-
-                    # Find number of levels in this piece. Eval will be a 2D array
-                    # whose shape is (Nlev, Nevent).
-                    Nlev, Nevent = Eval.shape
-
-                    if (Nlev > MaxLevels):
-                        MaxLevels = Nlev
-                    if (Nevent > MaxEvents):
-                        MaxEvents = Nevent
-
-                MaxObs += 1
+            # Attribute "subsets" contains the number of subsets
+            # for the current message.
+            MaxObs += bufr.subsets
 
     bufr.close()
 
-    return MaxLevels, MaxObs
+    return MaxObs
 
 def ReadBufrData(Fid, Dname, Btype, Dtype):
     # This routine will read one data piece (one mnemonic) from the BUFR file.
@@ -271,9 +235,10 @@ print("  Output netCDF file: {0:s}".format(NetcdfFname))
 print("")
 
 # Set up selection lists
-MessageRe = conf.ObsList[ObsType][0]
-DataList  = conf.ObsList[ObsType][1]
-EventList = conf.ObsList[ObsType][2]
+MaxLevels = conf.ObsList[ObsType][0]
+MessageRe = conf.ObsList[ObsType][1]
+DataList  = conf.ObsList[ObsType][2]
+EventList = conf.ObsList[ObsType][3]
 
 # It turns out that using multiple unlimited dimensions in the netCDF file
 # can be very detrimental to the file's size, and can also be detrimental
@@ -285,18 +250,23 @@ EventList = conf.ObsList[ObsType][2]
 # observations nor the number of levels in the data. Unfortunately, reading in
 # all of the data pieces is slow.
 #
+# Set the number of levels from the config file (first entry in the ObsList).
+#
 # MaxEvents will usually be set to 255 due to an array limit in the Fortran
 # interface. In practice, there are typically a handful of events (4 or 5) since
 # the events are related to the steps that are gone through to convert a raw
 # BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
 # a safe limit (instead of 255) for the max number of events, so set MaxEvents
 # to 20 to help conserve file space.
+#
+# MaxStringLen is good with 10 characters. This is the length of the long format
+# for date and time. Most of the id labels are 6 or 8 characters.
 
-# Make a pass through the BUFR file to set the dimension sizes
+# Make a pass through the BUFR file to determine the number of observations
 print("Finding dimension sizes from BUFR file")
 MaxStringLen = 10
 MaxEvents = 20
-MaxLevels, MaxObs = SetDimsFromBufrFile(PrepbufrFname, MessageRe, DataList, EventList, conf.DataTypes)
+MaxObs = FindNumObsFromBufrFile(PrepbufrFname, MessageRe)
 print("")
 
 print("Dimension sizes for output netCDF file")
