@@ -3,13 +3,15 @@
 # ObsList holds the list of message types for a given obs type. The format 
 # for each element of the list is:
 #
-#  <obs_type> : [ <list_of_bufr_message_types>,
+#  <obs_type> : [ <number_of_levels>, <list_of_bufr_message_types>,
 #                 <list_of_bufr_data_types>, <list_of_bufr_event_types> ]
 #
 ObsList = {
     # Aircraft with conventional obs from prepBUFR file
     # Specs are from GSI read_prepbufr.f90
     'Aircraft_prep': [
+        # Number of levels
+        1,
         # BUFR message types (regular expression)
         'AIRC[AF][RT]',
 
@@ -27,8 +29,10 @@ ObsList = {
 
     # Aircraft with conventional obs from BUFR file
     'Aircraft': [
+        # Number of levels
+        1,
         # BUFR message types
-        '^NC00400[1-4]',
+        '^NC004001',
 
         # BUFR data types
         [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'SEQNUM', 'BUHD', 'BORG', 'BULTIM', 'BBB',
