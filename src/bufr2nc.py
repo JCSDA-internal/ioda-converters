@@ -5,76 +5,35 @@ import ncepbufr
 import numpy as np
 import sys
 import os
+import re
 import netCDF4
 from netCDF4 import Dataset
 import struct
+import bufr2ncConfig as conf
 
 ###########################################################################
 # SUBROUTINES
 ###########################################################################
 
-def SetDimsFromBufrFile(PrepbufrFname, MessageList, DataList, EventList, DataTypes):
-    # This routine will read the BUFR file and figure out the sizes
-    # required for the netCDF file dimensions.
+def FindNumObsFromBufrFile(PrepbufrFname, MessageRe):
+    # This routine will read the BUFR file and figure out how many observations
+    # will be read when recording data.
 
     bufr = ncepbufr.open(PrepbufrFname)
 
-    MaxLevels = 0
-    MaxEvents = 0
-    MaxStringLen = 0
+    # The number of observations will be equal to the total number of subsets
+    # contained in the selected messages.
     MaxObs = 0
-
     while (bufr.advance() == 0): 
         # Select only the messages that belong to this observation type
-        if (bufr.msg_type in MessageList):
-            # Look at all subsets, but only pick out the desired data/event pieces
-            while (bufr.load_subset() == 0):
-
-                for Dname in DataList:
-                    Dval = ReadBufrData(bufr, Dname, 'data', DataTypes[Dname])
-
-                    # Find number of levels in this piece. Dval will either be a scalar,
-                    # or a 1D array whose size is the number of levels.
-                    if (Dval.ndim == 0):
-                        # scalar value, which implies single level
-                        Nlev = 1
-                    elif (Dval.ndim > 0):
-                        Nlev = Dval.shape[0]
-
-                    if (DataTypes[Dname] == 'string'):
-                        if (Dval.itemsize > MaxStringLen):
-                            MaxStringLen = Dval.itemsize
-
-                    if (Nlev > MaxLevels):
-                        MaxLevels = Nlev
-
-                for Ename in EventList:
-                    Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
-
-                    # Find number of levels in this piece. Eval will be a 2D array
-                    # whose shape is (Nlev, Nevent).
-                    Nlev, Nevent = Eval.shape
-
-                    if (Nlev > MaxLevels):
-                        MaxLevels = Nlev
-                    if (Nevent > MaxEvents):
-                        MaxEvents = Nevent
-
-                MaxObs += 1
-
-    # MaxEvents will usually be set to 255 due to an array limit in the Fortran
-    # interface. In practice, there are typically a handful of events (4 or 5) since
-    # the events are related to the steps that are gone through to convert a raw
-    # BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
-    # a safe limit (instead of 255) for the max number of events, so set MaxEvents
-    # to 20 to help conserve file space. Leave the code in above that sets MaxEvents
-    # in case we decide to get rid of the override below. Note that the code above isn't
-    # detrimental to execution time since the number of levels has to still be checked.
-    MaxEvents = 20
+        if (re.search(MessageRe, bufr.msg_type)):
+            # Attribute "subsets" contains the number of subsets
+            # for the current message.
+            MaxObs += bufr.subsets
 
     bufr.close()
 
-    return MaxLevels, MaxEvents, MaxStringLen, MaxObs
+    return MaxObs
 
 def ReadBufrData(Fid, Dname, Btype, Dtype):
     # This routine will read one data piece (one mnemonic) from the BUFR file.
@@ -256,87 +215,6 @@ def WriteNcVar(Fid, Nobs, Dname, Btype, Dval, MaxStringLen, MaxEvents):
 # MAIN
 ###########################################################################
 
-# ObsList holds the list of message types for a given obs type. The format 
-# for each element of the list is:
-#
-#  <obs_type> : [ <list_of_bufr_message_types>,
-#                 <list_of_bufr_data_types>, <list_of_bufr_event_types> ]
-#
-ObsList = {
-    # Aircraft with conventional obs
-    # Specs are from GSI read_prepbufr.f90
-    'Aircraft': [
-        # BUFR message types
-        [ 'AIRCFT', 'AIRCAR' ],
-
-        # BUFR data types
-        [ 'SID',  'ACID', 'XOB',  'YOB',  'DHR',  'TYP',  'ELV',  'SAID', 'T29',
-          'POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO',
-          'MXGS', 'HOVI', 'CAT',  'PRSS', 'TDO',  'PMO',
-          'POE',  'QOE',  'TOE',  'WOE',  'PWE',
-          'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
-          'XDR',  'YDR',  'HRDR', 'POAF', 'IALR' ],
-
-        # BUFR event types
-        [ 'TPC',  'TOB',  'TQM' ]
-        ],
-
-    }
-
-# DataTypes maps the mnemonic to its associated data type
-# 
-# For now the allowed types are:
-#   'string'     for CCITT IA5 units in the BUFR table
-#   'integer'    for CODE TABLE units in the BUFR table
-#   'float'      all other units in the BUFR table
-#
-# Keep these types in sync with the ReadBufrData() routine
-DataTypes = {
-    'SID'  : 'string',
-    'ACID' : 'string',
-    'XOB'  : 'float',
-    'YOB'  : 'float',
-    'DHR'  : 'float',
-    'TYP'  : 'integer',
-    'ELV'  : 'float',
-    'SAID' : 'integer',
-    'T29'  : 'integer',
-    'POB'  : 'float',
-    'QOB'  : 'float',
-    'TOB'  : 'float',
-    'ZOB'  : 'float',
-    'UOB'  : 'float',
-    'VOB'  : 'float',
-    'PWO'  : 'float',
-    'MXGS' : 'float',
-    'HOVI' : 'float',
-    'CAT'  : 'integer',
-    'PRSS' : 'float',
-    'TDO'  : 'float',
-    'PMO'  : 'float',
-    'POE'  : 'float',
-    'QOE'  : 'float',
-    'TOE'  : 'float',
-    'WOE'  : 'float',
-    'PWE'  : 'float',
-    'PQM'  : 'integer',
-    'QQM'  : 'integer',
-    'TQM'  : 'integer',
-    'ZQM'  : 'integer',
-    'WQM'  : 'integer',
-    'PWQ'  : 'integer',
-    'PMQ'  : 'integer',
-    'XDR'  : 'float',
-    'YDR'  : 'float',
-    'HRDR' : 'float',
-    'POAF' : 'integer',
-    'IALR' : 'float', 
-    'TPC'  : 'integer',
-    'TOB'  : 'float',
-    'TQM'  : 'integer',
-    }
-
-
 # Grab input arguemnts
 ScriptName = os.path.basename(sys.argv[0])
 UsageString = "USAGE: {0:s} <obs_type> <input_prepbufr> <output_netcdf>".format(ScriptName)
@@ -357,26 +235,38 @@ print("  Output netCDF file: {0:s}".format(NetcdfFname))
 print("")
 
 # Set up selection lists
-MessageList = ObsList[ObsType][0]
-DataList    = ObsList[ObsType][1]
-EventList   = ObsList[ObsType][2]
+MaxLevels = conf.ObsList[ObsType][0]
+MessageRe = conf.ObsList[ObsType][1]
+DataList  = conf.ObsList[ObsType][2]
+EventList = conf.ObsList[ObsType][3]
 
 # It turns out that using multiple unlimited dimensions in the netCDF file
 # can be very detrimental to the file's size, and can also be detrimental
 # to the runtime for creating the file.
 #
 # In order to mitigate this, we want to use fixed size dimensions instead.
-# We could just set the dimension sizes to values we expect to not be exceeded,
-# but that could turn out to be wasteful. Instead, we can read the BUFR file
-# in the same manner as when we record it and look at all the data to determine
-# what the dimension sizes should be. Unfortunately, there is not an easier
-# way to determine the required dimension sizes due to the high flexibility
-# of the format for storing obs in the BUFR file.
+#
+# Reading in the dictionary table is fast, but this won't reveal the number of
+# observations nor the number of levels in the data. Unfortunately, reading in
+# all of the data pieces is slow.
+#
+# Set the number of levels from the config file (first entry in the ObsList).
+#
+# MaxEvents will usually be set to 255 due to an array limit in the Fortran
+# interface. In practice, there are typically a handful of events (4 or 5) since
+# the events are related to the steps that are gone through to convert a raw
+# BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
+# a safe limit (instead of 255) for the max number of events, so set MaxEvents
+# to 20 to help conserve file space.
+#
+# MaxStringLen is good with 10 characters. This is the length of the long format
+# for date and time. Most of the id labels are 6 or 8 characters.
 
-# Make a pass through the BUFR file to set the dimension sizes
+# Make a pass through the BUFR file to determine the number of observations
 print("Finding dimension sizes from BUFR file")
-MaxLevels, MaxEvents, MaxStringLen, MaxObs = SetDimsFromBufrFile(
-    PrepbufrFname, MessageList, DataList, EventList, DataTypes)
+MaxStringLen = 10
+MaxEvents = 20
+MaxObs = FindNumObsFromBufrFile(PrepbufrFname, MessageRe)
 print("")
 
 print("Dimension sizes for output netCDF file")
@@ -441,12 +331,12 @@ CreateNcVar(nc, MdateVname, 'data', MdateDtype,
             MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for Dname in DataList:
-    CreateNcVar(nc, Dname, 'data', DataTypes[Dname],
+    CreateNcVar(nc, Dname, 'data', conf.DataTypes[Dname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
                 MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for Ename in EventList:
-    CreateNcVar(nc, Ename, 'event', DataTypes[Ename],
+    CreateNcVar(nc, Ename, 'event', conf.DataTypes[Ename],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
                 MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
@@ -464,7 +354,7 @@ while (bufr.advance() == 0):
     MsgDate = np.array([bufr.msg_date])
 
     # Select only the messages that belong to this observation type
-    if (bufr.msg_type in MessageList):
+    if (re.search(MessageRe, bufr.msg_type)):
         # Write out obs into the netCDF file as they are read from
         # the BUFR file. Need to start with index zero in the netCDF
         # file so don't increment the counter until after the write.
@@ -476,11 +366,11 @@ while (bufr.advance() == 0):
             WriteNcVar(nc, NumObs, MdateVname, 'data', MsgDate, MaxStringLen, MaxEvents)
 
             for Dname in DataList:
-                Dval = ReadBufrData(bufr, Dname, 'data', DataTypes[Dname])
+                Dval = ReadBufrData(bufr, Dname, 'data', conf.DataTypes[Dname])
                 WriteNcVar(nc, NumObs, Dname, 'data', Dval, MaxStringLen, MaxEvents)
 
             for Ename in EventList:
-                Eval = ReadBufrData(bufr, Ename, 'event', DataTypes[Ename])
+                Eval = ReadBufrData(bufr, Ename, 'event', conf.DataTypes[Ename])
                 WriteNcVar(nc, NumObs, Ename, 'event', Eval, MaxStringLen, MaxEvents)
 
             NumObs += 1
