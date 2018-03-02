@@ -1,6 +1,5 @@
-# link with libbufr.a in the py-ncepbufr project
-# the link_directories command needs to go before all targets that require libbufr.a
-link_directories (/Users/stephenh/projects/py-ncepbufr/src)
+# The Fortran code links with libbufr.a, which at this point is
+# expected to live in /usr/local/lib
 
 add_executable (pb_decode pb_decode.f90)
 add_executable (pb_decode_events pb_decode_events.f90)
