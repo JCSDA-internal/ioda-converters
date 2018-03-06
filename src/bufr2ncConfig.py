@@ -10,14 +10,16 @@ ObsList = {
     # Aircraft with conventional obs from prepBUFR file
     # Specs are from GSI read_prepbufr.f90
     'Aircraft_prep': [
-        # Number of levels
+        # Number of data levels
         1,
         # BUFR message types (regular expression)
         'AIRC[AF][RT]',
 
+        # BUFR message header types 
+        [ 'SID',  'ACID', 'XOB',  'YOB',  'DHR',  'TYP',  'ELV',  'SAID', 'T29'], 
+
         # BUFR data types
-        [ 'SID',  'ACID', 'XOB',  'YOB',  'DHR',  'TYP',  'ELV',  'SAID', 'T29',
-          'POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO',
+        [ 'POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO',
           'MXGS', 'HOVI', 'CAT',  'PRSS', 'TDO',  'PMO',
           'POE',  'QOE',  'TOE',  'WOE',  'PWE',
           'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
@@ -29,13 +31,16 @@ ObsList = {
 
     # Aircraft with conventional obs from BUFR file
     'Aircraft': [
-        # Number of levels
+        # Number of data levels
         1,
         # BUFR message types
         '^NC004001',
+# I don't know where the reader is foe this. Not sure I have the split right
+        # BUFR message header types 
+        [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'SEQNUM' ], 
 
         # BUFR data types
-        [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'SEQNUM', 'BUHD', 'BORG', 'BULTIM', 'BBB',
+        [ 'BUHD', 'BORG', 'BULTIM', 'BBB',
           'RPID', 'CORN', 'CLAT', 'CLON', 'FLVL', 'QMAT', 'TMDB', 'QMDD', 'TMDP',
           'REHU', 'QMWN', 'WSPD', 'WDIR', 'ACID' ],
 
@@ -44,6 +49,28 @@ ObsList = {
 
         ],
 
+    'Sondes': [
+        # Number of levels (255 max allowed in .f90 reader)
+        255,
+        # BUFR message types (regular expression)
+        'ADPUPA',
+
+        # BUFR message header
+        [ 'SID',  'XOB',  'YOB',  'DHR',  'TYP',  'ELV',  'T29'], 
+        # BUFR data types
+        # THIS LIST IS NOT EXHAUSTIVE!!!!
+        # it is based on dumping a  few messages, then screening for vars read in by the gsi
+        # 1. Header, 2. Obs types, 3. quality markers, 4. error ests., 5. location info?
+          ['POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO', 'TDO',
+          'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
+          'POE',  'QOE',  'TOE',  'WOE',  'PWE',
+          'XDR',  'YDR',  'HRDR'], 
+        # BUFR event types
+        []
+        ],
+# PREPBUFR FILES INCLUDE (BUT NOT READ BY GSI): 
+#          'TSB',  'ITP',  'SQN','PROCN',  'RPT', 'TCOR', 'SIRC',
+# EVENTS VARS? *PC, *RC, *FC , TVO
     }
 
 # DataTypes maps the mnemonic to its associated data type
