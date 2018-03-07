@@ -28,8 +28,13 @@ bufr = ncepbufr.open(PbFname)
 
 #bufr.print_table()
 
-#Mnemonics = "TOB"
-Mnemonics = "POB QOB TOB ZOB UOB VOB PWO CAT PRSS TDO PMO XDR YDR HRDR"
+# prepBUFR mnemonics
+Mnemonics = "TOB"
+#Mnemonics = "POB QOB TOB ZOB UOB VOB PWO CAT PRSS TDO PMO XDR YDR HRDR"
+
+# BUFR mnemonics
+#Mnemonics = "TMDB"
+#Mnemonics = "TMDB TMDP WDIR WSPD QMAT QMWN CLAT CLON FLVL YEAR MNTH DAYS HOUR MINU"
 
 while (bufr.advance() == 0):
     print("  MSG: {0:d} {1:s} {2:d} ({3:d})".format(
@@ -38,8 +43,9 @@ while (bufr.advance() == 0):
     isub = 0
     while (bufr.load_subset() == 0):
         isub += 1
-        Vals = bufr.read_subset(Mnemonics).data
+        Vals = bufr.read_subset(Mnemonics, events=True).data
         print("    SUBSET: {0:d}: MNEMONIC VALUES: ".format(isub), Vals)
+
         #bufr.print_subset()
 
 # clean up
