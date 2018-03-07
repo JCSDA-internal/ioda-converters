@@ -53,17 +53,19 @@ program pb_decode
      write(*,'(3a,i10)') 'subset=',subset,' cycle time =',idate
      sb_report: do while (ireadsb(unit_in) == 0)
        ntb = ntb+1
-       call ufbint(unit_in,hdr,mxmn,1   ,iret,hdstr)
-       call ufbint(unit_in,obs,mxmn,mxlv,iret,obstr)
-       call ufbint(unit_in,oer,mxmn,mxlv,iret,oestr)
-       call ufbint(unit_in,qcf,mxmn,mxlv,iret,qcstr)
+       !call ufbint(unit_in,hdr,mxmn,1   ,iret,hdstr)
+       !call ufbint(unit_in,obs,mxmn,mxlv,iret,obstr)
+       !call ufbint(unit_in,oer,mxmn,mxlv,iret,oestr)
+       !call ufbint(unit_in,qcf,mxmn,mxlv,iret,qcstr)
+       call ufbint(unit_in,obs,mxmn,mxlv,iret,'TOB')
        rstation_id=hdr(1)
        write(*,*)
        write(*,'(2I10,a14,8f15.1)') ntb,iret,c_sid,(hdr(i),i=2,8)
        DO k=1,iret
-         write(*,'(i3,a10,9f15.1)') k,'obs=',(obs(i,k),i=1,9)
-         write(*,'(i3,a10,9f15.1)') k,'oer=',(oer(i,k),i=1,7)
-         write(*,'(i3,a10,9f15.1)') k,'qcf=',(qcf(i,k),i=1,7)
+         !write(*,'(i3,a10,9f15.1)') k,'obs=',(obs(i,k),i=1,9)
+         !write(*,'(i3,a10,9f15.1)') k,'oer=',(oer(i,k),i=1,7)
+         !write(*,'(i3,a10,9f15.1)') k,'qcf=',(qcf(i,k),i=1,7)
+         write(*,'(i3,a10,9f15.1)') k, 'obs=', obs(1,k)
        ENDDO
      enddo sb_report
    enddo msg_report
