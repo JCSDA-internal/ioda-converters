@@ -241,11 +241,37 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
         else:
             Value = Dval.copy()
 
-    # Write the variable. The [obs_num,...] indexing accommodates whatever
-    # shape remains for the second through last dimension. This assumes
-    # that Value has been correctly shaped to match the variable that it
-    # is being written into.
-    Fid[Vname][obs_num,...] = Value
+    # Write the variable. Since the dimension sizes from the read_subset()
+    # routine can vary, we need to use array slice style indexing to
+    # copy Value into netCDF variable (NcVar below). Look at how many
+    # dimensions Value has compared to NcVar and put in the appropriate
+    # slice indexing. nobs (obs_num) is always the first dimension.
+    NcVar = Fid[Vname]
+    ValNdim = Value.ndim
+    NcNdim = NcVar.ndim
+    if (ValNdim == 1):
+        if (NcNdim == 1):
+            # Value has one dimension (scalar)
+            # NcVar has one dimension (eg, [nobs])
+            NcVar[obs_num] = Value
+        else:
+            # Value has one dimension  (eg, [nlevs])
+            # NcVar has two dimensions (eg, [nobs,nlevs])
+            N1 = Value.shape[0]
+            NcVar[obs_num,0:N1] = Value
+    elif (ValNdim == 2):
+        # Value has two dimensions   (eg, [nlevs,nevents])
+        # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
+        N1 = Value.shape[0]
+        N2 = Value.shape[1]
+        NcVar[obs_num,0:N1,0:N2] = Value
+    elif (ValNdim == 3):
+        # Value has three dimensions (eg, [nlevs,nstring,nevents])
+        # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
+        N1 = Value.shape[0]
+        N2 = Value.shape[1]
+        N3 = Value.shape[2]
+        NcVar[obs_num,0:N1,0:N2,0:N3] = Value
 
 ###########################################################################
 # MAIN
@@ -261,8 +287,6 @@ op.add_option("-m", "--max-msgs", type="int", dest="max_msgs", default=-1,
               help="maximum number of messages to keep", metavar="<max_num_msgs>")
 
 MyOptions, MyArgs = op.parse_args()
-print("DEBUG: MyOptions: ", MyOptions)
-print("DEBUG: MyArgs: ", MyArgs)
 
 if len(MyArgs) != 3:
     print("ERROR: must supply exactly 3 arguments")
