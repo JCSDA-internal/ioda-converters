@@ -8,4 +8,10 @@ Usage: bufr2nc.py <obs_type> <input_prepbufr> <output_netcdf>
 The short term plan is to handle aircraft, radiance and radiosonde observation types.
 It is also planned to be able to read and store the raw observation values.
 
-Currently, only aircraft observations are implemented and only prepbufr files are understood.
+Currently supported obs types
+
+| Obs Type   | raw BUFR | prepBUFR |
+|:-----------|:--------:|:--------:|
+| Aircraft   | Y        | Y        |
+| Radiosonde | N        | Y        |
+| Radiance   | N        | N        |
