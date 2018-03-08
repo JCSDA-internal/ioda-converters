@@ -125,6 +125,7 @@ while bufr.advance() == 0:
             satids.append(satid)
             ptids.append(ptid)
             qflags.append(qfro)
+            #ibits = bufr.get_flag_table_bits('QFRO',qfro)
             if ObsType.startswith('refr'):
                 ref=data2[1,k]
                 ref_error=data2[3,k]
