@@ -41,13 +41,13 @@ hdrstr ='YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU'
 bufr = ncepbufr.open(bufrFname)
 nc = netCDF4.Dataset(netcdfFname,'w',format='NETCDF4')
 nc.createDimension('nobs',None)
-lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True)
+lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
 lat.units='degrees north'
-lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True)
+lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
 lat.units='degress east'
-hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True)
-hgt.units='meters'
-time = nc.createVariable('Time',np.float32,'nobs',zlib=True)
+hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=np.nan)
+hgt.units='meters above geoid'
+time = nc.createVariable('Time',np.float32,'nobs',zlib=True,fill_value=np.nan)
 bufr.advance()
 YYYY = refdate[0:4]
 MM = refdate[4:6]
@@ -55,8 +55,14 @@ DD = refdate[6:8]
 HH = refdate[8:10]
 bufr.rewind()
 time.units = 'hours since %04s-%02s-%02s %02s:00 UTC' % (YYYY,MM,DD,HH)
-ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True)
-ob.missing_value=bufr.missing_value
+ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True,fill_value=np.nan)
+oberr = nc.createVariable('ObservationErrorBufr',np.float32,'nobs',zlib=True,fill_value=np.nan)
+obpcc = nc.createVariable('ObservationPercentConfidence',np.float32,'nobs',zlib=True,fill_value=np.nan)
+profpcc = nc.createVariable('ProfilePercentConfidence',np.float32,'nobs',zlib=True,fill_value=np.nan)
+satidn = nc.createVariable('SatelliteID',np.int16,'nobs',zlib=True)
+platidn = nc.createVariable('PlatformTransmitterID',np.int16,'nobs',zlib=True)
+rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=np.nan)
+geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=np.nan)
 #if ObsType.startswith('bend'):
 #    ob = nc.createVariable('Incremental_Bending_Angle',np.float32,'nobs')
 
@@ -68,8 +74,11 @@ while bufr.advance() == 0:
         yyyymmddhh ='%04i%02i%02i%02i%02i' % tuple(hdr[0:5])
         date = datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]))
         timeval = netCDF4.date2num(date,units=time.units)
-        satid = int(hdr[7])
-        ptid = int(hdr[8])
+        pcc = hdr[5] # profile percent confidence
+        roc = hdr[6] # Earth local radius of curvature
+        satid = int(hdr[7]) # satellite identifier
+        ptid = int(hdr[8]) # Platform transmitter ID number
+        geoid = int(hdr[9]) # geod undulation
         nreps_this_ROSEQ2 = bufr.read_subset('{ROSEQ2}').squeeze()
         nreps_this_ROSEQ1 = len(nreps_this_ROSEQ2)
         data1 = bufr.read_subset('ROSEQ1',seq=True) # bending angle
@@ -84,6 +93,8 @@ while bufr.advance() == 0:
         satid,ptid,levs1,yyyymmddhh)
         #print('k, height, lat, lon, ref, bend:')
         lats = []; lons = []; hgts = []; obs = []
+        pccs = []; rocs = []; satids = []; ptids = []
+        geoids = []; obserr = []; obspccf = []; rocs = []
         ncount = 0
         for k in range(levs):
             latval = data1[0,k]
@@ -98,24 +109,47 @@ while bufr.advance() == 0:
             lats.append(latval)
             lons.append(lonval)
             hgts.append(hgtval)
+            geoids.append(geoid)
+            rocs.append(roc)
+            pccs.append(pcc)
+            satids.append(satid)
+            ptids.append(ptid)
             if ObsType.startswith('refr'):
-                obs.append(data2[1,k])
+                ref=data2[1,k]
+                ref_error=data2[3,k]
+                ref_pccf=data2[5,k]
+                obs.append(ref)
+                obserr.append(ref_error)
+                obspccf.append(ref_pccf)
                 #print(k,rlat,rlon,height,ob)
             elif ObsType.startswith('bend'):
                 for i in range(int(nreps_this_ROSEQ2[k])):
                     m = 6*(i+1)-3
                     freq = data1[m,k]
-                    observation = data1[m+2,k]
+                    impact = data1[m+1,k] # impact parameter
+                    bend = data1[m+2,k]
+                    bend_error = data1[m+4,k]
                     # look for zero frequency bending angle ob
+                    # don't want non-zero frequency (read_gps in gsi)
                     if int(freq) == 0: break
-                obs.append(observation)
+                bend_pccf=data1[int(6*nreps_this_ROSEQ2[k])+3,k] # % conf
+                obs.append(bend)
+                obserr.append(bend_error)
+                obspccf.append(bend_pccf)
                 #print(k,rlat,rlon,height,ob)
         if ncount:
             lat[nob:nob+ncount] = lats
             lon[nob:nob+ncount] = lons
             ob[nob:nob+ncount] = obs
+            oberr[nob:nob+ncount] = obserr
+            obpcc[nob:nob+ncount] = obspccf
             hgt[nob:nob+ncount] = hgts
             time[nob:nob+ncount] = timeval
+            profpcc[nob:nob+ncount] = pccs
+            satidn[nob:nob+ncount] = satids
+            platidn[nob:nob+ncount] = ptids
+            rcurv[nob:nob+ncount] = rocs
+            geo[nob:nob+ncount] = geoids
             nob += ncount
     # only loop over first MaxMsgs messages
     if MaxMsgs > 0 and bufr.msg_counter == MaxMsgs: break
