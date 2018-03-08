@@ -37,7 +37,7 @@ if len(refdate) != 10:
 bufrFname = MyArgs[2]
 netcdfFname = MyArgs[3]
 
-hdrstr ='YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU QFRO'
+hdrstr ='YEAR MNTH DAYS HOUR MINU SECO PCCF ELRC SAID PTID GEODU QFRO'
 
 # read gpsro file.
 
@@ -52,14 +52,14 @@ lat.units='degress east'
 if ObsType.startswith('ref'):
     hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=np.nan)
     hgt.units='meters'
-time = nc.createVariable('Time',np.float32,'nobs',zlib=True,fill_value=np.nan)
+time = nc.createVariable('Time',np.int64,'nobs',zlib=True)
 bufr.advance()
 YYYY = refdate[0:4]
 MM = refdate[4:6]
 DD = refdate[6:8]
 HH = refdate[8:10]
 bufr.rewind()
-time.units = 'hours since %04s-%02s-%02s %02s:00 UTC' % (YYYY,MM,DD,HH)
+time.units = 'seconds since %04s-%02s-%02s %02s:00 UTC' % (YYYY,MM,DD,HH)
 ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True,fill_value=np.nan)
 if ObsType.startswith('bend'):
     ob.long_name = 'bending angle observation at zero frequency'
@@ -85,15 +85,15 @@ while bufr.advance() == 0:
     print(bufr.msg_counter, bufr.msg_type, bufr.msg_date)
     while bufr.load_subset() == 0:
         hdr = bufr.read_subset(hdrstr).squeeze()
-        yyyymmddhh ='%04i%02i%02i%02i%02i' % tuple(hdr[0:5])
-        date = datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]))
+        yyyymmddhhss ='%04i%02i%02i%02i%02i%02i' % tuple(hdr[0:6])
+        date=datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]),int(hdr[5]))
         timeval = netCDF4.date2num(date,units=time.units)
-        pcc = hdr[5] # profile percent confidence
-        roc = hdr[6] # Earth local radius of curvature
-        satid = int(hdr[7]) # satellite identifier
-        ptid = int(hdr[8]) # Platform transmitter ID number
-        geoid = hdr[9] # geod undulation
-        qfro = int(hdr[10]) # quality flag (used by read_gps to flag bad profile)
+        pcc = hdr[6] # profile percent confidence
+        roc = hdr[7] # Earth local radius of curvature
+        satid = int(hdr[8]) # satellite identifier
+        ptid = int(hdr[9]) # Platform transmitter ID number
+        geoid = hdr[10] # geod undulation
+        qfro = int(hdr[11]) # quality flag (used by read_gps to flag bad profile)
         #ibits = get_bin(qfro, 16) # convert to 16 bit binary string
         #iflags = np.zeros(16,np.int8)
         #for n,ibit in enumerate(ibits):
