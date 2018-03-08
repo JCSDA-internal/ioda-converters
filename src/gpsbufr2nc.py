@@ -20,6 +20,8 @@ if len(MyArgs) != 4:
     print(UsageString)
     sys.exit(1)
 
+MaxMsgs = MyOptions.max_msgs
+
 ObsType = MyArgs[0] # 'bend' or 'refrac'
 if not ObsType.startswith('bend') and not ObsType.startswith('refr'):
     print("ERROR: obs type string must start with 'bend' or 'refr'")
@@ -115,7 +117,7 @@ while bufr.advance() == 0:
             hgt[nob:nob+ncount] = hgts
             time[nob:nob+ncount] = timeval
             nob += ncount
-    # only loop over first 6 subsets
-    #if bufr.msg_counter == 6: break
+    # only loop over first MaxMsgs messages
+    if MaxMsgs > 0 and bufr.msg_counter == MaxMsgs: break
 bufr.close()
 nc.close()
