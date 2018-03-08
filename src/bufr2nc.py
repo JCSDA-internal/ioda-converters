@@ -34,7 +34,10 @@ def FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg):
             # for the current message.
             MaxObs += bufr.subsets
             NMsg += 1
-            if (NMsg == MaxNMsg): 
+            # Keep recording MaxObs until NMsg exceeds MaxNMsg. This way
+            # if MaxNMsg is greater than the total number of selected
+            # messages, MaxObsKeep will have the latest obs count.
+            if (NMsg <= MaxNMsg): 
                 MaxObsKeep = MaxObs
 
     bufr.close()
