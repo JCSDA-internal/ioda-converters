@@ -51,7 +51,7 @@ lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=np.na
 lat.units='degress east'
 if ObsType.startswith('ref'):
     hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=np.nan)
-    hgt.units='meters above geoid'
+    hgt.units='meters'
 time = nc.createVariable('Time',np.float32,'nobs',zlib=True,fill_value=np.nan)
 bufr.advance()
 YYYY = refdate[0:4]
@@ -73,6 +73,7 @@ platidn = nc.createVariable('PlatformTransmitterID',np.int16,'nobs',zlib=True)
 rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=np.nan)
 if ObsType.startswith('bend'):
     imp = nc.createVariable('ImpactParameter',np.float32,'nobs',zlib=True,fill_value=np.nan)
+    imp.units = 'meters'
 #qf = nc.createVariable('QualityFlags',np.int8,('nobs','nflags'),zlib=True)
 qf = nc.createVariable('QualityFlags',np.int16,'nobs',zlib=True)
 geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=np.nan)
