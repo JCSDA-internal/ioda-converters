@@ -99,12 +99,9 @@ while bufr.advance() == 0:
         #for n,ibit in enumerate(ibits):
         #    if int(ibit): iflags[n]=1
 # Get the number of occurences of sequence ROSEQ2 in this subset
-# (will also be the number of replications of sequence ROSEQ1),
-# nreps_ROSEQ1
+# (will also be the number of replications of sequence ROSEQ1).
 # Also determine the number of replications of sequence ROSEQ2 nested
 # inside each replication of ROSEQ1,
-# nreps_this_ROSEQ2(1:nreps_ROSEQ1) - currently = 3 frequencies (L1,
-#               L2, zero)
         nreps_this_ROSEQ2 = bufr.read_subset('{ROSEQ2}').squeeze()
         nreps_this_ROSEQ1 = len(nreps_this_ROSEQ2)
         data1 = bufr.read_subset('ROSEQ1',seq=True) # bending angle
