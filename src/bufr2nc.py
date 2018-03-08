@@ -6,7 +6,7 @@ import numpy as np
 import sys
 import os
 import re
-from optparse import OptionParser
+import argparse
 import netCDF4
 from netCDF4 import Dataset
 import struct
@@ -26,6 +26,7 @@ def FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg):
     # contained in the selected messages.
     MaxObs = 0
     NMsg = 0 
+    MaxObsKeep = 0 
     while ( (bufr.advance() == 0) ): 
         # Select only the messages that belong to this observation type
         if (re.search(MessageRe, bufr.msg_type)):
@@ -276,28 +277,45 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
 ###########################################################################
 # MAIN
 ###########################################################################
-
-# Grab input arguemnts
 ScriptName = os.path.basename(sys.argv[0])
-UsageString = "USAGE: {0:s} [options] <obs_type> <input_prepbufr> <output_netcdf>".format(ScriptName)
 
 # Parse command line
-op = OptionParser(usage=UsageString)
-op.add_option("-m", "--max-msgs", type="int", dest="max_msgs", default=-1,
-              help="maximum number of messages to keep", metavar="<max_num_msgs>")
+ap = argparse.ArgumentParser()
+ap.add_argument("obs_type", help="observation type")
+ap.add_argument("input_bufr", help="path to input BUFR file")
+ap.add_argument("output_netcdf", help="path to output netCDF4 file")
+ap.add_argument("-m", "--maxmsgs", type=int, default=-1,
+                help="maximum number of messages to keep", metavar="<max_num_msgs>")
+ap.add_argument("-c", "--clobber", action="store_true",
+                help="allow overwrite of output netcdf file")
 
-MyOptions, MyArgs = op.parse_args()
+MyArgs = ap.parse_args()
 
-if len(MyArgs) != 3:
-    print("ERROR: must supply exactly 3 arguments")
-    print(UsageString)
-    sys.exit(1)
+ObsType = MyArgs.obs_type
+PrepbufrFname = MyArgs.input_bufr
+NetcdfFname = MyArgs.output_netcdf
+MaxNMsg = MyArgs.maxmsgs
+ClobberOfile = MyArgs.clobber
 
-ObsType = MyArgs[0]
-PrepbufrFname = MyArgs[1]
-NetcdfFname = MyArgs[2]
+# Check files
+BadArgs = False
+if (not os.path.isfile(PrepbufrFname)): 
+    print("ERROR: {0:s}: Specified input BUFR file does not exist: {0:s}".format(ScriptName, PrepbufrFname))
+    print("")
+    BadArgs = True
 
-MaxNMsg = MyOptions.max_msgs
+if (os.path.isfile(NetcdfFname)):
+    if (ClobberOfile):
+        print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(ScriptName, NetcdfFname))
+        print("")
+    else:
+        print("ERROR: {0:s}: Specified nc file already exists: {1:s}".format(ScriptName, NetcdfFname))
+        print("ERROR: {0:s}:   Use -c option to overwrite.".format(ScriptName))
+        print("")
+        BadArgs = True
+
+if (BadArgs):
+    sys.exit(2)
 
 print("Converting BUFR to netCDF")
 print("  Observation Type: {0:s}".format(ObsType))
