@@ -44,13 +44,14 @@ hdrstr ='YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU QFRO'
 bufr = ncepbufr.open(bufrFname)
 nc = netCDF4.Dataset(netcdfFname,'w',format='NETCDF4')
 nc.createDimension('nobs',None)
-nc.createDimension('nflags',16) # number of bits in quality flag table
+#nc.createDimension('nflags',16) # number of bits in quality flag table
 lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
 lat.units='degrees north'
 lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
 lat.units='degress east'
-hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=np.nan)
-hgt.units='meters above geoid'
+if ObsType.startswith('ref'):
+    hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=np.nan)
+    hgt.units='meters above geoid'
 time = nc.createVariable('Time',np.float32,'nobs',zlib=True,fill_value=np.nan)
 bufr.advance()
 YYYY = refdate[0:4]
@@ -60,13 +61,20 @@ HH = refdate[8:10]
 bufr.rewind()
 time.units = 'hours since %04s-%02s-%02s %02s:00 UTC' % (YYYY,MM,DD,HH)
 ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True,fill_value=np.nan)
+if ObsType.startswith('bend'):
+    ob.long_name = 'bending angle observation at zero frequency'
+else:
+    ob.long_name = 'refractivity observation'
 oberr = nc.createVariable('ObservationErrorBufr',np.float32,'nobs',zlib=True,fill_value=np.nan)
 obpcc = nc.createVariable('ObservationPercentConfidence',np.float32,'nobs',zlib=True,fill_value=np.nan)
 profpcc = nc.createVariable('ProfilePercentConfidence',np.float32,'nobs',zlib=True,fill_value=np.nan)
 satidn = nc.createVariable('SatelliteID',np.int16,'nobs',zlib=True)
 platidn = nc.createVariable('PlatformTransmitterID',np.int16,'nobs',zlib=True)
 rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=np.nan)
-qf = nc.createVariable('QualityFlags',np.int8,('nobs','nflags'),zlib=True)
+if ObsType.startswith('bend'):
+    imp = nc.createVariable('ImpactParameter',np.float32,'nobs',zlib=True,fill_value=np.nan)
+#qf = nc.createVariable('QualityFlags',np.int8,('nobs','nflags'),zlib=True)
+qf = nc.createVariable('QualityFlags',np.int16,'nobs',zlib=True)
 geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=np.nan)
 #if ObsType.startswith('bend'):
 #    ob = nc.createVariable('Incremental_Bending_Angle',np.float32,'nobs')
@@ -85,10 +93,10 @@ while bufr.advance() == 0:
         ptid = int(hdr[8]) # Platform transmitter ID number
         geoid = hdr[9] # geod undulation
         qfro = int(hdr[10]) # quality flag (used by read_gps to flag bad profile)
-        ibits = get_bin(qfro, 16) # convert to 16 bit binary string
-        iflags = np.zeros(16,np.int8)
-        for n,ibit in enumerate(ibits):
-            if int(ibit): iflags[n]=1
+        #ibits = get_bin(qfro, 16) # convert to 16 bit binary string
+        #iflags = np.zeros(16,np.int8)
+        #for n,ibit in enumerate(ibits):
+        #    if int(ibit): iflags[n]=1
 # Get the number of occurences of sequence ROSEQ2 in this subset
 # (will also be the number of replications of sequence ROSEQ1),
 # nreps_ROSEQ1
@@ -106,13 +114,13 @@ while bufr.advance() == 0:
             print('skip report due to bending angle/refractivity mismatch')
             continue
         levs = levs1
-        print('sat id,platform transitter id, levels, yyyymmddhhmm =',\
-        satid,ptid,levs1,yyyymmddhh)
+        #print('sat id,platform transitter id, levels, yyyymmddhhmm =',\
+        #satid,ptid,levs1,yyyymmddhh)
         #print('k, height, lat, lon, ref, bend:')
         lats = []; lons = []; hgts = []; obs = []
         pccs = []; rocs = []; satids = []; ptids = []
         geoids = []; obserr = []; obspccf = []; rocs = []
-        qflags = []
+        qflags = []; impacts = []
         ncount = 0
         for k in range(levs):
             latval = data1[0,k]
@@ -132,7 +140,8 @@ while bufr.advance() == 0:
             pccs.append(pcc)
             satids.append(satid)
             ptids.append(ptid)
-            qflags.append(iflags)
+            #qflags.append(iflags)
+            qflags.append(qfro)
             if ObsType.startswith('refr'):
                 ref=data2[1,k]
                 ref_error=data2[3,k]
@@ -155,6 +164,7 @@ while bufr.advance() == 0:
                 obs.append(bend)
                 obserr.append(bend_error)
                 obspccf.append(bend_pccf)
+                impacts.append(impact)
                 #print(k,rlat,rlon,height,ob)
         if ncount:
             lat[nob:nob+ncount] = lats
@@ -162,14 +172,18 @@ while bufr.advance() == 0:
             ob[nob:nob+ncount] = obs
             oberr[nob:nob+ncount] = obserr
             obpcc[nob:nob+ncount] = obspccf
-            hgt[nob:nob+ncount] = hgts
+            if ObsType.startswith('ref'):
+                hgt[nob:nob+ncount] = hgts
             time[nob:nob+ncount] = timeval
             profpcc[nob:nob+ncount] = pccs
             satidn[nob:nob+ncount] = satids
             platidn[nob:nob+ncount] = ptids
             rcurv[nob:nob+ncount] = rocs
             geo[nob:nob+ncount] = geoids
-            qf[nob:nob+ncount,:] = qflags
+            #qf[nob:nob+ncount,:] = qflags
+            qf[nob:nob+ncount] = qflags
+            if ObsType.startswith('bend'):
+                imp[nob:nob+ncount] = impacts
             nob += ncount
     # only loop over first MaxMsgs messages
     if MaxMsgs > 0 and bufr.msg_counter == MaxMsgs: break
