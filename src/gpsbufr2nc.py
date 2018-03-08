@@ -34,7 +34,7 @@ if len(refdate) != 10:
 bufrFname = MyArgs[2]
 netcdfFname = MyArgs[3]
 
-hdrstr ='YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU'
+hdrstr ='YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU QFRO'
 
 # read gpsro file.
 
@@ -62,6 +62,7 @@ profpcc = nc.createVariable('ProfilePercentConfidence',np.float32,'nobs',zlib=Tr
 satidn = nc.createVariable('SatelliteID',np.int16,'nobs',zlib=True)
 platidn = nc.createVariable('PlatformTransmitterID',np.int16,'nobs',zlib=True)
 rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=np.nan)
+qf = nc.createVariable('QualityFlag',np.float64,'nobs',zlib=True,fill_value=np.nan)
 geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=np.nan)
 #if ObsType.startswith('bend'):
 #    ob = nc.createVariable('Incremental_Bending_Angle',np.float32,'nobs')
@@ -78,7 +79,15 @@ while bufr.advance() == 0:
         roc = hdr[6] # Earth local radius of curvature
         satid = int(hdr[7]) # satellite identifier
         ptid = int(hdr[8]) # Platform transmitter ID number
-        geoid = int(hdr[9]) # geod undulation
+        geoid = hdr[9] # geod undulation
+        qfro = hdr[10] # quality flag (used by read_gps to flag bad profile)
+# Get the number of occurences of sequence ROSEQ2 in this subset
+# (will also be the number of replications of sequence ROSEQ1),
+# nreps_ROSEQ1
+# Also determine the number of replications of sequence ROSEQ2 nested
+# inside each replication of ROSEQ1,
+# nreps_this_ROSEQ2(1:nreps_ROSEQ1) - currently = 3 frequencies (L1,
+#               L2, zero)
         nreps_this_ROSEQ2 = bufr.read_subset('{ROSEQ2}').squeeze()
         nreps_this_ROSEQ1 = len(nreps_this_ROSEQ2)
         data1 = bufr.read_subset('ROSEQ1',seq=True) # bending angle
@@ -95,6 +104,7 @@ while bufr.advance() == 0:
         lats = []; lons = []; hgts = []; obs = []
         pccs = []; rocs = []; satids = []; ptids = []
         geoids = []; obserr = []; obspccf = []; rocs = []
+        qflags = []
         ncount = 0
         for k in range(levs):
             latval = data1[0,k]
@@ -114,6 +124,7 @@ while bufr.advance() == 0:
             pccs.append(pcc)
             satids.append(satid)
             ptids.append(ptid)
+            qflags.append(qfro)
             if ObsType.startswith('refr'):
                 ref=data2[1,k]
                 ref_error=data2[3,k]
@@ -150,6 +161,7 @@ while bufr.advance() == 0:
             platidn[nob:nob+ncount] = ptids
             rcurv[nob:nob+ncount] = rocs
             geo[nob:nob+ncount] = geoids
+            qf[nob:nob+ncount] = qflags
             nob += ncount
     # only loop over first MaxMsgs messages
     if MaxMsgs > 0 and bufr.msg_counter == MaxMsgs: break
