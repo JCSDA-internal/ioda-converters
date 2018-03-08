@@ -25,9 +25,9 @@ if len(MyArgs) != 4:
 
 MaxMsgs = MyOptions.max_msgs
 
-ObsType = MyArgs[0] # 'bend' or 'refrac'
-if not ObsType.startswith('bend') and not ObsType.startswith('refr'):
-    print("ERROR: obs type string must start with 'bend' or 'refr'")
+ObsType = MyArgs[0] # 'bending ang' or 'refractivity' ('bend' or 'ref' is OK)
+if not ObsType.startswith('bend') and not ObsType.startswith('ref'):
+    print("ERROR: obs type string must start with 'bend' or 'ref'")
     sys.exit(1)
 
 refdate = MyArgs[1]
@@ -140,7 +140,7 @@ while bufr.advance() == 0:
             ptids.append(ptid)
             #qflags.append(iflags)
             qflags.append(qfro)
-            if ObsType.startswith('refr'):
+            if ObsType.startswith('ref'):
                 ref=data2[1,k]
                 ref_error=data2[3,k]
                 ref_pccf=data2[5,k]
