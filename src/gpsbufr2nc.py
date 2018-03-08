@@ -4,6 +4,9 @@ from optparse import OptionParser
 import numpy as np
 from datetime import datetime
 
+# function to convert number to binary string (without 0b prefix)
+get_bin = lambda x, n: format(x, 'b').zfill(n)
+
 # Grab input arguments
 ScriptName = os.path.basename(sys.argv[0])
 UsageString = "USAGE: {0:s} [options] <obs_type> <ref_date> <input_prepbufr> <output_netcdf>".format(ScriptName)
@@ -41,6 +44,7 @@ hdrstr ='YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU QFRO'
 bufr = ncepbufr.open(bufrFname)
 nc = netCDF4.Dataset(netcdfFname,'w',format='NETCDF4')
 nc.createDimension('nobs',None)
+nc.createDimension('nflags',16) # number of bits in quality flag table
 lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
 lat.units='degrees north'
 lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
@@ -62,7 +66,7 @@ profpcc = nc.createVariable('ProfilePercentConfidence',np.float32,'nobs',zlib=Tr
 satidn = nc.createVariable('SatelliteID',np.int16,'nobs',zlib=True)
 platidn = nc.createVariable('PlatformTransmitterID',np.int16,'nobs',zlib=True)
 rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=np.nan)
-qf = nc.createVariable('QualityFlag',np.float64,'nobs',zlib=True,fill_value=np.nan)
+qf = nc.createVariable('QualityFlags',np.int8,('nobs','nflags'),zlib=True)
 geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=np.nan)
 #if ObsType.startswith('bend'):
 #    ob = nc.createVariable('Incremental_Bending_Angle',np.float32,'nobs')
@@ -80,7 +84,11 @@ while bufr.advance() == 0:
         satid = int(hdr[7]) # satellite identifier
         ptid = int(hdr[8]) # Platform transmitter ID number
         geoid = hdr[9] # geod undulation
-        qfro = hdr[10] # quality flag (used by read_gps to flag bad profile)
+        qfro = int(hdr[10]) # quality flag (used by read_gps to flag bad profile)
+        ibits = get_bin(qfro, 16) # convert to 16 bit binary string
+        iflags = np.zeros(16,np.int8)
+        for n,ibit in enumerate(ibits):
+            if int(ibit): iflags[n]=1
 # Get the number of occurences of sequence ROSEQ2 in this subset
 # (will also be the number of replications of sequence ROSEQ1),
 # nreps_ROSEQ1
@@ -124,8 +132,7 @@ while bufr.advance() == 0:
             pccs.append(pcc)
             satids.append(satid)
             ptids.append(ptid)
-            qflags.append(qfro)
-            #ibits = bufr.get_flag_table_bits('QFRO',qfro)
+            qflags.append(iflags)
             if ObsType.startswith('refr'):
                 ref=data2[1,k]
                 ref_error=data2[3,k]
@@ -162,7 +169,7 @@ while bufr.advance() == 0:
             platidn[nob:nob+ncount] = ptids
             rcurv[nob:nob+ncount] = rocs
             geo[nob:nob+ncount] = geoids
-            qf[nob:nob+ncount] = qflags
+            qf[nob:nob+ncount,:] = qflags
             nob += ncount
     # only loop over first MaxMsgs messages
     if MaxMsgs > 0 and bufr.msg_counter == MaxMsgs: break
