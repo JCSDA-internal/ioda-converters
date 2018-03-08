@@ -180,7 +180,7 @@ while bufr.advance() == 0:
             qf[nob:nob+ncount] = qflags
             if ObsType.startswith('ref'):
                 hgt[nob:nob+ncount] = hgts
-            else
+            else:
                 imp[nob:nob+ncount] = impacts
             nob += ncount
     # only loop over first MaxMsgs messages
