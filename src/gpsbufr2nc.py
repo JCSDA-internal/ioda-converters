@@ -170,8 +170,6 @@ while bufr.advance() == 0:
             ob[nob:nob+ncount] = obs
             oberr[nob:nob+ncount] = obserr
             obpcc[nob:nob+ncount] = obspccf
-            if ObsType.startswith('ref'):
-                hgt[nob:nob+ncount] = hgts
             time[nob:nob+ncount] = timeval
             profpcc[nob:nob+ncount] = pccs
             satidn[nob:nob+ncount] = satids
@@ -180,7 +178,9 @@ while bufr.advance() == 0:
             geo[nob:nob+ncount] = geoids
             #qf[nob:nob+ncount,:] = qflags
             qf[nob:nob+ncount] = qflags
-            if ObsType.startswith('bend'):
+            if ObsType.startswith('ref'):
+                hgt[nob:nob+ncount] = hgts
+            else
                 imp[nob:nob+ncount] = impacts
             nob += ncount
     # only loop over first MaxMsgs messages
