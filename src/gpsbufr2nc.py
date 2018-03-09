@@ -107,8 +107,9 @@ nob = 0
 while bufr.advance() == 0:
     print(bufr.msg_counter, bufr.msg_type, bufr.msg_date)
     while bufr.load_subset() == 0:
-        hdr = bufr.read_subset(hdrstr).squeeze()
-        hdr = np.asarray(hdr)
+        # the asarray converts masked arrays to numpy arrays, will missing
+        # values filled in. Prevents NaNs from ending up in the netcdf file.
+        hdr = np.asarray(bufr.read_subset(hdrstr).squeeze())
         yyyymmddhhss ='%04i%02i%02i%02i%02i%02i' % tuple(hdr[0:6])
         date=datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]),int(hdr[5]))
         timeval = netCDF4.date2num(date,units=time.units)
