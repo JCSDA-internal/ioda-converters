@@ -59,8 +59,7 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
     # these values are "string", "integer" and "float".
 
     # Check for valid Btype and Dtype
-    if ((Btype != 'data') and (Btype != 'event') and
-        (Btype != 'rep') and (Btype != 'seq') and (Btype != 'header') ):
+    if ((Btype != 'data') and (Btype != 'event') and (Btype != 'header') ):
         print("ERROR: ExtractBufrData: unrecognized BUFR type: ", Btype)
         sys.exit(-1)
 
@@ -199,10 +198,10 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
     # This routine will write into a variable in the output netCDF file
 
     # Set the variable name according to Btype
-    if ( (Btype == 'data') or  (Btype == 'header') ):
-        Vname = Dname
-    elif (Btype == 'event'):
+    if (Btype == 'event'):
         Vname = "{0:s}_benv".format(Dname)
+    else:
+        Vname = Dname
 
     # For the string data, convert to a numpy character array
     if ((Dval.dtype.char == 'S') or (Dval.dtype.char == 'U')):
@@ -252,19 +251,20 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
         NcVar[obs_num,0:N1,0:N2,0:N3] = Value
 
 ###########################################################################
-def ReadWriteGroup(Fid, Mlist, Dtype, DataTypes, MissingInt, MissingFloat,
+def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MissingInt, MissingFloat,
                    MaxStringLen, MaxEvents):
     # This routine will read the mnemonics from the bufr file, convert them to
     # their proper data types and write them into the output netCDF file.
     Mstring = " ".join(Mlist)
-    BufrVals = Fid.read_subset(Mstring).data
+    Eflag =  (Btype == 'event')
+    BufrVals = Fid.read_subset(Mstring, events=Eflag).data
 
     for i, Vname in enumerate(Mlist):
         Bval = BufrVals[i,...]
-        [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Dtype, DataTypes[Vname],
+        [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Btype, DataTypes[Vname],
                             MissingInt, MissingFloat)
         if VarInBufr:
-            WriteNcVar(nc, NumObs, Vname, Dtype, VarVal, MaxStringLen, MaxEvents)
+            WriteNcVar(nc, NumObs, Vname, Btype, VarVal, MaxStringLen, MaxEvents)
 
 ###########################################################################
 # MAIN
