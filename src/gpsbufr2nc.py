@@ -15,6 +15,8 @@ UsageString = "USAGE: {0:s} [options] <obs_type> <ref_date> <input_prepbufr> <ou
 op = OptionParser(usage=UsageString)
 op.add_option("-m", "--max-msgs", type="int", dest="max_msgs", default=-1,
               help="maximum number of messages to keep", metavar="<max_num_msgs>")
+op.add_option("-c", "--clobber", action="store_true",
+              help="allow overwrite of output netcdf file")
 
 MyOptions, MyArgs = op.parse_args()
 
@@ -24,6 +26,7 @@ if len(MyArgs) != 4:
     sys.exit(1)
 
 MaxMsgs = MyOptions.max_msgs
+ClobberOfile = MyOptions.clobber
 
 ObsType = MyArgs[0] # 'bending ang' or 'refractivity' ('bend' or 'ref' is OK)
 if not ObsType.startswith('bend') and not ObsType.startswith('ref'):
@@ -37,6 +40,26 @@ if len(refdate) != 10:
 bufrFname = MyArgs[2]
 netcdfFname = MyArgs[3]
 
+# Check files
+BadArgs = False
+if (not os.path.isfile(bufrFname)):
+    print("ERROR: {0:s}: Specified input BUFR file does not exist: {0:s}".format(ScriptName, bufrFname))
+    print("")
+    BadArgs = True
+
+if (os.path.isfile(netcdfFname)):
+    if (ClobberOfile):
+        print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(ScriptName, netcdfFname))
+        print("")
+    else:
+        print("ERROR: {0:s}: Specified nc file already exists: {1:s}".format(ScriptName, netcdfFname))
+        print("ERROR: {0:s}:   Use -c option to overwrite.".format(ScriptName))
+        print("")
+        BadArgs = True
+
+if (BadArgs):
+    sys.exit(2)
+
 hdrstr ='YEAR MNTH DAYS HOUR MINU SECO PCCF ELRC SAID PTID GEODU QFRO'
 
 # read gpsro file.
@@ -45,12 +68,12 @@ bufr = ncepbufr.open(bufrFname)
 nc = netCDF4.Dataset(netcdfFname,'w',format='NETCDF4')
 nc.createDimension('nobs',None)
 #nc.createDimension('nflags',16) # number of bits in quality flag table
-lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
+lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 lat.units='degrees north'
-lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=np.nan)
+lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 lat.units='degress east'
 if ObsType.startswith('ref'):
-    hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=np.nan)
+    hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
     hgt.units='meters'
 time = nc.createVariable('Time',np.int64,'nobs',zlib=True)
 bufr.advance()
@@ -60,23 +83,23 @@ DD = refdate[6:8]
 HH = refdate[8:10]
 bufr.rewind()
 time.units = 'seconds since %04s-%02s-%02s %02s:00 UTC' % (YYYY,MM,DD,HH)
-ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True,fill_value=np.nan)
+ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 if ObsType.startswith('bend'):
     ob.long_name = 'bending angle observation at zero frequency'
 else:
     ob.long_name = 'refractivity observation'
-oberr = nc.createVariable('ObservationErrorBufr',np.float32,'nobs',zlib=True,fill_value=np.nan)
-obpcc = nc.createVariable('ObservationPercentConfidence',np.float32,'nobs',zlib=True,fill_value=np.nan)
-profpcc = nc.createVariable('ProfilePercentConfidence',np.float32,'nobs',zlib=True,fill_value=np.nan)
+oberr = nc.createVariable('ObservationErrorBufr',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
+obpcc = nc.createVariable('ObservationPercentConfidence',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
+profpcc = nc.createVariable('ProfilePercentConfidence',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 satidn = nc.createVariable('SatelliteID',np.int16,'nobs',zlib=True)
 platidn = nc.createVariable('PlatformTransmitterID',np.int16,'nobs',zlib=True)
-rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=np.nan)
+rcurv = nc.createVariable('EarthLocalRadiusCurv',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 if ObsType.startswith('bend'):
-    imp = nc.createVariable('ImpactParameter',np.float32,'nobs',zlib=True,fill_value=np.nan)
+    imp = nc.createVariable('ImpactParameter',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
     imp.units = 'meters'
 #qf = nc.createVariable('QualityFlags',np.int8,('nobs','nflags'),zlib=True)
 qf = nc.createVariable('QualityFlags',np.int16,'nobs',zlib=True)
-geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=np.nan)
+geo = nc.createVariable('GeoidUndulation',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 #if ObsType.startswith('bend'):
 #    ob = nc.createVariable('Incremental_Bending_Angle',np.float32,'nobs')
 
@@ -85,6 +108,7 @@ while bufr.advance() == 0:
     print(bufr.msg_counter, bufr.msg_type, bufr.msg_date)
     while bufr.load_subset() == 0:
         hdr = bufr.read_subset(hdrstr).squeeze()
+        hdr = np.asarray(hdr)
         yyyymmddhhss ='%04i%02i%02i%02i%02i%02i' % tuple(hdr[0:6])
         date=datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]),int(hdr[5]))
         timeval = netCDF4.date2num(date,units=time.units)
@@ -104,8 +128,8 @@ while bufr.advance() == 0:
 # inside each replication of ROSEQ1,
         nreps_this_ROSEQ2 = bufr.read_subset('{ROSEQ2}').squeeze()
         nreps_this_ROSEQ1 = len(nreps_this_ROSEQ2)
-        data1 = bufr.read_subset('ROSEQ1',seq=True) # bending angle
-        data2 = bufr.read_subset('ROSEQ3',seq=True) # refractivity
+        data1 = np.asarray(bufr.read_subset('ROSEQ1',seq=True)) # bending angle
+        data2 = np.asarray(bufr.read_subset('ROSEQ3',seq=True)) # refractivity
         levs1 = data1.shape[1]
         levs2 = data2.shape[1]
         if levs1 != levs2:
