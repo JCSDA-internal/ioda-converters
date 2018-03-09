@@ -4,99 +4,91 @@ import numpy as np
 MissingInt = -9999
 MissingFloat = np.nan
 
-# ObsList holds the list of message types for a given obs type. The format 
-# for each element of the list is:
+# ObsTypes holds the specifications of message types to extract for a given obs type.
+# The structure is a nested dictionary (two levels). The outer dictionary holds entries
+# for each observation type. The format for each element in the outer dictionary is:
 #
-#  <obs_type> : [ <bufr_file_type>, <number_of_levels>, <list_of_bufr_message_types>,
-#                 <list_of_bufr_data_types>, <list_of_bufr_event_types> ]
+#  <obs_type> : { <message_mnemonic_dictionary> }
 #
-ObsList = {
+#  <message_mnemonic_dictionary> has the following entries:
+#     'bufr_type' : 'prepBUFR'  # input file is prepBUFR format
+#                   'BUFR'      # input file is raw BUFR format
+#
+#     'num_levels' : 1  # single level data (eg, aircraft, surface obs)
+#                    n  # multi-level data (eg, sonde) 
+#
+#     'msg_type_re' : regular expression to match all message types with <obs_type>
+# 
+#     'hdr_list' : list of mnemonics for header information
+#
+#     'obs_list' : list of mnemonics for observation data
+#
+#     'qm_list' : list of mnemonics for quality marks
+#
+#     'err_list' : list of mnemonics for observation error values
+#
+#     'misc_list' : list of mnemonics for miscelaneous data
+#
+#     'evn_list' : list of mnemonics for event data
+#
+ObsTypes = {
     #################### prepBUFR obs types #############################
 
     # Aircraft 
     # Specs are from GSI read_prepbufr.f90
-    'Aircraft': [
-        # BUFR file type
-        'prepBUFR',
-
-        # Number of data levels
-        1,
-
-        # BUFR message types (regular expression)
-        'AIRC[AF][RT]',
-
-        # BUFR message header types 
-        [ 'SID',  'ACID', 'XOB',  'YOB',  'DHR',  'TYP',  'ELV',  'SAID', 'T29'], 
-
-        # BUFR data types
-        [ 'POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO',
-          'MXGS', 'HOVI', 'CAT',  'PRSS', 'TDO',  'PMO',
-          'POE',  'QOE',  'TOE',  'WOE',  'PWE',
-          'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
-          'XDR',  'YDR',  'HRDR', 'POAF', 'IALR' ],
-
-        # BUFR event types
-        [ 'TPC',  'TOB',  'TQM' ]
-        ],
+    'Aircraft': {
+        'bufr_type'   : 'prepBUFR',
+        'num_levels'  : 1,
+        'msg_type_re' : 'AIRC[AF][RT]',
+        'hdr_list'    : [ 'SID', 'ACID', 'XOB', 'YOB', 'DHR', 'TYP', 'ELV', 'SAID', 'T29' ],
+        'obs_list'    : [ 'POB', 'QOB', 'TOB', 'ZOB', 'UOB', 'VOB', 'PWO', 'MXGS', 'PRSS', 'TDO', 'PMO' ],
+        'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
+        'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
+        'misc_list'   : [ 'HOVI', 'CAT', 'XDR', 'YDR', 'HRDR', 'POAF', 'IALR' ],
+        'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
+        },
 
     # Radiosondes
-    'Sondes': [
-        # BUFR file type
-        'prepBUFR',
+    'Sondes': {
+        'bufr_type'   : 'prepBUFR',
+        'num_levels'  : 255,
+        'msg_type_re' : 'ADPUPA',
+        'hdr_list'    : [ 'SID', 'XOB', 'YOB', 'DHR', 'TYP', 'ELV', 'T29' ], 
+        'obs_list'    : [ 'POB', 'QOB', 'TOB', 'ZOB', 'UOB', 'VOB', 'PWO', 'TDO' ],
+        'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
+        'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
+        'misc_list'   : [ 'XDR', 'YDR', 'HRDR' ],
+        'evn_list'    : [ ],
+        },
 
-        # Number of levels (255 max allowed in .f90 reader)
-        255,
-
-        # BUFR message types (regular expression)
-        'ADPUPA',
-
-        # BUFR message header
-        [ 'SID',  'XOB',  'YOB',  'DHR',  'TYP',  'ELV',  'T29'], 
-
-        # BUFR data types
-        # Clara: THIS LIST IS NOT EXHAUSTIVE!!!!
-        #        it is based on dumping a few messages, 
-        #        then screening for vars read in by the gsi
-        #          1. Header
-        #          2. Obs types
-        #          3. quality markers
-        #          4. error ests.
-        #          5. location info?
-        ['POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO', 'TDO',
-         'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
-         'POE',  'QOE',  'TOE',  'WOE',  'PWE',
-         'XDR',  'YDR',  'HRDR'], 
-
-        # BUFR event types
-        []
-
-        ],
+#        # prepBUFR data types for Sondes
+#        # Clara: THIS LIST IS NOT EXHAUSTIVE!!!!
+#        #        it is based on dumping a few messages, 
+#        #        then screening for vars read in by the gsi
+#        #          1. Header
+#        #          2. Obs types
+#        #          3. quality markers
+#        #          4. error ests.
+#        #          5. location info?
+#        ['POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO', 'TDO',
+#         'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
+#         'POE',  'QOE',  'TOE',  'WOE',  'PWE',
+#         'XDR',  'YDR',  'HRDR'], 
 
     #################### raw BUFR obs types #############################
 
     # Aircraft
-    'Aircraft_raw': [
-        # BUFR file type
-        'BUFR',
-
-        # Number of data levels
-        1,
-
-        # BUFR message types
-        '^NC004001',
-
-        # BUFR message header types 
-        [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'SEQNUM', 'BUHD', 'BORG',
-          'BULTIM', 'BBB', 'RPID', 'CORN', 'CLAT', 'CLON', 'FLVL' ], 
-
-        # BUFR data types
-        [ 'QMAT', 'TMDB', 'QMDD', 'TMDP',
-          'REHU', 'QMWN', 'WSPD', 'WDIR', 'ACID' ],
-
-        # BUFR event types
-        [ ],
-
-        ],
+    'Aircraft_raw': {
+        'bufr_type'   : 'BUFR',
+        'num_levels'  : 1,
+        'msg_type_re' : '^NC004001',
+        'hdr_list'    : [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'ACID', 'CORN', 'CLAT', 'CLON', 'FLVL' ], 
+        'obs_list'    : [ 'TMDB', 'TMDP', 'REHU', 'WSPD', 'WDIR' ],
+        'qm_list'     : [ 'QMAT', 'QMDD', 'QMWN' ],
+        'err_list'    : [ ],
+        'misc_list'   : [ 'SEQNUM', 'BUHD', 'BORG', 'BULTIM', 'BBB', 'RPID' ],
+        'evn_list'    : [ ],
+        },
 
 
 # Clara: PREPBUFR FILES INCLUDE (BUT NOT READ BY GSI): 
