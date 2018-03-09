@@ -47,25 +47,11 @@ def FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg):
 
     return [MaxObsKeep, NMsg] 
 
-def ReadBufrData(Fid, Dname, Btype, Dtype, MissingInt, MissingFloat):
-    # This routine will read one data piece (one mnemonic) from the BUFR file.
-    #
-    # The bufr.read_subset() method will return a 2D array
-    # for non events, and a 3D array for events.
-    #
-    #   Non-event: data[nm, nlev]
-    #     nm is the number of mnemonics
-    #     nlev is the nubmer of levels
-    #
-    #   Event: data[nm, nlev, nec]
-    #      nm and nlev as for non-event
-    #      nec is the number of event codes
-    #
-    # Since we are calling these routines with one mnemonic at a time
-    # squeeze off the first dimension (it will always be size one).
-    #
-    # Fid.read_subset() will return a floating point number (for any
-    # type) or an empty list if the mnemonic didn't exist. For strings
+###########################################################################
+def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
+    # This routine will extract the value of a variable from the
+    # output of read_subset(). read_subset() will return a floating point
+    # number (for any type) or an empty list if the mnemonic didn't exist. For strings
     # (Dtype = 'string') read the floating point number as characters. Otherwise
     # convert to integer or leave alone.
     #
@@ -75,30 +61,16 @@ def ReadBufrData(Fid, Dname, Btype, Dtype, MissingInt, MissingFloat):
     # Check for valid Btype and Dtype
     if ((Btype != 'data') and (Btype != 'event') and
         (Btype != 'rep') and (Btype != 'seq') and (Btype != 'header') ):
-        print("ERROR: ReadBufrData: unrecognized BUFR type: ", Btype)
+        print("ERROR: ExtractBufrData: unrecognized BUFR type: ", Btype)
         sys.exit(-1)
 
     if ((Dtype != 'string') and (Dtype != 'integer') and
         (Dtype != 'float')):
-        print("ERROR: ReadBufrData: unrecognized data type: ", Dtype)
+        print("ERROR: ExtractBufrData: unrecognized data type: ", Dtype)
         sys.exit(-1)
     
-    # Determine flags for the read_subset() call
-    Eflag = False  # not an event
-    Rflag = False  # not a repetition
-    Sflag = False  # not a sequence
-    if (Btype == 'event'):
-        Eflag = True
-    elif (Btype == 'rep'):
-        Rflag = True
-    elif (Btype == 'seq'):
-        Sflag = True
-
-    # Dnum will be a numpy array of floats
-    Dnum = np.squeeze(Fid.read_subset(Dname, events=Eflag, rep=Rflag, seq=Sflag ).data, axis=0)
-
     # Make sure return value is a numpy.array type.
-    if (Dnum.size == 0):
+    if (Bval.size == 0):
         # array is empty
         DataPresent = False 
 
@@ -125,7 +97,7 @@ def ReadBufrData(Fid, Dname, Btype, Dtype, MissingInt, MissingFloat):
             # all values > 127 with a blank character. Then convert
             # the byte lists to strings. Replace byte value
             # equal to zero with a blank as well.
-            ByteList = list(struct.unpack('8c', Dnum[0]))
+            ByteList = list(struct.unpack('8c', Bval))
 
             # replace chars < 1 and > 127 with blank space
             for j in range(len(ByteList)):
@@ -137,15 +109,16 @@ def ReadBufrData(Fid, Dname, Btype, Dtype, MissingInt, MissingFloat):
             Dval = np.array(TempStr, dtype='S8')
         elif (Dtype == 'integer'):
             # convert missing vals to MissingInt
-            Dval = Dnum.astype(np.integer)
-            Dval[Dnum >= 10**9] = MissingInt
+            Dval = Bval.astype(np.integer)
+            Dval[Bval >= 10**9] = MissingInt
         elif (Dtype == 'float'):
             # convert missing vals to MissingFloat
-            Dval = np.copy(Dnum)
-            Dval[Dnum >= 10**9] = MissingFloat
+            Dval = np.copy(Bval)
+            Dval[Bval >= 10**9] = MissingFloat
 
     return [Dval, DataPresent] 
 
+###########################################################################
 def CreateNcVar(Fid, Dname, Btype, Dtype,
                 NobsDname, NlevsDname, NeventsDname, StrDname,
                 MaxLevels, MaxEvents, MaxStringLen, MaxObs):
@@ -221,6 +194,7 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
         zlib=True, shuffle=True, complevel=6)
 
+###########################################################################
 def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
     # This routine will write into a variable in the output netCDF file
 
@@ -278,6 +252,21 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
         NcVar[obs_num,0:N1,0:N2,0:N3] = Value
 
 ###########################################################################
+def ReadWriteGroup(Fid, Mlist, Dtype, DataTypes, MissingInt, MissingFloat,
+                   MaxStringLen, MaxEvents):
+    # This routine will read the mnemonics from the bufr file, convert them to
+    # their proper data types and write them into the output netCDF file.
+    Mstring = " ".join(Mlist)
+    BufrVals = Fid.read_subset(Mstring).data
+
+    for i, Vname in enumerate(Mlist):
+        Bval = BufrVals[i,...]
+        [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Dtype, DataTypes[Vname],
+                            MissingInt, MissingFloat)
+        if VarInBufr:
+            WriteNcVar(nc, NumObs, Vname, Dtype, VarVal, MaxStringLen, MaxEvents)
+
+###########################################################################
 # MAIN
 ###########################################################################
 ScriptName = os.path.basename(sys.argv[0])
@@ -328,13 +317,20 @@ if (MaxNMsg > 0):
     print("  Limiting nubmer of messages to record to {0:d} messages".format(MaxNMsg))
 print("")
 
-# Set up selection lists
-BufrFtype = conf.ObsList[ObsType][0]
-MaxLevels = conf.ObsList[ObsType][1]
-MessageRe = conf.ObsList[ObsType][2]
-HeadList  = conf.ObsList[ObsType][3]
-DataList  = conf.ObsList[ObsType][4]
-EventList = conf.ObsList[ObsType][5]
+# Set up selection lists from the configuration
+BufrFtype = conf.ObsTypes[ObsType]['bufr_type']
+MaxLevels = conf.ObsTypes[ObsType]['num_levels']
+MessageRe = conf.ObsTypes[ObsType]['msg_type_re']
+
+HeadList  = conf.ObsTypes[ObsType]['hdr_list']
+ObsList   = conf.ObsTypes[ObsType]['obs_list']
+QmarkList = conf.ObsTypes[ObsType]['qm_list']
+ErrList   = conf.ObsTypes[ObsType]['err_list']
+MiscList  = conf.ObsTypes[ObsType]['misc_list']
+EventList = conf.ObsTypes[ObsType]['evn_list']
+
+# The mnemonics in ObsList, QmarkList, ErrList, MiscList all represent 'data' types.
+DataList = ObsList + QmarkList + ErrList + MiscList
 
 # It turns out that using multiple unlimited dimensions in the netCDF file
 # can be very detrimental to the file's size, and can also be detrimental
@@ -346,7 +342,7 @@ EventList = conf.ObsList[ObsType][5]
 # observations nor the number of levels in the data. Unfortunately, reading in
 # all of the data pieces is slow.
 #
-# Set the number of levels from the config file (first entry in the ObsList).
+# Set the number of levels from the config file (entry in the ObsTypes).
 #
 # MaxEvents will usually be set to 255 due to an array limit in the Fortran
 # interface. In practice, there are typically a handful of events (4 or 5) since
@@ -383,8 +379,8 @@ print("")
 # recording the selected observations.
 nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 
-# ReadBurfData will return a 1D array for non events,
-# and a 2D array for events.
+# For each mnemonic, non-events will be in a 1D array,
+# and events will be in a 2D array.
 #
 #   Non-event: data[nlevs]
 #     nlevs is the nubmer of levels
@@ -474,23 +470,42 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
             WriteNcVar(nc, NumObs, MtypeVname, 'header', MsgType, MaxStringLen, MaxEvents)
             WriteNcVar(nc, NumObs, MdateVname, 'header', MsgDate, MaxStringLen, MaxEvents)
 
-            for HHname in HeadList:
-                [Hval,VarInBufr] = ReadBufrData(bufr, HHname, 'header', conf.DataTypes[HHname],
-                                                conf.MissingInt, conf.MissingFloat)
-                if VarInBufr:
-                    WriteNcVar(nc, NumObs, HHname, 'header', Hval, MaxStringLen, MaxEvents)
+            # Read mnemonics in sets that make one call to read_subset(). This should help
+            # reduce overhead and help this script run faster. After read_subset() is called,
+            # BufrVals will be an array with its first dimension being the mnemonic number.
+            # If the string passed to read_subset() is 'TOB POB QOB', then the first dimension
+            # of BufrVals will have a size of 3, and BufrVals[0,...] will be the data for TOB,
+            # BufrVals[1,...] for POB, and BufrVals[2,...] for QOB.
 
-            for DDname in DataList:
-                [Dval, VarInBufr] = ReadBufrData(bufr, DDname, 'data', conf.DataTypes[DDname],
-                                                conf.MissingInt, conf.MissingFloat)
-                if VarInBufr:
-                    WriteNcVar(nc, NumObs, DDname, 'data', Dval, MaxStringLen, MaxEvents)
+            # Header mnemonics
+            if (len(HeadList) > 0):
+                ReadWriteGroup(bufr, HeadList, 'header', conf.DataTypes, 
+                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
 
-            for EEname in EventList:
-                [Eval, VarInBufr] = ReadBufrData(bufr, EEname, 'event', conf.DataTypes[EEname],
-                                                conf.MissingInt, conf.MissingFloat)
-                if VarInBufr:
-                    WriteNcVar(nc, NumObs, EEname, 'event', Eval, MaxStringLen, MaxEvents)
+            # Observation mnemonics
+            if (len(ObsList) > 0):
+                ReadWriteGroup(bufr, ObsList, 'data', conf.DataTypes, 
+                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+
+            # Quality mark mnemonics
+            if (len(QmarkList) > 0):
+                ReadWriteGroup(bufr, QmarkList, 'data', conf.DataTypes, 
+                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+
+            # Error mnemonics
+            if (len(ErrList) > 0):
+                ReadWriteGroup(bufr, ErrList, 'data', conf.DataTypes, 
+                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+
+            # Misc mnemonics
+            if (len(MiscList) > 0):
+                ReadWriteGroup(bufr, MiscList, 'data', conf.DataTypes, 
+                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+
+            # Event mnemonics
+            if (len(EventList) > 0):
+                ReadWriteGroup(bufr, EventList, 'event', conf.DataTypes, 
+                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
 
             NumObs += 1
 
