@@ -1,15 +1,52 @@
 from __future__ import print_function
-import ncepbufr, os, sys, netCDF4
+import ncepbufr, os, sys, netCDF4, datetime
 from optparse import OptionParser
 import numpy as np
-from datetime import datetime
 
 # function to convert number to binary string (without 0b prefix)
 get_bin = lambda x, n: format(x, 'b').zfill(n)
+# date manipulation funcs
+def splitdate(yyyymmddhh):
+    """
+ yyyy,mm,dd,hh = splitdate(yyyymmddhh)
+
+ give an date string (yyyymmddhh) return integers yyyy,mm,dd,hh.
+    """
+    yyyy = int(yyyymmddhh[0:4])
+    mm = int(yyyymmddhh[4:6])
+    dd = int(yyyymmddhh[6:8])
+    hh = int(yyyymmddhh[8:10])
+    return yyyy,mm,dd,hh
+def makedate(yyyy,mm,dd,hh):
+    """
+ yyyymmddhh = makedate(yyyy,mm,dd,hh)
+
+ return a date string of the form yyyymmddhh given integers yyyy,mm,dd,hh.
+    """
+    return '%0.4i'%(yyyy)+'%0.2i'%(mm)+'%0.2i'%(dd)+'%0.2i'%(hh)
+def daterange(date1,date2,hrinc):
+    """
+ date_list = daterange(date1,date2,hrinc)
+
+ return of list of date strings of the form yyyymmddhh given
+ a starting date, ending date and an increment in hours.
+    """
+    date = date1
+    delta = datetime.timedelta(hours=1)
+    yyyy,mm,dd,hh = splitdate(date)
+    d = datetime.datetime(yyyy,mm,dd,hh)
+    n = 0
+    dates = [date]
+    while date < date2:
+       d = d + hrinc*delta
+       date = makedate(d.year,d.month,d.day,d.hour)
+       dates.append(date)
+       n = n + 1
+    return dates
 
 # Grab input arguments
 ScriptName = os.path.basename(sys.argv[0])
-UsageString = "USAGE: {0:s} [options] <obs_type> <ref_date> <input_prepbufr> <output_netcdf>".format(ScriptName)
+UsageString = "USAGE: {0:s} [options] <obs_type> <input_prepbufr> <output_netcdf>".format(ScriptName)
 
 # Parse command line
 op = OptionParser(usage=UsageString)
@@ -33,10 +70,6 @@ if not ObsType.startswith('bend') and not ObsType.startswith('ref'):
     print("ERROR: obs type string must start with 'bend' or 'ref'")
     sys.exit(1)
 
-refdate = MyArgs[1]
-if len(refdate) != 10:
-    print("refdate must be YYYYMMDDHH")
-    sys.exit(1)
 bufrFname = MyArgs[2]
 netcdfFname = MyArgs[3]
 
@@ -65,6 +98,21 @@ hdrstr ='YEAR MNTH DAYS HOUR MINU SECO PCCF ELRC SAID PTID GEODU QFRO'
 # read gpsro file.
 
 bufr = ncepbufr.open(bufrFname)
+# infer nominal analysis time from bufr message dates, use as time origin
+dates = []
+while bufr.advance() == 0:
+    dates.append(bufr.msg_date)
+dates = np.array(dates)
+date1 = str(dates.min()); date2 = str(dates.max())
+YYYY1 = date1[0:4]; YYYY2 = date2[0:4]
+MM1 = date1[4:6]; MM2 = date2[4:6]
+DD1 = date1[6:8]; DD2 = date2[6:8]
+datestart = '%s%s%s00' % (YYYY1,MM1,DD1)
+dateend = '%s%s%s18' % (YYYY2,MM2,DD2)
+for refdate in daterange(datestart,dateend,6):
+    if refdate[8:10] in ['00','06','12','18'] and\
+       refdate > date1 and refdate < date2: break
+
 nc = netCDF4.Dataset(netcdfFname,'w',format='NETCDF4')
 nc.createDimension('nobs',None)
 #nc.createDimension('nflags',16) # number of bits in quality flag table
@@ -76,7 +124,6 @@ if ObsType.startswith('ref'):
     hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
     hgt.units='meters'
 time = nc.createVariable('Time',np.int64,'nobs',zlib=True)
-bufr.advance()
 YYYY = refdate[0:4]
 MM = refdate[4:6]
 DD = refdate[6:8]
@@ -111,7 +158,7 @@ while bufr.advance() == 0:
         # values filled in. Prevents NaNs from ending up in the netcdf file.
         hdr = np.asarray(bufr.read_subset(hdrstr).squeeze())
         yyyymmddhhss ='%04i%02i%02i%02i%02i%02i' % tuple(hdr[0:6])
-        date=datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]),int(hdr[5]))
+        date=datetime.datetime(int(hdr[0]),int(hdr[1]),int(hdr[2]),int(hdr[3]),int(hdr[4]),int(hdr[5]))
         timeval = netCDF4.date2num(date,units=time.units)
         pcc = hdr[6] # profile percent confidence
         roc = hdr[7] # Earth local radius of curvature
