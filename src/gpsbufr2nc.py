@@ -102,13 +102,14 @@ bufr = ncepbufr.open(bufrFname)
 dates = []
 while bufr.advance() == 0:
     dates.append(bufr.msg_date)
+bufr.rewind()
 dates = np.array(dates)
 date1 = str(dates.min()); date2 = str(dates.max())
 YYYY1 = date1[0:4]; YYYY2 = date2[0:4]
 MM1 = date1[4:6]; MM2 = date2[4:6]
 DD1 = date1[6:8]; DD2 = date2[6:8]
-datestart = '%s%s%s00' % (YYYY1,MM1,DD1)
-dateend = '%s%s%s18' % (YYYY2,MM2,DD2)
+datestart = '%04s%s%02s00' % (YYYY1,MM1,DD1)
+dateend = '%04s%02s%02s18' % (YYYY2,MM2,DD2)
 for refdate in daterange(datestart,dateend,6):
     if refdate[8:10] in ['00','06','12','18'] and\
        refdate > date1 and refdate < date2: break
@@ -124,12 +125,8 @@ if ObsType.startswith('ref'):
     hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
     hgt.units='meters'
 time = nc.createVariable('Time',np.int64,'nobs',zlib=True)
-YYYY = refdate[0:4]
-MM = refdate[4:6]
-DD = refdate[6:8]
-HH = refdate[8:10]
-bufr.rewind()
-time.units = 'seconds since %04s-%02s-%02s %02s:00 UTC' % (YYYY,MM,DD,HH)
+time.units = 'seconds since %04s-%02s-%02s %02s:00 UTC' %\
+(refdate[0:4],refdate[4:6],refdate[6:8],refdate[8:10])
 ob = nc.createVariable('Observation',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 if ObsType.startswith('bend'):
     ob.long_name = 'bending angle observation at zero frequency'
