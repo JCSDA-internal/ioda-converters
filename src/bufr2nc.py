@@ -107,20 +107,16 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
             TempStr = bytes.join(b'', ByteList).decode('ascii') 
             Dval = np.array(TempStr, dtype='S8')
         elif (Dtype == 'integer'):
-            # convert missing vals to MissingInt
             Dval = Bval.astype(np.integer)
-            Dval[Bval >= 10**9] = MissingInt
         elif (Dtype == 'float'):
-            # convert missing vals to MissingFloat
             Dval = np.copy(Bval)
-            Dval[Bval >= 10**9] = MissingFloat
 
     return [Dval, DataPresent] 
 
 ###########################################################################
 def CreateNcVar(Fid, Dname, Btype, Dtype,
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs):
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs, FillInt, FillFloat):
 
     # This routine will create a variable in the output netCDF file.
     # In general, the order of dimensions is:
@@ -155,20 +151,23 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     #  'float'   [nobs, nlevs, nevents]
 
     # The netcdf variable name will match Dname, except for the case where
-    # the BUFR type is event. In this case, need to append "_benv" to the
+    # the BUFR type is event. In this case, need to append "_bevn" to the
     # variable name so it is unique from the name used for the BUFR data type.
     if (Btype == 'event'):
-        Vname = "{0:s}_benv".format(Dname)
+        Vname = "{0:s}_bevn".format(Dname)
     else:
         Vname = Dname
 
     # Set the netcdf variable type accordingly.
     if (Dtype == 'string'):
         Vtype = 'S1'
+        FillVal = ' '
     elif (Dtype == 'integer'):
-        Vtype = 'i4'
+        Vtype = 'i8'
+        FillVal = FillInt
     elif (Dtype == 'float'):
         Vtype = 'f4'
+        FillVal= FillFloat
 
     # Figure out the dimensions for this variable.
     # All types have nobs as first dimension
@@ -191,7 +190,7 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
         ChunkSpec.append(MaxEvents)
 
     Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
-        zlib=True, shuffle=True, complevel=6)
+        zlib=True, shuffle=True, complevel=6, fill_value = FillVal)
 
 ###########################################################################
 def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
@@ -199,7 +198,7 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
 
     # Set the variable name according to Btype
     if (Btype == 'event'):
-        Vname = "{0:s}_benv".format(Dname)
+        Vname = "{0:s}_bevn".format(Dname)
     else:
         Vname = Dname
 
@@ -423,32 +422,36 @@ MtypeDtype = "string"
 MdateVname = "msg_date"
 MdateDtype = "integer"
 
-CreateNcVar(nc, MtypeVname, 'header', MtypeDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
-CreateNcVar(nc, MdateVname, 'header', MdateDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
-
-for HHname in HeadList:
-    CreateNcVar(nc, HHname, 'header', conf.DataTypes[HHname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
-
-for DDname in DataList:
-    CreateNcVar(nc, DDname, 'data', conf.DataTypes[DDname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
-
-for EEname in EventList:
-    CreateNcVar(nc, EEname, 'event', conf.DataTypes[EEname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
-
 # Make a second pass through the BUFR file, this time to record
 # the selected observations.
 #
 bufr = ncepbufr.open(PrepbufrFname)
+BMiss = bufr.missing_value 
+MissingInt = np.int(BMiss)
+MissingFloat = np.float(BMiss)
+
+CreateNcVar(nc, MtypeVname, 'header', MtypeDtype,
+            NobsDname, NlevsDname, NeventsDname, StrDname,
+            MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+CreateNcVar(nc, MdateVname, 'header', MdateDtype,
+            NobsDname, NlevsDname, NeventsDname, StrDname,
+            MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+
+for HHname in HeadList:
+    CreateNcVar(nc, HHname, 'header', conf.DataTypes[HHname],
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+
+for DDname in DataList:
+    CreateNcVar(nc, DDname, 'data', conf.DataTypes[DDname],
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+
+for EEname in EventList:
+    CreateNcVar(nc, EEname, 'event', conf.DataTypes[EEname],
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+
 
 NumMsgs= 0
 NumSelectedMsgs = 0
@@ -480,32 +483,32 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
             # Header mnemonics
             if (len(HeadList) > 0):
                 ReadWriteGroup(bufr, HeadList, 'header', conf.DataTypes, 
-                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
 
             # Observation mnemonics
             if (len(ObsList) > 0):
                 ReadWriteGroup(bufr, ObsList, 'data', conf.DataTypes, 
-                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
 
             # Quality mark mnemonics
             if (len(QmarkList) > 0):
                 ReadWriteGroup(bufr, QmarkList, 'data', conf.DataTypes, 
-                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
 
             # Error mnemonics
             if (len(ErrList) > 0):
                 ReadWriteGroup(bufr, ErrList, 'data', conf.DataTypes, 
-                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
 
             # Misc mnemonics
             if (len(MiscList) > 0):
                 ReadWriteGroup(bufr, MiscList, 'data', conf.DataTypes, 
-                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
 
             # Event mnemonics
             if (len(EventList) > 0):
                 ReadWriteGroup(bufr, EventList, 'event', conf.DataTypes, 
-                               conf.MissingInt, conf.MissingFloat, MaxStringLen, MaxEvents)
+                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
 
             NumObs += 1
 

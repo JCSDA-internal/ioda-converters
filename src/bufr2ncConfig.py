@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
 
-MissingInt = -9999
-MissingFloat = np.nan
-
 # ObsTypes holds the specifications of message types to extract for a given obs type.
 # The structure is a nested dictionary (two levels). The outer dictionary holds entries
 # for each observation type. The format for each element in the outer dictionary is:
@@ -58,7 +55,7 @@ ObsTypes = {
         'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
         'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
         'misc_list'   : [ 'XDR', 'YDR', 'HRDR' ],
-        'evn_list'    : [ ],
+        'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
         },
 
 #        # prepBUFR data types for Sondes
@@ -106,8 +103,8 @@ ObsTypes = {
 #
 # Keep these types in sync with the ReadBufrData() routine
 DataTypes = {
-    'SID'    : 'string',
-    'ACID'   : 'string',
+    'SID'    : 'integer',
+    'ACID'   : 'integer',
     'XOB'    : 'float',
     'YOB'    : 'float',
     'DHR'    : 'float',
