@@ -79,7 +79,7 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
         elif (Dtype == 'integer'): 
            Dval = np.array([ MissingInt ])
         elif (Dtype == 'float'):
-           Dval = np.array([ np.nan ])
+           Dval = np.array([ MissingFloat ])
     else:
         # array is not empty
         DataPresent = True
@@ -107,16 +107,24 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
             TempStr = bytes.join(b'', ByteList).decode('ascii') 
             Dval = np.array(TempStr, dtype='S8')
         elif (Dtype == 'integer'):
-            Dval = Bval.astype(np.integer)
+            # convert missing vals to MissingInt 
+            # CSD - set to int32 for consistency with data type writen to nc4
+            # missing value for floats is too large for integers, so replace this, 
+            # then clip in case of other out-of-range values.
+            Bval.fill_value = MissingInt
+            Dval = np.clip(Bval , np.iinfo(np.int32).min, np.iinfo(np.int32).max).astype(np.int32)
         elif (Dtype == 'float'):
-            Dval = np.copy(Bval)
+            # convert missing vals to MissingFloat
+            print("DEBUG: {0:s}: Bval: ".format(Dname), Bval.data, Bval.mask, Bval.fill_value)
+            Bval.fill_value = MissingFloat
+            Dval = np.clip(Bval , np.finfo(np.float32).min, np.finfo(np.float32).max).astype(np.float32)
 
     return [Dval, DataPresent] 
 
 ###########################################################################
 def CreateNcVar(Fid, Dname, Btype, Dtype,
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs, FillInt, FillFloat):
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs):
 
     # This routine will create a variable in the output netCDF file.
     # In general, the order of dimensions is:
@@ -161,13 +169,10 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     # Set the netcdf variable type accordingly.
     if (Dtype == 'string'):
         Vtype = 'S1'
-        FillVal = ' '
     elif (Dtype == 'integer'):
-        Vtype = 'i8'
-        FillVal = FillInt
+        Vtype = 'i4'
     elif (Dtype == 'float'):
         Vtype = 'f4'
-        FillVal= FillFloat
 
     # Figure out the dimensions for this variable.
     # All types have nobs as first dimension
@@ -190,7 +195,7 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
         ChunkSpec.append(MaxEvents)
 
     Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
-        zlib=True, shuffle=True, complevel=6, fill_value = FillVal)
+        zlib=True, shuffle=True, complevel=6)
 
 ###########################################################################
 def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
@@ -256,7 +261,9 @@ def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MissingInt, MissingFloat,
     # their proper data types and write them into the output netCDF file.
     Mstring = " ".join(Mlist)
     Eflag =  (Btype == 'event')
-    BufrVals = Fid.read_subset(Mstring, events=Eflag).data
+    # CSD-keep this as a masked array for handling NaNs.
+    #BufrVals = Fid.read_subset(Mstring, events=Eflag).data
+    BufrVals = Fid.read_subset(Mstring, events=Eflag)
 
     for i, Vname in enumerate(Mlist):
         Bval = BufrVals[i,...]
@@ -424,33 +431,37 @@ MdateDtype = "integer"
 
 # Make a second pass through the BUFR file, this time to record
 # the selected observations.
-#
 bufr = ncepbufr.open(PrepbufrFname)
-BMiss = bufr.missing_value 
-MissingInt = np.int(BMiss)
-MissingFloat = np.float(BMiss)
+
+# set the bufr missing value to nc4 default
+MissingInt = netCDF4.default_fillvals['i4'] 
+MissingFloat = netCDF4.default_fillvals['f4']
+
+bufr.set_missing_value(MissingFloat)
+
+
 
 CreateNcVar(nc, MtypeVname, 'header', MtypeDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 CreateNcVar(nc, MdateVname, 'header', MdateDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for HHname in HeadList:
     CreateNcVar(nc, HHname, 'header', conf.DataTypes[HHname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for DDname in DataList:
     CreateNcVar(nc, DDname, 'data', conf.DataTypes[DDname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for EEname in EventList:
     CreateNcVar(nc, EEname, 'event', conf.DataTypes[EEname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs,MissingInt, MissingFloat)
+                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 
 NumMsgs= 0
