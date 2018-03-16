@@ -10,7 +10,187 @@ import argparse
 import netCDF4
 from netCDF4 import Dataset
 import struct
-import bufr2ncConfig as conf
+
+###########################################################################
+# CONFIGURATION
+###########################################################################
+
+# Some handy constants. These become global variables in this script. Using the
+# naming convention of all caps to remind us that these are not to be changed.
+
+# BUFR types
+BTYPE_HEADER = 1
+BTYPE_DATA   = 2
+BTYPE_EVENT  = 3
+
+# Data types
+DTYPE_STRING  = 1   # for CCITT IA5 units in the BUFR table
+DTYPE_INTEGER = 2   # for CODE TABLE, FLAG TABLE units in the BUFR table
+DTYPE_FLOAT   = 3   # all other units in the BUFR table
+
+# OBS_TYPES holds the specifications of message types to extract for a given obs type.
+# The structure is a nested dictionary (two levels). The outer dictionary holds entries
+# for each observation type. The format for each element in the outer dictionary is:
+#
+#  <obs_type> : { <message_mnemonic_dictionary> }
+#
+#  <message_mnemonic_dictionary> has the following entries:
+#     'bufr_type' : 'prepBUFR'  # input file is prepBUFR format
+#                   'BUFR'      # input file is raw BUFR format
+#
+#     'num_levels' : 1  # single level data (eg, aircraft, surface obs)
+#                    n  # multi-level data (eg, sonde) 
+#
+#     'msg_type_re' : regular expression to match all message types with <obs_type>
+# 
+#     'hdr_list' : list of mnemonics for header information
+#
+#     'obs_list' : list of mnemonics for observation data
+#
+#     'qm_list' : list of mnemonics for quality marks
+#
+#     'err_list' : list of mnemonics for observation error values
+#
+#     'misc_list' : list of mnemonics for miscelaneous data
+#
+#     'evn_list' : list of mnemonics for event data
+
+OBS_TYPES = {
+    #################### prepBUFR obs types #############################
+
+    # Aircraft 
+    # Specs are from GSI read_prepbufr.f90
+    'Aircraft': {
+        'bufr_type'   : 'prepBUFR',
+        'num_levels'  : 1,
+        'msg_type_re' : 'AIRC[AF][RT]',
+        'hdr_list'    : [ 'SID', 'ACID', 'XOB', 'YOB', 'DHR', 'TYP', 'ELV', 'SAID', 'T29' ],
+        'obs_list'    : [ 'POB', 'QOB', 'TOB', 'ZOB', 'UOB', 'VOB', 'PWO', 'MXGS', 'PRSS', 'TDO', 'PMO' ],
+        'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
+        'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
+        'misc_list'   : [ 'HOVI', 'CAT', 'XDR', 'YDR', 'HRDR', 'POAF', 'IALR' ],
+        'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
+        },
+
+    # Radiosondes
+    'Sondes': {
+        'bufr_type'   : 'prepBUFR',
+        'num_levels'  : 255,
+        'msg_type_re' : 'ADPUPA',
+        'hdr_list'    : [ 'SID', 'XOB', 'YOB', 'DHR', 'TYP', 'ELV', 'T29' ], 
+        'obs_list'    : [ 'POB', 'QOB', 'TOB', 'ZOB', 'UOB', 'VOB', 'PWO', 'TDO' ],
+        'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
+        'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
+        'misc_list'   : [ 'XDR', 'YDR', 'HRDR' ],
+        'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
+        },
+
+#        # prepBUFR data types for Sondes
+#        # Clara: THIS LIST IS NOT EXHAUSTIVE!!!!
+#        #        it is based on dumping a few messages, 
+#        #        then screening for vars read in by the gsi
+#        #          1. Header
+#        #          2. Obs types
+#        #          3. quality markers
+#        #          4. error ests.
+#        #          5. location info?
+#        ['POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO', 'TDO',
+#         'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
+#         'POE',  'QOE',  'TOE',  'WOE',  'PWE',
+#         'XDR',  'YDR',  'HRDR'], 
+
+    #################### raw BUFR obs types #############################
+
+    # Aircraft
+    'Aircraft_raw': {
+        'bufr_type'   : 'BUFR',
+        'num_levels'  : 1,
+        'msg_type_re' : '^NC004001',
+        'hdr_list'    : [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'ACID', 'CORN', 'CLAT', 'CLON', 'FLVL' ], 
+        'obs_list'    : [ 'TMDB', 'TMDP', 'REHU', 'WSPD', 'WDIR' ],
+        'qm_list'     : [ 'QMAT', 'QMDD', 'QMWN' ],
+        'err_list'    : [ ],
+        'misc_list'   : [ 'SEQNUM', 'BUHD', 'BORG', 'BULTIM', 'BBB', 'RPID' ],
+        'evn_list'    : [ ],
+        },
+
+
+# Clara: PREPBUFR FILES INCLUDE (BUT NOT READ BY GSI): 
+#            'TSB',  'ITP',  'SQN','PROCN',  'RPT', 'TCOR', 'SIRC',
+#        EVENTS VARS? *PC, *RC, *FC , TVO
+
+    }
+
+
+# DATA_TYPES creates a map from mnemonic name to its associated data type
+
+DATA_TYPES = {
+    'SID'    : DTYPE_STRING,
+    'ACID'   : DTYPE_STRING,
+    'XOB'    : DTYPE_FLOAT,
+    'YOB'    : DTYPE_FLOAT,
+    'DHR'    : DTYPE_FLOAT,
+    'TYP'    : DTYPE_INTEGER,
+    'ELV'    : DTYPE_FLOAT,
+    'SAID'   : DTYPE_INTEGER,
+    'T29'    : DTYPE_INTEGER,
+    'POB'    : DTYPE_FLOAT,
+    'QOB'    : DTYPE_FLOAT,
+    'TOB'    : DTYPE_FLOAT,
+    'ZOB'    : DTYPE_FLOAT,
+    'UOB'    : DTYPE_FLOAT,
+    'VOB'    : DTYPE_FLOAT,
+    'PWO'    : DTYPE_FLOAT,
+    'MXGS'   : DTYPE_FLOAT,
+    'HOVI'   : DTYPE_FLOAT,
+    'CAT'    : DTYPE_INTEGER,
+    'PRSS'   : DTYPE_FLOAT,
+    'TDO'    : DTYPE_FLOAT,
+    'PMO'    : DTYPE_FLOAT,
+    'POE'    : DTYPE_FLOAT,
+    'QOE'    : DTYPE_FLOAT,
+    'TOE'    : DTYPE_FLOAT,
+    'WOE'    : DTYPE_FLOAT,
+    'PWE'    : DTYPE_FLOAT,
+    'PQM'    : DTYPE_INTEGER,
+    'QQM'    : DTYPE_INTEGER,
+    'TQM'    : DTYPE_INTEGER,
+    'ZQM'    : DTYPE_INTEGER,
+    'WQM'    : DTYPE_INTEGER,
+    'PWQ'    : DTYPE_INTEGER,
+    'PMQ'    : DTYPE_INTEGER,
+    'XDR'    : DTYPE_FLOAT,
+    'YDR'    : DTYPE_FLOAT,
+    'HRDR'   : DTYPE_FLOAT,
+    'POAF'   : DTYPE_INTEGER,
+    'IALR'   : DTYPE_FLOAT, 
+    'TPC'    : DTYPE_INTEGER,
+    'TOB'    : DTYPE_FLOAT,
+    'TQM'    : DTYPE_INTEGER,
+    'YEAR'   : DTYPE_INTEGER,
+    'MNTH'   : DTYPE_INTEGER,
+    'DAYS'   : DTYPE_INTEGER,
+    'HOUR'   : DTYPE_INTEGER,
+    'MINU'   : DTYPE_INTEGER,
+    'SEQNUM' : DTYPE_STRING,
+    'BUHD'   : DTYPE_STRING,
+    'BORG'   : DTYPE_STRING,
+    'BULTIM' : DTYPE_STRING,
+    'BBB'    : DTYPE_STRING,
+    'RPID'   : DTYPE_STRING,
+    'CORN'   : DTYPE_INTEGER,
+    'CLAT'   : DTYPE_FLOAT,
+    'CLON'   : DTYPE_FLOAT,
+    'FLVL'   : DTYPE_FLOAT,
+    'QMAT'   : DTYPE_INTEGER,
+    'TMDB'   : DTYPE_FLOAT,
+    'QMDD'   : DTYPE_INTEGER,
+    'TMDP'   : DTYPE_FLOAT,
+    'REHU'   : DTYPE_FLOAT,
+    'QMWN'   : DTYPE_INTEGER,
+    'WSPD'   : DTYPE_FLOAT,
+    'WDIR'   : DTYPE_FLOAT,
+    }
 
 ###########################################################################
 # SUBROUTINES
@@ -48,43 +228,26 @@ def FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg):
     return [MaxObsKeep, NMsg] 
 
 ###########################################################################
-def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
+def ExtractBufrData(Bval, Dname, Btype, Dtype):
     # This routine will extract the value of a variable from the
     # output of read_subset(). read_subset() will return a floating point
     # number (for any type) or an empty list if the mnemonic didn't exist. For strings
-    # (Dtype = 'string') read the floating point number as characters. Otherwise
+    # (Dtype = DTYPE_STRING) read the floating point number as characters. Otherwise
     # convert to integer or leave alone.
     #
-    # Keep Dtype values in sync with entries in the DataTypes dictionary. For now,
-    # these values are "string", "integer" and "float".
+    # Keep Dtype values in sync with entries in the DATA_TYPES dictionary. For now,
+    # these values are DTYPE_STRING, DTYPE_INTEGER and DTYPE_FLOAT.
+    print("DEBUG: Extract: {0:s}: Bval: ".format(Dname), Bval.data, Bval.mask, Bval.fill_value)
 
-    # Check for valid Btype and Dtype
-    if ((Btype != 'data') and (Btype != 'event') and (Btype != 'header') ):
-        print("ERROR: ExtractBufrData: unrecognized BUFR type: ", Btype)
-        sys.exit(-1)
+    MissingInt   = netCDF4.default_fillvals['i4']
+    MissingFloat = netCDF4.default_fillvals['f4']
 
-    if ((Dtype != 'string') and (Dtype != 'integer') and
-        (Dtype != 'float')):
-        print("ERROR: ExtractBufrData: unrecognized data type: ", Dtype)
-        sys.exit(-1)
-    
-    # Make sure return value is a numpy.array type.
-    if (Bval.size == 0):
-        # array is empty
-        DataPresent = False 
-
-        if (Dtype == 'string'):
-           # character array
-           Dval = np.array([ '' ])
-        elif (Dtype == 'integer'): 
-           Dval = np.array([ MissingInt ])
-        elif (Dtype == 'float'):
-           Dval = np.array([ MissingFloat ])
-    else:
+    # 
+    DataPresent = (Bval.size > 0)
+    if (DataPresent):
         # array is not empty
-        DataPresent = True
 
-        if (Dtype == 'string'):
+        if (Dtype == DTYPE_STRING):
             # convert to list of strings
             # assume that an ID is a 1D array of float with only one
             # entry
@@ -106,16 +269,15 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype, MissingInt, MissingFloat):
 
             TempStr = bytes.join(b'', ByteList).decode('ascii') 
             Dval = np.array(TempStr, dtype='S8')
-        elif (Dtype == 'integer'):
+        elif (Dtype == DTYPE_INTEGER):
             # convert missing vals to MissingInt 
             # CSD - set to int32 for consistency with data type writen to nc4
             # missing value for floats is too large for integers, so replace this, 
             # then clip in case of other out-of-range values.
             Bval.fill_value = MissingInt
             Dval = np.clip(Bval , np.iinfo(np.int32).min, np.iinfo(np.int32).max).astype(np.int32)
-        elif (Dtype == 'float'):
+        elif (Dtype == DTYPE_FLOAT):
             # convert missing vals to MissingFloat
-            print("DEBUG: {0:s}: Bval: ".format(Dname), Bval.data, Bval.mask, Bval.fill_value)
             Bval.fill_value = MissingFloat
             Dval = np.clip(Bval , np.finfo(np.float32).min, np.finfo(np.float32).max).astype(np.float32)
 
@@ -139,39 +301,39 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     #
     # The dimensions are set according to the Dtype and Btype inputs.
     #
-    # If Btype is 'header'
+    # If Btype is BTYPE_HEADER
     #   Dtype       Dims
-    #  'string'  [nobs, nstring]
-    #  'integer' [nobs]
-    #  'float'   [nobs]
+    #  DTYPE_STRING  [nobs, nstring]
+    #  DTYPE_INTEGER [nobs]
+    #  DTYPE_FLOAT   [nobs]
     #
-    # If Btype is 'data' 
+    # If Btype is BTYPE_DATA 
     #   Dtype       Dims
-    #  'string'  [nobs, nlevs, nstring]
-    #  'integer' [nobs, nlevs]
-    #  'float'   [nobs, nlevs]
+    #  DTYPE_STRING  [nobs, nlevs, nstring]
+    #  DTYPE_INTEGER [nobs, nlevs]
+    #  DTYPE_FLOAT   [nobs, nlevs]
     #
-    # If Btype is 'event', then append the nevents dim on the end
+    # If Btype is BTYPE_EVENT, then append the nevents dim on the end
     # of the dim specification.
     #
-    #  'string'  [nobs, nlevs, nstring, nevents]
-    #  'integer' [nobs, nlevs, nevents]
-    #  'float'   [nobs, nlevs, nevents]
+    #  DTYPE_STRING  [nobs, nlevs, nstring, nevents]
+    #  DTYPE_INTEGER [nobs, nlevs, nevents]
+    #  DTYPE_FLOAT   [nobs, nlevs, nevents]
 
     # The netcdf variable name will match Dname, except for the case where
     # the BUFR type is event. In this case, need to append "_bevn" to the
     # variable name so it is unique from the name used for the BUFR data type.
-    if (Btype == 'event'):
+    if (Btype == BTYPE_EVENT):
         Vname = "{0:s}_bevn".format(Dname)
     else:
         Vname = Dname
 
     # Set the netcdf variable type accordingly.
-    if (Dtype == 'string'):
+    if (Dtype == DTYPE_STRING):
         Vtype = 'S1'
-    elif (Dtype == 'integer'):
+    elif (Dtype == DTYPE_INTEGER):
         Vtype = 'i4'
-    elif (Dtype == 'float'):
+    elif (Dtype == DTYPE_FLOAT):
         Vtype = 'f4'
 
     # Figure out the dimensions for this variable.
@@ -180,17 +342,17 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     ChunkSpec = [MaxObs]
 
     # If we have BUFR types data or event, then the next dimension is nlevs
-    if ((Btype == 'data') or (Btype == 'event')):
+    if ((Btype == BTYPE_DATA) or (Btype == BTYPE_EVENT)):
         DimSpec.append(NlevsDname)
         ChunkSpec.append(MaxLevels)
 
     # If we have string data type, then the next dimension is nstring
-    if (Dtype == 'string'):
+    if (Dtype == DTYPE_STRING):
         DimSpec.append(StrDname)
         ChunkSpec.append(MaxStringLen)
 
     # If we have BUFR type event, then the final dimension is nevents
-    if (Btype == 'event'):
+    if (Btype == BTYPE_EVENT):
         DimSpec.append(NeventsDname)
         ChunkSpec.append(MaxEvents)
 
@@ -202,7 +364,7 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
     # This routine will write into a variable in the output netCDF file
 
     # Set the variable name according to Btype
-    if (Btype == 'event'):
+    if (Btype == BTYPE_EVENT):
         Vname = "{0:s}_bevn".format(Dname)
     else:
         Vname = Dname
@@ -214,7 +376,7 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
         Value = netCDF4.stringtochar(Dval.astype(StrSpec))
     else:
         IsString=False
-        if (Btype == 'event'):
+        if (Btype == BTYPE_EVENT):
             # Trim the dimension representing events to 0:MaxEvents.
             # This will be the last dimension of a multi-dim array:
             #    either [nlev, nevent], or [nlev, nstring, nevent].
@@ -255,20 +417,18 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
         NcVar[obs_num,0:N1,0:N2,0:N3] = Value
 
 ###########################################################################
-def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MissingInt, MissingFloat,
-                   MaxStringLen, MaxEvents):
+def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MaxStringLen, MaxEvents):
     # This routine will read the mnemonics from the bufr file, convert them to
     # their proper data types and write them into the output netCDF file.
     Mstring = " ".join(Mlist)
-    Eflag =  (Btype == 'event')
+    Eflag =  (Btype == BTYPE_EVENT)
     # CSD-keep this as a masked array for handling NaNs.
     #BufrVals = Fid.read_subset(Mstring, events=Eflag).data
     BufrVals = Fid.read_subset(Mstring, events=Eflag)
 
     for i, Vname in enumerate(Mlist):
         Bval = BufrVals[i,...]
-        [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Btype, DataTypes[Vname],
-                            MissingInt, MissingFloat)
+        [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Btype, DataTypes[Vname])
         if VarInBufr:
             WriteNcVar(nc, NumObs, Vname, Btype, VarVal, MaxStringLen, MaxEvents)
 
@@ -324,18 +484,18 @@ if (MaxNMsg > 0):
 print("")
 
 # Set up selection lists from the configuration
-BufrFtype = conf.ObsTypes[ObsType]['bufr_type']
-MaxLevels = conf.ObsTypes[ObsType]['num_levels']
-MessageRe = conf.ObsTypes[ObsType]['msg_type_re']
+BufrFtype = OBS_TYPES[ObsType]['bufr_type']
+MaxLevels = OBS_TYPES[ObsType]['num_levels']
+MessageRe = OBS_TYPES[ObsType]['msg_type_re']
 
-HeadList  = conf.ObsTypes[ObsType]['hdr_list']
-ObsList   = conf.ObsTypes[ObsType]['obs_list']
-QmarkList = conf.ObsTypes[ObsType]['qm_list']
-ErrList   = conf.ObsTypes[ObsType]['err_list']
-MiscList  = conf.ObsTypes[ObsType]['misc_list']
-EventList = conf.ObsTypes[ObsType]['evn_list']
+HeadList  = OBS_TYPES[ObsType]['hdr_list']
+ObsList   = OBS_TYPES[ObsType]['obs_list']
+QmarkList = OBS_TYPES[ObsType]['qm_list']
+ErrList   = OBS_TYPES[ObsType]['err_list']
+MiscList  = OBS_TYPES[ObsType]['misc_list']
+EventList = OBS_TYPES[ObsType]['evn_list']
 
-# The mnemonics in ObsList, QmarkList, ErrList, MiscList all represent 'data' types.
+# The mnemonics in ObsList, QmarkList, ErrList, MiscList all represent BTYPE_DATA types.
 DataList = ObsList + QmarkList + ErrList + MiscList
 
 # It turns out that using multiple unlimited dimensions in the netCDF file
@@ -425,41 +585,33 @@ nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[MaxObs])
 
 # variables
 MtypeVname = "msg_type"
-MtypeDtype = "string"
+MtypeDtype = DTYPE_STRING
 MdateVname = "msg_date"
-MdateDtype = "integer"
+MdateDtype = DTYPE_INTEGER
 
 # Make a second pass through the BUFR file, this time to record
 # the selected observations.
 bufr = ncepbufr.open(PrepbufrFname)
 
-# set the bufr missing value to nc4 default
-MissingInt = netCDF4.default_fillvals['i4'] 
-MissingFloat = netCDF4.default_fillvals['f4']
-
-bufr.set_missing_value(MissingFloat)
-
-
-
-CreateNcVar(nc, MtypeVname, 'header', MtypeDtype,
+CreateNcVar(nc, MtypeVname, BTYPE_HEADER, MtypeDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname,
             MaxLevels, MaxEvents, MaxStringLen, MaxObs)
-CreateNcVar(nc, MdateVname, 'header', MdateDtype,
+CreateNcVar(nc, MdateVname, BTYPE_HEADER, MdateDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname,
             MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for HHname in HeadList:
-    CreateNcVar(nc, HHname, 'header', conf.DataTypes[HHname],
+    CreateNcVar(nc, HHname, BTYPE_HEADER, DATA_TYPES[HHname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
                 MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for DDname in DataList:
-    CreateNcVar(nc, DDname, 'data', conf.DataTypes[DDname],
+    CreateNcVar(nc, DDname, BTYPE_DATA, DATA_TYPES[DDname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
                 MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
 for EEname in EventList:
-    CreateNcVar(nc, EEname, 'event', conf.DataTypes[EEname],
+    CreateNcVar(nc, EEname, BTYPE_EVENT, DATA_TYPES[EEname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
                 MaxLevels, MaxEvents, MaxStringLen, MaxObs)
 
@@ -481,8 +633,8 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
             # Record message type and date with each subset. This is
             # inefficient in storage (lots of redundancy), but is the
             # expected format for now.
-            WriteNcVar(nc, NumObs, MtypeVname, 'header', MsgType, MaxStringLen, MaxEvents)
-            WriteNcVar(nc, NumObs, MdateVname, 'header', MsgDate, MaxStringLen, MaxEvents)
+            WriteNcVar(nc, NumObs, MtypeVname, BTYPE_HEADER, MsgType, MaxStringLen, MaxEvents)
+            WriteNcVar(nc, NumObs, MdateVname, BTYPE_HEADER, MsgDate, MaxStringLen, MaxEvents)
 
             # Read mnemonics in sets that make one call to read_subset(). This should help
             # reduce overhead and help this script run faster. After read_subset() is called,
@@ -493,33 +645,27 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
 
             # Header mnemonics
             if (len(HeadList) > 0):
-                ReadWriteGroup(bufr, HeadList, 'header', conf.DataTypes, 
-                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, HeadList, BTYPE_HEADER, DATA_TYPES, MaxStringLen, MaxEvents)
 
             # Observation mnemonics
             if (len(ObsList) > 0):
-                ReadWriteGroup(bufr, ObsList, 'data', conf.DataTypes, 
-                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, ObsList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
 
             # Quality mark mnemonics
             if (len(QmarkList) > 0):
-                ReadWriteGroup(bufr, QmarkList, 'data', conf.DataTypes, 
-                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, QmarkList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
 
             # Error mnemonics
             if (len(ErrList) > 0):
-                ReadWriteGroup(bufr, ErrList, 'data', conf.DataTypes, 
-                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, ErrList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
 
             # Misc mnemonics
             if (len(MiscList) > 0):
-                ReadWriteGroup(bufr, MiscList, 'data', conf.DataTypes, 
-                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, MiscList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
 
             # Event mnemonics
             if (len(EventList) > 0):
-                ReadWriteGroup(bufr, EventList, 'event', conf.DataTypes, 
-                               MissingInt, MissingFloat, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, EventList, BTYPE_EVENT, DATA_TYPES, MaxStringLen, MaxEvents)
 
             NumObs += 1
 
