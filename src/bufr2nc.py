@@ -237,15 +237,14 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype):
     #
     # Keep Dtype values in sync with entries in the DATA_TYPES dictionary. For now,
     # these values are DTYPE_STRING, DTYPE_INTEGER and DTYPE_FLOAT.
-    print("DEBUG: Extract: {0:s}: Bval: ".format(Dname), Bval.data, Bval.mask, Bval.fill_value)
 
-    MissingInt   = netCDF4.default_fillvals['i4']
-    MissingFloat = netCDF4.default_fillvals['f4']
-
-    # 
+    # If the incoming Bval is empty, then set DataPresent to False. This will tell
+    # ReadWriteNcVar to skip writing this value into the output file, which means
+    # that Dval can remain unset.
     DataPresent = (Bval.size > 0)
     if (DataPresent):
-        # array is not empty
+        # Bval is not empty. Convert the Bval data to the appropriate type, and
+        # return another masked array with the proper data and mask.
 
         if (Dtype == DTYPE_STRING):
             # convert to list of strings
@@ -268,18 +267,13 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype):
                     ByteList[j] = b' '
 
             TempStr = bytes.join(b'', ByteList).decode('ascii') 
-            Dval = np.array(TempStr, dtype='S8')
+            Dval = np.ma.array(TempStr, mask=Bval.mask, dtype='S8')
         elif (Dtype == DTYPE_INTEGER):
-            # convert missing vals to MissingInt 
-            # CSD - set to int32 for consistency with data type writen to nc4
-            # missing value for floats is too large for integers, so replace this, 
-            # then clip in case of other out-of-range values.
-            Bval.fill_value = MissingInt
-            Dval = np.clip(Bval , np.iinfo(np.int32).min, np.iinfo(np.int32).max).astype(np.int32)
+            # convert to integer
+            Dval = np.ma.array(Bval.data.astype(np.int32), mask=Bval.mask, dtype=np.int32)
         elif (Dtype == DTYPE_FLOAT):
-            # convert missing vals to MissingFloat
-            Bval.fill_value = MissingFloat
-            Dval = np.clip(Bval , np.finfo(np.float32).min, np.finfo(np.float32).max).astype(np.float32)
+            # copy floats
+            Dval = np.ma.array(Bval.data.astype(np.float32), mask=Bval.mask, dtype=np.float32)
 
     return [Dval, DataPresent] 
 
