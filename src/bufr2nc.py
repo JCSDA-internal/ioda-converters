@@ -27,6 +27,7 @@ BTYPE_EVENT  = 3
 DTYPE_STRING  = 1   # for CCITT IA5 units in the BUFR table
 DTYPE_INTEGER = 2   # for CODE TABLE, FLAG TABLE units in the BUFR table
 DTYPE_FLOAT   = 3   # all other units in the BUFR table
+DTYPE_DOUBLE  = 4   # all other units in the BUFR table
 
 # OBS_TYPES holds the specifications of message types to extract for a given obs type.
 # The structure is a nested dictionary (two levels). The outer dictionary holds entries
@@ -125,8 +126,8 @@ OBS_TYPES = {
 # DATA_TYPES creates a map from mnemonic name to its associated data type
 
 DATA_TYPES = {
-    'SID'    : DTYPE_STRING,
-    'ACID'   : DTYPE_STRING,
+    'SID'    : DTYPE_DOUBLE,
+    'ACID'   : DTYPE_DOUBLE,
     'XOB'    : DTYPE_FLOAT,
     'YOB'    : DTYPE_FLOAT,
     'DHR'    : DTYPE_FLOAT,
@@ -274,6 +275,9 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype):
         elif (Dtype == DTYPE_FLOAT):
             # copy floats
             Dval = np.ma.array(Bval.data.astype(np.float32), mask=Bval.mask, dtype=np.float32)
+        elif (Dtype == DTYPE_DOUBLE):
+            # copy doubles
+            Dval = np.ma.array(Bval.data.astype(np.float64), mask=Bval.mask, dtype=np.float64)
 
     return [Dval, DataPresent] 
 
@@ -329,6 +333,8 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
         Vtype = 'i4'
     elif (Dtype == DTYPE_FLOAT):
         Vtype = 'f4'
+    elif (Dtype == DTYPE_DOUBLE):
+        Vtype = 'f8'
 
     # Figure out the dimensions for this variable.
     # All types have nobs as first dimension
