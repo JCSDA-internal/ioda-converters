@@ -10,8 +10,8 @@ It is also planned to be able to read and store the raw observation values.
 
 Currently supported obs types
 
-| Obs Type   | raw BUFR | prepBUFR |
-|:-----------|:--------:|:--------:|
-| Aircraft   | Y        | Y        |
-| Radiosonde | N        | Y        |
-| Radiance   | N        | N        |
+| Obs Type           | raw BUFR | prepBUFR |
+|:-------------------|:--------:|:--------:|
+| Aircraft           | Y        | Y        |
+| Radiosonde         | N        | Y        |
+| Radiance (AMSU-A)  | Y        | N        |

@@ -22,6 +22,7 @@ import struct
 BTYPE_HEADER = 1
 BTYPE_DATA   = 2
 BTYPE_EVENT  = 3
+BTYPE_REP    = 4
 
 # Data types
 DTYPE_STRING  = 1   # for CCITT IA5 units in the BUFR table
@@ -55,6 +56,8 @@ DTYPE_DOUBLE  = 4   # all other units in the BUFR table
 #     'misc_list' : list of mnemonics for miscelaneous data
 #
 #     'evn_list' : list of mnemonics for event data
+#
+#     'rep_list' : list of mnemonics for replication data
 
 OBS_TYPES = {
     #################### prepBUFR obs types #############################
@@ -71,6 +74,7 @@ OBS_TYPES = {
         'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
         'misc_list'   : [ 'HOVI', 'CAT', 'XDR', 'YDR', 'HRDR', 'POAF', 'IALR' ],
         'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
+        'rep_list'    : [ ],
         },
 
     # Radiosondes
@@ -84,6 +88,7 @@ OBS_TYPES = {
         'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
         'misc_list'   : [ 'XDR', 'YDR', 'HRDR' ],
         'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
+        'rep_list'    : [ ],
         },
 
 #        # prepBUFR data types for Sondes
@@ -113,6 +118,21 @@ OBS_TYPES = {
         'err_list'    : [ ],
         'misc_list'   : [ 'SEQNUM', 'BUHD', 'BORG', 'BULTIM', 'BBB', 'RPID' ],
         'evn_list'    : [ ],
+        'rep_list'    : [ ],
+        },
+
+    # Radiance, AMSU-A
+    'Amsua' : {
+        'bufr_type'     : 'BUFR',
+        'num_levels'    : 1,
+        'msg_type_re' : '^NC021023',
+        'hdr_list'    : [ 'SAID', 'FOVN', 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'SECO', 'CLAT', 'CLON', 'HOLS' ], 
+        'obs_list'    : [ ],
+        'qm_list'     : [ ],
+        'err_list'    : [ ],
+        'misc_list'   : [ 'SAZA', 'SOZA', 'BEARAZ', 'SOLAZI' ],
+        'evn_list'    : [ ],
+        'rep_list'    : [ 'CHNM', 'TMBR', 'CSTC' ],
         },
 
 
@@ -173,6 +193,7 @@ DATA_TYPES = {
     'DAYS'   : DTYPE_INTEGER,
     'HOUR'   : DTYPE_INTEGER,
     'MINU'   : DTYPE_INTEGER,
+    'SECO'   : DTYPE_INTEGER,
     'SEQNUM' : DTYPE_STRING,
     'BUHD'   : DTYPE_STRING,
     'BORG'   : DTYPE_STRING,
@@ -191,6 +212,15 @@ DATA_TYPES = {
     'QMWN'   : DTYPE_INTEGER,
     'WSPD'   : DTYPE_FLOAT,
     'WDIR'   : DTYPE_FLOAT,
+    'HOLS'   : DTYPE_FLOAT,
+    'FOVN'   : DTYPE_INTEGER,
+    'CHNM'   : DTYPE_INTEGER,
+    'TMBR'   : DTYPE_FLOAT,
+    'CSTC'   : DTYPE_FLOAT,
+    'SAZA'   : DTYPE_FLOAT,
+    'SOZA'   : DTYPE_FLOAT,
+    'BEARAZ' : DTYPE_FLOAT,
+    'SOLAZI' : DTYPE_FLOAT,
     }
 
 ###########################################################################
@@ -213,7 +243,7 @@ def FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg):
         if (re.search(MessageRe, bufr.msg_type)):
             # Attribute "subsets" contains the number of subsets
             # for the current message.
-            MaxObs += bufr.subsets
+            MaxObs += bufr._subsets()
             NMsg += 1
             # Keep recording MaxObs until NMsg exceeds MaxNMsg. This way
             # if MaxNMsg is greater than the total number of selected
@@ -284,7 +314,7 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype):
 ###########################################################################
 def CreateNcVar(Fid, Dname, Btype, Dtype,
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs):
+                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs):
 
     # This routine will create a variable in the output netCDF file.
     # In general, the order of dimensions is:
@@ -311,14 +341,14 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
     #  DTYPE_INTEGER [nobs, nlevs]
     #  DTYPE_FLOAT   [nobs, nlevs]
     #
-    # If Btype is BTYPE_EVENT, then append the nevents dim on the end
-    # of the dim specification.
+    # If Btype is BTYPE_EVENT or BTYPE_REP, then append the nevents (nreps) dim
+    # on the end of the dim specification.
     #
     #  DTYPE_STRING  [nobs, nlevs, nstring, nevents]
     #  DTYPE_INTEGER [nobs, nlevs, nevents]
     #  DTYPE_FLOAT   [nobs, nlevs, nevents]
 
-    # The netcdf variable name will match Dname, except for the case where
+    # The netcdf variable name will match Dname, except for the cases where
     # the BUFR type is event. In this case, need to append "_bevn" to the
     # variable name so it is unique from the name used for the BUFR data type.
     if (Btype == BTYPE_EVENT):
@@ -352,15 +382,19 @@ def CreateNcVar(Fid, Dname, Btype, Dtype,
         ChunkSpec.append(MaxStringLen)
 
     # If we have BUFR type event, then the final dimension is nevents
+    # or if we have BUFR type rep, then the final dimension is nreps
     if (Btype == BTYPE_EVENT):
         DimSpec.append(NeventsDname)
         ChunkSpec.append(MaxEvents)
+    elif (Btype == BTYPE_REP):
+        DimSpec.append(NrepsDname)
+        ChunkSpec.append(MaxReps)
 
     Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
         zlib=True, shuffle=True, complevel=6)
 
 ###########################################################################
-def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
+def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents, MaxReps):
     # This routine will write into a variable in the output netCDF file
 
     # Set the variable name according to Btype
@@ -380,7 +414,12 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
             # Trim the dimension representing events to 0:MaxEvents.
             # This will be the last dimension of a multi-dim array:
             #    either [nlev, nevent], or [nlev, nstring, nevent].
-            Value = Dval[:,0:MaxEvents].copy()
+            Value = Dval[...,0:MaxEvents].copy()
+        elif (Btype == BTYPE_REP):
+            # Trim the dimension representing reps to 0:MaxReps.
+            # This will be the last dimension of a multi-dim array:
+            #    either [nlev, nrep], or [nlev, nstring, nrep].
+            Value = Dval[...,0:MaxReps].copy()
         else:
             Value = Dval.copy()
 
@@ -417,20 +456,20 @@ def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents):
         NcVar[obs_num,0:N1,0:N2,0:N3] = Value
 
 ###########################################################################
-def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MaxStringLen, MaxEvents):
+def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MaxStringLen, MaxEvents, MaxReps):
     # This routine will read the mnemonics from the bufr file, convert them to
     # their proper data types and write them into the output netCDF file.
     Mstring = " ".join(Mlist)
-    Eflag =  (Btype == BTYPE_EVENT)
+    Eflag = (Btype == BTYPE_EVENT)
+    Rflag = (Btype == BTYPE_REP)
     # CSD-keep this as a masked array for handling NaNs.
-    #BufrVals = Fid.read_subset(Mstring, events=Eflag).data
-    BufrVals = Fid.read_subset(Mstring, events=Eflag)
+    BufrVals = Fid.read_subset(Mstring, events=Eflag, rep=Rflag)
 
     for i, Vname in enumerate(Mlist):
         Bval = BufrVals[i,...]
         [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Btype, DataTypes[Vname])
         if VarInBufr:
-            WriteNcVar(nc, NumObs, Vname, Btype, VarVal, MaxStringLen, MaxEvents)
+            WriteNcVar(nc, NumObs, Vname, Btype, VarVal, MaxStringLen, MaxEvents, MaxReps)
 
 ###########################################################################
 # MAIN
@@ -494,6 +533,7 @@ QmarkList = OBS_TYPES[ObsType]['qm_list']
 ErrList   = OBS_TYPES[ObsType]['err_list']
 MiscList  = OBS_TYPES[ObsType]['misc_list']
 EventList = OBS_TYPES[ObsType]['evn_list']
+RepList   = OBS_TYPES[ObsType]['rep_list']
 
 # The mnemonics in ObsList, QmarkList, ErrList, MiscList all represent BTYPE_DATA types.
 DataList = ObsList + QmarkList + ErrList + MiscList
@@ -517,6 +557,10 @@ DataList = ObsList + QmarkList + ErrList + MiscList
 # a safe limit (instead of 255) for the max number of events, so set MaxEvents
 # to 20 to help conserve file space.
 #
+# MaxReps is typically used for the number of channels in a satellite instrument.
+# The Fortran interface uses 255 for its array limit. Set this to 50 to help
+# conserve space.
+#
 # MaxStringLen is good with 10 characters. This is the length of the long format
 # for date and time. Most of the id labels are 6 or 8 characters.
 
@@ -524,6 +568,7 @@ DataList = ObsList + QmarkList + ErrList + MiscList
 print("Finding dimension sizes from BUFR file")
 MaxStringLen = 10
 MaxEvents = 20
+MaxReps   = 50
 
 [MaxObs, FilNMsg] = FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg)
 
@@ -537,6 +582,7 @@ print("")
 print("Dimension sizes for output netCDF file")
 print("  Maximum number of levels: {}".format(MaxLevels))
 print("  Maximum number of events: {}".format(MaxEvents))
+print("  Maximum number of replications: {}".format(MaxReps))
 print("  Maximum number of characters in strings: {}".format(MaxStringLen))
 print("  Maximum number of observations: {}".format(MaxObs))
 print("")
@@ -564,11 +610,13 @@ nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 NobsDname = "nobs"
 NlevsDname = "nlevs"
 NeventsDname = "nevents"
+NrepsDname = "nreps"
 StrDname = "nstring"
 
 # dimsensions plus corresponding vars to hold coordinate values
 nc.createDimension(NlevsDname, MaxLevels)
 nc.createDimension(NeventsDname, MaxEvents)
+nc.createDimension(NrepsDname, MaxReps)
 nc.createDimension(StrDname, MaxStringLen)
 nc.createDimension(NobsDname, MaxObs)
 
@@ -580,6 +628,7 @@ nc.createDimension(NobsDname, MaxObs)
 # big anyway (a dimension size is over a million items!).
 nc.createVariable(NlevsDname, 'u4', (NlevsDname), chunksizes=[MaxLevels])
 nc.createVariable(NeventsDname, 'u4', (NeventsDname), chunksizes=[MaxEvents])
+nc.createVariable(NrepsDname, 'u4', (NrepsDname), chunksizes=[MaxReps])
 nc.createVariable(StrDname, 'u4', (StrDname), chunksizes=[MaxStringLen])
 nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[MaxObs])
 
@@ -595,25 +644,30 @@ bufr = ncepbufr.open(PrepbufrFname)
 
 CreateNcVar(nc, MtypeVname, BTYPE_HEADER, MtypeDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
+            MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
 CreateNcVar(nc, MdateVname, BTYPE_HEADER, MdateDtype,
             NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxStringLen, MaxObs)
+            MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
 
 for HHname in HeadList:
     CreateNcVar(nc, HHname, BTYPE_HEADER, DATA_TYPES[HHname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
+                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
 
 for DDname in DataList:
     CreateNcVar(nc, DDname, BTYPE_DATA, DATA_TYPES[DDname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
+                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
 
 for EEname in EventList:
     CreateNcVar(nc, EEname, BTYPE_EVENT, DATA_TYPES[EEname],
                 NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxStringLen, MaxObs)
+                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
+
+for RRname in RepList:
+    CreateNcVar(nc, RRname, BTYPE_REP, DATA_TYPES[RRname],
+                NobsDname, NlevsDname, NeventsDname, StrDname,
+                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
 
 
 NumMsgs= 0
@@ -633,8 +687,8 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
             # Record message type and date with each subset. This is
             # inefficient in storage (lots of redundancy), but is the
             # expected format for now.
-            WriteNcVar(nc, NumObs, MtypeVname, BTYPE_HEADER, MsgType, MaxStringLen, MaxEvents)
-            WriteNcVar(nc, NumObs, MdateVname, BTYPE_HEADER, MsgDate, MaxStringLen, MaxEvents)
+            WriteNcVar(nc, NumObs, MtypeVname, BTYPE_HEADER, MsgType, MaxStringLen, MaxEvents, MaxReps)
+            WriteNcVar(nc, NumObs, MdateVname, BTYPE_HEADER, MsgDate, MaxStringLen, MaxEvents, MaxReps)
 
             # Read mnemonics in sets that make one call to read_subset(). This should help
             # reduce overhead and help this script run faster. After read_subset() is called,
@@ -645,27 +699,31 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
 
             # Header mnemonics
             if (len(HeadList) > 0):
-                ReadWriteGroup(bufr, HeadList, BTYPE_HEADER, DATA_TYPES, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, HeadList, BTYPE_HEADER, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
 
             # Observation mnemonics
             if (len(ObsList) > 0):
-                ReadWriteGroup(bufr, ObsList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, ObsList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
 
             # Quality mark mnemonics
             if (len(QmarkList) > 0):
-                ReadWriteGroup(bufr, QmarkList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, QmarkList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
 
             # Error mnemonics
             if (len(ErrList) > 0):
-                ReadWriteGroup(bufr, ErrList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, ErrList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
 
             # Misc mnemonics
             if (len(MiscList) > 0):
-                ReadWriteGroup(bufr, MiscList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, MiscList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
 
             # Event mnemonics
             if (len(EventList) > 0):
-                ReadWriteGroup(bufr, EventList, BTYPE_EVENT, DATA_TYPES, MaxStringLen, MaxEvents)
+                ReadWriteGroup(bufr, EventList, BTYPE_EVENT, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
+
+            # Rep mnemonics
+            if (len(RepList) > 0):
+                ReadWriteGroup(bufr, RepList, BTYPE_REP, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
 
             NumObs += 1
 
@@ -678,6 +736,7 @@ while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)):
 nc[NobsDname][0:MaxObs]       = np.arange(MaxObs) + 1
 nc[NlevsDname][0:MaxLevels]   = np.arange(MaxLevels) + 1
 nc[NeventsDname][0:MaxEvents] = np.arange(MaxEvents) + 1
+nc[NrepsDname][0:MaxReps]     = np.arange(MaxReps) + 1
 nc[StrDname][0:MaxStringLen]  = np.arange(MaxStringLen) + 1
 
 # If reading a prepBUFR type file, then record the virtual temperature code
