@@ -57,8 +57,8 @@ op.add_option("-c", "--clobber", action="store_true",
 
 MyOptions, MyArgs = op.parse_args()
 
-if len(MyArgs) != 4:
-    print("ERROR: must supply exactly 4 arguments")
+if len(MyArgs) != 3:
+    print("ERROR: must supply exactly 3 arguments")
     print(UsageString)
     sys.exit(1)
 
@@ -70,8 +70,8 @@ if not ObsType.startswith('bend') and not ObsType.startswith('ref'):
     print("ERROR: obs type string must start with 'bend' or 'ref'")
     sys.exit(1)
 
-bufrFname = MyArgs[2]
-netcdfFname = MyArgs[3]
+bufrFname = MyArgs[1]
+netcdfFname = MyArgs[2]
 
 # Check files
 BadArgs = False
@@ -120,7 +120,7 @@ nc.createDimension('nobs',None)
 lat = nc.createVariable('Latitude',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
 lat.units='degrees north'
 lon = nc.createVariable('Longitude',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
-lat.units='degress east'
+lon.units='degress east'
 if ObsType.startswith('ref'):
     hgt = nc.createVariable('Height',np.float32,'nobs',zlib=True,fill_value=bufr.missing_value)
     hgt.units='meters'
