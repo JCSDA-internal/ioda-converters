@@ -102,7 +102,8 @@ class ObsType(object):
     def __init__(self):
         self.bufr_ftype = BFILE_UNDEF
         self.mtype_re = 'UnDef'
-        self.nobs    = -1
+        self.nobs = -1
+        self.time_units = ""
         self.hdr_spec = []
         self.int_spec = []
         self.evn_spec = []
@@ -111,6 +112,12 @@ class ObsType(object):
         self.dim_spec = []
 
     ### methods ###
+
+    ###############################################################################
+    # This method will set the time units. The time units value will be used to
+    # calculate time offsets for observation values.
+    def set_time_units(self, tunits):
+        self.time_units = tunits
 
     ###############################################################################
     # This method will set the number of observations. This must be called
@@ -668,6 +675,19 @@ print("  Number of messages selected: {0:d}".format(NumMsgs))
 print("  Number of observations selected: {0:d}".format(NumObs))
 print("  Reference date for observations: {0:d}".format(RefDate))
 print("")
+
+# We will use the netCDF4 method date2num to calculate the datetime offset from the
+# reference date (RefDate). This method wants a datetime object holding the current
+# date and time as the first argument, and a units string holding the reference time.
+# The units string is in the form "seconds since YYYY-MM-DD HH:00 UTC" where YYYY, MM,
+# DD and HH come from the reference date. Create the units string and add that to the
+# Obs object.
+RefDtime = SplitDate(RefDate)
+TimeUnits = "seconds since %0.4i-%0.2i-%0.2i %0.2i:00 UTC" %(RefDtime.year,
+            RefDtime.month, RefDtime.day, RefDtime.hour)
+Obs.set_time_units(TimeUnits)
+
+print("DEBUG: time units: ", Obs.time_units)
 
 # Now that we have the number of observations we will be recording, set the dimension
 # size in the obs object. Note the set_nobs() method needs to be called before creating
