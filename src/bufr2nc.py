@@ -10,6 +10,7 @@ import argparse
 import netCDF4
 from netCDF4 import Dataset
 import struct
+import datetime as dt
 
 ###########################################################################
 # CONFIGURATION
@@ -160,6 +161,48 @@ class ObsType(object):
 
             self.dim_spec.append([ dname, dname, DTYPE_UINT, [ dname ], [ dsize], False ])
 
+    ###############################################################################
+    # This method will create dimensions and variables in the netcdf file
+    # according to the obs type variable specs.
+    def create_nc_datasets(self, fid):
+
+        # Create dimensions first so that the variables can reference them.
+        for dspec in self.dim_spec:
+            nc.createDimension(dspec[0], dspec[4][0])
+
+        # Create variables including the coordinates for the dimensions
+        for spec in [ self.dim_spec, self.hdr_spec, self.int_spec, self.evn_spec, self.rep_spec, self.seq_spec ]:
+            for var_spec in spec:
+                Vname    = var_spec[0]
+                Dtype    = var_spec[2]
+                DimNames = var_spec[3]
+                DimSizes = var_spec[4]
+
+                # Convert the data type code to a netCDF data type
+                if (Dtype == DTYPE_STRING):
+                    Vtype = 'S1'
+                elif (Dtype == DTYPE_INTEGER):
+                    Vtype = 'i4'
+                elif (Dtype == DTYPE_UINT):
+                    Vtype = 'u4'
+                elif (Dtype == DTYPE_FLOAT):
+                    Vtype = 'f4'
+                elif (Dtype == DTYPE_DOUBLE):
+                    Vtype = 'f8'
+
+                # For the chunk sizes,
+                #   The first dimension is always nobs
+                #   For vars with a single dimension,
+                #       make the chunk spec match dim sizes
+                #   For vars with multiple dimensions,
+                #       make the chunk spec match dim sizes except use 1 for the first entry
+                if (len(DimSizes) == 1):
+                    ChunkSizes = DimSizes
+                else:
+                    ChunkSizes = [ 1 ] + DimSizes[1:]
+
+                nc.createVariable(Vname, Vtype, DimNames, chunksizes=ChunkSizes)
+
 
     ###############################################################################
     # This method will convert the BUFR data into netcdf data. This includes
@@ -202,32 +245,32 @@ class AircraftObsType(ObsType):
         if (bf_type == BFILE_BUFR):
             self.mtype_re = '^NC004001'
             self.hdr_spec = [
-                [ 'YEAR', 'YEAR', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'MNTH', 'MNTH', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'DAYS', 'DAYS', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'HOUR', 'HOUR', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'MINU', 'MINU', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'ACID', 'ACID', DTYPE_DOUBLE,  ['nobs'], [self.nobs], False ],
-                [ 'CORN', 'CORN', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'CLAT', 'CLAT', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'CLON', 'CLON', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'FLVL', 'FLVL', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
+                [ 'YEAR', 'YEAR', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'MNTH', 'MNTH', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'DAYS', 'DAYS', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'HOUR', 'HOUR', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'MINU', 'MINU', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'ACID', 'ACID', DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                [ 'CORN', 'CORN', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'CLAT', 'CLAT', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'CLON', 'CLON', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'FLVL', 'FLVL', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                 ]
             self.int_spec = [
-                [ 'TMDB',   'TMDB',   DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'TMDP',   'TMDP',   DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'REHU',   'REHU',   DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'WSPD',   'WSPD',   DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'WDIR',   'WDIR',   DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'QMAT',   'QMAT',   DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'QMDD',   'QMDD',   DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'QMWN',   'QMWN',   DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'SEQNUM', 'SEQNUM', DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring], False ],
-                [ 'BUHD',   'BUHD',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring], False ],
-                [ 'BORG',   'BORG',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring], False ],
-                [ 'BULTIM', 'BULTIM', DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring], False ],
-                [ 'BBB',    'BBB',    DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring], False ],
-                [ 'RPID',   'RPID',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring], False ],
+                [ 'TMDB',   'TMDB',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'TMDP',   'TMDP',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'REHU',   'REHU',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'WSPD',   'WSPD',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'WDIR',   'WDIR',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'QMAT',   'QMAT',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'QMDD',   'QMDD',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'QMWN',   'QMWN',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'SEQNUM', 'SEQNUM', DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ 'BUHD',   'BUHD',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ 'BORG',   'BORG',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ 'BULTIM', 'BULTIM', DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ 'BBB',    'BBB',    DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ 'RPID',   'RPID',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
                 ]
             self.evn_spec = []
             self.rep_spec = []
@@ -235,52 +278,52 @@ class AircraftObsType(ObsType):
         elif (bf_type == BFILE_PREPBUFR):
             self.mtype_re = 'AIRC[AF][RT]'
             self.hdr_spec = [
-                [ 'SID',  'SID',  DTYPE_DOUBLE,  ['nobs'], [self.nobs], False ],
-                [ 'ACID', 'ACID', DTYPE_DOUBLE,  ['nobs'], [self.nobs], False ],
-                [ 'XOB',  'XOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'YOB',  'YOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'DHR',  'DHR',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'TYP',  'TYP',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'ELV',  'ELV',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'SAID', 'SAID', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'T29',  'T29',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
+                [ 'SID',  'SID',  DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                [ 'ACID', 'ACID', DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                [ 'XOB',  'XOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'YOB',  'YOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'DHR',  'DHR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'TYP',  'TYP',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'ELV',  'ELV',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'SAID', 'SAID', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'T29',  'T29',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                 ]
             self.int_spec = [
-                [ 'POB',  'POB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'QOB',  'QOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'TOB',  'TOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'ZOB',  'ZOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'UOB',  'UOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'VOB',  'VOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'PWO',  'PWO',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'MXGS', 'MXGS', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'PRSS', 'PRSS', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'TDO',  'TDO',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'PMO',  'PMO',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'PQM',  'PQM',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'QQM',  'QQM',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'TQM',  'TQM',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'ZQM',  'ZQM',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'WQM',  'WQM',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'PWQ',  'PWQ',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'PMQ',  'PMQ',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'POE',  'POE',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'QOE',  'QOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'TOE',  'TOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'WOE',  'WOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'PWE',  'PWE',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'HOVI', 'HOVI', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'CAT',  'CAT',  DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'XDR',  'XDR',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'YDR',  'YDR',  DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'HRDR', 'HRDR', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'POAF', 'POAF', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'IALR', 'IALR', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
+                [ 'POB',  'POB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'QOB',  'QOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'TOB',  'TOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'ZOB',  'ZOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'UOB',  'UOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'VOB',  'VOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'PWO',  'PWO',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'MXGS', 'MXGS', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'PRSS', 'PRSS', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'TDO',  'TDO',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'PMO',  'PMO',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'PQM',  'PQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'QQM',  'QQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'TQM',  'TQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'ZQM',  'ZQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'WQM',  'WQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'PWQ',  'PWQ',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'PMQ',  'PMQ',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'POE',  'POE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'QOE',  'QOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'TOE',  'TOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'WOE',  'WOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'PWE',  'PWE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'HOVI', 'HOVI', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'CAT',  'CAT',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'XDR',  'XDR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'YDR',  'YDR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'HRDR', 'HRDR', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'POAF', 'POAF', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'IALR', 'IALR', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                 ]
             self.evn_spec = [
-                [ 'TPC_bevn', 'TPC', DTYPE_INTEGER, ['nobs', 'nevents'], [self.nobs, self.nevents], False ],
-                [ 'TOB_bevn', 'TOB', DTYPE_FLOAT,   ['nobs', 'nevents'], [self.nobs, self.nevents], False ],
-                [ 'TQM_bevn', 'TQM', DTYPE_INTEGER, ['nobs', 'nevents'], [self.nobs, self.nevents], False ],
+                [ 'TPC_bevn', 'TPC', DTYPE_INTEGER, ['nobs', 'nevents'], [self.nobs, self.nevents] ],
+                [ 'TOB_bevn', 'TOB', DTYPE_FLOAT,   ['nobs', 'nevents'], [self.nobs, self.nevents] ],
+                [ 'TQM_bevn', 'TQM', DTYPE_INTEGER, ['nobs', 'nevents'], [self.nobs, self.nevents] ],
                 ]
             self.rep_spec = []
             self.seq_spec = []
@@ -323,43 +366,43 @@ class SondesObsType(ObsType):
             #
             self.mtype_re = 'ADPUPA'
             self.hdr_spec = [
-                [ 'SID', 'SID', DTYPE_DOUBLE,  ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'XOB', 'XOB', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'YOB', 'YOB', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'DHR', 'DHR', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'TYP', 'TYP', DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'ELV', 'ELV', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'T29', 'T29', DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
+                [ 'SID', 'SID', DTYPE_DOUBLE,  ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'XOB', 'XOB', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'YOB', 'YOB', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'DHR', 'DHR', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'TYP', 'TYP', DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'ELV', 'ELV', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'T29', 'T29', DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
                 ]
             self.int_spec = [
-                [ 'POB',  'POB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'QOB',  'QOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'TOB',  'TOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'ZOB',  'ZOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'UOB',  'UOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'VOB',  'VOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'PWO',  'PWO',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'TDO',  'TDO',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'PQM',  'PQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'QQM',  'QQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'TQM',  'TQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'ZQM',  'ZQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'WQM',  'WQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'PWQ',  'PWQ',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'PMQ',  'PMQ',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'POE',  'POE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'QOE',  'QOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'TOE',  'TOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'WOE',  'WOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'PWE',  'PWE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'XDR',  'XDR',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'YDR',  'YDR',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
-                [ 'HRDR', 'HRDR', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs], False ],
+                [ 'POB',  'POB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'QOB',  'QOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'TOB',  'TOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'ZOB',  'ZOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'UOB',  'UOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'VOB',  'VOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'PWO',  'PWO',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'TDO',  'TDO',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'PQM',  'PQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'QQM',  'QQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'TQM',  'TQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'ZQM',  'ZQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'WQM',  'WQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'PWQ',  'PWQ',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'PMQ',  'PMQ',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'POE',  'POE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'QOE',  'QOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'TOE',  'TOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'WOE',  'WOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'PWE',  'PWE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'XDR',  'XDR',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'YDR',  'YDR',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                [ 'HRDR', 'HRDR', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
                 ]
             self.evn_spec = [
-                [ 'TPC', 'TPC_bevn', DTYPE_INTEGER, ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents], False ],
-                [ 'TOB', 'TOB_bevn', DTYPE_FLOAT,   ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents], False ],
-                [ 'TQM', 'TQM_bevn', DTYPE_INTEGER, ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents], False ],
+                [ 'TPC_bevn', 'TPC', DTYPE_INTEGER, ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents] ],
+                [ 'TOB_bevn', 'TOB', DTYPE_FLOAT,   ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents] ],
+                [ 'TQM_bevn', 'TQM', DTYPE_INTEGER, ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents] ],
                 ]
             self.rep_spec = []
             self.seq_spec = []
@@ -382,29 +425,29 @@ class AmsuaObsType(ObsType):
 
             self.mtype_re = '^NC021023'
             self.hdr_spec = [
-                [ 'SAID', 'SAID', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'FOVN', 'FOVN', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'YEAR', 'YEAR', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'MNTH', 'MNTH', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'DAYS', 'DAYS', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'HOUR', 'HOUR', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'MINU', 'MINU', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'SECO', 'SECO', DTYPE_INTEGER, ['nobs'], [self.nobs], False ],
-                [ 'CLAT', 'CLAT', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'CLON', 'CLON', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
-                [ 'HOLS', 'HOLS', DTYPE_FLOAT,   ['nobs'], [self.nobs], False ],
+                [ 'SAID', 'SAID', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'FOVN', 'FOVN', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'YEAR', 'YEAR', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'MNTH', 'MNTH', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'DAYS', 'DAYS', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'HOUR', 'HOUR', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'MINU', 'MINU', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'SECO', 'SECO', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ 'CLAT', 'CLAT', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'CLON', 'CLON', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                [ 'HOLS', 'HOLS', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                 ]
             self.int_spec = [
-                [ 'SAZA',   'SAZA',   DTYPE_FLOAT, ['nobs'], [self.nobs], False ],
-                [ 'SOZA',   'SOZA',   DTYPE_FLOAT, ['nobs'], [self.nobs], False ],
-                [ 'BEARAZ', 'BEARAZ', DTYPE_FLOAT, ['nobs'], [self.nobs], False ],
-                [ 'SOLAZI', 'SOLAZI', DTYPE_FLOAT, ['nobs'], [self.nobs], False ],
+                [ 'SAZA',   'SAZA',   DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                [ 'SOZA',   'SOZA',   DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                [ 'BEARAZ', 'BEARAZ', DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                [ 'SOLAZI', 'SOLAZI', DTYPE_FLOAT, ['nobs'], [self.nobs] ],
                 ]
             self.evn_spec = []
             self.rep_spec = [
-                [ 'CHNM', 'CHNM', DTYPE_INTEGER, ['nobs', 'nchans'], [self.nobs, self.nchans], False ],
-                [ 'TMBR', 'TMBR', DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans], False ],
-                [ 'CSTC', 'CSTC', DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans], False ],
+                [ 'CHNM', 'CHNM', DTYPE_INTEGER, ['nobs', 'nchans'], [self.nobs, self.nchans] ],
+                [ 'TMBR', 'TMBR', DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ],
+                [ 'CSTC', 'CSTC', DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ],
                 ]
             self.seq_spec = []
         elif (bf_type == BFILE_PREPBUFR):
@@ -424,6 +467,49 @@ class AmsuaObsType(ObsType):
 ###########################################################################
 # SUBROUTINES
 ###########################################################################
+
+def SplitDate(yyyymmddhh):
+    # This routine will take an integer date yyyymmddhh and return the
+    # datetime equivalent.
+    DateString = str(yyyymmddhh)
+    Dtime = dt.datetime(int(DateString[0:4]), int(DateString[4:6]),
+                        int(DateString[6:8]), int(DateString[8:10]))
+
+    return Dtime
+
+def MakeDate(Dtime):
+    # This routine will take in integers representing yyyy, mm, dd, hh and
+    # return an integer date yyyymmddhh.
+
+    DateString = "%0.4i"%(Dtime.year) + "%0.2i"%(Dtime.month) + "%0.2i"%(Dtime.day) + "%0.2i"%(Dtime.hour)
+
+    return int(DateString)
+
+def FindRefDate(StartDate):
+    # This routine will return the next analysis time (0, 6, 12, 18Z) following
+    # the date represented in StartDate. StartDate is an integer value of the form
+    # yyyymmddhh.
+    #
+    # Use datetime structures so that addition will take into account carry
+    # over into the next day, month, year when hours are added.
+    #
+    # Compare the hours field in the start date with the analysis times
+    # 0, 6, 12, 18, 24 where 24 is 0Z of the next day. 24 is there to make
+    # sure that when subtracting the start date hour value, at least one
+    # of the entries in the result will be greater than zero. Then the
+    # distance to the next analysis time will be the first entry that is
+    # greater than zero in the result of the subtraction (HourDiffs).
+    StartDtime = SplitDate(StartDate)
+    HourDiffs = np.array([ 0, 6, 12, 18, 24 ]) - StartDtime.hour
+    HourInc = int(HourDiffs[HourDiffs > 0][0])
+
+    # Form the datetime compatible version of HourInc, which can then
+    # be added to the start date.
+    DtDelta = dt.timedelta(hours=HourInc) 
+    RefDtime = StartDtime + DtDelta
+    RefDate = MakeDate(RefDtime)
+
+    return RefDate
 
 def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
     # This routine will read the BUFR file and figure out how many observations
@@ -446,6 +532,7 @@ def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
     NumMsg = 0 
     NumObs = 0 
     EarliestDate = 9999999999 # A value about 8000 years from now
+    LatestDate = 0
     while ( (bufr.advance() == 0) ): 
         # Select only the messages that belong to this observation type
         if (re.search(MessageRe, bufr.msg_type)):
@@ -462,10 +549,9 @@ def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
                 if (bufr.msg_date < EarliestDate):
                     EarliestDate = bufr.msg_date
 
-    print("DEBUG: BfilePreprocess: EarliestDate: ", EarliestDate)
     bufr.close()
- 
-    return [NumObs, NumMsg, TotalNumMsg] 
+
+    return [NumObs, NumMsg, TotalNumMsg, FindRefDate(EarliestDate)] 
 
 ###################################################################################
 # MAIN
@@ -575,11 +661,12 @@ print("")
 # types. NumObs will be set to the number of observations selected,
 # NumMsgs will be set to the number of messages selected, and TotalMsgs
 # will be set to the total number of messages that match Obs.mtype_re in the file.
-[NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs.mtype_re, MaxNumMsg)
+[NumObs, NumMsgs, TotalMsgs, RefDate] = BfilePreprocess(BufrFname, Obs.mtype_re, MaxNumMsg)
 
 print("  Total number of messages that match obs type {0:s}: {1:d}".format(ObsType, TotalMsgs))
 print("  Number of messages selected: {0:d}".format(NumMsgs))
 print("  Number of observations selected: {0:d}".format(NumObs))
+print("  Reference date for observations: {0:d}".format(RefDate))
 print("")
 
 # Now that we have the number of observations we will be recording, set the dimension
@@ -587,10 +674,16 @@ print("")
 # netcdf variables.
 Obs.set_nobs(NumObs)
 
+# Create the dimensions and variables in the netCDF file in preparation for
+# recording the selected observations.
+nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
+Obs.create_nc_datasets(nc)
 
 
 Obs.convert()
 
+nc.sync()
+nc.close()
 
 ### ###########################################################################
 ### # SUBROUTINES
@@ -648,88 +741,6 @@ Obs.convert()
 ###             Dval = np.ma.array(Bval.data.astype(np.float64), mask=Bval.mask, dtype=np.float64)
 ### 
 ###     return [Dval, DataPresent] 
-### 
-### ###########################################################################
-### def CreateNcVar(Fid, Dname, Btype, Dtype,
-###                 NobsDname, NlevsDname, NeventsDname, StrDname,
-###                 MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs):
-### 
-###     # This routine will create a variable in the output netCDF file.
-###     # In general, the order of dimensions is:
-###     #
-###     #     nobs
-###     #     nlevs
-###     #     nstring
-###     #     nevents
-###     #
-###     # If a dimension is missing, then the others stay in their relative
-###     # order as listed above.
-###     #
-###     # The dimensions are set according to the Dtype and Btype inputs.
-###     #
-###     # If Btype is BTYPE_HEADER
-###     #   Dtype       Dims
-###     #  DTYPE_STRING  [nobs, nstring]
-###     #  DTYPE_INTEGER [nobs]
-###     #  DTYPE_FLOAT   [nobs]
-###     #
-###     # If Btype is BTYPE_DATA 
-###     #   Dtype       Dims
-###     #  DTYPE_STRING  [nobs, nlevs, nstring]
-###     #  DTYPE_INTEGER [nobs, nlevs]
-###     #  DTYPE_FLOAT   [nobs, nlevs]
-###     #
-###     # If Btype is BTYPE_EVENT or BTYPE_REP, then append the nevents (nreps) dim
-###     # on the end of the dim specification.
-###     #
-###     #  DTYPE_STRING  [nobs, nlevs, nstring, nevents]
-###     #  DTYPE_INTEGER [nobs, nlevs, nevents]
-###     #  DTYPE_FLOAT   [nobs, nlevs, nevents]
-### 
-###     # The netcdf variable name will match Dname, except for the cases where
-###     # the BUFR type is event. In this case, need to append "_bevn" to the
-###     # variable name so it is unique from the name used for the BUFR data type.
-###     if (Btype == BTYPE_EVENT):
-###         Vname = "{0:s}_bevn".format(Dname)
-###     else:
-###         Vname = Dname
-### 
-###     # Set the netcdf variable type accordingly.
-###     if (Dtype == DTYPE_STRING):
-###         Vtype = 'S1'
-###     elif (Dtype == DTYPE_INTEGER):
-###         Vtype = 'i4'
-###     elif (Dtype == DTYPE_FLOAT):
-###         Vtype = 'f4'
-###     elif (Dtype == DTYPE_DOUBLE):
-###         Vtype = 'f8'
-### 
-###     # Figure out the dimensions for this variable.
-###     # All types have nobs as first dimension
-###     DimSpec = [NobsDname]
-###     ChunkSpec = [MaxObs]
-### 
-###     # If we have BUFR types data or event, then the next dimension is nlevs
-###     if ((Btype == BTYPE_DATA) or (Btype == BTYPE_EVENT)):
-###         DimSpec.append(NlevsDname)
-###         ChunkSpec.append(MaxLevels)
-### 
-###     # If we have string data type, then the next dimension is nstring
-###     if (Dtype == DTYPE_STRING):
-###         DimSpec.append(StrDname)
-###         ChunkSpec.append(MaxStringLen)
-### 
-###     # If we have BUFR type event, then the final dimension is nevents
-###     # or if we have BUFR type rep, then the final dimension is nreps
-###     if (Btype == BTYPE_EVENT):
-###         DimSpec.append(NeventsDname)
-###         ChunkSpec.append(MaxEvents)
-###     elif (Btype == BTYPE_REP):
-###         DimSpec.append(NrepsDname)
-###         ChunkSpec.append(MaxReps)
-### 
-###     Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
-###         zlib=True, shuffle=True, complevel=6)
 ### 
 ### ###########################################################################
 ### def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents, MaxReps):
@@ -812,88 +823,6 @@ Obs.convert()
 ### ###########################################################################
 ### # MAIN
 ### ###########################################################################
-### # Create the dimensions and variables in the netCDF file in preparation for
-### # recording the selected observations.
-### nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
-### 
-### # For each mnemonic, non-events will be in a 1D array,
-### # and events will be in a 2D array.
-### #
-### #   Non-event: data[nlevs]
-### #     nlevs is the nubmer of levels
-### #
-### #   Event: data[nlevs, nevents]
-### #     nlevs is the nubmer of levels
-### #     nevents is the number of event codes
-### #
-### # Each variable will add a dimension (in the front) to hold
-### # each observation (subset). This results in:
-### #
-### #   Non-event: data[nobs,nlevs]
-### #   Event: data[nobs,nlevs,nevents]
-### #
-### NobsDname = "nobs"
-### NlevsDname = "nlevs"
-### NeventsDname = "nevents"
-### NrepsDname = "nreps"
-### StrDname = "nstring"
-### 
-### # dimsensions plus corresponding vars to hold coordinate values
-### nc.createDimension(NlevsDname, MaxLevels)
-### nc.createDimension(NeventsDname, MaxEvents)
-### nc.createDimension(NrepsDname, MaxReps)
-### nc.createDimension(StrDname, MaxStringLen)
-### nc.createDimension(NobsDname, MaxObs)
-### 
-### # coordinates
-### #   these are just counts so use unsigned ints
-### #
-### # Use chunk sizes that match the dimension sizes. Don't want a total chunk
-### # size to exceed ~ 1MB, but if that is true, the data size is getting too
-### # big anyway (a dimension size is over a million items!).
-### nc.createVariable(NlevsDname, 'u4', (NlevsDname), chunksizes=[MaxLevels])
-### nc.createVariable(NeventsDname, 'u4', (NeventsDname), chunksizes=[MaxEvents])
-### nc.createVariable(NrepsDname, 'u4', (NrepsDname), chunksizes=[MaxReps])
-### nc.createVariable(StrDname, 'u4', (StrDname), chunksizes=[MaxStringLen])
-### nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[MaxObs])
-### 
-### # variables
-### MtypeVname = "msg_type"
-### MtypeDtype = DTYPE_STRING
-### MdateVname = "msg_date"
-### MdateDtype = DTYPE_INTEGER
-### 
-### # Make a second pass through the BUFR file, this time to record
-### # the selected observations.
-### bufr = ncepbufr.open(BufrFname)
-### 
-### CreateNcVar(nc, MtypeVname, BTYPE_HEADER, MtypeDtype,
-###             NobsDname, NlevsDname, NeventsDname, StrDname,
-###             MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-### CreateNcVar(nc, MdateVname, BTYPE_HEADER, MdateDtype,
-###             NobsDname, NlevsDname, NeventsDname, StrDname,
-###             MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-### 
-### for HHname in HeadList:
-###     CreateNcVar(nc, HHname, BTYPE_HEADER, DATA_TYPES[HHname],
-###                 NobsDname, NlevsDname, NeventsDname, StrDname,
-###                 MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-### 
-### for DDname in DataList:
-###     CreateNcVar(nc, DDname, BTYPE_DATA, DATA_TYPES[DDname],
-###                 NobsDname, NlevsDname, NeventsDname, StrDname,
-###                 MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-### 
-### for EEname in EventList:
-###     CreateNcVar(nc, EEname, BTYPE_EVENT, DATA_TYPES[EEname],
-###                 NobsDname, NlevsDname, NeventsDname, StrDname,
-###                 MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-### 
-### for RRname in RepList:
-###     CreateNcVar(nc, RRname, BTYPE_REP, DATA_TYPES[RRname],
-###                 NobsDname, NlevsDname, NeventsDname, StrDname,
-###                 MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-### 
 ### 
 ### NumMsgs= 0
 ### NumSelectedMsgs = 0
@@ -974,5 +903,3 @@ Obs.convert()
 ### 
 ### bufr.close()
 ### 
-### nc.sync()
-### nc.close()
