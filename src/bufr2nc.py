@@ -113,7 +113,7 @@ class ObsType(object):
         self.misc_spec = [
             [ [ 'Time',     '', DTYPE_FLOAT,  ['nobs'],            [self.nobs]               ],
               [ 'msg_type', '', DTYPE_STRING, ['nobs', 'nstring'], [self.nobs, self.nstring] ],
-              [ 'msg_date', '', DTYPE_STRING, ['nobs', 'nstring'], [self.nobs, self.nstring] ] ]
+              [ 'msg_date', '', DTYPE_UINT,   ['nobs'],            [self.nobs]               ] ]
             ]
 
     ### methods ###
@@ -222,7 +222,18 @@ class ObsType(object):
                     else:
                         ChunkSizes = [ 1 ] + DimSizes[1:]
 
-                    nc.createVariable(Vname, Vtype, DimNames, chunksizes=ChunkSizes)
+                    nc.createVariable(Vname, Vtype, DimNames, chunksizes=ChunkSizes,
+                                      zlib=True, shuffle=True, complevel=6)
+
+    ###############################################################################
+    # This method will fill in the dimension variables with coordinate values.
+    # For now, using dummy values which are 1..n where n is the variable size.
+    def fill_coords(self, nc):
+        for DimSpecs in self.dim_spec:
+            for VarSpec in DimSpecs:
+                Vname = VarSpec[0]
+                Value = np.arange(VarSpec[4][0]) + 1
+                nc[Vname][:] = Value
 
     ###############################################################################
     # This method will read in a list of bufr mnemonics and return a list of
@@ -239,55 +250,52 @@ class ObsType(object):
         return BufrValues
 
     ###############################################################################
-    # This method will convert bufr data to the specified netcdf format. Upon entry
-    # BufrValues will be organized in the same list structure as SpecList. NcValues
-    # is expected to get initialized to an empty dictionary ( {} ) by the caller
-    # before the first call to this method. Then this method will append to the
-    # the dictionary sent in through NcValues, and output that result.
-    def bufr_to_netcdf(self, SpecList, BufrValues, NcValues):
+    # This method will convert bufr float data to the specified actual format.
+    # BufrValues is a list of masked arrays, where each masked array contains
+    # entries for all mnemonics in the sub-list of SpecList.
+    def bufr_float_to_actual(self, SpecList, BufrValues, ActualValues):
         # Make a separate copy of the input dictionary
-        OutVals = { key : value for key, value in NcValues.items() }
+        OutVals = { key : value for key, value in ActualValues.items() }
 
         for SubSpecs, SubBvals in zip(SpecList, BufrValues):
             for VarSpec, Bval in zip(SubSpecs, SubBvals):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-                OutVals[VarSpec[0]] = BufrValToNetcdf(Bval, VarSpec[2])
+                OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
 
         return OutVals
-
 
     ###############################################################################
     # This method will take the four input spec lists and read the mnemonics
     # from the bufr file. This routine will also convert the bufr values to
     # corresponding netcdf values. This method will return a dictionary keyed
     # by the netcdf variable name containing the associated values.
-    def extract_bufr(self, bufr, ObsNum):
-        NcValues = {}
+    def extract_bufr(self, bufr):
+        ActualValues = {}
     
         # Read and convert the individual data mnemonics. The mnemonic value is the second
         # entry in the int_spec sublist elements.
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.int_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists) 
-        NcValues = self.bufr_to_netcdf(self.int_spec, BufrValues, NcValues)
+        ActualValues = self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues)
 
         # Read and convert the event mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.evn_spec ]
-        BufrValues = self.read_bufr_data(bufr, Mlists) 
-        NcValues = self.bufr_to_netcdf(self.evn_spec, BufrValues, NcValues)
+        BufrValues = self.read_bufr_data(bufr, Mlists, Eflag=True) 
+        ActualValues = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues)
 
         # Read and convert the replication mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.rep_spec ]
-        BufrValues = self.read_bufr_data(bufr, Mlists) 
-        NcValues = self.bufr_to_netcdf(self.rep_spec, BufrValues, NcValues)
+        BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True) 
+        ActualValues = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues)
 
         # Read and convert the event mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.seq_spec ]
-        BufrValues = self.read_bufr_data(bufr, Mlists) 
-        NcValues = self.bufr_to_netcdf(self.seq_spec, BufrValues, NcValues)
+        BufrValues = self.read_bufr_data(bufr, Mlists, Sflag=True) 
+        ActualValues = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues)
 
-        return NcValues
+        return ActualValues
 
     ###############################################################################
     # This method will convert the BUFR data into netcdf data. This includes
@@ -299,7 +307,7 @@ class ObsType(object):
     #   Copy all BUFR mnemonic values in the variable specs to the output netcdf file
     #   Calculate a time offset from the reference time and store in addition to
     #     the BUFR mnemonic values
-    def convert(self, bufr):
+    def convert(self, bufr, nc):
         # Walk through the messages, selecting only those that match the regular
         # expression for this obs type.
         print("Converting BUFR to netcdf:")
@@ -308,15 +316,21 @@ class ObsType(object):
             # Select only the messages that belong to this observation type
             if (re.search(self.mtype_re, bufr.msg_type)):
                 while (bufr.load_subset() == 0):
+                    # Write the message type and message date
+                    WriteNcVar(nc, ObsNum, 'msg_type', np.array(bufr.msg_type))
+                    WriteNcVar(nc, ObsNum, 'msg_date', np.array([bufr.msg_date]))
+
                     # Grab all of the mnemonics from the bufr file, and convert
                     # to netcdf ready format. ReadConvertBufr() a dictionary 
                     # keyed by the netcdf variable name and containing the associated
                     # data values.
-                    NcValues = self.extract_bufr(bufr, ObsNum)
+                    ActualValues = self.extract_bufr(bufr)
 
-                    print("DEBUG: NcValues:")
-                    for key, val in NcValues.items():
-                        print("DEBUG:   Vname, Value: ", key, val)
+                    # Write out the netcdf values
+                    for Vname, Vdata in ActualValues.items():
+                        # Skip the write if Vdata is empty
+                        if (Vdata.size > 0):
+                            WriteNcVar(nc, ObsNum, Vname, Vdata)
 
                     # Increment observation number and print out progress messages.
                     ObsNum += 1
@@ -649,7 +663,7 @@ def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
 
     return [NumObs, NumMsg, TotalNumMsg, FindRefDate(EarliestDate)] 
 
-def BufrValToNetcdf(Bval, Dtype):
+def BufrFloatToActual(Bval, Dtype):
     # This routine will extract the value of a variable from the
     # output of read_subset(). read_subset() will return a floating point
     # number (for any type) or an empty list if the mnemonic didn't exist. For strings
@@ -659,11 +673,9 @@ def BufrValToNetcdf(Bval, Dtype):
     # Keep Dtype values in sync with entries in the DATA_TYPES dictionary. For now,
     # these values are DTYPE_STRING, DTYPE_INTEGER, DTYPE_FLOAT, DTYPE_DOUBLE.
 
-    # If the incoming Bval is empty, then set DataPresent to False. This will tell
-    # ReadWriteNcVar to skip writing this value into the output file, which means
-    # that Dval can remain unset.
-    DataPresent = (Bval.size > 0)
-    if (not DataPresent):
+    # If the incoming Bval is empty, then return an empty masked array
+    # value so that writing process can skip this value if Bval was empty.
+    if (Bval.size == 0):
         # Bval is empty so return an empty Dval.
         Dval = np.ma.array([ ])
     else:
@@ -702,7 +714,68 @@ def BufrValToNetcdf(Bval, Dtype):
             # copy doubles
             Dval = np.ma.array(Bval.data.astype(np.float64), mask=Bval.mask, dtype=np.float64)
 
-    return [Dval] 
+    return Dval
+
+def WriteNcVar(Fid, ObsNum, Vname, Vdata):
+    # This routine will write into a variable in the output netCDF file
+
+    # For the string data, convert to a numpy character array
+    if ((Vdata.dtype.char == 'S') or (Vdata.dtype.char == 'U')):
+        StrSpec = "S{0:d}".format(MAX_STRING_LEN)
+        Value = netCDF4.stringtochar(Vdata.astype(StrSpec))
+    else:
+        Value = Vdata.copy()
+
+    # At this point, the dimension sizes of the netcdf variable (NcVar) and Value
+    # need to get aligned. For some dimensions, the NcVar dimension size will tend
+    # to be larger than the Value dimension size (eg, nlevs). For other dimensions,
+    # it will be the other way around (eg, nevents). The one thing that can be counted
+    # on is that the list of dimensions will match between NcVar and Value, except
+    # that NcVar will have nobs as an extra dimension, and nobs will be the first
+    # in the dimension list. For example, if you have a multi-level event:
+    #
+    #    Value dimensions will be [ nlevs, nevents ]
+    #    Ncvar dimensions will be [ nobs, nlevs, nevents ]
+    #
+    # This means that to reconcile the sizes of each dimension, we need to slice
+    # out of the minimum sizes of the corresponding dimension of NcVar and Value.
+    # Using the example above, for a multi-level event:
+    #
+    #    Value dimensions are [ 51, 255 ]
+    #    NcVar dimensions are [ 1000, 255, 20 ]
+    #
+    #    nlevs size for Value is 51, for NcVar is 255 so use 51 for the slicing
+    #    nevents size for Value is 255, for NcVar is 20 so use 20 for the slicing
+    #
+    #    The assignment then becomes
+    #        NcVar[ObsNum, 0:51, 0:20] = Value[0:51, 0:20]
+    #
+    NcVar = Fid[Vname]
+    ValNdim = Value.ndim
+    NcNdim = NcVar.ndim
+    if (ValNdim == 1):
+        if (NcNdim == 1):
+            # Value has one dimension (scalar)
+            # NcVar has one dimension (eg, [nobs])
+            NcVar[ObsNum] = Value
+        else:
+            # Value has one dimension  (eg, [nlevs])
+            # NcVar has two dimensions (eg, [nobs,nlevs])
+            N1 = min(Value.shape[0], NcVar.shape[1])
+            NcVar[ObsNum, 0:N1] = Value[0:N1]
+    elif (ValNdim == 2):
+        # Value has two dimensions   (eg, [nlevs,nevents])
+        # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
+        N1 = min(Value.shape[0], NcVar.shape[1])
+        N2 = min(Value.shape[1], NcVar.shape[2])
+        NcVar[ObsNum,0:N1, 0:N2] = Value[0:N1, 0:N2]
+    elif (ValNdim == 3):
+        # Value has three dimensions (eg, [nlevs,nstring,nevents])
+        # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
+        N1 = min(Value.shape[0], NcVar.shape[1])
+        N2 = min(Value.shape[1], NcVar.shape[2])
+        N3 = min(Value.shape[2], NcVar.shape[3])
+        NcVar[ObsNum, 0:N1, 0:N2, 0:N3] = Value[0:N1, 0:N2, 0:N3]
 
 ###################################################################################
 # MAIN
@@ -839,119 +912,18 @@ nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 nc.ref_date = RefDate
 Obs.create_nc_datasets(nc)
 
+# Fill in the dimension variables with the coordinate values. Just using dummy values
+# for now which are 1..n where n is the size of the coorespoding dimension.
+Obs.fill_coords(nc)
+
 # Open the BUFR file and initialize the file object.
 bufr = ncepbufr.open(BufrFname)
 
-Obs.convert(bufr)
+# Run the conversion
+Obs.convert(bufr, nc)
 
 # Clean up
 bufr.close()
 
 nc.sync()
 nc.close()
-
-### ###########################################################################
-### # SUBROUTINES
-### ###########################################################################
-### 
-### ###########################################################################
-### def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents, MaxReps):
-###     # This routine will write into a variable in the output netCDF file
-### 
-###     # Set the variable name according to Btype
-###     if (Btype == BTYPE_EVENT):
-###         Vname = "{0:s}_bevn".format(Dname)
-###     else:
-###         Vname = Dname
-### 
-###     # For the string data, convert to a numpy character array
-###     if ((Dval.dtype.char == 'S') or (Dval.dtype.char == 'U')):
-###         IsString=True
-###         StrSpec = "S{0:d}".format(MaxStringLen)
-###         Value = netCDF4.stringtochar(Dval.astype(StrSpec))
-###     else:
-###         IsString=False
-###         if (Btype == BTYPE_EVENT):
-###             # Trim the dimension representing events to 0:MaxEvents.
-###             # This will be the last dimension of a multi-dim array:
-###             #    either [nlev, nevent], or [nlev, nstring, nevent].
-###             Value = Dval[...,0:MaxEvents].copy()
-###         elif (Btype == BTYPE_REP):
-###             # Trim the dimension representing reps to 0:MaxReps.
-###             # This will be the last dimension of a multi-dim array:
-###             #    either [nlev, nrep], or [nlev, nstring, nrep].
-###             Value = Dval[...,0:MaxReps].copy()
-###         else:
-###             Value = Dval.copy()
-### 
-###     # Write the variable. Since the dimension sizes from the read_subset()
-###     # routine can vary, we need to use array slice style indexing to
-###     # copy Value into netCDF variable (NcVar below). Look at how many
-###     # dimensions Value has compared to NcVar and put in the appropriate
-###     # slice indexing. nobs (obs_num) is always the first dimension.
-###     NcVar = Fid[Vname]
-###     ValNdim = Value.ndim
-###     NcNdim = NcVar.ndim
-###     if (ValNdim == 1):
-###         if (NcNdim == 1):
-###             # Value has one dimension (scalar)
-###             # NcVar has one dimension (eg, [nobs])
-###             NcVar[obs_num] = Value
-###         else:
-###             # Value has one dimension  (eg, [nlevs])
-###             # NcVar has two dimensions (eg, [nobs,nlevs])
-###             N1 = Value.shape[0]
-###             NcVar[obs_num,0:N1] = Value
-###     elif (ValNdim == 2):
-###         # Value has two dimensions   (eg, [nlevs,nevents])
-###         # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
-###         N1 = Value.shape[0]
-###         N2 = Value.shape[1]
-###         NcVar[obs_num,0:N1,0:N2] = Value
-###     elif (ValNdim == 3):
-###         # Value has three dimensions (eg, [nlevs,nstring,nevents])
-###         # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
-###         N1 = Value.shape[0]
-###         N2 = Value.shape[1]
-###         N3 = Value.shape[2]
-###         NcVar[obs_num,0:N1,0:N2,0:N3] = Value
-### 
-### ###########################################################################
-### def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MaxStringLen, MaxEvents, MaxReps):
-###     # This routine will read the mnemonics from the bufr file, convert them to
-###     # their proper data types and write them into the output netCDF file.
-###     Mstring = " ".join(Mlist)
-###     Eflag = (Btype == BTYPE_EVENT)
-###     Rflag = (Btype == BTYPE_REP)
-###     # CSD-keep this as a masked array for handling NaNs.
-###     BufrVals = Fid.read_subset(Mstring, events=Eflag, rep=Rflag)
-### 
-###     for i, Vname in enumerate(Mlist):
-###         Bval = BufrVals[i,...]
-###         [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Btype, DataTypes[Vname])
-###         if VarInBufr:
-###             WriteNcVar(nc, NumObs, Vname, Btype, VarVal, MaxStringLen, MaxEvents, MaxReps)
-### 
-### ###########################################################################
-### # MAIN
-### ###########################################################################
-### 
-### 
-### # Fill in coordinate values. Simply put in the numbers 1 through N for each
-### # dimension variable according to that dimension's size.
-### nc[NobsDname][0:MaxObs]       = np.arange(MaxObs) + 1
-### nc[NlevsDname][0:MaxLevels]   = np.arange(MaxLevels) + 1
-### nc[NeventsDname][0:MaxEvents] = np.arange(MaxEvents) + 1
-### nc[NrepsDname][0:MaxReps]     = np.arange(MaxReps) + 1
-### nc[StrDname][0:MaxStringLen]  = np.arange(MaxStringLen) + 1
-### 
-### # If reading a prepBUFR type file, then record the virtual temperature code
-### if (BufrFtype == 'prepBUFR'):
-###     nc.virtmp_code = bufr.get_program_code('VIRTMP')
-### 
-### print("{0:d} messages selected out of {1:d} total messages".format(MaxMsgs, TotalMsgs))
-### print("  {0:d} observations recorded in output netCDF file".format(MaxObs))
-### 
-### 
-### bufr.close()
-### 
