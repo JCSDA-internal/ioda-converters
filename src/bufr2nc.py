@@ -102,8 +102,15 @@ class ObsType(object):
     def __init__(self):
         self.bufr_ftype = BFILE_UNDEF
         self.mtype_re = 'UnDef'
+ 
+        # Keep this list of dimensions in sync with the if statment structure
+        # in the init_dim_spec() method.
         self.nobs = -1
+        self.nlevs = MAX_LEVELS
+        self.nevents = MAX_EVENTS
         self.nstring = MAX_STRING_LEN
+        self.nchans = -1
+
         self.time_units = ""
         self.int_spec = []
         self.evn_spec = []
@@ -166,16 +173,18 @@ class ObsType(object):
             if (dname == 'nobs'):
                 dsize = self.nobs
             elif (dname == 'nlevs'):
-                dsize = MAX_LEVELS
+                dsize = self.nlevs
             elif (dname == 'nevents'):
-                dsize = MAX_EVENTS
+                dsize = self.nevents
             elif (dname == 'nstring'):
-                dsize = MAX_STRING_LEN
+                dsize = self.nstring
+            elif (dname == 'nchans'):
+                dsize = self.nchans
             else:
                 print("ERROR: init_dim_spec: Unknown dimension name: {0:s}".format(dname))
                 sys.exit(3)
 
-            DimList.append([ dname, dname, DTYPE_UINT, [ dname ], [ dsize], False ])
+            DimList.append([ dname, dname, DTYPE_UINT, [ dname ], [ dsize ] ])
 
         self.dim_spec = [ DimList ]
 
@@ -315,10 +324,12 @@ class ObsType(object):
         while ((bufr.advance() == 0) and (ObsNum < self.nobs)):
             # Select only the messages that belong to this observation type
             if (re.search(self.mtype_re, bufr.msg_type)):
+                MsgType = np.ma.array(bufr.msg_type)
+                MsgDate = np.ma.array([bufr.msg_date])
                 while (bufr.load_subset() == 0):
                     # Write the message type and message date
-                    WriteNcVar(nc, ObsNum, 'msg_type', np.array(bufr.msg_type))
-                    WriteNcVar(nc, ObsNum, 'msg_date', np.array([bufr.msg_date]))
+                    WriteNcVar(nc, ObsNum, 'msg_type', MsgType)
+                    WriteNcVar(nc, ObsNum, 'msg_date', MsgDate)
 
                     # Grab all of the mnemonics from the bufr file, and convert
                     # to netcdf ready format. ReadConvertBufr() a dictionary 
@@ -347,7 +358,6 @@ class AircraftObsType(ObsType):
     def __init__(self, bf_type):
         super().__init__()
 
-        self.nevents = MAX_EVENTS
         self.bufr_ftype = bf_type
         if (bf_type == BFILE_BUFR):
             self.mtype_re = '^NC004001'
@@ -449,8 +459,6 @@ class SondesObsType(ObsType):
     def __init__(self, bf_type):
         super().__init__()
 
-        self.nlevs   = MAX_LEVELS
-        self.nevents = MAX_EVENTS
         self.bufr_ftype = bf_type
         if (bf_type == BFILE_BUFR):
             self.mtype_re = 'UnDef'
@@ -714,7 +722,8 @@ def BufrFloatToActual(Bval, Dtype):
             # copy doubles
             Dval = np.ma.array(Bval.data.astype(np.float64), mask=Bval.mask, dtype=np.float64)
 
-    return Dval
+    # Squeeze the array since read_subset can return size 1 dimensions (eg. nlevs).
+    return Dval.squeeze()
 
 def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     # This routine will write into a variable in the output netCDF file
@@ -750,6 +759,10 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     #    The assignment then becomes
     #        NcVar[ObsNum, 0:51, 0:20] = Value[0:51, 0:20]
     #
+    if (isinstance(Value, np.ma.MaskedArray)):
+        print("DEBUG: WriteNcVar: Masked array: ", Value.data, Value.mask)
+        print("DEBUG: WriteNcVar: Filled array: ", np.ma.filled(Value))
+
     NcVar = Fid[Vname]
     ValNdim = Value.ndim
     NcNdim = NcVar.ndim
