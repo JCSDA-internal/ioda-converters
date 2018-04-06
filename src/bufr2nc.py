@@ -759,30 +759,29 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     #    The assignment then becomes
     #        NcVar[ObsNum, 0:51, 0:20] = Value[0:51, 0:20]
     #
-    if (isinstance(Value, np.ma.MaskedArray)):
-        print("DEBUG: WriteNcVar: Masked array: ", Value.data, Value.mask)
-        print("DEBUG: WriteNcVar: Filled array: ", np.ma.filled(Value))
-
+    # Figure out how to do the slicing by looking at the number of dimensions at both
+    # Value (masked array) and NcVar (netcdf array). A masked array that gets built
+    # using a scalar data value will return 0 for the number of dimensions.
     NcVar = Fid[Vname]
     ValNdim = Value.ndim
     NcNdim = NcVar.ndim
-    if (ValNdim == 1):
-        if (NcNdim == 1):
-            # Value has one dimension (scalar)
-            # NcVar has one dimension (eg, [nobs])
-            NcVar[ObsNum] = Value
-        else:
-            # Value has one dimension  (eg, [nlevs])
-            # NcVar has two dimensions (eg, [nobs,nlevs])
-            N1 = min(Value.shape[0], NcVar.shape[1])
-            NcVar[ObsNum, 0:N1] = Value[0:N1]
-    elif (ValNdim == 2):
+
+    if (NcNdim == 1):
+        # No need for slicing. Value is either a scalar or a
+        # 1D array with a single element
+        NcVar[ObsNum] = Value
+    elif (NcNdim == 2):
+        # Value has one dimension  (eg, [nlevs])
+        # NcVar has two dimensions (eg, [nobs,nlevs])
+        N1 = min(Value.shape[0], NcVar.shape[1])
+        NcVar[ObsNum, 0:N1] = Value[0:N1]
+    elif (NcNdim == 3):
         # Value has two dimensions   (eg, [nlevs,nevents])
         # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
         N1 = min(Value.shape[0], NcVar.shape[1])
         N2 = min(Value.shape[1], NcVar.shape[2])
         NcVar[ObsNum,0:N1, 0:N2] = Value[0:N1, 0:N2]
-    elif (ValNdim == 3):
+    elif (NcNdim == 4):
         # Value has three dimensions (eg, [nlevs,nstring,nevents])
         # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
         N1 = min(Value.shape[0], NcVar.shape[1])
