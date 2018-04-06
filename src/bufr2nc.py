@@ -220,19 +220,11 @@ class ObsType(object):
                     elif (Dtype == DTYPE_DOUBLE):
                         Vtype = 'f8'
 
-                    # For the chunk sizes,
-                    #   The first dimension is always nobs
-                    #   For vars with a single dimension,
-                    #       make the chunk spec match dim sizes
-                    #   For vars with multiple dimensions,
-                    #       make the chunk spec match dim sizes except use 1 for first entry
-                    if (len(DimSizes) == 1):
-                        ChunkSizes = DimSizes
-                    else:
-                        ChunkSizes = [ 1 ] + DimSizes[1:]
-
-                    nc.createVariable(Vname, Vtype, DimNames, chunksizes=ChunkSizes,
-                                      zlib=True, shuffle=True, complevel=6)
+                    # Don't specify the chunk sizes. Since all of the dimensions
+                    # are of fixed size, the built-in algorithm for calculating
+                    # chunk sizes will do a good job.
+                    nc.createVariable(Vname, Vtype, DimNames, zlib=True,
+                                      shuffle=True, complevel=6)
 
     ###############################################################################
     # This method will fill in the dimension variables with coordinate values.
@@ -347,7 +339,12 @@ class ObsType(object):
                     ObsNum += 1
                     if ((ObsNum % 100) == 0):
                         print("  Converted {0:d} observations".format(ObsNum))
-            
+
+        # If processing a prepBUFR file, record the virtual temperature
+        # program code
+        if (self.bufr_ftype == BFILE_PREPBUFR):
+            nc.virtmp_code = bufr.get_program_code('VIRTMP')
+
         print("")
         print("  Total converted observations: ", ObsNum)
         print("")
