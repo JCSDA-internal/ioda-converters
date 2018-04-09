@@ -118,8 +118,7 @@ class ObsType(object):
         self.seq_spec = []
         self.dim_spec = []
         self.misc_spec = [
-            [ [ 'Time',     '', DTYPE_FLOAT,  ['nobs'],            [self.nobs]               ],
-              [ 'msg_type', '', DTYPE_STRING, ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+            [ [ 'msg_type', '', DTYPE_STRING, ['nobs', 'nstring'], [self.nobs, self.nstring] ],
               [ 'msg_date', '', DTYPE_UINT,   ['nobs'],            [self.nobs]               ] ]
             ]
 
@@ -168,6 +167,8 @@ class ObsType(object):
                     AllDimNames = AllDimNames | set(var_spec[3])
 
         # AllDimNames holds the list of unique dimension names.
+        # Keep the following list of dimensions in sync with the __init__ method in
+        # in the ObsType base class.
         DimList = []
         for dname in AllDimNames:
             if (dname == 'nobs'):
@@ -299,6 +300,66 @@ class ObsType(object):
         return ActualValues
 
     ###############################################################################
+    # This method will calculated the offset time value from the BUFR mnemonic
+    # values. The calculation depends on the type of BUFR file (raw BUFR or prepBUFR).
+    # For raw BUFR, the absolute observation time comes from the mnemonics:
+    #     YEAR  - year
+    #     MNTH  - month
+    #     DAYS  - day
+    #     HOUR  - hour
+    #     MINU  - minute
+    #     SECO  - second
+    #
+    # For prepBUFR, the time relative to msg_date is held in DHR, and for multi-level
+    # obs in HRDR.
+    #     msg_date - Message date/time
+    #     DHR      - Observation time minus cycle time
+    #     HRDR     - Observation time minus cycle time on a level by level basis
+    #                   (taking drift into account)
+    #
+    # The netCDF4 utility date2num is used to calculate the offset. This routine takes
+    # in an absolute time stored in a datetime structure and the reference time stored
+    # in a units string (ie: seconds from YYYY-MM-DD HH:MM). First calculate the
+    # absolute time from the variable values, and then use date2num to get the time
+    # offset.
+    def calc_obs_time(self, ActualValues):
+        if (self.bufr_ftype == BFILE_PREPBUFR):
+            # prepBUFR: use msg_date and DHR or HRDR
+
+            # Calculate the offset given by msg_date alone.
+            MsgDate = ActualValues['msg_date'].data[0]
+            MsgDtime = SplitDate(MsgDate)
+            MdateOffset = netCDF4.date2num(MsgDtime, units=self.time_units)
+
+            # Get the offset from either DHR or HRDR. 
+            if (self.multi_level):
+                OdateOffset = ActualValues['HRDR'].data
+            else:
+                OdateOffset = ActualValues['DHR'].data
+                
+            # Add in the MsgDate and ObsDate offsets together.
+            Toffset = np.ma.array(OdateOffset + MdateOffset)
+        else:
+            # raw BUFR: use YEAR, MNTH, ...
+            Year   = int(ActualValues['YEAR'].data)
+            Month  = int(ActualValues['MNTH'].data)
+            Day    = int(ActualValues['DAYS'].data)
+            Hour   = int(ActualValues['HOUR'].data)
+            Minute = int(ActualValues['MINU'].data)
+            Second = int(ActualValues['SECO'].data)
+
+            # Create datetime object with above data. Sometimes the SECO value is
+            # outside the range 0..59 (which is what datetime requires). Use Year through
+            # Minute to create the datetime object and add in Second via a
+            # timedelta object.
+            ObsDate = dt.datetime(Year, Month, Day, Hour, Minute) + dt.timedelta(seconds=Second)
+
+            # Convert to offset relative to the time units.
+            Toffset = np.ma.array(netCDF4.date2num(ObsDate, units=self.time_units))
+
+        return Toffset
+
+    ###############################################################################
     # This method will convert the BUFR data into netcdf data. This includes
     # reading BUFR and writing netcdf. This method represents a default that can
     # be used for (hopefully) many obs types. If an obs type requires a more complex
@@ -319,17 +380,23 @@ class ObsType(object):
                 MsgType = np.ma.array(bufr.msg_type)
                 MsgDate = np.ma.array([bufr.msg_date])
                 while (bufr.load_subset() == 0):
-                    # Write the message type and message date
-                    WriteNcVar(nc, ObsNum, 'msg_type', MsgType)
-                    WriteNcVar(nc, ObsNum, 'msg_date', MsgDate)
-
                     # Grab all of the mnemonics from the bufr file, and convert
-                    # to netcdf ready format. ReadConvertBufr() a dictionary 
+                    # from the BUFR float representation to the actual data type
+                    # (integer, float, string, double). ActualValues will be a dictionary 
                     # keyed by the netcdf variable name and containing the associated
-                    # data values.
+                    # data value.
                     ActualValues = self.extract_bufr(bufr)
 
-                    # Write out the netcdf values
+                    # Put the message type and message date into the dictionary.
+                    ActualValues['msg_type'] = MsgType
+                    ActualValues['msg_date'] = MsgDate
+
+                    # Calculate the value for the Time variable (which is an offset
+                    # from the reference time). Add the Time value to the dictionary.
+                    TimeValue = self.calc_obs_time(ActualValues)
+                    ActualValues['Time'] = TimeValue
+
+                    # Write out the netcdf variables.
                     for Vname, Vdata in ActualValues.items():
                         # Skip the write if Vdata is empty
                         if (Vdata.size > 0):
@@ -356,6 +423,9 @@ class AircraftObsType(ObsType):
         super().__init__()
 
         self.bufr_ftype = bf_type
+        self.multi_level = False
+        # Add on the specs for the Time variable
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs'], [self.nobs] ])
         if (bf_type == BFILE_BUFR):
             self.mtype_re = '^NC004001'
             self.int_spec = [
@@ -457,6 +527,9 @@ class SondesObsType(ObsType):
         super().__init__()
 
         self.bufr_ftype = bf_type
+        self.multi_level = True
+        # Add on the specs for the Time variable
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
         if (bf_type == BFILE_BUFR):
             self.mtype_re = 'UnDef'
             self.int_spec = []
@@ -536,6 +609,8 @@ class AmsuaObsType(ObsType):
 
         self.nchans = 20  # This is unique to AMSU
         self.bufr_ftype = bf_type
+        self.multi_level = False
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs'], [self.nobs] ])
         if (bf_type == BFILE_BUFR):
 
             self.mtype_re = '^NC021023'
@@ -603,7 +678,10 @@ def MakeDate(Dtime):
 def FindRefDate(StartDate):
     # This routine will return the next analysis time (0, 6, 12, 18Z) following
     # the date represented in StartDate. StartDate is an integer value of the form
-    # yyyymmddhh.
+    # yyyymmddhh. If StartDate matches an analysis time, then RefDate will be
+    # set to StartDate. This is done so that if the message dates are all the same,
+    # which happens a fair amount of the time, then the time offsets stored in the
+    # output file will be close to the RefDate.
     #
     # Use datetime structures so that addition will take into account carry
     # over into the next day, month, year when hours are added.
@@ -616,7 +694,7 @@ def FindRefDate(StartDate):
     # greater than zero in the result of the subtraction (HourDiffs).
     StartDtime = SplitDate(StartDate)
     HourDiffs = np.array([ 0, 6, 12, 18, 24 ]) - StartDtime.hour
-    HourInc = int(HourDiffs[HourDiffs > 0][0])
+    HourInc = int(HourDiffs[HourDiffs >= 0][0])
 
     # Form the datetime compatible version of HourInc, which can then
     # be added to the start date.
