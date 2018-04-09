@@ -10,6 +10,7 @@ import argparse
 import netCDF4
 from netCDF4 import Dataset
 import struct
+import datetime as dt
 
 ###########################################################################
 # CONFIGURATION
@@ -18,248 +19,734 @@ import struct
 # Some handy constants. These become global variables in this script. Using the
 # naming convention of all caps to remind us that these are not to be changed.
 
+# MAX_STRING_LEN is good with 10 characters. This is the length of the long format
+# for date and time. Most of the id labels are 6 or 8 characters.
+MAX_STRING_LEN = 10
+
+# MAX_EVENTS will usually be limited to 255 due to an array size in the Fortran
+# interface. In practice, there are typically a handful of events (4 or 5) since
+# the events are related to the steps that are gone through to convert a raw
+# BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
+# a safe limit (instead of 255) for the max number of events, so set MaxEvents
+# to 20 to help conserve file space.
+MAX_EVENTS = 20
+
+# MAX_LEVELS should be limited to 255 by a Fortran array size. This may need to
+# change in the future since this number corresponds to the number of atmospheric
+# levels in an observation.
+MAX_LEVELS = 255
+
+# BUFR file types
+BFILE_UNDEF    = 0
+BFILE_BUFR     = 1
+BFILE_PREPBUFR = 2
+
 # BUFR types
+BTYPE_UNDEF  = 0
 BTYPE_HEADER = 1
 BTYPE_DATA   = 2
 BTYPE_EVENT  = 3
 BTYPE_REP    = 4
 
 # Data types
+DTYPE_UNDEF   = 0
 DTYPE_STRING  = 1   # for CCITT IA5 units in the BUFR table
 DTYPE_INTEGER = 2   # for CODE TABLE, FLAG TABLE units in the BUFR table
-DTYPE_FLOAT   = 3   # all other units in the BUFR table
-DTYPE_DOUBLE  = 4   # all other units in the BUFR table
+DTYPE_FLOAT   = 3   # for all other units in the BUFR table
+DTYPE_UINT    = 4   # for dimension coordinates
+DTYPE_DOUBLE  = 5   # temporary: for strings that are expected to be double
+                    #            in downstream flows (GSI)
 
-# OBS_TYPES holds the specifications of message types to extract for a given obs type.
-# The structure is a nested dictionary (two levels). The outer dictionary holds entries
-# for each observation type. The format for each element in the outer dictionary is:
+############################################################################
+# CLASSES
+############################################################################
+
+# The BUFR format is extremely flexible, and different obs types have taken
+# advantage of that fact. This has resulted in the requirement of utilizing
+# different algorithms to extract obs data for different obs types. Ie, it's
+# extremely difficult to force the different formats into a common algorithm.
+# Using a base class with a simple extraction algorithm which can be overridden
+# in a derived class seems to be a good way to handle this situation.
 #
-#  <obs_type> : { <message_mnemonic_dictionary> }
+# For the extraction, it does appear that many obs types will place a header
+# at the front of an BUFR subset which consists of a simple list of BUFR
+# mnemonics. The header is followed by the obs data which can be a simple
+# list of mnemonics, but typically is a more complex structure with 
+# replications, sequences and events. The header extraction algorithm can
+# (for now) belong in the base class, and the obs data extraction algorithms
+# can belong in the derived classes (ie, specific to each obs type).
 #
-#  <message_mnemonic_dictionary> has the following entries:
-#     'bufr_type' : 'prepBUFR'  # input file is prepBUFR format
-#                   'BUFR'      # input file is raw BUFR format
+# Define the base class with a simple method that assumes all variables have a
+# one-to-one corrspondence with a BUFR mnemonic. More complex examples can
+# override the convert(), convert_header(), and/or convert_obs() methods
+# and do whatever is necessary. The thought about breaking up convert() into
+# two methods, convert_header() and convert_obs(), is that it seems that most
+# obs types will be able to utilize the simple convert_header() algorithm.
 #
-#     'num_levels' : 1  # single level data (eg, aircraft, surface obs)
-#                    n  # multi-level data (eg, sonde) 
+# The format for an entry in the *_spec lists is:
 #
-#     'msg_type_re' : regular expression to match all message types with <obs_type>
-# 
-#     'hdr_list' : list of mnemonics for header information
+#    [ nc_varname, mnemonic, data_type, dim_names, dim_sizes, created ] 
 #
-#     'obs_list' : list of mnemonics for observation data
+#        nc_varname: netcdf variable name
+#        mnemonic:   BUFR mnemonic
+#        data_type:  float, integer, string, ...
+#        dim_names:  (list of dimension names)
+#        dim_sizes:  (list of dimension sizes)
+#        created:    flag: True  - nc variable has been created
+#                          False - nc variable has not been created
 #
-#     'qm_list' : list of mnemonics for quality marks
-#
-#     'err_list' : list of mnemonics for observation error values
-#
-#     'misc_list' : list of mnemonics for miscelaneous data
-#
-#     'evn_list' : list of mnemonics for event data
-#
-#     'rep_list' : list of mnemonics for replication data
 
-OBS_TYPES = {
-    #################### prepBUFR obs types #############################
+################################# Base Observation Type ############################
+class ObsType(object):
+    ### initialize data elements ###
+    def __init__(self):
+        self.bufr_ftype = BFILE_UNDEF
+        self.mtype_re = 'UnDef'
+ 
+        # Keep this list of dimensions in sync with the if statment structure
+        # in the init_dim_spec() method.
+        self.nobs = -1
+        self.nlevs = MAX_LEVELS
+        self.nevents = MAX_EVENTS
+        self.nstring = MAX_STRING_LEN
+        self.nchans = -1
 
-    # Aircraft 
-    # Specs are from GSI read_prepbufr.f90
-    'Aircraft': {
-        'bufr_type'   : 'prepBUFR',
-        'num_levels'  : 1,
-        'msg_type_re' : 'AIRC[AF][RT]',
-        'hdr_list'    : [ 'SID', 'ACID', 'XOB', 'YOB', 'DHR', 'TYP', 'ELV', 'SAID', 'T29' ],
-        'obs_list'    : [ 'POB', 'QOB', 'TOB', 'ZOB', 'UOB', 'VOB', 'PWO', 'MXGS', 'PRSS', 'TDO', 'PMO' ],
-        'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
-        'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
-        'misc_list'   : [ 'HOVI', 'CAT', 'XDR', 'YDR', 'HRDR', 'POAF', 'IALR' ],
-        'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
-        'rep_list'    : [ ],
-        },
+        self.time_units = ""
+        self.int_spec = []
+        self.evn_spec = []
+        self.rep_spec = []
+        self.seq_spec = []
+        self.dim_spec = []
+        self.misc_spec = [
+            [ [ 'msg_type', '', DTYPE_STRING, ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+              [ 'msg_date', '', DTYPE_UINT,   ['nobs'],            [self.nobs]               ] ]
+            ]
 
-    # Radiosondes
-    'Sondes': {
-        'bufr_type'   : 'prepBUFR',
-        'num_levels'  : 255,
-        'msg_type_re' : 'ADPUPA',
-        'hdr_list'    : [ 'SID', 'XOB', 'YOB', 'DHR', 'TYP', 'ELV', 'T29' ], 
-        'obs_list'    : [ 'POB', 'QOB', 'TOB', 'ZOB', 'UOB', 'VOB', 'PWO', 'TDO' ],
-        'qm_list'     : [ 'PQM', 'QQM', 'TQM', 'ZQM', 'WQM', 'PWQ', 'PMQ' ],
-        'err_list'    : [ 'POE', 'QOE', 'TOE', 'WOE', 'PWE' ],
-        'misc_list'   : [ 'XDR', 'YDR', 'HRDR' ],
-        'evn_list'    : [ 'TPC', 'TOB', 'TQM' ],
-        'rep_list'    : [ ],
-        },
+    ### methods ###
 
-#        # prepBUFR data types for Sondes
-#        # Clara: THIS LIST IS NOT EXHAUSTIVE!!!!
-#        #        it is based on dumping a few messages, 
-#        #        then screening for vars read in by the gsi
-#        #          1. Header
-#        #          2. Obs types
-#        #          3. quality markers
-#        #          4. error ests.
-#        #          5. location info?
-#        ['POB',  'QOB',  'TOB',  'ZOB',  'UOB',  'VOB',  'PWO', 'TDO',
-#         'PQM',  'QQM',  'TQM',  'ZQM',  'WQM',  'PWQ',  'PMQ',
-#         'POE',  'QOE',  'TOE',  'WOE',  'PWE',
-#         'XDR',  'YDR',  'HRDR'], 
+    ###############################################################################
+    # This method will set the time units. The time units value will be used to
+    # calculate time offsets for observation values.
+    def set_time_units(self, tunits):
+        self.time_units = tunits
 
-    #################### raw BUFR obs types #############################
+    ###############################################################################
+    # This method will set the number of observations. This must be called
+    # before attempting to create any netcdf variables since self.nobs
+    # is also used to define the dimension sizes in all of the netcdf variables.
+    def set_nobs(self, nobs):
+        # update the data memeber
+        self.nobs = nobs
 
-    # Aircraft
-    'Aircraft_raw': {
-        'bufr_type'   : 'BUFR',
-        'num_levels'  : 1,
-        'msg_type_re' : '^NC004001',
-        'hdr_list'    : [ 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'ACID', 'CORN', 'CLAT', 'CLON', 'FLVL' ], 
-        'obs_list'    : [ 'TMDB', 'TMDP', 'REHU', 'WSPD', 'WDIR' ],
-        'qm_list'     : [ 'QMAT', 'QMDD', 'QMWN' ],
-        'err_list'    : [ ],
-        'misc_list'   : [ 'SEQNUM', 'BUHD', 'BORG', 'BULTIM', 'BBB', 'RPID' ],
-        'evn_list'    : [ ],
-        'rep_list'    : [ ],
-        },
+        # update the dimension sizes in the specs
+        #
+        # each spec is a list of variable specs
+        # each variable spec is a list with the fourth item being a list of
+        #    dimension names and the fifth item being a list of dimension sizes
+        #
+        # for every place in the dimension name list where the name is 'nobs', replace
+        # the corresponding size in the size list with self.nobs
+        for slist in [ self.int_spec, self.evn_spec, self.rep_spec, self.seq_spec,
+                      self.dim_spec, self.misc_spec ]:
+            for sub_slist in slist:
+                for var_spec in sub_slist:
+                    for i in [ j for j,dname in enumerate(var_spec[3]) if dname == 'nobs']:
+                        var_spec[4][i] = self.nobs
 
-    # Radiance, AMSU-A
-    'Amsua' : {
-        'bufr_type'     : 'BUFR',
-        'num_levels'    : 1,
-        'msg_type_re' : '^NC021023',
-        'hdr_list'    : [ 'SAID', 'FOVN', 'YEAR', 'MNTH', 'DAYS', 'HOUR', 'MINU', 'SECO', 'CLAT', 'CLON', 'HOLS' ], 
-        'obs_list'    : [ ],
-        'qm_list'     : [ ],
-        'err_list'    : [ ],
-        'misc_list'   : [ 'SAZA', 'SOZA', 'BEARAZ', 'SOLAZI' ],
-        'evn_list'    : [ ],
-        'rep_list'    : [ 'CHNM', 'TMBR', 'CSTC' ],
-        },
+    ###############################################################################
+    # This method will set the dimension specs (data memeber self.dim_spec). The
+    # format for the dim_spec will match that of the other specs (eg, self.int_spec).
+    def init_dim_spec(self):
+        # Do a union on all of the dimension names.
+        AllDimNames = set([])
+        for slist in [ self.int_spec, self.evn_spec, self.rep_spec,
+                       self.seq_spec, self.misc_spec ]:
+            for sub_slist in slist:
+                for var_spec in sub_slist:
+                    # dimension names are in the list given by var_spec[3]
+                    AllDimNames = AllDimNames | set(var_spec[3])
 
+        # AllDimNames holds the list of unique dimension names.
+        # Keep the following list of dimensions in sync with the __init__ method in
+        # in the ObsType base class.
+        DimList = []
+        for dname in AllDimNames:
+            if (dname == 'nobs'):
+                dsize = self.nobs
+            elif (dname == 'nlevs'):
+                dsize = self.nlevs
+            elif (dname == 'nevents'):
+                dsize = self.nevents
+            elif (dname == 'nstring'):
+                dsize = self.nstring
+            elif (dname == 'nchans'):
+                dsize = self.nchans
+            else:
+                print("ERROR: init_dim_spec: Unknown dimension name: {0:s}".format(dname))
+                sys.exit(3)
 
-# Clara: PREPBUFR FILES INCLUDE (BUT NOT READ BY GSI): 
-#            'TSB',  'ITP',  'SQN','PROCN',  'RPT', 'TCOR', 'SIRC',
-#        EVENTS VARS? *PC, *RC, *FC , TVO
+            DimList.append([ dname, dname, DTYPE_UINT, [ dname ], [ dsize ] ])
 
-    }
+        self.dim_spec = [ DimList ]
 
+    ###############################################################################
+    # This method will create dimensions and variables in the netcdf file
+    # according to the obs type variable specs.
+    def create_nc_datasets(self, fid):
 
-# DATA_TYPES creates a map from mnemonic name to its associated data type
+        # Create dimensions first so that the variables can reference them.
+        for sub_slist in self.dim_spec:
+            for dspec in sub_slist:
+                nc.createDimension(dspec[0], dspec[4][0])
 
-DATA_TYPES = {
-    'SID'    : DTYPE_DOUBLE,
-    'ACID'   : DTYPE_DOUBLE,
-    'XOB'    : DTYPE_FLOAT,
-    'YOB'    : DTYPE_FLOAT,
-    'DHR'    : DTYPE_FLOAT,
-    'TYP'    : DTYPE_INTEGER,
-    'ELV'    : DTYPE_FLOAT,
-    'SAID'   : DTYPE_INTEGER,
-    'T29'    : DTYPE_INTEGER,
-    'POB'    : DTYPE_FLOAT,
-    'QOB'    : DTYPE_FLOAT,
-    'TOB'    : DTYPE_FLOAT,
-    'ZOB'    : DTYPE_FLOAT,
-    'UOB'    : DTYPE_FLOAT,
-    'VOB'    : DTYPE_FLOAT,
-    'PWO'    : DTYPE_FLOAT,
-    'MXGS'   : DTYPE_FLOAT,
-    'HOVI'   : DTYPE_FLOAT,
-    'CAT'    : DTYPE_INTEGER,
-    'PRSS'   : DTYPE_FLOAT,
-    'TDO'    : DTYPE_FLOAT,
-    'PMO'    : DTYPE_FLOAT,
-    'POE'    : DTYPE_FLOAT,
-    'QOE'    : DTYPE_FLOAT,
-    'TOE'    : DTYPE_FLOAT,
-    'WOE'    : DTYPE_FLOAT,
-    'PWE'    : DTYPE_FLOAT,
-    'PQM'    : DTYPE_INTEGER,
-    'QQM'    : DTYPE_INTEGER,
-    'TQM'    : DTYPE_INTEGER,
-    'ZQM'    : DTYPE_INTEGER,
-    'WQM'    : DTYPE_INTEGER,
-    'PWQ'    : DTYPE_INTEGER,
-    'PMQ'    : DTYPE_INTEGER,
-    'XDR'    : DTYPE_FLOAT,
-    'YDR'    : DTYPE_FLOAT,
-    'HRDR'   : DTYPE_FLOAT,
-    'POAF'   : DTYPE_INTEGER,
-    'IALR'   : DTYPE_FLOAT, 
-    'TPC'    : DTYPE_INTEGER,
-    'TOB'    : DTYPE_FLOAT,
-    'TQM'    : DTYPE_INTEGER,
-    'YEAR'   : DTYPE_INTEGER,
-    'MNTH'   : DTYPE_INTEGER,
-    'DAYS'   : DTYPE_INTEGER,
-    'HOUR'   : DTYPE_INTEGER,
-    'MINU'   : DTYPE_INTEGER,
-    'SECO'   : DTYPE_INTEGER,
-    'SEQNUM' : DTYPE_STRING,
-    'BUHD'   : DTYPE_STRING,
-    'BORG'   : DTYPE_STRING,
-    'BULTIM' : DTYPE_STRING,
-    'BBB'    : DTYPE_STRING,
-    'RPID'   : DTYPE_STRING,
-    'CORN'   : DTYPE_INTEGER,
-    'CLAT'   : DTYPE_FLOAT,
-    'CLON'   : DTYPE_FLOAT,
-    'FLVL'   : DTYPE_FLOAT,
-    'QMAT'   : DTYPE_INTEGER,
-    'TMDB'   : DTYPE_FLOAT,
-    'QMDD'   : DTYPE_INTEGER,
-    'TMDP'   : DTYPE_FLOAT,
-    'REHU'   : DTYPE_FLOAT,
-    'QMWN'   : DTYPE_INTEGER,
-    'WSPD'   : DTYPE_FLOAT,
-    'WDIR'   : DTYPE_FLOAT,
-    'HOLS'   : DTYPE_FLOAT,
-    'FOVN'   : DTYPE_INTEGER,
-    'CHNM'   : DTYPE_INTEGER,
-    'TMBR'   : DTYPE_FLOAT,
-    'CSTC'   : DTYPE_FLOAT,
-    'SAZA'   : DTYPE_FLOAT,
-    'SOZA'   : DTYPE_FLOAT,
-    'BEARAZ' : DTYPE_FLOAT,
-    'SOLAZI' : DTYPE_FLOAT,
-    }
+        # Create variables including the coordinates for the dimensions
+        for slist in [ self.dim_spec, self.int_spec, self.evn_spec,
+                      self.rep_spec, self.seq_spec, self.misc_spec ]:
+            for sub_slist in slist:
+                for var_spec in sub_slist:
+                    Vname    = var_spec[0]
+                    Dtype    = var_spec[2]
+                    DimNames = var_spec[3]
+                    DimSizes = var_spec[4]
+
+                    # Convert the data type code to a netCDF data type
+                    if (Dtype == DTYPE_STRING):
+                        Vtype = 'S1'
+                    elif (Dtype == DTYPE_INTEGER):
+                        Vtype = 'i4'
+                    elif (Dtype == DTYPE_UINT):
+                        Vtype = 'u4'
+                    elif (Dtype == DTYPE_FLOAT):
+                        Vtype = 'f4'
+                    elif (Dtype == DTYPE_DOUBLE):
+                        Vtype = 'f8'
+
+                    # Don't specify the chunk sizes. Since all of the dimensions
+                    # are of fixed size, the built-in algorithm for calculating
+                    # chunk sizes will do a good job.
+                    nc.createVariable(Vname, Vtype, DimNames, zlib=True,
+                                      shuffle=True, complevel=6)
+
+    ###############################################################################
+    # This method will fill in the dimension variables with coordinate values.
+    # For now, using dummy values which are 1..n where n is the variable size.
+    def fill_coords(self, nc):
+        for DimSpecs in self.dim_spec:
+            for VarSpec in DimSpecs:
+                Vname = VarSpec[0]
+                Value = np.arange(VarSpec[4][0]) + 1
+                nc[Vname][:] = Value
+
+    ###############################################################################
+    # This method will read in a list of bufr mnemonics and return a list of
+    # the corresponding data values.
+    def read_bufr_data(self, bufr, Mlists, Rflag=False, Sflag=False, Eflag=False):
+        BufrValues = []
+
+        # Mlists contains sub-lists of mnemonic names. Process each sub-list by
+        # reading all mnemonics in that sub-list in one call to read_subset().
+        for MnemonicList in Mlists:
+            Mstring = " ".join(MnemonicList)
+            BufrValues.append(bufr.read_subset(Mstring, events=Eflag, seq=Sflag, rep=Rflag))
+
+        return BufrValues
+
+    ###############################################################################
+    # This method will convert bufr float data to the specified actual format.
+    # BufrValues is a list of masked arrays, where each masked array contains
+    # entries for all mnemonics in the sub-list of SpecList.
+    def bufr_float_to_actual(self, SpecList, BufrValues, ActualValues):
+        # Make a separate copy of the input dictionary
+        OutVals = { key : value for key, value in ActualValues.items() }
+
+        for SubSpecs, SubBvals in zip(SpecList, BufrValues):
+            for VarSpec, Bval in zip(SubSpecs, SubBvals):
+                # Convert according to the spec, and add to the dictionary.
+                # Netcdf variable name is in VarSpec[0]
+                # Data type is in VarSpec[2]
+                OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
+
+        return OutVals
+
+    ###############################################################################
+    # This method will take the four input spec lists and read the mnemonics
+    # from the bufr file. This routine will also convert the bufr values to
+    # corresponding netcdf values. This method will return a dictionary keyed
+    # by the netcdf variable name containing the associated values.
+    def extract_bufr(self, bufr):
+        ActualValues = {}
+    
+        # Read and convert the individual data mnemonics. The mnemonic value is the second
+        # entry in the int_spec sublist elements.
+        Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.int_spec ]
+        BufrValues = self.read_bufr_data(bufr, Mlists) 
+        ActualValues = self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues)
+
+        # Read and convert the event mnemonics
+        Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.evn_spec ]
+        BufrValues = self.read_bufr_data(bufr, Mlists, Eflag=True) 
+        ActualValues = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues)
+
+        # Read and convert the replication mnemonics
+        Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.rep_spec ]
+        BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True) 
+        ActualValues = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues)
+
+        # Read and convert the event mnemonics
+        Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.seq_spec ]
+        BufrValues = self.read_bufr_data(bufr, Mlists, Sflag=True) 
+        ActualValues = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues)
+
+        return ActualValues
+
+    ###############################################################################
+    # This method will calculated the offset time value from the BUFR mnemonic
+    # values. The calculation depends on the type of BUFR file (raw BUFR or prepBUFR).
+    # For raw BUFR, the absolute observation time comes from the mnemonics:
+    #     YEAR  - year
+    #     MNTH  - month
+    #     DAYS  - day
+    #     HOUR  - hour
+    #     MINU  - minute
+    #     SECO  - second
+    #
+    # For prepBUFR, the time relative to msg_date is held in DHR, and for multi-level
+    # obs in HRDR.
+    #     msg_date - Message date/time
+    #     DHR      - Observation time minus cycle time
+    #     HRDR     - Observation time minus cycle time on a level by level basis
+    #                   (taking drift into account)
+    #
+    # The netCDF4 utility date2num is used to calculate the offset. This routine takes
+    # in an absolute time stored in a datetime structure and the reference time stored
+    # in a units string (ie: seconds from YYYY-MM-DD HH:MM). First calculate the
+    # absolute time from the variable values, and then use date2num to get the time
+    # offset.
+    def calc_obs_time(self, ActualValues):
+        if (self.bufr_ftype == BFILE_PREPBUFR):
+            # prepBUFR: use msg_date and DHR or HRDR
+
+            # Calculate the offset given by msg_date alone.
+            MsgDate = ActualValues['msg_date'].data[0]
+            MsgDtime = SplitDate(MsgDate)
+            MdateOffset = netCDF4.date2num(MsgDtime, units=self.time_units)
+
+            # Get the offset from either DHR or HRDR. 
+            if (self.multi_level):
+                OdateOffset = ActualValues['HRDR'].data
+            else:
+                OdateOffset = ActualValues['DHR'].data
+                
+            # Add in the MsgDate and ObsDate offsets together.
+            Toffset = np.ma.array(OdateOffset + MdateOffset)
+        else:
+            # raw BUFR: use YEAR, MNTH, ...
+            Year   = int(ActualValues['YEAR'].data)
+            Month  = int(ActualValues['MNTH'].data)
+            Day    = int(ActualValues['DAYS'].data)
+            Hour   = int(ActualValues['HOUR'].data)
+            Minute = int(ActualValues['MINU'].data)
+            Second = int(ActualValues['SECO'].data)
+
+            # Create datetime object with above data. Sometimes the SECO value is
+            # outside the range 0..59 (which is what datetime requires). Use Year through
+            # Minute to create the datetime object and add in Second via a
+            # timedelta object.
+            ObsDate = dt.datetime(Year, Month, Day, Hour, Minute) + dt.timedelta(seconds=Second)
+
+            # Convert to offset relative to the time units.
+            Toffset = np.ma.array(netCDF4.date2num(ObsDate, units=self.time_units))
+
+        return Toffset
+
+    ###############################################################################
+    # This method will convert the BUFR data into netcdf data. This includes
+    # reading BUFR and writing netcdf. This method represents a default that can
+    # be used for (hopefully) many obs types. If an obs type requires a more complex
+    # method, then this one can be overridden in a derived class. 
+    #
+    # The default method provides the following:
+    #   Copy all BUFR mnemonic values in the variable specs to the output netcdf file
+    #   Calculate a time offset from the reference time and store in addition to
+    #     the BUFR mnemonic values
+    def convert(self, bufr, nc):
+        # Walk through the messages, selecting only those that match the regular
+        # expression for this obs type.
+        print("Converting BUFR to netcdf:")
+        ObsNum = 0
+        while ((bufr.advance() == 0) and (ObsNum < self.nobs)):
+            # Select only the messages that belong to this observation type
+            if (re.search(self.mtype_re, bufr.msg_type)):
+                MsgType = np.ma.array(bufr.msg_type)
+                MsgDate = np.ma.array([bufr.msg_date])
+                while (bufr.load_subset() == 0):
+                    # Grab all of the mnemonics from the bufr file, and convert
+                    # from the BUFR float representation to the actual data type
+                    # (integer, float, string, double). ActualValues will be a dictionary 
+                    # keyed by the netcdf variable name and containing the associated
+                    # data value.
+                    ActualValues = self.extract_bufr(bufr)
+
+                    # Put the message type and message date into the dictionary.
+                    ActualValues['msg_type'] = MsgType
+                    ActualValues['msg_date'] = MsgDate
+
+                    # Calculate the value for the Time variable (which is an offset
+                    # from the reference time). Add the Time value to the dictionary.
+                    TimeValue = self.calc_obs_time(ActualValues)
+                    ActualValues['Time'] = TimeValue
+
+                    # Write out the netcdf variables.
+                    for Vname, Vdata in ActualValues.items():
+                        # Skip the write if Vdata is empty
+                        if (Vdata.size > 0):
+                            WriteNcVar(nc, ObsNum, Vname, Vdata)
+
+                    # Increment observation number and print out progress messages.
+                    ObsNum += 1
+                    if ((ObsNum % 100) == 0):
+                        print("  Converted {0:d} observations".format(ObsNum))
+
+        # If processing a prepBUFR file, record the virtual temperature
+        # program code
+        if (self.bufr_ftype == BFILE_PREPBUFR):
+            nc.virtmp_code = bufr.get_program_code('VIRTMP')
+
+        print("")
+        print("  Total converted observations: ", ObsNum)
+        print("")
+
+################################# Aircraft Observation Type ############################
+class AircraftObsType(ObsType):
+    ### initialize data elements ###
+    def __init__(self, bf_type):
+        super().__init__()
+
+        self.bufr_ftype = bf_type
+        self.multi_level = False
+        # Add on the specs for the Time variable
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs'], [self.nobs] ])
+        if (bf_type == BFILE_BUFR):
+            self.mtype_re = '^NC004001'
+            self.int_spec = [
+                [ [ 'YEAR',   'YEAR',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MNTH',   'MNTH',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'DAYS',   'DAYS',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'HOUR',   'HOUR',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MINU',   'MINU',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ACID',   'ACID',   DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                  [ 'CORN',   'CORN',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'CLAT',   'CLAT',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'CLON',   'CLON',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'FLVL',   'FLVL',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'TMDB',   'TMDB',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TMDP',   'TMDP',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'REHU',   'REHU',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WSPD',   'WSPD',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WDIR',   'WDIR',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QMAT',   'QMAT',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QMDD',   'QMDD',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QMWN',   'QMWN',   DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+
+                [ [ 'SEQNUM', 'SEQNUM', DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BUHD',   'BUHD',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BORG',   'BORG',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BULTIM', 'BULTIM', DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BBB',    'BBB',    DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'RPID',   'RPID',   DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ] ],
+                ]
+            self.evn_spec = []
+            self.rep_spec = []
+            self.seq_spec = []
+        elif (bf_type == BFILE_PREPBUFR):
+            self.mtype_re = 'AIRC[AF][RT]'
+            self.int_spec = [
+                [ [ 'SID',  'SID',  DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                  [ 'ACID', 'ACID', DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                  [ 'XOB',  'XOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'YOB',  'YOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'DHR',  'DHR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TYP',  'TYP',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ELV',  'ELV',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'SAID', 'SAID', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'T29',  'T29',  DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+
+                [ [ 'POB',  'POB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QOB',  'QOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TOB',  'TOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'ZOB',  'ZOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'UOB',  'UOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'VOB',  'VOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PWO',  'PWO',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'MXGS', 'MXGS', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PRSS', 'PRSS', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TDO',  'TDO',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PMO',  'PMO',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'PQM',  'PQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QQM',  'QQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'TQM',  'TQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ZQM',  'ZQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'WQM',  'WQM',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'PWQ',  'PWQ',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'PMQ',  'PMQ',  DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+
+                [ [ 'POE',  'POE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QOE',  'QOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TOE',  'TOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WOE',  'WOE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PWE',  'PWE',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'HOVI', 'HOVI', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'CAT',  'CAT',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'XDR',  'XDR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'YDR',  'YDR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'HRDR', 'HRDR', DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'POAF', 'POAF', DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'IALR', 'IALR', DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                ]
+            self.evn_spec = [
+                [ [ 'TPC_bevn', 'TPC', DTYPE_INTEGER, ['nobs', 'nevents'], [self.nobs, self.nevents] ],
+                  [ 'TOB_bevn', 'TOB', DTYPE_FLOAT,   ['nobs', 'nevents'], [self.nobs, self.nevents] ],
+                  [ 'TQM_bevn', 'TQM', DTYPE_INTEGER, ['nobs', 'nevents'], [self.nobs, self.nevents] ] ],
+                ]
+            self.rep_spec = []
+            self.seq_spec = []
+
+        # Set the dimension specs.
+        super().init_dim_spec()
+
+    ### methods ###
+    
+
+################################# Radiosonde Observation Type ############################
+class SondesObsType(ObsType):
+    ### initialize data elements ###
+    def __init__(self, bf_type):
+        super().__init__()
+
+        self.bufr_ftype = bf_type
+        self.multi_level = True
+        # Add on the specs for the Time variable
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
+        if (bf_type == BFILE_BUFR):
+            self.mtype_re = 'UnDef'
+            self.int_spec = []
+            self.evn_spec = []
+            self.rep_spec = []
+            self.seq_spec = []
+        elif (bf_type == BFILE_PREPBUFR):
+            # Clara: THIS LIST IS NOT EXHAUSTIVE!!!!
+            #        it is based on dumping a few messages, 
+            #        then screening for vars read in by the gsi
+            #          1. Header
+            #          2. Obs types
+            #          3. quality markers
+            #          4. error ests.
+            #          5. location info?
+            #
+            # Clara: PREPBUFR FILES INCLUDE (BUT NOT READ BY GSI): 
+            #            'TSB',  'ITP',  'SQN','PROCN',  'RPT', 'TCOR', 'SIRC',
+            #        EVENTS VARS? *PC, *RC, *FC , TVO
+            #
+            self.mtype_re = 'ADPUPA'
+            self.int_spec = [
+                [ [ 'SID',  'SID',  DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                  [ 'XOB',  'XOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'YOB',  'YOB',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'DHR',  'DHR',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TYP',  'TYP',  DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ELV',  'ELV',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'T29',  'T29',  DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+
+                [ [ 'POB',  'POB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'QOB',  'QOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TOB',  'TOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'ZOB',  'ZOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'UOB',  'UOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'VOB',  'VOB',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PWO',  'PWO',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TDO',  'TDO',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
+
+                [ [ 'PQM',  'PQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'QQM',  'QQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TQM',  'TQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'ZQM',  'ZQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'WQM',  'WQM',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PWQ',  'PWQ',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PMQ',  'PMQ',  DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
+
+                [ [ 'POE',  'POE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'QOE',  'QOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TOE',  'TOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'WOE',  'WOE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PWE',  'PWE',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'XDR',  'XDR',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'YDR',  'YDR',  DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'HRDR', 'HRDR', DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
+
+                ]
+            self.evn_spec = [
+                [ [ 'TPC_bevn', 'TPC', DTYPE_INTEGER, ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents] ],
+                  [ 'TOB_bevn', 'TOB', DTYPE_FLOAT,   ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents] ],
+                  [ 'TQM_bevn', 'TQM', DTYPE_INTEGER, ['nobs', 'nlevs', 'nevents'], [self.nobs, self.nlevs, self.nevents] ] ]
+                ]
+            self.rep_spec = []
+            self.seq_spec = []
+
+        # Set the dimension specs.
+        super().init_dim_spec()
+
+    ### methods ###
+    
+
+########################### Radiance (AMSU-A) Observation Type ############################
+class AmsuaObsType(ObsType):
+    ### initialize data elements ###
+    def __init__(self, bf_type):
+        super().__init__()
+
+        self.nchans = 20  # This is unique to AMSU
+        self.bufr_ftype = bf_type
+        self.multi_level = False
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs'], [self.nobs] ])
+        if (bf_type == BFILE_BUFR):
+
+            self.mtype_re = '^NC021023'
+            self.int_spec = [
+                [ [ 'SAID',   'SAID',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'FOVN',   'FOVN',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'YEAR',   'YEAR',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MNTH',   'MNTH',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'DAYS',   'DAYS',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'HOUR',   'HOUR',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MINU',   'MINU',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'SECO',   'SECO',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'CLAT',   'CLAT',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'CLON',   'CLON',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'HOLS',   'HOLS',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'SAZA',   'SAZA',   DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                  [ 'SOZA',   'SOZA',   DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                  [ 'BEARAZ', 'BEARAZ', DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                  [ 'SOLAZI', 'SOLAZI', DTYPE_FLOAT, ['nobs'], [self.nobs] ] ]
+
+                ]
+            self.evn_spec = []
+            self.rep_spec = [
+                [ [ 'CHNM', 'CHNM', DTYPE_INTEGER, ['nobs', 'nchans'], [self.nobs, self.nchans] ],
+                  [ 'TMBR', 'TMBR', DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ],
+                  [ 'CSTC', 'CSTC', DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ] ]
+
+                ]
+            self.seq_spec = []
+        elif (bf_type == BFILE_PREPBUFR):
+            self.mtype_re = 'UnDef'
+            self.int_spec = []
+            self.evn_spec = []
+            self.rep_spec = []
+            self.seq_spec = []
+
+        # Set the dimension specs.
+        super().init_dim_spec()
+
+    ### methods ###
+    
 
 ###########################################################################
 # SUBROUTINES
 ###########################################################################
 
-def FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg):
+def SplitDate(yyyymmddhh):
+    # This routine will take an integer date yyyymmddhh and return the
+    # datetime equivalent.
+    DateString = str(yyyymmddhh)
+    Dtime = dt.datetime(int(DateString[0:4]), int(DateString[4:6]),
+                        int(DateString[6:8]), int(DateString[8:10]))
+
+    return Dtime
+
+def MakeDate(Dtime):
+    # This routine will take in integers representing yyyy, mm, dd, hh and
+    # return an integer date yyyymmddhh.
+
+    DateString = "%0.4i"%(Dtime.year) + "%0.2i"%(Dtime.month) + "%0.2i"%(Dtime.day) + "%0.2i"%(Dtime.hour)
+
+    return int(DateString)
+
+def FindRefDate(StartDate):
+    # This routine will return the next analysis time (0, 6, 12, 18Z) following
+    # the date represented in StartDate. StartDate is an integer value of the form
+    # yyyymmddhh. If StartDate matches an analysis time, then RefDate will be
+    # set to StartDate. This is done so that if the message dates are all the same,
+    # which happens a fair amount of the time, then the time offsets stored in the
+    # output file will be close to the RefDate.
+    #
+    # Use datetime structures so that addition will take into account carry
+    # over into the next day, month, year when hours are added.
+    #
+    # Compare the hours field in the start date with the analysis times
+    # 0, 6, 12, 18, 24 where 24 is 0Z of the next day. 24 is there to make
+    # sure that when subtracting the start date hour value, at least one
+    # of the entries in the result will be greater than zero. Then the
+    # distance to the next analysis time will be the first entry that is
+    # greater than zero in the result of the subtraction (HourDiffs).
+    StartDtime = SplitDate(StartDate)
+    HourDiffs = np.array([ 0, 6, 12, 18, 24 ]) - StartDtime.hour
+    HourInc = int(HourDiffs[HourDiffs >= 0][0])
+
+    # Form the datetime compatible version of HourInc, which can then
+    # be added to the start date.
+    DtDelta = dt.timedelta(hours=HourInc) 
+    RefDtime = StartDtime + DtDelta
+    RefDate = MakeDate(RefDtime)
+
+    return RefDate
+
+def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
     # This routine will read the BUFR file and figure out how many observations
     # will be read when recording data.
+    #
+    # It will also figure out the timestamp to use for the obs reference time.
+    # The next analysis time (0, 6, 12, 18Z) past the earliest message date
+    # found in the selected messages will be used for the reference time.
+    #
+    # The msg_date value is an integer in the form of YYYYMMDDHH. Because of
+    # this format, the smallest integer is also the earliest date. So we
+    # just need to find the minimum date value and then figure out the
+    # next analysis time from that value.
 
-    bufr = ncepbufr.open(PrepbufrFname)
+    bufr = ncepbufr.open(BufrFname)
 
     # The number of observations will be equal to the total number of subsets
     # contained in the selected messages.
-    MaxObs = 0
-    NMsg = 0 
-    MaxObsKeep = 0 
+    TotalNumMsg = 0
+    NumMsg = 0 
+    NumObs = 0 
+    EarliestDate = 9999999999 # A value about 8000 years from now
+    LatestDate = 0
     while ( (bufr.advance() == 0) ): 
         # Select only the messages that belong to this observation type
         if (re.search(MessageRe, bufr.msg_type)):
-            # Attribute "subsets" contains the number of subsets
-            # for the current message.
-            MaxObs += bufr._subsets()
-            NMsg += 1
-            # Keep recording MaxObs until NMsg exceeds MaxNMsg. This way
-            # if MaxNMsg is greater than the total number of selected
-            # messages, MaxObsKeep will have the latest obs count.
-            if (NMsg <= MaxNMsg): 
-                MaxObsKeep = MaxObs
+            TotalNumMsg += 1
+
+            # If MaxNumMsg is less than 1, then select all messages.
+            # If MaxNumMsg is >= 1, then select no more than MaxNumMsg
+            if ((MaxNumMsg < 1) or (NumMsg < MaxNumMsg)):
+                # Attribute "subsets" contains the number of subsets
+                # for the current message.
+                NumMsg += 1
+                NumObs += bufr._subsets()
+
+                if (bufr.msg_date < EarliestDate):
+                    EarliestDate = bufr.msg_date
 
     bufr.close()
- 
-    if (MaxNMsg<0): 
-        MaxObsKeep=MaxObs
 
-    return [MaxObsKeep, NMsg] 
+    return [NumObs, NumMsg, TotalNumMsg, FindRefDate(EarliestDate)] 
 
-###########################################################################
-def ExtractBufrData(Bval, Dname, Btype, Dtype):
+def BufrFloatToActual(Bval, Dtype):
     # This routine will extract the value of a variable from the
     # output of read_subset(). read_subset() will return a floating point
     # number (for any type) or an empty list if the mnemonic didn't exist. For strings
@@ -267,13 +754,14 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype):
     # convert to integer or leave alone.
     #
     # Keep Dtype values in sync with entries in the DATA_TYPES dictionary. For now,
-    # these values are DTYPE_STRING, DTYPE_INTEGER and DTYPE_FLOAT.
+    # these values are DTYPE_STRING, DTYPE_INTEGER, DTYPE_FLOAT, DTYPE_DOUBLE.
 
-    # If the incoming Bval is empty, then set DataPresent to False. This will tell
-    # ReadWriteNcVar to skip writing this value into the output file, which means
-    # that Dval can remain unset.
-    DataPresent = (Bval.size > 0)
-    if (DataPresent):
+    # If the incoming Bval is empty, then return an empty masked array
+    # value so that writing process can skip this value if Bval was empty.
+    if (Bval.size == 0):
+        # Bval is empty so return an empty Dval.
+        Dval = np.ma.array([ ])
+    else:
         # Bval is not empty. Convert the Bval data to the appropriate type, and
         # return another masked array with the proper data and mask.
 
@@ -309,171 +797,76 @@ def ExtractBufrData(Bval, Dname, Btype, Dtype):
             # copy doubles
             Dval = np.ma.array(Bval.data.astype(np.float64), mask=Bval.mask, dtype=np.float64)
 
-    return [Dval, DataPresent] 
+    # Squeeze the array since read_subset can return size 1 dimensions (eg. nlevs).
+    return Dval.squeeze()
 
-###########################################################################
-def CreateNcVar(Fid, Dname, Btype, Dtype,
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs):
-
-    # This routine will create a variable in the output netCDF file.
-    # In general, the order of dimensions is:
-    #
-    #     nobs
-    #     nlevs
-    #     nstring
-    #     nevents
-    #
-    # If a dimension is missing, then the others stay in their relative
-    # order as listed above.
-    #
-    # The dimensions are set according to the Dtype and Btype inputs.
-    #
-    # If Btype is BTYPE_HEADER
-    #   Dtype       Dims
-    #  DTYPE_STRING  [nobs, nstring]
-    #  DTYPE_INTEGER [nobs]
-    #  DTYPE_FLOAT   [nobs]
-    #
-    # If Btype is BTYPE_DATA 
-    #   Dtype       Dims
-    #  DTYPE_STRING  [nobs, nlevs, nstring]
-    #  DTYPE_INTEGER [nobs, nlevs]
-    #  DTYPE_FLOAT   [nobs, nlevs]
-    #
-    # If Btype is BTYPE_EVENT or BTYPE_REP, then append the nevents (nreps) dim
-    # on the end of the dim specification.
-    #
-    #  DTYPE_STRING  [nobs, nlevs, nstring, nevents]
-    #  DTYPE_INTEGER [nobs, nlevs, nevents]
-    #  DTYPE_FLOAT   [nobs, nlevs, nevents]
-
-    # The netcdf variable name will match Dname, except for the cases where
-    # the BUFR type is event. In this case, need to append "_bevn" to the
-    # variable name so it is unique from the name used for the BUFR data type.
-    if (Btype == BTYPE_EVENT):
-        Vname = "{0:s}_bevn".format(Dname)
-    else:
-        Vname = Dname
-
-    # Set the netcdf variable type accordingly.
-    if (Dtype == DTYPE_STRING):
-        Vtype = 'S1'
-    elif (Dtype == DTYPE_INTEGER):
-        Vtype = 'i4'
-    elif (Dtype == DTYPE_FLOAT):
-        Vtype = 'f4'
-    elif (Dtype == DTYPE_DOUBLE):
-        Vtype = 'f8'
-
-    # Figure out the dimensions for this variable.
-    # All types have nobs as first dimension
-    DimSpec = [NobsDname]
-    ChunkSpec = [MaxObs]
-
-    # If we have BUFR types data or event, then the next dimension is nlevs
-    if ((Btype == BTYPE_DATA) or (Btype == BTYPE_EVENT)):
-        DimSpec.append(NlevsDname)
-        ChunkSpec.append(MaxLevels)
-
-    # If we have string data type, then the next dimension is nstring
-    if (Dtype == DTYPE_STRING):
-        DimSpec.append(StrDname)
-        ChunkSpec.append(MaxStringLen)
-
-    # If we have BUFR type event, then the final dimension is nevents
-    # or if we have BUFR type rep, then the final dimension is nreps
-    if (Btype == BTYPE_EVENT):
-        DimSpec.append(NeventsDname)
-        ChunkSpec.append(MaxEvents)
-    elif (Btype == BTYPE_REP):
-        DimSpec.append(NrepsDname)
-        ChunkSpec.append(MaxReps)
-
-    Fid.createVariable(Vname, Vtype, DimSpec, chunksizes=ChunkSpec,
-        zlib=True, shuffle=True, complevel=6)
-
-###########################################################################
-def WriteNcVar(Fid, obs_num, Dname, Btype, Dval, MaxStringLen, MaxEvents, MaxReps):
+def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     # This routine will write into a variable in the output netCDF file
 
-    # Set the variable name according to Btype
-    if (Btype == BTYPE_EVENT):
-        Vname = "{0:s}_bevn".format(Dname)
-    else:
-        Vname = Dname
-
     # For the string data, convert to a numpy character array
-    if ((Dval.dtype.char == 'S') or (Dval.dtype.char == 'U')):
-        IsString=True
-        StrSpec = "S{0:d}".format(MaxStringLen)
-        Value = netCDF4.stringtochar(Dval.astype(StrSpec))
+    if ((Vdata.dtype.char == 'S') or (Vdata.dtype.char == 'U')):
+        StrSpec = "S{0:d}".format(MAX_STRING_LEN)
+        Value = netCDF4.stringtochar(Vdata.astype(StrSpec))
     else:
-        IsString=False
-        if (Btype == BTYPE_EVENT):
-            # Trim the dimension representing events to 0:MaxEvents.
-            # This will be the last dimension of a multi-dim array:
-            #    either [nlev, nevent], or [nlev, nstring, nevent].
-            Value = Dval[...,0:MaxEvents].copy()
-        elif (Btype == BTYPE_REP):
-            # Trim the dimension representing reps to 0:MaxReps.
-            # This will be the last dimension of a multi-dim array:
-            #    either [nlev, nrep], or [nlev, nstring, nrep].
-            Value = Dval[...,0:MaxReps].copy()
-        else:
-            Value = Dval.copy()
+        Value = Vdata.copy()
 
-    # Write the variable. Since the dimension sizes from the read_subset()
-    # routine can vary, we need to use array slice style indexing to
-    # copy Value into netCDF variable (NcVar below). Look at how many
-    # dimensions Value has compared to NcVar and put in the appropriate
-    # slice indexing. nobs (obs_num) is always the first dimension.
+    # At this point, the dimension sizes of the netcdf variable (NcVar) and Value
+    # need to get aligned. For some dimensions, the NcVar dimension size will tend
+    # to be larger than the Value dimension size (eg, nlevs). For other dimensions,
+    # it will be the other way around (eg, nevents). The one thing that can be counted
+    # on is that the list of dimensions will match between NcVar and Value, except
+    # that NcVar will have nobs as an extra dimension, and nobs will be the first
+    # in the dimension list. For example, if you have a multi-level event:
+    #
+    #    Value dimensions will be [ nlevs, nevents ]
+    #    Ncvar dimensions will be [ nobs, nlevs, nevents ]
+    #
+    # This means that to reconcile the sizes of each dimension, we need to slice
+    # out of the minimum sizes of the corresponding dimension of NcVar and Value.
+    # Using the example above, for a multi-level event:
+    #
+    #    Value dimensions are [ 51, 255 ]
+    #    NcVar dimensions are [ 1000, 255, 20 ]
+    #
+    #    nlevs size for Value is 51, for NcVar is 255 so use 51 for the slicing
+    #    nevents size for Value is 255, for NcVar is 20 so use 20 for the slicing
+    #
+    #    The assignment then becomes
+    #        NcVar[ObsNum, 0:51, 0:20] = Value[0:51, 0:20]
+    #
+    # Figure out how to do the slicing by looking at the number of dimensions at both
+    # Value (masked array) and NcVar (netcdf array). A masked array that gets built
+    # using a scalar data value will return 0 for the number of dimensions.
     NcVar = Fid[Vname]
     ValNdim = Value.ndim
     NcNdim = NcVar.ndim
-    if (ValNdim == 1):
-        if (NcNdim == 1):
-            # Value has one dimension (scalar)
-            # NcVar has one dimension (eg, [nobs])
-            NcVar[obs_num] = Value
-        else:
-            # Value has one dimension  (eg, [nlevs])
-            # NcVar has two dimensions (eg, [nobs,nlevs])
-            N1 = Value.shape[0]
-            NcVar[obs_num,0:N1] = Value
-    elif (ValNdim == 2):
+
+    if (NcNdim == 1):
+        # No need for slicing. Value is either a scalar or a
+        # 1D array with a single element
+        NcVar[ObsNum] = Value
+    elif (NcNdim == 2):
+        # Value has one dimension  (eg, [nlevs])
+        # NcVar has two dimensions (eg, [nobs,nlevs])
+        N1 = min(Value.shape[0], NcVar.shape[1])
+        NcVar[ObsNum, 0:N1] = Value[0:N1]
+    elif (NcNdim == 3):
         # Value has two dimensions   (eg, [nlevs,nevents])
         # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
-        N1 = Value.shape[0]
-        N2 = Value.shape[1]
-        NcVar[obs_num,0:N1,0:N2] = Value
-    elif (ValNdim == 3):
+        N1 = min(Value.shape[0], NcVar.shape[1])
+        N2 = min(Value.shape[1], NcVar.shape[2])
+        NcVar[ObsNum,0:N1, 0:N2] = Value[0:N1, 0:N2]
+    elif (NcNdim == 4):
         # Value has three dimensions (eg, [nlevs,nstring,nevents])
         # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
-        N1 = Value.shape[0]
-        N2 = Value.shape[1]
-        N3 = Value.shape[2]
-        NcVar[obs_num,0:N1,0:N2,0:N3] = Value
+        N1 = min(Value.shape[0], NcVar.shape[1])
+        N2 = min(Value.shape[1], NcVar.shape[2])
+        N3 = min(Value.shape[2], NcVar.shape[3])
+        NcVar[ObsNum, 0:N1, 0:N2, 0:N3] = Value[0:N1, 0:N2, 0:N3]
 
-###########################################################################
-def ReadWriteGroup(Fid, Mlist, Btype, DataTypes, MaxStringLen, MaxEvents, MaxReps):
-    # This routine will read the mnemonics from the bufr file, convert them to
-    # their proper data types and write them into the output netCDF file.
-    Mstring = " ".join(Mlist)
-    Eflag = (Btype == BTYPE_EVENT)
-    Rflag = (Btype == BTYPE_REP)
-    # CSD-keep this as a masked array for handling NaNs.
-    BufrVals = Fid.read_subset(Mstring, events=Eflag, rep=Rflag)
-
-    for i, Vname in enumerate(Mlist):
-        Bval = BufrVals[i,...]
-        [VarVal, VarInBufr] = ExtractBufrData(Bval, Vname, Btype, DataTypes[Vname])
-        if VarInBufr:
-            WriteNcVar(nc, NumObs, Vname, Btype, VarVal, MaxStringLen, MaxEvents, MaxReps)
-
-###########################################################################
+###################################################################################
 # MAIN
-###########################################################################
+###################################################################################
 ScriptName = os.path.basename(sys.argv[0])
 
 # Parse command line
@@ -485,19 +878,25 @@ ap.add_argument("-m", "--maxmsgs", type=int, default=-1,
                 help="maximum number of messages to keep", metavar="<max_num_msgs>")
 ap.add_argument("-c", "--clobber", action="store_true",
                 help="allow overwrite of output netcdf file")
+ap.add_argument("-p", "--prepbufr", action="store_true",
+                help="input BUFR file is in prepBUFR format")
 
 MyArgs = ap.parse_args()
 
 ObsType = MyArgs.obs_type
-PrepbufrFname = MyArgs.input_bufr
+BufrFname = MyArgs.input_bufr
 NetcdfFname = MyArgs.output_netcdf
-MaxNMsg = MyArgs.maxmsgs
+MaxNumMsg = MyArgs.maxmsgs
 ClobberOfile = MyArgs.clobber
+if (MyArgs.prepbufr):
+    BfileType = BFILE_PREPBUFR
+else:
+    BfileType = BFILE_BUFR
 
 # Check files
 BadArgs = False
-if (not os.path.isfile(PrepbufrFname)): 
-    print("ERROR: {0:s}: Specified input BUFR file does not exist: {0:s}".format(ScriptName, PrepbufrFname))
+if (not os.path.isfile(BufrFname)): 
+    print("ERROR: {0:s}: Specified input BUFR file does not exist: {1:s}".format(ScriptName, BufrFname))
     print("")
     BadArgs = True
 
@@ -511,242 +910,106 @@ if (os.path.isfile(NetcdfFname)):
         print("")
         BadArgs = True
 
+# Check the observation type, and create an observation instance.
+if (ObsType == 'Aircraft'):
+    Obs = AircraftObsType(BfileType)
+elif (ObsType == 'Sondes'):
+    Obs = SondesObsType(BfileType)
+elif (ObsType == 'Amsua'):
+    Obs = AmsuaObsType(BfileType)
+else:
+    print("ERROR: {0:s}: Unknown observation type: {1:s}".format(ScriptName, ObsType))
+    print("")
+    BadArgs = True
+
+if (not BadArgs):
+    if (Obs.mtype_re == 'UnDef'):
+        if (BfileType == BFILE_BUFR):
+            print("ERROR: {0:s}: Observation type {1:s} for BUFR format is undefined".format(ScriptName, ObsType))
+        elif (BfileType == BFILE_PREPBUFR):
+            print("ERROR: {0:s}: Observation type {1:s} for prepBUFR format is undefined".format(ScriptName, ObsType))
+        print("")
+        BadArgs = True
+
 if (BadArgs):
     sys.exit(2)
 
+# Arguments are okay, and we've got an observation object instantiated. Note that
+# we need to have the obs object instantiated before calling BfilePreprocess()
+# routine below. This is so BfilePreprocess() can select messages in the
+# same manner as the subsequent conversion.
 print("Converting BUFR to netCDF")
 print("  Observation Type: {0:s}".format(ObsType))
-print("  Input BUFR file: {0:s}".format(PrepbufrFname))
+if (BfileType == BFILE_BUFR):
+    print("  Input BUFR file (BUFR format): {0:s}".format(BufrFname))
+elif (BfileType == BFILE_PREPBUFR):
+    print("  Input BUFR file (prepBUFR format): {0:s}".format(BufrFname))
 print("  Output netCDF file: {0:s}".format(NetcdfFname))
-if (MaxNMsg > 0):
-    print("  Limiting nubmer of messages to record to {0:d} messages".format(MaxNMsg))
+if (MaxNumMsg > 0):
+    print("  Limiting nubmer of messages to record to {0:d} messages".format(MaxNumMsg))
 print("")
-
-# Set up selection lists from the configuration
-BufrFtype = OBS_TYPES[ObsType]['bufr_type']
-MaxLevels = OBS_TYPES[ObsType]['num_levels']
-MessageRe = OBS_TYPES[ObsType]['msg_type_re']
-
-HeadList  = OBS_TYPES[ObsType]['hdr_list']
-ObsList   = OBS_TYPES[ObsType]['obs_list']
-QmarkList = OBS_TYPES[ObsType]['qm_list']
-ErrList   = OBS_TYPES[ObsType]['err_list']
-MiscList  = OBS_TYPES[ObsType]['misc_list']
-EventList = OBS_TYPES[ObsType]['evn_list']
-RepList   = OBS_TYPES[ObsType]['rep_list']
-
-# The mnemonics in ObsList, QmarkList, ErrList, MiscList all represent BTYPE_DATA types.
-DataList = ObsList + QmarkList + ErrList + MiscList
 
 # It turns out that using multiple unlimited dimensions in the netCDF file
 # can be very detrimental to the file's size, and can also be detrimental
 # to the runtime for creating the file.
 #
 # In order to mitigate this, we want to use fixed size dimensions instead.
+# Each obs type object will have its associated dimension sizes defined as
+# fixed sizes. The only missing part is how many observations (subsets) will
+# be selected.
 #
-# Reading in the dictionary table is fast, but this won't reveal the number of
-# observations nor the number of levels in the data. Unfortunately, reading in
-# all of the data pieces is slow.
+# This number of subsets needs to be determined from reading through all the
+# selected messages. Fortunately, this is very fast.
 #
-# Set the number of levels from the config file (entry in the ObsTypes).
-#
-# MaxEvents will usually be set to 255 due to an array limit in the Fortran
-# interface. In practice, there are typically a handful of events (4 or 5) since
-# the events are related to the steps that are gone through to convert a raw
-# BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
-# a safe limit (instead of 255) for the max number of events, so set MaxEvents
-# to 20 to help conserve file space.
-#
-# MaxReps is typically used for the number of channels in a satellite instrument.
-# The Fortran interface uses 255 for its array limit. Set this to 50 to help
-# conserve space.
-#
-# MaxStringLen is good with 10 characters. This is the length of the long format
-# for date and time. Most of the id labels are 6 or 8 characters.
-
 # Make a pass through the BUFR file to determine the number of observations
-print("Finding dimension sizes from BUFR file")
-MaxStringLen = 10
-MaxEvents = 20
-MaxReps   = 50
+# and the reference time.
+#
+# BfilePreprocess() will use the regular expression for selecting message
+# types. NumObs will be set to the number of observations selected,
+# NumMsgs will be set to the number of messages selected, and TotalMsgs
+# will be set to the total number of messages that match Obs.mtype_re in the file.
+[NumObs, NumMsgs, TotalMsgs, RefDate] = BfilePreprocess(BufrFname, Obs.mtype_re, MaxNumMsg)
 
-[MaxObs, FilNMsg] = FindNumObsFromBufrFile(PrepbufrFname, MessageRe, MaxNMsg)
-
-if (MaxNMsg>0): 
-    NMsgRead = MaxNMsg 
-else: 
-    NMsgRead = FilNMsg
-
+print("  Total number of messages that match obs type {0:s}: {1:d}".format(ObsType, TotalMsgs))
+print("  Number of messages selected: {0:d}".format(NumMsgs))
+print("  Number of observations selected: {0:d}".format(NumObs))
+print("  Reference date for observations: {0:d}".format(RefDate))
 print("")
 
-print("Dimension sizes for output netCDF file")
-print("  Maximum number of levels: {}".format(MaxLevels))
-print("  Maximum number of events: {}".format(MaxEvents))
-print("  Maximum number of replications: {}".format(MaxReps))
-print("  Maximum number of characters in strings: {}".format(MaxStringLen))
-print("  Maximum number of observations: {}".format(MaxObs))
-print("")
+# We will use the netCDF4 method date2num to calculate the datetime offset from the
+# reference date (RefDate). This method wants a datetime object holding the current
+# date and time as the first argument, and a units string holding the reference time.
+# The units string is in the form "seconds since YYYY-MM-DD HH:00 UTC" where YYYY, MM,
+# DD and HH come from the reference date. Create the units string and add that to the
+# Obs object.
+RefDtime = SplitDate(RefDate)
+TimeUnits = "seconds since %0.4i-%0.2i-%0.2i %0.2i:00 UTC" %(RefDtime.year,
+            RefDtime.month, RefDtime.day, RefDtime.hour)
+Obs.set_time_units(TimeUnits)
+
+# Now that we have the number of observations we will be recording, set the dimension
+# size in the obs object. Note the set_nobs() method needs to be called before creating
+# netcdf variables.
+Obs.set_nobs(NumObs)
 
 # Create the dimensions and variables in the netCDF file in preparation for
 # recording the selected observations.
+# Aslo, store the reference date in the netcdf file as an attribute
 nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
+nc.ref_date = RefDate
+Obs.create_nc_datasets(nc)
 
-# For each mnemonic, non-events will be in a 1D array,
-# and events will be in a 2D array.
-#
-#   Non-event: data[nlevs]
-#     nlevs is the nubmer of levels
-#
-#   Event: data[nlevs, nevents]
-#     nlevs is the nubmer of levels
-#     nevents is the number of event codes
-#
-# Each variable will add a dimension (in the front) to hold
-# each observation (subset). This results in:
-#
-#   Non-event: data[nobs,nlevs]
-#   Event: data[nobs,nlevs,nevents]
-#
-NobsDname = "nobs"
-NlevsDname = "nlevs"
-NeventsDname = "nevents"
-NrepsDname = "nreps"
-StrDname = "nstring"
+# Fill in the dimension variables with the coordinate values. Just using dummy values
+# for now which are 1..n where n is the size of the coorespoding dimension.
+Obs.fill_coords(nc)
 
-# dimsensions plus corresponding vars to hold coordinate values
-nc.createDimension(NlevsDname, MaxLevels)
-nc.createDimension(NeventsDname, MaxEvents)
-nc.createDimension(NrepsDname, MaxReps)
-nc.createDimension(StrDname, MaxStringLen)
-nc.createDimension(NobsDname, MaxObs)
+# Open the BUFR file and initialize the file object.
+bufr = ncepbufr.open(BufrFname)
 
-# coordinates
-#   these are just counts so use unsigned ints
-#
-# Use chunk sizes that match the dimension sizes. Don't want a total chunk
-# size to exceed ~ 1MB, but if that is true, the data size is getting too
-# big anyway (a dimension size is over a million items!).
-nc.createVariable(NlevsDname, 'u4', (NlevsDname), chunksizes=[MaxLevels])
-nc.createVariable(NeventsDname, 'u4', (NeventsDname), chunksizes=[MaxEvents])
-nc.createVariable(NrepsDname, 'u4', (NrepsDname), chunksizes=[MaxReps])
-nc.createVariable(StrDname, 'u4', (StrDname), chunksizes=[MaxStringLen])
-nc.createVariable(NobsDname, 'u4', (NobsDname), chunksizes=[MaxObs])
+# Run the conversion
+Obs.convert(bufr, nc)
 
-# variables
-MtypeVname = "msg_type"
-MtypeDtype = DTYPE_STRING
-MdateVname = "msg_date"
-MdateDtype = DTYPE_INTEGER
-
-# Make a second pass through the BUFR file, this time to record
-# the selected observations.
-bufr = ncepbufr.open(PrepbufrFname)
-
-CreateNcVar(nc, MtypeVname, BTYPE_HEADER, MtypeDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-CreateNcVar(nc, MdateVname, BTYPE_HEADER, MdateDtype,
-            NobsDname, NlevsDname, NeventsDname, StrDname,
-            MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-
-for HHname in HeadList:
-    CreateNcVar(nc, HHname, BTYPE_HEADER, DATA_TYPES[HHname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-
-for DDname in DataList:
-    CreateNcVar(nc, DDname, BTYPE_DATA, DATA_TYPES[DDname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-
-for EEname in EventList:
-    CreateNcVar(nc, EEname, BTYPE_EVENT, DATA_TYPES[EEname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-
-for RRname in RepList:
-    CreateNcVar(nc, RRname, BTYPE_REP, DATA_TYPES[RRname],
-                NobsDname, NlevsDname, NeventsDname, StrDname,
-                MaxLevels, MaxEvents, MaxReps, MaxStringLen, MaxObs)
-
-
-NumMsgs= 0
-NumSelectedMsgs = 0
-NumObs = 0
-while ( (bufr.advance() == 0) and (NumSelectedMsgs < NMsgRead)): 
-    NumMsgs += 1
-    MsgType = np.array(bufr.msg_type)
-    MsgDate = np.array([bufr.msg_date])
-
-    # Select only the messages that belong to this observation type
-    if (re.search(MessageRe, bufr.msg_type)):
-        # Write out obs into the netCDF file as they are read from
-        # the BUFR file. Need to start with index zero in the netCDF
-        # file so don't increment the counter until after the write.
-        while (bufr.load_subset() == 0):
-            # Record message type and date with each subset. This is
-            # inefficient in storage (lots of redundancy), but is the
-            # expected format for now.
-            WriteNcVar(nc, NumObs, MtypeVname, BTYPE_HEADER, MsgType, MaxStringLen, MaxEvents, MaxReps)
-            WriteNcVar(nc, NumObs, MdateVname, BTYPE_HEADER, MsgDate, MaxStringLen, MaxEvents, MaxReps)
-
-            # Read mnemonics in sets that make one call to read_subset(). This should help
-            # reduce overhead and help this script run faster. After read_subset() is called,
-            # BufrVals will be an array with its first dimension being the mnemonic number.
-            # If the string passed to read_subset() is 'TOB POB QOB', then the first dimension
-            # of BufrVals will have a size of 3, and BufrVals[0,...] will be the data for TOB,
-            # BufrVals[1,...] for POB, and BufrVals[2,...] for QOB.
-
-            # Header mnemonics
-            if (len(HeadList) > 0):
-                ReadWriteGroup(bufr, HeadList, BTYPE_HEADER, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            # Observation mnemonics
-            if (len(ObsList) > 0):
-                ReadWriteGroup(bufr, ObsList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            # Quality mark mnemonics
-            if (len(QmarkList) > 0):
-                ReadWriteGroup(bufr, QmarkList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            # Error mnemonics
-            if (len(ErrList) > 0):
-                ReadWriteGroup(bufr, ErrList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            # Misc mnemonics
-            if (len(MiscList) > 0):
-                ReadWriteGroup(bufr, MiscList, BTYPE_DATA, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            # Event mnemonics
-            if (len(EventList) > 0):
-                ReadWriteGroup(bufr, EventList, BTYPE_EVENT, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            # Rep mnemonics
-            if (len(RepList) > 0):
-                ReadWriteGroup(bufr, RepList, BTYPE_REP, DATA_TYPES, MaxStringLen, MaxEvents, MaxReps)
-
-            NumObs += 1
-
-
-        NumSelectedMsgs += 1
-
-
-# Fill in coordinate values. Simply put in the numbers 1 through N for each
-# dimension variable according to that dimension's size.
-nc[NobsDname][0:MaxObs]       = np.arange(MaxObs) + 1
-nc[NlevsDname][0:MaxLevels]   = np.arange(MaxLevels) + 1
-nc[NeventsDname][0:MaxEvents] = np.arange(MaxEvents) + 1
-nc[NrepsDname][0:MaxReps]     = np.arange(MaxReps) + 1
-nc[StrDname][0:MaxStringLen]  = np.arange(MaxStringLen) + 1
-
-# If reading a prepBUFR type file, then record the virtual temperature code
-if (BufrFtype == 'prepBUFR'):
-    nc.virtmp_code = bufr.get_program_code('VIRTMP')
-
-print("{0:d} messages selected out of {1:d} total messages".format(NumSelectedMsgs, FilNMsg))
-print("  {0:d} observations recorded in output netCDF file".format(MaxObs))
-
-
+# Clean up
 bufr.close()
 
 nc.sync()
