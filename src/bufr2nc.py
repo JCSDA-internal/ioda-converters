@@ -154,6 +154,15 @@ class ObsType(object):
                         var_spec[4][i] = self.nobs
 
     ###############################################################################
+    # This method is a default routine for counting the number of observations
+    # in the current BUFR message. The default number of observations is simply
+    # the number of subsets in this message. The reason that this is a method in
+    # the base class is so that derived classes (GpsroObsType, for example) can
+    # override this method with a more complex algorithm.
+    def msg_obs_count(self, bufr):
+        return bufr._subsets()
+
+    ###############################################################################
     # This method will set the dimension specs (data memeber self.dim_spec). The
     # format for the dim_spec will match that of the other specs (eg, self.int_spec).
     def init_dim_spec(self):
@@ -273,34 +282,44 @@ class ObsType(object):
     # from the bufr file. This routine will also convert the bufr values to
     # corresponding netcdf values. This method will return a dictionary keyed
     # by the netcdf variable name containing the associated values.
+    #
+    # This method provides a defalut method that can be overridden by an obs type
+    # requiring a more complex algorithm (Gpsro, eg.). ActualValues is a list
+    # of dictionaries, and the defalut action is to create one item in that list.
+    # This single dictionary will be filled in by simply walking through the
+    # variables in the lists contained in int_spec, evn_spec, rep_spec and seq_spec,
+    # reading the mnemonics out of the BUFR file, and loading in the results into
+    # the single dictionary.
     def extract_bufr(self, bufr):
-        ActualValues = {}
+        # Initialize ActualValues to a list with one entry which is an empty dictionary.
+        ActualValues = []
+        ActualValues.append({})
     
         # Read and convert the individual data mnemonics. The mnemonic value is the second
         # entry in the int_spec sublist elements.
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.int_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists) 
-        ActualValues = self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues)
+        ActualValues[0] = self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues[0])
 
         # Read and convert the event mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.evn_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Eflag=True) 
-        ActualValues = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues)
+        ActualValues[0] = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues[0])
 
         # Read and convert the replication mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.rep_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True) 
-        ActualValues = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues)
+        ActualValues[0] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
 
-        # Read and convert the event mnemonics
+        # Read and convert the sequence mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.seq_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Sflag=True) 
-        ActualValues = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues)
+        ActualValues[0] = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues[0])
 
         return ActualValues
 
     ###############################################################################
-    # This method will calculated the offset time value from the BUFR mnemonic
+    # This method will calculate the offset time value from the BUFR mnemonic
     # values. The calculation depends on the type of BUFR file (raw BUFR or prepBUFR).
     # For raw BUFR, the absolute observation time comes from the mnemonics:
     #     YEAR  - year
@@ -382,30 +401,31 @@ class ObsType(object):
                 while (bufr.load_subset() == 0):
                     # Grab all of the mnemonics from the bufr file, and convert
                     # from the BUFR float representation to the actual data type
-                    # (integer, float, string, double). ActualValues will be a dictionary 
-                    # keyed by the netcdf variable name and containing the associated
-                    # data value.
+                    # (integer, float, string, double). ActualValues is a list of
+                    # dictionaries where each dictionary represents one observation.
+                    # A dictionary within the list is keyed by the netcdf variable
+                    # name and contains the associated data value.
                     ActualValues = self.extract_bufr(bufr)
 
-                    # Put the message type and message date into the dictionary.
-                    ActualValues['msg_type'] = MsgType
-                    ActualValues['msg_date'] = MsgDate
+                    for i in range(len(ActualValues)):
+                        # Put the message type and message date into the dictionary.
+                        ActualValues[i]['msg_type'] = MsgType
+                        ActualValues[i]['msg_date'] = MsgDate
 
-                    # Calculate the value for the Time variable (which is an offset
-                    # from the reference time). Add the Time value to the dictionary.
-                    TimeValue = self.calc_obs_time(ActualValues)
-                    ActualValues['Time'] = TimeValue
+                        # Calculate the value for the Time variable (which is an offset
+                        # from the reference time). Add the Time value to the dictionary.
+                        ActualValues[i]['Time'] = self.calc_obs_time(ActualValues[i])
 
-                    # Write out the netcdf variables.
-                    for Vname, Vdata in ActualValues.items():
-                        # Skip the write if Vdata is empty
-                        if (Vdata.size > 0):
-                            WriteNcVar(nc, ObsNum, Vname, Vdata)
+                        # Write out the netcdf variables.
+                        for Vname, Vdata in ActualValues[i].items():
+                            # Skip the write if Vdata is empty
+                            if (Vdata.size > 0):
+                                WriteNcVar(nc, ObsNum, Vname, Vdata)
 
-                    # Increment observation number and print out progress messages.
-                    ObsNum += 1
-                    if ((ObsNum % 100) == 0):
-                        print("  Converted {0:d} observations".format(ObsNum))
+                        # Increment observation number and print out progress messages.
+                        ObsNum += 1
+                        if ((ObsNum % 100) == 0):
+                            print("  Converted {0:d} observations".format(ObsNum))
 
         # If processing a prepBUFR file, record the virtual temperature
         # program code
@@ -653,6 +673,192 @@ class AmsuaObsType(ObsType):
 
     ### methods ###
     
+########################### GPSRO Observation Type ############################
+class GpsroObsType(ObsType):
+    ### initialize data elements ###
+    def __init__(self, bf_type):
+        super().__init__()
+
+        self.bufr_ftype = bf_type
+        self.multi_level = False
+        self.misc_dtype = DTYPE_FLOAT
+        self.misc_spec[0].append([ 'Time', '', DTYPE_FLOAT, ['nobs'], [self.nobs] ])
+        if (bf_type == BFILE_BUFR):
+
+            self.mtype_re = '^NC003010'
+            self.int_spec = [
+                [ [ 'SAID',   'SAID',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'YEAR',   'YEAR',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MNTH',   'MNTH',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'DAYS',   'DAYS',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'HOUR',   'HOUR',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MINU',   'MINU',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'SECO',   'SECO',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ELRC',   'ELRC',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PCCF',   'PCCF',   DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PTID',   'PTID',   DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'GEODU',  'GEODU',  DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QFRO',   'QFRO',   DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+
+                ]
+            self.evn_spec = []
+            self.rep_spec = []
+            self.seq_spec = []
+
+            # These are the observation variables that will be extracted by the
+            # convert method of this class (which overrides the base class convert
+            # method).
+            self.misc_spec[0].append([ 'CLATH',     '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'CLONH',     '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'HEIT',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'ARFR',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'ARFR_err',  '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'ARFR_pccf', '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'BNDA',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'BNDA_err',  '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'BNDA_pccf', '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'MEFR',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'IMPP',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+
+        elif (bf_type == BFILE_PREPBUFR):
+            self.mtype_re = 'UnDef'
+            self.int_spec = []
+            self.evn_spec = []
+            self.rep_spec = []
+            self.seq_spec = []
+
+        # Set the dimension specs.
+        super().init_dim_spec()
+
+    ### methods ###
+
+    ########################################################################
+    # This method will extract counts from the BUFR file which are useful
+    # for determining how to walk through the bending angle and refractivity
+    # observation data within the BUFR file.
+    def extract_gpsro_obs_counts(self, bufr):
+        # ROSEQ1 contains the bending angle observations
+        # ROSEQ3 contains the refractivity observations
+        #
+        # Within each bending angle observation is another sequence, ROSEQ2,
+        # which contains bending angle obs for a list of frequencies. Because
+        # ROSEQ1 and ROSEQ2 are related, the length of the array returned 
+        # from the mnemonic '{ROSEQ2}' will be equal to the value returned
+        # from the mnemonic '(ROSEQ1)'. Therefore, the number of bending angle
+        # observations can be determined from the length of the ROSEQ2 array.
+        #
+        # Mnemonic '{ROSEQ2}' returns the number of frequencies within each bend angle obs
+        #                     this value is an array since the number of frequencies can
+        #                     change on each bend angle obs
+        # Mnemonic '(ROSEQ3)' returns the number of refractivity obs
+        #
+        NumBangleFreq = bufr.read_subset('{ROSEQ2}').astype(int).squeeze()
+        NumRefrac     = bufr.read_subset('(ROSEQ3)').astype(int).squeeze()
+
+        NumBangle = len(NumBangleFreq)
+
+        return [ NumBangle, NumRefrac, NumBangleFreq ]
+
+    ########################################################################
+    # This method will count up the number of observations contained in a
+    # single message of a GPSRO obs type.
+    def msg_obs_count(self, bufr):
+        ObsCount = 0
+
+        # Visit all subsets and count up the number of obs contained in each
+        # subset.
+        SubsetCount = 1
+        while (bufr.load_subset() == 0):
+            [ NumBangle, NumRefrac, NumBangleFreq ] = self.extract_gpsro_obs_counts(bufr)
+
+            if (NumBangle != NumRefrac):
+                print("WARNING: Gpsro: Skip report due to mismatch in number of bending angle and refractivity observations")
+                print("WARNING: Gpsro:   Message number: {0:d}, Subset number: {1:d}".format(bufr.msg_counter, SubsetCount))
+                print("")
+                continue
+            else:
+                # Have same number of bending angle and refractivity observations
+                # Even though there can be multiple frequencies within a single
+                # bending angle obs, we are only going to take the zero frequency
+                # entry. That is, only one frequency per bending angle obs. Therefore,
+                # the number of obs this subset is equal to the number of bend
+                # angle obs.
+                ObsCount += NumBangle
+
+            SubsetCount += 1
+
+        return int(ObsCount)
+
+    ###############################################################################
+    # This method will extract data from a subset of a Gpsro raw BUFR file and
+    # load up the observations into the ActualValues data structure. ActualValues
+    # is a list of dictionaries where each dictionary holds one observation.
+    def extract_bufr(self, bufr):
+        ActualValues = []
+    
+        # Read and convert the header data (list in int_spec)
+        Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.int_spec ]
+        BufrValues = self.read_bufr_data(bufr, Mlists) 
+        HeaderVals = self.bufr_float_to_actual(self.int_spec, BufrValues, {})
+
+        [ NumBangle, NumRefrac, NumBangleFreq ] = self.extract_gpsro_obs_counts(bufr)
+
+        # Only record observations if the numbers of bend angle and refractivity obs match
+        # The warnings about skipping mismatched number of obs have already been written
+        # by the msg_obs_count() method.
+        if (NumBangle == NumRefrac):
+            # Grab the sequence data for each of bend angle and refractivity
+            BangleBvals = bufr.read_subset('ROSEQ1', seq=True)
+            RfracBvals = bufr.read_subset('ROSEQ3', seq=True)
+
+            # Each replication of bend angle (and refrac) obs is a single observation.
+            for i in range(NumBangle):
+                # Record the header values. It is important to use the copy() method
+                # of the HeaderVals dictionary. The copy() method will create a new
+                # dictionary with references to the elements in HeaderVals. This is
+                # exactly what we want: A list of separate dictionaries where the
+                # header elements are all references to the elements in HeaderVals, and
+                # the other elements that get entered into each dictionary are
+                # separated so they can be set to anything (ie, hold unique values).
+                #
+                # Note that "ActualValues.append(HeaderVals)" results in each entry
+                # in the ActualVlaues list reference the same dictionary which is the
+                # one created when HeaderVals was created. In this case, subsequent
+                # loops keep overwriting the previous loop's values and you end up
+                # with NumBangle references to the single dictionary. Ie, the entire
+                # set of NumBangle observations all have the same values for all
+                # keys.
+                ActualValues.append(HeaderVals.copy())
+
+                # The frequency related data from the inner sequence of ROSEQ1 got
+                # expanded and recorded in the result array (BangleBvals) by adding
+                # extra entries along the first dimension. The sequence ROSEQ1 looks
+                # like:
+                #
+                #   ROSEQ1: CLATH CLONH BEARAZ {ROSEQ2} PCCF
+                #   ROSEQ2: MEFR IMPP BNDA FOST BNDA_err FOST_err
+                #
+                # ROSEQ2 can repeat n times, then the expansion ROSEQ1 looks like:
+                #
+                #   CLATH CLONH BEARAZ ROSEQ2-1 PCCF                    (for n = 1)
+                #   CLATH CLONH BEARAZ ROSEQ2-1 ROSEQ2-2 ROSEQ-3 PCCF   (for n = 3)
+                #
+                #         where ROSEQ2-n just means the nth replication of ROSEQ2
+                #
+                # Latitude
+                Bval = np.ma.array(BangleBvals[0,i], mask=BangleBvals.mask[0,i])
+                ActualValues[i]['CLATH'] = BufrFloatToActual(Bval, self.misc_dtype)
+
+                # Longitude
+                Bval = np.ma.array(BangleBvals[1,i], mask=BangleBvals.mask[1,i])
+                ActualValues[i]['CLONH'] = BufrFloatToActual(Bval, self.misc_dtype)
+
+                # Height
+                Bval = np.ma.array(RfracBvals[0,i], mask=RfracBvals.mask[0,i])
+                ActualValues[i]['HEIT']  = BufrFloatToActual(Bval, self.misc_dtype)
+                
+
+        return ActualValues
 
 ###########################################################################
 # SUBROUTINES
@@ -704,7 +910,7 @@ def FindRefDate(StartDate):
 
     return RefDate
 
-def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
+def BfilePreprocess(BufrFname, Obs, MaxNumMsg):
     # This routine will read the BUFR file and figure out how many observations
     # will be read when recording data.
     #
@@ -728,7 +934,7 @@ def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
     LatestDate = 0
     while ( (bufr.advance() == 0) ): 
         # Select only the messages that belong to this observation type
-        if (re.search(MessageRe, bufr.msg_type)):
+        if (re.search(Obs.mtype_re, bufr.msg_type)):
             TotalNumMsg += 1
 
             # If MaxNumMsg is less than 1, then select all messages.
@@ -737,7 +943,7 @@ def BfilePreprocess(BufrFname, MessageRe, MaxNumMsg):
                 # Attribute "subsets" contains the number of subsets
                 # for the current message.
                 NumMsg += 1
-                NumObs += bufr._subsets()
+                NumObs += Obs.msg_obs_count(bufr)
 
                 if (bufr.msg_date < EarliestDate):
                     EarliestDate = bufr.msg_date
@@ -917,6 +1123,8 @@ elif (ObsType == 'Sondes'):
     Obs = SondesObsType(BfileType)
 elif (ObsType == 'Amsua'):
     Obs = AmsuaObsType(BfileType)
+elif (ObsType == 'Gpsro'):
+    Obs = GpsroObsType(BfileType)
 else:
     print("ERROR: {0:s}: Unknown observation type: {1:s}".format(ScriptName, ObsType))
     print("")
@@ -968,7 +1176,7 @@ print("")
 # types. NumObs will be set to the number of observations selected,
 # NumMsgs will be set to the number of messages selected, and TotalMsgs
 # will be set to the total number of messages that match Obs.mtype_re in the file.
-[NumObs, NumMsgs, TotalMsgs, RefDate] = BfilePreprocess(BufrFname, Obs.mtype_re, MaxNumMsg)
+[NumObs, NumMsgs, TotalMsgs, RefDate] = BfilePreprocess(BufrFname, Obs, MaxNumMsg)
 
 print("  Total number of messages that match obs type {0:s}: {1:d}".format(ObsType, TotalMsgs))
 print("  Number of messages selected: {0:d}".format(NumMsgs))
