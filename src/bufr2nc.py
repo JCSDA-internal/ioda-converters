@@ -812,7 +812,7 @@ class GpsroObsType(ObsType):
             RfracBvals = bufr.read_subset('ROSEQ3', seq=True)
 
             # Each replication of bend angle (and refrac) obs is a single observation.
-            for i in range(NumBangle):
+            for irep in range(NumBangle):
                 # Record the header values. It is important to use the copy() method
                 # of the HeaderVals dictionary. The copy() method will create a new
                 # dictionary with references to the elements in HeaderVals. This is
@@ -845,18 +845,64 @@ class GpsroObsType(ObsType):
                 #
                 #         where ROSEQ2-n just means the nth replication of ROSEQ2
                 #
+
+                # Grab the BUFR values for the obs data
                 # Latitude
-                Bval = np.ma.array(BangleBvals[0,i], mask=BangleBvals.mask[0,i])
-                ActualValues[i]['CLATH'] = BufrFloatToActual(Bval, self.misc_dtype)
+                CLATH = np.ma.array(BangleBvals[0,irep], mask=BangleBvals.mask[0,irep])
 
                 # Longitude
-                Bval = np.ma.array(BangleBvals[1,i], mask=BangleBvals.mask[1,i])
-                ActualValues[i]['CLONH'] = BufrFloatToActual(Bval, self.misc_dtype)
+                CLONH = np.ma.array(BangleBvals[1,irep], mask=BangleBvals.mask[1,irep])
 
                 # Height
-                Bval = np.ma.array(RfracBvals[0,i], mask=RfracBvals.mask[0,i])
-                ActualValues[i]['HEIT']  = BufrFloatToActual(Bval, self.misc_dtype)
-                
+                HEIT = np.ma.array(RfracBvals[0,irep], mask=RfracBvals.mask[0,irep])
+
+                # Refractivity data
+                ARFR = np.ma.array(RfracBvals[1,irep], mask=RfracBvals.mask[0,irep])
+                ARFR_err = np.ma.array(RfracBvals[3,irep], mask=RfracBvals.mask[0,irep])
+                ARFR_pccf = np.ma.array(RfracBvals[5,irep], mask=RfracBvals.mask[0,irep])
+
+                # Bending Angle data
+                # Locate the zero frequency sequence. Use missing data if the zero
+                # frequency data is not available in the BUFR file.
+                MEFR     = np.ma.array([0.0], mask=[True])
+                IMPP     = np.ma.array([0.0], mask=[True])
+                BNDA     = np.ma.array([0.0], mask=[True])
+                BNDA_err = np.ma.array([0.0], mask=[True])
+                for i in range(NumBangleFreq[irep]):
+                    m = 6*(i+1)-3
+                    if ((int(BangleBvals[m,irep]) == 0) and (not BangleBvals.mask[m,irep])):
+                        # This replication has zero frequency which is not masked
+                        # (that is, not marked as missing).
+                        MEFR     = np.ma.array(BangleBvals[m,irep],
+                                     mask=BangleBvals.mask[m,irep])    # mean frequency
+                        IMPP     = np.ma.array(BangleBvals[m+1,irep],
+                                     mask=BangleBvals.mask[m+1,irep])  # impact parameter
+                        BNDA     = np.ma.array(BangleBvals[m+2,irep],
+                                     mask=BangleBvals.mask[m+2,irep])  # bending angle
+                        BNDA_err = np.ma.array(BangleBvals[m+4,irep],
+                                     mask=BangleBvals.mask[m+4,irep])  # bending angle error
+                        break
+
+                # BNDA_pccf is at the end of the ROSEQ1 section, i.e. one after the
+                # NumBangleFreq[irep] replications of the current ROSEQ2 section.
+                m = 6*NumBangleFreq[irep] + 3
+                BNDA_pccf = np.ma.array(BangleBvals[m,irep],
+                              mask=BangleBvals.mask[m,irep])   # bending angle pccf
+
+                # Convert and fill in the ActualValues dictionary
+                ActualValues[irep]['CLATH'] = BufrFloatToActual(CLATH, self.misc_dtype)
+                ActualValues[irep]['CLONH'] = BufrFloatToActual(CLONH, self.misc_dtype)
+                ActualValues[irep]['HEIT']  = BufrFloatToActual(HEIT, self.misc_dtype)
+
+                ActualValues[irep]['ARFR']      = BufrFloatToActual(ARFR, self.misc_dtype)
+                ActualValues[irep]['ARFR_err']  = BufrFloatToActual(ARFR_err, self.misc_dtype)
+                ActualValues[irep]['ARFR_pccf'] = BufrFloatToActual(ARFR_pccf, self.misc_dtype)
+
+                ActualValues[irep]['MEFR']      = BufrFloatToActual(MEFR, self.misc_dtype)
+                ActualValues[irep]['IMPP']      = BufrFloatToActual(IMPP, self.misc_dtype)
+                ActualValues[irep]['BNDA']      = BufrFloatToActual(BNDA, self.misc_dtype)
+                ActualValues[irep]['BNDA_err']  = BufrFloatToActual(BNDA_err, self.misc_dtype)
+                ActualValues[irep]['BNDA_pccf'] = BufrFloatToActual(BNDA_pccf, self.misc_dtype)
 
         return ActualValues
 
