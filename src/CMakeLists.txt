@@ -1,1 +1,1 @@
-install (PROGRAMS bufr2nc.py DESTINATION bin)
+install (PROGRAMS bufr2nc.py bufr2ncCommon.py bufr2ncObsTypes.py DESTINATION bin)
