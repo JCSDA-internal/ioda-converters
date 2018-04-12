@@ -7,5 +7,3 @@ add_executable (pb_decode_events pb_decode_events.f90)
 target_link_libraries (pb_decode bufr)
 target_link_libraries (pb_decode_events bufr)
 
-install (TARGETS pb_decode pb_decode_events DESTINATION bin)
-install (PROGRAMS bufrtest.py DESTINATION bin)
