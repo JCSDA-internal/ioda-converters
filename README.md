@@ -2,7 +2,7 @@
 
 Python script, bufr2nc.py, for converting BUFR to netCDF4. bufr2nc is built upon the py-ncepbufr package.
 
-Usage: bufr2nc.py <obs_type> <input_prepbufr> <output_netcdf>
+Usage: usage: bufr2nc.py [-h] [-m <max_num_msgs>] [-c] [-p] obs_type input_bufr output_netcdf
   * The idea is for bufr2nc.py to create separate netCDF files for different observation types
 
 The short term plan is to handle aircraft, radiance, radiosonde and GPSRO observation types.
@@ -15,5 +15,5 @@ Currently supported obs types
 | Aircraft           | Y        | Y        |
 | Radiosonde         | N        | Y        |
 | Radiance (AMSU-A)  | Y        | N/A      |
-| GPSRO              | N        | N/A      |
+| GPSRO              | Y        | N/A      |
 | AOD                | N        | N/A      |
