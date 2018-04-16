@@ -1,0 +1,100 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC008043 | A10198 | NPP Aerosol Optical Thickness (AOT) data                 |
+|          |        |                                                          |
+| YYMMDD   | 301011 | Date -- year, month, day                                 |
+| HHMM     | 301012 | Time -- hour, minute                                     |
+| LTLONH   | 301021 | High accuracy latitude/longitude position                |
+| VAODCH   | 322192 | VIIRS Aerosol Optical Depth at Channel                   |
+| NAOTDATA | 310064 | NPP Aerosol Optical Thickness (AOT) data                 |
+|          |        |                                                          |
+| SAID     | 001007 | Satellite identifier                                     |
+| OGCE     | 001033 | Identification of originating/generating center          |
+| GSES     | 001034 | Identification of originating/generating sub-center      |
+| SIID     | 002019 | Satellite instruments                                    |
+| SCLF     | 002020 | Satellite classification                                 |
+| CHWL     | 002155 | Satellite channel wavelength                             |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| SECO     | 004006 | Second                                                   |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| BEARAZ   | 005021 | Bearing or azimuth                                       |
+| SOLAZI   | 005022 | Solar azimuth                                            |
+| ORBN     | 005040 | Orbit number                                             |
+| SLNM     | 005041 | Scan line number                                         |
+| FOVN     | 005043 | Field of view number                                     |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| HMSL     | 007002 | Height or altitude                                       |
+| SAZA     | 007024 | Satellite zenith angle                                   |
+| SOZA     | 007025 | Solar zenith angle                                       |
+| RSST     | 008029 | Surface type                                             |
+| ACCT     | 008046 | Atmospheric chemical or physical constituent type        |
+| STKO     | 008075 | Ascending/descending orbit qualifier                     |
+| AAWE     | 015049 | Aerosol Angstrom wavelength exponent                     |
+| AOPT     | 015062 | Aerosol optical thickness                                |
+| VIIRGQ   | 033082 | Geolocation quality flags                                |
+| AOTQ     | 033085 | Aerosol optical thickness quality flags                  |
+| QPLR     | 033086 | Quality of pixel level retrieval                         |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC008043 | NAOTDATA  CHWL  AOPT                                              |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| VAODCH   | CHWL  AOPT                                                        |
+|          |                                                                   |
+| NAOTDATA | SAID  OGCE  GSES  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000  |
+| NAOTDATA | ORBN  201133  SLNM  FOVN  201000  VIIRGQ  LTLONH  201129  HMSL    |
+| NAOTDATA | 201000  SAZA  BEARAZ  SOZA  SOLAZI  STKO  RSST  ACCT  AOTQ  QPLR  |
+| NAOTDATA | AAWE  QPLR  "VAODCH"11                                            |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| OGCE     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| GSES     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| SIID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| SCLF     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| CHWL     |    9 |           0 |  16 | M                        |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| SOLAZI   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| ORBN     |    0 |           0 |  24 | NUMERIC                  |-------------|
+| SLNM     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| FOVN     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| HMSL     |   -1 |         -40 |  16 | M                        |-------------|
+| SAZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| SOZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| RSST     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| ACCT     |    0 |           0 |  16 | CODE TABLE               |-------------|
+| STKO     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| AAWE     |    3 |       -2000 |  14 | NUMERIC                  |-------------|
+| AOPT     |    3 |       -1000 |  14 | NUMERIC                  |-------------|
+| VIIRGQ   |    0 |           0 |  16 | FLAG TABLE               |-------------|
+| AOTQ     |    0 |           0 |  18 | FLAG TABLE               |-------------|
+| QPLR     |    0 |           0 |   3 | CODE TABLE               |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
