@@ -1,0 +1,170 @@
+
+ MESSAGE TYPE NC003010  
+
+001007  SAID                       740.0  CODE TABLE                    SATELLITE IDENTIFIER                            
+002019  SIID                       102.0  CODE TABLE                    SATELLITE INSTRUMENTS                           
+001033  OGCE                        60.0  CODE TABLE                    IDENTIFICATION OF ORIGINATING/GENERATING CENTER 
+002172  PTAG                         2.0  CODE TABLE                    PRODUCT TYPE FOR RETRIEVED ATMOSPHERIC GASES    
+025060  SWID                         1.0  NUMERIC                       SOFTWARE IDENTIFICATION                         
+008021  TSIG                        17.0  CODE TABLE                    TIME SIGNIFICANCE                               
+004001  YEAR                      2018.0  YEAR                          YEAR                                            
+004002  MNTH                         1.0  MONTH                         MONTH                                           
+004003  DAYS                        31.0  DAY                           DAY                                             
+004004  HOUR                        21.0  HOUR                          HOUR                                            
+004005  MINU                         2.0  MINUTE                        MINUTE                                          
+004006  SECO                      25.000  SECOND                        SECOND                                          
+033039  QFRO                       256.0  FLAG TABLE(8)                 QUALITY FLAGS FOR RADIO OCCULTATION DATA        
+033007  PCCF                       100.0  %                             PER CENT CONFIDENCE                             
+027031  PD00                  1322744.25  M                             IN DIRECTION OF 0 DEG LONG, DISTANCE FROM EARTH'
+028031  PD90                 -4782075.00  M                             IN DIRECTION OF 90 DEG E, DISTANCE FROM EARTH'S 
+010031  PDNP                  5138678.50  M                             IN DIR OF NORTH POLE, DISTANCE FROM THE EARTH'S 
+001041  PS00                 -5418.91211  M/S                           ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT    
+001042  PS90                  2244.99951  M/S                           ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT   
+001043  PSNP                  4649.37744  M/S                           ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT    
+002020  SCLF                       401.0  CODE TABLE                    SATELLITE CLASSIFICATION                        
+001050  PTID                         1.0  NUMERIC                       PLATFORM TRANSMITTER ID NUMBER                  
+027031  PD00                 -15079230.0  M                             IN DIRECTION OF 0 DEG LONG, DISTANCE FROM EARTH'
+028031  PD90                 -13431308.0  M                             IN DIRECTION OF 90 DEG E, DISTANCE FROM EARTH'S 
+010031  PDNP                 -17536348.0  M                             IN DIR OF NORTH POLE, DISTANCE FROM THE EARTH'S 
+001041  PS00                  1222.38513  M/S                           ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT    
+001042  PS90                  3103.68311  M/S                           ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT   
+001043  PSNP                 -1916.41431  M/S                           ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT    
+004016  TISE                      58.561  SECOND                        TIME INCREMENT                                  
+005001  CLATH                   24.39049  DEGREES                       LATITUDE (HIGH ACCURACY)                        
+006001  CLONH                  -95.33267  DEGREES                       LONGITUDE (HIGH ACCURACY)                       
+027031  PD00                    -2033.06  M                             IN DIRECTION OF 0 DEG LONG, DISTANCE FROM EARTH'
+028031  PD90                   -23122.23  M                             IN DIRECTION OF 90 DEG E, DISTANCE FROM EARTH'S 
+010031  PDNP                    -7083.29  M                             IN DIR OF NORTH POLE, DISTANCE FROM THE EARTH'S 
+010035  ELRC                   6356307.5  M                             EARTH'S LOC RADIUS OF CURVATURE                 
+005021  BEARAZ                     32.15  DEGREES TRUE                  BEARING OR AZIMUTH                              
+010036  GEODU                     -30.60  M                             GEOID UNDULATION                                
+           (ROSEQ1)   300 REPLICATIONS
+    ++++++  ROSEQ1  REPLICATION #     1  ++++++
+005001  CLATH                   24.89494  DEGREES                       LATITUDE (HIGH ACCURACY)                        
+006001  CLONH                  -95.36119  DEGREES                       LONGITUDE (HIGH ACCURACY)                       
+005021  BEARAZ                     31.97  DEGREES TRUE                  BEARING OR AZIMUTH                              
+           {ROSEQ2}     1 REPLICATIONS
+002121  MEFR                         0.0  HERTZ                         MEAN FREQUENCY                                  
+007040  IMPP                   6358410.0  M                             IMPACT PARAMETER                                
+015037  BNDA                  0.02584513  RAD                           BENDING ANGLE                                   
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+015037  BNDA                  0.00463097  RAD                           BENDING ANGLE                                   
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                        61.0  %                             PER CENT CONFIDENCE                             
+    ++++++  ROSEQ1  REPLICATION #     2  ++++++
+005001  CLATH                   24.86542  DEGREES                       LATITUDE (HIGH ACCURACY)                        
+006001  CLONH                  -95.35934  DEGREES                       LONGITUDE (HIGH ACCURACY)                       
+005021  BEARAZ                     31.98  DEGREES TRUE                  BEARING OR AZIMUTH                              
+           {ROSEQ2}     1 REPLICATIONS
+002121  MEFR                         0.0  HERTZ                         MEAN FREQUENCY                                  
+007040  IMPP                   6358595.0  M                             IMPACT PARAMETER                                
+015037  BNDA                  0.02835443  RAD                           BENDING ANGLE                                   
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+015037  BNDA                  0.00357318  RAD                           BENDING ANGLE                                   
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                        70.0  %                             PER CENT CONFIDENCE                             
+    ++++++  ROSEQ1  REPLICATION #     3  ++++++
+005001  CLATH                   24.84174  DEGREES                       LATITUDE (HIGH ACCURACY)                        
+006001  CLONH                  -95.35786  DEGREES                       LONGITUDE (HIGH ACCURACY)                       
+005021  BEARAZ                     31.99  DEGREES TRUE                  BEARING OR AZIMUTH                              
+           {ROSEQ2}     1 REPLICATIONS
+002121  MEFR                         0.0  HERTZ                         MEAN FREQUENCY                                  
+007040  IMPP                   6358744.0  M                             IMPACT PARAMETER                                
+015037  BNDA                  0.03024281  RAD                           BENDING ANGLE                                   
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+015037  BNDA                  0.00378379  RAD                           BENDING ANGLE                                   
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                        68.0  %                             PER CENT CONFIDENCE                             
+.
+.
+.
+.
+.
+.
+.
+.
+           (ROSEQ3)   300 REPLICATIONS
+    ++++++  ROSEQ3  REPLICATION #     1  ++++++
+007007  HEIT                         8.0  M                             HEIGHT                                          
+015036  ARFR                     334.299  N-UNITS                       ATMOSPHERIC REFRACTIVITY                        
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+015036  ARFR                     MISSING  N-UNITS                       ATMOSPHERIC REFRACTIVITY                        
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                        61.0  %                             PER CENT CONFIDENCE                             
+    ++++++  ROSEQ3  REPLICATION #     2  ++++++
+007007  HEIT                       208.0  M                             HEIGHT                                          
+015036  ARFR                     331.973  N-UNITS                       ATMOSPHERIC REFRACTIVITY                        
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+015036  ARFR                     MISSING  N-UNITS                       ATMOSPHERIC REFRACTIVITY                        
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                        70.0  %                             PER CENT CONFIDENCE                             
+    ++++++  ROSEQ3  REPLICATION #     3  ++++++
+007007  HEIT                       408.0  M                             HEIGHT                                          
+015036  ARFR                     323.935  N-UNITS                       ATMOSPHERIC REFRACTIVITY                        
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+015036  ARFR                     MISSING  N-UNITS                       ATMOSPHERIC REFRACTIVITY                        
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                        68.0  %                             PER CENT CONFIDENCE                             
+.
+.
+.
+.
+.
+.
+.
+.
+           (ROSEQ4)   200 REPLICATIONS
+    ++++++  ROSEQ4  REPLICATION #     1  ++++++
+007009  GPHTST                       0.0  GPM                           GEOPOTENTIAL HEIGHT                             
+010004  PRES                     MISSING  PASCALS                       PRESSURE                                        
+012001  TMDBST                   MISSING  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+013001  SPFH                     MISSING  KG/KG                         SPECIFIC HUMIDITY                               
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+010004  PRES                     MISSING  PASCALS                       PRESSURE                                        
+012001  TMDBST                   MISSING  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+013001  SPFH                     MISSING  KG/KG                         SPECIFIC HUMIDITY                               
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                       100.0  %                             PER CENT CONFIDENCE                             
+    ++++++  ROSEQ4  REPLICATION #     2  ++++++
+007009  GPHTST                     200.0  GPM                           GEOPOTENTIAL HEIGHT                             
+010004  PRES                     99700.0  PASCALS                       PRESSURE                                        
+012001  TMDBST                     291.4  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+013001  SPFH                     0.00957  KG/KG                         SPECIFIC HUMIDITY                               
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+010004  PRES                     MISSING  PASCALS                       PRESSURE                                        
+012001  TMDBST                   MISSING  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+013001  SPFH                     MISSING  KG/KG                         SPECIFIC HUMIDITY                               
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                       100.0  %                             PER CENT CONFIDENCE                             
+    ++++++  ROSEQ4  REPLICATION #     3  ++++++
+007009  GPHTST                     399.0  GPM                           GEOPOTENTIAL HEIGHT                             
+010004  PRES                     97400.0  PASCALS                       PRESSURE                                        
+012001  TMDBST                     290.2  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+013001  SPFH                     0.00925  KG/KG                         SPECIFIC HUMIDITY                               
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+010004  PRES                     MISSING  PASCALS                       PRESSURE                                        
+012001  TMDBST                   MISSING  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+013001  SPFH                     MISSING  KG/KG                         SPECIFIC HUMIDITY                               
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                       100.0  %                             PER CENT CONFIDENCE                             
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+008003  VSAT                         0.0  CODE TABLE                    VERTICAL SIGNIFICANCE (SATELLITE OBSERVATIONS)  
+007009  GPHTST                   MISSING  GPM                           GEOPOTENTIAL HEIGHT                             
+010004  PRES                     MISSING  PASCALS                       PRESSURE                                        
+008023  FOST                        13.0  CODE TABLE                    FIRST ORDER STATISTICS                          
+010004  PRES                     MISSING  PASCALS                       PRESSURE                                        
+008023  FOST                     MISSING  CODE TABLE                    FIRST ORDER STATISTICS                          
+033007  PCCF                         0.0  %                             PER CENT CONFIDENCE                             
+
+ >>> END OF SUBSET <<< 
