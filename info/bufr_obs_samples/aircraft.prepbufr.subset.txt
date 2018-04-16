@@ -1,0 +1,75 @@
+ MESSAGE TYPE AIRCFT    
+
+001194  SID                       GES061  ( 8)CCITT IA5                 STATION IDENTIFICATION                          
+006240  XOB                    309.72000  DEG E                         LONGITUDE                                       
+005002  YOB                     45.93000  DEG N                         LATITUDE                                        
+004215  DHR                     -2.96667  HOURS                         OBSERVATION TIME MINUS CYCLE TIME               
+010199  ELV                      12497.0  METER                         STATION ELEVATION                               
+055007  TYP                        130.0  CODE TABLE                    PREPBUFR REPORT TYPE                            
+055008  T29                         41.0  CODE TABLE                    DATA DUMP REPORT TYPE                           
+055009  TSB                          0.0  CODE TABLE                    REPORT SUBTYPE (HAS VARIOUS MEANINGS DEPENDING O
+002195  ITP                      MISSING  CODE TABLE                    INSTRUMENT TYPE                                 
+050001  SQN                         62.0  NUMERIC                       REPORT SEQUENCE NUMBER                          
+050003  PROCN                        0.0  NUMERIC                       PROCESS NUMBER FOR THIS MPI RUN (OBTAINED FROM S
+004214  RPT                     21.03333  HOURS                         REPORTED OBSERVATION TIME                       
+004216  TCOR                         0.0  CODE TABLE                    INDICATOR WHETHER OBS. TIME IN "DHR" WAS CORRECT
+           <RSRD_SEQ>     0 REPLICATIONS
+           <ACID_SEQ>     0 REPLICATIONS
+           {PRSLEVLA}     1 REPLICATIONS
+004217  RCT                        21.07  HOURS                         RECEIPT TIME                                    
+002199  ROLF                     MISSING  CODE TABLE                    AIRCRAFT ROLL ANGLE FLAG                        
+033026  MSTQ                     MISSING  CODE TABLE                    MOISTURE QUALITY                                
+010082  IALR                     MISSING  M/S                           INSTANTANEOUS ALTITUDE RATE                     
+008193  CAT                          6.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        178.7  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                      MISSING  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                         13.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -60.0  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          1.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                         15.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        531.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012245  TOB                        -60.0  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                      MISSING  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.7  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -62.4  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      12497.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                      MISSING  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      12403.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     0 REPLICATIONS
+           <ACFT_SEQ>     0 REPLICATIONS
+           <TURB1SEQ>     0 REPLICATIONS
+           <TURB2SEQ>     0 REPLICATIONS
+           {TURB3SEQ}     0 REPLICATIONS
+           {PREWXSEQ}     0 REPLICATIONS
+           {CLOUDSEQ}     0 REPLICATIONS
+           {AFIC_SEQ}     0 REPLICATIONS
+033249  NRLQMS               ........M.N  (11)CCITT IA5                 NRL AIRCRAFT QUALITY CNTRL MARK (ADDED BY PGM PR
+           <LATCORSQ>     0 REPLICATIONS
+           <LONCORSQ>     0 REPLICATIONS
+
+ >>> END OF SUBSET <<< 
