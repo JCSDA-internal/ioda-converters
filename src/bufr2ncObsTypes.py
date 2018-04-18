@@ -106,6 +106,13 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     # Figure out how to do the slicing by looking at the number of dimensions at both
     # Value (masked array) and NcVar (netcdf array). A masked array that gets built
     # using a scalar data value will return 0 for the number of dimensions.
+    #
+    # It is possible to get single level values from a multiple level
+    # obs type (such as sondes). In this case the levels dimension will
+    # be squeezed away from Value. Handle this case by inserting Value
+    # into the first element of the nlevs dimension. Note that there is
+    # an assumption that nlevs is the first dimension of Value and
+    # the second dimension of NcVar.
     NcVar = Fid[Vname]
     ValNdim = Value.ndim
     NcNdim = NcVar.ndim
@@ -115,23 +122,41 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
         # 1D array with a single element
         NcVar[ObsNum] = Value
     elif (NcNdim == 2):
-        # Value has one dimension  (eg, [nlevs])
-        # NcVar has two dimensions (eg, [nobs,nlevs])
-        N1 = min(Value.shape[0], NcVar.shape[1])
-        NcVar[ObsNum, 0:N1] = Value[0:N1]
+        if (ValNdim == 0):
+            # Value is a scalar (representing a single level value)
+            # NcVar has two dimensions (eg, [nobs,nlevs])
+            NcVar[ObsNum, 0] = Value
+        else:
+            # Value has one dimension  (eg, [nlevs])
+            # NcVar has two dimensions (eg, [nobs,nlevs])
+            N1 = min(Value.shape[0], NcVar.shape[1])
+            NcVar[ObsNum, 0:N1] = Value[0:N1]
     elif (NcNdim == 3):
-        # Value has two dimensions   (eg, [nlevs,nevents])
-        # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
-        N1 = min(Value.shape[0], NcVar.shape[1])
-        N2 = min(Value.shape[1], NcVar.shape[2])
-        NcVar[ObsNum,0:N1, 0:N2] = Value[0:N1, 0:N2]
+        if (ValNdim == 1):
+            # Value has one dimension and is single level   (eg, [nevents])
+            # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
+            N2 = min(Value.shape[0], NcVar.shape[2])
+            NcVar[ObsNum, 0, 0:N2] = Value[0:N2]
+        else:
+            # Value has two dimensions   (eg, [nlevs,nevents])
+            # NcVar has three dimensions (eg, [nobs,nlevs,nevents])
+            N1 = min(Value.shape[0], NcVar.shape[1])
+            N2 = min(Value.shape[1], NcVar.shape[2])
+            NcVar[ObsNum,0:N1, 0:N2] = Value[0:N1, 0:N2]
     elif (NcNdim == 4):
-        # Value has three dimensions (eg, [nlevs,nstring,nevents])
-        # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
-        N1 = min(Value.shape[0], NcVar.shape[1])
-        N2 = min(Value.shape[1], NcVar.shape[2])
-        N3 = min(Value.shape[2], NcVar.shape[3])
-        NcVar[ObsNum, 0:N1, 0:N2, 0:N3] = Value[0:N1, 0:N2, 0:N3]
+        if (ValNdim == 2):
+            # Value has two dimensions and is single level (eg, [nstring,nevents])
+            # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
+            N2 = min(Value.shape[0], NcVar.shape[2])
+            N3 = min(Value.shape[1], NcVar.shape[3])
+            NcVar[ObsNum, 0, 0:N2, 0:N3] = Value[0:N2, 0:N3]
+        else:
+            # Value has three dimensions (eg, [nlevs,nstring,nevents])
+            # NcVar has four dimensions  (eg, [nobs,nlevs,nstring,nevents])
+            N1 = min(Value.shape[0], NcVar.shape[1])
+            N2 = min(Value.shape[1], NcVar.shape[2])
+            N3 = min(Value.shape[2], NcVar.shape[3])
+            NcVar[ObsNum, 0:N1, 0:N2, 0:N3] = Value[0:N1, 0:N2, 0:N3]
 
 ############################################################################
 # CLASSES
