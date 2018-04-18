@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-#import ncepbufr
 import numpy as np
 import sys
 import re
@@ -517,7 +516,7 @@ class ObsType(object):
 class AircraftObsType(ObsType):
     ### initialize data elements ###
     def __init__(self, bf_type):
-        super().__init__()
+        super(AircraftObsType, self).__init__()
 
         self.bufr_ftype = bf_type
         self.multi_level = False
@@ -612,7 +611,7 @@ class AircraftObsType(ObsType):
             self.seq_spec = []
 
         # Set the dimension specs.
-        super().init_dim_spec()
+        super(AircraftObsType, self).init_dim_spec()
 
     ### methods ###
     
@@ -621,7 +620,7 @@ class AircraftObsType(ObsType):
 class SondesObsType(ObsType):
     ### initialize data elements ###
     def __init__(self, bf_type):
-        super().__init__()
+        super(SondesObsType, self).__init__()
 
         self.bufr_ftype = bf_type
         self.multi_level = True
@@ -693,7 +692,7 @@ class SondesObsType(ObsType):
             self.seq_spec = []
 
         # Set the dimension specs.
-        super().init_dim_spec()
+        super(SondesObsType, self).init_dim_spec()
 
     ### methods ###
     
@@ -702,7 +701,7 @@ class SondesObsType(ObsType):
 class AmsuaObsType(ObsType):
     ### initialize data elements ###
     def __init__(self, bf_type):
-        super().__init__()
+        super(AmsuaObsType, self).__init__()
 
         self.nchans = 20  # This is unique to AMSU
         self.bufr_ftype = bf_type
@@ -746,7 +745,7 @@ class AmsuaObsType(ObsType):
             self.seq_spec = []
 
         # Set the dimension specs.
-        super().init_dim_spec()
+        super(AmsuaObsType, self).init_dim_spec()
 
     ### methods ###
     
@@ -754,7 +753,7 @@ class AmsuaObsType(ObsType):
 class GpsroObsType(ObsType):
     ### initialize data elements ###
     def __init__(self, bf_type):
-        super().__init__()
+        super(GpsroObsType, self).__init__()
 
         self.bufr_ftype = bf_type
         self.multi_level = False
@@ -805,7 +804,7 @@ class GpsroObsType(ObsType):
             self.seq_spec = []
 
         # Set the dimension specs.
-        super().init_dim_spec()
+        super(GpsroObsType, self).init_dim_spec()
 
     ### methods ###
 
