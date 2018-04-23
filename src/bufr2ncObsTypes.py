@@ -854,11 +854,16 @@ class GpsroObsType(ObsType):
         # Mnemonic '(ROSEQ3)' returns the number of refractivity obs
         #
         NumBangleFreq = bufr.read_subset('{ROSEQ2}').astype(int).squeeze()
+        
+        # Steve: there are two checks we need to do here: 
+        # (all obs): reps of Q1 = reps of Q2 [NumROSEQ1 = NumBangleFreq] 
+        # (ref obs): NumRefrac = NumBangle
         NumRefrac     = bufr.read_subset('(ROSEQ3)').astype(int).squeeze()
+        NumROSEQ1     = bufr.read_subset('(ROSEQ1)').astype(int).squeeze()
 
         NumBangle = len(NumBangleFreq)
 
-        return [ NumBangle, NumRefrac, NumBangleFreq ]
+        return [ NumBangle, NumROSEQ1,NumRefrac, NumBangleFreq ]
 
     ########################################################################
     # This method will count up the number of observations contained in a
@@ -870,10 +875,10 @@ class GpsroObsType(ObsType):
         # subset.
         SubsetCount = 1
         while (bufr.load_subset() == 0):
-            [ NumBangle, NumRefrac, NumBangleFreq ] = self.extract_gpsro_obs_counts(bufr)
+            [ NumBangle, NumROSEQ1, NumRefrac, NumBangleFreq ] = self.extract_gpsro_obs_counts(bufr)
 
-            if (NumBangle != NumRefrac):
-                print("WARNING: Gpsro: Skip report due to mismatch in number of bending angle and refractivity observations")
+            if (NumBangle != NumROSEQ1):
+                print("WARNING: Gpsro: Skip report due to mismatch in ROSEQ1 and ROSEQ2 occurence")
                 print("WARNING: Gpsro:   Message number: {0:d}, Subset number: {1:d}".format(bufr.msg_counter, SubsetCount))
                 print("")
                 continue
@@ -902,12 +907,12 @@ class GpsroObsType(ObsType):
         BufrValues = self.read_bufr_data(bufr, Mlists) 
         HeaderVals = self.bufr_float_to_actual(self.int_spec, BufrValues, {})
 
-        [ NumBangle, NumRefrac, NumBangleFreq ] = self.extract_gpsro_obs_counts(bufr)
+        [ NumBangle, NumROSEQ1,NumRefrac, NumBangleFreq ] = self.extract_gpsro_obs_counts(bufr)
 
         # Only record observations if the numbers of bend angle and refractivity obs match
         # The warnings about skipping mismatched number of obs have already been written
         # by the msg_obs_count() method.
-        if (NumBangle == NumRefrac):
+        if (NumBangle == NumROSEQ1):
             # Grab the sequence data for each of bend angle and refractivity
             BangleBvals = bufr.read_subset('ROSEQ1', seq=True)
             RfracBvals = bufr.read_subset('ROSEQ3', seq=True)
@@ -955,12 +960,18 @@ class GpsroObsType(ObsType):
                 CLONH = np.ma.array(BangleBvals[1,irep], mask=BangleBvals.mask[1,irep])
 
                 # Height
-                HEIT = np.ma.array(RfracBvals[0,irep], mask=RfracBvals.mask[0,irep])
+                if (NumBangle == NumRefrac): 
+                    HEIT = np.ma.array(RfracBvals[0,irep], mask=RfracBvals.mask[0,irep])
 
-                # Refractivity data
-                ARFR = np.ma.array(RfracBvals[1,irep], mask=RfracBvals.mask[0,irep])
-                ARFR_err = np.ma.array(RfracBvals[3,irep], mask=RfracBvals.mask[0,irep])
-                ARFR_pccf = np.ma.array(RfracBvals[5,irep], mask=RfracBvals.mask[0,irep])
+                    # Refractivity data
+                    ARFR = np.ma.array(RfracBvals[1,irep], mask=RfracBvals.mask[0,irep])
+                    ARFR_err = np.ma.array(RfracBvals[3,irep], mask=RfracBvals.mask[0,irep])
+                    ARFR_pccf = np.ma.array(RfracBvals[5,irep], mask=RfracBvals.mask[0,irep])
+                else: 
+                    HEIT = np.ma.array([0.0], mask=[True])
+                    ARFR = np.ma.array([0.0], mask=[True])
+                    ARFR_err = np.ma.array([0.0], mask=[True])
+                    ARFR_pccf = np.ma.array([0.0], mask=[True])
 
                 # Bending Angle data
                 # Locate the zero frequency sequence. Use missing data if the zero
@@ -982,7 +993,9 @@ class GpsroObsType(ObsType):
                                      mask=BangleBvals.mask[m+2,irep])  # bending angle
                         BNDA_err = np.ma.array(BangleBvals[m+4,irep],
                                      mask=BangleBvals.mask[m+4,irep])  # bending angle error
-                        break
+                        #break
+# CSD - fortran does not exit after first zero-frequency is found. I think there is only 
+# one, but just in case, don't break? 
 
                 # BNDA_pccf is at the end of the ROSEQ1 section, i.e. one after the
                 # NumBangleFreq[irep] replications of the current ROSEQ2 section.
@@ -1004,6 +1017,5 @@ class GpsroObsType(ObsType):
                 ActualValues[irep]['BNDA']      = BufrFloatToActual(BNDA, self.misc_dtype)
                 ActualValues[irep]['BNDA_err']  = BufrFloatToActual(BNDA_err, self.misc_dtype)
                 ActualValues[irep]['BNDA_pccf'] = BufrFloatToActual(BNDA_pccf, self.misc_dtype)
-
         return ActualValues
 
