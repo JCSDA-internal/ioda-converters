@@ -520,7 +520,7 @@ class ObsType(object):
                         # Write out the netcdf variables.
                         for Vname, Vdata in ActualValues[i].items():
                             # Skip the write if Vdata is empty
-                            if (Vdata.size > 0):
+                            if Vdata.size:
                                 WriteNcVar(nc, ObsNum, Vname, Vdata)
 
                         # Increment observation number and print out progress messages.
