@@ -226,6 +226,9 @@ class ObsType(object):
     def __init__(self):
         self.bufr_ftype = cm.BFILE_UNDEF
         self.mtype_re = 'UnDef'
+        self.max_num_msg = 0
+        self.thin_interval = 1
+        self.num_msg_selected = 0
  
         # Keep this list of dimensions in sync with the if statment structure
         # in the init_dim_spec() method.
@@ -510,6 +513,35 @@ class ObsType(object):
         return [ AbsDate, AbsTime ]
 
     ###############################################################################
+    # This method will reset the internal message counter for the message select
+    # method.
+    def reset_msg_selector(self):
+        self.num_msg_selected = 0
+
+    ###############################################################################
+    # This method will apply a selection filter to the input BUFR messages. It is
+    # simple in that only compares message counts to a couple data members.
+    def select_this_message(self):
+        # Default is to take all messages
+        Select = True
+
+        # If the max_num_msg parameter is greater than zero, then use it to limit
+        # the number of messages that are selected.
+        if (self.max_num_msg > 0):
+            Select = (self.num_msg_selected < self.max_num_msg)
+
+        # If the thinning interval is greater than 1, then use it to further select
+        # every n-th message.
+        #if (self.thin_interval > 1):
+        #    Select = Select and ((self.num_msg_selected % self.thin_interval) == 0)
+
+        # Keep track of how many messages were selected
+        if (Select):
+            self.num_msg_selected += 1
+
+        return Select
+
+    ###############################################################################
     # This method will convert the BUFR data into netcdf data. This includes
     # reading BUFR and writing netcdf. This method represents a default that can
     # be used for (hopefully) many obs types. If an obs type requires a more complex
@@ -524,39 +556,42 @@ class ObsType(object):
         # expression for this obs type.
         print("Converting BUFR to netcdf:")
         ObsNum = 0
-        while ((bufr.advance() == 0) and (ObsNum < self.nobs)):
+        self.reset_msg_selector()
+        while (bufr.advance() == 0):
             # Select only the messages that belong to this observation type
             if (re.search(self.mtype_re, bufr.msg_type)):
-                MsgType = np.ma.array(bufr.msg_type)
-                MsgDate = np.ma.array([bufr.msg_date])
-                while (bufr.load_subset() == 0):
-                    # Grab all of the mnemonics from the bufr file, and convert
-                    # from the BUFR float representation to the actual data type
-                    # (integer, float, string, double). ActualValues is a list of
-                    # dictionaries where each dictionary represents one observation.
-                    # A dictionary within the list is keyed by the netcdf variable
-                    # name and contains the associated data value.
-                    ActualValues = self.extract_bufr(bufr)
-
-                    for i in range(len(ActualValues)):
-                        # Put the message type and message date into the dictionary.
-                        ActualValues[i]['msg_type'] = MsgType
-                        ActualValues[i]['msg_date'] = MsgDate
-
-                        # Calculate the value for the Time variable (which is an offset
-                        # from the reference time). Add the Time value to the dictionary.
-                        [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'] ] = self.calc_obs_date_time(ActualValues[i])
-
-                        # Write out the netcdf variables.
-                        for Vname, Vdata in ActualValues[i].items():
-                            # Skip the write if Vdata is empty
-                            if Vdata.size:
-                                WriteNcVar(nc, ObsNum, Vname, Vdata)
-
-                        # Increment observation number and print out progress messages.
-                        ObsNum += 1
-                        if ((ObsNum % 100) == 0):
-                            print("  Converted {0:d} observations".format(ObsNum))
+                # Apply the message selection filter
+                if (self.select_this_message()):
+                    MsgType = np.ma.array(bufr.msg_type)
+                    MsgDate = np.ma.array([bufr.msg_date])
+                    while (bufr.load_subset() == 0):
+                        # Grab all of the mnemonics from the bufr file, and convert
+                        # from the BUFR float representation to the actual data type
+                        # (integer, float, string, double). ActualValues is a list of
+                        # dictionaries where each dictionary represents one observation.
+                        # A dictionary within the list is keyed by the netcdf variable
+                        # name and contains the associated data value.
+                        ActualValues = self.extract_bufr(bufr)
+    
+                        for i in range(len(ActualValues)):
+                            # Put the message type and message date into the dictionary.
+                            ActualValues[i]['msg_type'] = MsgType
+                            ActualValues[i]['msg_date'] = MsgDate
+    
+                            # Calculate the value for the Time variable (which is an offset
+                            # from the reference time). Add the Time value to the dictionary.
+                            [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'] ] = self.calc_obs_date_time(ActualValues[i])
+    
+                            # Write out the netcdf variables.
+                            for Vname, Vdata in ActualValues[i].items():
+                                # Skip the write if Vdata is empty
+                                if Vdata.size:
+                                    WriteNcVar(nc, ObsNum, Vname, Vdata)
+    
+                            # Increment observation number and print out progress messages.
+                            ObsNum += 1
+                            if ((ObsNum % 100) == 0):
+                                print("  Converted {0:d} observations".format(ObsNum))
 
         # If processing a prepBUFR file, record the virtual temperature
         # program code
