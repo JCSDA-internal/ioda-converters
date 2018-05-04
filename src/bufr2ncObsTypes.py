@@ -15,6 +15,29 @@ import bufr2ncCommon as cm
 # SUBROUTINES
 ############################################################################
 
+def SplitMsgDate(yyyymmddhh):
+    # This routine will take an integer date yyyymmddhh and return the
+    # datetime equivalent.
+    DateString = str(yyyymmddhh)
+    Dtime = dt.datetime(int(DateString[0:4]), int(DateString[4:6]),
+                        int(DateString[6:8]), int(DateString[8:10]))
+
+    return Dtime
+
+def MakeDate(Dtime):
+    # This routine will take in integers representing yyyy, mm, dd
+    # and return an integer date yyyymmdd.
+    DateString = "%0.4i"%(Dtime.year) + "%0.2i"%(Dtime.month) + "%0.2i"%(Dtime.day)
+
+    return int(DateString)
+
+def MakeTime(Dtime):
+    # This routine will take in integers representing hh, mm, ss
+    # and return an integer time hhmmss.
+    TimeString = "%0.2i"%(Dtime.hour) + "%0.2i"%(Dtime.minute) + "%0.2i"%(Dtime.second)
+
+    return int(TimeString)
+
 def BufrFloatToActual(Bval, Dtype):
     # This routine will extract the value of a variable from the
     # output of read_subset(). read_subset() will return a floating point
@@ -212,7 +235,6 @@ class ObsType(object):
         self.nstring = cm.MAX_STRING_LEN
         self.nchans = -1
 
-        self.time_units = ""
         self.int_spec = []
         self.evn_spec = []
         self.rep_spec = []
@@ -224,12 +246,6 @@ class ObsType(object):
             ]
 
     ### methods ###
-
-    ###############################################################################
-    # This method will set the time units. The time units value will be used to
-    # calculate time offsets for observation values.
-    def set_time_units(self, tunits):
-        self.time_units = tunits
 
     ###############################################################################
     # This method will set the number of observations. This must be called
@@ -420,9 +436,10 @@ class ObsType(object):
         return ActualValues
 
     ###############################################################################
-    # This method will calculate the offset time value from the BUFR mnemonic
-    # values. The calculation depends on the type of BUFR file (raw BUFR or prepBUFR).
-    # For raw BUFR, the absolute observation time comes from the mnemonics:
+    # This method will calculate the absolute date and time values from the BUFR
+    # mnemonic values. The calculation depends on the type of BUFR file (raw BUFR
+    # or prepBUFR). For raw BUFR, the absolute observation time comes from the
+    # mnemonics:
     #     YEAR  - year
     #     MNTH  - month
     #     DAYS  - day
@@ -437,28 +454,40 @@ class ObsType(object):
     #     HRDR     - Observation time minus cycle time on a level by level basis
     #                   (taking drift into account)
     #
-    # The netCDF4 utility date2num is used to calculate the offset. This routine takes
-    # in an absolute time stored in a datetime structure and the reference time stored
-    # in a units string (ie: seconds from YYYY-MM-DD HH:MM). First calculate the
-    # absolute time from the variable values, and then use date2num to get the time
-    # offset.
-    def calc_obs_time(self, ActualValues):
+    def calc_obs_date_time(self, ActualValues):
         if (self.bufr_ftype == cm.BFILE_PREPBUFR):
             # prepBUFR: use msg_date and DHR or HRDR
 
-            # Calculate the offset given by msg_date alone.
+            # Form the absolute time by adding the message date with the
+            # offset time.
             MsgDate = ActualValues['msg_date'].data[0]
-            MsgDtime = cm.SplitDate(MsgDate)
-            MdateOffset = netCDF4.date2num(MsgDtime, units=self.time_units)
+            MsgDtime = SplitMsgDate(MsgDate)
 
-            # Get the offset from either DHR or HRDR. 
+            # Get the offset from either DHR or HRDR. These values are
+            # in hours.
             if (self.multi_level):
                 OdateOffset = ActualValues['HRDR'].data
             else:
                 OdateOffset = ActualValues['DHR'].data
-                
-            # Add in the MsgDate and ObsDate offsets together.
-            Toffset = np.ma.array(OdateOffset + MdateOffset)
+
+            # The offset is a 1D array whose size is the number of levels.
+            # The datetime routines don't accept arrays as arguments so
+            # need to calculate absolute times one element at a time.
+            Nlevs = OdateOffset.size
+            AbsDate = np.empty(Nlevs, dtype=np.int)
+            AbsTime = np.empty(Nlevs, dtype=np.int)
+            for i in range(Nlevs):
+                # OdateOffset has an empty shape when there is only
+                # one level.
+                if (Nlevs == 1):
+                    OffsetDtime = dt.timedelta(hours=float(OdateOffset))
+                else:
+                    OffsetDtime = dt.timedelta(hours=float(OdateOffset[i]))
+                AbsDtime = MsgDtime + OffsetDtime
+
+                AbsDate[i] = MakeDate(AbsDtime)
+                AbsTime[i] = MakeTime(AbsDtime)
+
         else:
             # raw BUFR: use YEAR, MNTH, ...
             Year   = int(ActualValues['YEAR'].data)
@@ -472,12 +501,13 @@ class ObsType(object):
             # outside the range 0..59 (which is what datetime requires). Use Year through
             # Minute to create the datetime object and add in Second via a
             # timedelta object.
-            ObsDate = dt.datetime(Year, Month, Day, Hour, Minute) + dt.timedelta(seconds=Second)
+            ObsDtime = dt.datetime(Year, Month, Day, Hour, Minute) + dt.timedelta(seconds=Second)
 
-            # Convert to offset relative to the time units.
-            Toffset = np.ma.array(netCDF4.date2num(ObsDate, units=self.time_units))
+            # Form as arrays so that their size can be checked.
+            AbsDate = np.array([MakeDate(ObsDtime)])
+            AbsTime = np.array([MakeTime(ObsDtime)])
 
-        return Toffset
+        return [ AbsDate, AbsTime ]
 
     ###############################################################################
     # This method will convert the BUFR data into netcdf data. This includes
@@ -515,7 +545,7 @@ class ObsType(object):
 
                         # Calculate the value for the Time variable (which is an offset
                         # from the reference time). Add the Time value to the dictionary.
-                        ActualValues[i]['Time'] = self.calc_obs_time(ActualValues[i])
+                        [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'] ] = self.calc_obs_date_time(ActualValues[i])
 
                         # Write out the netcdf variables.
                         for Vname, Vdata in ActualValues[i].items():
@@ -545,8 +575,12 @@ class AircraftObsType(ObsType):
 
         self.bufr_ftype = bf_type
         self.multi_level = False
-        # Add on the specs for the Time variable
-        self.misc_spec[0].append([ 'Time', '', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ])
+
+        # Put the time and date vars in the subclasses so that their dimensions can
+        # vary ( [nobs], [nobs,nlevs] ).
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = '^NC004001'
             self.int_spec = [
@@ -649,8 +683,12 @@ class SondesObsType(ObsType):
 
         self.bufr_ftype = bf_type
         self.multi_level = True
-        # Add on the specs for the Time variable
-        self.misc_spec[0].append([ 'Time', '', cm.DTYPE_FLOAT, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
+
+        # Put the time and date vars in the subclasses so that their dimensions can
+        # vary ( [nobs], [nobs,nlevs] ).
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
+
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = 'UnDef'
             self.int_spec = []
@@ -731,7 +769,12 @@ class AmsuaObsType(ObsType):
         self.nchans = 20  # This is unique to AMSU
         self.bufr_ftype = bf_type
         self.multi_level = False
-        self.misc_spec[0].append([ 'Time', '', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ])
+
+        # Put the time and date vars in the subclasses so that their dimensions can
+        # vary ( [nobs], [nobs,nlevs] ).
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+
         if (bf_type == cm.BFILE_BUFR):
 
             self.mtype_re = '^NC021023'
@@ -783,7 +826,12 @@ class GpsroObsType(ObsType):
         self.bufr_ftype = bf_type
         self.multi_level = False
         self.misc_dtype = cm.DTYPE_FLOAT
-        self.misc_spec[0].append([ 'Time', '', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ])
+
+        # Put the time and date vars in the subclasses so that their dimensions can
+        # vary ( [nobs], [nobs,nlevs] ).
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+
         if (bf_type == cm.BFILE_BUFR):
 
             self.mtype_re = '^NC003010'
