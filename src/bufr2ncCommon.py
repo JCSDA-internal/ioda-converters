@@ -2,28 +2,10 @@
 
 from __future__ import print_function
 import numpy as np
-import datetime as dt
 
 ###########################################################################
 # SUBROUTINES
 ###########################################################################
-
-def SplitDate(yyyymmddhh):
-    # This routine will take an integer date yyyymmddhh and return the
-    # datetime equivalent.
-    DateString = str(yyyymmddhh)
-    Dtime = dt.datetime(int(DateString[0:4]), int(DateString[4:6]),
-                        int(DateString[6:8]), int(DateString[8:10]))
-
-    return Dtime
-
-def MakeDate(Dtime):
-    # This routine will take in integers representing yyyy, mm, dd, hh and
-    # return an integer date yyyymmddhh.
-
-    DateString = "%0.4i"%(Dtime.year) + "%0.2i"%(Dtime.month) + "%0.2i"%(Dtime.day) + "%0.2i"%(Dtime.hour)
-
-    return int(DateString)
 
 ###########################################################################
 # CONSTANTS
