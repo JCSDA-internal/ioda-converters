@@ -17,7 +17,7 @@ import bufr2ncObsTypes as ot
 # SUBROUTINES
 ###################################################################################
 
-def BfilePreprocess(BufrFname, Obs, MaxNumMsg):
+def BfilePreprocess(BufrFname, Obs):
     # This routine will read the BUFR file and figure out how many observations
     # will be read when recording data.
 
@@ -25,25 +25,14 @@ def BfilePreprocess(BufrFname, Obs, MaxNumMsg):
 
     # The number of observations will be equal to the total number of subsets
     # contained in the selected messages.
-    TotalNumMsg = 0
-    NumMsg = 0 
     NumObs = 0 
-    while ( (bufr.advance() == 0) ): 
-        # Select only the messages that belong to this observation type
-        if (re.search(Obs.mtype_re, bufr.msg_type)):
-            TotalNumMsg += 1
-
-            # If MaxNumMsg is less than 1, then select all messages.
-            # If MaxNumMsg is >= 1, then select no more than MaxNumMsg
-            if ((MaxNumMsg < 1) or (NumMsg < MaxNumMsg)):
-                # Attribute "subsets" contains the number of subsets
-                # for the current message.
-                NumMsg += 1
-                NumObs += Obs.msg_obs_count(bufr)
+    Obs.start_msg_selector()
+    while (Obs.select_next_msg(bufr)): 
+        NumObs += Obs.msg_obs_count(bufr)
 
     bufr.close()
 
-    return [ NumObs, NumMsg, TotalNumMsg ] 
+    return [ NumObs, Obs.num_msg_selected, Obs.num_msg_mtype ] 
 
 ###################################################################################
 # MAIN
@@ -57,6 +46,8 @@ ap.add_argument("input_bufr", help="path to input BUFR file")
 ap.add_argument("output_netcdf", help="path to output netCDF4 file")
 ap.add_argument("-m", "--maxmsgs", type=int, default=-1,
                 help="maximum number of messages to keep", metavar="<max_num_msgs>")
+ap.add_argument("-t", "--thin", type=int, default=1,
+                help="select every nth message (thinning)", metavar="<thin_interval>")
 ap.add_argument("-c", "--clobber", action="store_true",
                 help="allow overwrite of output netcdf file")
 ap.add_argument("-p", "--prepbufr", action="store_true",
@@ -68,6 +59,7 @@ ObsType = MyArgs.obs_type
 BufrFname = MyArgs.input_bufr
 NetcdfFname = MyArgs.output_netcdf
 MaxNumMsg = MyArgs.maxmsgs
+ThinInterval = MyArgs.thin
 ClobberOfile = MyArgs.clobber
 if (MyArgs.prepbufr):
     BfileType = cm.BFILE_PREPBUFR
@@ -130,6 +122,8 @@ elif (BfileType == cm.BFILE_PREPBUFR):
 print("  Output netCDF file: {0:s}".format(NetcdfFname))
 if (MaxNumMsg > 0):
     print("  Limiting nubmer of messages to record to {0:d} messages".format(MaxNumMsg))
+if (ThinInterval > 1):
+    print("  Thining: selecting every {0:d}-th message".format(ThinInterval))
 print("")
 
 # It turns out that using multiple unlimited dimensions in the netCDF file
@@ -151,7 +145,9 @@ print("")
 # types. NumObs will be set to the number of observations selected,
 # NumMsgs will be set to the number of messages selected, and TotalMsgs
 # will be set to the total number of messages that match Obs.mtype_re in the file.
-[NumObs, NumMsgs, TotalMsgs ] = BfilePreprocess(BufrFname, Obs, MaxNumMsg)
+Obs.max_num_msg = MaxNumMsg
+Obs.thin_interval = ThinInterval
+[NumObs, NumMsgs, TotalMsgs ] = BfilePreprocess(BufrFname, Obs)
 
 print("  Total number of messages that match obs type {0:s}: {1:d}".format(ObsType, TotalMsgs))
 print("  Number of messages selected: {0:d}".format(NumMsgs))
