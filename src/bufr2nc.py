@@ -25,25 +25,14 @@ def BfilePreprocess(BufrFname, Obs):
 
     # The number of observations will be equal to the total number of subsets
     # contained in the selected messages.
-    TotalNumMsg = 0
-    NumMsg = 0 
     NumObs = 0 
-    Obs.reset_msg_selector()
-    while ( (bufr.advance() == 0) ): 
-        # Select only the messages that belong to this observation type
-        if (re.search(Obs.mtype_re, bufr.msg_type)):
-            TotalNumMsg += 1
-
-            # Apply the message selection filter
-            if (Obs.select_this_message()):
-                # Attribute "subsets" contains the number of subsets
-                # for the current message.
-                NumMsg += 1
-                NumObs += Obs.msg_obs_count(bufr)
+    Obs.start_msg_selector()
+    while (Obs.select_next_msg(bufr)): 
+        NumObs += Obs.msg_obs_count(bufr)
 
     bufr.close()
 
-    return [ NumObs, NumMsg, TotalNumMsg ] 
+    return [ NumObs, Obs.num_msg_selected, Obs.num_msg_mtype ] 
 
 ###################################################################################
 # MAIN
