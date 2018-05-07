@@ -470,25 +470,35 @@ class ObsType(object):
             MsgDtime = SplitMsgDate(MsgDate)
 
             # Get the offset from either DHR or HRDR. These values are
-            # in hours.
-            if (self.multi_level):
-                OdateOffset = ActualValues['HRDR'].data
-            else:
-                OdateOffset = ActualValues['DHR'].data
+            # in hours. Use DHR by default. If HRDR is available with
+            # a multilevel obs type, then use it.
+             
+            # Data is missing if corresponding mask value is True, so need
+            # to verify that all mask values are False before using HRDR.
+            HrdrAvailable = not np.any(ActualValues['HRDR'].mask)
 
-            # The offset is a 1D array whose size is the number of levels.
+            OdateOffset = ActualValues['DHR'].data
+            if (self.multi_level):
+                if (HrdrAvailable):
+                    OdateOffset = ActualValues['HRDR'].data
+                else:
+                    # Have a multi-level obs type, but using a single DHR value.
+                    # Replicate the DHR value into a vector with the size of
+                    # the multi-level obs type.
+                    OdateOffset = np.repeat(OdateOffset, ActualValues['HRDR'].size)
+
+            # At this point it is possible that OdateOffset is a scalar value
+            # (indicated by size == 1). If so, then cast OdateOffest into a vector
+            # of size one for the following loop.
             # The datetime routines don't accept arrays as arguments so
             # need to calculate absolute times one element at a time.
             Nlevs = OdateOffset.size
+            if (Nlevs == 1):
+                OdateOffset = np.array([ OdateOffset ])
             AbsDate = np.empty(Nlevs, dtype=np.int)
             AbsTime = np.empty(Nlevs, dtype=np.int)
             for i in range(Nlevs):
-                # OdateOffset has an empty shape when there is only
-                # one level.
-                if (Nlevs == 1):
-                    OffsetDtime = dt.timedelta(hours=float(OdateOffset))
-                else:
-                    OffsetDtime = dt.timedelta(hours=float(OdateOffset[i]))
+                OffsetDtime = dt.timedelta(hours=float(OdateOffset[i]))
                 AbsDtime = MsgDtime + OffsetDtime
 
                 AbsDate[i] = MakeDate(AbsDtime)
