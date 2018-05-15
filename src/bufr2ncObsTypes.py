@@ -202,10 +202,7 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
 #
 # Define the base class with a simple method that assumes all variables have a
 # one-to-one corrspondence with a BUFR mnemonic. More complex examples can
-# override the convert(), convert_header(), and/or convert_obs() methods
-# and do whatever is necessary. The thought about breaking up convert() into
-# two methods, convert_header() and convert_obs(), is that it seems that most
-# obs types will be able to utilize the simple convert_header() algorithm.
+# override the convert() method or its sub-methods.
 #
 # The format for an entry in the *_spec lists is:
 #
@@ -883,6 +880,9 @@ class GpsroObsType(ObsType):
     def __init__(self, bf_type):
         super(GpsroObsType, self).__init__()
 
+        # For nc variable 'profile_number'
+        self.subset_num = 0
+
         self.bufr_ftype = bf_type
         self.multi_level = False
         self.misc_dtype = cm.DTYPE_FLOAT
@@ -928,6 +928,9 @@ class GpsroObsType(ObsType):
             self.misc_spec[0].append([ 'BNDA_pccf', '', self.misc_dtype, ['nobs'], [self.nobs] ])
             self.misc_spec[0].append([ 'MEFR',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
             self.misc_spec[0].append([ 'IMPP',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+
+            # Subset count
+            self.misc_spec[0].append([ 'profile_number', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
 
         elif (bf_type == cm.BFILE_PREPBUFR):
             self.mtype_re = 'UnDef'
@@ -1050,6 +1053,9 @@ class GpsroObsType(ObsType):
         # subsets have already been written by the msg_obs_count() method.
         if (self.select_this_subset(bufr, HeaderVals['SAID'], HeaderVals['PTID'],
           HeaderVals['QFRO'], NumBangle, BangleFreqCnts)):
+            # Update subset number.
+            self.subset_num += 1
+
             # Grab the sequence data for each of bend angle and refractivity
             BangleBvals = bufr.read_subset('ROSEQ1', seq=True)
             RfracBvals = bufr.read_subset('ROSEQ3', seq=True)
@@ -1165,6 +1171,8 @@ class GpsroObsType(ObsType):
                 ActualValues[irep]['BNDA']      = BufrFloatToActual(BNDA, self.misc_dtype)
                 ActualValues[irep]['BNDA_err']  = BufrFloatToActual(BNDA_err, self.misc_dtype)
                 ActualValues[irep]['BNDA_pccf'] = BufrFloatToActual(BNDA_pccf, self.misc_dtype)
+
+                ActualValues[irep]['profile_number'] = np.ma.array([self.subset_num])
 
         else:
             # This subset has been rejected, so empty out the ActualValues list so that
