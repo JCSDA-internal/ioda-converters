@@ -1,0 +1,1241 @@
+ MESSAGE TYPE ADPUPA    
+
+001194  SID                        89512  ( 8)CCITT IA5                 STATION IDENTIFICATION                          
+006240  XOB                     11.83000  DEG E                         LONGITUDE                                       
+005002  YOB                    -70.77000  DEG N                         LATITUDE                                        
+004215  DHR                      0.00000  HOURS                         OBSERVATION TIME MINUS CYCLE TIME               
+010199  ELV                        119.0  METER                         STATION ELEVATION                               
+055007  TYP                        120.0  CODE TABLE                    PREPBUFR REPORT TYPE                            
+055008  T29                         11.0  CODE TABLE                    DATA DUMP REPORT TYPE                           
+055009  TSB                      MISSING  CODE TABLE                    REPORT SUBTYPE (HAS VARIOUS MEANINGS DEPENDING O
+002195  ITP                         90.0  CODE TABLE                    INSTRUMENT TYPE                                 
+050001  SQN                          1.0  NUMERIC                       REPORT SEQUENCE NUMBER                          
+050003  PROCN                        0.0  NUMERIC                       PROCESS NUMBER FOR THIS MPI RUN (OBTAINED FROM S
+004214  RPT                      0.00000  HOURS                         REPORTED OBSERVATION TIME                       
+004216  TCOR                         0.0  CODE TABLE                    INDICATOR WHETHER OBS. TIME IN "DHR" WAS CORRECT
+           <RSRD_SEQ>     0 REPLICATIONS
+002013  SIRC                         5.0  CODE TABLE                    RAWINSONDE SOLAR & INFRARED RADIATION CORR. INDI
+           {PRSLEVEL}    31 REPLICATIONS
+    ++++++  PRSLEVEL  REPLICATION #     1  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                       1000.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     0 REPLICATIONS
+           <T___INFO>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       -214.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       -196.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.83000  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.77000  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.45000  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     2  ++++++
+008193  CAT                          0.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        959.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     1 REPLICATIONS
+007250  POE                         1.00  MB                            PRESSURE OBSERVATION ERROR                      
+007249  PFC                        961.4  MB                            FORECAST (BACKGROUND) PRESSURE VALUE            
+           <PFC__MSQ>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+013245  QOB                       3019.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          8.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+013245  QOB                       3019.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                        100.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+012244  TDO                         -3.7  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                          2.0  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                       2959.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                         -0.2  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          8.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                          1.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012245  TOB                         -0.7  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                         -0.2  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.1  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                         -0.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                        119.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                        139.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.83000  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.77000  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.45000  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     3  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        925.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+013245  QOB                       2859.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          8.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+013245  QOB                       2859.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                        100.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+012244  TDO                         -4.9  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                          2.0  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                       2876.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                         -1.6  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          8.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                          1.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012245  TOB                         -2.1  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                         -1.6  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.0  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                         -1.8  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                        408.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                        427.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.81506  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.76869  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.43394  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     4  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        850.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+013245  QOB                       2248.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          8.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+013245  QOB                       2248.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                        100.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+012244  TDO                         -9.1  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                          2.0  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                       2314.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                         -6.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          8.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                          1.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012245  TOB                         -6.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                         -6.5  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                         -7.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       1071.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       1092.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.76859  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.76310  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.39711  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     5  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        718.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+013245  QOB                       1240.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          8.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+013245  QOB                       1240.0  MG/KG                         SPECIFIC HUMIDITY OBSERVATION                   
+013246  QQM                          2.0  CODE TABLE                    SPECIFIC HUMIDITY (QUALITY) MARKER              
+013247  QPC                          1.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT PROGRAM CODE            
+013248  QRC                        100.0  CODE TABLE                    SPECIFIC HUMIDITY EVENT REASON CODE             
+012244  TDO                        -18.4  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                          2.0  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                       1416.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -15.7  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          8.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                          1.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012245  TOB                        -15.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                        -15.7  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -15.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.61664  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75847  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.32515  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     6  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        700.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                       1274.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -17.1  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -16.5  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       2554.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       2576.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.59500  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75878  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.31472  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     7  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        698.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                       1257.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -17.3  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -16.6  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.59256  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75885  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.31353  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     8  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        584.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        731.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -23.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -23.7  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.24025  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #     9  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        517.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        459.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -30.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -29.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.19151  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    10  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        500.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        401.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -31.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -30.7  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       5000.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       5035.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.17883  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    11  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        484.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        347.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -32.7  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -32.3  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.16608  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    12  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        454.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        262.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -37.1  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -35.4  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.14127  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    13  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        422.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        181.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -38.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -39.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.11330  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    14  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        400.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                        122.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -41.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -41.7  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       6540.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       6582.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.09328  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    15  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        363.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                         53.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -46.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -46.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                    -0.05708  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    16  ++++++
+008193  CAT                          5.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        304.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                         21.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -50.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.9  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -49.9  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.00770  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    17  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        300.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                         19.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -50.7  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.9  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -49.9  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       8440.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       8484.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.01228  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    18  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        268.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          5.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -47.3  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.1  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -47.8  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.05342  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    19  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        250.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          3.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -47.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.2  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -45.5  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                       9640.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                       9683.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.07894  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    20  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        216.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          1.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -44.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.2  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -43.6  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.13293  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    21  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        200.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          1.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -45.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.2  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -44.1  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      11120.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      11181.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.16117  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    22  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        150.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -46.3  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.0  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -44.5  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      13030.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      13106.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.26728  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    23  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                        100.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          4.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -45.1  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -44.6  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      15740.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      15818.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.41783  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    24  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         98.2  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          4.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -44.7  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -44.6  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.42458  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    25  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         70.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          4.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -44.1  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.8  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -43.4  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      18120.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      18208.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.55005  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    26  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         50.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -43.7  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          0.9  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -42.5  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      20380.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      20475.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.67561  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    27  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         30.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -40.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.0  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -40.5  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      23820.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      23937.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     0.86672  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    28  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         20.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -38.9  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.3  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -38.5  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      26580.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      26706.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     1.02005  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    29  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         16.5  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -38.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.3  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -36.6  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     1.09345  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    30  ++++++
+008193  CAT                          1.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                         10.0  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -32.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.5  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -31.4  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     1 REPLICATIONS
+010007  ZOB                      31380.0  METER                         HEIGHT OBSERVATION                              
+010246  ZQM                          2.0  CODE TABLE                    HEIGHT (QUALITY) MARKER                         
+010247  ZPC                          1.0  CODE TABLE                    HEIGHT EVENT PROGRAM CODE                       
+010248  ZRC                        100.0  CODE TABLE                    HEIGHT EVENT REASON CODE                        
+           <Z__BACKG>     1 REPLICATIONS
+010249  ZFC                      31536.0  METER                         FORECAST (BACKGROUND) HEIGHT VALUE              
+           <ZFC__MSQ>     0 REPLICATIONS
+           <Z__POSTP>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     1.28672  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+    ++++++  PRSLEVEL  REPLICATION #    31  ++++++
+008193  CAT                          2.0  CODE TABLE                    PREPBUFR DATA LEVEL CATEGORY                    
+           <P___INFO>     1 REPLICATIONS
+007245  POB                          9.2  MB                            PRESSURE OBSERVATION                            
+007246  PQM                          2.0  CODE TABLE                    PRESSURE (QUALITY) MARKER                       
+007247  PPC                          1.0  CODE TABLE                    PRESSURE EVENT PROGRAM CODE                     
+007248  PRC                        100.0  CODE TABLE                    PRESSURE EVENT REASON CODE                      
+           <P__BACKG>     0 REPLICATIONS
+           <P__POSTP>     0 REPLICATIONS
+           <Q___INFO>     1 REPLICATIONS
+012244  TDO                      MISSING  DEG C                         DEWPOINT TEMPERATURE OBSERVATION (NOT ASSIMILATE
+           <Q__BACKG>     1 REPLICATIONS
+013250  QOE                      MISSING  PERCENT DIVIDED BY 10         RELATIVE HUMIDITY OBSERVATION ERROR             
+013249  QFC                          2.0  MG/KG                         FORECAST (BACKGROUND) SPECIFIC HUMIDITY VALUE   
+           <QFC__MSQ>     0 REPLICATIONS
+           <Q__POSTP>     0 REPLICATIONS
+           <T___INFO>     1 REPLICATIONS
+012245  TOB                        -31.5  DEG C                         TEMPERATURE OBSERVATION                         
+012246  TQM                          2.0  CODE TABLE                    TEMPERATURE (QUALITY) MARKER                    
+012247  TPC                          1.0  CODE TABLE                    TEMPERATURE EVENT PROGRAM CODE                  
+012248  TRC                        100.0  CODE TABLE                    TEMPERATURE EVENT REASON CODE                   
+012243  TVO                      MISSING  DEG C                         NON-Q. CONTROLLED VIRTUAL TEMP OBS (NOT ASSIMILA
+           <T__BACKG>     1 REPLICATIONS
+012250  TOE                          1.5  DEG C                         TEMPERATURE OBSERVATION ERROR                   
+012249  TFC                        -30.4  DEG C                         FORECAST (BACKGROUND) TEMPERATURE VALUE         
+           <TFC__MSQ>     0 REPLICATIONS
+           <T__POSTP>     0 REPLICATIONS
+           <Z___INFO>     0 REPLICATIONS
+           <W___INFO>     0 REPLICATIONS
+           <DRFTINFO>     1 REPLICATIONS
+006241  XDR                     11.54276  DEG E                         PROFILE LEVEL LON (FOR RAOB/PIBAL BASED ON BALLO
+005241  YDR                    -70.75874  DEG N                         PROFILE LEVEL LAT (FOR RAOB/PIBAL BASED ON BALLO
+004218  HRDR                     1.31944  HOURS                         PROFILE LVL TIME-CYCLE (FOR RAOB/PIBAL, BASED ON
+           <SST_INFO>     0 REPLICATIONS
+           <PREWXSEQ>     0 REPLICATIONS
+           {CLOUDSEQ}     3 REPLICATIONS
+    ++++++  CLOUDSEQ  REPLICATION #     1  ++++++
+008002  VSSO                     MISSING  CODE TABLE                    VERT. SIGNIFICANCE (SFC OBSERVATION)            
+020011  CLAM                         8.0  CODE TABLE                    CLOUD AMOUNT                                    
+020012  CLTP                        35.0  CODE TABLE                    CLOUD TYPE                                      
+020013  HOCB                     MISSING  METER                         HEIGHT OF BASE OF CLOUD                         
+           <HOCT_SEQ>     0 REPLICATIONS
+    ++++++  CLOUDSEQ  REPLICATION #     2  ++++++
+008002  VSSO                     MISSING  CODE TABLE                    VERT. SIGNIFICANCE (SFC OBSERVATION)            
+020011  CLAM                     MISSING  CODE TABLE                    CLOUD AMOUNT                                    
+020012  CLTP                        61.0  CODE TABLE                    CLOUD TYPE                                      
+020013  HOCB                     MISSING  METER                         HEIGHT OF BASE OF CLOUD                         
+           <HOCT_SEQ>     0 REPLICATIONS
+    ++++++  CLOUDSEQ  REPLICATION #     3  ++++++
+008002  VSSO                     MISSING  CODE TABLE                    VERT. SIGNIFICANCE (SFC OBSERVATION)            
+020011  CLAM                     MISSING  CODE TABLE                    CLOUD AMOUNT                                    
+020012  CLTP                        60.0  CODE TABLE                    CLOUD TYPE                                      
+020013  HOCB                     MISSING  METER                         HEIGHT OF BASE OF CLOUD                         
+           <HOCT_SEQ>     0 REPLICATIONS
+           <CLOU2SEQ>     1 REPLICATIONS
+020010  TOCC                     MISSING  PERCENT                       CLOUD COVER (TOTAL)                             
+020201  HBLCS                        4.0  CODE TABLE                    HEIGHT ABOVE SURFACE OF BASE OF LOWEST CLOUD SEE
+           <SWINDSEQ>     0 REPLICATIONS
+           <AFIC_SEQ>     0 REPLICATIONS
+           <TURB3SEQ>     0 REPLICATIONS
+
+ >>> END OF SUBSET <<< 

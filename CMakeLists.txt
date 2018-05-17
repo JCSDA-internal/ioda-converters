@@ -4,4 +4,4 @@ enable_language (Fortran)
 project (bufr2nc)
 
 add_subdirectory (src)
-add_subdirectory (test)
+add_subdirectory (util)
