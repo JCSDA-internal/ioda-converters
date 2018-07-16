@@ -25,25 +25,18 @@ def SplitMsgDate(yyyymmddhh):
     return Dtime
 
 def MakeDate(Dtime):
-    # This routine will take in a datetime object and return an integer date yyyymmdd.
+    # This routine will take in integers representing yyyy, mm, dd
+    # and return an integer date yyyymmdd.
     DateString = "%0.4i"%(Dtime.year) + "%0.2i"%(Dtime.month) + "%0.2i"%(Dtime.day)
 
     return int(DateString)
 
 def MakeTime(Dtime):
-    # This routine will take in a datetime object and return an integer time hhmmss.
+    # This routine will take in integers representing hh, mm, ss
+    # and return an integer time hhmmss.
     TimeString = "%0.2i"%(Dtime.hour) + "%0.2i"%(Dtime.minute) + "%0.2i"%(Dtime.second)
 
     return int(TimeString)
-
-def MakeEpochTime(Dtime):
-    # This routine will take in a datetime object and return time since the
-    # epoch (Jan 1, 1970, 00Z).
-    #
-    # Need to mark the Dtime object as UTC time before accessing the epoch timestamp.
-    EpochTime = Dtime.replace(tzinfo=dt.timezone.utc).timestamp()
-
-    return EpochTime
 
 def BufrFloatToActual(Bval, Dtype):
     # This routine will extract the value of a variable from the
@@ -501,14 +494,12 @@ class ObsType(object):
                 OdateOffset = np.array([ OdateOffset ])
             AbsDate = np.empty(Nlevs, dtype=np.int)
             AbsTime = np.empty(Nlevs, dtype=np.int)
-            EpochTime = np.empty(Nlevs, dtype=np.int)
             for i in range(Nlevs):
                 OffsetDtime = dt.timedelta(hours=float(OdateOffset[i]))
                 AbsDtime = MsgDtime + OffsetDtime
 
                 AbsDate[i] = MakeDate(AbsDtime)
                 AbsTime[i] = MakeTime(AbsDtime)
-                EpochTime[i] = MakeEpochTime(AbsDtime)
 
         else:
             # raw BUFR: use YEAR, MNTH, ...
@@ -517,10 +508,7 @@ class ObsType(object):
             Day    = int(ActualValues['DAYS'].data)
             Hour   = int(ActualValues['HOUR'].data)
             Minute = int(ActualValues['MINU'].data)
-            if ('SECO' in ActualValues):
-                Second = int(ActualValues['SECO'].data)
-            else:
-                Second = int(0)
+            Second = int(ActualValues['SECO'].data)
 
             # Create datetime object with above data. Sometimes the SECO value is
             # outside the range 0..59 (which is what datetime requires). Use Year through
@@ -531,47 +519,8 @@ class ObsType(object):
             # Form as arrays so that their size can be checked.
             AbsDate = np.array([MakeDate(ObsDtime)])
             AbsTime = np.array([MakeTime(ObsDtime)])
-            EpochTime = np.array([MakeEpochTime(ObsDtime)])
 
-        return [ AbsDate, AbsTime, EpochTime ]
-
-    ###############################################################################
-    # This method will calculate the lat and lon values from the BUFR
-    # mnemonic values. The calculation depends on the type of BUFR file (raw BUFR
-    # or prepBUFR). For raw BUFR, the lat and lon vlaues come from the
-    # mnemonics:
-    #     CLAT  - latitude (coarse resolution)
-    #     CLON  - longitude (coarse resolution)
-    #                  OR
-    #     CLATH  - latitude (high resolution)
-    #     CLONH  - longitude (high resolution)
-    #
-    # For prepBUFR, the lat lon values come from the mnemonics:
-    #     XOB   - For single level obs
-    #     YOB   - For single level obs
-    #                   OR
-    #     XDR   - For multi-level obs (drift)
-    #     YDR   - For multi-level obs (drift)
-    #
-    def calc_obs_lat_lon(self, ActualValues):
-        if (self.bufr_ftype == cm.BFILE_PREPBUFR):
-            # If multi-level obs, then use XDR, YDR. Otherwise, use XOB, YOB.
-            if (self.multi_level):
-                Lon = ActualValues['XDR'].data
-                Lat = ActualValues['YDR'].data
-            else:
-                Lon = ActualValues['XOB'].data
-                Lat = ActualValues['YOB'].data
-        else:
-            # Try CLATH and CLONH first.
-            if ('CLATH' in ActualValues):
-                Lon = ActualValues['CLONH'].data
-                Lat = ActualValues['CLATH'].data
-            else:
-                Lon = ActualValues['CLON'].data
-                Lat = ActualValues['CLAT'].data
-
-        return [ Lat, Lon ]
+        return [ AbsDate, AbsTime ]
 
     ###############################################################################
     # This method will start the message selector. This selector method will
@@ -653,10 +602,7 @@ class ObsType(object):
     
                     # Calculate the value for the Time variable (which is an offset
                     # from the reference time). Add the Time value to the dictionary.
-                    [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'], ActualValues[i]['time'] ] = self.calc_obs_date_time(ActualValues[i])
-
-                    # Calculate the value of lat and lon and add to the dictionary.
-                    [ ActualValues[i]['latitude'], ActualValues[i]['longitude'] ] = self.calc_obs_lat_lon(ActualValues[i])
+                    [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'] ] = self.calc_obs_date_time(ActualValues[i])
     
                     # Write out the netcdf variables.
                     for Vname, Vdata in ActualValues[i].items():
@@ -689,14 +635,11 @@ class AircraftObsType(ObsType):
 
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nobs], [nobs,nlevs] ).
-        self.misc_spec[0].append([ 'ObsTime',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'ObsDate',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'time',      '', cm.DTYPE_DOUBLE,  ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'latitude',  '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'longitude', '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
 
         if (bf_type == cm.BFILE_BUFR):
-            self.mtype_re = '^NC00400[14]'
+            self.mtype_re = '^NC004001'
             self.int_spec = [
                 [ [ 'YEAR',   'YEAR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'MNTH',   'MNTH',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
@@ -709,13 +652,14 @@ class AircraftObsType(ObsType):
                   [ 'CLON',   'CLON',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'FLVL',   'FLVL',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
 
-                [ [ 'air_temperature',      'TMDB',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'relative_humidity',    'REHU',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'wind_speed',           'WSPD',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'wind_to_direction',    'WDIR',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'air_temperature_qc',   'QMAT',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'relative_humidity_qc', 'QMDD',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'wind_qc',              'QMWN',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+                [ [ 'TMDB',   'TMDB',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TMDP',   'TMDP',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'REHU',   'REHU',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WSPD',   'WSPD',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WDIR',   'WDIR',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QMAT',   'QMAT',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QMDD',   'QMDD',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QMWN',   'QMWN',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
 
                 [ [ 'SEQNUM', 'SEQNUM', cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
                   [ 'BUHD',   'BUHD',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
@@ -740,31 +684,31 @@ class AircraftObsType(ObsType):
                   [ 'SAID', 'SAID', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'T29',  'T29',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
 
-                [ [ 'air_pressure',          'POB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'specific_humidity',     'QOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'air_temperature',       'TOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'height',                'ZOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'eastward_wind',         'UOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'northward_wind',        'VOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'precipitable_water',    'PWO',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'MXGS',                  'MXGS', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'PRSS',                  'PRSS', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'dew_point_temperature', 'TDO',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'PMO',                   'PMO',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                [ [ 'POB',  'POB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QOB',  'QOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TOB',  'TOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'ZOB',  'ZOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'UOB',  'UOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'VOB',  'VOB',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PWO',  'PWO',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'MXGS', 'MXGS', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PRSS', 'PRSS', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TDO',  'TDO',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PMO',  'PMO',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
 
-                [ [ 'air_pressure_qc',       'PQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'specific_humidity_qc',  'QQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'air_temperature_qc',    'TQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'height_qc',             'ZQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'WQM',                   'WQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'precipitable_water_qc', 'PWQ',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'PMQ',                   'PMQ',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+                [ [ 'PQM',  'PQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QQM',  'QQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'TQM',  'TQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ZQM',  'ZQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'WQM',  'WQM',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'PWQ',  'PWQ',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'PMQ',  'PMQ',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
 
-                [ [ 'air_pressure_err',       'POE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'specific_humidity_err',  'QOE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'air_temperature_err',    'TOE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'height_err',             'WOE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'precipitable_water_err', 'PWE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                [ [ 'POE',  'POE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QOE',  'QOE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TOE',  'TOE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WOE',  'WOE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PWE',  'PWE',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
 
                 [ [ 'HOVI', 'HOVI', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'CAT',  'CAT',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
@@ -799,11 +743,8 @@ class SondesObsType(ObsType):
 
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nobs], [nobs,nlevs] ).
-        self.misc_spec[0].append([ 'ObsTime',   '', cm.DTYPE_INTEGER, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
-        self.misc_spec[0].append([ 'ObsDate',   '', cm.DTYPE_INTEGER, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
-        self.misc_spec[0].append([ 'time',      '', cm.DTYPE_DOUBLE,  ['nobs','nlevs'], [self.nobs,self.nlevs] ])
-        self.misc_spec[0].append([ 'latitude',  '', cm.DTYPE_FLOAT,   ['nobs','nlevs'], [self.nobs,self.nlevs] ])
-        self.misc_spec[0].append([ 'longitude', '', cm.DTYPE_FLOAT,   ['nobs','nlevs'], [self.nobs,self.nlevs] ])
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs','nlevs'], [self.nobs,self.nlevs] ])
 
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = 'UnDef'
@@ -835,31 +776,31 @@ class SondesObsType(ObsType):
                   [ 'ELV',  'ELV',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'T29',  'T29',  cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
 
-                [ [ 'air_pressure',          'POB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'specific_humidity',     'QOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'air_temperature',       'TOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'height',                'ZOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'eastward_wind',         'UOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'northward_wind',        'VOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'precipitable_water',    'PWO',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'dew_point_temperature', 'TDO',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
+                [ [ 'POB',  'POB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'QOB',  'QOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TOB',  'TOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'ZOB',  'ZOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'UOB',  'UOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'VOB',  'VOB',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PWO',  'PWO',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TDO',  'TDO',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
 
-                [ [ 'air_pressure_qc',       'PQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'specific_humidity_qc',  'QQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'air_temperature_qc',    'TQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'height_qc',             'ZQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'WQM',                   'WQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'precipitable_water_qc', 'PWQ',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'PMQ',                   'PMQ',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
+                [ [ 'PQM',  'PQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'QQM',  'QQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TQM',  'TQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'ZQM',  'ZQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'WQM',  'WQM',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PWQ',  'PWQ',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PMQ',  'PMQ',  cm.DTYPE_INTEGER, ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
 
-                [ [ 'air_pressure_err',        'POE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'specific_humidity_err',   'QOE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'air_temperature_err',     'TOE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'height_err',              'WOE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'precipitable_water_err',  'PWE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'XDR',                     'XDR',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'YDR',                     'YDR',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
-                  [ 'HRDR',                    'HRDR', cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
+                [ [ 'POE',  'POE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'QOE',  'QOE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'TOE',  'TOE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'WOE',  'WOE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'PWE',  'PWE',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'XDR',  'XDR',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'YDR',  'YDR',  cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ],
+                  [ 'HRDR', 'HRDR', cm.DTYPE_FLOAT,   ['nobs', 'nlevs'], [self.nobs, self.nlevs] ] ],
 
                 ]
             self.evn_spec = [
@@ -888,11 +829,8 @@ class AmsuaObsType(ObsType):
 
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nobs], [nobs,nlevs] ).
-        self.misc_spec[0].append([ 'ObsTime',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'ObsDate',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'time',      '', cm.DTYPE_DOUBLE,  ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'latitude',  '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'longitude', '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
 
         if (bf_type == cm.BFILE_BUFR):
 
@@ -910,17 +848,17 @@ class AmsuaObsType(ObsType):
                   [ 'CLON',   'CLON',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'HOLS',   'HOLS',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
 
-                [ [ 'sensor_zenith_angle',  'SAZA',   cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ],
-                  [ 'solar_zenith_angle',   'SOZA',   cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ],
-                  [ 'sensor_azimuth_angle', 'BEARAZ', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ],
-                  [ 'solar_azimuth_angle',  'SOLAZI', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ] ]
+                [ [ 'SAZA',   'SAZA',   cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                  [ 'SOZA',   'SOZA',   cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                  [ 'BEARAZ', 'BEARAZ', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ],
+                  [ 'SOLAZI', 'SOLAZI', cm.DTYPE_FLOAT, ['nobs'], [self.nobs] ] ]
 
                 ]
             self.evn_spec = []
             self.rep_spec = [
-                [ [ 'channel_number',         'CHNM', cm.DTYPE_INTEGER, ['nobs', 'nchans'], [self.nobs, self.nchans] ],
-                  [ 'brightness_temperature', 'TMBR', cm.DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ],
-                  [ 'CSTC',                   'CSTC', cm.DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ] ]
+                [ [ 'CHNM', 'CHNM', cm.DTYPE_INTEGER, ['nobs', 'nchans'], [self.nobs, self.nchans] ],
+                  [ 'TMBR', 'TMBR', cm.DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ],
+                  [ 'CSTC', 'CSTC', cm.DTYPE_FLOAT,   ['nobs', 'nchans'], [self.nobs, self.nchans] ] ]
 
                 ]
             self.seq_spec = []
@@ -951,11 +889,8 @@ class GpsroObsType(ObsType):
 
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nobs], [nobs,nlevs] ).
-        self.misc_spec[0].append([ 'ObsTime',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'ObsDate',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'time',      '', cm.DTYPE_DOUBLE,  ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'latitude',  '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
-        self.misc_spec[0].append([ 'longitude', '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
 
         if (bf_type == cm.BFILE_BUFR):
 
@@ -982,17 +917,17 @@ class GpsroObsType(ObsType):
             # These are the observation variables that will be extracted by the
             # convert method of this class (which overrides the base class convert
             # method).
-            self.misc_spec[0].append([ 'CLATH',                         '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'CLONH',                         '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'height',                        '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'atmospheric_refractivity',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'atmospheric_refractivity_err',  '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'atmospheric_refractivity_pccf', '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'bending_angle',                 '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'bending_angle_err',             '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'bending_angle_pccf',            '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'mean_frequency',                '', self.misc_dtype, ['nobs'], [self.nobs] ])
-            self.misc_spec[0].append([ 'impact_parameter',              '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'CLATH',     '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'CLONH',     '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'HEIT',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'ARFR',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'ARFR_err',  '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'ARFR_pccf', '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'BNDA',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'BNDA_err',  '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'BNDA_pccf', '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'MEFR',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
+            self.misc_spec[0].append([ 'IMPP',      '', self.misc_dtype, ['nobs'], [self.nobs] ])
 
             # Subset count
             self.misc_spec[0].append([ 'profile_number', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
@@ -1225,17 +1160,17 @@ class GpsroObsType(ObsType):
                 # Convert and fill in the ActualValues dictionary
                 ActualValues[irep]['CLATH'] = BufrFloatToActual(CLATH, self.misc_dtype)
                 ActualValues[irep]['CLONH'] = BufrFloatToActual(CLONH, self.misc_dtype)
-                ActualValues[irep]['height']  = BufrFloatToActual(HEIT, self.misc_dtype)
+                ActualValues[irep]['HEIT']  = BufrFloatToActual(HEIT, self.misc_dtype)
 
-                ActualValues[irep]['atmospheric_refractivity']      = BufrFloatToActual(ARFR, self.misc_dtype)
-                ActualValues[irep]['atmospheric_refractivity_err']  = BufrFloatToActual(ARFR_err, self.misc_dtype)
-                ActualValues[irep]['atmospheric_refractivity_pccf'] = BufrFloatToActual(ARFR_pccf, self.misc_dtype)
+                ActualValues[irep]['ARFR']      = BufrFloatToActual(ARFR, self.misc_dtype)
+                ActualValues[irep]['ARFR_err']  = BufrFloatToActual(ARFR_err, self.misc_dtype)
+                ActualValues[irep]['ARFR_pccf'] = BufrFloatToActual(ARFR_pccf, self.misc_dtype)
 
-                ActualValues[irep]['mean_frequency']     = BufrFloatToActual(MEFR, self.misc_dtype)
-                ActualValues[irep]['impact_parameter']   = BufrFloatToActual(IMPP, self.misc_dtype)
-                ActualValues[irep]['bending_angle']      = BufrFloatToActual(BNDA, self.misc_dtype)
-                ActualValues[irep]['bending_angle_err']  = BufrFloatToActual(BNDA_err, self.misc_dtype)
-                ActualValues[irep]['bending_angle_pccf'] = BufrFloatToActual(BNDA_pccf, self.misc_dtype)
+                ActualValues[irep]['MEFR']      = BufrFloatToActual(MEFR, self.misc_dtype)
+                ActualValues[irep]['IMPP']      = BufrFloatToActual(IMPP, self.misc_dtype)
+                ActualValues[irep]['BNDA']      = BufrFloatToActual(BNDA, self.misc_dtype)
+                ActualValues[irep]['BNDA_err']  = BufrFloatToActual(BNDA_err, self.misc_dtype)
+                ActualValues[irep]['BNDA_pccf'] = BufrFloatToActual(BNDA_pccf, self.misc_dtype)
 
                 ActualValues[irep]['profile_number'] = np.ma.array([self.subset_num])
 
