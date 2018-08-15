@@ -32,8 +32,8 @@ class ObsType(object):
     ###########################################################
     # Dummy method that returns an error so that developer
     # knows to fill in this method with a obs type specific one.
-    def MergeNetcdf(self, *Args):
-        print("ERROR: MergeNetcdf method is not defined for obs type: {0:s}".format(self.obs_type))
+    def PrepNetcdf(self, *Args):
+        print("ERROR: PrepNetcdf method is not defined for obs type: {0:s}".format(self.obs_type))
         sys.exit(1)
 
 #######################################################
@@ -44,6 +44,24 @@ class SondesObsType(ObsType):
     def __init__(self):
         super(SondesObsType, self).__init__()
         self.obs_type = 'Sondes'
+        self.geo_vars = {
+          'Latitude' : 'latitude',
+          'Longitude' : 'longitude',
+          'Time' : 'time',
+          'Height' : 'height',
+          'virtual_temperature' : 'virtual_temperature',
+          'atmosphere_ln_pressure_coordinates' : 'atmosphere_ln_pressure_coordinates',
+          }
+        self.obs_vars = {
+          'Latitude' : 'latitude',
+          'Longitude' : 'longitude',
+          'Time' : 'time',
+          'Height' : 'height',
+          'Pressure' : 'air_pressure',
+          'Observation' : 'air_temperature',
+          'Errinv_Final' : 'air_temperature_err_inv',
+          'Setup_QC_Mark' : 'air_temperature_qc',
+          }
 
 #######################################################
 ############ AMSU-A OBS TYPE ##########################
@@ -104,7 +122,7 @@ class AmsuaObsType(ObsType):
           }
 
     ### Methods ###
-    def MergeNetcdf(self, InFnames, OutGeoFname, OutObsFname):
+    def PrepNetcdf(self, InFnames, OutGeoFname, OutObsFname):
         # This method is used to reformat an AMSU-A netcdf file containing
         # both geovals and observations into two netcdf files, one containing
         # geovals and the other containing observations.
@@ -341,6 +359,6 @@ print("  Output geovals file: {0:s}".format(OutGeoFname))
 print("  Output observations file: {0:s}".format(OutObsFname))
 print("")
 
-Obs.MergeNetcdf(InFnames, OutGeoFname, OutObsFname)
+Obs.PrepNetcdf(InFnames, OutGeoFname, OutObsFname)
 
 
