@@ -50,35 +50,89 @@ if (os.path.isfile(OutFname)):
 if (BadArgs):
     sys.exit(2)
 
-# Everything looks okay, forge on and merge the files.
-
-# First, read in all of the netcdf files and merge into a dictionary that keeps
-# track of groupings by station id, flight number data, etc.
+# Everything looks okay, forge on and concatenate the files.
 print("Concatenating input files:")
 print("  Output file: {0:s}".format(OutFname))
 print("")
 
-InData = { 
-  'Attributes': { },
-  'Dimensions': { },
-  'Variables': { },
-  }
+# Collect up the contents of the files into a dictionary. Then write out the contents
+# of the dictionary. This assumes that we are using this script for the contrived
+# geovals/obs netcdf from GSI runs of which do not get to large sizes.
+
+Attributes = { }
+Dimensions = { }
+Variables = { }
+VarDims = { }
 
 for InFname in InFileList:
-  # Open the file and append the data to the ongoing lists
-  nc = Dataset(InFname, 'r')
+    print("Reading: {0:s}".format(InFname))
+    # Open the file and append the data to the ongoing lists
+    nc = Dataset(InFname, 'r')
+  
+    # Attributes
+    #
+    # The attributes should be matching for every file.
+    for Aname in nc.ncattrs():
+        Avalue = nc.getncattr(Aname)
+        if Aname in Attributes:
+            if (Avalue != Attributes[Aname]):
+                print("WARNING: Attributes do not match:")
+                print("WARNING:     Input file: {0:s}".format(InFname))
+                print("WARNING:     Attribute: {0:s}".format(Aname))
+                print("WARNING:     Stored value: ", Attributes[Aname])
+                print("WARNING:     Input file value: ", Avalue)
+        else:
+            Attributes[Aname] = Avalue
+  
+    # Dimensions
+    #
+    # We want to append along the nobs dimension, but keep the other dimensions the
+    # same. Only the nobs dimension should be changing size from file to file.
+    for Dkey, Dim in nc.dimensions.items():
+        if (Dim.name in Dimensions):
+            if (Dim.name == 'nobs'):
+                Dimensions[Dim.name] += Dim.size
+            else:
+                if (Dim.size != Dimensions[Dim.name]):
+                    print("WARNING: Dimension sizes do not match:")
+                    print("WARNING:     Input file: {0:s}".format(InFname))
+                    print("WARNING:     Dimension: {0:s}".format(Dim.name))
+                    print("WARNING:     Stored dimension size: ", Dimensions[Dim.name])
+                    print("WARNING:     Input file dimension size: ", Dim.size)
+        else:
+            Dimensions[Dim.name] = Dim.size
+       
+    # Variables
+    for Vkey, Var in nc.variables.items():
+        if (Var.name in Variables):
+            if (Var.dimensions[0] == 'nobs'):
+                Vvalues = Var[...].data
+                Variables[Var.name] = np.concatenate([ Variables[Var.name], Vvalues ], axis=0)
+        else:
+            Vvalues = Var[...].data
+            Variables[Var.name] = Vvalues
+            VarDims[Var.name] = Var.dimensions
+  
+    nc.close()
 
-  # Attributes
-  for Aname in nc.ncattrs():
-      Avalue = nc.getncattr(Aname)
-      print("DEBUG:", Aname, Avalue)
-
-  # Dimensions
-  for Dkey, Dim in nc.dimensions.items():
-      print("DEBUG:", Dim.name, Dim.size)
-     
-  # Variables
-  for Vkey, Var in nc.variables.items():
-      print("DEBUG:", Var.name, Var.size, Var.shape)
+print("")
 
 
+# Write out the dictionary into the output file.
+print("Writing: {0:s}".format(OutFname))
+nc = Dataset(OutFname, 'w', format='NETCDF4')
+
+# Attributes
+for Aname, Avalue in Attributes.items():
+    nc.setncattr(Aname, Avalue)
+
+# Dimensions
+for Dname, Dsize in Dimensions.items():
+    nc.createDimension(Dname, Dsize)
+
+# Variables
+for Vname, Vvalue in Variables.items():
+    Var = nc.createVariable(Vname, Vvalue.dtype, VarDims[Vname])
+    Var[...] = Vvalue[...]
+
+nc.close()
