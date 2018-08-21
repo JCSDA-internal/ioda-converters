@@ -43,6 +43,34 @@ class SondesObsType(ObsType):
         super(SondesObsType, self).__init__()
         self.obs_type = 'Sondes'
 
+    ###########################################################
+    # This method will cycle through the variables in the input
+    # file and select a number of observations from the file
+    # for writing into the output file.
+    def CalcNobsIndex(self, Fname, SidFname, NumRecsSelect):
+        # Read in the Station IDs that are common to all
+        # three variable files (t,q,uv). Simply read in the
+        # first NumRecsSelect ids and grab those out of the file.
+        SidList = [ ]
+        Sfid = open(SidFname, 'r')
+        for i in range(NumRecsSelect):
+            SidList.append(Sfid.readline().strip())
+        Sfid.close
+
+        # Read in the Station ID list from the netcdf file.
+        nc = Dataset(Fname, 'r')
+        StationIds = nc.variables['Station_ID'][...].data
+        nc.close()
+
+        IndexList = [ ]
+        for i in range(StationIds.shape[0]):
+            Sid = np.squeeze(StationIds[i,...]).tostring().decode("ascii").strip()
+            if (Sid in SidList):
+                IndexList.append(i)
+
+        NobsIndex = np.array(IndexList)
+        return NobsIndex
+
 #######################################################
 ############ AMSU-A OBS TYPE ##########################
 #######################################################
@@ -56,12 +84,14 @@ class AmsuaObsType(ObsType):
     # This method will cycle through the variables in the input
     # file and select a number of observations from the file
     # for writing into the output file.
-    def CalcNobsIndex(self, NcIn, NumRecsSelect):
+    def CalcNobsIndex(self, Fname, NumRecsSelect):
          # Need to keep channel groupings together. Vars are 1D arrays
          # where values are ch1, ch2, ch3, ..., chN, where N is nchans.
+         nc = Dataset(Fname, 'r')
+         Nobs = nc.dimensions['nobs'].size
+         Nchans = nc.dimensions['nchans'].size
+         nc.close()
 
-         Nobs = NcIn.dimensions['nobs'].size
-         Nchans = NcIn.dimensions['nchans'].size
          Nrecs = Nobs // Nchans    # number of channel groupings
 
          NrecsSkip = Nrecs // NumRecsSelect # how many records to skip between selections
@@ -87,10 +117,11 @@ sp = ap.add_subparsers(dest="obs_type", help="Observation Type")
 # Main arguments
 ap.add_argument("-c", "--clobber", action="store_true", help="allow overwrite of output file")
 ap.add_argument("num_recs", help="number of observation records to select")
-ap.add_argument("in_file", help="list of input netcdf files")
+ap.add_argument("in_file", help="path to input netcdf file")
 ap.add_argument("out_file", help="path to output netcdf file")
 
 sondes_p = sp.add_parser("Sondes", help="Select from sondes file")
+sondes_p.add_argument("-s", "--s_file", required=True, help="path to station id file")
 
 amsua_p = sp.add_parser("Amsua", help="Select from amsu-a file")
 
@@ -106,7 +137,7 @@ OutFname = MyArgs.out_file
 # Check files
 BadArgs = False
 
-# Verify if okay to write to the output files
+# Verify if okay to write to the output file
 if (os.path.isfile(OutFname)):
     if (ClobberOfile):
         print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(ScriptName, OutFname))
@@ -120,19 +151,23 @@ if (os.path.isfile(OutFname)):
 if (BadArgs):
     sys.exit(2)
 
-# ObsType arg gets checked for valid value via the argparse methods.
-if (ObsType == 'Sondes'):
-    Obs = SondesObsType()
-elif (ObsType == 'Amsua'):
-    Obs = AmsuaObsType()
-
 # Everything looks okay, forge on and concatenate the files.
 print("Selecting observations:")
-print("  Input file: {0:s}".format(InFname))
 print("  Output file: {0:s}".format(OutFname))
 print("  Observation type: {0:s}".format(ObsType))
 print("  Number of observation records to select: {0:d}".format(NumRecsSelect))
 print("")
+
+# Instantiate an obs type object and calculate the indecies for selection along
+# the nobs dimension.
+if (ObsType == "Sondes"):
+    Obs = SondesObsType()
+    SidFname = MyArgs.s_file
+    NobsIndex = Obs.CalcNobsIndex(InFname, SidFname, NumRecsSelect)
+
+elif (ObsType == "Amsua"):
+    Obs = AmsuaObsType()
+    NobsIndex = Obs.CalcNobsIndex(InFname, NumRecsSelect)
 
 
 # Copy all attributes and dimensions
@@ -140,9 +175,6 @@ print("")
 # out throughout the file.
 NcIn = Dataset(InFname, 'r')
 NcOut = Dataset(OutFname, 'w', format='NETCDF4')
-
-# Figure out how to select obs from the nobs dimension
-NobsIndex = Obs.CalcNobsIndex(NcIn, NumRecsSelect)
 
 # Attributes
 for Aname in NcIn.ncattrs():
@@ -169,85 +201,3 @@ for Vkey, VarIn in NcIn.variables.items():
 
 NcIn.close()
 NcOut.close()
-
-### # Collect up the contents of the files into a dictionary. Then write out the contents
-### # of the dictionary. This assumes that we are using this script for the contrived
-### # geovals/obs netcdf from GSI runs of which do not get to large sizes.
-### 
-### Attributes = { }
-### Dimensions = { }
-### Variables = { }
-### VarDims = { }
-### 
-### for InFname in InFileList:
-###     print("Reading: {0:s}".format(InFname))
-###     # Open the file and append the data to the ongoing lists
-###     nc = Dataset(InFname, 'r')
-###   
-###     # Attributes
-###     #
-###     # The attributes should be matching for every file.
-###     for Aname in nc.ncattrs():
-###         Avalue = nc.getncattr(Aname)
-###         if Aname in Attributes:
-###             if (Avalue != Attributes[Aname]):
-###                 print("WARNING: Attributes do not match:")
-###                 print("WARNING:     Input file: {0:s}".format(InFname))
-###                 print("WARNING:     Attribute: {0:s}".format(Aname))
-###                 print("WARNING:     Stored value: ", Attributes[Aname])
-###                 print("WARNING:     Input file value: ", Avalue)
-###         else:
-###             Attributes[Aname] = Avalue
-###   
-###     # Dimensions
-###     #
-###     # We want to append along the nobs dimension, but keep the other dimensions the
-###     # same. Only the nobs dimension should be changing size from file to file.
-###     for Dkey, Dim in nc.dimensions.items():
-###         if (Dim.name in Dimensions):
-###             if (Dim.name == 'nobs'):
-###                 Dimensions[Dim.name] += Dim.size
-###             else:
-###                 if (Dim.size != Dimensions[Dim.name]):
-###                     print("WARNING: Dimension sizes do not match:")
-###                     print("WARNING:     Input file: {0:s}".format(InFname))
-###                     print("WARNING:     Dimension: {0:s}".format(Dim.name))
-###                     print("WARNING:     Stored dimension size: ", Dimensions[Dim.name])
-###                     print("WARNING:     Input file dimension size: ", Dim.size)
-###         else:
-###             Dimensions[Dim.name] = Dim.size
-###        
-###     # Variables
-###     for Vkey, Var in nc.variables.items():
-###         if (Var.name in Variables):
-###             if (Var.dimensions[0] == 'nobs'):
-###                 Vvalues = Var[...].data
-###                 Variables[Var.name] = np.concatenate([ Variables[Var.name], Vvalues ], axis=0)
-###         else:
-###             Vvalues = Var[...].data
-###             Variables[Var.name] = Vvalues
-###             VarDims[Var.name] = Var.dimensions
-###   
-###     nc.close()
-### 
-### print("")
-### 
-### 
-### # Write out the dictionary into the output file.
-### print("Writing: {0:s}".format(OutFname))
-### nc = Dataset(OutFname, 'w', format='NETCDF4')
-### 
-### # Attributes
-### for Aname, Avalue in Attributes.items():
-###     nc.setncattr(Aname, Avalue)
-### 
-### # Dimensions
-### for Dname, Dsize in Dimensions.items():
-###     nc.createDimension(Dname, Dsize)
-### 
-### # Variables
-### for Vname, Vvalue in Variables.items():
-###     Var = nc.createVariable(Vname, Vvalue.dtype, VarDims[Vname])
-###     Var[...] = Vvalue[...]
-### 
-### nc.close()
