@@ -44,22 +44,25 @@ class SondesObsType(ObsType):
     def __init__(self):
         super(SondesObsType, self).__init__()
         self.obs_type = 'Sondes'
-        self.geo_vars = {
-          'Latitude' : 'latitude',
+        self.copy_vars = {
+          #  input var name : [ output destination, is collapsible, output destination ]
+          #
+          #     output destination: B - both files, G - geovar file, O - observation file
+
+          # both files
+          'Latitude'  : 'latitude',
           'Longitude' : 'longitude',
-          'Time' : 'time',
-          'Height' : 'height',
+          'Time'      : 'time',
+          'Height'    : 'height',
+
+          # geovals file only
           'virtual_temperature' : 'virtual_temperature',
           'atmosphere_ln_pressure_coordinates' : 'atmosphere_ln_pressure_coordinates',
-          }
-        self.obs_vars = {
-          'Latitude' : 'latitude',
-          'Longitude' : 'longitude',
-          'Time' : 'time',
-          'Height' : 'height',
-          'Pressure' : 'air_pressure',
-          'Observation' : 'air_temperature',
-          'Errinv_Final' : 'air_temperature_err_inv',
+
+          # obs file only
+          'Pressure'      : 'air_pressure',
+          'Observation_T' : 'air_temperature',
+          'Error_Final'   : 'air_temperature_err',
           'Setup_QC_Mark' : 'air_temperature_qc',
           }
 
@@ -71,54 +74,66 @@ class AmsuaObsType(ObsType):
     def __init__(self):
         super(AmsuaObsType, self).__init__()
         self.obs_type = 'Amsua'
-        self.geo_vars = {
-          'Latitude' : 'latitude',
-          'Longitude' : 'longitude',
-          'Obs_Time' : 'time',
-          'Elevation' : 'height',
-          'virtual_temperature' : 'virtual_temperature',
-          'humidity_mixing_ratio' : 'humidity_mixing_ratio',
-          'air_pressure' : 'air_pressure',
-          'air_pressure_levels' : 'air_pressure_levels',
-          'mass_concentration_of_ozone_in_air' : 'mass_concentration_of_ozone_in_air',
-          'mass_concentration_of_carbon_dioxide_in_air' : 'mass_concentration_of_carbon_dioxide_in_air',
-          'atmosphere_mass_content_of_cloud_liquid_water' : 'atmosphere_mass_content_of_cloud_liquid_water',
-          'atmosphere_mass_content_of_cloud_ice' : 'atmosphere_mass_content_of_cloud_ice',
-          'effective_radius_of_cloud_liquid_water_particle' : 'effective_radius_of_cloud_liquid_water_particle',
-          'effective_radius_of_cloud_ice_particle' : 'effective_radius_of_cloud_ice_particle',
-          'Water_Fraction' : 'Water_Fraction',
-          'Land_Fraction' : 'Land_Fraction',
-          'Ice_Fraction' : 'Ice_Fraction',
-          'Snow_Fraction' : 'Snow_Fraction',
-          'Water_Temperature' : 'Water_Temperature',
-          'Land_Temperature' : 'Land_Temperature',
-          'Ice_Temperature' : 'Ice_Temperature',
-          'Snow_Temperature' : 'Snow_Temperature',
-          'Vegetation_Fraction' : 'Vegetation_Fraction',
-          'Sfc_Wind_Speed' : 'Sfc_Wind_Speed',
-          'Sfc_Wind_Direction' : 'Sfc_Wind_Direction',
-          'Lai' : 'Lai',
-          'Soil_Moisture' : 'Soil_Moisture',
-          'Soil_Temperature' : 'Soil_Temperature',
-          'Land_Type_Index' : 'Land_Type_Index',
-          'Vegetation_Type' : 'Vegetation_Type',
-          'Soil_Type' : 'Soil_Type',
-          'Snow_Depth' : 'Snow_Depth'
-          }
-        self.obs_vars = {
-          'Latitude' : 'latitude',
-          'Longitude' : 'longitude',
-          'Obs_Time' : 'time',
-          'Elevation' : 'height',
-          'Observation' : 'brightness_temperature',
-          'Inverse_Observation_Error' : 'brightness_temperature_err_inv',
-          'QC_Flag' : 'brightness_temperature_qc',
-          'Sat_Zenith_Angle' : 'Sat_Zenith_Angle',
-          'Sol_Zenith_Angle' : 'Sol_Zenith_Angle',
-          'Sat_Azimuth_Angle' : 'Sat_Azimuth_Angle',
-          'Sol_Azimuth_Angle' : 'Sol_Azimuth_Angle',
-          'Scan_Position' : 'Scan_Position',
-          'Scan_Angle' : 'Scan_Angle'
+        self.copy_vars = {
+          #  input var name : [ output destination, is collapsible, output destination ]
+          #
+          #     output destination: B - both files, G - geovar file, O - observation file
+
+          # both files
+          'chaninfoidx'     : [ 'B', 'chaninfoidx', False ],
+          'frequency'       : [ 'B', 'frequency', False ],
+          'polarization'    : [ 'B', 'polarization', False ],
+          'wavenumber'      : [ 'B', 'wavenumber', False ],
+          'error_variance'  : [ 'B', 'error_variance', False ],
+	  'mean_lapse_rate' : [ 'B', 'mean_lapse_rate', False ],
+          'use_flag'        : [ 'B', 'use_flag', False ],
+          'sensor_chan'     : [ 'B', 'sensor_chan', False ],
+          'satinfo_chan'    : [ 'B', 'satinfo_chan', False ], 
+          'Latitude'        : [ 'B', 'latitude', True ],
+          'Longitude'       : [ 'B', 'longitude', True ],
+          'Elevation'       : [ 'B', 'height', True ],
+          'Obs_Time'        : [ 'B', 'time', True ],
+
+          # geovar file only
+          'Water_Fraction'        : [ 'G', 'Water_Fraction', True ],
+          'Land_Fraction'         : [ 'G', 'Land_Fraction', True ],
+          'Ice_Fraction'          : [ 'G', 'Ice_Fraction', True ],
+          'Snow_Fraction'         : [ 'G', 'Snow_Fraction', True ],
+          'Water_Temperature'     : [ 'G', 'Water_Temperature', True ],
+          'Land_Temperature'      : [ 'G', 'Land_Temperature', True ],
+          'Ice_Temperature'       : [ 'G', 'Ice_Temperature', True ],
+          'Snow_Temperature'      : [ 'G', 'Snow_Temperature', True ],
+          'Soil_Temperature'      : [ 'G', 'Soil_Temperature', True ],
+          'Soil_Moisture'         : [ 'G', 'Soil_Moisture', True ],
+          'Land_Type_Index'       : [ 'G', 'Land_Type_Index', True ],
+          'Vegetation_Fraction'   : [ 'G', 'Vegetation_Fraction', True ],
+          'Snow_Depth'            : [ 'G', 'Snow_Depth', True ],
+          'Sfc_Wind_Speed'        : [ 'G', 'Sfc_Wind_Speed', True ],
+          'Vegetation_Type'       : [ 'G', 'Vegetation_Type', True ],
+          'Lai'                   : [ 'G', 'Lai', True ],
+          'Soil_Type'             : [ 'G', 'Soil_Type', True ],
+          'Sfc_Wind_Direction'    : [ 'G', 'Sfc_Wind_Direction', True ],
+          'virtual_temperature'   : [ 'G', 'virtual_temperature', True ],
+          'humidity_mixing_ratio' : [ 'G', 'humidity_mixing_ratio', True ],
+          'air_pressure'          : [ 'G', 'air_pressure', True ],
+          'air_pressure_levels'   : [ 'G', 'air_pressure_levels', True ],
+          'mass_concentration_of_ozone_in_air'              : [ 'G', 'mass_concentration_of_ozone_in_air', True ],
+          'mass_concentration_of_carbon_dioxide_in_air'     : [ 'G', 'mass_concentration_of_carbon_dioxide_in_air', True ],
+          'atmosphere_mass_content_of_cloud_liquid_water'   : [ 'G', 'atmosphere_mass_content_of_cloud_liquid_water', True ],
+          'atmosphere_mass_content_of_cloud_ice'            : [ 'G', 'atmosphere_mass_content_of_cloud_ice', True ],
+          'effective_radius_of_cloud_liquid_water_particle' : [ 'G', 'effective_radius_of_cloud_liquid_water_particle', True ],
+          'effective_radius_of_cloud_ice_particle'          : [ 'G', 'effective_radius_of_cloud_ice_particle', True ],
+
+          # obs file only
+          'Scan_Position'     : [ 'O', 'Scan_Position', True ],
+          'Sat_Zenith_Angle'  : [ 'O', 'Sat_Zenith_Angle', True ],
+          'Sat_Azimuth_Angle' : [ 'O', 'Sat_Azimuth_Angle', True ],
+          'Sol_Zenith_Angle'  : [ 'O', 'Sol_Zenith_Angle', True ],
+          'Sol_Azimuth_Angle' : [ 'O', 'Sol_Azimuth_Angle', True ],
+          'Scan_Angle'        : [ 'O', 'Scan_Angle', True ],
+          'Observation'       : [ 'O', 'brightness_temperature', False ],
+          'Observation_Error' : [ 'O', 'brightness_temperature_err', False ],
+          'QC_Flag'           : [ 'O', 'brightness_temperature_qc', False ]
           }
 
     ### Methods ###
@@ -140,6 +155,7 @@ class AmsuaObsType(ObsType):
 
         Rfname = InFnames['r_file']
         print("Reading netcdf file: {0:s}".format(Rfname))
+        print("")
 
         # Open up the netcdf files
         Rfid = Dataset(Rfname, 'r')
@@ -166,48 +182,57 @@ class AmsuaObsType(ObsType):
         Gfid.createDimension('nrecs', Nrecs)
         Ofid.createDimension('nrecs', Nrecs)
 
-        # Walk through all of the variables and:
-        #   1. Determine if the true shape is 1D (values repeat across channels)
-        #      or 2D (values are unique across channels).
-        #   2. Decide to which output file the variable belongs, and write accordingly.
-        for Var in Rfid.variables.values():
-            if (Var.dimensions[0] == 'nchans'):
-                # channel information, copy to both files
-                Gvar = Gfid.createVariable(Var.name, Var.dtype, Var.dimensions)
-                Ovar = Ofid.createVariable(Var.name, Var.dtype, Var.dimensions)
-                Gvar[:] = Var[:]
-                Ovar[:] = Var[:]
+        # Walk through geo_vars and obs_vars and copy vars to their corresponding
+        # output files.
+        for InVname in self.copy_vars.keys():
+            OutDest       = self.copy_vars[InVname][0]
+            OutVname      = self.copy_vars[InVname][1]
+            IsCollapsible = self.copy_vars[InVname][2]
+
+            # determine where variable belongs
+            VarToGeo = (OutDest == 'G' or OutDest == 'B')
+            VarToObs = (OutDest == 'O' or OutDest == 'B')
+
+            if (InVname in Rfid.variables):
+                # variable exists in the input file
+                Var = Rfid.variables[InVname]
+
+                # Only consider collapsing if the first dimension is 'nobs'
+                if (Var.dimensions[0] == 'nobs'):
+                    # collapse variable (if collapsible) before copying to the output file
+                    if (IsCollapsible):
+                        VarVals = self.CollapseVar(Var, Nrecs, Nchans)
+                    else:
+                        VarVals = Var[...]
+
+                    # Determine var dimensions
+                    VarDims = [ 'nrecs' ]
+                    if (not IsCollapsible):
+                        VarDims.append('nchans')
+                    for i in range(1,Var.ndim):
+                        VarDims.append(Var.dimensions[i])
+
+                    # Write variable into selected file(s) 
+                    if (VarToGeo):
+                        Ovar = Gfid.createVariable(OutVname, Var.dtype, VarDims)
+                        Ovar[...] = VarVals
+    
+                    if (VarToObs):
+                        Ovar = Ofid.createVariable(OutVname, Var.dtype, VarDims)
+                        Ovar[...] = VarVals
+                else:
+                    # copy variable as is to the output file
+                    if (VarToGeo):
+                        Ovar = Gfid.createVariable(OutVname, Var.dtype, Var.dimensions)
+                        Ovar[...] = Var[...]
+
+                    if (VarToObs):
+                        Ovar = Ofid.createVariable(OutVname, Var.dtype, Var.dimensions)
+                        Ovar[...] = Var[...]
             else:
-                # obs or geovals data, need to first collapse data then copy
-                # to appropriate file
-                [ VarVals, VarWasCollapsed ] = self.CollapseVar(Var, Nrecs, Nchans)
-
-                # determine where variable belongs
-                VarToGeo = (Var.name in self.geo_vars.keys())
-                VarToObs = (Var.name in self.obs_vars.keys())
-
-                # determine var dimensions
-                #
-                # From the input netcdf, the variables that are selected here have
-                # 'nobs' as their first dimension. If the var was collapsed, want to
-                # replace 'nobs' with 'nrecs'. If the var was not collapsed, want to
-                # replace 'nobs' with 'nrecs', 'nchans'. Any additional dimensions after
-                # 'nobs' on the input variable need to be copied to the output dimensions.
-                VarDims = [ 'nrecs' ]
-                if (not VarWasCollapsed):
-                    VarDims.append('nchans')
-                for i in range(1,Var.ndim):
-                    VarDims.append(Var.dimensions[i])
-
-                # Write variable into selected file(s) 
-                if (VarToGeo):
-                    Gvar = Gfid.createVariable(self.geo_vars[Var.name], Var.dtype, VarDims)
-                    Gvar[...] = VarVals
-
-                if (VarToObs):
-                    Ovar = Ofid.createVariable(self.obs_vars[Var.name], Var.dtype, VarDims)
-                    Ovar[...] = VarVals
-
+                # variable does not exist in the input file
+                print("WARNING: Variable '{0:s}' does not exist in the input file".format(InVname))
+                print("")
 
         Rfid.close()
         Gfid.close()
@@ -215,56 +240,19 @@ class AmsuaObsType(ObsType):
 
     def CollapseVar(self, Var, Nrecs, Nchans):
         ###############################################################
-        # This method will check to see if a variable can be
-        # "collapsed" and return either the 2D (not collapsible) or
-        # 1D (collapsible) version of the variable.
+        # This method will "collapse" a variable.
         #
         # Reshape the variable into Nrecs by Nchans. Then collapse
-        # the variable if appropriate. Use the trick of converting the
-        # first row to a set and if the length of the set is 1, then 
-        # all the values were matching.
+        # the variable (eliminate the nchans dimension).
         if (Var.ndim == 1):
             OutVals = Var[:].reshape(Nrecs, Nchans)
-            CollapseVar = self.IsCollapsible(OutVals)
-            if (CollapseVar):
-                OutVals = np.squeeze(OutVals[:,0])
+            OutVals = np.squeeze(OutVals[:,0])
         elif (Var.ndim == 2):
             N1 = Var.shape[1]
             OutVals = Var[:].reshape(Nrecs, Nchans, N1)
-            CollapseVar = self.IsCollapsible(OutVals)
-            if (CollapseVar):
-                OutVals = np.squeeze(OutVals[:,0,:])
+            OutVals = np.squeeze(OutVals[:,0,:])
 
-        return [ OutVals, CollapseVar ]
-
-    def IsCollapsible(self, Vals):
-        ###############################################################
-        # This method will check to see if a variable can be collapsed.
-        # Collapsibility is true when all channels in a given row
-        # have matching values. This method assumes if the first row
-        # contains all matching values, then this will be true for all
-        # rows.
-        ItemsMatch = True
-
-        # Test "row" by row
-        for i in range(Vals.shape[0]):
-            TestVals = np.squeeze(Vals[i,...])
-            if (TestVals.ndim == 1):
-                # reshape so that TestVals is always 2D
-                TestVals = TestVals.reshape(( len(TestVals), 1 ))
-            [ N1, N2 ] = TestVals.shape
-
-            # Make sure items all match for every column
-            for j in range(N2):
-                TestVector = np.squeeze(TestVals[:,j])
-                if (len(set(TestVector)) > 1):
-                    ItemsMatch = False
-                    break
-
-            if (not ItemsMatch):
-                break
-
-        return ItemsMatch
+        return OutVals
 
 ###################################################################################
 # MAIN
@@ -354,7 +342,7 @@ if (BadArgs):
 
 # First, read in all of the netcdf files and merge into a dictionary that keeps
 # track of groupings by station id, flight number data, etc.
-print("Merging input files:")
+print("Preparing netcdf files:")
 print("  Output geovals file: {0:s}".format(OutGeoFname))
 print("  Output observations file: {0:s}".format(OutObsFname))
 print("")
