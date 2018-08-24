@@ -24,8 +24,7 @@ class ObsType(object):
     ### Constructor ###
     def __init__(self):
         self.obs_type = 'UnDef'
-        self.geo_vars = []
-        self.obs_vars = []
+        self.missing_value = 1.0e10
 
     ### Methods ###
 
@@ -44,27 +43,360 @@ class SondesObsType(ObsType):
     def __init__(self):
         super(SondesObsType, self).__init__()
         self.obs_type = 'Sondes'
-        self.copy_vars = {
-          #  input var name : [ output destination, is collapsible, output destination ]
-          #
-          #     output destination: B - both files, G - geovar file, O - observation file
 
-          # both files
-          'Latitude'  : 'latitude',
-          'Longitude' : 'longitude',
-          'Time'      : 'time',
-          'Height'    : 'height',
+        # set up names for dictionary keys
+        self.sid   = 'Sid'
+        self.lon   = 'Lon'
+        self.lat   = 'Lat'
+        self.press = 'Press'
+        self.time  = 'Time'
 
-          # geovals file only
-          'virtual_temperature' : 'virtual_temperature',
-          'atmosphere_ln_pressure_coordinates' : 'atmosphere_ln_pressure_coordinates',
+        self.geot = 'GeoT'
+        self.geoq = 'GeoQ'
+        self.geou = 'GeoU'
+        self.geov = 'GeoV'
+        self.geop = 'GeoP'
 
-          # obs file only
-          'Pressure'      : 'air_pressure',
-          'Observation_T' : 'air_temperature',
-          'Error_Final'   : 'air_temperature_err',
-          'Setup_QC_Mark' : 'air_temperature_qc',
+        self.obst = 'ObsT'
+        self.obsq = 'ObsQ'
+        self.obsu = 'ObsU'
+        self.obsv = 'ObsV'
+
+        self.obste = 'ObsTerr'
+        self.obsqe = 'ObsQerr'
+        self.obsue = 'ObsUerr'
+        self.obsve = 'ObsVerr'
+
+        self.obstq = 'ObsTqc'
+        self.obsqq = 'ObsQqc'
+        self.obsuq = 'ObsUqc'
+        self.obsvq = 'ObsVqc'
+
+        self.var_names = {
+          self.sid   : 'station_id',
+
+          self.lon   : 'longitude',
+          self.lat   : 'latitude',
+          self.press : 'air_pressure',
+          self.time  : 'time',
+
+          self.geot : 'virtual_temperature',
+          self.geoq : 'specific_humidity',
+          self.geou : 'eastward_wind',
+          self.geov : 'northward_wind',
+          self.geop : 'atmosphere_ln_pressure_coordinate',
+
+          self.obst : 'air_temperature',
+          self.obsq : 'specific_humidity',
+          self.obsu : 'eastward_wind',
+          self.obsv : 'northward_wind'
           }
+
+        self.var_names[self.obste] = self.var_names[self.obst] + '_err'
+        self.var_names[self.obsqe] = self.var_names[self.obsq] + '_err'
+        self.var_names[self.obsue] = self.var_names[self.obsu] + '_err'
+        self.var_names[self.obsve] = self.var_names[self.obsv] + '_err'
+
+        self.var_names[self.obstq] = self.var_names[self.obst] + '_qc'
+        self.var_names[self.obsqq] = self.var_names[self.obsq] + '_qc'
+        self.var_names[self.obsuq] = self.var_names[self.obsu] + '_qc'
+        self.var_names[self.obsvq] = self.var_names[self.obsv] + '_qc'
+
+    ### Methods ###
+    def PrepNetcdf(self, InFnames, OutGeoFname, OutObsFname):
+        # This method is used to reformat an AMSU-A netcdf file containing
+        # both geovals and observations into two netcdf files, one containing
+        # geovals and the other containing observations.
+        #
+        # The data comes in vectors (indexed by observation number), where the
+        # corresponding T,Q,U,V values for a given station id can be different
+        # lengths with their points at different locations.
+        #
+        # Read the input data into a dictionary that can be used to keep the
+        # soundings grouped together (identified by station id) and the locations
+        # grouped together.
+
+        Tfname = InFnames['t_file']
+        Qfname = InFnames['q_file']
+        UVfname = InFnames['uv_file']
+
+        ObsData = { }
+        ExtraDims = { }
+
+        ## Temperature ##
+        print("Reading: {0:s}".format(Tfname))
+        Fid = Dataset(Tfname, 'r')
+
+        # grab variables
+        Nobs = Fid.dimensions['nobs'].size
+
+        Sid  = Fid.variables['Station_ID'][:]
+
+        Lon  = Fid.variables['Longitude'][:]
+        Lat  = Fid.variables['Latitude'][:]
+        P    = Fid.variables['Pressure'][:]
+        Time = Fid.variables['Time'][:]
+
+        T    = Fid.variables['Observation_T'][:]
+        Terr = Fid.variables['Err_Final'][:]
+        Tqc  = Fid.variables['Setup_QC_Mark'][:]
+
+        Tvirt  = Fid.variables['virtual_temperature'][:].data
+        Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
+
+        # Record extra dimension information
+        Dim = Fid.dimensions['Station_ID_maxstrlen']
+        ExtraDims[self.sid] = [ Dim.name, Dim.size ]
+
+        Dim = Fid.dimensions['num_profile_levels']
+        ExtraDims[self.geot] = [ Dim.name, Dim.size ]
+        ExtraDims[self.geop] = [ Dim.name, Dim.size ]
+
+        # Organize data by record and then by location.
+        for i in range(Nobs):
+            # Form a "record" key from the station id, and a "location" key from
+            # lon,lat,pressure,time.
+            RecKey = "{0:s}".format(Sid[i].tostring().decode('ascii').strip())
+            LocKey = "{0:f}:{1:f}:{2:f}:{3:f}".format(Lon[i],Lat[i],P[i],Time[i])
+
+            # Observation data
+            if (RecKey not in ObsData):
+                ObsData[RecKey] = { }
+
+            if (LocKey not in ObsData[RecKey]):
+                ObsData[RecKey][LocKey] = { 'OBS' : { }, 'GEO' : { } }
+
+            ObsData[RecKey][LocKey]['OBS'][self.obst]  = T[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obste] = Terr[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obstq] = Tqc[i]
+
+            ObsData[RecKey][LocKey]['GEO'][self.geot] = Tvirt[i]
+            ObsData[RecKey][LocKey]['GEO'][self.geop] = Pcoord[i]
+      
+        Fid.close()
+
+
+        ## Moisture ##
+        print("Reading: {0:s}".format(Qfname))
+        Fid = Dataset(Qfname, 'r')
+        
+        # grab variables
+        Nobs = Fid.dimensions['nobs'].size
+
+        Sid  = Fid.variables['Station_ID'][:]
+
+        Lon  = Fid.variables['Longitude'][:]
+        Lat  = Fid.variables['Latitude'][:]
+        P    = Fid.variables['Pressure'][:]
+        Time = Fid.variables['Time'][:]
+
+        Q    = Fid.variables['q_Observation'][:]
+        Qerr = Fid.variables['Err_Final'][:]
+        Qqc  = Fid.variables['Prep_QC_Mark'][:]
+
+        Qgeo   = Fid.variables['specific_humidity'][:].data
+        Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
+
+        # Record extra dimension information
+        Dim = Fid.dimensions['specific_humidity_arr_dim']
+        ExtraDims[self.geoq] = [ Dim.name, Dim.size ]
+
+        # Organize data by record and then by location.
+        for i in range(Nobs):
+            # Form a "record" key from the station id, and a "location" key from
+            # lon,lat,pressure,time.
+            RecKey = "{0:s}".format(Sid[i].tostring().decode('ascii').strip())
+            LocKey = "{0:f}:{1:f}:{2:f}:{3:f}".format(Lon[i],Lat[i],P[i],Time[i])
+
+            # Observation data
+            if (RecKey not in ObsData):
+                ObsData[RecKey] = { }
+
+            if (LocKey not in ObsData[RecKey]):
+                ObsData[RecKey][LocKey] = { 'OBS' : { }, 'GEO' : { } }
+
+            ObsData[RecKey][LocKey]['OBS'][self.obsq]  = Q[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsqe] = Qerr[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsqq] = Qqc[i]
+
+            ObsData[RecKey][LocKey]['GEO'][self.geoq] = Qgeo[i]
+            ObsData[RecKey][LocKey]['GEO'][self.geop] = Pcoord[i]
+      
+        Fid.close()
+
+        ## Winds ##
+        print("Reading: {0:s}".format(UVfname))
+        Fid = Dataset(UVfname, 'r')
+        
+        # grab variables
+        Nobs = Fid.dimensions['nobs'].size
+
+        Sid  = Fid.variables['Station_ID'][:]
+
+        Lon  = Fid.variables['Longitude'][:]
+        Lat  = Fid.variables['Latitude'][:]
+        P    = Fid.variables['Pressure'][:]
+        Time = Fid.variables['Time'][:]
+
+        U    = Fid.variables['u_Observation'][:]
+        Uerr = Fid.variables['Err_Final'][:]
+        Uqc  = Fid.variables['Setup_QC_Mark'][:]
+        V    = Fid.variables['v_Observation'][:]
+        Verr = Fid.variables['Err_Final'][:]
+        Vqc  = Fid.variables['Setup_QC_Mark'][:]
+
+        Ugeo   = Fid.variables['eastward_wind'][:].data
+        Vgeo   = Fid.variables['northward_wind'][:].data
+        Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
+
+        # Record extra dimension information
+        Dim = Fid.dimensions['eastward_wind_arr_dim']
+        ExtraDims[self.geou] = [ Dim.name, Dim.size ]
+
+        Dim = Fid.dimensions['northward_wind_arr_dim']
+        ExtraDims[self.geov] = [ Dim.name, Dim.size ]
+
+        # Organize data by record and then by location.
+        for i in range(Nobs):
+            # Form a "record" key from the station id, and a "location" key from
+            # lon,lat,pressure,time.
+            RecKey = "{0:s}".format(Sid[i].tostring().decode('ascii').strip())
+            LocKey = "{0:f}:{1:f}:{2:f}:{3:f}".format(Lon[i],Lat[i],P[i],Time[i])
+
+            # Observation data
+            if (RecKey not in ObsData):
+                ObsData[RecKey] = { }
+
+            if (LocKey not in ObsData[RecKey]):
+                ObsData[RecKey][LocKey] = { 'OBS' : { }, 'GEO' : { } }
+
+            ObsData[RecKey][LocKey]['OBS'][self.obsu]  = U[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsue] = Uerr[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsuq] = Uqc[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsv]  = V[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsve] = Verr[i]
+            ObsData[RecKey][LocKey]['OBS'][self.obsvq] = Vqc[i]
+
+            ObsData[RecKey][LocKey]['GEO'][self.geou] = Ugeo[i]
+            ObsData[RecKey][LocKey]['GEO'][self.geov] = Vgeo[i]
+            ObsData[RecKey][LocKey]['GEO'][self.geop] = Pcoord[i]
+      
+        Fid.close()
+
+        print("")
+
+        # Count up the number of records, locations, and observations
+        Nrecs = 0
+        Nlocs = 0
+        Nobs  = 0
+        Nvars = 4
+        for Sid in ObsData:
+            Nrecs += 1
+            for Loc in ObsData[Sid]:
+               Nlocs += 1
+
+        Nobs = Nlocs * Nvars
+
+        # Create output netcdf files
+        Tfid = Dataset(Tfname, 'r')
+        Gfid = Dataset(OutGeoFname, 'w', format='NETCDF4')
+        Ofid = Dataset(OutObsFname, 'w', format='NETCDF4')
+
+        # Copy over the file attributes. Add new attributes for the sizes
+        for Attr in Tfid.ncattrs():
+            Gfid.setncattr(Attr, Tfid.getncattr(Attr))
+            Ofid.setncattr(Attr, Tfid.getncattr(Attr))
+
+        Gfid.setncattr('nrecs', Nrecs)
+        Gfid.setncattr('nlocs', Nlocs)
+        Gfid.setncattr('nobs',  Nobs)
+        Gfid.setncattr('nvars', Nvars)
+
+        Ofid.setncattr('nrecs', Nrecs)
+        Ofid.setncattr('nlocs', Nlocs)
+        Ofid.setncattr('nobs',  Nobs)
+        Ofid.setncattr('nvars', Nvars)
+
+        # Create dimensions.
+        Gfid.createDimension('nlocs', Nlocs)
+        Gfid.createDimension(ExtraDims[self.sid][0], ExtraDims[self.sid][1])
+        Gfid.createDimension(ExtraDims[self.geot][0], ExtraDims[self.geot][1])
+        Gfid.createDimension(ExtraDims[self.geoq][0], ExtraDims[self.geoq][1])
+        Gfid.createDimension(ExtraDims[self.geou][0], ExtraDims[self.geou][1])
+        Gfid.createDimension(ExtraDims[self.geov][0], ExtraDims[self.geov][1])
+
+        Ofid.createDimension('nlocs', Nlocs)
+        Ofid.createDimension(ExtraDims[self.sid][0],  ExtraDims[self.sid][1])
+
+        # Create variables.
+        #    header, location vars
+        Gfid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
+        Ofid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
+
+        Gfid.createVariable(self.var_names[self.lon], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.lon], 'f4', ('nlocs'))
+       
+        Gfid.createVariable(self.var_names[self.lat], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.lat], 'f4', ('nlocs'))
+       
+        Gfid.createVariable(self.var_names[self.press], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.press], 'f4', ('nlocs'))
+
+        Gfid.createVariable(self.var_names[self.time], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.time], 'f4', ('nlocs'))
+
+        #    geo file vars
+        Gfid.createVariable(self.var_names[self.geot], 'f4', ('nlocs', ExtraDims[self.geot][0]))
+        Gfid.createVariable(self.var_names[self.geoq], 'f4', ('nlocs', ExtraDims[self.geoq][0]))
+        Gfid.createVariable(self.var_names[self.geou], 'f4', ('nlocs', ExtraDims[self.geou][0]))
+        Gfid.createVariable(self.var_names[self.geov], 'f4', ('nlocs', ExtraDims[self.geov][0]))
+        Gfid.createVariable(self.var_names[self.geop], 'f4', ('nlocs', ExtraDims[self.geop][0]))
+
+        #    obs file vars (all have one dimension: nlocs)
+        Ofid.createVariable(self.var_names[self.obst], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsq], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsu], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsv], 'f4', ('nlocs'))
+
+        Ofid.createVariable(self.var_names[self.obste], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsqe], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsue], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsve], 'f4', ('nlocs'))
+
+        Ofid.createVariable(self.var_names[self.obstq], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsqq], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsuq], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.obsvq], 'f4', ('nlocs'))
+
+        # Copy data into variables indexed by nlocs
+        iloc = 0
+        for RecKey in ObsData:
+            # Extract the station id
+            Sid = netCDF4.stringtochar(np.array(RecKey, 'S8'))
+            for LocKey in ObsData[RecKey]:
+                # Extract the location data
+                LocItems = LocKey.split(':')
+                Lon   = float(LocItems[0])
+                Lat   = float(LocItems[1])
+                Press = float(LocItems[2])
+                Time  = float(LocItems[3])
+
+                # geovals
+                Gfid[self.var_names[self.sid]][iloc,:] = Sid
+                Gfid[self.var_names[self.lon]][iloc] = Lon
+                Gfid[self.var_names[self.lat]][iloc] = Lat
+                Gfid[self.var_names[self.press]][iloc] = Press
+                Gfid[self.var_names[self.time]][iloc] = Time
+
+                # obs
+                Ofid[self.var_names[self.sid]][iloc,:] = Sid
+                Ofid[self.var_names[self.lon]][iloc] = Lon
+                Ofid[self.var_names[self.lat]][iloc] = Lat
+                Ofid[self.var_names[self.press]][iloc] = Press
+                Ofid[self.var_names[self.time]][iloc] = Time
+
+
+                iloc += 1
 
 #######################################################
 ############ AMSU-A OBS TYPE ##########################
@@ -75,7 +407,7 @@ class AmsuaObsType(ObsType):
         super(AmsuaObsType, self).__init__()
         self.obs_type = 'Amsua'
         self.copy_vars = {
-          #  input var name : [ output destination, is collapsible, output destination ]
+          #  input var name : [ output destination, output var name, is collapsible ]
           #
           #     output destination: B - both files, G - geovar file, O - observation file
 
@@ -273,8 +605,7 @@ ap.add_argument("-c", "--clobber", action="store_true",
 sondes_p = sp.add_parser("Sondes", help="Merge sondes files")
 sondes_p.add_argument("-t", "--t_file", required=True, help="path to input temperature file")
 sondes_p.add_argument("-q", "--q_file", required=True, help="path to input moisture file")
-sondes_p.add_argument("-u", "--u_file", required=True, help="path to input u-wind file")
-sondes_p.add_argument("-v", "--v_file", required=True, help="path to input v-wind file")
+sondes_p.add_argument("-uv", "--uv_file", required=True, help="path to input wind (u and v) file")
 
 # Arguments for Amsua
 amsua_p = sp.add_parser("Amsua", help="Merge amsu-a files")
@@ -298,8 +629,7 @@ if (ObsType == "Sondes"):
     InFnames = { 
       't_file' : MyArgs.t_file,
       'q_file' : MyArgs.q_file,
-      'u_file' : MyArgs.u_file,
-      'v_file' : MyArgs.v_file
+      'uv_file' : MyArgs.uv_file,
       }
 
 elif (ObsType == "Amsua"):
