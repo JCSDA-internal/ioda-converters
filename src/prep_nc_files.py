@@ -50,6 +50,7 @@ class SondesObsType(ObsType):
         self.lat   = 'Lat'
         self.press = 'Press'
         self.time  = 'Time'
+        self.rnum  = 'RecNum'
 
         self.geot = 'GeoT'
         self.geoq = 'GeoQ'
@@ -79,6 +80,7 @@ class SondesObsType(ObsType):
           self.lat   : 'latitude',
           self.press : 'air_pressure',
           self.time  : 'time',
+          self.rnum  : 'record_number',
 
           self.geot : 'virtual_temperature',
           self.geoq : 'specific_humidity',
@@ -288,12 +290,13 @@ class SondesObsType(ObsType):
         # Count up the number of records, locations, and observations
         Nrecs = 0
         Nlocs = 0
-        Nobs  = 0
-        Nvars = 4
         for Sid in ObsData:
             Nrecs += 1
             for Loc in ObsData[Sid]:
                Nlocs += 1
+
+        Nvars = 4
+        Nobs  = Nlocs * Nvars
 
         # Create output netcdf files
         Tfid = Dataset(Tfname, 'r')
@@ -316,6 +319,15 @@ class SondesObsType(ObsType):
         Ofid.createDimension('nlocs', Nlocs)
         Ofid.createDimension(ExtraDims[self.sid][0],  ExtraDims[self.sid][1])
 
+        # Create dummy dimensions for nrecs and nvars and nobs.
+        Gfid.createDimension('nrecs', Nrecs)
+        Gfid.createDimension('nvars', Nvars)
+        Gfid.createDimension('nobs',  Nobs)
+
+        Ofid.createDimension('nrecs', Nrecs)
+        Ofid.createDimension('nvars', Nvars)
+        Ofid.createDimension('nobs',  Nobs)
+
         # Create variables.
         #    header, location vars
         Gfid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
@@ -332,6 +344,9 @@ class SondesObsType(ObsType):
 
         Gfid.createVariable(self.var_names[self.time], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.time], 'f4', ('nlocs'))
+
+        Gfid.createVariable(self.var_names[self.rnum], 'i4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.rnum], 'i4', ('nlocs'))
 
         #    geo file vars
         Gfid.createVariable(self.var_names[self.geot], 'f4', ('nlocs', ExtraDims[self.geot][0]))
@@ -358,9 +373,11 @@ class SondesObsType(ObsType):
 
         # Copy data into variables indexed by nlocs
         iloc = 0
+        irec = 0
         for RecKey in ObsData:
             # Extract the station id
             Sid = netCDF4.stringtochar(np.array(RecKey, 'S8'))
+            irec += 1
             for LocKey in ObsData[RecKey]:
                 # Extract the location data
                 LocItems = LocKey.split(':')
@@ -375,6 +392,7 @@ class SondesObsType(ObsType):
                 Gfid[self.var_names[self.lat]][iloc] = Lat
                 Gfid[self.var_names[self.press]][iloc] = Press
                 Gfid[self.var_names[self.time]][iloc] = Time
+                Gfid[self.var_names[self.rnum]][iloc] = irec
 
                 if (self.geop in ObsData[RecKey][LocKey]):
                     Gfid[self.var_names[self.geop]][iloc,:] = ObsData[RecKey][LocKey][self.geop]
@@ -393,6 +411,7 @@ class SondesObsType(ObsType):
                 Ofid[self.var_names[self.lat]][iloc] = Lat
                 Ofid[self.var_names[self.press]][iloc] = Press
                 Ofid[self.var_names[self.time]][iloc] = Time
+                Ofid[self.var_names[self.rnum]][iloc] = irec
 
                 if (self.obst in ObsData[RecKey][LocKey]):
                     Ofid[self.var_names[self.obst]][iloc] = ObsData[RecKey][LocKey][self.obst]
@@ -519,6 +538,9 @@ class AmsuaObsType(ObsType):
         Gfid = Dataset(OutGeoFname, 'w', format='NETCDF4')
         Ofid = Dataset(OutObsFname, 'w', format='NETCDF4')
 
+        # Need a copy of channel numbers for the "expand variables" section below.
+        ChanNums = Rfid.variables['chaninfoidx'][:]
+
         # Copy over the file attributes
         for Attr in Rfid.ncattrs():
             Gfid.setncattr(Attr, Rfid.getncattr(Attr))
@@ -533,9 +555,28 @@ class AmsuaObsType(ObsType):
         Nchans = len(Rfid.dimensions['nchans'])
         Nobs = len(Rfid.dimensions['nobs'])
         Nlocs = Nobs // Nchans
+        Nrecs = Nlocs
+        Nvars = Nchans # each separate channel will become a separate variable
 
         Gfid.createDimension('nlocs', Nlocs)
         Ofid.createDimension('nlocs', Nlocs)
+
+        # Create dummy dimensions containing the counts of records and variables.
+        # Already copied over the 'nobs' dimension which will turn into a dummy
+        # dimensions whose size is the number of observations.
+        Gfid.createDimension('nrecs', Nrecs)
+        Gfid.createDimension('nvars', Nvars)
+
+        Ofid.createDimension('nrecs', Nrecs)
+        Ofid.createDimension('nvars', Nvars)
+
+        # Create the record_num variable. In this case this variable simply contains
+        # the numbers 1 .. nrecs since each location is also an individual record.
+        Gfid.createVariable('record_number', 'i4', ('nlocs'))
+        Ofid.createVariable('record_number', 'i4', ('nlocs'))
+
+        Gfid['record_number'][:] = np.array(np.arange(Nrecs)) + 1
+        Ofid['record_number'][:] = np.array(np.arange(Nrecs)) + 1
 
         # Walk through geo_vars and obs_vars and copy vars to their corresponding
         # output files.
@@ -544,46 +585,45 @@ class AmsuaObsType(ObsType):
             OutVname      = self.copy_vars[InVname][1]
             IsCollapsible = self.copy_vars[InVname][2]
 
-            # determine where variable belongs
-            VarToGeo = (OutDest == 'G' or OutDest == 'B')
-            VarToObs = (OutDest == 'O' or OutDest == 'B')
-
             if (InVname in Rfid.variables):
                 # variable exists in the input file
                 Var = Rfid.variables[InVname]
 
                 # Only consider collapsing if the first dimension is 'nobs'
                 if (Var.dimensions[0] == 'nobs'):
-                    # collapse variable (if collapsible) before copying to the output file
+                    # Reshape the variable into nlocs X nchans
+                    [ VarVals, VarDims ] = self.ReshapeVar(Var, Nlocs, Nchans)
+
+                    # If specified, collapse the variable. Otherwise expand the variable
+                    # into a series of variables, one for each channel.
                     if (IsCollapsible):
-                        VarVals = self.CollapseVar(Var, Nlocs, Nchans)
+                        # Collapse the variable and write out.
+                        if (Var.ndim == 1):
+                            VarVals = VarVals[:,0].squeeze()
+                            VarDims = (VarDims[0])
+                        else:
+                            VarVals = VarVals[:,0,:].squeeze()
+                            VarDims = (VarDims[0], VarDims[2])
+
+                        self.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                                        VarDims, VarVals)
                     else:
-                        VarVals = Var[...]
+                        # Expand into a series of variables, one for each channel.
+                        for ichan in range(Nchans):
+                            Vname = "{0:s}_ch{1:d}".format(OutVname, ChanNums[ichan])
+                            Vvals = VarVals[:,ichan].squeeze()
+                            if (len(VarDims) == 2):
+                                Vdims = (VarDims[0])
+                            else:
+                                Vdims = (VarDims[0], VarDims[2])
 
-                    # Determine var dimensions
-                    VarDims = [ 'nlocs' ]
-                    if (not IsCollapsible):
-                        VarDims.append('nchans')
-                    for i in range(1,Var.ndim):
-                        VarDims.append(Var.dimensions[i])
+                            self.WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
 
-                    # Write variable into selected file(s) 
-                    if (VarToGeo):
-                        Ovar = Gfid.createVariable(OutVname, Var.dtype, VarDims)
-                        Ovar[...] = VarVals
-    
-                    if (VarToObs):
-                        Ovar = Ofid.createVariable(OutVname, Var.dtype, VarDims)
-                        Ovar[...] = VarVals
                 else:
-                    # copy variable as is to the output file
-                    if (VarToGeo):
-                        Ovar = Gfid.createVariable(OutVname, Var.dtype, Var.dimensions)
-                        Ovar[...] = Var[...]
+                    # copy variable as is
+                    self.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                                    Var.dimensions, Var[...])
 
-                    if (VarToObs):
-                        Ovar = Ofid.createVariable(OutVname, Var.dtype, Var.dimensions)
-                        Ovar[...] = Var[...]
             else:
                 # variable does not exist in the input file
                 print("WARNING: Variable '{0:s}' does not exist in the input file".format(InVname))
@@ -593,21 +633,37 @@ class AmsuaObsType(ObsType):
         Gfid.close()
         Ofid.close()
 
-    def CollapseVar(self, Var, Nrecs, Nchans):
+    def ReshapeVar(self, Var, Nlocs, Nchans):
         ###############################################################
-        # This method will "collapse" a variable.
+        # This method will reshape a variable along the first axis.
+        # It is assumed that the input variable, along the first axis,
+        # has the data in 'C' order (column-major). Also it is assumed
+        # that the variable is either 1D or 2D.
         #
-        # Reshape the variable into Nrecs by Nchans. Then collapse
-        # the variable (eliminate the nchans dimension).
         if (Var.ndim == 1):
-            OutVals = Var[:].reshape(Nrecs, Nchans)
-            OutVals = np.squeeze(OutVals[:,0])
+            OutVals = Var[:].reshape(Nlocs, Nchans, order='C')
+            OutDims = ('nlocs', 'nchans')
         elif (Var.ndim == 2):
             N1 = Var.shape[1]
-            OutVals = Var[:].reshape(Nrecs, Nchans, N1)
-            OutVals = np.squeeze(OutVals[:,0,:])
+            OutVals = Var[:].reshape(Nlocs, Nchans, N1, order='C')
+            OutDims = ('nlocs', 'nchans', Var.dimensions[1])
 
-        return OutVals
+        return [ OutVals, OutDims ]
+
+    def WriteNcVar(self, Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
+        ###############################################################
+        # This method will write out the variable into the appropriate
+        # netcdf files.
+        #
+        if (OutDest == 'G' or OutDest == 'B'):
+            # write to geo file
+            Ovar = Gfid.createVariable(Vname, Vdtype, Vdims)
+            Ovar[...] = Vvals[...]
+
+        if (OutDest == 'O' or OutDest == 'B'):
+            # write to obs file
+            Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
+            Ovar[...] = Vvals[...]
 
 ###################################################################################
 # MAIN
