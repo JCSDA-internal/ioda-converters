@@ -164,14 +164,14 @@ class SondesObsType(ObsType):
                 ObsData[RecKey] = { }
 
             if (LocKey not in ObsData[RecKey]):
-                ObsData[RecKey][LocKey] = { 'OBS' : { }, 'GEO' : { } }
+                ObsData[RecKey][LocKey] = { }
 
-            ObsData[RecKey][LocKey]['OBS'][self.obst]  = T[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obste] = Terr[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obstq] = Tqc[i]
+            ObsData[RecKey][LocKey][self.obst]  = T[i]
+            ObsData[RecKey][LocKey][self.obste] = Terr[i]
+            ObsData[RecKey][LocKey][self.obstq] = Tqc[i]
 
-            ObsData[RecKey][LocKey]['GEO'][self.geot] = Tvirt[i]
-            ObsData[RecKey][LocKey]['GEO'][self.geop] = Pcoord[i]
+            ObsData[RecKey][LocKey][self.geot] = Tvirt[i]
+            ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
       
         Fid.close()
 
@@ -213,14 +213,14 @@ class SondesObsType(ObsType):
                 ObsData[RecKey] = { }
 
             if (LocKey not in ObsData[RecKey]):
-                ObsData[RecKey][LocKey] = { 'OBS' : { }, 'GEO' : { } }
+                ObsData[RecKey][LocKey] = { }
 
-            ObsData[RecKey][LocKey]['OBS'][self.obsq]  = Q[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsqe] = Qerr[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsqq] = Qqc[i]
+            ObsData[RecKey][LocKey][self.obsq]  = Q[i]
+            ObsData[RecKey][LocKey][self.obsqe] = Qerr[i]
+            ObsData[RecKey][LocKey][self.obsqq] = Qqc[i]
 
-            ObsData[RecKey][LocKey]['GEO'][self.geoq] = Qgeo[i]
-            ObsData[RecKey][LocKey]['GEO'][self.geop] = Pcoord[i]
+            ObsData[RecKey][LocKey][self.geoq] = Qgeo[i]
+            ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
       
         Fid.close()
 
@@ -268,19 +268,19 @@ class SondesObsType(ObsType):
                 ObsData[RecKey] = { }
 
             if (LocKey not in ObsData[RecKey]):
-                ObsData[RecKey][LocKey] = { 'OBS' : { }, 'GEO' : { } }
+                ObsData[RecKey][LocKey] = { }
 
-            ObsData[RecKey][LocKey]['OBS'][self.obsu]  = U[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsue] = Uerr[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsuq] = Uqc[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsv]  = V[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsve] = Verr[i]
-            ObsData[RecKey][LocKey]['OBS'][self.obsvq] = Vqc[i]
+            ObsData[RecKey][LocKey][self.obsu]  = U[i]
+            ObsData[RecKey][LocKey][self.obsue] = Uerr[i]
+            ObsData[RecKey][LocKey][self.obsuq] = Uqc[i]
+            ObsData[RecKey][LocKey][self.obsv]  = V[i]
+            ObsData[RecKey][LocKey][self.obsve] = Verr[i]
+            ObsData[RecKey][LocKey][self.obsvq] = Vqc[i]
 
-            ObsData[RecKey][LocKey]['GEO'][self.geou] = Ugeo[i]
-            ObsData[RecKey][LocKey]['GEO'][self.geov] = Vgeo[i]
-            ObsData[RecKey][LocKey]['GEO'][self.geop] = Pcoord[i]
-      
+            ObsData[RecKey][LocKey][self.geou] = Ugeo[i]
+            ObsData[RecKey][LocKey][self.geov] = Vgeo[i]
+            ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
+     
         Fid.close()
 
         print("")
@@ -295,8 +295,6 @@ class SondesObsType(ObsType):
             for Loc in ObsData[Sid]:
                Nlocs += 1
 
-        Nobs = Nlocs * Nvars
-
         # Create output netcdf files
         Tfid = Dataset(Tfname, 'r')
         Gfid = Dataset(OutGeoFname, 'w', format='NETCDF4')
@@ -306,16 +304,6 @@ class SondesObsType(ObsType):
         for Attr in Tfid.ncattrs():
             Gfid.setncattr(Attr, Tfid.getncattr(Attr))
             Ofid.setncattr(Attr, Tfid.getncattr(Attr))
-
-        Gfid.setncattr('nrecs', Nrecs)
-        Gfid.setncattr('nlocs', Nlocs)
-        Gfid.setncattr('nobs',  Nobs)
-        Gfid.setncattr('nvars', Nvars)
-
-        Ofid.setncattr('nrecs', Nrecs)
-        Ofid.setncattr('nlocs', Nlocs)
-        Ofid.setncattr('nobs',  Nobs)
-        Ofid.setncattr('nvars', Nvars)
 
         # Create dimensions.
         Gfid.createDimension('nlocs', Nlocs)
@@ -388,6 +376,17 @@ class SondesObsType(ObsType):
                 Gfid[self.var_names[self.press]][iloc] = Press
                 Gfid[self.var_names[self.time]][iloc] = Time
 
+                if (self.geop in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.geop]][iloc,:] = ObsData[RecKey][LocKey][self.geop]
+                if (self.geot in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.geot]][iloc,:] = ObsData[RecKey][LocKey][self.geot]
+                if (self.geoq in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.geoq]][iloc,:] = ObsData[RecKey][LocKey][self.geoq]
+                if (self.geou in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.geou]][iloc,:] = ObsData[RecKey][LocKey][self.geou]
+                if (self.geov in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.geov]][iloc,:] = ObsData[RecKey][LocKey][self.geov]
+
                 # obs
                 Ofid[self.var_names[self.sid]][iloc,:] = Sid
                 Ofid[self.var_names[self.lon]][iloc] = Lon
@@ -395,6 +394,32 @@ class SondesObsType(ObsType):
                 Ofid[self.var_names[self.press]][iloc] = Press
                 Ofid[self.var_names[self.time]][iloc] = Time
 
+                if (self.obst in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obst]][iloc] = ObsData[RecKey][LocKey][self.obst]
+                if (self.obsq in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsq]][iloc] = ObsData[RecKey][LocKey][self.obsq]
+                if (self.obsu in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsu]][iloc] = ObsData[RecKey][LocKey][self.obsu]
+                if (self.obsv in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsv]][iloc] = ObsData[RecKey][LocKey][self.obsv]
+
+                if (self.obste in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obste]][iloc] = ObsData[RecKey][LocKey][self.obste]
+                if (self.obsqe in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsqe]][iloc] = ObsData[RecKey][LocKey][self.obsqe]
+                if (self.obsue in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsue]][iloc] = ObsData[RecKey][LocKey][self.obsue]
+                if (self.obsve in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsve]][iloc] = ObsData[RecKey][LocKey][self.obsve]
+
+                if (self.obstq in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obstq]][iloc] = ObsData[RecKey][LocKey][self.obstq]
+                if (self.obsqq in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsqq]][iloc] = ObsData[RecKey][LocKey][self.obsqq]
+                if (self.obsuq in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsuq]][iloc] = ObsData[RecKey][LocKey][self.obsuq]
+                if (self.obsvq in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.obsvq]][iloc] = ObsData[RecKey][LocKey][self.obsvq]
 
                 iloc += 1
 
@@ -499,20 +524,18 @@ class AmsuaObsType(ObsType):
             Gfid.setncattr(Attr, Rfid.getncattr(Attr))
             Ofid.setncattr(Attr, Rfid.getncattr(Attr))
 
-        # Copy over the dimensions. Create a new dimension 'nrecs' which will be used
-        # as for the rows in the 2D tables.
+        # Copy over the dimensions. Create a new dimension 'nlocs' which will be used
+        # for indexing the rows of the tables.
         for Dim in Rfid.dimensions.values():
             Gfid.createDimension(Dim.name, Dim.size)
             Ofid.createDimension(Dim.name, Dim.size)
 
-        # Create a new dimension, called 'nrecs', that will represent the number
-        # of rows in the 2D tables.
         Nchans = len(Rfid.dimensions['nchans'])
         Nobs = len(Rfid.dimensions['nobs'])
-        Nrecs = Nobs // Nchans
+        Nlocs = Nobs // Nchans
 
-        Gfid.createDimension('nrecs', Nrecs)
-        Ofid.createDimension('nrecs', Nrecs)
+        Gfid.createDimension('nlocs', Nlocs)
+        Ofid.createDimension('nlocs', Nlocs)
 
         # Walk through geo_vars and obs_vars and copy vars to their corresponding
         # output files.
@@ -533,12 +556,12 @@ class AmsuaObsType(ObsType):
                 if (Var.dimensions[0] == 'nobs'):
                     # collapse variable (if collapsible) before copying to the output file
                     if (IsCollapsible):
-                        VarVals = self.CollapseVar(Var, Nrecs, Nchans)
+                        VarVals = self.CollapseVar(Var, Nlocs, Nchans)
                     else:
                         VarVals = Var[...]
 
                     # Determine var dimensions
-                    VarDims = [ 'nrecs' ]
+                    VarDims = [ 'nlocs' ]
                     if (not IsCollapsible):
                         VarDims.append('nchans')
                     for i in range(1,Var.ndim):
