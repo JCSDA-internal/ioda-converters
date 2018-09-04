@@ -35,27 +35,30 @@ class ObsType(object):
         sys.exit(1)
 
 #######################################################
-############ SONDES OBS TYPE ##########################
+############ CONVENTIONAL OBS TYPE ####################
 #######################################################
-class SondesObsType(ObsType):
+#
+# This class serves as a base class for aircraft and sondes
+#
+class ConvObsType(ObsType):
     ### Constructor ###
     def __init__(self):
-        super(SondesObsType, self).__init__()
-        self.obs_type = 'Sondes'
+        super(ConvObsType, self).__init__()
+        self.obs_type = 'Conv'
 
     ###########################################################
     # This method will cycle through the variables in the input
     # file and select a number of observations from the file
     # for writing into the output file.
-    def CalcNobsIndex(self, Fname, SidFname, NumRecsSelect):
+    def CalcNobsIndex(self, Fname, IdFname, NumRecsSelect):
         # Read in the Station IDs that are common to all
         # three variable files (t,q,uv). Simply read in the
         # first NumRecsSelect ids and grab those out of the file.
-        SidList = [ ]
-        Sfid = open(SidFname, 'r')
+        IdList = [ ]
+        Ifid = open(IdFname, 'r')
         for i in range(NumRecsSelect):
-            SidList.append(Sfid.readline().strip())
-        Sfid.close
+            IdList.append(Ifid.readline().strip())
+        Ifid.close
 
         # Read in the Station ID list from the netcdf file.
         nc = Dataset(Fname, 'r')
@@ -64,12 +67,31 @@ class SondesObsType(ObsType):
 
         IndexList = [ ]
         for i in range(StationIds.shape[0]):
-            Sid = np.squeeze(StationIds[i,...]).tostring().decode("ascii").strip()
-            if (Sid in SidList):
+            Id = np.squeeze(StationIds[i,...]).tostring().decode("ascii").strip()
+            if (Id in IdList):
                 IndexList.append(i)
 
         NobsIndex = np.array(IndexList)
         return NobsIndex
+
+
+#######################################################
+############ SONDES OBS TYPE ##########################
+#######################################################
+class SondesObsType(ConvObsType):
+    ### Constructor ###
+    def __init__(self):
+        super(SondesObsType, self).__init__()
+        self.obs_type = 'Sondes'
+
+#######################################################
+############ AIRCRAFT OBS TYPE ########################
+#######################################################
+class AircraftObsType(ConvObsType):
+    ### Constructor ###
+    def __init__(self):
+        super(AircraftObsType, self).__init__()
+        self.obs_type = 'Aircraft'
 
 #######################################################
 ############ AMSU-A OBS TYPE ##########################
@@ -121,7 +143,10 @@ ap.add_argument("in_file", help="path to input netcdf file")
 ap.add_argument("out_file", help="path to output netcdf file")
 
 sondes_p = sp.add_parser("Sondes", help="Select from sondes file")
-sondes_p.add_argument("-s", "--s_file", required=True, help="path to station id file")
+sondes_p.add_argument("-s", "--s_file", required=True, help="path to sondes file")
+
+aircraft_p = sp.add_parser("Aircraft", help="Select from aircraft file")
+aircraft_p.add_argument("-a", "--a_file", required=True, help="path to aircraft file")
 
 amsua_p = sp.add_parser("Amsua", help="Select from amsu-a file")
 
@@ -164,6 +189,11 @@ if (ObsType == "Sondes"):
     Obs = SondesObsType()
     SidFname = MyArgs.s_file
     NobsIndex = Obs.CalcNobsIndex(InFname, SidFname, NumRecsSelect)
+
+elif (ObsType == "Aircraft"):
+    Obs = AircraftObsType()
+    AidFname = MyArgs.a_file
+    NobsIndex = Obs.CalcNobsIndex(InFname, AidFname, NumRecsSelect)
 
 elif (ObsType == "Amsua"):
     Obs = AmsuaObsType()
