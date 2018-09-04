@@ -36,13 +36,16 @@ class ObsType(object):
         sys.exit(1)
 
 #######################################################
-############ SONDES OBS TYPE ##########################
+############ CONVENTIONAL OBS TYPE ####################
 #######################################################
-class SondesObsType(ObsType):
+#
+# This class serves as a base class for aircraft and
+# radiosonde
+class ConvObsType(ObsType):
     ### Constructor ###
     def __init__(self):
-        super(SondesObsType, self).__init__()
-        self.obs_type = 'Sondes'
+        super(ConvObsType, self).__init__()
+        self.obs_type = 'Conv'
 
         # set up names for dictionary keys
         self.sid   = 'Sid'
@@ -442,6 +445,24 @@ class SondesObsType(ObsType):
 
                 iloc += 1
 
+#################################################
+############ SONDES OBS TYPE ####################
+#################################################
+class SondesObsType(ConvObsType):
+    ### Constructor ###
+    def __init__(self):
+        super(SondesObsType, self).__init__()
+        self.obs_type = 'Sondes'
+
+###################################################
+############ AIRCRAFT OBS TYPE ####################
+###################################################
+class AircraftObsType(ConvObsType):
+    ### Constructor ###
+    def __init__(self):
+        super(AircraftObsType, self).__init__()
+        self.obs_type = 'Aircraft'
+
 #######################################################
 ############ AMSU-A OBS TYPE ##########################
 #######################################################
@@ -686,6 +707,12 @@ sondes_p.add_argument("-t", "--t_file", required=True, help="path to input tempe
 sondes_p.add_argument("-q", "--q_file", required=True, help="path to input moisture file")
 sondes_p.add_argument("-uv", "--uv_file", required=True, help="path to input wind (u and v) file")
 
+# Arguments for Aircraft
+aircraft_p = sp.add_parser("Aircraft", help="Merge aircraft files")
+aircraft_p.add_argument("-t", "--t_file", required=True, help="path to input temperature file")
+aircraft_p.add_argument("-q", "--q_file", required=True, help="path to input moisture file")
+aircraft_p.add_argument("-uv", "--uv_file", required=True, help="path to input wind (u and v) file")
+
 # Arguments for Amsua
 amsua_p = sp.add_parser("Amsua", help="Merge amsu-a files")
 amsua_p.add_argument("-r", "--r_file", required=True, help="path to input radiance file")
@@ -704,6 +731,14 @@ BadArgs = False
 # Instantiate an obs type object, and set up the expected input
 # file names.
 if (ObsType == "Sondes"):
+    Obs = SondesObsType()
+    InFnames = { 
+      't_file' : MyArgs.t_file,
+      'q_file' : MyArgs.q_file,
+      'uv_file' : MyArgs.uv_file,
+      }
+
+elif (ObsType == "Aircraft"):
     Obs = SondesObsType()
     InFnames = { 
       't_file' : MyArgs.t_file,
