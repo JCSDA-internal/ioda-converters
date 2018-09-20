@@ -17,7 +17,7 @@ then
   echo "Concatenating Radiosonde netcdf files:"
   for Var in ps t q uv
   do
-    Cmd="cat_nc_files.py -o AllObs/sondes_obs_geoval_${Var}_01.nc4 Sondes_2018041500/*.conv_obs_geoval_${Var}_01.nc4"
+    Cmd="cat_nc_files.py -o AllObs/sondes_obs_geoval_${Var}_01.nc4 Sondes_2018041500/*/conv_obs_geoval_${Var}_01.nc4"
     echo "Running: $Cmd"
     $Cmd
   done
@@ -26,7 +26,7 @@ then
   echo "Concatenating Aircraft netcdf files:"
   for Var in ps t q uv
   do
-    Cmd="cat_nc_files.py -o AllObs/aircraft_obs_geoval_${Var}_01.nc4 Aircraft_2018041500/*.conv_obs_geoval_${Var}_01.nc4"
+    Cmd="cat_nc_files.py -o AllObs/aircraft_obs_geoval_${Var}_01.nc4 Aircraft_2018041500/*/conv_obs_geoval_${Var}_01.nc4"
     echo "Running: $Cmd"
     $Cmd
   done
@@ -35,7 +35,7 @@ then
   echo "Concatenating AMSU-A netcdf files:"
   for Sat in aqua metop-a metop-b n15 n18 n19
   do
-    Cmd="cat_nc_files.py -o AllObs/amsua_obs_geoval_${Sat}_01.nc4 Amsua_2018041500/*.amsua_obs_geoval_${Sat}_01.nc4"
+    Cmd="cat_nc_files.py -o AllObs/amsua_obs_geoval_${Sat}_01.nc4 Amsua_2018041500/*/amsua_obs_geoval_${Sat}_01.nc4"
     echo "Running: $Cmd"
     $Cmd
   done
@@ -48,34 +48,34 @@ then
   mkdir -p HundredsObs OneObs
 
   echo "Selecting subset of Radiosonde obs from netcdf files:"
-  NumRecs=5
+  NumRecs=24
   for Var in t q uv
   do
     # one obs (record)
-    Cmd="select_nc_obs.py Sondes -s AllObs/CommonRaobStationIds 1 AllObs/sondes_obs_geoval_${Var}_01.nc4 OneObs/sondes_obs_geoval_${Var}_01.nc4"
+    Cmd="select_nc_obs.py Sondes -s AllObs/RadiosondeStationIds 1 AllObs/sondes_obs_geoval_${Var}_01.nc4 OneObs/sondes_obs_geoval_${Var}_01.nc4"
 
     echo "Running: $Cmd"
     $Cmd
 
     # hundreds of obs
-    Cmd="select_nc_obs.py Sondes -s AllObs/CommonRaobStationIds ${NumRecs} AllObs/sondes_obs_geoval_${Var}_01.nc4 HundredsObs/sondes_obs_geoval_${Var}_01.nc4"
+    Cmd="select_nc_obs.py Sondes -s AllObs/RadiosondeStationIds ${NumRecs} AllObs/sondes_obs_geoval_${Var}_01.nc4 HundredsObs/sondes_obs_geoval_${Var}_01.nc4"
     echo "Running: $Cmd"
     $Cmd
   done
   echo
 
   echo "Selecting subset of Aircraft obs from netcdf files:"
-  NumRecs=5
+  NumRecs=30
   for Var in t q uv
   do
     # one obs (record)
-    Cmd="select_nc_obs.py Aircraft -a AllObs/CommonAircraftStationIds 1 AllObs/aircraft_obs_geoval_${Var}_01.nc4 OneObs/aircraft_obs_geoval_${Var}_01.nc4"
+    Cmd="select_nc_obs.py Aircraft -a AllObs/AircraftStationIds 1 AllObs/aircraft_obs_geoval_${Var}_01.nc4 OneObs/aircraft_obs_geoval_${Var}_01.nc4"
 
     echo "Running: $Cmd"
     $Cmd
 
     # hundreds of obs
-    Cmd="select_nc_obs.py Aircraft -a AllObs/CommonAircraftStationIds ${NumRecs} AllObs/aircraft_obs_geoval_${Var}_01.nc4 HundredsObs/aircraft_obs_geoval_${Var}_01.nc4"
+    Cmd="select_nc_obs.py Aircraft -a AllObs/AircraftStationIds ${NumRecs} AllObs/aircraft_obs_geoval_${Var}_01.nc4 HundredsObs/aircraft_obs_geoval_${Var}_01.nc4"
     echo "Running: $Cmd"
     $Cmd
   done

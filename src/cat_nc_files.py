@@ -65,55 +65,57 @@ Variables = { }
 VarDims = { }
 
 for InFname in InFileList:
-    print("Reading: {0:s}".format(InFname))
-    # Open the file and append the data to the ongoing lists
-    nc = Dataset(InFname, 'r')
-  
-    # Attributes
-    #
-    # The attributes should be matching for every file.
-    for Aname in nc.ncattrs():
-        Avalue = nc.getncattr(Aname)
-        if Aname in Attributes:
-            if (Avalue != Attributes[Aname]):
-                print("WARNING: Attributes do not match:")
-                print("WARNING:     Input file: {0:s}".format(InFname))
-                print("WARNING:     Attribute: {0:s}".format(Aname))
-                print("WARNING:     Stored value: ", Attributes[Aname])
-                print("WARNING:     Input file value: ", Avalue)
-        else:
-            Attributes[Aname] = Avalue
-  
-    # Dimensions
-    #
-    # We want to append along the nobs dimension, but keep the other dimensions the
-    # same. Only the nobs dimension should be changing size from file to file.
-    for Dkey, Dim in nc.dimensions.items():
-        if (Dim.name in Dimensions):
-            if (Dim.name == 'nobs'):
-                Dimensions[Dim.name] += Dim.size
-            else:
-                if (Dim.size != Dimensions[Dim.name]):
-                    print("WARNING: Dimension sizes do not match:")
+    # Skip over empty files
+    if (os.stat(InFname).st_size > 0):
+        print("Reading: {0:s}".format(InFname))
+        # Open the file and append the data to the ongoing lists
+        nc = Dataset(InFname, 'r')
+      
+        # Attributes
+        #
+        # The attributes should be matching for every file.
+        for Aname in nc.ncattrs():
+            Avalue = nc.getncattr(Aname)
+            if Aname in Attributes:
+                if (Avalue != Attributes[Aname]):
+                    print("WARNING: Attributes do not match:")
                     print("WARNING:     Input file: {0:s}".format(InFname))
-                    print("WARNING:     Dimension: {0:s}".format(Dim.name))
-                    print("WARNING:     Stored dimension size: ", Dimensions[Dim.name])
-                    print("WARNING:     Input file dimension size: ", Dim.size)
-        else:
-            Dimensions[Dim.name] = Dim.size
-       
-    # Variables
-    for Vkey, Var in nc.variables.items():
-        if (Var.name in Variables):
-            if (Var.dimensions[0] == 'nobs'):
+                    print("WARNING:     Attribute: {0:s}".format(Aname))
+                    print("WARNING:     Stored value: ", Attributes[Aname])
+                    print("WARNING:     Input file value: ", Avalue)
+            else:
+                Attributes[Aname] = Avalue
+      
+        # Dimensions
+        #
+        # We want to append along the nobs dimension, but keep the other dimensions the
+        # same. Only the nobs dimension should be changing size from file to file.
+        for Dkey, Dim in nc.dimensions.items():
+            if (Dim.name in Dimensions):
+                if (Dim.name == 'nobs'):
+                    Dimensions[Dim.name] += Dim.size
+                else:
+                    if (Dim.size != Dimensions[Dim.name]):
+                        print("WARNING: Dimension sizes do not match:")
+                        print("WARNING:     Input file: {0:s}".format(InFname))
+                        print("WARNING:     Dimension: {0:s}".format(Dim.name))
+                        print("WARNING:     Stored dimension size: ", Dimensions[Dim.name])
+                        print("WARNING:     Input file dimension size: ", Dim.size)
+            else:
+                Dimensions[Dim.name] = Dim.size
+           
+        # Variables
+        for Vkey, Var in nc.variables.items():
+            if (Var.name in Variables):
+                if (Var.dimensions[0] == 'nobs'):
+                    Vvalues = Var[...].data
+                    Variables[Var.name] = np.concatenate([ Variables[Var.name], Vvalues ], axis=0)
+            else:
                 Vvalues = Var[...].data
-                Variables[Var.name] = np.concatenate([ Variables[Var.name], Vvalues ], axis=0)
-        else:
-            Vvalues = Var[...].data
-            Variables[Var.name] = Vvalues
-            VarDims[Var.name] = Var.dimensions
-  
-    nc.close()
+                Variables[Var.name] = Vvalues
+                VarDims[Var.name] = Var.dimensions
+      
+        nc.close()
 
 print("")
 
