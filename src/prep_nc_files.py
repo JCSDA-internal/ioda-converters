@@ -60,6 +60,7 @@ class ConvObsType(ObsType):
         self.geou = 'GeoU'
         self.geov = 'GeoV'
         self.geop = 'GeoP'
+        self.geop2 = 'GeoP2'
 
         self.obst = 'ObsT'
         self.obsq = 'ObsQ'
@@ -90,6 +91,7 @@ class ConvObsType(ObsType):
           self.geou : 'eastward_wind',
           self.geov : 'northward_wind',
           self.geop : 'atmosphere_ln_pressure_coordinate',
+          self.geop2 : 'atmosphere_pressure_coordinate',
 
           self.obst : 'air_temperature',
           self.obsq : 'specific_humidity',
@@ -148,6 +150,7 @@ class ConvObsType(ObsType):
 
         Tvirt  = Fid.variables['virtual_temperature'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
+        Pcoord2 = Fid.variables['atmosphere_pressure_coordinate'][:].data * 1000.0 # kPa to Pa
 
         # Record extra dimension information
         Dim = Fid.dimensions['Station_ID_maxstrlen']
@@ -156,6 +159,7 @@ class ConvObsType(ObsType):
         Dim = Fid.dimensions['num_profile_levels']
         ExtraDims[self.geot] = [ Dim.name, Dim.size ]
         ExtraDims[self.geop] = [ Dim.name, Dim.size ]
+        ExtraDims[self.geop2] = [ Dim.name, Dim.size ]
 
         # Organize data by record and then by location.
         for i in range(Nobs):
@@ -177,6 +181,7 @@ class ConvObsType(ObsType):
 
             ObsData[RecKey][LocKey][self.geot] = Tvirt[i]
             ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
+            ObsData[RecKey][LocKey][self.geop2] = Pcoord2[i]
       
         Fid.close()
 
@@ -201,6 +206,7 @@ class ConvObsType(ObsType):
 
         Qgeo   = Fid.variables['specific_humidity'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
+        Pcoord2 = Fid.variables['atmosphere_pressure_coordinate'][:].data * 1000.0 # kPa to Pa
 
         # Record extra dimension information
         Dim = Fid.dimensions['specific_humidity_arr_dim']
@@ -226,6 +232,7 @@ class ConvObsType(ObsType):
 
             ObsData[RecKey][LocKey][self.geoq] = Qgeo[i]
             ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
+            ObsData[RecKey][LocKey][self.geop2] = Pcoord2[i]
       
         Fid.close()
 
@@ -253,6 +260,7 @@ class ConvObsType(ObsType):
         Ugeo   = Fid.variables['eastward_wind'][:].data
         Vgeo   = Fid.variables['northward_wind'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
+        Pcoord2 = Fid.variables['atmosphere_pressure_coordinate'][:].data * 1000.0 # kPa to Pa
 
         # Record extra dimension information
         Dim = Fid.dimensions['eastward_wind_arr_dim']
@@ -285,6 +293,7 @@ class ConvObsType(ObsType):
             ObsData[RecKey][LocKey][self.geou] = Ugeo[i]
             ObsData[RecKey][LocKey][self.geov] = Vgeo[i]
             ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
+            ObsData[RecKey][LocKey][self.geop2] = Pcoord2[i]
      
         Fid.close()
 
@@ -357,6 +366,7 @@ class ConvObsType(ObsType):
         Gfid.createVariable(self.var_names[self.geou], 'f4', ('nlocs', ExtraDims[self.geou][0]))
         Gfid.createVariable(self.var_names[self.geov], 'f4', ('nlocs', ExtraDims[self.geov][0]))
         Gfid.createVariable(self.var_names[self.geop], 'f4', ('nlocs', ExtraDims[self.geop][0]))
+        Gfid.createVariable(self.var_names[self.geop2], 'f4', ('nlocs', ExtraDims[self.geop2][0]))
 
         #    obs file vars (all have one dimension: nlocs)
         Ofid.createVariable(self.var_names[self.obst], 'f4', ('nlocs'))
@@ -399,6 +409,8 @@ class ConvObsType(ObsType):
 
                 if (self.geop in ObsData[RecKey][LocKey]):
                     Gfid[self.var_names[self.geop]][iloc,:] = ObsData[RecKey][LocKey][self.geop]
+                if (self.geop2 in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.geop2]][iloc,:] = ObsData[RecKey][LocKey][self.geop2]
                 if (self.geot in ObsData[RecKey][LocKey]):
                     Gfid[self.var_names[self.geot]][iloc,:] = ObsData[RecKey][LocKey][self.geot]
                 if (self.geoq in ObsData[RecKey][LocKey]):
@@ -631,7 +643,7 @@ class AmsuaObsType(ObsType):
                     else:
                         # Expand into a series of variables, one for each channel.
                         for ichan in range(Nchans):
-                            Vname = "{0:s}_ch{1:d}".format(OutVname, ChanNums[ichan])
+                            Vname = "{0:s}_{1:d}_".format(OutVname, ChanNums[ichan])
                             Vvals = VarVals[:,ichan].squeeze()
                             if (len(VarDims) == 2):
                                 Vdims = (VarDims[0])
