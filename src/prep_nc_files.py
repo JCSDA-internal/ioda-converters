@@ -49,6 +49,7 @@ class ConvObsType(ObsType):
 
         # set up names for dictionary keys
         self.sid   = 'Sid'
+        self.selev = 'Selev'
         self.lon   = 'Lon'
         self.lat   = 'Lat'
         self.press = 'Press'
@@ -79,6 +80,7 @@ class ConvObsType(ObsType):
 
         self.var_names = {
           self.sid   : 'station_id',
+          self.selev : 'station_elevation',
 
           self.lon   : 'longitude',
           self.lat   : 'latitude',
@@ -137,7 +139,8 @@ class ConvObsType(ObsType):
         # grab variables
         Nobs = Fid.dimensions['nobs'].size
 
-        Sid  = Fid.variables['Station_ID'][:]
+        Sid   = Fid.variables['Station_ID'][:]
+        Selev = Fid.variables['Station_Elevation'][:]
 
         Lon  = Fid.variables['Longitude'][:]
         Lat  = Fid.variables['Latitude'][:]
@@ -175,6 +178,8 @@ class ConvObsType(ObsType):
             if (LocKey not in ObsData[RecKey]):
                 ObsData[RecKey][LocKey] = { }
 
+            ObsData[RecKey][LocKey][self.selev]  = Selev[i]
+
             ObsData[RecKey][LocKey][self.obst]  = T[i]
             ObsData[RecKey][LocKey][self.obste] = Terr[i]
             ObsData[RecKey][LocKey][self.obstq] = Tqc[i]
@@ -193,7 +198,8 @@ class ConvObsType(ObsType):
         # grab variables
         Nobs = Fid.dimensions['nobs'].size
 
-        Sid  = Fid.variables['Station_ID'][:]
+        Sid   = Fid.variables['Station_ID'][:]
+        Selev = Fid.variables['Station_Elevation'][:]
 
         Lon  = Fid.variables['Longitude'][:]
         Lat  = Fid.variables['Latitude'][:]
@@ -226,6 +232,8 @@ class ConvObsType(ObsType):
             if (LocKey not in ObsData[RecKey]):
                 ObsData[RecKey][LocKey] = { }
 
+            ObsData[RecKey][LocKey][self.selev]  = Selev[i]
+
             ObsData[RecKey][LocKey][self.obsq]  = Q[i]
             ObsData[RecKey][LocKey][self.obsqe] = Qerr[i]
             ObsData[RecKey][LocKey][self.obsqq] = Qqc[i]
@@ -243,7 +251,8 @@ class ConvObsType(ObsType):
         # grab variables
         Nobs = Fid.dimensions['nobs'].size
 
-        Sid  = Fid.variables['Station_ID'][:]
+        Sid   = Fid.variables['Station_ID'][:]
+        Selev = Fid.variables['Station_Elevation'][:]
 
         Lon  = Fid.variables['Longitude'][:]
         Lat  = Fid.variables['Latitude'][:]
@@ -282,6 +291,8 @@ class ConvObsType(ObsType):
 
             if (LocKey not in ObsData[RecKey]):
                 ObsData[RecKey][LocKey] = { }
+
+            ObsData[RecKey][LocKey][self.selev]  = Selev[i]
 
             ObsData[RecKey][LocKey][self.obsu]  = U[i]
             ObsData[RecKey][LocKey][self.obsue] = Uerr[i]
@@ -345,6 +356,9 @@ class ConvObsType(ObsType):
         Gfid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
         Ofid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
 
+        Gfid.createVariable(self.var_names[self.selev], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.selev], 'f4', ('nlocs'))
+
         Gfid.createVariable(self.var_names[self.lon], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.lon], 'f4', ('nlocs'))
        
@@ -407,6 +421,8 @@ class ConvObsType(ObsType):
                 Gfid[self.var_names[self.time]][iloc] = Time
                 Gfid[self.var_names[self.rnum]][iloc] = irec
 
+                if (self.selev in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.selev]][iloc] = ObsData[RecKey][LocKey][self.selev]
                 if (self.geop in ObsData[RecKey][LocKey]):
                     Gfid[self.var_names[self.geop]][iloc,:] = ObsData[RecKey][LocKey][self.geop]
                 if (self.geop2 in ObsData[RecKey][LocKey]):
@@ -428,6 +444,8 @@ class ConvObsType(ObsType):
                 Ofid[self.var_names[self.time]][iloc] = Time
                 Ofid[self.var_names[self.rnum]][iloc] = irec
 
+                if (self.selev in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.selev]][iloc] = ObsData[RecKey][LocKey][self.selev]
                 if (self.obst in ObsData[RecKey][LocKey]):
                     Ofid[self.var_names[self.obst]][iloc] = ObsData[RecKey][LocKey][self.obst]
                 if (self.obsq in ObsData[RecKey][LocKey]):
