@@ -13,6 +13,38 @@ from netCDF4 import Dataset
 # SUBROUTINES
 ###################################################################################
 
+def ReshapeVar(Var, Nlocs, Nchans):
+    ###############################################################
+    # This method will reshape a variable along the first axis.
+    # It is assumed that the input variable, along the first axis,
+    # has the data in 'C' order (column-major). Also it is assumed
+    # that the variable is either 1D or 2D.
+    #
+    if (Var.ndim == 1):
+        OutVals = Var[:].reshape(Nlocs, Nchans, order='C')
+        OutDims = ('nlocs', 'nchans')
+    elif (Var.ndim == 2):
+        N1 = Var.shape[1]
+        OutVals = Var[:].reshape(Nlocs, Nchans, N1, order='C')
+        OutDims = ('nlocs', 'nchans', Var.dimensions[1])
+
+    return [ OutVals, OutDims ]
+
+def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
+    ###############################################################
+    # This method will write out the variable into the appropriate
+    # netcdf files.
+    #
+    if (OutDest == 'G' or OutDest == 'B'):
+        # write to geo file
+        Ovar = Gfid.createVariable(Vname, Vdtype, Vdims)
+        Ovar[...] = Vvals[...]
+
+    if (OutDest == 'O' or OutDest == 'B'):
+        # write to obs file
+        Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
+        Ovar[...] = Vvals[...]
+
 ###################################################################################
 # CLASSES
 ###################################################################################
@@ -643,7 +675,7 @@ class AmsuaObsType(ObsType):
                 # Only consider collapsing if the first dimension is 'nobs'
                 if (Var.dimensions[0] == 'nobs'):
                     # Reshape the variable into nlocs X nchans
-                    [ VarVals, VarDims ] = self.ReshapeVar(Var, Nlocs, Nchans)
+                    [ VarVals, VarDims ] = ReshapeVar(Var, Nlocs, Nchans)
 
                     # If specified, collapse the variable. Otherwise expand the variable
                     # into a series of variables, one for each channel.
@@ -656,8 +688,8 @@ class AmsuaObsType(ObsType):
                             VarVals = VarVals[:,0,:].squeeze()
                             VarDims = (VarDims[0], VarDims[2])
 
-                        self.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
-                                        VarDims, VarVals)
+                        WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                                   VarDims, VarVals)
                     else:
                         # Expand into a series of variables, one for each channel.
                         for ichan in range(Nchans):
@@ -668,12 +700,12 @@ class AmsuaObsType(ObsType):
                             else:
                                 Vdims = (VarDims[0], VarDims[2])
 
-                            self.WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
+                            WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
 
                 else:
                     # copy variable as is
-                    self.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
-                                    Var.dimensions, Var[...])
+                    WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                               Var.dimensions, Var[...])
 
             else:
                 # variable does not exist in the input file
@@ -684,37 +716,169 @@ class AmsuaObsType(ObsType):
         Gfid.close()
         Ofid.close()
 
-    def ReshapeVar(self, Var, Nlocs, Nchans):
-        ###############################################################
-        # This method will reshape a variable along the first axis.
-        # It is assumed that the input variable, along the first axis,
-        # has the data in 'C' order (column-major). Also it is assumed
-        # that the variable is either 1D or 2D.
+#######################################################
+############ AOD OBS TYPE ##########################
+#######################################################
+class AodObsType(ObsType):
+    ### Constructor ###
+    def __init__(self):
+        super(AodObsType, self).__init__()
+        self.obs_type = 'Aod'
+        self.copy_vars = {
+          #  input var name : [ output destination, output var name, is collapsible ]
+          #
+          #     output destination: B - both files, G - geovar file, O - observation file
+
+          # both files
+          'chaninfoidx'     : [ 'B', 'chaninfoidx', False ],
+          'frequency'       : [ 'B', 'frequency', False ],
+          'polarization'    : [ 'B', 'polarization', False ],
+          'wavenumber'      : [ 'B', 'wavenumber', False ],
+          'error_variance'  : [ 'B', 'error_variance', False ],
+          'use_flag'        : [ 'B', 'use_flag', False ],
+          'sensor_chan'     : [ 'B', 'sensor_chan', False ],
+          'satinfo_chan'    : [ 'B', 'satinfo_chan', False ], 
+          'Latitude'        : [ 'B', 'latitude', True ],
+          'Longitude'       : [ 'B', 'longitude', True ],
+          'Obs_Time'        : [ 'B', 'time', True ],
+
+          # geovar file only
+          #'Water_Fraction'        : [ 'G', 'Water_Fraction', True ],
+
+          # obs file only
+          'Sol_Zenith_Angle'  : [ 'O', 'Sol_Zenith_Angle', True ],
+          'Sol_Azimuth_Angle' : [ 'O', 'Sol_Azimuth_Angle', True ],
+
+          'Observation'               : [ 'O', 'aerosol_optical_depth', False ],
+          'Inverse_Observation_Error' : [ 'O', 'aerosol_optical_depth_err', False ],
+          'QC_Flag'                   : [ 'O', 'aerosol_optical_depth_qc', False ],
+
+          'Obs_Minus_Forecast_unadjusted'   : [ 'O', 'obs_minus_forecast_unadjusted', False ],
+
+          'Psfc'                      : [ 'O', 'surface_air_pressure', False ]
+
+          }
+
+    ### Methods ###
+    def PrepNetcdf(self, InFnames, OutGeoFname, OutObsFname):
+        # This method is used to reformat an AMSU-A netcdf file containing
+        # both geovals and observations into two netcdf files, one containing
+        # geovals and the other containing observations.
         #
-        if (Var.ndim == 1):
-            OutVals = Var[:].reshape(Nlocs, Nchans, order='C')
-            OutDims = ('nlocs', 'nchans')
-        elif (Var.ndim == 2):
-            N1 = Var.shape[1]
-            OutVals = Var[:].reshape(Nlocs, Nchans, N1, order='C')
-            OutDims = ('nlocs', 'nchans', Var.dimensions[1])
-
-        return [ OutVals, OutDims ]
-
-    def WriteNcVar(self, Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
-        ###############################################################
-        # This method will write out the variable into the appropriate
-        # netcdf files.
+        # The data comes in vectors where each vector contains obs values
+        # for the first location for channels 1..n, then the obs values for
+        # the second location for channels 1..n, etc.
         #
-        if (OutDest == 'G' or OutDest == 'B'):
-            # write to geo file
-            Ovar = Gfid.createVariable(Vname, Vdtype, Vdims)
-            Ovar[...] = Vvals[...]
+        # This script will rearrange the data as if each channel is a separate
+        # variable. Ie, the data will be reshape into 2D data where the rows
+        # correspond to locations and the columns correspond to channel numbers.
+        # Some data is repeated (eg, Latitude) where you get the same value for
+        # every channel on a given location. These cases will be collapsed into
+        # a vector that holds the unique values.
 
-        if (OutDest == 'O' or OutDest == 'B'):
-            # write to obs file
-            Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
-            Ovar[...] = Vvals[...]
+        Afname = InFnames['a_file']
+        print("Reading netcdf file: {0:s}".format(Afname))
+        print("")
+
+        # Open up the netcdf files
+        Afid = Dataset(Afname, 'r')
+        Gfid = Dataset(OutGeoFname, 'w', format='NETCDF4')
+        Ofid = Dataset(OutObsFname, 'w', format='NETCDF4')
+
+        # Need a copy of channel numbers for the "expand variables" section below.
+        ChanNums = Afid.variables['chaninfoidx'][:]
+
+        # Copy over the file attributes
+        for Attr in Afid.ncattrs():
+            Gfid.setncattr(Attr, Afid.getncattr(Attr))
+            Ofid.setncattr(Attr, Afid.getncattr(Attr))
+
+        # Copy over the dimensions. Create a new dimension 'nlocs' which will be used
+        # for indexing the rows of the tables.
+        for Dim in Afid.dimensions.values():
+            Gfid.createDimension(Dim.name, Dim.size)
+            Ofid.createDimension(Dim.name, Dim.size)
+
+        Nchans = len(Afid.dimensions['nchans'])
+        Nobs = len(Afid.dimensions['nobs'])
+        Nlocs = Nobs // Nchans
+        Nrecs = Nlocs
+        Nvars = Nchans # each separate channel will become a separate variable
+
+        Gfid.createDimension('nlocs', Nlocs)
+        Ofid.createDimension('nlocs', Nlocs)
+
+        # Create dummy dimensions containing the counts of records and variables.
+        # Already copied over the 'nobs' dimension which will turn into a dummy
+        # dimensions whose size is the number of observations.
+        Gfid.createDimension('nrecs', Nrecs)
+        Gfid.createDimension('nvars', Nvars)
+
+        Ofid.createDimension('nrecs', Nrecs)
+        Ofid.createDimension('nvars', Nvars)
+
+        # Create the record_num variable. In this case this variable simply contains
+        # the numbers 1 .. nrecs since each location is also an individual record.
+        Gfid.createVariable('record_number', 'i4', ('nlocs'))
+        Ofid.createVariable('record_number', 'i4', ('nlocs'))
+
+        Gfid['record_number'][:] = np.array(np.arange(Nrecs)) + 1
+        Ofid['record_number'][:] = np.array(np.arange(Nrecs)) + 1
+
+        # Walk through geo_vars and obs_vars and copy vars to their corresponding
+        # output files.
+        for InVname in self.copy_vars.keys():
+            OutDest       = self.copy_vars[InVname][0]
+            OutVname      = self.copy_vars[InVname][1]
+            IsCollapsible = self.copy_vars[InVname][2]
+
+            if (InVname in Afid.variables):
+                # variable exists in the input file
+                Var = Afid.variables[InVname]
+
+                # Only consider collapsing if the first dimension is 'nobs'
+                if (Var.dimensions[0] == 'nobs'):
+                    # Reshape the variable into nlocs X nchans
+                    [ VarVals, VarDims ] = ReshapeVar(Var, Nlocs, Nchans)
+
+                    # If specified, collapse the variable. Otherwise expand the variable
+                    # into a series of variables, one for each channel.
+                    if (IsCollapsible):
+                        # Collapse the variable and write out.
+                        if (Var.ndim == 1):
+                            VarVals = VarVals[:,0].squeeze()
+                            VarDims = (VarDims[0])
+                        else:
+                            VarVals = VarVals[:,0,:].squeeze()
+                            VarDims = (VarDims[0], VarDims[2])
+
+                        WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                                   VarDims, VarVals)
+                    else:
+                        # Expand into a series of variables, one for each channel.
+                        for ichan in range(Nchans):
+                            Vname = "{0:s}_{1:d}_".format(OutVname, ChanNums[ichan])
+                            Vvals = VarVals[:,ichan].squeeze()
+                            if (len(VarDims) == 2):
+                                Vdims = (VarDims[0])
+                            else:
+                                Vdims = (VarDims[0], VarDims[2])
+
+                            WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
+
+                else:
+                    # copy variable as is
+                    WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                               Var.dimensions, Var[...])
+
+            else:
+                # variable does not exist in the input file
+                print("WARNING: Variable '{0:s}' does not exist in the input file".format(InVname))
+                print("")
+
+        Afid.close()
+        Gfid.close()
+        Ofid.close()
 
 ###################################################################################
 # MAIN
@@ -746,6 +910,10 @@ aircraft_p.add_argument("-uv", "--uv_file", required=True, help="path to input w
 # Arguments for Amsua
 amsua_p = sp.add_parser("Amsua", help="Merge amsu-a files")
 amsua_p.add_argument("-r", "--r_file", required=True, help="path to input radiance file")
+
+# Arguments for Aod
+amsua_p = sp.add_parser("Aod", help="Merge aod files")
+amsua_p.add_argument("-a", "--a_file", required=True, help="path to input aod file")
 
 
 MyArgs = ap.parse_args()
@@ -780,6 +948,12 @@ elif (ObsType == "Amsua"):
     Obs = AmsuaObsType()
     InFnames = {
       'r_file' : MyArgs.r_file
+      }
+
+elif (ObsType == "Aod"):
+    Obs = AodObsType()
+    InFnames = {
+      'a_file' : MyArgs.a_file
       }
 
 # Verify that the input files exist
