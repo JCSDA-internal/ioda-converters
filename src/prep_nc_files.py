@@ -79,14 +79,37 @@ class ConvObsType(ObsType):
         super(ConvObsType, self).__init__()
         self.obs_type = 'Conv'
 
+        # obs variable names
+        self.obs_tname = 'air_temperature'
+        self.obs_qname = 'specific_humidity'
+        self.obs_uname = 'eastward_wind'
+        self.obs_vname = 'northward_wind'
+
+        # metadata variable names
+        self.sid_name   = 'station_id'
+        self.selev_name = 'station_elevation'
+        self.lon_name   = 'longitude'
+        self.lat_name   = 'latitude'
+        self.press_name = 'air_pressure'
+        self.time_name  = 'time'
+        self.rnum_name  = 'record_number'
+
         # set up names for dictionary keys
-        self.sid   = 'Sid'
-        self.selev = 'Selev'
-        self.lon   = 'Lon'
-        self.lat   = 'Lat'
-        self.press = 'Press'
-        self.time  = 'Time'
-        self.rnum  = 'RecNum'
+        self.o_sid   = 'ObsSid'
+        self.o_selev = 'ObsSelev'
+        self.o_lon   = 'ObsLon'
+        self.o_lat   = 'ObsLat'
+        self.o_press = 'ObsPress'
+        self.o_time  = 'ObsTime'
+        self.o_rnum  = 'ObsRecNum'
+
+        self.g_sid   = 'GeoSid'
+        self.g_selev = 'GeoSelev'
+        self.g_lon   = 'GeoLon'
+        self.g_lat   = 'GeoLat'
+        self.g_press = 'GeoPress'
+        self.g_time  = 'GeoTime'
+        self.g_rnum  = 'GeoRecNum'
 
         self.geot = 'GeoT'
         self.geoq = 'GeoQ'
@@ -110,38 +133,59 @@ class ConvObsType(ObsType):
         self.obsuq = 'ObsUqc'
         self.obsvq = 'ObsVqc'
 
+        self.hofxt = 'HofxT'
+        self.hofxq = 'HofxQ'
+        self.hofxu = 'HofxU'
+        self.hofxv = 'HofxV'
+
         self.var_names = {
-          self.sid   : 'station_id',
-          self.selev : 'station_elevation',
+          # geovals variable names
+          self.g_sid   : self.sid_name,
+          self.g_selev : self.selev_name,
 
-          self.lon   : 'longitude',
-          self.lat   : 'latitude',
-          self.press : 'air_pressure',
-          self.time  : 'time',
-          self.rnum  : 'record_number',
+          self.g_lon   : self.lon_name,
+          self.g_lat   : self.lat_name,
+          self.g_press : self.press_name,
+          self.g_time  : self.time_name,
+          self.g_rnum  : self.rnum_name,
 
-          self.geot : 'virtual_temperature',
-          self.geoq : 'specific_humidity',
-          self.geou : 'eastward_wind',
-          self.geov : 'northward_wind',
-          self.geop : 'atmosphere_ln_pressure_coordinate',
+          self.geot  : 'virtual_temperature',
+          self.geoq  : 'specific_humidity',
+          self.geou  : 'eastward_wind',
+          self.geov  : 'northward_wind',
+          self.geop  : 'atmosphere_ln_pressure_coordinate',
           self.geop2 : 'atmosphere_pressure_coordinate',
 
-          self.obst : 'air_temperature',
-          self.obsq : 'specific_humidity',
-          self.obsu : 'eastward_wind',
-          self.obsv : 'northward_wind'
-          }
+          # observation variable names
+          self.o_sid   : self.sid_name + '_MetaData',
+          self.o_selev : self.selev_name + '_MetaData',
 
-        self.var_names[self.obste] = self.var_names[self.obst] + '_err'
-        self.var_names[self.obsqe] = self.var_names[self.obsq] + '_err'
-        self.var_names[self.obsue] = self.var_names[self.obsu] + '_err'
-        self.var_names[self.obsve] = self.var_names[self.obsv] + '_err'
+          self.o_lon   : self.lon_name + '_MetaData',
+          self.o_lat   : self.lat_name + '_MetaData',
+          self.o_press : self.press_name + '_MetaData',
+          self.o_time  : self.time_name + '_MetaData',
+          self.o_rnum  : self.rnum_name + '_MetaData',
 
-        self.var_names[self.obstq] = self.var_names[self.obst] + '_qc'
-        self.var_names[self.obsqq] = self.var_names[self.obsq] + '_qc'
-        self.var_names[self.obsuq] = self.var_names[self.obsu] + '_qc'
-        self.var_names[self.obsvq] = self.var_names[self.obsv] + '_qc'
+          self.obst : self.obs_tname + '_ObsValue',
+          self.obsq : self.obs_qname + '_ObsValue',
+          self.obsu : self.obs_uname + '_ObsValue',
+          self.obsv : self.obs_vname + '_ObsValue',
+
+          self.obste : self.obs_tname + '_ObsError',
+          self.obsqe : self.obs_qname + '_ObsError',
+          self.obsue : self.obs_uname + '_ObsError',
+          self.obsve : self.obs_vname + '_ObsError',
+
+          self.obstq : self.obs_tname + '_ObsQc',
+          self.obsqq : self.obs_qname + '_ObsQc',
+          self.obsuq : self.obs_uname + '_ObsQc',
+          self.obsvq : self.obs_vname + '_ObsQc',
+
+          self.hofxt : self.obs_tname + '_GsiHofx',
+          self.hofxq : self.obs_qname + '_GsiHofx',
+          self.hofxu : self.obs_uname + '_GsiHofx',
+          self.hofxv : self.obs_vname + '_GsiHofx'
+        }
 
     ### Methods ###
     def PrepNetcdf(self, InFnames, OutGeoFname, OutObsFname):
@@ -179,9 +223,10 @@ class ConvObsType(ObsType):
         P    = Fid.variables['Pressure'][:]
         Time = Fid.variables['Time'][:]
 
-        T    = Fid.variables['Observation_T'][:]
-        Terr = Fid.variables['Err_Final'][:]
-        Tqc  = Fid.variables['Setup_QC_Mark'][:]
+        T     = Fid.variables['Observation_T'][:]
+        Terr  = Fid.variables['Err_Final'][:]
+        Tqc   = Fid.variables['Setup_QC_Mark'][:]
+        Thofx = T - Fid.variables['Obs_Minus_Forecast_unadjusted'][:]
 
         Tvirt  = Fid.variables['virtual_temperature'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
@@ -189,7 +234,8 @@ class ConvObsType(ObsType):
 
         # Record extra dimension information
         Dim = Fid.dimensions['Station_ID_maxstrlen']
-        ExtraDims[self.sid] = [ Dim.name, Dim.size ]
+        ExtraDims[self.g_sid] = [ Dim.name, Dim.size ]
+        ExtraDims[self.o_sid] = [ Dim.name, Dim.size ]
 
         Dim = Fid.dimensions['num_profile_levels']
         ExtraDims[self.geot] = [ Dim.name, Dim.size ]
@@ -210,11 +256,13 @@ class ConvObsType(ObsType):
             if (LocKey not in ObsData[RecKey]):
                 ObsData[RecKey][LocKey] = { }
 
-            ObsData[RecKey][LocKey][self.selev]  = Selev[i]
+            ObsData[RecKey][LocKey][self.g_selev]  = Selev[i]
+            ObsData[RecKey][LocKey][self.o_selev]  = Selev[i]
 
             ObsData[RecKey][LocKey][self.obst]  = T[i]
             ObsData[RecKey][LocKey][self.obste] = Terr[i]
             ObsData[RecKey][LocKey][self.obstq] = Tqc[i]
+            ObsData[RecKey][LocKey][self.hofxt] = Thofx[i]
 
             ObsData[RecKey][LocKey][self.geot] = Tvirt[i]
             ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
@@ -238,9 +286,10 @@ class ConvObsType(ObsType):
         P    = Fid.variables['Pressure'][:]
         Time = Fid.variables['Time'][:]
 
-        Q    = Fid.variables['q_Observation'][:]
-        Qerr = Fid.variables['Err_Final'][:]
-        Qqc  = Fid.variables['Prep_QC_Mark'][:]
+        Q     = Fid.variables['q_Observation'][:]
+        Qerr  = Fid.variables['Err_Final'][:]
+        Qqc   = Fid.variables['Prep_QC_Mark'][:]
+        Qhofx = Q - Fid.variables['Obs_Minus_Forecast_unadjusted'][:]
 
         Qgeo   = Fid.variables['specific_humidity'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
@@ -264,11 +313,13 @@ class ConvObsType(ObsType):
             if (LocKey not in ObsData[RecKey]):
                 ObsData[RecKey][LocKey] = { }
 
-            ObsData[RecKey][LocKey][self.selev]  = Selev[i]
+            ObsData[RecKey][LocKey][self.g_selev]  = Selev[i]
+            ObsData[RecKey][LocKey][self.o_selev]  = Selev[i]
 
             ObsData[RecKey][LocKey][self.obsq]  = Q[i]
             ObsData[RecKey][LocKey][self.obsqe] = Qerr[i]
             ObsData[RecKey][LocKey][self.obsqq] = Qqc[i]
+            ObsData[RecKey][LocKey][self.hofxq] = Qhofx[i]
 
             ObsData[RecKey][LocKey][self.geoq] = Qgeo[i]
             ObsData[RecKey][LocKey][self.geop] = Pcoord[i]
@@ -291,12 +342,14 @@ class ConvObsType(ObsType):
         P    = Fid.variables['Pressure'][:]
         Time = Fid.variables['Time'][:]
 
-        U    = Fid.variables['u_Observation'][:]
-        Uerr = Fid.variables['Err_Final'][:]
-        Uqc  = Fid.variables['Setup_QC_Mark'][:]
-        V    = Fid.variables['v_Observation'][:]
-        Verr = Fid.variables['Err_Final'][:]
-        Vqc  = Fid.variables['Setup_QC_Mark'][:]
+        U     = Fid.variables['u_Observation'][:]
+        Uerr  = Fid.variables['Err_Final'][:]
+        Uqc   = Fid.variables['Setup_QC_Mark'][:]
+        Uhofx = U - Fid.variables['u_Obs_Minus_Forecast_unadjusted'][:]
+        V     = Fid.variables['v_Observation'][:]
+        Verr  = Fid.variables['Err_Final'][:]
+        Vqc   = Fid.variables['Setup_QC_Mark'][:]
+        Vhofx = V - Fid.variables['v_Obs_Minus_Forecast_unadjusted'][:]
 
         Ugeo   = Fid.variables['eastward_wind'][:].data
         Vgeo   = Fid.variables['northward_wind'][:].data
@@ -324,14 +377,17 @@ class ConvObsType(ObsType):
             if (LocKey not in ObsData[RecKey]):
                 ObsData[RecKey][LocKey] = { }
 
-            ObsData[RecKey][LocKey][self.selev]  = Selev[i]
+            ObsData[RecKey][LocKey][self.g_selev]  = Selev[i]
+            ObsData[RecKey][LocKey][self.o_selev]  = Selev[i]
 
             ObsData[RecKey][LocKey][self.obsu]  = U[i]
             ObsData[RecKey][LocKey][self.obsue] = Uerr[i]
             ObsData[RecKey][LocKey][self.obsuq] = Uqc[i]
+            ObsData[RecKey][LocKey][self.hofxu] = Uhofx[i]
             ObsData[RecKey][LocKey][self.obsv]  = V[i]
             ObsData[RecKey][LocKey][self.obsve] = Verr[i]
             ObsData[RecKey][LocKey][self.obsvq] = Vqc[i]
+            ObsData[RecKey][LocKey][self.hofxv] = Vhofx[i]
 
             ObsData[RecKey][LocKey][self.geou] = Ugeo[i]
             ObsData[RecKey][LocKey][self.geov] = Vgeo[i]
@@ -365,14 +421,14 @@ class ConvObsType(ObsType):
 
         # Create dimensions.
         Gfid.createDimension('nlocs', Nlocs)
-        Gfid.createDimension(ExtraDims[self.sid][0], ExtraDims[self.sid][1])
+        Gfid.createDimension(ExtraDims[self.g_sid][0], ExtraDims[self.g_sid][1])
         Gfid.createDimension(ExtraDims[self.geot][0], ExtraDims[self.geot][1])
         Gfid.createDimension(ExtraDims[self.geoq][0], ExtraDims[self.geoq][1])
         Gfid.createDimension(ExtraDims[self.geou][0], ExtraDims[self.geou][1])
         Gfid.createDimension(ExtraDims[self.geov][0], ExtraDims[self.geov][1])
 
         Ofid.createDimension('nlocs', Nlocs)
-        Ofid.createDimension(ExtraDims[self.sid][0],  ExtraDims[self.sid][1])
+        Ofid.createDimension(ExtraDims[self.o_sid][0],  ExtraDims[self.o_sid][1])
 
         # Create dummy dimensions for nrecs and nvars and nobs.
         Gfid.createDimension('nrecs', Nrecs)
@@ -384,29 +440,15 @@ class ConvObsType(ObsType):
         Ofid.createDimension('nobs',  Nobs)
 
         # Create variables.
-        #    header, location vars
-        Gfid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
-        Ofid.createVariable(self.var_names[self.sid], 'S8', ('nlocs', ExtraDims[self.sid][0]))
-
-        Gfid.createVariable(self.var_names[self.selev], 'f4', ('nlocs'))
-        Ofid.createVariable(self.var_names[self.selev], 'f4', ('nlocs'))
-
-        Gfid.createVariable(self.var_names[self.lon], 'f4', ('nlocs'))
-        Ofid.createVariable(self.var_names[self.lon], 'f4', ('nlocs'))
-       
-        Gfid.createVariable(self.var_names[self.lat], 'f4', ('nlocs'))
-        Ofid.createVariable(self.var_names[self.lat], 'f4', ('nlocs'))
-       
-        Gfid.createVariable(self.var_names[self.press], 'f4', ('nlocs'))
-        Ofid.createVariable(self.var_names[self.press], 'f4', ('nlocs'))
-
-        Gfid.createVariable(self.var_names[self.time], 'f4', ('nlocs'))
-        Ofid.createVariable(self.var_names[self.time], 'f4', ('nlocs'))
-
-        Gfid.createVariable(self.var_names[self.rnum], 'i4', ('nlocs'))
-        Ofid.createVariable(self.var_names[self.rnum], 'i4', ('nlocs'))
-
         #    geo file vars
+        Gfid.createVariable(self.var_names[self.g_sid], 'S8', ('nlocs', ExtraDims[self.g_sid][0]))
+        Gfid.createVariable(self.var_names[self.g_selev], 'f4', ('nlocs'))
+        Gfid.createVariable(self.var_names[self.g_lon], 'f4', ('nlocs'))
+        Gfid.createVariable(self.var_names[self.g_lat], 'f4', ('nlocs'))
+        Gfid.createVariable(self.var_names[self.g_press], 'f4', ('nlocs'))
+        Gfid.createVariable(self.var_names[self.g_time], 'f4', ('nlocs'))
+        Gfid.createVariable(self.var_names[self.g_rnum], 'i4', ('nlocs'))
+
         Gfid.createVariable(self.var_names[self.geot], 'f4', ('nlocs', ExtraDims[self.geot][0]))
         Gfid.createVariable(self.var_names[self.geoq], 'f4', ('nlocs', ExtraDims[self.geoq][0]))
         Gfid.createVariable(self.var_names[self.geou], 'f4', ('nlocs', ExtraDims[self.geou][0]))
@@ -414,7 +456,15 @@ class ConvObsType(ObsType):
         Gfid.createVariable(self.var_names[self.geop], 'f4', ('nlocs', ExtraDims[self.geop][0]))
         Gfid.createVariable(self.var_names[self.geop2], 'f4', ('nlocs', ExtraDims[self.geop2][0]))
 
-        #    obs file vars (all have one dimension: nlocs)
+        #    obs file vars
+        Ofid.createVariable(self.var_names[self.o_sid], 'S8', ('nlocs', ExtraDims[self.o_sid][0]))
+        Ofid.createVariable(self.var_names[self.o_selev], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.o_lon], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.o_lat], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.o_press], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.o_time], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.o_rnum], 'i4', ('nlocs'))
+
         Ofid.createVariable(self.var_names[self.obst], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.obsq], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.obsu], 'f4', ('nlocs'))
@@ -429,6 +479,11 @@ class ConvObsType(ObsType):
         Ofid.createVariable(self.var_names[self.obsqq], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.obsuq], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.obsvq], 'f4', ('nlocs'))
+
+        Ofid.createVariable(self.var_names[self.hofxt], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.hofxq], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.hofxu], 'f4', ('nlocs'))
+        Ofid.createVariable(self.var_names[self.hofxv], 'f4', ('nlocs'))
 
         # Copy data into variables indexed by nlocs
         iloc = 0
@@ -446,15 +501,15 @@ class ConvObsType(ObsType):
                 Time  = float(LocItems[3])
 
                 # geovals
-                Gfid[self.var_names[self.sid]][iloc,:] = Sid
-                Gfid[self.var_names[self.lon]][iloc] = Lon
-                Gfid[self.var_names[self.lat]][iloc] = Lat
-                Gfid[self.var_names[self.press]][iloc] = Press
-                Gfid[self.var_names[self.time]][iloc] = Time
-                Gfid[self.var_names[self.rnum]][iloc] = irec
+                Gfid[self.var_names[self.g_sid]][iloc,:] = Sid
+                Gfid[self.var_names[self.g_lon]][iloc] = Lon
+                Gfid[self.var_names[self.g_lat]][iloc] = Lat
+                Gfid[self.var_names[self.g_press]][iloc] = Press
+                Gfid[self.var_names[self.g_time]][iloc] = Time
+                Gfid[self.var_names[self.g_rnum]][iloc] = irec
 
-                if (self.selev in ObsData[RecKey][LocKey]):
-                    Gfid[self.var_names[self.selev]][iloc] = ObsData[RecKey][LocKey][self.selev]
+                if (self.g_selev in ObsData[RecKey][LocKey]):
+                    Gfid[self.var_names[self.g_selev]][iloc] = ObsData[RecKey][LocKey][self.g_selev]
                 if (self.geop in ObsData[RecKey][LocKey]):
                     Gfid[self.var_names[self.geop]][iloc,:] = ObsData[RecKey][LocKey][self.geop]
                 if (self.geop2 in ObsData[RecKey][LocKey]):
@@ -467,17 +522,16 @@ class ConvObsType(ObsType):
                     Gfid[self.var_names[self.geou]][iloc,:] = ObsData[RecKey][LocKey][self.geou]
                 if (self.geov in ObsData[RecKey][LocKey]):
                     Gfid[self.var_names[self.geov]][iloc,:] = ObsData[RecKey][LocKey][self.geov]
-
                 # obs
-                Ofid[self.var_names[self.sid]][iloc,:] = Sid
-                Ofid[self.var_names[self.lon]][iloc] = Lon
-                Ofid[self.var_names[self.lat]][iloc] = Lat
-                Ofid[self.var_names[self.press]][iloc] = Press
-                Ofid[self.var_names[self.time]][iloc] = Time
-                Ofid[self.var_names[self.rnum]][iloc] = irec
+                Ofid[self.var_names[self.o_sid]][iloc,:] = Sid
+                Ofid[self.var_names[self.o_lon]][iloc] = Lon
+                Ofid[self.var_names[self.o_lat]][iloc] = Lat
+                Ofid[self.var_names[self.o_press]][iloc] = Press
+                Ofid[self.var_names[self.o_time]][iloc] = Time
+                Ofid[self.var_names[self.o_rnum]][iloc] = irec
 
-                if (self.selev in ObsData[RecKey][LocKey]):
-                    Ofid[self.var_names[self.selev]][iloc] = ObsData[RecKey][LocKey][self.selev]
+                if (self.o_selev in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.o_selev]][iloc] = ObsData[RecKey][LocKey][self.o_selev]
                 if (self.obst in ObsData[RecKey][LocKey]):
                     Ofid[self.var_names[self.obst]][iloc] = ObsData[RecKey][LocKey][self.obst]
                 if (self.obsq in ObsData[RecKey][LocKey]):
@@ -504,6 +558,16 @@ class ConvObsType(ObsType):
                     Ofid[self.var_names[self.obsuq]][iloc] = ObsData[RecKey][LocKey][self.obsuq]
                 if (self.obsvq in ObsData[RecKey][LocKey]):
                     Ofid[self.var_names[self.obsvq]][iloc] = ObsData[RecKey][LocKey][self.obsvq]
+
+                if (self.hofxt in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.hofxt]][iloc] = ObsData[RecKey][LocKey][self.hofxt]
+                if (self.hofxq in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.hofxq]][iloc] = ObsData[RecKey][LocKey][self.hofxq]
+                if (self.hofxu in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.hofxu]][iloc] = ObsData[RecKey][LocKey][self.hofxu]
+                if (self.hofxv in ObsData[RecKey][LocKey]):
+                    Ofid[self.var_names[self.hofxv]][iloc] = ObsData[RecKey][LocKey][self.hofxv]
+
 
                 iloc += 1
 
