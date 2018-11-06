@@ -121,7 +121,7 @@ then
   $Cmd
 
   # hundreds of obs
-  Cmd="prep_nc_files.py Sondes -t HundredsObs/aircraft_obs_geoval_t_01.nc4 -q HundredsObs/aircraft_obs_geoval_q_01.nc4 -uv HundredsObs/aircraft_obs_geoval_uv_01.nc4 GeoObs/aircraft_geoval_2018041500_m.nc4 GeoObs/aircraft_obs_2018041500_m.nc4"
+  Cmd="prep_nc_files.py Aircraft -t HundredsObs/aircraft_obs_geoval_t_01.nc4 -q HundredsObs/aircraft_obs_geoval_q_01.nc4 -uv HundredsObs/aircraft_obs_geoval_uv_01.nc4 GeoObs/aircraft_geoval_2018041500_m.nc4 GeoObs/aircraft_obs_2018041500_m.nc4"
   echo "Running: $Cmd"
   $Cmd
   echo
