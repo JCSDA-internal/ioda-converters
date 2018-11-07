@@ -157,34 +157,34 @@ class ConvObsType(ObsType):
           self.geop2 : 'atmosphere_pressure_coordinate',
 
           # observation variable names
-          self.o_sid   : self.sid_name + '_MetaData',
-          self.o_selev : self.selev_name + '_MetaData',
+          self.o_sid   : self.sid_name + '@MetaData',
+          self.o_selev : self.selev_name + '@MetaData',
 
-          self.o_lon   : self.lon_name + '_MetaData',
-          self.o_lat   : self.lat_name + '_MetaData',
-          self.o_press : self.press_name + '_MetaData',
-          self.o_time  : self.time_name + '_MetaData',
-          self.o_rnum  : self.rnum_name + '_MetaData',
+          self.o_lon   : self.lon_name + '@MetaData',
+          self.o_lat   : self.lat_name + '@MetaData',
+          self.o_press : self.press_name + '@MetaData',
+          self.o_time  : self.time_name + '@MetaData',
+          self.o_rnum  : self.rnum_name + '@MetaData',
 
-          self.obst : self.obs_tname + '_ObsValue',
-          self.obsq : self.obs_qname + '_ObsValue',
-          self.obsu : self.obs_uname + '_ObsValue',
-          self.obsv : self.obs_vname + '_ObsValue',
+          self.obst : self.obs_tname + '@ObsValue',
+          self.obsq : self.obs_qname + '@ObsValue',
+          self.obsu : self.obs_uname + '@ObsValue',
+          self.obsv : self.obs_vname + '@ObsValue',
 
-          self.obste : self.obs_tname + '_ObsError',
-          self.obsqe : self.obs_qname + '_ObsError',
-          self.obsue : self.obs_uname + '_ObsError',
-          self.obsve : self.obs_vname + '_ObsError',
+          self.obste : self.obs_tname + '@ObsError',
+          self.obsqe : self.obs_qname + '@ObsError',
+          self.obsue : self.obs_uname + '@ObsError',
+          self.obsve : self.obs_vname + '@ObsError',
 
-          self.obstq : self.obs_tname + '_ObsQc',
-          self.obsqq : self.obs_qname + '_ObsQc',
-          self.obsuq : self.obs_uname + '_ObsQc',
-          self.obsvq : self.obs_vname + '_ObsQc',
+          self.obstq : self.obs_tname + '@ObsQc',
+          self.obsqq : self.obs_qname + '@ObsQc',
+          self.obsuq : self.obs_uname + '@ObsQc',
+          self.obsvq : self.obs_vname + '@ObsQc',
 
-          self.hofxt : self.obs_tname + '_GsiHofx',
-          self.hofxq : self.obs_qname + '_GsiHofx',
-          self.hofxu : self.obs_uname + '_GsiHofx',
-          self.hofxv : self.obs_vname + '_GsiHofx'
+          self.hofxt : self.obs_tname + '@GsiHofx',
+          self.hofxq : self.obs_qname + '@GsiHofx',
+          self.hofxu : self.obs_uname + '@GsiHofx',
+          self.hofxv : self.obs_vname + '@GsiHofx'
         }
 
     ### Methods ###
