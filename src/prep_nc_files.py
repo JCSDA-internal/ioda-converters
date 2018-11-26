@@ -441,7 +441,7 @@ class ConvObsType(ObsType):
 
         # Create variables.
         #    geo file vars
-        Gfid.createVariable(self.var_names[self.g_sid], 'S8', ('nlocs', ExtraDims[self.g_sid][0]))
+        Gfid.createVariable(self.var_names[self.g_sid], 'c', ('nlocs', ExtraDims[self.g_sid][0]))
         Gfid.createVariable(self.var_names[self.g_selev], 'f4', ('nlocs'))
         Gfid.createVariable(self.var_names[self.g_lon], 'f4', ('nlocs'))
         Gfid.createVariable(self.var_names[self.g_lat], 'f4', ('nlocs'))
@@ -457,7 +457,7 @@ class ConvObsType(ObsType):
         Gfid.createVariable(self.var_names[self.geop2], 'f4', ('nlocs', ExtraDims[self.geop2][0]))
 
         #    obs file vars
-        Ofid.createVariable(self.var_names[self.o_sid], 'S8', ('nlocs', ExtraDims[self.o_sid][0]))
+        Ofid.createVariable(self.var_names[self.o_sid], 'c', ('nlocs', ExtraDims[self.o_sid][0]))
         Ofid.createVariable(self.var_names[self.o_selev], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.o_lon], 'f4', ('nlocs'))
         Ofid.createVariable(self.var_names[self.o_lat], 'f4', ('nlocs'))
