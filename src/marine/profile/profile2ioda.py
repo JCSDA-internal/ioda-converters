@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import sys
 import numpy as np
@@ -14,19 +15,18 @@ def rd_prof(fname):
     except Exception:
         raise Exception('Unknown error opening %s' % fname)
 
-    n_obs, n_lvl, n_vrsn = fh.read_ints('>i4')
-
-    print('    number profiles: %d' % n_obs)
-    print('  max number levels: %d' % n_lvl)
-    print('file version number: %d' % n_vrsn)
-
-    if n_obs <= 0:
-        print('No profile observations to process from %s' % fname)
-        print('EXITING!')
-        sys.exit(0)
-
-    # Dictionary to hold all data
+    # Dictionary to hold all data from file
     odata = {}
+
+    odata['n_obs'], odata['n_lvl'], odata['n_vrsn'] = fh.read_ints('>i4')
+
+    print('    number profiles: %d' % odata['n_obs'])
+    print('  max number levels: %d' % odata['n_lvl'])
+    print('file version number: %d' % odata['n_vrsn'])
+
+    if odata['n_obs'] <= 0:
+        print('No profile observations to process from %s' % fname)
+        return odata
 
     odata['ob_btm'] = fh.read_reals('>f4')
     odata['ob_lat'] = fh.read_reals('>f4')
@@ -48,7 +48,7 @@ def rd_prof(fname):
     odata['ob_tmp_err'] = []
     odata['ob_tmp_prb'] = []
 
-    for n in range(n_obs):
+    for n in range(odata['n_obs']):
         odata['ob_lvl'].append(fh.read_reals('>f4'))
         odata['ob_sal'].append(fh.read_reals('>f4'))
         odata['ob_sal_err'].append(fh.read_reals('>f4'))
@@ -77,7 +77,7 @@ def rd_prof(fname):
     odata['ob_rgn_ssd'] = []
     odata['ob_rgn_tsd'] = []
 
-    for n in range(n_obs):
+    for n in range(odata['n_obs']):
         odata['ob_clm_sal'].append(fh.read_reals('>f4'))
         odata['ob_clm_tmp'].append(fh.read_reals('>f4'))
         odata['ob_clm_ssd'].append(fh.read_reals('>f4'))
@@ -93,13 +93,13 @@ def rd_prof(fname):
         odata['ob_rgn_ssd'].append(fh.read_reals('>f4'))
         odata['ob_rgn_tsd'].append(fh.read_reals('>f4'))
 
-    if n_vrsn > 1:
+    if odata['n_vrsn'] > 1:
         odata['ob_sal_xvl'] = fh.read_reals('>f4')
         odata['ob_sal_xsd'] = fh.read_reals('>f4')
         odata['ob_tmp_xvl'] = fh.read_reals('>f4')
         odata['ob_tmp_xsd'] = fh.read_reals('>f4')
 
-        #if n_vrsn > 2:
+        #if odata['n_vrsn'] > 2:
         #    For some reason ob_id has characters that don't conform.
         #    ob_id is not used, so comment out for now
         #    odata['ob_id'] = fh.read_record('>S10').astype('U10')
