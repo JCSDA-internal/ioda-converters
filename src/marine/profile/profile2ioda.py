@@ -5,8 +5,9 @@ import os
 import sys
 import numpy as np
 from scipy.io import FortranFile
+from netCDF4 import Dataset
 
-def rd_prof(fname):
+def rd_prof(fname, datetime='YYYYMMDDHH'):
 
     try:
         fh = FortranFile(fname, mode='r', header_dtype='>i4')
@@ -17,6 +18,8 @@ def rd_prof(fname):
 
     # Dictionary to hold all data from file
     odata = {}
+
+    odata['datetime'] = datetime
 
     odata['n_obs'], odata['n_lvl'], odata['n_vrsn'] = fh.read_ints('>i4')
 
@@ -108,9 +111,89 @@ def rd_prof(fname):
 
     return odata
 
-fname = sys.argv[1]
-odata = rd_prof(fname)
+
+def to_nlocs(idata):
 
 
+    odata = {}
+
+    odata['datetime'] = idata['datetime']
+
+    odata['ob_lat'] = []
+    odata['ob_lon'] = []
+    odata['ob_lvl'] = []
+    odata['ob_dtg'] = []
+    odata['ob_sal'] = []
+    odata['ob_sal_err'] = []
+    odata['ob_tmp'] = []
+    odata['ob_tmp_err'] = []
+
+    for n in range(idata['n_obs']):
+
+        lat = idata['ob_lat'][n]
+        lon = idata['ob_lon'][n]
+        dtg = idata['ob_dtg'][n]
+
+        for l, lvl in enumerate(idata['ob_lvl'][n]):
+
+            odata['ob_lat'].append(lat)
+            odata['ob_lon'].append(lon)
+            odata['ob_dtg'].append(dtg)
+            odata['ob_lvl'].append(lvl)
+            odata['ob_sal'].append(idata['ob_sal'][n][l])
+            odata['ob_sal_err'].append(idata['ob_sal_err'][n][l])
+            odata['ob_tmp'].append(idata['ob_tmp'][n][l])
+            odata['ob_tmp_err'].append(idata['ob_tmp_err'][n][l])
+
+    return odata
+
+
+def toioda(fname, odata):
+
+    ncid = Dataset(fname, 'w', format='NETCDF4')
+
+    ncid.createDimension('nlocs', len(odata['ob_lat']))
+
+    longitudes = ncid.createVariable('longitude', 'f4', ('nlocs'))
+    longitudes.units = 'degrees_east'
+    latitudes = ncid.createVariable('latitude', 'f4', ('nlocs'))
+    latitudes.units = 'degrees_north'
+    times = ncid.createVariable('time', 'f4', ('nlocs'))
+    times.long_name = 'observation_time_YYYYMMDDHHMMSS'
+    levels = ncid.createVariable('level', 'f4', ('nlocs'))
+    levels.units = 'meters'
+    levels.positive = 'down'
+    sals = ncid.createVariable('ocean_salinity@ObsValue', 'f4', ('nlocs'))
+    sals.units = 'g/kg?'
+    sal_errs = ncid.createVariable('ocean_salinity@ObsError', 'f4', ('nlocs'))
+    sal_errs.units = 'sal.units^2'
+    tmps = ncid.createVariable('insitu_temperature@ObsValue', 'f4', ('nlocs'))
+    tmps.units = 'degree_celcius'
+    tmp_errs = ncid.createVariable('insitu_temperature@ObsError', 'f4', ('nlocs'))
+    tmp_errs.units = 'degree_celcius^2'
+
+    ncid.date_time = odata['datetime']
+
+    longitudes[:] = np.asarray(odata['ob_lon'], dtype=np.float32)
+    latitudes[:] = np.asarray(odata['ob_lat'], dtype=np.float32)
+    levels[:] = np.asarray(odata['ob_lvl'], dtype=np.float32)
+    times[:] = np.asarray(odata['ob_lvl'], dtype=np.float32) * 0.0 # To do!
+    sals[:] = np.asarray(odata['ob_sal'], dtype=np.float32)
+    sal_errs[:] = np.asarray(odata['ob_sal_err'], dtype=np.float32)
+    tmps[:] = np.asarray(odata['ob_tmp'], dtype=np.float32)
+    tmp_errs[:] = np.asarray(odata['ob_tmp_err'], dtype=np.float32)
+
+    ncid.close()
+
+    return
+
+
+profname = sys.argv[1]
+iodaname = sys.argv[2]
+datetime = sys.argv[3]
+
+odata = rd_prof(profname, datetime=datetime)
+odata2 = to_nlocs(odata)
+toioda(iodaname, odata2)
 
 
