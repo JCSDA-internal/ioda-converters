@@ -21,6 +21,10 @@ class profile(object):
         return
 
     def _rd_prof(self):
+        '''
+        Read the profile data
+        Based on subroutine rd_prof in ocn_obs.f
+        '''
 
         try:
             fh = FortranFile(self.filename, mode='r', header_dtype='>i4')
@@ -113,10 +117,15 @@ class profile(object):
             odata['ob_tmp_xvl'] = fh.read_reals('>f4')
             odata['ob_tmp_xsd'] = fh.read_reals('>f4')
 
-            # if odata['n_vrsn'] > 2:
-            #    For some reason ob_id has characters that don't conform.
-            #    ob_id is not used, so comment out for now
-            #    odata['ob_id'] = fh.read_record('>S10').astype('U10')
+            if odata['n_vrsn'] > 2:
+                # ob_id is 10 characters long, with variable spaces in front.
+                # How are these legitimate fortran spaces represented in
+                # python? FortranFile.read_record has difficulty, because
+                # dtype does not conform
+                # Since ob_id is not used, treat it as an array of characters
+                # Something like this would be ideal:
+                # odata['ob_id'] = fh.read_record('>S10').astype('U10')
+                odata['ob_id'] = fh.read_record('>S1')
 
         fh.close()
 
@@ -125,6 +134,11 @@ class profile(object):
         return
 
     def _to_nlocs(self):
+        '''
+        Selectively (e.g. salinity, temperature) convert odata into idata
+        idata is the IODA required data structure, where profiles are stacked
+        on top of each other into a single vector.
+        '''
 
         # idata is the dictionary containing IODA friendly data structure
         idata = {}
@@ -174,7 +188,8 @@ class profile(object):
 
         ncid = Dataset(self.filename + '.nc4', 'w', format='NETCDF4')
 
-        ncid.createDimension('nlocs', self.idata['nlocs'])
+        ncid.createDimension('nlocs', self.idata['nlocs']) # total no. of obs
+        ncid.createDimension('nrecs', self.odata['n_obs']) # no. of profiles
         ncid.createDimension('nvars', 2)
 
         longitudes = ncid.createVariable('longitude', 'f4', ('nlocs'))
