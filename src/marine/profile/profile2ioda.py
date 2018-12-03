@@ -4,6 +4,7 @@ from __future__ import print_function
 import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
+import scipy.io.netcdf as netcdf
 from netCDF4 import Dataset
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
@@ -172,46 +173,45 @@ class profile(object):
 
         self._to_nlocs()
 
-        ncid = Dataset(self.filename + '.nc4', 'w', format='NETCDF4')
-
+        ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
         ncid.createDimension('nlocs', self.idata['nlocs'])
         ncid.createDimension('nvars', 2)
 
-        longitudes = ncid.createVariable('longitude', 'f4', ('nlocs'))
+        longitudes = ncid.createVariable('longitude', 'f4', ('nlocs',))
         longitudes.units = 'degrees_east'
 
-        latitudes = ncid.createVariable('latitude', 'f4', ('nlocs'))
+        latitudes = ncid.createVariable('latitude', 'f4', ('nlocs',))
         latitudes.units = 'degrees_north'
 
-        times = ncid.createVariable('time', 'f4', ('nlocs'))
+        times = ncid.createVariable('time', 'f4', ('nlocs',))
         times.long_name = 'observation time from date_time'
         times.units = 'hours'
         times.description = 'why does this have to be with a reference to, why not absolute?'
 
-        depths = ncid.createVariable('ocean_depth', 'f4', ('nlocs'))
+        depths = ncid.createVariable('ocean_depth', 'f4', ('nlocs',))
         depths.units = 'meters'
         depths.positive = 'down'
 
-        sals = ncid.createVariable('ocean_salinity@ObsValue', 'f4', ('nlocs'))
+        sals = ncid.createVariable('ocean_salinity@ObsValue', 'f4', ('nlocs',))
         sals.units = 'g/kg'
         sals.description = ''
 
         sal_errs = ncid.createVariable(
-            'ocean_salinity@ObsError', 'f4', ('nlocs'))
+            'ocean_salinity@ObsError', 'f4', ('nlocs',))
         sal_errs.units = '(g/kg)^2'
         sal_errs.description = 'Standard deviation of observation error'
 
         tmps = ncid.createVariable(
-            'insitu_temperature@ObsValue', 'f4', ('nlocs'))
+            'insitu_temperature@ObsValue', 'f4', ('nlocs',))
         tmps.units = 'degree_celcius'
         tmps.description = ''
 
         tmp_errs = ncid.createVariable(
-            'insitu_temperature@ObsError', 'f4', ('nlocs'))
+            'insitu_temperature@ObsError', 'f4', ('nlocs',))
         tmp_errs.units = '(degree_celcius)^2'
         tmp_errs.description = 'Standard deviation of observation error'
 
-        ncid.date_time = datetime.strftime(self.date, '%Y%m%d%H%M')
+        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
 
         longitudes[:] = np.asarray(self.idata['ob_lon'], dtype=np.float32)
         latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
