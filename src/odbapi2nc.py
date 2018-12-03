@@ -3,8 +3,16 @@
 import sys
 import os
 import argparse
-import netCDF4
-from netCDF4 import Dataset
+
+#TODO:Figure out a general way to add this path so that the 'import odb' statement can work
+try:
+    sys.path.index('/vagrant_data/projects/libs/odb/install/lib/python2.7/site-packages/odb')
+except ValueError:
+    sys.path.append('/vagrant_data/projects/libs/odb/install/lib/python2.7/site-packages/odb')
+
+import odb
+#import netCDF4
+#from netCDF4 import Dataset
 
 ###################################################################################
 # MAIN
@@ -51,3 +59,12 @@ if (os.path.isfile(NetcdfFname)):
 
 if (BadArgs):
     sys.exit(2)
+
+conn = odb.connect(Odb2Fname)
+c = conn.cursor()
+
+sql = "select * from \"" + Odb2Fname + "\";"
+c.execute(sql)
+for row in c.fetchall():
+    print ",".join(str(v) for v in row)
+
