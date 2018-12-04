@@ -225,7 +225,7 @@ class profile(object):
         tmp_errs.units = '(degree_celcius)^2'
         tmp_errs.description = 'Standard deviation of observation error'
 
-        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M'))
+        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H'))
 
         longitudes[:] = np.asarray(self.idata['ob_lon'], dtype=np.float32)
         latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
