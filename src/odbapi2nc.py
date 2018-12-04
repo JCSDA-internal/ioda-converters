@@ -4,11 +4,19 @@ import sys
 import os
 import argparse
 
-#TODO:Figure out a general way to add this path so that the 'import odb' statement can work
+
+#TODO:Figure out a more general way to add the path to the ODB API Python module.
+#     For now, user needs to export environment variable ODBPYTHONPATH (if not 
+#     using default) before running script.
+#NOTE: ODB API must be built on the system with the ENABLE_PYTHON flag on or else
+#      the python module won't be there.
+odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
+print odbPythonPath
+
 try:
-    sys.path.index('/vagrant_data/projects/libs/odb/install/lib/python2.7/site-packages/odb')
+    sys.path.index(odbPythonPath)
 except ValueError:
-    sys.path.append('/vagrant_data/projects/libs/odb/install/lib/python2.7/site-packages/odb')
+    sys.path.append(odbPythonPath)
 
 import odb
 #import netCDF4
