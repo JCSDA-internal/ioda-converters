@@ -5,6 +5,28 @@ import sys
 import os
 import argparse
 
+#This function takes two integers like date=20180415 time=61532 and converts them to a
+#ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
+def IntDateTimeToString(date, time):
+    #Make sure passed values are int's since we're counting on integer division
+    date = int(date)
+    time = int(time)
+    #Define consts to prevent new int objects being created every time we use these numbers
+    TEN_THOW = 10000
+    HUNDRED = 100
+
+    year = date // TEN_THOW
+    date = date - year * TEN_THOW
+    month = date // HUNDRED
+    day = date - month * HUNDRED
+
+    hour = time // TEN_THOW
+    time = time - hour * TEN_THOW
+    minute = time // HUNDRED
+    second = time - minute * HUNDRED
+
+    return "%d-%02d-%02dT%02d:%02d:%02dZ" % (year, month, day, hour, minute, second)
+
 #TODO:Figure out a more general way to add the path to the ODB API Python module.
 #     For now, user needs to export environment variable ODBPYTHONPATH (if not 
 #     using default) before running script.
@@ -63,7 +85,7 @@ if (BadArgs):
 #The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
 #The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
-stationDict = defaultdict(defaultdict(dict))
+#stationDict = defaultdict(defaultdict(dict))
 
 fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, report_status.rejected, datum_status.rejected'
 tupleNames   = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, report_status_rejected, datum_status_rejected'
@@ -75,5 +97,5 @@ sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\" where vertco_type=
 print sql
 c.execute(sql)
 for row in map(FetchRow._make, c.fetchall()):
-    print row.varno,row.obsvalue
+    print IntDateTimeToString(row.date, row.time)
 
