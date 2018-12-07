@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
@@ -59,11 +60,20 @@ if (os.path.isfile(NetcdfFname)):
 if (BadArgs):
     sys.exit(2)
 
+#The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
+#The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
+#The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
+stationDict = defaultdict(defaultdict(dict))
+
+fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, report_status.rejected, datum_status.rejected'
+tupleNames   = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, report_status_rejected, datum_status_rejected'
+FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
-sql = "select * from \"" + Odb2Fname + "\";"
+sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\" where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
+print sql
 c.execute(sql)
-for row in c.fetchall():
-    print ",".join(str(v) for v in row)
+for row in map(FetchRow._make, c.fetchall()):
+    print row.varno,row.obsvalue
 
