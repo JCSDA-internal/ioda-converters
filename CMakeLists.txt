@@ -9,7 +9,7 @@
 
 cmake_minimum_required( VERSION 3.3.2 FATAL_ERROR )
 
-project( iodaconverters C CXX Fortran )
+project( iodaconv C CXX Fortran )
 
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH} )
 
@@ -31,7 +31,7 @@ ecbuild_declare_project()
 ecbuild_enable_fortran( REQUIRED )
 ecbuild_add_cxx11_flags()
 
-set( IODACONVERTERS_LINKER_LANGUAGE CXX )
+set( IODACONV_LINKER_LANGUAGE CXX )
 
 ################################################################################
 # Dependencies
@@ -51,31 +51,31 @@ endif (HAVE_ODB_API)
 # Export package info
 ################################################################################
 
-list( APPEND IODACONVERTERS_TPLS ) # NetCDF oops )
+list( APPEND IODACONV_TPLS ) # NetCDF oops )
 
-set( IODACONVERTERS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src
+set( IODACONV_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src
                        ${CMAKE_Fortran_MODULE_DIRECTORY} )
-set( IODACONVERTERS_LIBRARIES ioda )
+set( IODACONV_LIBRARIES ioda )
 
-get_directory_property( IODACONVERTERS_DEFINITIONS COMPILE_DEFINITIONS )
+get_directory_property( IODACONV_DEFINITIONS COMPILE_DEFINITIONS )
 
-foreach( _tpl ${IODACONVERTERS_TPLS} )
+foreach( _tpl ${IODACONV_TPLS} )
   string( TOUPPER ${_tpl} TPL )
-  list( APPEND IODACONVERTERS_EXTRA_DEFINITIONS   ${${TPL}_DEFINITIONS}  ${${TPL}_TPL_DEFINITIONS}  )
-  list( APPEND IODACONVERTERS_EXTRA_INCLUDE_DIRS  ${${TPL}_INCLUDE_DIRS} ${${TPL}_TPL_INCLUDE_DIRS} )
-  list( APPEND IODACONVERTERS_EXTRA_LIBRARIES     ${${TPL}_LIBRARIES}    ${${TPL}_TPL_LIBRARIES}    )
+  list( APPEND IODACONV_EXTRA_DEFINITIONS   ${${TPL}_DEFINITIONS}  ${${TPL}_TPL_DEFINITIONS}  )
+  list( APPEND IODACONV_EXTRA_INCLUDE_DIRS  ${${TPL}_INCLUDE_DIRS} ${${TPL}_TPL_INCLUDE_DIRS} )
+  list( APPEND IODACONV_EXTRA_LIBRARIES     ${${TPL}_LIBRARIES}    ${${TPL}_TPL_LIBRARIES}    )
 endforeach()
 
 if( HAVE_ODB_API )
-  list( APPEND IODACONVERTERS_EXTRA_LIBRARIES     Odb    )
+  list( APPEND IODACONV_EXTRA_LIBRARIES     Odb    )
 endif()
 
 ################################################################################
 # Sources
 ################################################################################
 
-include( iodaconverters_compiler_flags )
-include_directories( ${IODACONVERTERS_INCLUDE_DIRS} ${IODACONVERTERS_EXTRA_INCLUDE_DIRS} )
+include( iodaconv_compiler_flags )
+include_directories( ${IODACONV_INCLUDE_DIRS} ${IODACONV_EXTRA_INCLUDE_DIRS} )
 add_subdirectory( src )
 #add_subdirectory( test )
 #add_subdirectory( tools )
