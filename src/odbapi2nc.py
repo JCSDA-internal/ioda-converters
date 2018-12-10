@@ -82,20 +82,48 @@ if (os.path.isfile(NetcdfFname)):
 if (BadArgs):
     sys.exit(2)
 
+sondeVarnoDict = {
+    2:  "air_temperature",
+    3:  "eastward_wind",
+    4:  "northward_wind",
+    29: "relative_humidity"
+}
+
 #The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
 #The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
-#stationDict = defaultdict(defaultdict(dict))
+obsDataDictTree = defaultdict(lambda:defaultdict(dict))
 
-fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, report_status.rejected, datum_status.rejected'
-tupleNames   = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, report_status_rejected, datum_status_rejected'
+fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, ' \
+               'report_status.active, report_status.rejected, datum_status.active, datum_status.rejected'
+tupleNames = fetchColumns.replace('.', '_')
 FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
-sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\" where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
+sql = "select " + fetchColumns + " from \"" + Odb2Fname + \
+    "\" where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
 print sql
 c.execute(sql)
 for row in map(FetchRow._make, c.fetchall()):
-    print IntDateTimeToString(row.date, row.time)
+    anDateTimeString = IntDateTimeToString(row.andate, row.antime)
+    obsDateTimeString = IntDateTimeToString(row.date, row.time)
+    if (row.report_status_active == 1 and \
+        row.datum_status_active == 1 and \
+        row.report_status_rejected != 1 and \
+        row.datum_status_rejected != 1):
+        qcVal = 1
+    else:
+        qcVal = 0
+
+    varName = sondeVarnoDict[row.varno]
+    profileKey = row.statid, anDateTimeString
+    locationKey = row.lat, row.lon, row.vertco_reference_1, obsDateTimeString
+
+    obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"] = row.obsvalue
+    obsDataDictTree[profileKey][locationKey][varName + "@ObsError"] = row.obs_error
+    obsDataDictTree[profileKey][locationKey][varName + "@ObsQc"] = qcVal
+    print varName, profileKey, locationKey
+    print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"]
+
 
