@@ -8,7 +8,7 @@ import argparse
 import numpy as np
 import netCDF4
 from netCDF4 import Dataset
-import ioda_conv_ncio
+import ioda_conv_ncio as iconv
 
 ###################################################################################
 # SUBROUTINES
@@ -738,7 +738,7 @@ class AmsuaObsType(ObsType):
                             VarVals = VarVals[:,0,:].squeeze()
                             VarDims = (VarDims[0], VarDims[2])
 
-                        WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                        iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                    VarDims, VarVals)
                     else:
                         # Expand into a series of variables, one for each channel.
@@ -750,11 +750,11 @@ class AmsuaObsType(ObsType):
                             else:
                                 Vdims = (VarDims[0], VarDims[2])
 
-                            WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
+                            iconv.WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
 
                 else:
                     # copy variable as is
-                    WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                    iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                Var.dimensions, Var[...])
 
             else:
@@ -902,7 +902,7 @@ class AodObsType(ObsType):
                             VarVals = VarVals[:,0,:].squeeze()
                             VarDims = (VarDims[0], VarDims[2])
 
-                        WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                        iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                    VarDims, VarVals)
                     else:
                         # Expand into a series of variables, one for each channel.
@@ -914,11 +914,11 @@ class AodObsType(ObsType):
                             else:
                                 Vdims = (VarDims[0], VarDims[2])
 
-                            WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
+                            iconv.WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
 
                 else:
                     # copy variable as is
-                    WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                    iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                Var.dimensions, Var[...])
 
             else:
