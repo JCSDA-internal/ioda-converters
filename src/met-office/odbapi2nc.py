@@ -4,6 +4,7 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
+import datetime
 
 #This function takes two integers like date=20180415 time=61532 and converts them to a
 #ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
@@ -27,11 +28,11 @@ def IntDateTimeToString(date, time):
 
     return "%d-%02d-%02dT%02d:%02d:%02dZ" % (year, month, day, hour, minute, second)
 
-#TODO:Figure out a more general way to add the path to the ODB API Python module.
-#     For now, user needs to export environment variable ODBPYTHONPATH (if not 
-#     using default) before running script.
-#NOTE: ODB API must be built on the system with the ENABLE_PYTHON flag on or else
-#      the python module won't be there.
+#NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
+#      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
+#      is unneeded in that environment (but it doesn't hurt anything). 
+#      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the 
+#      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
 print odbPythonPath
 
@@ -94,6 +95,8 @@ sondeVarnoDict = {
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
 obsDataDictTree = defaultdict(lambda:defaultdict(dict))
 
+print datetime.datetime.now()
+
 fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, ' \
                'report_status.active, report_status.rejected, datum_status.active, datum_status.rejected'
 tupleNames = fetchColumns.replace('.', '_')
@@ -101,11 +104,14 @@ FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
-sql = "select " + fetchColumns + " from \"" + Odb2Fname + \
-    "\" where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
+sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
+    " where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
 print sql
 c.execute(sql)
-for row in map(FetchRow._make, c.fetchall()):
+row = c.fetchone()
+while row is not None:
+    row = FetchRow._make(row)
+    #for row in map(FetchRow._make, c.fetchall()):
     anDateTimeString = IntDateTimeToString(row.andate, row.antime)
     obsDateTimeString = IntDateTimeToString(row.date, row.time)
     if (row.report_status_active == 1 and \
@@ -123,7 +129,12 @@ for row in map(FetchRow._make, c.fetchall()):
     obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"] = row.obsvalue
     obsDataDictTree[profileKey][locationKey][varName + "@ObsError"] = row.obs_error
     obsDataDictTree[profileKey][locationKey][varName + "@ObsQc"] = qcVal
-    print varName, profileKey, locationKey
-    print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"]
+    
+    row = c.fetchone()
+    #print varName, profileKey, locationKey
+    #print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"]
 
+# print "Top level len: ", len(obsDataDictTree)
+# print "Num Locations: ", len(obsDataDictTree[profileKey])
 
+print datetime.datetime.now()
