@@ -4,7 +4,6 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
-import datetime
 
 #This function takes two integers like date=20180415 time=61532 and converts them to a
 #ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
@@ -95,8 +94,6 @@ sondeVarnoDict = {
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
 obsDataDictTree = defaultdict(lambda:defaultdict(dict))
 
-print datetime.datetime.now()
-
 fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, ' \
                'report_status.active, report_status.rejected, datum_status.active, datum_status.rejected'
 tupleNames = fetchColumns.replace('.', '_')
@@ -136,5 +133,3 @@ while row is not None:
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
-
-print datetime.datetime.now()
