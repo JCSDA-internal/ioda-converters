@@ -4,6 +4,7 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
+import ioda_conv_ncio as iconv
 
 #This function takes two integers like date=20180415 time=61532 and converts them to a
 #ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
@@ -119,11 +120,20 @@ for row in map(FetchRow._make, c.fetchall()):
     varName = sondeVarnoDict[row.varno]
     profileKey = row.statid, anDateTimeString
     locationKey = row.lat, row.lon, row.vertco_reference_1, obsDateTimeString
+    ovalKey = varName, iconv.OVAL_NAME
+    oerrKey = varName, iconv.OERR_NAME
+    oqcKey = varName, iconv.OQC_NAME
 
-    obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"] = row.obsvalue
-    obsDataDictTree[profileKey][locationKey][varName + "@ObsError"] = row.obs_error
-    obsDataDictTree[profileKey][locationKey][varName + "@ObsQc"] = qcVal
-    print varName, profileKey, locationKey
-    print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"]
+    obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
+    obsDataDictTree[profileKey][locationKey][oerrKey] = row.obs_error
+    obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
+#    print varName, profileKey, locationKey
+#    print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][ovalKey]
 
+# Call the writer
+AttrData = {
+  'odb_version' : 2,
+  'my_attr' : 'my_value'
+   }
+iconv.BuildNetcdf(NetcdfFname, obsDataDictTree, AttrData)
 
