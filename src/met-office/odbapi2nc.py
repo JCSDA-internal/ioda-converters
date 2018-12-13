@@ -28,11 +28,11 @@ def IntDateTimeToString(date, time):
 
     return "%d-%02d-%02dT%02d:%02d:%02dZ" % (year, month, day, hour, minute, second)
 
-#TODO:Figure out a more general way to add the path to the ODB API Python module.
-#     For now, user needs to export environment variable ODBPYTHONPATH (if not 
-#     using default) before running script.
-#NOTE: ODB API must be built on the system with the ENABLE_PYTHON flag on or else
-#      the python module won't be there.
+#NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
+#      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
+#      is unneeded in that environment (but it doesn't hurt anything). 
+#      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the 
+#      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
 print odbPythonPath
 
@@ -102,11 +102,14 @@ FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
-sql = "select " + fetchColumns + " from \"" + Odb2Fname + \
-    "\" where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
+sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
+    " where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
 print sql
 c.execute(sql)
-for row in map(FetchRow._make, c.fetchall()):
+row = c.fetchone()
+while row is not None:
+    row = FetchRow._make(row)
+    #for row in map(FetchRow._make, c.fetchall()):
     anDateTimeString = IntDateTimeToString(row.andate, row.antime)
     obsDateTimeString = IntDateTimeToString(row.date, row.time)
     if (row.report_status_active == 1 and \
@@ -130,10 +133,14 @@ for row in map(FetchRow._make, c.fetchall()):
 #    print varName, profileKey, locationKey
 #    print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][ovalKey]
 
+    row = c.fetchone()
+    
+# print "Top level len: ", len(obsDataDictTree)
+# print "Num Locations: ", len(obsDataDictTree[profileKey])
+
 # Call the writer
 AttrData = {
   'odb_version' : 2,
   'my_attr' : 'my_value'
    }
 iconv.BuildNetcdf(NetcdfFname, obsDataDictTree, AttrData)
-
