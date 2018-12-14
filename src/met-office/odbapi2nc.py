@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 from math import exp
+import ioda_conv_ncio as iconv
 
 #This function takes two integers like date=20180415 time=61532 and converts them to a
 #ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
@@ -150,10 +151,13 @@ while row is not None:
 
     profileKey = row.statid, anDateTimeString
     locationKey = row.lat, row.lon, row.vertco_reference_1, obsDateTimeString
+    ovalKey = varName, iconv.OVAL_NAME
+    oerrKey = varName, iconv.OERR_NAME
+    oqcKey = varName, iconv.OQC_NAME
 
-    obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"] = row.obsvalue
-    obsDataDictTree[profileKey][locationKey][varName + "@ObsError"] = row.obs_error
-    obsDataDictTree[profileKey][locationKey][varName + "@ObsQc"] = qcVal
+    obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
+    obsDataDictTree[profileKey][locationKey][oerrKey] = row.obs_error
+    obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
     
     row = c.fetchone()
 
@@ -163,24 +167,30 @@ MISSING_VAL = -999999.0
 #print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
 for profileKey in obsDataDictTree:
     for locationKey in obsDataDictTree[profileKey]:
-        if "relative_humidity@ObsValue" in obsDataDictTree[profileKey][locationKey]:
+        if ("relative_humidity", iconv.OVAL_NAME) in obsDataDictTree[profileKey][locationKey]:
             obsDict = obsDataDictTree[profileKey][locationKey]
-            rh = obsDict["relative_humidity@ObsValue"]
-            rh_err = obsDict["relative_humidity@ObsError"]
-            t = obsDict.get("air_temperature@ObsValue")
+            rh = obsDict[("relative_humidity", iconv.OVAL_NAME)]
+            rh_err = obsDict[("relative_humidity", iconv.OERR_NAME)]
+            t = obsDict.get(("air_temperature", iconv.OVAL_NAME))
             p = locationKey[2]
             if t is not None and rh is not None and rh_err is not None and p is not None and \
             t != MISSING_VAL and rh != MISSING_VAL and rh_err != MISSING_VAL and p != MISSING_VAL:
                 q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
-                obsDict["specific_humidity@ObsValue"] = q
-                obsDict["specific_humidity@ObsError"] = q_err
-                obsDict["specific_humidity@ObsQc"] = obsDict["relative_humidity@ObsQc"]
-                del obsDict["relative_humidity@ObsValue"]
-                del obsDict["relative_humidity@ObsError"]
-                del obsDict["relative_humidity@ObsQc"]
+                obsDict[("specific_humidity", iconv.OVAL_NAME)] = q
+                obsDict[("specific_humidity", iconv.OERR_NAME)] = q_err
+                obsDict[("specific_humidity", iconv.OQC_NAME)] = obsDict[("relative_humidity", iconv.OQC_NAME)]
+                del obsDict[("relative_humidity", iconv.OVAL_NAME)]
+                del obsDict[("relative_humidity", iconv.OERR_NAME)]
+                del obsDict[("relative_humidity", iconv.OQC_NAME)]
                 #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p/100,q,q_err]))
-
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
+
+# Call the writer
+AttrData = {
+  'odb_version' : 2,
+  'my_attr' : 'my_value'
+   }
+iconv.BuildNetcdf(NetcdfFname, obsDataDictTree, AttrData)

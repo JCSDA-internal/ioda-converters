@@ -8,7 +8,7 @@ import argparse
 import numpy as np
 import netCDF4
 from netCDF4 import Dataset
-import ioda_conv_ncio
+import ioda_conv_ncio as iconv
 
 ###################################################################################
 # SUBROUTINES
@@ -623,15 +623,15 @@ class AmsuaObsType(ObsType):
           'Soil_Type'             : [ 'G', 'Soil_Type', True ],
           'Sfc_Wind_Direction'    : [ 'G', 'Sfc_Wind_Direction', True ],
           'virtual_temperature'   : [ 'G', 'virtual_temperature', True ],
-          'humidity_mixing_ratio' : [ 'G', 'humidity_mixing_ratio', True ],
-          'air_pressure'          : [ 'G', 'air_pressure', True ],
-          'air_pressure_levels'   : [ 'G', 'air_pressure_levels', True ],
-          'mass_concentration_of_ozone_in_air'              : [ 'G', 'mass_concentration_of_ozone_in_air', True ],
-          'mass_concentration_of_carbon_dioxide_in_air'     : [ 'G', 'mass_concentration_of_carbon_dioxide_in_air', True ],
-          'atmosphere_mass_content_of_cloud_liquid_water'   : [ 'G', 'atmosphere_mass_content_of_cloud_liquid_water', True ],
-          'atmosphere_mass_content_of_cloud_ice'            : [ 'G', 'atmosphere_mass_content_of_cloud_ice', True ],
-          'effective_radius_of_cloud_liquid_water_particle' : [ 'G', 'effective_radius_of_cloud_liquid_water_particle', True ],
-          'effective_radius_of_cloud_ice_particle'          : [ 'G', 'effective_radius_of_cloud_ice_particle', True ],
+          'atmosphere_absorber_01' : [ 'G', 'humidity_mixing_ratio', True ],
+          'air_pressure'           : [ 'G', 'air_pressure', True ],
+          'air_pressure_levels'    : [ 'G', 'air_pressure_levels', True ],
+          'atmosphere_absorber_03' : [ 'G', 'mass_concentration_of_ozone_in_air', True ],
+          'atmosphere_absorber_02' : [ 'G', 'mass_concentration_of_carbon_dioxide_in_air', True ],
+          'atmosphere_mass_content_of_cloud_01' : [ 'G', 'atmosphere_mass_content_of_cloud_liquid_water', True ],
+          'atmosphere_mass_content_of_cloud_02' : [ 'G', 'atmosphere_mass_content_of_cloud_ice', True ],
+          'effective_radius_of_cloud_particle_01' : [ 'G', 'effective_radius_of_cloud_liquid_water_particle', True ],
+          'effective_radius_of_cloud_particle_02' : [ 'G', 'effective_radius_of_cloud_ice_particle', True ],
 
           # obs file only
           'Scan_Position'     : [ 'O', 'Scan_Position', True ],
@@ -738,7 +738,7 @@ class AmsuaObsType(ObsType):
                             VarVals = VarVals[:,0,:].squeeze()
                             VarDims = (VarDims[0], VarDims[2])
 
-                        WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                        iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                    VarDims, VarVals)
                     else:
                         # Expand into a series of variables, one for each channel.
@@ -750,11 +750,11 @@ class AmsuaObsType(ObsType):
                             else:
                                 Vdims = (VarDims[0], VarDims[2])
 
-                            WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
+                            iconv.WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
 
                 else:
                     # copy variable as is
-                    WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                    iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                Var.dimensions, Var[...])
 
             else:
@@ -902,7 +902,7 @@ class AodObsType(ObsType):
                             VarVals = VarVals[:,0,:].squeeze()
                             VarDims = (VarDims[0], VarDims[2])
 
-                        WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                        iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                    VarDims, VarVals)
                     else:
                         # Expand into a series of variables, one for each channel.
@@ -914,11 +914,11 @@ class AodObsType(ObsType):
                             else:
                                 Vdims = (VarDims[0], VarDims[2])
 
-                            WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
+                            iconv.WriteNcVar(Gfid, Ofid, OutDest, Vname, Var.dtype, Vdims, Vvals)
 
                 else:
                     # copy variable as is
-                    WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
+                    iconv.WriteNcVar(Gfid, Ofid, OutDest, OutVname, Var.dtype,
                                Var.dimensions, Var[...])
 
             else:
