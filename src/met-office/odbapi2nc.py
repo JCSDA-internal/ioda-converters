@@ -185,8 +185,6 @@ for profileKey in obsDataDictTree:
                 del obsDict[("relative_humidity", iconv.OQC_NAME)]
                 #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p/100,q,q_err]))
 
-    row = c.fetchone()
-    
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
 
