@@ -4,6 +4,7 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
+from math import exp
 
 #This function takes two integers like date=20180415 time=61532 and converts them to a
 #ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
@@ -26,6 +27,30 @@ def IntDateTimeToString(date, time):
     second = time - minute * HUNDRED
 
     return "%d-%02d-%02dT%02d:%02d:%02dZ" % (year, month, day, hour, minute, second)
+
+def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
+    T_KELVIN = 273.15
+    ES_ALPHA = 6.112
+    ES_BETA = 17.67
+    ES_GAMMA = 243.5
+    GAS_CONSTANT = 287.0
+    GAS_CONSTANT_V = 461.6
+    HUNDRED = 100.0
+    
+    rdOverRv = GAS_CONSTANT / GAS_CONSTANT_V
+    rdOverRv1 = 1.0 - rdOverRv
+    t_celcius = t - T_KELVIN
+    p = p / HUNDRED # Convert from Pa to hPa
+
+    #Calculate saturation vapor pressure
+    es = ES_ALPHA * exp(ES_BETA * t_celcius / (t_celcius + ES_GAMMA))
+    #Calculate saturation specific humidity
+    qs = rdOverRv * es / (p - rdOverRv1 * es)
+    #Calculate specific humidity
+    q = qs * rh / HUNDRED
+    q_err = qs * rh_err / HUNDRED
+    return q, q_err
+
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
@@ -95,31 +120,34 @@ sondeVarnoDict = {
 obsDataDictTree = defaultdict(lambda:defaultdict(dict))
 
 fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, ' \
-               'report_status.active, report_status.rejected, datum_status.active, datum_status.rejected'
+               'report_status.active, report_status.passive, report_status.rejected, report_status.blacklisted, ' \
+               'datum_status.active, datum_status.passive, datum_status.rejected, datum_status.blacklisted'
 tupleNames = fetchColumns.replace('.', '_')
 FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
 sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
-    " where vertco_type=1 and (varno=2 or varno=3 or varno=4 or varno=29);"
+    " where vertco_type=1 and obsvalue IS NOT NULL and " + \
+    "obs_error IS NOT NULL and (varno=2 or varno=3 or varno=4 or varno=29);"
 print sql
 c.execute(sql)
 row = c.fetchone()
 while row is not None:
     row = FetchRow._make(row)
-    #for row in map(FetchRow._make, c.fetchall()):
     anDateTimeString = IntDateTimeToString(row.andate, row.antime)
     obsDateTimeString = IntDateTimeToString(row.date, row.time)
-    if (row.report_status_active == 1 and \
-        row.datum_status_active == 1 and \
-        row.report_status_rejected != 1 and \
-        row.datum_status_rejected != 1):
-        qcVal = 1
-    else:
-        qcVal = 0
-
+    #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
+    qcVal = (row.report_status_active      * 128 +
+             row.report_status_passive     *  64 +
+             row.report_status_rejected    *  32 +
+             row.report_status_blacklisted *  16 +
+             row.datum_status_active       *   8 +
+             row.datum_status_passive      *   4 +
+             row.datum_status_rejected     *   2 +
+             row.datum_status_blacklisted)
     varName = sondeVarnoDict[row.varno]
+
     profileKey = row.statid, anDateTimeString
     locationKey = row.lat, row.lon, row.vertco_reference_1, obsDateTimeString
 
@@ -128,8 +156,31 @@ while row is not None:
     obsDataDictTree[profileKey][locationKey][varName + "@ObsQc"] = qcVal
     
     row = c.fetchone()
-    #print varName, profileKey, locationKey
-    #print varName + "@ObsValue", obsDataDictTree[profileKey][locationKey][varName + "@ObsValue"]
+
+#For now, we convert relative to specific humidity here.
+#This code should be removed eventually, as this is not the right place to convert variables.
+MISSING_VAL = -999999.0
+#print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
+for profileKey in obsDataDictTree:
+    for locationKey in obsDataDictTree[profileKey]:
+        if "relative_humidity@ObsValue" in obsDataDictTree[profileKey][locationKey]:
+            obsDict = obsDataDictTree[profileKey][locationKey]
+            rh = obsDict["relative_humidity@ObsValue"]
+            rh_err = obsDict["relative_humidity@ObsError"]
+            t = obsDict.get("air_temperature@ObsValue")
+            p = locationKey[2]
+            if t is not None and rh is not None and rh_err is not None and p is not None and \
+            t != MISSING_VAL and rh != MISSING_VAL and rh_err != MISSING_VAL and p != MISSING_VAL:
+                q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
+
+                obsDict["specific_humidity@ObsValue"] = q
+                obsDict["specific_humidity@ObsError"] = q_err
+                obsDict["specific_humidity@ObsQc"] = obsDict["relative_humidity@ObsQc"]
+                del obsDict["relative_humidity@ObsValue"]
+                del obsDict["relative_humidity@ObsError"]
+                del obsDict["relative_humidity@ObsQc"]
+                #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p/100,q,q_err]))
+
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
