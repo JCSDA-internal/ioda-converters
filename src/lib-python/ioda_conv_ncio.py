@@ -9,6 +9,11 @@ from netCDF4 import Dataset
 # Global Variables
 ###################################################################################
 
+# Output format
+OUT_NC_FORMAT = 1    # 1 - old format with list of vectors
+                     # 2 - new format with groups for meta data, 2D tables for obs
+                     #     data, etc.
+
 # Names assigned to obs values, error estimates and qc marks
 OVAL_NAME = "ObsValue"
 OERR_NAME = "ObsError"
@@ -77,13 +82,15 @@ def WriteNcAttr(Fid, AttrData, Nrecs, Nvars, Nlocs):
     for Aname, Aval in AttrData.items():
         Fid.setncattr(Aname, Aval)
 
-def WriteNcObsVars(Fid, Nvars, Nlocs, ObsVars):
+def WriteNcObsVars(Fid, Nvars, Nlocs, Nrecs, ObsVars):
     ############################################################
     # This method will create dimensions and variables in the
     # output netcdf file for the obs variables.
 
     Fid.createDimension(NVARS_DIM_NAME, Nvars)
     Fid.createDimension(NLOCS_DIM_NAME, Nlocs)
+    Fid.createDimension(NRECS_DIM_NAME, Nrecs)
+    Fid.createDimension(NSTR_DIM_NAME, MAX_STR_LEN)
 
     for Vname, Vvals in ObsVars.items():
         if ((Vvals.dtype == np.dtype('float32')) or (Vvals.dtype == np.dtype('float64'))):
@@ -100,8 +107,8 @@ def WriteNcMetadata(Fid, MdataGroup, DimName, DimSize, RecMdata):
 
     MdGroup = Fid.createGroup(MdataGroup)
 
-    MdGroup.createDimension(DimName, DimSize)
-    MdGroup.createDimension(NSTR_DIM_NAME, MAX_STR_LEN)
+    #MdGroup.createDimension(DimName, DimSize)
+    #MdGroup.createDimension(NSTR_DIM_NAME, MAX_STR_LEN)
 
     for Vname, Vvals in RecMdata.items():
         if ((Vvals.dtype == np.dtype('float32')) or (Vvals.dtype == np.dtype('float64'))):
@@ -256,7 +263,7 @@ def BuildNetcdf(NcFname, ObsData, AttrData):
 
     WriteNcAttr(Fid, AttrData, Nrecs, Nvars, Nlocs)
 
-    WriteNcObsVars(Fid, Nvars, Nlocs, ObsVars)
+    WriteNcObsVars(Fid, Nvars, Nlocs, Nrecs, ObsVars)
 
     WriteNcMetadata(Fid, REC_MD_NAME, NRECS_DIM_NAME, Nrecs, RecMdata)
     WriteNcMetadata(Fid, LOC_MD_NAME, NLOCS_DIM_NAME, Nlocs, LocMdata)
