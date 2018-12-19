@@ -6,7 +6,7 @@ import netCDF4
 from netCDF4 import Dataset
 
 ###################################################################################
-# SUBROUTINES (soon to be obsoleted)
+# SUBROUTINES
 ###################################################################################
 
 def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
@@ -24,11 +24,9 @@ def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
         Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
         Ovar[...] = Vvals[...]
 
-
 ###################################################################################
 # CLASSES
 ###################################################################################
-
 
 class NcWriter(object):
     #### Constructor ####

@@ -4,6 +4,7 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
+import datetime as dt
 from math import exp
 import ioda_conv_ncio as iconv
 
@@ -157,9 +158,12 @@ sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
 print sql
 c.execute(sql)
 row = c.fetchone()
+refDateTimeString = "UnSeT"
 while row is not None:
     row = FetchRow._make(row)
     anDateTimeString = IntDateTimeToString(row.andate, row.antime)
+    if (refDateTimeString == "UnSeT"):
+        refDateTimeString = anDateTimeString
     obsDateTimeString = IntDateTimeToString(row.date, row.time)
     #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
     qcVal = (row.report_status_active      * 128 +
@@ -236,12 +240,15 @@ for profileKey in obsDataDictTree:
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
-print("")
+print ""
 
-# Call the writer
+# Call the writer. Convert the first analysis date time string to the reference
+# date time attribute for the netcdf file.
+refDt = dt.datetime.strptime(refDateTimeString, "%Y-%m-%dT%H:%M:%SZ")
+refDateTime = refDt.year * 1000000 +  refDt.month * 10000 + refDt.day * 100 + refDt.hour
 AttrData = {
   'odb_version' : 2,
-  'my_attr' : 'my_value'
+  'date_time' : refDateTime
    }
 
 nc_writer.BuildNetcdf(obsDataDictTree, AttrData)
