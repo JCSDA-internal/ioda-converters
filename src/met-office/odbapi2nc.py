@@ -41,7 +41,7 @@ def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
     rdOverRv = GAS_CONSTANT / GAS_CONSTANT_V
     rdOverRv1 = 1.0 - rdOverRv
     t_celcius = t - T_KELVIN
-    p = p / HUNDRED # Convert from Pa to hPa
+    #p = p / HUNDRED # Convert from Pa to hPa
 
     #Calculate saturation vapor pressure
     es = ES_ALPHA * exp(ES_BETA * t_celcius / (t_celcius + ES_GAMMA))
@@ -115,6 +115,9 @@ sondeVarnoDict = {
     29: "relative_humidity"
 }
 
+IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
+varCategories = [iconv.OVAL_NAME, iconv.OERR_NAME, iconv.OQC_NAME]
+
 #The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
 #The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
@@ -129,8 +132,8 @@ conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
 sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
-    " where vertco_type=1 and obsvalue IS NOT NULL and " + \
-    "obs_error IS NOT NULL and (varno=2 or varno=3 or varno=4 or varno=29);"
+    " where vertco_type=1 and " + \
+    "(varno=2 or varno=3 or varno=4 or varno=29);"
 print sql
 c.execute(sql)
 row = c.fetchone()
@@ -149,21 +152,53 @@ while row is not None:
              row.datum_status_blacklisted)
     varName = sondeVarnoDict[row.varno]
 
-    profileKey = row.statid, anDateTimeString
-    locationKey = row.lat, row.lon, row.vertco_reference_1, obsDateTimeString
+    profileKey = row.statid.rstrip(), anDateTimeString
+    #TODO: For now we convert pressure (vertco_reference_1) to hPa here. No units stored yet.
+    pressure = row.vertco_reference_1 / 100.0 if row.vertco_reference_1 is not None else IODA_MISSING_VAL
+    if pressure == IODA_MISSING_VAL:
+        print row.lat, row.lon, pressure, obsDateTimeString
+    locationKey = row.lat, row.lon, pressure, obsDateTimeString
     ovalKey = varName, iconv.OVAL_NAME
     oerrKey = varName, iconv.OERR_NAME
     oqcKey = varName, iconv.OQC_NAME
 
-    obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
-    obsDataDictTree[profileKey][locationKey][oerrKey] = row.obs_error
-    obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
+    oval = row.obsvalue if row.obsvalue is not None else IODA_MISSING_VAL
+    oerr = row.obs_error if row.obs_error is not None else IODA_MISSING_VAL
+    if qcVal is None:
+        qcVal = IODA_MISSING_VAL
+    
+    #Assignment code below is done this way for two reasons:
+    # 1. Want to make sure all locations get into IODA, even if they only have 
+    #    missing values. (Preserve all the data we can.)
+    # 2. There can be multiple entries in the file for each locationKey, but 
+    #    we can only keep one. So we choose an entry that is not null/missing, if present.
+    if (ovalKey not in obsDataDictTree[profileKey][locationKey] or
+         obsDataDictTree[profileKey][locationKey][ovalKey] == IODA_MISSING_VAL):
+        obsDataDictTree[profileKey][locationKey][ovalKey] = oval
+    if (oerrKey not in obsDataDictTree[profileKey][locationKey] or
+         obsDataDictTree[profileKey][locationKey][oerrKey] == IODA_MISSING_VAL):
+        obsDataDictTree[profileKey][locationKey][oerrKey] = oerr
+    if (oqcKey not in obsDataDictTree[profileKey][locationKey] or
+         obsDataDictTree[profileKey][locationKey][oqcKey] == IODA_MISSING_VAL):
+        obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
+
+    # obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
+    # obsDataDictTree[profileKey][locationKey][oerrKey] = row.obs_error
+    # obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
     
     row = c.fetchone()
 
+#After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
+for profileKey in obsDataDictTree:
+    for locationKey in obsDataDictTree[profileKey]:
+        for varName in sondeVarnoDict.values():
+            for varCat in varCategories:
+                if (varName, varCat) not in obsDataDictTree[profileKey][locationKey]:
+                    obsDataDictTree[profileKey][locationKey][varName, varCat] = IODA_MISSING_VAL
+
+
 #For now, we convert relative to specific humidity here.
 #This code should be removed eventually, as this is not the right place to convert variables.
-MISSING_VAL = -999999.0
 #print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
 for profileKey in obsDataDictTree:
     for locationKey in obsDataDictTree[profileKey]:
@@ -174,16 +209,13 @@ for profileKey in obsDataDictTree:
             t = obsDict.get(("air_temperature", iconv.OVAL_NAME))
             p = locationKey[2]
             if t is not None and rh is not None and rh_err is not None and p is not None and \
-            t != MISSING_VAL and rh != MISSING_VAL and rh_err != MISSING_VAL and p != MISSING_VAL:
+            t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL:
                 q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                 obsDict[("specific_humidity", iconv.OVAL_NAME)] = q
                 obsDict[("specific_humidity", iconv.OERR_NAME)] = q_err
                 obsDict[("specific_humidity", iconv.OQC_NAME)] = obsDict[("relative_humidity", iconv.OQC_NAME)]
-                del obsDict[("relative_humidity", iconv.OVAL_NAME)]
-                del obsDict[("relative_humidity", iconv.OERR_NAME)]
-                del obsDict[("relative_humidity", iconv.OQC_NAME)]
-                #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p/100,q,q_err]))
+                #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
