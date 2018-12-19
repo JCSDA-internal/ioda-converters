@@ -5,7 +5,6 @@ import sys
 import os
 import argparse
 from math import exp
-import ioda_conv_ncio as iconv
 
 #This function takes two integers like date=20180415 time=61532 and converts them to a
 #ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
@@ -52,6 +51,16 @@ def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
     q_err = qs * rh_err / HUNDRED
     return q, q_err
 
+#Add the path to ioda_conv_ncio before importing it
+dirname = os.path.dirname(__file__)
+writerPath = os.path.join(dirname, '../lib-python')
+#print 'writerPath: ', writerPath
+try:
+    sys.path.index(writerPath)
+except ValueError:
+    sys.path.append(writerPath)
+
+import ioda_conv_ncio as iconv
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
@@ -59,7 +68,7 @@ def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
 #      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the 
 #      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
-print odbPythonPath
+#print odbPythonPath
 
 try:
     sys.path.index(odbPythonPath)
