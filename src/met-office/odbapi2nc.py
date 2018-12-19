@@ -115,8 +115,28 @@ sondeVarnoDict = {
     29: "relative_humidity"
 }
 
+recordKeyList = [
+    [ "station_id", "string" ],
+    [ "analysis_date_time", "string" ]
+    ]
+
+locationKeyList = [
+    [ "latitude", "float" ],
+    [ "longitude", "float" ],
+    [ "air_pressure", "float" ],
+    [ "date_time", "string" ]
+    ]
+
+# Instantiate a netcdf writer object, and get the obs data names from
+# the writer object.
+nc_writer = iconv.NcWriter(NetcdfFname, recordKeyList, locationKeyList)
+
+ncOvalName = nc_writer.OvalName()
+ncOerrName = nc_writer.OerrName()
+ncOqcName  = nc_writer.OqcName()
+
 IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
-varCategories = [iconv.OVAL_NAME, iconv.OERR_NAME, iconv.OQC_NAME]
+varCategories = [ncOvalName, ncOerrName, ncOqcName]
 
 #The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
 #The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
@@ -156,9 +176,9 @@ while row is not None:
     #TODO: For now we convert pressure (vertco_reference_1) to hPa here. No units stored yet.
     pressure = row.vertco_reference_1 / 100.0 if row.vertco_reference_1 is not None else IODA_MISSING_VAL
     locationKey = row.lat, row.lon, pressure, obsDateTimeString
-    ovalKey = varName, iconv.OVAL_NAME
-    oerrKey = varName, iconv.OERR_NAME
-    oqcKey = varName, iconv.OQC_NAME
+    ovalKey = varName, ncOvalName
+    oerrKey = varName, ncOerrName
+    oqcKey = varName, ncOqcName
 
     oval = row.obsvalue if row.obsvalue is not None else IODA_MISSING_VAL
     oerr = row.obs_error if row.obs_error is not None else IODA_MISSING_VAL
@@ -194,33 +214,34 @@ for profileKey in obsDataDictTree:
                 if (varName, varCat) not in obsDataDictTree[profileKey][locationKey]:
                     obsDataDictTree[profileKey][locationKey][varName, varCat] = IODA_MISSING_VAL
 
-
 #For now, we convert relative to specific humidity here.
 #This code should be removed eventually, as this is not the right place to convert variables.
 #print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
 for profileKey in obsDataDictTree:
     for locationKey in obsDataDictTree[profileKey]:
-        if ("relative_humidity", iconv.OVAL_NAME) in obsDataDictTree[profileKey][locationKey]:
+        if ("relative_humidity", ncOvalName) in obsDataDictTree[profileKey][locationKey]:
             obsDict = obsDataDictTree[profileKey][locationKey]
-            rh = obsDict[("relative_humidity", iconv.OVAL_NAME)]
-            rh_err = obsDict[("relative_humidity", iconv.OERR_NAME)]
-            t = obsDict.get(("air_temperature", iconv.OVAL_NAME))
+            rh = obsDict[("relative_humidity", ncOvalName)]
+            rh_err = obsDict[("relative_humidity", ncOerrName)]
+            t = obsDict.get(("air_temperature", ncOvalName))
             p = locationKey[2]
             if t is not None and rh is not None and rh_err is not None and p is not None and \
             t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL:
                 q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
-                obsDict[("specific_humidity", iconv.OVAL_NAME)] = q
-                obsDict[("specific_humidity", iconv.OERR_NAME)] = q_err
-                obsDict[("specific_humidity", iconv.OQC_NAME)] = obsDict[("relative_humidity", iconv.OQC_NAME)]
+                obsDict[("specific_humidity", ncOvalName)] = q
+                obsDict[("specific_humidity", ncOerrName)] = q_err
+                obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
                 #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
+print("")
 
 # Call the writer
 AttrData = {
   'odb_version' : 2,
   'my_attr' : 'my_value'
    }
-iconv.BuildNetcdf(NetcdfFname, obsDataDictTree, AttrData)
+
+nc_writer.BuildNetcdf(obsDataDictTree, AttrData)
