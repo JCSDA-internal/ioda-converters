@@ -155,8 +155,6 @@ while row is not None:
     profileKey = row.statid.rstrip(), anDateTimeString
     #TODO: For now we convert pressure (vertco_reference_1) to hPa here. No units stored yet.
     pressure = row.vertco_reference_1 / 100.0 if row.vertco_reference_1 is not None else IODA_MISSING_VAL
-    if pressure == IODA_MISSING_VAL:
-        print row.lat, row.lon, pressure, obsDateTimeString
     locationKey = row.lat, row.lon, pressure, obsDateTimeString
     ovalKey = varName, iconv.OVAL_NAME
     oerrKey = varName, iconv.OERR_NAME
