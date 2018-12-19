@@ -60,7 +60,7 @@ def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
 #      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the 
 #      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
-print odbPythonPath
+#print odbPythonPath
 
 try:
     sys.path.index(odbPythonPath)
@@ -229,13 +229,17 @@ for profileKey in obsDataDictTree:
             rh_err = obsDict[("relative_humidity", ncOerrName)]
             t = obsDict.get(("air_temperature", ncOvalName))
             p = locationKey[2]
-            if t is not None and rh is not None and rh_err is not None and p is not None and \
-            t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL:
+            if (t is not None and rh is not None and rh_err is not None and p is not None and 
+            t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
                 q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                 obsDict[("specific_humidity", ncOvalName)] = q
                 obsDict[("specific_humidity", ncOerrName)] = q_err
                 obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
+            else:
+                obsDict[("specific_humidity", ncOvalName)] = IODA_MISSING_VAL
+                obsDict[("specific_humidity", ncOerrName)] = IODA_MISSING_VAL
+            obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
                 #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
 
 # print "Top level len: ", len(obsDataDictTree)
