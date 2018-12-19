@@ -111,6 +111,15 @@ class NcWriter(object):
 
         return NcDtype
 
+    def ConvertToTimeOffset(self, TimeStrings):
+        ############################################################
+        # This method will convert the absoute time in the string
+        # given by TimeStrings into floating point offsets from
+        # the reference date_time.
+        TimeOffset = 0.0
+
+        return TimeOffset
+
     def CreateNcVector(self, Nsize, Dtype):
         ############################################################
         # This method will create a numpy array (vector) of an
@@ -195,6 +204,10 @@ class NcWriter(object):
         if (self._out_nc_version == 1):
             if (MdataGroup == self._loc_md_name):
                 Gname = "MetaData"
+
+                # Will be adding the time offset to the location metadata
+                ToffsetName = "time@{0:s}".format(Gname)
+                self._fid.createVariable(ToffsetName, "f4", (DimName))
             else:
                 Gname = MdataGroup
 
@@ -207,6 +220,13 @@ class NcWriter(object):
                     self._fid.createVariable(NcVname, NcDtype, (DimName))
 
                 self._fid[NcVname][:] = Vvals
+
+                # If we are writing out the date_time string, then we also
+                # need to write out the time offset (from the reference date_time
+                # attribute value).
+                if (NcVname == "date_time@MetaData"):
+                    ToffsetValues = self.ConvertToTimeOffset(Vvals)
+                    self._fid[ToffsetName][:] = ToffsetValues
 
         elif (self._out_nc_version == 2):
             MdGroup = self._fid.createGroup(MdataGroup)
