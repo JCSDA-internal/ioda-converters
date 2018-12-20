@@ -158,7 +158,7 @@ c = conn.cursor()
 sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
     " where (vertco_type=1 or vertco_type=11) and " + \
     "(varno=2 or varno=3 or varno=4 or varno=29);"
-print sql
+#print sql
 c.execute(sql)
 row = c.fetchone()
 refDateTimeString = "UnSeT"
@@ -247,7 +247,6 @@ for profileKey in obsDataDictTree:
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
-print ""
 
 # Call the writer. Pass in the reference date time string for writing the
 # version 1 netcdf file. The reference date time string won't be necessary when
