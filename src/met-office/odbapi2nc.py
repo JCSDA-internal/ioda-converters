@@ -245,8 +245,9 @@ for profileKey in obsDataDictTree:
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
 print ""
 
-# Call the writer. Convert the first analysis date time string to the reference
-# date time attribute for the netcdf file.
+# Call the writer. Pass in the reference date time string for writing the
+# version 1 netcdf file. The reference date time string won't be necessary when
+# we switch to the version 2 netcdf file.
 AttrData = {
   'odb_version' : 2,
   'date_time_string' : refDateTimeString
