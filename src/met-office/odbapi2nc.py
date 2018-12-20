@@ -151,8 +151,12 @@ FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
+#vertco_type=1 indicates pressure
+#vertco_type=11 indicates "derived pressure", which is a pressure value calculated from airplane flight level
+#               instead of directly measured. Derived pressure is not present in radiosonde files, but is in
+#               aircraft files. We are treating both types identically in this code.
 sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
-    " where vertco_type=1 and " + \
+    " where (vertco_type=1 or vertco_type=11) and " + \
     "(varno=2 or varno=3 or varno=4 or varno=29);"
 print sql
 c.execute(sql)
