@@ -181,16 +181,17 @@ class NcWriter(object):
         self._fid.setncattr(self._nlocs_dim_name, self._nlocs)
         self._fid.setncattr(self._nobs_dim_name, self._nobs)
         for Aname, Aval in AttrData.items():
-            self._fid.setncattr(Aname, Aval)
-            # If included, save the reference date
-            if (Aname == "date_time"):
-                YYYY = Aval / 1000000
-                Tmp = Aval % 1000000
-                MM = Tmp / 10000
-                Tmp = Tmp % 10000
-                DD = Tmp / 100
-                HH = Tmp % 100
-                self._ref_date_time = dt.datetime(YYYY, MM, DD, HH)
+            if (Aname == "date_time_string"):
+                # Save the datetime object in this object and convert
+                # to integer representation for the netcdf file
+                self._ref_date_time = dt.datetime.strptime(Aval, "%Y-%m-%dT%H:%M:%SZ")
+                refDateTime = (self._ref_date_time.year * 1000000 +
+                               self._ref_date_time.month * 10000 +
+                               self._ref_date_time.day * 100 +
+                               self._ref_date_time.hour)
+                self._fid.setncattr("date_time", refDateTime)
+            else:
+                self._fid.setncattr(Aname, Aval)
 
     def WriteNcObsVars(self, ObsVars, VarMdata):
         ############################################################
