@@ -4,7 +4,6 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
-import datetime as dt
 from math import exp
 import ioda_conv_ncio as iconv
 
@@ -117,15 +116,15 @@ sondeVarnoDict = {
 }
 
 recordKeyList = [
-    [ "station_id", "string" ],
-    [ "analysis_date_time", "string" ]
+    ( "station_id", "string" ),
+    ( "analysis_date_time", "string" )
     ]
 
 locationKeyList = [
-    [ "latitude", "float" ],
-    [ "longitude", "float" ],
-    [ "air_pressure", "float" ],
-    [ "date_time", "string" ]
+    ( "latitude", "float" ),
+    ( "longitude", "float" ),
+    ( "air_pressure", "float" ),
+    ( "date_time", "string" )
     ]
 
 # Instantiate a netcdf writer object, and get the obs data names from
@@ -248,11 +247,9 @@ print ""
 
 # Call the writer. Convert the first analysis date time string to the reference
 # date time attribute for the netcdf file.
-refDt = dt.datetime.strptime(refDateTimeString, "%Y-%m-%dT%H:%M:%SZ")
-refDateTime = refDt.year * 1000000 +  refDt.month * 10000 + refDt.day * 100 + refDt.hour
 AttrData = {
   'odb_version' : 2,
-  'date_time' : refDateTime
+  'date_time_string' : refDateTimeString
    }
 
 nc_writer.BuildNetcdf(obsDataDictTree, AttrData)
