@@ -1,51 +1,89 @@
-"""Splitting GSI ncdiag conv_uv file into files for different platforms"""
+"""Splitting GSI ncdiag conv_t and conv_q files into files for different platforms"""
 from netCDF4 import Dataset
 import numpy as np
+
 
 def write_to_file(din, dout, nlocs, flag):
   """Copies variable from GSI ncdiag (din) file into IODA-style (dout)
      nlocs: number of unique locs to copy,
      flag: which obs to copy from the original file"""
+
+  def write_var_1d(datatype, varin, varout):
+    dout.createVariable(varout, datatype, ('nlocs'))
+    var = din[varin][:]; var = var[flag]
+    dout[varout][:] = var
+
   dout.createDimension('nlocs', nlocs)
   dout.createDimension('Station_ID_maxstrlen', len(din.dimensions['Station_ID_maxstrlen']))
   dout.createDimension('Observation_Class_maxstrlen', len(din.dimensions['Observation_Class_maxstrlen']))
-  var = dout.createVariable('Station_ID@MetaData', 'c', ('nlocs', 'Station_ID_maxstrlen'))
-  var[:,:] = din['Station_ID'][flag,:]
-  var = dout.createVariable('Observation_Class@MetaData', 'c', ('nlocs', 'Observation_Class_maxstrlen'))
-  var[:,:] = din['Observation_Class'][flag,:]
-  var = dout.createVariable('ObsType@MetaData', 'i', ('nlocs'));      var[:] = din['Observation_Type'][flag]
-  var = dout.createVariable('ObsSubtype@MetaData', 'i', ('nlocs'));   var[:] = din['Observation_Subtype'][flag]
-  var = dout.createVariable('Latitude@MetaData', 'f4', ('nlocs'));    var[:] = din['Latitude'][flag]
-  var = dout.createVariable('Longitude@MetaData', 'f4', ('nlocs'));   var[:] = din['Longitude'][flag]
-  var = dout.createVariable('Station_Elevation@MetaData', 'f4', ('nlocs'));  var[:] = din['Station_Elevation'][flag]
-  var = dout.createVariable('Pressure@MetaData', 'f4', ('nlocs'));    var[:] = din['Pressure'][flag]
-  var = dout.createVariable('Height@MetaData', 'f4', ('nlocs'));      var[:] = din['Height'][flag]
-  var = dout.createVariable('Time@MetaData', 'f4', ('nlocs'));        var[:] = din['Time'][flag]
-  varname = 'eastward_wind'
-  var = dout.createVariable(varname + '@ObsQC', 'f4', ('nlocs'));     var[:] = din['Prep_QC_Mark'][flag]
-  var = dout.createVariable(varname + '@ObsValue', 'f4', ('nlocs'));  var[:] = din['u_Observation'][flag]
-  var = dout.createVariable(varname + '@ObsError', 'f4', ('nlocs'));  var[:] = 1.0 / din['Errinv_Input'][flag]
-  var = dout.createVariable(varname + '@PrepUse', 'f4', ('nlocs'));   var[:] = din['Prep_Use_Flag'][flag]
-  var = dout.createVariable(varname + '@GsiUse', 'f4', ('nlocs'));    var[:] = din['Analysis_Use_Flag'][flag]
-  var = dout.createVariable(varname + '@GsiQCWgt', 'f4', ('nlocs'));  var[:] = din['Nonlinear_QC_Rel_Wgt'][flag]
-  var = dout.createVariable(varname + '@GsiHofX', 'f4', ('nlocs'))
-  var[:] = din['u_Observation'][flag] - din['u_Obs_Minus_Forecast_unadjusted'][flag]
-  var = dout.createVariable(varname + '@GsiObsError', 'f4', ('nlocs')); var[:] = 1.0 / din['Errinv_Final'][flag]
-  var = dout.createVariable(varname + '@GsiHofX_bc', 'f4', ('nlocs'))
-  var[:] = din['u_Observation'][flag] - din['u_Obs_Minus_Forecast_adjusted'][flag]
-  varname = 'northward_wind'
-  var = dout.createVariable(varname + '@ObsQC', 'f4', ('nlocs'));     var[:] = din['Prep_QC_Mark'][flag]
-  var = dout.createVariable(varname + '@ObsValue', 'f4', ('nlocs'));  var[:] = din['v_Observation'][flag]
-  var = dout.createVariable(varname + '@ObsError', 'f4', ('nlocs'));  var[:] = 1.0 / din['Errinv_Input'][flag]
-  var = dout.createVariable(varname + '@PrepUse', 'f4', ('nlocs'));   var[:] = din['Prep_Use_Flag'][flag]
-  var = dout.createVariable(varname + '@GsiUse', 'f4', ('nlocs'));    var[:] = din['Analysis_Use_Flag'][flag]
-  var = dout.createVariable(varname + '@GsiQCWgt', 'f4', ('nlocs'));  var[:] = din['Nonlinear_QC_Rel_Wgt'][flag]
-  var = dout.createVariable(varname + '@GsiHofX', 'f4', ('nlocs'))
-  var[:] = din['v_Observation'][flag] - din['v_Obs_Minus_Forecast_unadjusted'][flag]
-  var = dout.createVariable(varname + '@GsiObsError', 'f4', ('nlocs')); var[:] = 1.0 / din['Errinv_Final'][flag]
-  var = dout.createVariable(varname + '@GsiHofX_bc', 'f4', ('nlocs'))
-  var[:] = din['v_Observation'][flag] - din['v_Obs_Minus_Forecast_adjusted'][flag]
-  
+  dout.createDimension('nlev', len(din.dimensions['atmosphere_ln_pressure_coordinate_arr_dim']))
+
+  dout.createVariable('Station_ID@MetaData', 'c', ('nlocs', 'Station_ID_maxstrlen'))
+  dout['Station_ID@MetaData'][:,:] = din['Station_ID'][flag,:]
+  dout.createVariable('Observation_Class@MetaData', 'c', ('nlocs', 'Observation_Class_maxstrlen'))
+  dout['Observation_Class@MetaData'][:,:] = din['Observation_Class'][flag,:]
+  write_var_1d('i',  'Observation_Type',  'ObsType@MetaData')
+  write_var_1d('f4', 'Latitude',          'Latitude@MetaData')
+  write_var_1d('f4', 'Longitude',         'Longitude@MetaData')
+  write_var_1d('f4', 'Station_Elevation', 'Station_Elevation@MetaData')
+  write_var_1d('f4', 'Pressure',          'Pressure@MetaData')
+  write_var_1d('f4', 'Height',            'Height@MetaData')
+  write_var_1d('f4', 'Time',              'Time@MetaData')
+  for varname in ['eastward_wind', 'northward_wind']:
+    write_var_1d('f4', 'Prep_QC_Mark',      varname + '@ObsQC')
+    write_var_1d('f4', 'Prep_Use_Flag',     varname + '@PrepUse')
+    write_var_1d('f4', 'Analysis_Use_Flag', varname + '@GsiUse')
+    write_var_1d('f4', 'Nonlinear_QC_Rel_Wgt', varname + '@GsiQCWgt')
+
+  write_var_1d('f4', 'u_Observation',     'eastward_wind@ObsValue')
+  write_var_1d('f4', 'v_Observation',     'northward_wind@ObsValue')
+
+  # invert obs error
+  varin = 'Errinv_Input'
+  var = din[varin][:]; var = var[flag]
+  for varname in ['eastward_wind', 'northward_wind']:
+    varout = varname + '@ObsError'
+    dout.createVariable(varout, 'f4', ('nlocs'))
+    dout[varout][:] = 1.0 / var
+  # calc GSI H(x)
+  varout = 'eastward_wind@GsiHofX'
+  dout.createVariable(varout, 'f4', ('nlocs'))
+  var = din['u_Observation'][:] - din['u_Obs_Minus_Forecast_unadjusted'][:];  var = var[flag]
+  dout[varout][:] = var
+  varout = 'northward_wind@GsiHofX'
+  dout.createVariable(varout, 'f4', ('nlocs'))
+  var = din['v_Observation'][:] - din['v_Obs_Minus_Forecast_unadjusted'][:];  var = var[flag]
+  dout[varout][:] = var
+  # invert GSI obs error
+  varin = 'Errinv_Final'
+  var = din[varin][:]; var = var[flag]
+  for varname in ['eastward_wind', 'northward_wind']:
+    varout = varname + '@GsiObsError'
+    dout.createVariable(varout, 'f4', ('nlocs'))
+    dout[varout][:] = 1.0 / var
+  # calc GSI H(x) with bias correction
+  varout = 'eastward_wind@GsiHofX_bc'
+  dout.createVariable(varout, 'f4', ('nlocs'))
+  var = din['u_Observation'][:] - din['u_Obs_Minus_Forecast_adjusted'][:];   var = var[flag]
+  dout[varout][:] = var
+  varout = 'northward_wind@GsiHofX_bc'
+  dout.createVariable(varout, 'f4', ('nlocs'))
+  var = din['v_Observation'][:] - din['v_Obs_Minus_Forecast_adjusted'][:];   var = var[flag]
+  dout[varout][:] = var
+
+  # GeoVaLs (to be in different file later)
+  dout.createVariable('atmosphere_pressure', 'f4', ('nlocs', 'nlev'))
+  logp = din['atmosphere_ln_pressure_coordinate'][:,:];   logp = logp[flag,:]
+  dout['atmosphere_pressure'][:,:] = np.exp(logp) * 1000.0
+  dout.createVariable('atmosphere_ln_pressure_coordinate', 'f4', ('nlocs', 'nlev'))
+  dout['atmosphere_ln_pressure_coordinate'][:,:] = logp
+  dout.createVariable('eastward_wind',  'f4', ('nlocs', 'nlev'))
+  u = din['eastward_wind'][:,:];   u = u[flag,:]
+  dout['eastward_wind'][:,:] = u
+  dout.createVariable('northward_wind', 'f4', ('nlocs', 'nlev'))
+  v = din['northward_wind'][:,:];  v = v[flag,:]
+  dout['northward_wind'][:,:] = v
+
 # Open tmeprature GSI ncdiag file
 d = Dataset('diag_conv_uv_ges.2018041500_ensmean.nc4', 'r')
 
@@ -72,3 +110,4 @@ write_to_file(d, dnew, len(code[ind_satw]), ind_satw)
 dnew.close()
 
 d.close()
+
