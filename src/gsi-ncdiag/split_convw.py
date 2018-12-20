@@ -13,11 +13,13 @@ def write_to_file(din, dout, nlocs, flag):
     var = din[varin][:]; var = var[flag]
     dout[varout][:] = var
 
+  # create dimensions
   dout.createDimension('nlocs', nlocs)
   dout.createDimension('Station_ID_maxstrlen', len(din.dimensions['Station_ID_maxstrlen']))
   dout.createDimension('Observation_Class_maxstrlen', len(din.dimensions['Observation_Class_maxstrlen']))
   dout.createDimension('nlev', len(din.dimensions['atmosphere_ln_pressure_coordinate_arr_dim']))
 
+  # copy attributes
   for attr in din.ncattrs():
     dout.setncattr(attr, din.getncattr(attr))
 
@@ -32,6 +34,7 @@ def write_to_file(din, dout, nlocs, flag):
   write_var_1d('f4', 'Pressure',          'air_pressure@MetaData')
   write_var_1d('f4', 'Height',            'height@MetaData')
   write_var_1d('f4', 'Time',              'time@MetaData')
+  # this time dimension is for geovals
   write_var_1d('f4', 'Time',              'time')
   for varname in ['eastward_wind', 'northward_wind']:
     write_var_1d('f4', 'Prep_QC_Mark',      varname + '@ObsQc')
