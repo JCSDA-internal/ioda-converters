@@ -50,3 +50,5 @@ The short term plan is to handle aircraft, radiosonde, and radiance observation 
 
 Currently supported obs types
 * radiosonde
+* aircraft
+
