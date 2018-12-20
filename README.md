@@ -39,3 +39,14 @@ A fourth script, list_sid_raob.py, can be used to create the file containing a l
 ## marine - profile
 Python script to convert GODAE profile data (binary) to netcdf file that can be ingested into IODA.
 usage: profile2ioda.py [-h] --name /path/to/binary/file --date reference_datetime_of_data_in_file
+
+## odbapi2nc
+
+Python script, odbapi2nc.py, for converting Met Office ODB API files to netCDF4 files formatted for use by IODA.
+
+Usage: odbapi2nc.py [-h] [-c] input_odbapi output_netcdf
+
+The short term plan is to handle aircraft, radiosonde, and radiance observation types.
+
+Currently supported obs types
+* radiosonde
