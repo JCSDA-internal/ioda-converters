@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Splitting GSI ncdiag conv_t and conv_q files into files for different platforms"""
 from netCDF4 import Dataset
 import numpy as np
