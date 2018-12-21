@@ -16,27 +16,34 @@ def write_to_file(din, dout, nlocs, flag, varname):
     var = din[varin][:]; var = var[flag]
     dout[varout][:] = var
 
+  # create dimensions
   dout.createDimension('nlocs', nlocs)
   dout.createDimension('Station_ID_maxstrlen', len(din.dimensions['Station_ID_maxstrlen']))
   dout.createDimension('Observation_Class_maxstrlen', len(din.dimensions['Observation_Class_maxstrlen']))
   dout.createDimension('nlev', len(din.dimensions['atmosphere_ln_pressure_coordinate_arr_dim']))
 
-  dout.createVariable('Station_ID@MetaData', 'c', ('nlocs', 'Station_ID_maxstrlen'))
-  dout['Station_ID@MetaData'][:,:] = din['Station_ID'][flag,:]
-  dout.createVariable('Observation_Class@MetaData', 'c', ('nlocs', 'Observation_Class_maxstrlen'))
-  dout['Observation_Class@MetaData'][:,:] = din['Observation_Class'][flag,:]
-  write_var_1d('i',  'Observation_Type',  'ObsType@MetaData')
-  write_var_1d('f4', 'Latitude',          'Latitude@MetaData')
-  write_var_1d('f4', 'Longitude',         'Longitude@MetaData')
-  write_var_1d('f4', 'Station_Elevation', 'Station_Elevation@MetaData')
-  write_var_1d('f4', 'Pressure',          'Pressure@MetaData')
-  write_var_1d('f4', 'Height',            'Height@MetaData')
-  write_var_1d('f4', 'Time',              'Time@MetaData')
-  write_var_1d('f4', 'Prep_QC_Mark',      varname + '@ObsQC')
+  # copy attributes
+  for attr in din.ncattrs():
+    dout.setncattr(attr, din.getncattr(attr))
+
+  dout.createVariable('station_id@MetaData', 'c', ('nlocs', 'Station_ID_maxstrlen'))
+  dout['station_id@MetaData'][:,:] = din['Station_ID'][flag,:]
+  dout.createVariable('observation_class@MetaData', 'c', ('nlocs', 'Observation_Class_maxstrlen'))
+  dout['observation_class@MetaData'][:,:] = din['Observation_Class'][flag,:]
+  write_var_1d('i',  'Observation_Type',  'obstype@MetaData')
+  write_var_1d('f4', 'Latitude',          'latitude@MetaData')
+  write_var_1d('f4', 'Longitude',         'longitude@MetaData')
+  write_var_1d('f4', 'Station_Elevation', 'station_elevation@MetaData')
+  write_var_1d('f4', 'Pressure',          'air_pressure@MetaData')
+  write_var_1d('f4', 'Height',            'height@MetaData')
+  write_var_1d('f4', 'Time',              'time@MetaData')
+  # this "time" variable is for geovals
+  write_var_1d('f4', 'Time',              'time')
+  write_var_1d('f4', 'Prep_QC_Mark',      varname + '@ObsQc')
   write_var_1d('f4', 'Observation',       varname + '@ObsValue')
   write_var_1d('f4', 'Prep_Use_Flag',     varname + '@PrepUse')
   write_var_1d('f4', 'Analysis_Use_Flag', varname + '@GsiUse')
-  write_var_1d('f4', 'Nonlinear_QC_Rel_Wgt', varname + '@GsiQCWgt')
+  write_var_1d('f4', 'Nonlinear_QC_Rel_Wgt', varname + '@GsiQcWgt')
   # invert obs error
   varin = 'Errinv_Input'; varout = varname + '@ObsError'
   dout.createVariable(varout, 'f4', ('nlocs'))
