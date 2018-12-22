@@ -162,10 +162,10 @@ class ConvObsType(ObsType):
           self.obsue : self.obs_uname + '@ObsError',
           self.obsve : self.obs_vname + '@ObsError',
 
-          self.obstq : self.obs_tname + '@ObsQc',
-          self.obsqq : self.obs_qname + '@ObsQc',
-          self.obsuq : self.obs_uname + '@ObsQc',
-          self.obsvq : self.obs_vname + '@ObsQc',
+          self.obstq : self.obs_tname + '@PreQc',
+          self.obsqq : self.obs_qname + '@PreQc',
+          self.obsuq : self.obs_uname + '@PreQc',
+          self.obsvq : self.obs_vname + '@PreQc',
 
           self.hofxt : self.obs_tname + '@GsiHofx',
           self.hofxq : self.obs_qname + '@GsiHofx',
@@ -209,21 +209,21 @@ class ConvObsType(ObsType):
         P    = Fid.variables['Pressure'][:]
         Time = Fid.variables['Time'][:]
 
-        T     = Fid.variables['Observation_T'][:]
-        Terr  = Fid.variables['Err_Final'][:]
+        T     = Fid.variables['Observation'][:]
+        Terr  = 1.0 / Fid.variables['Errinv_Input'][:]
         Tqc   = Fid.variables['Setup_QC_Mark'][:]
         Thofx = T - Fid.variables['Obs_Minus_Forecast_unadjusted'][:]
 
         Tvirt  = Fid.variables['virtual_temperature'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
-        Pcoord2 = Fid.variables['atmosphere_pressure_coordinate'][:].data * 1000.0 # kPa to Pa
+        Pcoord2 = np.exp(Pcoord) * 1000.0 # kPa to Pa
 
         # Record extra dimension information
         Dim = Fid.dimensions['Station_ID_maxstrlen']
         ExtraDims[self.g_sid] = [ Dim.name, Dim.size ]
         ExtraDims[self.o_sid] = [ Dim.name, Dim.size ]
 
-        Dim = Fid.dimensions['num_profile_levels']
+        Dim = Fid.dimensions['atmosphere_ln_pressure_coordinate_arr_dim']
         ExtraDims[self.geot] = [ Dim.name, Dim.size ]
         ExtraDims[self.geop] = [ Dim.name, Dim.size ]
         ExtraDims[self.geop2] = [ Dim.name, Dim.size ]
@@ -272,14 +272,14 @@ class ConvObsType(ObsType):
         P    = Fid.variables['Pressure'][:]
         Time = Fid.variables['Time'][:]
 
-        Q     = Fid.variables['q_Observation'][:]
-        Qerr  = Fid.variables['Err_Final'][:]
+        Q     = Fid.variables['Observation'][:]
+        Qerr  = 1.0 / Fid.variables['Errinv_Input'][:]
         Qqc   = Fid.variables['Prep_QC_Mark'][:]
         Qhofx = Q - Fid.variables['Obs_Minus_Forecast_unadjusted'][:]
 
         Qgeo   = Fid.variables['specific_humidity'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
-        Pcoord2 = Fid.variables['atmosphere_pressure_coordinate'][:].data * 1000.0 # kPa to Pa
+        Pcoord2 = np.exp(Pcoord) * 1000.0 # kPa to Pa
 
         # Record extra dimension information
         Dim = Fid.dimensions['specific_humidity_arr_dim']
@@ -329,18 +329,18 @@ class ConvObsType(ObsType):
         Time = Fid.variables['Time'][:]
 
         U     = Fid.variables['u_Observation'][:]
-        Uerr  = Fid.variables['Err_Final'][:]
+        Uerr  = 1.0 / Fid.variables['Errinv_Input'][:]
         Uqc   = Fid.variables['Setup_QC_Mark'][:]
         Uhofx = U - Fid.variables['u_Obs_Minus_Forecast_unadjusted'][:]
         V     = Fid.variables['v_Observation'][:]
-        Verr  = Fid.variables['Err_Final'][:]
+        Verr  = Uerr
         Vqc   = Fid.variables['Setup_QC_Mark'][:]
         Vhofx = V - Fid.variables['v_Obs_Minus_Forecast_unadjusted'][:]
 
         Ugeo   = Fid.variables['eastward_wind'][:].data
         Vgeo   = Fid.variables['northward_wind'][:].data
         Pcoord = Fid.variables['atmosphere_ln_pressure_coordinate'][:].data
-        Pcoord2 = Fid.variables['atmosphere_pressure_coordinate'][:].data * 1000.0 # kPa to Pa
+        Pcoord2 = np.exp(Pcoord) * 1000.0 # kPa to Pa
 
         # Record extra dimension information
         Dim = Fid.dimensions['eastward_wind_arr_dim']
@@ -589,21 +589,21 @@ class AmsuaObsType(ObsType):
           #     output destination: B - both files, G - geovar file, O - observation file
 
           # both files
-          'chaninfoidx'     : [ 'B', 'chaninfoidx', False ],
-          'frequency'       : [ 'B', 'frequency', False ],
-          'polarization'    : [ 'B', 'polarization', False ],
-          'wavenumber'      : [ 'B', 'wavenumber', False ],
-          'error_variance'  : [ 'B', 'error_variance', False ],
-	  'mean_lapse_rate' : [ 'B', 'mean_lapse_rate', False ],
-          'use_flag'        : [ 'B', 'use_flag', False ],
-          'sensor_chan'     : [ 'B', 'sensor_chan', False ],
-          'satinfo_chan'    : [ 'B', 'satinfo_chan', False ], 
-          'Latitude'        : [ 'B', 'latitude', True ],
-          'Longitude'       : [ 'B', 'longitude', True ],
-          'Elevation'       : [ 'B', 'height', True ],
-          'Obs_Time'        : [ 'B', 'time', True ],
 
           # geovar file only
+          'chaninfoidx'           : [ 'G', 'chaninfoidx', False ],
+          'frequency'             : [ 'G', 'frequency', False ],
+          'polarization'          : [ 'G', 'polarization', False ],
+          'wavenumber'            : [ 'G', 'wavenumber', False ],
+          'error_variance'        : [ 'G', 'error_variance', False ],
+	  'mean_lapse_rate'       : [ 'G', 'mean_lapse_rate', False ],
+          'use_flag'              : [ 'G', 'use_flag', False ],
+          'sensor_chan'           : [ 'G', 'sensor_chan', False ],
+          'satinfo_chan'          : [ 'G', 'satinfo_chan', False ], 
+          'Latitude'              : [ 'G', 'latitude', True ],
+          'Longitude'             : [ 'G', 'longitude', True ],
+          'Elevation'             : [ 'G', 'height', True ],
+          'Obs_Time'              : [ 'G', 'time', True ],
           'Water_Fraction'        : [ 'G', 'Water_Fraction', True ],
           'Land_Fraction'         : [ 'G', 'Land_Fraction', True ],
           'Ice_Fraction'          : [ 'G', 'Ice_Fraction', True ],
@@ -634,15 +634,28 @@ class AmsuaObsType(ObsType):
           'effective_radius_of_cloud_particle_02' : [ 'G', 'effective_radius_of_cloud_ice_particle', True ],
 
           # obs file only
-          'Scan_Position'     : [ 'O', 'Scan_Position', True ],
-          'Sat_Zenith_Angle'  : [ 'O', 'Sat_Zenith_Angle', True ],
-          'Sat_Azimuth_Angle' : [ 'O', 'Sat_Azimuth_Angle', True ],
-          'Sol_Zenith_Angle'  : [ 'O', 'Sol_Zenith_Angle', True ],
-          'Sol_Azimuth_Angle' : [ 'O', 'Sol_Azimuth_Angle', True ],
-          'Scan_Angle'        : [ 'O', 'Scan_Angle', True ],
-          'Observation'       : [ 'O', 'brightness_temperature', False ],
-          'Observation_Error' : [ 'O', 'brightness_temperature_err', False ],
-          'QC_Flag'           : [ 'O', 'brightness_temperature_qc', False ]
+          'chaninfoidx'       : [ 'O', 'chaninfoidx@VarMetaData', False ],
+          'frequency'         : [ 'O', 'frequency@VarMetaData', False ],
+          'polarization'      : [ 'O', 'polarization@VarMetaData', False ],
+          'wavenumber'        : [ 'O', 'wavenumber@VarMetaData', False ],
+          'error_variance'    : [ 'O', 'error_variance@VarMetaData', False ],
+	  'mean_lapse_rate'   : [ 'O', 'mean_lapse_rate@VarMetaData', False ],
+          'use_flag'          : [ 'O', 'use_flag@VarMetaData', False ],
+          'sensor_chan'       : [ 'O', 'sensor_chan@VarMetaData', False ],
+          'satinfo_chan'      : [ 'O', 'satinfo_chan@VarMetaData', False ], 
+          'Latitude'          : [ 'O', 'latitude@MetaData', True ],
+          'Longitude'         : [ 'O', 'longitude@MetaData', True ],
+          'Elevation'         : [ 'O', 'height@MetaData', True ],
+          'Obs_Time'          : [ 'O', 'time@MetaData', True ],
+          'Scan_Position'     : [ 'O', 'Scan_Position@MetaData', True ],
+          'Sat_Zenith_Angle'  : [ 'O', 'Sat_Zenith_Angle@MetaData', True ],
+          'Sat_Azimuth_Angle' : [ 'O', 'Sat_Azimuth_Angle@MetaData', True ],
+          'Sol_Zenith_Angle'  : [ 'O', 'Sol_Zenith_Angle@MetaData', True ],
+          'Sol_Azimuth_Angle' : [ 'O', 'Sol_Azimuth_Angle@MetaData', True ],
+          'Scan_Angle'        : [ 'O', 'Scan_Angle@MetaData', True ],
+          'Observation'       : [ 'O', 'brightness_temperature@ObsValue', False ],
+          'Inverse_Observation_Error' : [ 'O', 'brightness_temperature@ObsError', False ],
+          'QC_Flag'           : [ 'O', 'brightness_temperature@PreQc', False ]
           }
 
     ### Methods ###
@@ -726,6 +739,8 @@ class AmsuaObsType(ObsType):
                 if (Var.dimensions[0] == 'nobs'):
                     # Reshape the variable into nlocs X nchans
                     [ VarVals, VarDims ] = ReshapeVar(Var, Nlocs, Nchans)
+                    if (InVname == "Inverse_Observation_Error"):
+                        VarVals = 1.0 / VarVals
 
                     # If specified, collapse the variable. Otherwise expand the variable
                     # into a series of variables, one for each channel.
@@ -743,7 +758,11 @@ class AmsuaObsType(ObsType):
                     else:
                         # Expand into a series of variables, one for each channel.
                         for ichan in range(Nchans):
-                            Vname = "{0:s}_{1:d}_".format(OutVname, ChanNums[ichan])
+                            Tokens = re.split("@", OutVname)
+                            if (len(Tokens) > 1):
+                                Vname = "{0:s}_{1:d}_@{2:s}".format(Tokens[0], ChanNums[ichan], Tokens[1])
+                            else:
+                                Vname = "{0:s}_{1:d}_".format(OutVname, ChanNums[ichan])
                             Vvals = VarVals[:,ichan].squeeze()
                             if (len(VarDims) == 2):
                                 Vdims = (VarDims[0])
