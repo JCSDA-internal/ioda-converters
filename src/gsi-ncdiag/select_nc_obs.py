@@ -94,6 +94,15 @@ class AircraftObsType(ConvObsType):
         self.obs_type = 'Aircraft'
 
 #######################################################
+############ AIRCRAFT OBS TYPE ########################
+#######################################################
+class SatwindObsType(ConvObsType):
+    ### Constructor ###
+    def __init__(self):
+        super(SatwindObsType, self).__init__()
+        self.obs_type = 'Satwind'
+
+#######################################################
 ############ AMSU-A OBS TYPE ##########################
 #######################################################
 class AmsuaObsType(ObsType):
@@ -143,10 +152,13 @@ ap.add_argument("in_file", help="path to input netcdf file")
 ap.add_argument("out_file", help="path to output netcdf file")
 
 sondes_p = sp.add_parser("Sondes", help="Select from sondes file")
-sondes_p.add_argument("-s", "--s_file", required=True, help="path to sondes file")
+sondes_p.add_argument("-i", "--id_file", required=True, help="path to sondes id file")
 
 aircraft_p = sp.add_parser("Aircraft", help="Select from aircraft file")
-aircraft_p.add_argument("-a", "--a_file", required=True, help="path to aircraft file")
+aircraft_p.add_argument("-i", "--id_file", required=True, help="path to aircraft id file")
+
+aircraft_p = sp.add_parser("Satwind", help="Select from satellite wind file")
+aircraft_p.add_argument("-i", "--id_file", required=True, help="path to satellite wind id file")
 
 amsua_p = sp.add_parser("Amsua", help="Select from amsu-a file")
 
@@ -187,13 +199,18 @@ print("")
 # the nobs dimension.
 if (ObsType == "Sondes"):
     Obs = SondesObsType()
-    SidFname = MyArgs.s_file
+    SidFname = MyArgs.id_file
     NobsIndex = Obs.CalcNobsIndex(InFname, SidFname, NumRecsSelect)
 
 elif (ObsType == "Aircraft"):
     Obs = AircraftObsType()
-    AidFname = MyArgs.a_file
+    AidFname = MyArgs.id_file
     NobsIndex = Obs.CalcNobsIndex(InFname, AidFname, NumRecsSelect)
+
+elif (ObsType == "Satwind"):
+    Obs = SatwindObsType()
+    SwidFname = MyArgs.id_file
+    NobsIndex = Obs.CalcNobsIndex(InFname, SwidFname, NumRecsSelect)
 
 elif (ObsType == "Amsua"):
     Obs = AmsuaObsType()
