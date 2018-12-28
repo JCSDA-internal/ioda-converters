@@ -80,6 +80,8 @@ ap.add_argument("input_odb2", help="path to input Met Office ODB API file")
 ap.add_argument("output_netcdf", help="path to output netCDF4 file")
 ap.add_argument("-c", "--clobber", action="store_true",
                 help="allow overwrite of output netcdf file")
+ap.add_argument("-q", "--qcfilter", action="store_true",
+                help="only export rows with good qc flags")
 
 MyArgs = ap.parse_args()
 
@@ -87,6 +89,7 @@ MyArgs = ap.parse_args()
 Odb2Fname = MyArgs.input_odb2
 NetcdfFname = MyArgs.output_netcdf
 ClobberOfile = MyArgs.clobber
+qcFilter = MyArgs.qcfilter
 
 # Check files
 BadArgs = False
@@ -157,8 +160,14 @@ c = conn.cursor()
 #               aircraft files. We are treating both types identically in this code.
 sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
     " where (vertco_type=1 or vertco_type=11) and " + \
-    "(varno=2 or varno=3 or varno=4 or varno=29);"
+    "(varno=2 or varno=3 or varno=4 or varno=29)"
+if qcFilter:
+    sql += " and report_status.active=1 and report_status.passive=0 and report_status.rejected=0 and" \
+    " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
+    " and datum_status.blacklisted=0"
+sql += ';'
 #print sql
+
 c.execute(sql)
 row = c.fetchone()
 refDateTimeString = "UnSeT"

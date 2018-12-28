@@ -44,7 +44,7 @@ usage: profile2ioda.py [-h] --name /path/to/binary/file --date reference_datetim
 
 Python script, odbapi2nc.py, for converting Met Office ODB API files to netCDF4 files formatted for use by IODA.
 
-Usage: odbapi2nc.py [-h] [-c] input_odbapi output_netcdf
+Usage: odbapi2nc.py [-h] [-c] [-q] input_odbapi output_netcdf
 
 The short term plan is to handle aircraft, radiosonde, and radiance observation types.
 
