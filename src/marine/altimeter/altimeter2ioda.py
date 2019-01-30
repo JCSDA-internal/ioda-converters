@@ -57,6 +57,13 @@ class preobs:
         self.num_validobs = np.shape(self.time[self.validobs])[0]
         
         ncfile.close()
+
+    def append(self, other):
+        self.lon = np.append(self.lon, other.lon)        
+        self.lat = np.append(self.lat, other.lat)        
+        self.time = np.append(self.time, other.time)
+        self.adt = np.append(self.adt, other.adt)
+        self.validobs = np.append(self.validobs, other.validobs)
         
     def plot(self):
         plt.scatter(self.lon[self.validobs],self.lat[self.validobs],c=self.adt[self.validobs],vmin=-1.6,vmax=1.4)
@@ -114,17 +121,18 @@ if __name__ == '__main__':
     flist.sort()
     cnt=0
     for filename in flist:
+        print(filename)
         dofy_file = int(filename[-6:-3])
         dofy_da = datetime.datetime.strptime(args.date[0:8],"%Y%m%d")
         dofy_da = dofy_da.timetuple().tm_yday
         if (abs(1.0*(dofy_file-dofy_da))<=2.0*int(args.window)/24.0):
-            adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)
-            if (adt.num_validobs>0):
-                fnameout='adt-ioda-'+midwindow_date+'-'+str(cnt).zfill(3)+'.nc'
-                print(filename,fnameout, adt.num_validobs)
-                adt.toioda(fname=fnameout)
-                cnt+=1
+            if (cnt==0):
+                adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)
+            else:
+                tmp_adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)                
+                    
+                adt.append(tmp_adt)
+            cnt+=1
+    fnameout='adt-ioda-'+midwindow_date+'.nc'
+    adt.toioda(fname=fnameout)
 
-
-#ncrcat -h file_1979 file_1980 file_1981 file_197919801981
-#
