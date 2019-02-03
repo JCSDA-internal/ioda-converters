@@ -32,7 +32,7 @@ class preobs:
                         np.squeeze(ncfile.variables['lon'][:])
         self.adt     = ncfile.variables['adt_xgm2016'].scale_factor*\
                         np.squeeze(ncfile.variables['adt_xgm2016'][:])
-        self.validobs = np.where( (self.adt<2.0) & (self.adt>-2.0) )
+        #self.validobs = np.where( (self.adt<2.0) & (self.adt>-2.0) )
 
         self.time     = np.squeeze(ncfile.variables['time_mjd'][:])
 
@@ -53,17 +53,22 @@ class preobs:
                 dt = obs_date-self.ref_da_time
                 self.time[j]=dt.days*24.0 + dt.seconds/3600.0
             
-        self.validobs = np.where( (self.adt<2.0) & (self.adt>-2.0) & (abs(self.time)<=0.5*window_length))
+        self.validobs = np.where( (self.adt<2.0) & (self.adt>-2.0) & (abs(self.time)<=window_length))
         self.num_validobs = np.shape(self.time[self.validobs])[0]
-        
+
         ncfile.close()
 
+        self.lon = self.lon[self.validobs]
+        self.lat = self.lat[self.validobs]
+        self.adt = self.adt[self.validobs]
+        self.time = self.time[self.validobs]
+        
+        
     def append(self, other):
         self.lon = np.append(self.lon, other.lon)        
         self.lat = np.append(self.lat, other.lat)        
         self.time = np.append(self.time, other.time)
         self.adt = np.append(self.adt, other.adt)
-        self.validobs = np.append(self.validobs, other.validobs)
         
     def plot(self):
         plt.scatter(self.lon[self.validobs],self.lat[self.validobs],c=self.adt[self.validobs],vmin=-1.6,vmax=1.4)
@@ -71,7 +76,8 @@ class preobs:
     def toioda(self, fname='test.nc'):
 
         nvars = 1
-        nlocs = np.shape(self.time[self.validobs])[0]
+        nlocs = np.shape(self.time)[0]
+        #nlocs = np.shape(self.time[self.validobs])[0]        
         nrecs = 1
         nobs = nvars*nlocs
 
@@ -95,10 +101,10 @@ class preobs:
         ssh_obs_error.description = 'Standard deviation of observation error'
 
         # Dump to file
-        lat[:] = self.lat[self.validobs]
-        lon[:] = self.lon[self.validobs]
-        time[:] = self.time[self.validobs]
-        ssh_obs[:] = self.adt[self.validobs]
+        lat[:] = self.lat
+        lon[:] = self.lon
+        time[:] = self.time
+        ssh_obs[:] = self.adt
         ssh_obs_error[:] = 0.1*np.ones((nlocs))
 
         # Global attributes
@@ -111,28 +117,33 @@ if __name__ == '__main__':
     description='Read NESDIS altimetry files and convert to IODA netCDF format ex: altimeter2ioda.py --path /home/gvernier/Data/altimeters/nesdis/2018/ --date 2018071900'
     parser = ArgumentParser(description=description,formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--path', help='path to altimetry files',type=str, required=True)
-    parser.add_argument('--date', help='file date, yyyymmddhh', type=str, required=True)
-    parser.add_argument('--window', help='window length in hours', type=str, required=True)
+    parser.add_argument('--date', help='middle of the window, yyyymmddhh', type=str, required=True)
+    parser.add_argument('--ic', help='initial condition, yyyymmddhh', type=str, required=True)    
+    parser.add_argument('--window', help='half window length in hours', type=str, required=True)
     args = parser.parse_args()
 
     midwindow_date = args.date
+    ic_date = args.ic
 
-    flist = glob.glob(args.path+'/*.nc')
-    flist.sort()
-    cnt=0
-    for filename in flist:
-        print(filename)
-        dofy_file = int(filename[-6:-3])
-        dofy_da = datetime.datetime.strptime(args.date[0:8],"%Y%m%d")
-        dofy_da = dofy_da.timetuple().tm_yday
-        if (abs(1.0*(dofy_file-dofy_da))<=2.0*int(args.window)/24.0):
-            if (cnt==0):
-                adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)
-            else:
-                tmp_adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)                
-                    
-                adt.append(tmp_adt)
-            cnt+=1
-    fnameout='adt-ioda-'+midwindow_date+'.nc'
-    adt.toioda(fname=fnameout)
+    altimeters=['j3','c2','sa']
+
+    for sat in altimeters:
+        flist = glob.glob(args.path+'/*'+sat+'*.nc')
+        flist.sort()
+        cnt=0
+        for filename in flist:
+            dofy_file = int(filename[-6:-3])
+            dofy_da = datetime.datetime.strptime(args.date[0:8],"%Y%m%d")
+            dofy_da = dofy_da.timetuple().tm_yday
+            if (abs(1.0*(dofy_file-dofy_da))<=2.0*int(args.window)/24.0):
+                print(filename)            
+                if (cnt==0):
+                    adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)
+                else:
+                    tmp_adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)                
+                    adt.append(tmp_adt)
+                cnt+=1
+
+        fnameout='adt-ioda-'+sat+'-'+ic_date+'.nc'
+        adt.toioda(fname=fnameout)
 
