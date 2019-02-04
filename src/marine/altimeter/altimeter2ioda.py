@@ -18,13 +18,17 @@ class preobs:
         self.dd = midwindow_date[6:8]
         self.hh = midwindow_date[8:10]
 
+        # Save observation source 
         self.source = filename
-        
-        ref_da_time = datetime.datetime(int(self.yyyy),int(self.mm),int(self.dd),int(self.hh))
 
+        # Set the reference time for the DA window
+        ref_da_time = datetime.datetime(int(self.yyyy),int(self.mm),int(self.dd),int(self.hh))
         self.ref_da_time =  ref_da_time
-        
+
+        # Observation file name (redundant? needed?)
         self.filename=filename
+
+        # Open obs file and read/load relevant info
         ncfile = netcdf.netcdf_file(filename, mode='r', mmap=False)
         self.lat      = ncfile.variables['lat'].scale_factor*\
                         np.squeeze(ncfile.variables['lat'][:])
@@ -32,14 +36,12 @@ class preobs:
                         np.squeeze(ncfile.variables['lon'][:])
         self.adt     = ncfile.variables['adt_xgm2016'].scale_factor*\
                         np.squeeze(ncfile.variables['adt_xgm2016'][:])
-        #self.validobs = np.where( (self.adt<2.0) & (self.adt>-2.0) )
-
         self.time     = np.squeeze(ncfile.variables['time_mjd'][:])
-
         # Get ref time for julian date
         units = ncfile.variables['time_mjd'].units[-23:-4]
         reftime = dateutil.parser.parse(units)
 
+        # Set time in hrs referenced to center DA window
         for j in range(len(self.time)):
             if (np.isnan(self.time[j])):
                 self.time[j]=99999.9
@@ -52,12 +54,14 @@ class preobs:
                 obs_date = reftime + datetime.timedelta(days=days,hours=hrs,seconds=sec)
                 dt = obs_date-self.ref_da_time
                 self.time[j]=dt.days*24.0 + dt.seconds/3600.0
-            
+
+        # Trivial QC, might not be needed in the future
         self.validobs = np.where( (self.adt<2.0) & (self.adt>-2.0) & (abs(self.time)<=window_length))
         self.num_validobs = np.shape(self.time[self.validobs])[0]
 
         ncfile.close()
 
+        # Store obs info in memory
         self.lon = self.lon[self.validobs]
         self.lat = self.lat[self.validobs]
         self.adt = self.adt[self.validobs]
@@ -65,19 +69,20 @@ class preobs:
         
         
     def append(self, other):
+        # Append other to self
         self.lon = np.append(self.lon, other.lon)        
         self.lat = np.append(self.lat, other.lat)        
         self.time = np.append(self.time, other.time)
         self.adt = np.append(self.adt, other.adt)
         
     def plot(self):
+        # Simple plot method for sanity checks
         plt.scatter(self.lon[self.validobs],self.lat[self.validobs],c=self.adt[self.validobs],vmin=-1.6,vmax=1.4)
 
     def toioda(self, fname='test.nc'):
-
+        # Write in ioda netcdf format
         nvars = 1
         nlocs = np.shape(self.time)[0]
-        #nlocs = np.shape(self.time[self.validobs])[0]        
         nrecs = 1
         nobs = nvars*nlocs
 
@@ -114,7 +119,8 @@ class preobs:
 
 if __name__ == '__main__':
 
-    description='Read NESDIS altimetry files and convert to IODA netCDF format ex: altimeter2ioda.py --path /home/gvernier/Data/altimeters/nesdis/2018/ --date 2018071900'
+    description='Read NESDIS altimetry files and convert to IODA netCDF format /n\
+                 ex: altimeter2ioda.py --path /path/to/RADS/ADT/ --ic 2018071812 --date 2018071900 --window 12'
     parser = ArgumentParser(description=description,formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--path', help='path to altimetry files',type=str, required=True)
     parser.add_argument('--date', help='middle of the window, yyyymmddhh', type=str, required=True)
@@ -125,6 +131,8 @@ if __name__ == '__main__':
     midwindow_date = args.date
     ic_date = args.ic
 
+    # Create lis of altimeters.
+    # TODO: Pass as argument
     altimeters=['j3','c2','sa']
 
     for sat in altimeters:
