@@ -187,22 +187,23 @@ class profile(object):
 
         ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
 
-        ncid.createDimension('nlocs', self.idata['nlocs']) # total no. of obs
-        ncid.createDimension('nrecs', self.odata['n_obs']) # no. of profiles
-        ncid.createDimension('nvars', 2) # no. of variables
+        ncid.createDimension('nlocs', self.idata['nlocs']) # no. of obs per var type
+        ncid.createDimension('nrecs', 1) #self.odata['n_obs']) # no. of profiles
+        ncid.createDimension('nvars', 1) # no. of variables
+        ncid.createDimension('nobs', 1*self.idata['nlocs']) # total no. of obs
 
-        longitudes = ncid.createVariable('longitude', 'f4', ('nlocs',))
+        longitudes = ncid.createVariable('longitude@MetaData', 'f4', ('nlocs',))
         longitudes.units = 'degrees_east'
 
-        latitudes = ncid.createVariable('latitude', 'f4', ('nlocs',))
+        latitudes = ncid.createVariable('latitude@MetaData', 'f4', ('nlocs',))
         latitudes.units = 'degrees_north'
 
-        times = ncid.createVariable('time', 'f4', ('nlocs',))
+        times = ncid.createVariable('time@MetaData', 'f4', ('nlocs',))
         times.long_name = 'observation time from date_time'
         times.units = 'hours'
         times.description = 'why does this have to be with a reference to, why not absolute?'
 
-        depths = ncid.createVariable('ocean_depth', 'f4', ('nlocs',))
+        depths = ncid.createVariable('ocean_depth@MetaData', 'f4', ('nlocs',))
         depths.units = 'meters'
         depths.positive = 'down'
 
@@ -225,7 +226,7 @@ class profile(object):
         tmp_errs.units = '(degree_celcius)^2'
         tmp_errs.description = 'Standard deviation of observation error'
 
-        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H'))
+        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
 
         longitudes[:] = np.asarray(self.idata['ob_lon'], dtype=np.float32)
         latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
@@ -233,8 +234,10 @@ class profile(object):
         times[:] = np.asarray(self.idata['ob_dtg'], dtype=np.float32)
         sals[:] = np.asarray(self.idata['ob_sal'], dtype=np.float32)
         sal_errs[:] = np.asarray(self.idata['ob_sal_err'], dtype=np.float32)
+
         tmps[:] = np.asarray(self.idata['ob_tmp'], dtype=np.float32)
-        tmp_errs[:] = np.asarray(self.idata['ob_tmp_err'], dtype=np.float32)
+        lat=np.asarray(self.idata['ob_lat'], dtype=np.float32)
+        tmp_errs[:] = 0.5 + np.asarray(self.idata['ob_tmp_err'], dtype=np.float32)
 
         ncid.close()
 
@@ -254,7 +257,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     profname = args.name
-    profdate = datetime.strptime(args.date, '%Y%m%d%H')
+    profdate = datetime.strptime(args.date, '%Y%m%d%H%M')
 
     prof = profile(profname, profdate)
     prof.to_ioda()
