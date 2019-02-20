@@ -52,3 +52,16 @@ Currently supported obs types
 * radiosonde
 * aircraft
 
+## odbapi2json
+
+Python script, odbapi2json.py, for converting Met Office ODB API files to JSON files which can be used to load the data
+to MongoDB.
+
+Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
+
+The short term plan is to handle aircraft, radiosonde, and radiance observation types.
+
+Currently supported obs types
+* radiosonde
+* aircraft
+
