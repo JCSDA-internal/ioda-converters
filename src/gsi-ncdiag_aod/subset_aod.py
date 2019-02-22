@@ -47,13 +47,13 @@ def write_to_file(din, fileout, nlocs, flag):
 ########################
 
 date='2018041500'
-rads = ['v.viirs-m_npp', \
+aods = ['v.viirs-m_npp', \
         'sndrd4_g15']
 #add modis, goes-r, himawari etc.
-rads = ['aod']
+aods = ['aod']
 date='2018041500'
 
-for name in rads:
+for name in aods:
   d = Dataset(name+'_obs_'+date+'_f.nc4', 'r')
   nlocs = 100
   flag = random.sample(np.arange(0,d.dimensions['nlocs'].size), nlocs)
