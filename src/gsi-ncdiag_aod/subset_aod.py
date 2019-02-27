@@ -52,20 +52,21 @@ aods = ['v.viirs-m_npp', \
 #add modis, goes-r, himawari etc.
 aods = ['aod']
 date='2018041500'
+random.seed(15)
 
 for name in aods:
   d = Dataset(name+'_obs_'+date+'_f.nc4', 'r')
   nlocs = 100
   flag = random.sample(np.arange(0,d.dimensions['nlocs'].size), nlocs)
   print nlocs, ', locs: ', flag
-  flag10obs = np.arange(0,10)
+  flag1obs = np.arange(0,10)
   # create multi obs files (10 "records" or 100 locations
   print name, ' writing out ', len(flag), ' locs'
   write_to_file(d, name+"_obs_"+date+"_m.nc4", len(flag), flag)
-  write_to_file(d, name+"_obs_"+date+"_s.nc4", len(flag10obs), flag10obs)
+  write_to_file(d, name+"_obs_"+date+"_s.nc4", len(flag1obs), flag1obs)
   d.close()
   d = Dataset(name+'_geoval_'+date+'_f.nc4', 'r')
   write_to_file(d, name+"_geoval_"+date+"_m.nc4", len(flag), flag)
-  write_to_file(d, name+"_geoval_"+date+"_s.nc4", len(flag10obs), flag10obs)
+  write_to_file(d, name+"_geoval_"+date+"_s.nc4", len(flag1obs), flag1obs)
   d.close()
 
