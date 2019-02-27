@@ -52,7 +52,7 @@ aods = ['v.viirs-m_npp', \
 #add modis, goes-r, himawari etc.
 aods = ['aod']
 date='2018041500'
-random.seed(15)
+random.seed(5)
 
 for name in aods:
   d = Dataset(name+'_obs_'+date+'_f.nc4', 'r')
