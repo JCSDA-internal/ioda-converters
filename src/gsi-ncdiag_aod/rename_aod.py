@@ -44,7 +44,7 @@ def write_to_obsfile(din, fileout):
         vdata = var[:]; vdata = vdata[::nchans_in]
         var_out[:] = vdata
       elif vname in chan_metadata_dict.keys():
-        var_out = dout.createVariable(chan_metadata_dict[vname]+"@ChanMetaData", \
+        var_out = dout.createVariable(chan_metadata_dict[vname]+"@VarMetaData", \
                                       var.dtype, ('nchans',))
         vdata = var[:]; vdata = vdata[chan_indx]
         var_out[:] = vdata
