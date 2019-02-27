@@ -20,7 +20,7 @@ variables_dict = {'Observation'       : 'ObsValue',   \
                   'Obs_Minus_Forecast_adjusted' : 'GsiHofXBc', \
                   'Obs_Minus_Forecast_unadjusted' : 'GsiHofX', \
                   'GSI_QC_Flag' : 'GsiQC', \
-                  'QC_Flag' : 'QC', \
+                  'QC_Flag' : 'PreQC', \
                   'Observation_Error': 'GsiObsError'}
 
 geovals_dict = {'air_temperature': 'air_temperature', \
