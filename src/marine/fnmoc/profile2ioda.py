@@ -187,10 +187,10 @@ class profile(object):
 
         ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
 
-        ncid.createDimension('nlocs', self.idata['nlocs']) # no. of obs per var type
-        ncid.createDimension('nrecs', 1) #self.odata['n_obs']) # no. of profiles
-        ncid.createDimension('nvars', 1) # no. of variables
-        ncid.createDimension('nobs', 1*self.idata['nlocs']) # total no. of obs
+        ncid.createDimension('nlocs', self.idata['nlocs'])  # no. of obs per var type
+        ncid.createDimension('nrecs', 1)  # no. of profiles
+        ncid.createDimension('nvars', 1)  # no. of variables
+        ncid.createDimension('nobs', 1*self.idata['nlocs'])  # total no. of obs
 
         longitudes = ncid.createVariable('longitude@MetaData', 'f4', ('nlocs',))
         longitudes.units = 'degrees_east'
@@ -232,11 +232,11 @@ class profile(object):
         latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
         depths[:] = np.asarray(self.idata['ob_lvl'], dtype=np.float32)
         times[:] = np.asarray(self.idata['ob_dtg'], dtype=np.float32)
+
         sals[:] = np.asarray(self.idata['ob_sal'], dtype=np.float32)
         sal_errs[:] = np.asarray(self.idata['ob_sal_err'], dtype=np.float32)
 
         tmps[:] = np.asarray(self.idata['ob_tmp'], dtype=np.float32)
-        lat=np.asarray(self.idata['ob_lat'], dtype=np.float32)
         tmp_errs[:] = 0.5 + np.asarray(self.idata['ob_tmp_err'], dtype=np.float32)
 
         ncid.close()
@@ -246,8 +246,9 @@ class profile(object):
 
 if __name__ == '__main__':
 
+    desc = 'Read GODAE binary profile file and convert to IODA netCDF4 format'
     parser = ArgumentParser(
-        description='Read GODAE binary profile file and convert to IODA netCDF4 format',
+        description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--name', help='name of the binary GODAE profile file (path)',
