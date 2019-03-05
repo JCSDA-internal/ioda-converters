@@ -251,14 +251,15 @@ if __name__ == '__main__':
         description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '--name', help='name of the binary GODAE profile file (path)',
+        '-n', '--name', help='name of the binary GODAE profile file (path)',
         type=str, required=True)
-    parser.add_argument('--date', help='file date', type=str, required=True)
+    parser.add_argument(
+        '-d', '--date', help='file date', type=str, required=True)
 
     args = parser.parse_args()
 
-    profname = args.name
-    profdate = datetime.strptime(args.date, '%Y%m%d%H%M')
+    fname = args.name
+    fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
 
-    prof = profile(profname, profdate)
+    prof = profile(fname, fdate)
     prof.to_ioda()

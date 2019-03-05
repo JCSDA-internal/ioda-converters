@@ -7,22 +7,22 @@ from scipy.io import FortranFile, netcdf
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 
-class sfcobs(object):
+class trak(object):
 
     def __init__(self, filename, date):
 
         self.filename = filename
         self.date = date
 
-        # Read sfcobs data
-        self._rd_ship()
+        # Read trak data
+        self._rd_trak()
 
         return
 
-    def _rd_ship(self):
+    def _rd_trak(self):
         '''
-        Read the surface obs data
-        Based on subroutine rd_ship in ocn_obs.f
+        Read the trak data
+        Based on subroutine rd_trak in ocn_obs.f
         '''
 
         try:
@@ -37,43 +37,39 @@ class sfcobs(object):
 
         odata['n_obs'], odata['n_lvl'], odata['n_vrsn'] = fh.read_ints('>i4')
 
-        print('    number ship obs: %d' % odata['n_obs'])
+        print('    number trak obs: %d' % odata['n_obs'])
         print('  max number levels: %d' % odata['n_lvl'])
         print('file version number: %d' % odata['n_vrsn'])
 
         if odata['n_obs'] <= 0:
-            print('No ship observations to process from %s' % self.filename)
+            print('No trak observations to process from %s' % self.filename)
             return
 
         odata['ob_wm'] = fh.read_reals('>i4')
-        odata['ob_glb'] = fh.read_reals('>f4')
+        odata['ob_gsal'] = fh.read_reals('>f4')
+        odata['ob_gsst'] = fh.read_reals('>f4')
         odata['ob_lat'] = fh.read_reals('>f4')
         odata['ob_lon'] = fh.read_reals('>f4')
         odata['ob_age'] = fh.read_reals('>f4')
-        odata['ob_clm'] = fh.read_reals('>f4')
-        odata['ob_qc'] = fh.read_reals('>f4')
-        odata['ob_rgn'] = fh.read_reals('>f4')
+        odata['ob_csal'] = fh.read_reals('>f4')
+        odata['ob_csst'] = fh.read_reals('>f4')
+        odata['ob_qc_sal'] = fh.read_reals('>f4')
+        odata['ob_qc_sst'] = fh.read_reals('>f4')
+        odata['ob_qc_vel'] = fh.read_reals('>f4')
+        odata['ob_rsal'] = fh.read_reals('>f4')
+        odata['ob_rsst'] = fh.read_reals('>f4')
+        odata['ob_sal'] = fh.read_reals('>f4')
         odata['ob_sst'] = fh.read_reals('>f4')
         odata['ob_typ'] = fh.read_reals('>i4')
+        odata['ob_uuu'] = fh.read_reals('>f4')
+        odata['ob_vvv'] = fh.read_reals('>f4')
         odata['ob_dtg'] = fh.read_record('>S12').astype('U12')
         odata['ob_rcpt'] = fh.read_record('>S12').astype('U12')
         odata['ob_scr'] = fh.read_record('>S1').astype('U1')
-
-        if odata['n_vrsn'] <= 2:
-            print('verify ob_sign for version = %d' % odata['n_vrsn'])
-            odata['ob_sign'] = fh.read_record('>S7').astype('U7')
-        else:
-            odata['ob_sign'] = fh.read_record('>S7').astype('U7')
-
-        if odata['n_vrsn'] > 1:
-            odata['ob_csgm'] = fh.read_reals('>f4')
-            odata['ob_gsgm'] = fh.read_reals('>f4')
-            odata['ob_rsgm'] = fh.read_reals('>f4')
-        else:
-            minus999 = np.ones(odata['n_obs'], dtype=np.float32) * -999.
-            odata['ob_csgm'] = minus999
-            odata['ob_gsgm'] = minus999
-            odata['ob_rsgm'] = minus999
+        odata['ob_sgn'] = fh.read_record('>S6').astype('U6')
+        odata['ob_csgm'] = fh.read_reals('>f4')
+        odata['ob_gsgm'] = fh.read_reals('>f4')
+        odata['ob_rsgm'] = fh.read_reals('>f4')
 
         fh.close()
 
@@ -104,7 +100,7 @@ class sfcobs(object):
     def to_ioda(self):
 
         if self.odata['n_obs'] <= 0:
-            print('No sfcobs observations for IODA!')
+            print('No trak observations for IODA!')
             return
 
         self._to_nlocs()
@@ -112,7 +108,7 @@ class sfcobs(object):
         ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
 
         ncid.createDimension('nlocs', self.idata['nlocs'])  # no. of obs per var type
-        ncid.createDimension('nrecs', 1)  # no. of obs.
+        ncid.createDimension('nrecs', 1)  # no. of track obs
         ncid.createDimension('nvars', 1)  # no. of variables
         ncid.createDimension('nobs', 1*self.idata['nlocs'])  # total no. of obs
 
@@ -127,15 +123,44 @@ class sfcobs(object):
         times.units = 'hours'
         times.description = 'why does this have to be with a reference to, why not absolute?'
 
-        tmps = ncid.createVariable(
-            'sea_surface_temperature@ObsValue', 'f4', ('nlocs',))
-        tmps.units = 'degree_celcius'
-        tmps.description = ''
+        sal = ncid.createVariable('sea_surface_salinity@ObsValue', 'f4', ('nlocs',))
+        sal.units = 'g/kg'
+        sal.description = ''
 
-        tmp_errs = ncid.createVariable(
+        sal_errs = ncid.createVariable(
+            'sea_surface_salinity@ObsError', 'f4', ('nlocs',))
+        sal_errs.units = '(g/kg)^2'
+        sal_errs.description = 'Standard deviation of observation error'
+
+        sst = ncid.createVariable(
+            'sea_surface_temperature@ObsValue', 'f4', ('nlocs',))
+        sst.units = 'degree_celcius'
+        sst.description = ''
+
+        sst_errs = ncid.createVariable(
             'sea_surface_temperature@ObsError', 'f4', ('nlocs',))
-        tmp_errs.units = '(degree_celcius)^2'
-        tmp_errs.description = 'Standard deviation of observation error; Fixed at 0.5'
+        sst_errs.units = '(degree_celcius)^2'
+        sst_errs.description = 'Standard deviation of observation error'
+
+        u = ncid.createVariable(
+            'sea_surface_zonal_wind@ObsValue', 'f4', ('nlocs',))
+        u.units = 'm/s'
+        u.description = ''
+
+        u_errs = ncid.createVariable(
+            'sea_surface_zonal_wind@ObsError', 'f4', ('nlocs',))
+        u_errs.units = '(m/s)^2'
+        u_errs.description = 'Standard deviation of observation error'
+
+        v = ncid.createVariable(
+            'sea_surface_meridional_wind@ObsValue', 'f4', ('nlocs',))
+        v.units = 'm/s'
+        v.description = ''
+
+        v_errs = ncid.createVariable(
+            'sea_surface_meridional_wind@ObsError', 'f4', ('nlocs',))
+        v_errs.units = '(m/s)^2'
+        v_errs.description = 'Standard deviation of observation error'
 
         ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
 
@@ -143,8 +168,17 @@ class sfcobs(object):
         latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
         times[:] = np.asarray(self.idata['ob_dtg'], dtype=np.float32)
 
-        tmps[:] = np.asarray(self.idata['ob_sst'], dtype=np.float32)
-        tmp_errs[:] = 0.5
+        sal[:] = np.asarray(self.idata['ob_sal'], dtype=np.float32)
+        sal_errs[:] = 1.0
+
+        sst[:] = np.asarray(self.idata['ob_sst'], dtype=np.float32)
+        sst_errs[:] = 1.0
+
+        u[:] = np.asarray(self.idata['ob_uuu'], dtype=np.float32)
+        u_errs[:] = 1.0
+
+        v[:] = np.asarray(self.idata['ob_vvv'], dtype=np.float32)
+        v_errs[:] = 1.0
 
         ncid.close()
 
@@ -153,19 +187,20 @@ class sfcobs(object):
 
 if __name__ == '__main__':
 
-    desc = 'Read GODAE binary ship file and convert to IODA netCDF4 format'
-    parser = ArgumentParser(description=desc,
-                            formatter_class=ArgumentDefaultsHelpFormatter)
+    desc = 'Read GODAE binary track file and convert to IODA netCDF4 format'
+    parser = ArgumentParser(
+        description=desc,
+        formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '-f', '--filename', help='name of the binary GODAE ship file (path)',
+        '-n', '--name', help='name of the binary GODAE track file (path)',
         type=str, required=True)
     parser.add_argument(
         '-d', '--date', help='file date', type=str, required=True)
 
     args = parser.parse_args()
 
-    fname = args.filename
+    fname = args.name
     fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
 
-    sfcobs = sfcobs(fname, fdate)
-    sfcobs.to_ioda()
+    track = trak(fname, fdate)
+    track.to_ioda()
