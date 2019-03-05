@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+###!/usr/bin/env python
 
 from __future__ import print_function
 import ncepbufr
@@ -12,6 +12,7 @@ from netCDF4 import Dataset
 
 import bufr2ncCommon as cm
 import bufr2ncObsTypes as ot
+
 
 ###################################################################################
 # SUBROUTINES
@@ -37,6 +38,9 @@ def BfilePreprocess(BufrFname, Obs):
 ###################################################################################
 # MAIN
 ###################################################################################
+
+print(set(sys.modules) & set(globals()))
+
 ScriptName = os.path.basename(sys.argv[0])
 
 # Parse command line
@@ -66,6 +70,7 @@ if (MyArgs.prepbufr):
 else:
     BfileType = cm.BFILE_BUFR
 
+print('BfileType = ',BfileType)
 # Check files
 BadArgs = False
 if (not os.path.isfile(BufrFname)): 
@@ -92,6 +97,11 @@ elif (ObsType == 'Amsua'):
     Obs = ot.AmsuaObsType(BfileType)
 elif (ObsType == 'Gpsro'):
     Obs = ot.GpsroObsType(BfileType)
+elif (ObsType == 'NC001001'):
+    print('ShipsObsType:', ObsType)
+    Obs = ot.ShipsObsType(BfileType)
+#    sys.exit (0)
+      
 else:
     print("ERROR: {0:s}: Unknown observation type: {1:s}".format(ScriptName, ObsType))
     print("")

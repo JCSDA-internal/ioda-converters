@@ -678,6 +678,150 @@ class ObsType(object):
         print("  Total converted observations: ", ObsNum)
         print("")
 
+
+
+################################# Ships Observations ############################
+
+
+class ShipsObsType(ObsType):
+    ### initialize data elements ###
+    def __init__(self, bf_type):
+        super(ShipsObsType, self).__init__()
+
+        self.bufr_ftype = bf_type
+        self.multi_level = False
+
+        # Put the time and date vars in the subclasses so that their dimensions can
+        # vary ( [nobs], [nobs,nlevs] ).
+        self.misc_spec[0].append([ 'ObsTime',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'ObsDate',   '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'time',      '', cm.DTYPE_DOUBLE,  ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'latitude',  '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
+        self.misc_spec[0].append([ 'longitude', '', cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ])
+
+        if (bf_type == cm.BFILE_BUFR):
+            self.mtype_re = '^NC001001'
+            self.int_spec = [
+                [ [ 'YEAR',   'YEAR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MNTH',   'MNTH',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'DAYS',   'DAYS',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'HOUR',   'HOUR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'MINU',   'MINU',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'ACID',   'ACID',   cm.DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
+                  [ 'CORN',   'CORN',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'CLAT',   'CLAT',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'CLON',   'CLON',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ], 
+                  [ 'SELV',   'SELV',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'SEQNUM', 'SEQNUM', cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BUHD',   'BUHD',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BORG',   'BORG',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BULTIM', 'BULTIM', cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'BBB',    'BBB',    cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ]],
+
+                [  [ 'RPID',   'RPID',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ] ],
+
+                [ [ 'ITSO',   'ITSO',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'TOST',   'TOST',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'INPC',   'INPC',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
+
+                [ [ 'HOVI',   'HOVI',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TIWM',   'TIWM',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'QMWN',   'QMWN',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'WDIR',   'WDIR',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'WSPD',   'WSPD',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'QMAT',   'QMAT',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'TMDE',   'TMDE',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QMDD',   'QMDD',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'TMDP',   'TMDP',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'MSST',   'MSST',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'QMST',   'QMST',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'SST1',   'SST1',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'MWBT',   'MWBT',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TMWB',   'TMWB',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'REHU',   'REHU',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'MXTM',   'MXTM',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'MITM',   'MITM',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                  
+                            
+                [ [ 'QMPR',   'QMPR',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'PRES',   'PRES',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'PMSL',   'PMSL',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'CHPT',   'CHPT',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ '3HPC',   '3HPC',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ '24PC',   '24PC',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+                [ [ 'TP01',   'TP01',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TP03',   'TP03',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TP06',   'TP06',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TP12',   'TP12',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'TP24',   'TP24',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                  
+               [  [ 'TOCC',   'TOCC',   cm.DTYPE_FLOAT,    ['nobs'], [self.nobs] ],
+                  [ 'HBLCS',  'HBLCS',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ] ], 
+
+#               [   [ 'VSSO',   'VSSO',   cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ], 
+#                   [ 'CLAM',   'CLAM',   cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ],
+#                   [ 'CLTP',   'CLTP',   cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ] ], 
+              
+               [  [ 'PRWE',   'PRWE',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ],
+                  [ 'PSW1',   'PSW1',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ],
+                  [ 'PSW2',   'PSW2',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ] ], 
+              
+               [  [ 'HOWV',   'HOWV',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ], 
+                  [ 'POWV',   'POWV',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'QMWH',   'QMWH',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],  
+                  [ 'HOWW',   'HOWW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+                  [ 'POWW',   'POWW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                  
+#               [  [ 'POSW',   'POSW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+#                  [ 'DOSW',   'DOSW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
+#                  [ 'HOSW',   'HOSW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+               [  [ 'TDMP',   'TDMP',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ],
+                  [ 'ASMP',   'ASMP',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ] ], 
+
+               [  [ 'COIA',   'COIA',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ],
+                  [ 'ROIA',   'ROIA',  cm.DTYPE_INTEGER,  ['nobs'], [self.nobs] ],
+                  [ 'IDTH',   'IDTH',  cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+
+               [  [ 'VTVI',   'VTVI',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
+                
+               ]
+            self.evn_spec = []
+            self.rep_spec = []
+            self.seq_spec = []
+        # Set the dimension specs.
+        super(ShipsObsType, self).init_dim_spec()
+
+    ### methods ###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ################################# Aircraft Observation Type ############################
 class AircraftObsType(ObsType):
     ### initialize data elements ###
