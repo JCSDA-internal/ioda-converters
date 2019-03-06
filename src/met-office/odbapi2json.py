@@ -6,52 +6,8 @@ import os
 import argparse
 from math import exp
 import ioda_conv_ncio as iconv
-
-#This function takes two integers like date=20180415 time=61532 and converts them to a
-#ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
-def IntDateTimeToString(date, time):
-    #Make sure passed values are int's since we're counting on integer division
-    date = int(date)
-    time = int(time)
-    #Define consts to prevent new int objects being created every time we use these numbers
-    TEN_THOW = 10000
-    HUNDRED = 100
-
-    year = date // TEN_THOW
-    date = date - year * TEN_THOW
-    month = date // HUNDRED
-    day = date - month * HUNDRED
-
-    hour = time // TEN_THOW
-    time = time - hour * TEN_THOW
-    minute = time // HUNDRED
-    second = time - minute * HUNDRED
-
-    return "%d-%02d-%02dT%02d:%02d:%02dZ" % (year, month, day, hour, minute, second)
-
-def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
-    T_KELVIN = 273.15
-    ES_ALPHA = 6.112
-    ES_BETA = 17.67
-    ES_GAMMA = 243.5
-    GAS_CONSTANT = 287.0
-    GAS_CONSTANT_V = 461.6
-    HUNDRED = 100.0
-    
-    rdOverRv = GAS_CONSTANT / GAS_CONSTANT_V
-    rdOverRv1 = 1.0 - rdOverRv
-    t_celcius = t - T_KELVIN
-    #p = p / HUNDRED # Convert from Pa to hPa
-
-    #Calculate saturation vapor pressure
-    es = ES_ALPHA * exp(ES_BETA * t_celcius / (t_celcius + ES_GAMMA))
-    #Calculate saturation specific humidity
-    qs = rdOverRv * es / (p - rdOverRv1 * es)
-    #Calculate specific humidity
-    q = qs * rh / HUNDRED
-    q_err = qs * rh_err / HUNDRED
-    return q, q_err
-
+import ioda_conv_util
+import var_convert
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
@@ -173,10 +129,10 @@ row = c.fetchone()
 refDateTimeString = "UnSeT"
 while row is not None:
     row = FetchRow._make(row)
-    anDateTimeString = IntDateTimeToString(row.andate, row.antime)
+    anDateTimeString = ioda_conv_util.IntDateTimeToString(row.andate, row.antime)
     if (refDateTimeString == "UnSeT"):
         refDateTimeString = anDateTimeString
-    obsDateTimeString = IntDateTimeToString(row.date, row.time)
+    obsDateTimeString = ioda_conv_util.IntDateTimeToString(row.date, row.time)
     #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
     qcVal = (row.report_status_active      * 128 +
              row.report_status_passive     *  64 +
@@ -243,7 +199,7 @@ for profileKey in obsDataDictTree:
             p = locationKey[2]
             if (t is not None and rh is not None and rh_err is not None and p is not None and 
             t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
-                q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
+                q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                 obsDict[("specific_humidity", ncOvalName)] = q
                 obsDict[("specific_humidity", ncOerrName)] = q_err
