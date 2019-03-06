@@ -129,7 +129,7 @@ class trak(object):
 
         sal_errs = ncid.createVariable(
             'sea_surface_salinity@ObsError', 'f4', ('nlocs',))
-        sal_errs.units = '(g/kg)^2'
+        sal_errs.units = '(g/kg)'
         sal_errs.description = 'Standard deviation of observation error'
 
         sst = ncid.createVariable(
@@ -139,7 +139,7 @@ class trak(object):
 
         sst_errs = ncid.createVariable(
             'sea_surface_temperature@ObsError', 'f4', ('nlocs',))
-        sst_errs.units = '(degree_celcius)^2'
+        sst_errs.units = '(degree_celcius)'
         sst_errs.description = 'Standard deviation of observation error'
 
         u = ncid.createVariable(
@@ -149,7 +149,7 @@ class trak(object):
 
         u_errs = ncid.createVariable(
             'sea_surface_zonal_wind@ObsError', 'f4', ('nlocs',))
-        u_errs.units = '(m/s)^2'
+        u_errs.units = '(m/s)'
         u_errs.description = 'Standard deviation of observation error'
 
         v = ncid.createVariable(
@@ -159,7 +159,7 @@ class trak(object):
 
         v_errs = ncid.createVariable(
             'sea_surface_meridional_wind@ObsError', 'f4', ('nlocs',))
-        v_errs.units = '(m/s)^2'
+        v_errs.units = '(m/s)'
         v_errs.description = 'Standard deviation of observation error'
 
         ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])

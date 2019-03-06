@@ -213,7 +213,7 @@ class profile(object):
 
         sal_errs = ncid.createVariable(
             'ocean_salinity@ObsError', 'f4', ('nlocs',))
-        sal_errs.units = '(g/kg)^2'
+        sal_errs.units = '(g/kg)'
         sal_errs.description = 'Standard deviation of observation error'
 
         tmps = ncid.createVariable(
@@ -223,7 +223,7 @@ class profile(object):
 
         tmp_errs = ncid.createVariable(
             'insitu_temperature@ObsError', 'f4', ('nlocs',))
-        tmp_errs.units = '(degree_celcius)^2'
+        tmp_errs.units = '(degree_celcius)'
         tmp_errs.description = 'Standard deviation of observation error'
 
         ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])

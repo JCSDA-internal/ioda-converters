@@ -134,7 +134,7 @@ class ship(object):
 
         tmp_errs = ncid.createVariable(
             'sea_surface_temperature@ObsError', 'f4', ('nlocs',))
-        tmp_errs.units = '(degree_celcius)^2'
+        tmp_errs.units = '(degree_celcius)'
         tmp_errs.description = 'Standard deviation of observation error; Fixed at 0.5'
 
         ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
