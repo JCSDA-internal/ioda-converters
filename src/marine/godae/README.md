@@ -10,7 +10,9 @@ GODAE data can be obtained from [here](https://www.usgodae.org/ftp/outgoing/fnmo
 ### Usage:
 
 `$> profile2ioda.py -n /path/to/profile/datafile -d YYYYMMDDHH`
+
 `$> ship2ioda.py -n /path/to/ship/datafile -d YYYYMMDDHH`
+
 `$> trak2ioda.py -n /path/to/trak/datafile -d YYYYMMDDHH`
 
 `YYYYMMDDHH` is the reference datetime of data in the datafile
