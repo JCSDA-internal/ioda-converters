@@ -726,17 +726,17 @@ class ShipsObsType(ObsType):
                   [ 'INPC',   'INPC',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ] ],
 
                 [ [ 'HOVI',   'HOVI',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'TIWM',   'TIWM',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
-                  [ 'QMWN',   'QMWN',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'TIWM',   'TIWM',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QMWN',   'QMWN',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'WDIR',   'WDIR',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'WSPD',   'WSPD',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
 
-                [ [ 'QMAT',   'QMAT',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ [ 'QMAT',   'QMAT',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'TMDE',   'TMDE',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'QMDD',   'QMDD',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'QMDD',   'QMDD',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'TMDP',   'TMDP',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'MSST',   'MSST',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
-                  [ 'QMST',   'QMST',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'MSST',   'MSST',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'QMST',   'QMST',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'SST1',   'SST1',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'MWBT',   'MWBT',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'TMWB',   'TMWB',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
@@ -745,10 +745,10 @@ class ShipsObsType(ObsType):
                   [ 'MITM',   'MITM',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
                   
                             
-                [ [ 'QMPR',   'QMPR',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                [ [ 'QMPR',   'QMPR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'PRES',   'PRES',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'PMSL',   'PMSL',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'CHPT',   'CHPT',   cm.DTYPE_STRING,  ['nobs', 'nstring'], [self.nobs, self.nstring] ],
+                  [ 'CHPT',   'CHPT',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ '3HPC',   '3HPC',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ '24PC',   '24PC',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
 
@@ -771,7 +771,7 @@ class ShipsObsType(ObsType):
               
                [  [ 'HOWV',   'HOWV',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ], 
                   [ 'POWV',   'POWV',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
-                  [ 'QMWH',   'QMWH',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],  
+                  [ 'QMWH',   'QMWH',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],  
                   [ 'HOWW',   'HOWW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
                   [ 'POWW',   'POWW',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ] ],
                   
