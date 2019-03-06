@@ -7,30 +7,7 @@ import argparse
 from math import exp
 import ioda_conv_ncio as iconv
 import ioda_conv_util
-
-def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
-    T_KELVIN = 273.15
-    ES_ALPHA = 6.112
-    ES_BETA = 17.67
-    ES_GAMMA = 243.5
-    GAS_CONSTANT = 287.0
-    GAS_CONSTANT_V = 461.6
-    HUNDRED = 100.0
-    
-    rdOverRv = GAS_CONSTANT / GAS_CONSTANT_V
-    rdOverRv1 = 1.0 - rdOverRv
-    t_celcius = t - T_KELVIN
-    #p = p / HUNDRED # Convert from Pa to hPa
-
-    #Calculate saturation vapor pressure
-    es = ES_ALPHA * exp(ES_BETA * t_celcius / (t_celcius + ES_GAMMA))
-    #Calculate saturation specific humidity
-    qs = rdOverRv * es / (p - rdOverRv1 * es)
-    #Calculate specific humidity
-    q = qs * rh / HUNDRED
-    q_err = qs * rh_err / HUNDRED
-    return q, q_err
-
+import var_convert
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
@@ -222,7 +199,7 @@ for profileKey in obsDataDictTree:
             p = locationKey[2]
             if (t is not None and rh is not None and rh_err is not None and p is not None and 
             t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
-                q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
+                q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                 obsDict[("specific_humidity", ncOvalName)] = q
                 obsDict[("specific_humidity", ncOerrName)] = q_err
