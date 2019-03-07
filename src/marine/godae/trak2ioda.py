@@ -89,7 +89,7 @@ class trak(object):
         # Diff. between ob. time and time in the file (hrs)!
         for i in range(self.odata['n_obs']):
             dtg = datetime.strptime(self.odata['ob_dtg'][i], '%Y%m%d%H%M')
-            idata['ob_dtg'][i] = (dtg - self.date).seconds/3600.
+            idata['ob_dtg'][i] = (dtg - self.date).total_seconds/3600.
 
         idata['nlocs'] = len(idata['ob_dtg'])
 

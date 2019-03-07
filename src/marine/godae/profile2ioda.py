@@ -158,7 +158,7 @@ class profile(object):
             dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
 
             # Diff. between ob. time and time in the file (hrs)!
-            ddtg = (dtg - self.date).seconds/3600.
+            ddtg = (dtg - self.date).total_seconds/3600.
 
             for l, lvl in enumerate(self.odata['ob_lvl'][n]):
 
