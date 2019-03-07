@@ -36,9 +36,9 @@ The flow consists of runnign three scripts in succession:
 See the script tools/build_gsi_nc_files.sh for an example of how to run the flow.
 A fourth script, list_sid_raob.py, can be used to create the file containing a list of unique station ids (which is a file used by the select_nc_obs.py script for the Radiosonde and Aircraft obs types).
 
-## marine - profile
-Python script to convert GODAE profile data (binary) to netcdf file that can be ingested into IODA.
-usage: profile2ioda.py [-h] --name /path/to/binary/file --date reference_datetime_of_data_in_file
+## marine
+Python scripts to convert GODAE data (binary) to netCDF4 file that can be ingested into IODA.
+See [here](src/marine/godae/README.md) for usage.
 
 ## odbapi2nc
 

@@ -158,7 +158,7 @@ class profile(object):
             dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
 
             # Diff. between ob. time and time in the file (hrs)!
-            ddtg = (dtg - self.date).seconds/3600.
+            ddtg = (dtg - self.date).total_seconds()/3600.
 
             for l, lvl in enumerate(self.odata['ob_lvl'][n]):
 
@@ -187,10 +187,10 @@ class profile(object):
 
         ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
 
-        ncid.createDimension('nlocs', self.idata['nlocs']) # no. of obs per var type
-        ncid.createDimension('nrecs', 1) #self.odata['n_obs']) # no. of profiles
-        ncid.createDimension('nvars', 1) # no. of variables
-        ncid.createDimension('nobs', 1*self.idata['nlocs']) # total no. of obs
+        ncid.createDimension('nlocs', self.idata['nlocs'])  # no. of obs per var type
+        ncid.createDimension('nrecs', 1)  # no. of profiles
+        ncid.createDimension('nvars', 1)  # no. of variables
+        ncid.createDimension('nobs', 1*self.idata['nlocs'])  # total no. of obs
 
         longitudes = ncid.createVariable('longitude@MetaData', 'f4', ('nlocs',))
         longitudes.units = 'degrees_east'
@@ -213,7 +213,7 @@ class profile(object):
 
         sal_errs = ncid.createVariable(
             'ocean_salinity@ObsError', 'f4', ('nlocs',))
-        sal_errs.units = '(g/kg)^2'
+        sal_errs.units = '(g/kg)'
         sal_errs.description = 'Standard deviation of observation error'
 
         tmps = ncid.createVariable(
@@ -223,7 +223,7 @@ class profile(object):
 
         tmp_errs = ncid.createVariable(
             'insitu_temperature@ObsError', 'f4', ('nlocs',))
-        tmp_errs.units = '(degree_celcius)^2'
+        tmp_errs.units = '(degree_celcius)'
         tmp_errs.description = 'Standard deviation of observation error'
 
         ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
@@ -232,11 +232,11 @@ class profile(object):
         latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
         depths[:] = np.asarray(self.idata['ob_lvl'], dtype=np.float32)
         times[:] = np.asarray(self.idata['ob_dtg'], dtype=np.float32)
+
         sals[:] = np.asarray(self.idata['ob_sal'], dtype=np.float32)
         sal_errs[:] = np.asarray(self.idata['ob_sal_err'], dtype=np.float32)
 
         tmps[:] = np.asarray(self.idata['ob_tmp'], dtype=np.float32)
-        lat=np.asarray(self.idata['ob_lat'], dtype=np.float32)
         tmp_errs[:] = 0.5 + np.asarray(self.idata['ob_tmp_err'], dtype=np.float32)
 
         ncid.close()
@@ -246,18 +246,20 @@ class profile(object):
 
 if __name__ == '__main__':
 
+    desc = 'Read GODAE binary profile file and convert to IODA netCDF4 format'
     parser = ArgumentParser(
-        description='Read GODAE binary profile file and convert to IODA netCDF4 format',
+        description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '--name', help='name of the binary GODAE profile file (path)',
+        '-n', '--name', help='name of the binary GODAE profile file (path)',
         type=str, required=True)
-    parser.add_argument('--date', help='file date', type=str, required=True)
+    parser.add_argument(
+        '-d', '--date', help='file date', type=str, required=True)
 
     args = parser.parse_args()
 
-    profname = args.name
-    profdate = datetime.strptime(args.date, '%Y%m%d%H%M')
+    fname = args.name
+    fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
 
-    prof = profile(profname, profdate)
+    prof = profile(fname, fdate)
     prof.to_ioda()
