@@ -2,6 +2,7 @@
 
 import path
 
+
 def collect_sources(ignore_func):
     top_path = path.Path(".")
     for py_path in top_path.walkfiles("*.py"):

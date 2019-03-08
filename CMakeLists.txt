@@ -76,6 +76,7 @@ endif()
 
 include( iodaconv_compiler_flags )
 include_directories( ${IODACONV_INCLUDE_DIRS} ${IODACONV_EXTRA_INCLUDE_DIRS} )
+include( iodaconv_extra_macros )
 add_subdirectory( src )
 add_subdirectory( tools )
 
