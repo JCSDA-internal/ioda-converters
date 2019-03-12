@@ -8,6 +8,8 @@ from math import exp
 import ioda_conv_ncio as iconv
 import ioda_conv_util
 import var_convert
+import yaml
+import io
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
@@ -31,8 +33,8 @@ ScriptName = os.path.basename(sys.argv[0])
 
 # Parse command line
 ap = argparse.ArgumentParser()
-#ap.add_argument("obs_type", help="observation type")
-ap.add_argument("input_odb2", help="path to input Met Office ODB API file")
+ap.add_argument("input_odb2", help="path to input ODB-2 file")
+ap.add_argument("input_def", help="path to input yaml definition file")
 ap.add_argument("output_netcdf", help="path to output netCDF4 file")
 ap.add_argument("-c", "--clobber", action="store_true",
                 help="allow overwrite of output netcdf file")
@@ -43,6 +45,7 @@ MyArgs = ap.parse_args()
 
 #ObsType = MyArgs.obs_type
 Odb2Fname = MyArgs.input_odb2
+DefFname = MyArgs.input_def
 NetcdfFname = MyArgs.output_netcdf
 ClobberOfile = MyArgs.clobber
 qcFilter = MyArgs.qcfilter
@@ -51,6 +54,11 @@ qcFilter = MyArgs.qcfilter
 BadArgs = False
 if (not os.path.isfile(Odb2Fname)): 
     print("ERROR: {0:s}: Specified input file does not exist: {1:s}".format(ScriptName, Odb2Fname))
+    print("")
+    BadArgs = True
+
+if (not os.path.isfile(DefFname)): 
+    print("ERROR: {0:s}: Specified definition file does not exist: {1:s}".format(ScriptName, DefFname))
     print("")
     BadArgs = True
 
@@ -66,6 +74,47 @@ if (os.path.isfile(NetcdfFname)):
 
 if (BadArgs):
     sys.exit(2)
+
+# Read in the contents of the definition file
+with io.open(DefFname, 'r') as defstream:
+    importDef = yaml.load(defstream)
+
+# Define strings that act as keys in yaml definition file.
+# The passed yaml file must use these strings, of course.
+yamlColumnVariables = 'column_variables'
+
+#print importDef[yamlColumnVariables]
+
+# Assemble list of columns to select
+selectColumns = []
+selectColumns.append("varno")
+selectColumns.append("vertco_reference_1")
+selectColumns.append("obsvalue")
+selectColumns.append("obs_error")
+selectColumns.append("report_status.active")
+selectColumns.append("report_status.passive")
+selectColumns.append("report_status.rejected")
+selectColumns.append("report_status.blacklisted")
+selectColumns.append("datum_status.active")
+selectColumns.append("datum_status.passive")
+selectColumns.append("datum_status.rejected")
+selectColumns.append("datum_status.blacklisted")
+
+# The columns above are always selected.
+# Next we add the columns that are required by the variables
+# in the "column_variables" section of the yaml definition.
+for varName in importDef[yamlColumnVariables]:
+    for colName in importDef[yamlColumnVariables][varName]:
+        selectColumns.append(colName)
+
+# Assemble the columns to select into a string we'll use in sql
+selectColumnsString = ""
+for index, columnName in enumerate(selectColumns):
+    if (index > 0):
+        selectColumnsString += ", "
+    selectColumnsString += columnName
+
+print selectColumnsString
 
 sondeVarnoDict = {
     2:  "air_temperature",
@@ -102,10 +151,7 @@ varCategories = [ncOvalName, ncOerrName, ncOqcName]
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
 obsDataDictTree = defaultdict(lambda:defaultdict(dict))
 
-fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, ' \
-               'report_status.active, report_status.passive, report_status.rejected, report_status.blacklisted, ' \
-               'datum_status.active, datum_status.passive, datum_status.rejected, datum_status.blacklisted'
-tupleNames = fetchColumns.replace('.', '_')
+tupleNames = selectColumnsString.replace('.', '_')
 FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
@@ -114,7 +160,7 @@ c = conn.cursor()
 #vertco_type=11 indicates "derived pressure", which is a pressure value calculated from airplane flight level
 #               instead of directly measured. Derived pressure is not present in radiosonde files, but is in
 #               aircraft files. We are treating both types identically in this code.
-sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
+sql = "select " + selectColumnsString + " from \"" + Odb2Fname + "\"" + \
     " where (vertco_type=1 or vertco_type=11) and " + \
     "(varno=2 or varno=3 or varno=4 or varno=29)"
 if qcFilter:
