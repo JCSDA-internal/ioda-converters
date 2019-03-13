@@ -19,10 +19,8 @@ def write_to_file(din, fileout, nlocs, flag):
 
   # Copy dimensions
   for dim in din.dimensions.values():
-    if (dim.name == "nlocs"):
+    if (dim.name in ["nlocs", "nrecs"]):
       d_size = nlocs
-    elif (dim.name == "nobs"):
-      d_size = nlocs * len(din.dimensions['nvars'])
     else:
       d_size = len(dim)
     dout.createDimension(dim.name, d_size)
@@ -50,11 +48,13 @@ rads = ['airs_aqua', \
                       'amsua_n18', 'amsua_n19', \
         'atms_npp', \
         'hirs4_metop-a', 'hirs4_metop-b', \
+        'iasi_metop-a', 'iasi_metop-b', \
         'mhs_metop-a', 'mhs_metop-b', 'mhs_n18', 'mhs_n19', \
         'seviri_m08', \
         'sndrd1_g15', 'sndrd2_g15', 'sndrd3_g15', 'sndrd4_g15']
-rads = ['amsua_n19']
+#rads = ['amsua_n19']
 date='2018041500'
+random.seed(5)
 
 for name in rads:
   d = Dataset(name+'_obs_'+date+'.nc4', 'r')

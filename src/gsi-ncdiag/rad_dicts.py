@@ -1,7 +1,7 @@
 
 loc_metadata_dict = {'Latitude':   'latitude',     \
                      'Longitude':  'longitude',    \
-                     'Elevation':  'elevation',    \
+                     'Elevation':  'height',       \
                      'Obs_Time':   'time',         \
                      'Scan_Position':     'scan_position',     \
 	             'Sat_Zenith_Angle':  'sat_zenith_angle',  \
