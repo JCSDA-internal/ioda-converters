@@ -27,10 +27,8 @@ def write_to_obsfile(din, fileout):
   # calc number of obs
   nobs   = nchans * nlocs
   dout.createDimension("nlocs", nlocs)
-  dout.createDimension("nobs",  nobs)
   dout.createDimension("nrecs", nlocs)
   dout.createDimension("nvars", nchans)
-  dout.createDimension("nchans", nchans)
   # Copy vars, rename and transform (for inverse errors and O-F)
   for var in din.variables.values():
     vname = var.name
@@ -43,13 +41,13 @@ def write_to_obsfile(din, fileout):
         vdata = var[:]; vdata = vdata[::nchans_in]
         var_out[:] = vdata
       elif vname in chan_metadata_dict.keys():
-        var_out = dout.createVariable(chan_metadata_dict[vname]+"@ChanMetaData", \
-                                      var.dtype, ('nchans',))
+        var_out = dout.createVariable(chan_metadata_dict[vname]+"@VarMetaData", \
+                                      var.dtype, ('nvars',))
         vdata = var[:]; vdata = vdata[chan_indx]
         var_out[:] = vdata
         if vname == "error_variance":
           for i in range(nchans):
-            var_out = dout.createVariable("brightness_temperature_"+str(chan_number[i])+"_@ObsError", \
+            var_out = dout.createVariable("brightness_temperature_"+str(chan_number[i])+"@ObsError", \
                                         var.dtype, ('nlocs'))
             var_out[:] = var[chan_indx[i]]
       elif vname in variables_dict.keys():
@@ -59,7 +57,7 @@ def write_to_obsfile(din, fileout):
         elif "_adjusted" in vname:
           vdata_hx = din["Obs_Minus_Forecast_unadjusted"][:]
         for i in range(nchans):
-          var_out = dout.createVariable("brightness_temperature_"+str(chan_number[i])+"_@"+variables_dict[vname], \
+          var_out = dout.createVariable("brightness_temperature_"+str(chan_number[i])+"@"+variables_dict[vname], \
                                         var.dtype, ('nlocs'))
           vdata_i = vdata[chan_indx[i]::nchans_in]
           if "Inverse" in vname:
@@ -115,10 +113,11 @@ rads = ['airs_aqua', \
                       'amsua_n18', 'amsua_n19', \
         'atms_npp', \
         'hirs4_metop-a', 'hirs4_metop-b', \
+        'iasi_metop-a', 'iasi_metop-b', \
         'mhs_metop-a', 'mhs_metop-b', 'mhs_n18', 'mhs_n19', \
         'seviri_m08', \
         'sndrd1_g15', 'sndrd2_g15', 'sndrd3_g15', 'sndrd4_g15']
-rads = ['amsua_n19']
+#rads = ['amsua_n19']
 date='2018041500'
 for rad in rads:
   fname = "diag_"+rad+"_ges."+date+"_ensmean.nc4"
