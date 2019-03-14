@@ -26,6 +26,36 @@ except ValueError:
 
 import odb
 
+def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoVarDict):
+    returnKey = []
+    for keyVariableName in keyDefinitionDict:
+        keyVariableValue = None
+        if keyVariableName in ColumnVarDict:
+            keyVariableValue = row[selectColumns.index(ColumnVarDict[keyVariableName])]
+        elif keyVariableName in VertcoVarDict:
+            if row[selectColumns.index("vertco_type")] == VertcoVarDict[keyVariableName]:
+                keyVariableValue = row[selectColumns.index("vertco_reference_1")]
+                # If we're returning a pressure value, we divide by 100 to convert from Pa to hPa.
+                # vertco_type=1 ==> pressure, vertco_type=11 ==> derived pressure (from aircraft altitude)
+                if (VertcoVarDict[keyVariableName] == 1 or VertcoVarDict[keyVariableName] == 11) and keyVariableValue is not None:
+                    keyVariableValue /= 100.0
+        elif keyVariableName == "analysis_date_time":
+            keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("andate")], row[selectColumns.index("antime")])
+        elif keyVariableName == "date_time":
+            keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("date")], row[selectColumns.index("time")])
+
+        if keyVariableValue == None:
+            if keyDefinitionDict[keyVariableName] == "float":
+                keyVariableValue = IODA_MISSING_VAL
+            elif keyDefinitionDict[keyVariableName] == "string":
+                keyVariableValue = ""
+
+        if keyDefinitionDict[keyVariableName] == "string":
+            keyVariableValue = keyVariableValue.rstrip()
+        returnKey.append(keyVariableValue)
+    returnKey = tuple(returnKey)
+    return returnKey
+
 ###################################################################################
 # MAIN
 ###################################################################################
@@ -79,16 +109,29 @@ if (BadArgs):
 with io.open(DefFname, 'r') as defstream:
     importDef = yaml.load(defstream)
 
+columnVariableDict = importDef['column_variables']
+vertcoVariableDict = importDef['vertco_variables']
+varnoVariableDict = importDef['varno_variables']
+
 # Define strings that act as keys in yaml definition file.
 # The passed yaml file must use these strings, of course.
-yamlColumnVariables = 'column_variables'
+#yamlColumnVariables = 'column_variables'
+# yamlVarnoVariables = 'varno_variables'
+# yamlVertcoVariables = 'vertco_variables'
+yamlRecordKey ='record_key'
+yamlLocationKey = 'location_key'
 
-#print importDef[yamlColumnVariables]
+#print columnVariableDict
 
 # Assemble list of columns to select
 selectColumns = []
 selectColumns.append("varno")
+selectColumns.append("vertco_type")
 selectColumns.append("vertco_reference_1")
+selectColumns.append("andate")
+selectColumns.append("antime")
+selectColumns.append("date")
+selectColumns.append("time")
 selectColumns.append("obsvalue")
 selectColumns.append("obs_error")
 selectColumns.append("report_status.active")
@@ -103,9 +146,8 @@ selectColumns.append("datum_status.blacklisted")
 # The columns above are always selected.
 # Next we add the columns that are required by the variables
 # in the "column_variables" section of the yaml definition.
-for varName in importDef[yamlColumnVariables]:
-    for colName in importDef[yamlColumnVariables][varName]:
-        selectColumns.append(colName)
+for varName in columnVariableDict:
+    selectColumns.append(columnVariableDict[varName])
 
 # Assemble the columns to select into a string we'll use in sql
 selectColumnsString = ""
@@ -114,26 +156,37 @@ for index, columnName in enumerate(selectColumns):
         selectColumnsString += ", "
     selectColumnsString += columnName
 
-print selectColumnsString
+#print selectColumnsString
 
-sondeVarnoDict = {
-    2:  "air_temperature",
-    3:  "eastward_wind",
-    4:  "northward_wind",
-    29: "relative_humidity"
-}
+# Assemble the vertco_type 'where' clause we'll use in sql
+vertcoTypeSqlString = ""
+for index, vertcoVariable in enumerate(vertcoVariableDict):
+    if (index > 0):
+        vertcoTypeSqlString += " or "
+    vertcoTypeSqlString += "vertco_type="+str(vertcoVariableDict[vertcoVariable])
 
-recordKeyList = [
-    ( "station_id", "string" ),
-    ( "analysis_date_time", "string" )
-    ]
+print vertcoTypeSqlString
 
-locationKeyList = [
-    ( "latitude", "float" ),
-    ( "longitude", "float" ),
-    ( "air_pressure", "float" ),
-    ( "date_time", "string" )
-    ]
+# Assemble the varno 'where' clause we'll use in sql
+varnoSqlString = ""
+for index, varnoValue in enumerate(varnoVariableDict):
+    if (index > 0):
+        varnoSqlString += " or "
+    varnoSqlString += "varno="+str(varnoValue)
+
+print varnoSqlString
+
+recordKeyList = []
+for varName in importDef[yamlRecordKey]:
+    recordKeyList.append((varName, importDef[yamlRecordKey][varName]))
+
+#print recordKeyList
+
+locationKeyList = []
+for varName in importDef[yamlLocationKey]:
+    locationKeyList.append((varName, importDef[yamlLocationKey][varName]))
+
+#print locationKeyList
 
 # Instantiate a netcdf writer object, and get the obs data names from
 # the writer object.
@@ -156,50 +209,47 @@ FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
-#vertco_type=1 indicates pressure
-#vertco_type=11 indicates "derived pressure", which is a pressure value calculated from airplane flight level
-#               instead of directly measured. Derived pressure is not present in radiosonde files, but is in
-#               aircraft files. We are treating both types identically in this code.
+# Construct the entire sql statement
 sql = "select " + selectColumnsString + " from \"" + Odb2Fname + "\"" + \
-    " where (vertco_type=1 or vertco_type=11) and " + \
-    "(varno=2 or varno=3 or varno=4 or varno=29)"
+    " where (" + vertcoTypeSqlString +") and (" + varnoSqlString + ")"
 if qcFilter:
     sql += " and report_status.active=1 and report_status.passive=0 and report_status.rejected=0 and" \
     " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
     " and datum_status.blacklisted=0"
 sql += ';'
-#print sql
+print sql
 
 c.execute(sql)
 row = c.fetchone()
-refDateTimeString = "UnSeT"
+refDateTimeString = None
 while row is not None:
-    row = FetchRow._make(row)
-    anDateTimeString = ioda_conv_util.IntDateTimeToString(row.andate, row.antime)
-    if (refDateTimeString == "UnSeT"):
-        refDateTimeString = anDateTimeString
-    obsDateTimeString = ioda_conv_util.IntDateTimeToString(row.date, row.time)
+    if (refDateTimeString is None):
+        refDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("andate")], row[selectColumns.index("antime")])
+    obsDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("date")], row[selectColumns.index("time")])
     #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
-    qcVal = (row.report_status_active      * 128 +
-             row.report_status_passive     *  64 +
-             row.report_status_rejected    *  32 +
-             row.report_status_blacklisted *  16 +
-             row.datum_status_active       *   8 +
-             row.datum_status_passive      *   4 +
-             row.datum_status_rejected     *   2 +
-             row.datum_status_blacklisted)
-    varName = sondeVarnoDict[row.varno]
+    qcVal = (row[selectColumns.index("report_status.active")]      * 128 +
+             row[selectColumns.index("report_status.passive")]     *  64 +
+             row[selectColumns.index("report_status.rejected")]    *  32 +
+             row[selectColumns.index("report_status.blacklisted")] *  16 +
+             row[selectColumns.index("datum_status.active")]       *   8 +
+             row[selectColumns.index("datum_status.passive")]      *   4 +
+             row[selectColumns.index("datum_status.rejected")]     *   2 +
+             row[selectColumns.index("datum_status.blacklisted")])
 
-    profileKey = row.statid.rstrip(), anDateTimeString
-    #TODO: For now we convert pressure (vertco_reference_1) to hPa here. No units stored yet.
-    pressure = row.vertco_reference_1 / 100.0 if row.vertco_reference_1 is not None else IODA_MISSING_VAL
-    locationKey = row.lat, row.lon, pressure, obsDateTimeString
+    varName = varnoVariableDict[row[selectColumns.index("varno")]]
+
+    #recordKey = row.statid.rstrip(), anDateTimeString
+    recordKey = CreateKeyTuple(importDef[yamlRecordKey], row, selectColumns, columnVariableDict, vertcoVariableDict)
+    locationKey = CreateKeyTuple(importDef[yamlLocationKey], row, selectColumns, columnVariableDict, vertcoVariableDict)
+
     ovalKey = varName, ncOvalName
     oerrKey = varName, ncOerrName
     oqcKey = varName, ncOqcName
 
-    oval = row.obsvalue if row.obsvalue is not None else IODA_MISSING_VAL
-    oerr = row.obs_error if row.obs_error is not None else IODA_MISSING_VAL
+    rowObsValue = row[selectColumns.index("obsvalue")]
+    rowObsError = row[selectColumns.index("obs_error")]
+    oval =  rowObsValue if rowObsValue is not None else IODA_MISSING_VAL
+    oerr = rowObsError if rowObsError is not None else IODA_MISSING_VAL
     if qcVal is None:
         qcVal = IODA_MISSING_VAL
     
@@ -208,37 +258,33 @@ while row is not None:
     #    missing values. (Preserve all the data we can.)
     # 2. There can be multiple entries in the file for each locationKey, but 
     #    we can only keep one. So we choose an entry that is not null/missing, if present.
-    if (ovalKey not in obsDataDictTree[profileKey][locationKey] or
-         obsDataDictTree[profileKey][locationKey][ovalKey] == IODA_MISSING_VAL):
-        obsDataDictTree[profileKey][locationKey][ovalKey] = oval
-    if (oerrKey not in obsDataDictTree[profileKey][locationKey] or
-         obsDataDictTree[profileKey][locationKey][oerrKey] == IODA_MISSING_VAL):
-        obsDataDictTree[profileKey][locationKey][oerrKey] = oerr
-    if (oqcKey not in obsDataDictTree[profileKey][locationKey] or
-         obsDataDictTree[profileKey][locationKey][oqcKey] == IODA_MISSING_VAL):
-        obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
+    if (ovalKey not in obsDataDictTree[recordKey][locationKey] or
+         obsDataDictTree[recordKey][locationKey][ovalKey] == IODA_MISSING_VAL):
+        obsDataDictTree[recordKey][locationKey][ovalKey] = oval
+    if (oerrKey not in obsDataDictTree[recordKey][locationKey] or
+         obsDataDictTree[recordKey][locationKey][oerrKey] == IODA_MISSING_VAL):
+        obsDataDictTree[recordKey][locationKey][oerrKey] = oerr
+    if (oqcKey not in obsDataDictTree[recordKey][locationKey] or
+         obsDataDictTree[recordKey][locationKey][oqcKey] == IODA_MISSING_VAL):
+        obsDataDictTree[recordKey][locationKey][oqcKey] = qcVal
 
-    # obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
-    # obsDataDictTree[profileKey][locationKey][oerrKey] = row.obs_error
-    # obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
-    
     row = c.fetchone()
 
 #After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
-for profileKey in obsDataDictTree:
-    for locationKey in obsDataDictTree[profileKey]:
-        for varName in sondeVarnoDict.values():
+for recordKey in obsDataDictTree:
+    for locationKey in obsDataDictTree[recordKey]:
+        for varName in varnoVariableDict.values():
             for varCat in varCategories:
-                if (varName, varCat) not in obsDataDictTree[profileKey][locationKey]:
-                    obsDataDictTree[profileKey][locationKey][varName, varCat] = IODA_MISSING_VAL
+                if (varName, varCat) not in obsDataDictTree[recordKey][locationKey]:
+                    obsDataDictTree[recordKey][locationKey][varName, varCat] = IODA_MISSING_VAL
 
 #For now, we convert relative to specific humidity here.
 #This code should be removed eventually, as this is not the right place to convert variables.
 #print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
-for profileKey in obsDataDictTree:
-    for locationKey in obsDataDictTree[profileKey]:
-        if ("relative_humidity", ncOvalName) in obsDataDictTree[profileKey][locationKey]:
-            obsDict = obsDataDictTree[profileKey][locationKey]
+for recordKey in obsDataDictTree:
+    for locationKey in obsDataDictTree[recordKey]:
+        if ("relative_humidity", ncOvalName) in obsDataDictTree[recordKey][locationKey]:
+            obsDict = obsDataDictTree[recordKey][locationKey]
             rh = obsDict[("relative_humidity", ncOvalName)]
             rh_err = obsDict[("relative_humidity", ncOerrName)]
             t = obsDict.get(("air_temperature", ncOvalName))
@@ -254,10 +300,10 @@ for profileKey in obsDataDictTree:
                 obsDict[("specific_humidity", ncOvalName)] = IODA_MISSING_VAL
                 obsDict[("specific_humidity", ncOerrName)] = IODA_MISSING_VAL
             obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
-                #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
+                #print ",".join(map(lambda x: str(x), [recordKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
 
 # print "Top level len: ", len(obsDataDictTree)
-# print "Num Locations: ", len(obsDataDictTree[profileKey])
+# print "Num Locations: ", len(obsDataDictTree[recordKey])
 
 # Call the writer. Pass in the reference date time string for writing the
 # version 1 netcdf file. The reference date time string won't be necessary when
