@@ -26,6 +26,20 @@ except ValueError:
 
 import odb
 
+# Define some (global) frequently-used strings as variables to prevent the creation of new
+# string objects every time they're used (often inside large loops).
+date_s = "date"
+time_s = "time"
+andate_s = "andate"
+antime_s = "antime"
+vertco_type_s = "vertco_type"
+vertco_reference_1_s = "vertco_reference_1"
+analysis_date_time_s = "analysis_date_time"
+date_time_s = "date_time"
+float_s = "float"
+string_s = "string"
+IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
+
 def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoVarDict):
     returnKey = []
     for keyVariableName in keyDefinitionDict:
@@ -33,24 +47,24 @@ def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoV
         if keyVariableName in ColumnVarDict:
             keyVariableValue = row[selectColumns.index(ColumnVarDict[keyVariableName])]
         elif keyVariableName in VertcoVarDict:
-            if row[selectColumns.index("vertco_type")] == VertcoVarDict[keyVariableName]:
-                keyVariableValue = row[selectColumns.index("vertco_reference_1")]
+            if row[selectColumns.index(vertco_type_s)] == VertcoVarDict[keyVariableName]:
+                keyVariableValue = row[selectColumns.index(vertco_reference_1_s)]
                 # If we're returning a pressure value, we divide by 100 to convert from Pa to hPa.
                 # vertco_type=1 ==> pressure, vertco_type=11 ==> derived pressure (from aircraft altitude)
                 if (VertcoVarDict[keyVariableName] == 1 or VertcoVarDict[keyVariableName] == 11) and keyVariableValue is not None:
                     keyVariableValue /= 100.0
-        elif keyVariableName == "analysis_date_time":
-            keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("andate")], row[selectColumns.index("antime")])
-        elif keyVariableName == "date_time":
-            keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("date")], row[selectColumns.index("time")])
+        elif keyVariableName == analysis_date_time_s:
+            keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(andate_s)], row[selectColumns.index(antime_s)])
+        elif keyVariableName == date_time_s:
+            keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(date_s)], row[selectColumns.index(time_s)])
 
         if keyVariableValue == None:
-            if keyDefinitionDict[keyVariableName] == "float":
+            if keyDefinitionDict[keyVariableName] == float_s:
                 keyVariableValue = IODA_MISSING_VAL
-            elif keyDefinitionDict[keyVariableName] == "string":
+            elif keyDefinitionDict[keyVariableName] == string_s:
                 keyVariableValue = ""
 
-        if keyDefinitionDict[keyVariableName] == "string":
+        if keyDefinitionDict[keyVariableName] == string_s:
             keyVariableValue = keyVariableValue.rstrip()
         returnKey.append(keyVariableValue)
     returnKey = tuple(returnKey)
@@ -70,6 +84,10 @@ ap.add_argument("-c", "--clobber", action="store_true",
                 help="allow overwrite of output netcdf file")
 ap.add_argument("-q", "--qcfilter", action="store_true",
                 help="only export rows with good qc flags")
+ap.add_argument("-t", "--trace", action="store_true",
+                help="Print trace statements")
+ap.add_argument("-v", "--convertvars", action="store_true",
+                help="Convert relative_humidity to specific_humidity and output both")
 
 MyArgs = ap.parse_args()
 
@@ -79,6 +97,8 @@ DefFname = MyArgs.input_def
 NetcdfFname = MyArgs.output_netcdf
 ClobberOfile = MyArgs.clobber
 qcFilter = MyArgs.qcfilter
+Trace = MyArgs.trace
+ConvertVars = MyArgs.convertvars
 
 # Check files
 BadArgs = False
@@ -110,8 +130,17 @@ with io.open(DefFname, 'r') as defstream:
     importDef = yaml.load(defstream)
 
 columnVariableDict = importDef['column_variables']
+if Trace:
+    print "column_variables:"
+    print str(columnVariableDict)
 vertcoVariableDict = importDef['vertco_variables']
+if Trace:
+    print "vertco_variables:"
+    print str(vertcoVariableDict)
 varnoVariableDict = importDef['varno_variables']
+if Trace:
+    print "varno_variables:"
+    print str(varnoVariableDict)
 
 # Define strings that act as keys in yaml definition file.
 # The passed yaml file must use these strings, of course.
@@ -126,12 +155,12 @@ yamlLocationKey = 'location_key'
 # Assemble list of columns to select
 selectColumns = []
 selectColumns.append("varno")
-selectColumns.append("vertco_type")
-selectColumns.append("vertco_reference_1")
-selectColumns.append("andate")
-selectColumns.append("antime")
-selectColumns.append("date")
-selectColumns.append("time")
+selectColumns.append(vertco_type_s)
+selectColumns.append(vertco_reference_1_s)
+selectColumns.append(andate_s)
+selectColumns.append(antime_s)
+selectColumns.append(date_s)
+selectColumns.append(time_s)
 selectColumns.append("obsvalue")
 selectColumns.append("obs_error")
 selectColumns.append("report_status.active")
@@ -156,16 +185,12 @@ for index, columnName in enumerate(selectColumns):
         selectColumnsString += ", "
     selectColumnsString += columnName
 
-#print selectColumnsString
-
 # Assemble the vertco_type 'where' clause we'll use in sql
 vertcoTypeSqlString = ""
 for index, vertcoVariable in enumerate(vertcoVariableDict):
     if (index > 0):
         vertcoTypeSqlString += " or "
     vertcoTypeSqlString += "vertco_type="+str(vertcoVariableDict[vertcoVariable])
-
-print vertcoTypeSqlString
 
 # Assemble the varno 'where' clause we'll use in sql
 varnoSqlString = ""
@@ -174,19 +199,19 @@ for index, varnoValue in enumerate(varnoVariableDict):
         varnoSqlString += " or "
     varnoSqlString += "varno="+str(varnoValue)
 
-print varnoSqlString
-
 recordKeyList = []
 for varName in importDef[yamlRecordKey]:
     recordKeyList.append((varName, importDef[yamlRecordKey][varName]))
 
-#print recordKeyList
+if Trace:
+    print "Record Key: ", str(recordKeyList)
 
 locationKeyList = []
 for varName in importDef[yamlLocationKey]:
     locationKeyList.append((varName, importDef[yamlLocationKey][varName]))
 
-#print locationKeyList
+if Trace:
+    print "Location Key: ", str(locationKeyList)
 
 # Instantiate a netcdf writer object, and get the obs data names from
 # the writer object.
@@ -196,16 +221,13 @@ ncOvalName = nc_writer.OvalName()
 ncOerrName = nc_writer.OerrName()
 ncOqcName  = nc_writer.OqcName()
 
-IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
 varCategories = [ncOvalName, ncOerrName, ncOqcName]
 
-#The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
-#The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
+#The top-level dictionary is keyed by the fields in recordKeyList, which uniquely identifiies a record.
+#The second-level dictionary is keyed by the fields in locationKeyList, which uniquely identifies a location
 #The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
 obsDataDictTree = defaultdict(lambda:defaultdict(dict))
 
-tupleNames = selectColumnsString.replace('.', '_')
-FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
@@ -217,28 +239,48 @@ if qcFilter:
     " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
     " and datum_status.blacklisted=0"
 sql += ';'
-print sql
+
+if Trace:
+    print "ODB API SQL statement:"
+    print sql
 
 c.execute(sql)
+
 row = c.fetchone()
 refDateTimeString = None
+
+#Defining these sql row indexes outside the main loop prevents new objects
+#from being created for each one every iteration.
+rsActiveIndex = selectColumns.index("report_status.active")
+rsPassiveIndex = selectColumns.index("report_status.passive")
+rsRejectedIndex = selectColumns.index("report_status.rejected")
+rsBlacklistIndex = selectColumns.index("report_status.blacklisted")
+dsActiveIndex = selectColumns.index("datum_status.active")
+dsPassiveIndex = selectColumns.index("datum_status.passive")
+dsRejectedIndex = selectColumns.index("datum_status.rejected")
+dsBlacklistIndex = selectColumns.index("datum_status.blacklisted")
+dateIndex = selectColumns.index(date_s)
+timeIndex = selectColumns.index(time_s)
+obsvalueIndex = selectColumns.index("obsvalue")
+obs_errorIndex = selectColumns.index("obs_error")
+varnoIndex = selectColumns.index("varno")
+
 while row is not None:
     if (refDateTimeString is None):
-        refDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("andate")], row[selectColumns.index("antime")])
-    obsDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index("date")], row[selectColumns.index("time")])
-    #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
-    qcVal = (row[selectColumns.index("report_status.active")]      * 128 +
-             row[selectColumns.index("report_status.passive")]     *  64 +
-             row[selectColumns.index("report_status.rejected")]    *  32 +
-             row[selectColumns.index("report_status.blacklisted")] *  16 +
-             row[selectColumns.index("datum_status.active")]       *   8 +
-             row[selectColumns.index("datum_status.passive")]      *   4 +
-             row[selectColumns.index("datum_status.rejected")]     *   2 +
-             row[selectColumns.index("datum_status.blacklisted")])
+        refDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(andate_s)], row[selectColumns.index(antime_s)])
+    obsDateTimeString = ioda_conv_util.IntDateTimeToString(row[dateIndex], row[timeIndex])
+    #Encode the 8 QC bitfields in the ODB2 file into a single value for IODA
+    qcVal = (row[rsActiveIndex]    * 128 +
+             row[rsPassiveIndex]   *  64 +
+             row[rsRejectedIndex]  *  32 +
+             row[rsBlacklistIndex] *  16 +
+             row[dsActiveIndex]    *   8 +
+             row[dsPassiveIndex]   *   4 +
+             row[dsRejectedIndex]  *   2 +
+             row[dsBlacklistIndex])
 
-    varName = varnoVariableDict[row[selectColumns.index("varno")]]
+    varName = varnoVariableDict[row[varnoIndex]]
 
-    #recordKey = row.statid.rstrip(), anDateTimeString
     recordKey = CreateKeyTuple(importDef[yamlRecordKey], row, selectColumns, columnVariableDict, vertcoVariableDict)
     locationKey = CreateKeyTuple(importDef[yamlLocationKey], row, selectColumns, columnVariableDict, vertcoVariableDict)
 
@@ -246,10 +288,8 @@ while row is not None:
     oerrKey = varName, ncOerrName
     oqcKey = varName, ncOqcName
 
-    rowObsValue = row[selectColumns.index("obsvalue")]
-    rowObsError = row[selectColumns.index("obs_error")]
-    oval =  rowObsValue if rowObsValue is not None else IODA_MISSING_VAL
-    oerr = rowObsError if rowObsError is not None else IODA_MISSING_VAL
+    oval = row[obsvalueIndex] if row[obsvalueIndex] is not None else IODA_MISSING_VAL
+    oerr = row[obs_errorIndex] if row[obs_errorIndex] is not None else IODA_MISSING_VAL
     if qcVal is None:
         qcVal = IODA_MISSING_VAL
     
@@ -278,32 +318,45 @@ for recordKey in obsDataDictTree:
                 if (varName, varCat) not in obsDataDictTree[recordKey][locationKey]:
                     obsDataDictTree[recordKey][locationKey][varName, varCat] = IODA_MISSING_VAL
 
-#For now, we convert relative to specific humidity here.
+#For now, we allow converting relative humidity to specific humidity here.
 #This code should be removed eventually, as this is not the right place to convert variables.
-#print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
-for recordKey in obsDataDictTree:
-    for locationKey in obsDataDictTree[recordKey]:
-        if ("relative_humidity", ncOvalName) in obsDataDictTree[recordKey][locationKey]:
-            obsDict = obsDataDictTree[recordKey][locationKey]
-            rh = obsDict[("relative_humidity", ncOvalName)]
-            rh_err = obsDict[("relative_humidity", ncOerrName)]
-            t = obsDict.get(("air_temperature", ncOvalName))
-            p = locationKey[2]
-            if (t is not None and rh is not None and rh_err is not None and p is not None and 
-            t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
-                q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
+if ConvertVars and ("relative_humidity" in varnoVariableDict):
+    relative_humidity_s = "relative_humidity"
+    specific_humidity_s = "specific_humidity"
+    temperature_s = "temperature"
 
-                obsDict[("specific_humidity", ncOvalName)] = q
-                obsDict[("specific_humidity", ncOerrName)] = q_err
-                obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
-            else:
-                obsDict[("specific_humidity", ncOvalName)] = IODA_MISSING_VAL
-                obsDict[("specific_humidity", ncOerrName)] = IODA_MISSING_VAL
-            obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
-                #print ",".join(map(lambda x: str(x), [recordKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
+    #In order to retrieve the pressure value from the location key, we need to know
+    #what position of the tuple it's in.
+    pressureIndex = -1
+    for index, varName in enumerate(importDef[yamlLocationKey]):
+        if varName == "air_pressure":
+            pressureIndex = index
+            break
 
-# print "Top level len: ", len(obsDataDictTree)
-# print "Num Locations: ", len(obsDataDictTree[recordKey])
+    for recordKey in obsDataDictTree:
+        for locationKey in obsDataDictTree[recordKey]:
+            if (relative_humidity_s, ncOvalName) in obsDataDictTree[recordKey][locationKey]:
+                obsDict = obsDataDictTree[recordKey][locationKey]
+                rh = obsDict[(relative_humidity_s, ncOvalName)]
+                rh_err = obsDict[(relative_humidity_s, ncOerrName)]
+                t = obsDict.get((temperature_s, ncOvalName))
+                p = locationKey[pressureIndex]
+                if (t is not None and rh is not None and rh_err is not None and p is not None and 
+                t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
+                    q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
+
+                    obsDict[(specific_humidity_s, ncOvalName)] = q
+                    obsDict[(specific_humidity_s, ncOerrName)] = q_err
+                    obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
+                else:
+                    obsDict[(specific_humidity_s, ncOvalName)] = IODA_MISSING_VAL
+                    obsDict[(specific_humidity_s, ncOerrName)] = IODA_MISSING_VAL
+                obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
+
+if Trace:
+    print "Num records: ", len(obsDataDictTree)
+    print "Last record key: ", recordKey
+    print "Num Locations, last record: ", len(obsDataDictTree[recordKey])
 
 # Call the writer. Pass in the reference date time string for writing the
 # version 1 netcdf file. The reference date time string won't be necessary when
