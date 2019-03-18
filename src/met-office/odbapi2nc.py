@@ -4,7 +4,6 @@ from collections import defaultdict, namedtuple
 import sys
 import os
 import argparse
-from math import exp
 import ioda_conv_ncio as iconv
 import ioda_conv_util
 import var_convert
@@ -318,9 +317,9 @@ for recordKey in obsDataDictTree:
                 if (varName, varCat) not in obsDataDictTree[recordKey][locationKey]:
                     obsDataDictTree[recordKey][locationKey][varName, varCat] = IODA_MISSING_VAL
 
-#For now, we allow converting relative humidity to specific humidity here.
+#For now, we allow converting relative humidity (varno=29) to specific humidity here.
 #This code should be removed eventually, as this is not the right place to convert variables.
-if ConvertVars and ("relative_humidity" in varnoVariableDict):
+if ConvertVars and (29 in varnoVariableDict):
     relative_humidity_s = "relative_humidity"
     specific_humidity_s = "specific_humidity"
     temperature_s = "temperature"

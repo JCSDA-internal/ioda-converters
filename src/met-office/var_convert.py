@@ -2,6 +2,8 @@
 # are being imported from the data source. Nonetheless, it is being
 # done for expediency. This code will hopefully one day be removed.
 
+from math import exp
+
 def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
     T_KELVIN = 273.15
     ES_ALPHA = 6.112
