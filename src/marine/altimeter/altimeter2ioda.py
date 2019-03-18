@@ -125,13 +125,13 @@ if __name__ == '__main__':
     parser.add_argument('--path', help='path to altimetry files',type=str, required=True)
     parser.add_argument('--date', help='middle of the window, yyyymmddhh', type=str, required=True)
     parser.add_argument('--ic', help='initial condition, yyyymmddhh', type=str, required=True)    
-    parser.add_argument('--window', help='half window length in hours', type=str, required=True)
+    parser.add_argument('--window', help='window length in hours', type=str, required=True)
     args = parser.parse_args()
 
     midwindow_date = args.date
     ic_date = args.ic
 
-    # Create lis of altimeters.
+    # Create list of altimeters.
     # TODO: Pass as argument
     altimeters=['j3','c2','sa']
 
@@ -143,7 +143,7 @@ if __name__ == '__main__':
             dofy_file = int(filename[-6:-3])
             dofy_da = datetime.datetime.strptime(args.date[0:8],"%Y%m%d")
             dofy_da = dofy_da.timetuple().tm_yday
-            if (abs(1.0*(dofy_file-dofy_da))<=2.0*int(args.window)/24.0):
+            if (abs(1.0*(dofy_file-dofy_da))<=int(args.window)/24.0):
                 print(filename)            
                 if (cnt==0):
                     adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)
