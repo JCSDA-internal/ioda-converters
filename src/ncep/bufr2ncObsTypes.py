@@ -400,7 +400,7 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-                OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
+                OutVals[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
 
         return OutVals
 
