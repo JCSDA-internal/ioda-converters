@@ -143,7 +143,7 @@ if __name__ == '__main__':
             dofy_file = int(filename[-6:-3])
             dofy_da = datetime.datetime.strptime(args.date[0:8],"%Y%m%d")
             dofy_da = dofy_da.timetuple().tm_yday
-            if (abs(1.0*(dofy_file-dofy_da))<=int(args.window)/24.0):
+            if (abs(1.0*(dofy_file-dofy_da))<=np.ceil(float(args.window)/24.0)):
                 print(filename)            
                 if (cnt==0):
                     adt = preobs(filename=filename, window_length=int(args.window), midwindow_date=midwindow_date)
