@@ -10,6 +10,7 @@ import var_convert
 import yaml
 import io
 
+
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
 #      is unneeded in that environment (but it doesn't hurt anything). 
@@ -37,6 +38,7 @@ analysis_date_time_s = "analysis_date_time"
 date_time_s = "date_time"
 float_s = "float"
 string_s = "string"
+varnoVertco_s = "USE_VERTCO"
 IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
 
 def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoVarDict):
@@ -124,6 +126,11 @@ if (os.path.isfile(NetcdfFname)):
 if (BadArgs):
     sys.exit(2)
 
+if Trace:
+    import time
+    import datetime
+    print "Start: " + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
 # Read in the contents of the definition file
 with io.open(DefFname, 'r') as defstream:
     importDef = yaml.load(defstream)
@@ -140,6 +147,10 @@ varnoVariableDict = importDef['varno_variables']
 if Trace:
     print "varno_variables:"
     print str(varnoVariableDict)
+varnoVertcoVariableDict = importDef['varno_vertco_variables']
+if Trace:
+    print "varno_vertco_variables:"
+    print str(varnoVertcoVariableDict)
 
 # Define strings that act as keys in yaml definition file.
 # The passed yaml file must use these strings, of course.
@@ -263,8 +274,16 @@ timeIndex = selectColumns.index(time_s)
 obsvalueIndex = selectColumns.index("obsvalue")
 obs_errorIndex = selectColumns.index("obs_error")
 varnoIndex = selectColumns.index("varno")
+vertcoRef1Index = selectColumns.index(vertco_reference_1_s)
+
+rowCount = 0
 
 while row is not None:
+    if Trace:
+        rowCount += 1
+        if rowCount % 50000 == 0:
+            print "Processed {} rows".format(rowCount)
+
     if (refDateTimeString is None):
         refDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(andate_s)], row[selectColumns.index(antime_s)])
     obsDateTimeString = ioda_conv_util.IntDateTimeToString(row[dateIndex], row[timeIndex])
@@ -278,7 +297,21 @@ while row is not None:
              row[dsRejectedIndex]  *   2 +
              row[dsBlacklistIndex])
 
+    # For conventional obs, varName is usually found using only varno.
+    # For satellite obs, must also look at vertco_reference_1 column to find the channel
     varName = varnoVariableDict[row[varnoIndex]]
+    if Trace and rowCount == 1:
+        print "first row varName: {}".format(varName)
+    if varName == varnoVertco_s:
+        if row[varnoIndex] in varnoVertcoVariableDict and int(row[vertcoRef1Index]) in varnoVertcoVariableDict[row[varnoIndex]]:
+            varName = varnoVertcoVariableDict[row[varnoIndex]][int(row[vertcoRef1Index])]
+            if Trace and rowCount == 1:
+                print "first row vertcoVarName: {}".format(varName)
+        else:
+            # Here we don't have a variable defined in the yaml for the channel number. (vertco_reference_1 value). 
+            # Just move onto the next row.
+            row = c.fetchone()
+            continue
 
     recordKey = CreateKeyTuple(importDef[yamlRecordKey], row, selectColumns, columnVariableDict, vertcoVariableDict)
     locationKey = CreateKeyTuple(importDef[yamlLocationKey], row, selectColumns, columnVariableDict, vertcoVariableDict)
@@ -309,17 +342,32 @@ while row is not None:
 
     row = c.fetchone()
 
+if Trace:
+    print "Finished reading file. Now populating missing values."
+
 #After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
 for recordKey in obsDataDictTree:
     for locationKey in obsDataDictTree[recordKey]:
-        for varName in varnoVariableDict.values():
-            for varCat in varCategories:
-                if (varName, varCat) not in obsDataDictTree[recordKey][locationKey]:
-                    obsDataDictTree[recordKey][locationKey][varName, varCat] = IODA_MISSING_VAL
+        for varno in varnoVariableDict:
+            varName = varnoVariableDict[varno]
+            if varName == varnoVertco_s:
+                for vertcoVarName in varnoVertcoVariableDict[varno].values():
+                    for varCat in varCategories:
+                        if (vertcoVarName, varCat) not in obsDataDictTree[recordKey][locationKey]:
+                            obsDataDictTree[recordKey][locationKey][vertcoVarName, varCat] = IODA_MISSING_VAL
+            else:
+                for varCat in varCategories:
+                    if (varName, varCat) not in obsDataDictTree[recordKey][locationKey]:
+                        obsDataDictTree[recordKey][locationKey][varName, varCat] = IODA_MISSING_VAL
+
+if Trace:
+    print "Finished populating missing values."
 
 #For now, we allow converting relative humidity (varno=29) to specific humidity here.
 #This code should be removed eventually, as this is not the right place to convert variables.
 if ConvertVars and (29 in varnoVariableDict):
+    if Trace:
+        print "Converting relative humidity to specific humidity."
     relative_humidity_s = "relative_humidity"
     specific_humidity_s = "specific_humidity"
     temperature_s = "temperature"
@@ -351,6 +399,8 @@ if ConvertVars and (29 in varnoVariableDict):
                     obsDict[(specific_humidity_s, ncOvalName)] = IODA_MISSING_VAL
                     obsDict[(specific_humidity_s, ncOerrName)] = IODA_MISSING_VAL
                 obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
+    if Trace:
+        print "Finished humidity conversion."
 
 if Trace:
     print "Num records: ", len(obsDataDictTree)
@@ -366,3 +416,6 @@ AttrData = {
    }
 
 nc_writer.BuildNetcdf(obsDataDictTree, AttrData)
+
+if Trace:
+    print "End: " + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')

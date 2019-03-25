@@ -64,7 +64,7 @@ class NcWriter(object):
         self._nvars   = 0
         self._nrecs   = 0
         self._nobs    = 0
-        self._nstring = 20
+        self._nstring = 30
 
         # Names assigned to record number (location metadata)
         self._rec_num_name = "record_number"
@@ -128,7 +128,7 @@ class NcWriter(object):
 
         TimeOffset = np.zeros((self._nlocs), dtype = 'f4')
         for i in range(len(TimeStrings)):
-            Tstring = TimeStrings[i].tostring()
+            Tstring = TimeStrings[i].tostring().rstrip('\x00')
             ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
 
             TimeDelta = ObsDt - self._ref_date_time
@@ -417,7 +417,6 @@ class NcWriter(object):
         # data sections: Obs variables, Record metadata, locations metadata
         # and variable metadata.
         self.WriteNcAttr(AttrData)
-
         self.WriteNcObsVars(ObsVars, VarMdata)
 
         self.WriteNcMetadata(self._rec_md_name, self._nrecs_dim_name, RecMdata)
