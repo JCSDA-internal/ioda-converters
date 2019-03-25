@@ -5,7 +5,11 @@ import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile, netcdf
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from collections import defaultdict
+import ioda_conv_ncio as iconv
 
+
+vName = "obs_absolute_dynamic_topography",
 
 class profile(object):
 
@@ -158,13 +162,14 @@ class profile(object):
             dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
 
             # Diff. between ob. time and time in the file (hrs)!
-            ddtg = (dtg - self.date).total_seconds()/3600.
+            #ddtg = (dtg - self.date).total_seconds()/3600.
 
             for l, lvl in enumerate(self.odata['ob_lvl'][n]):
 
                 idata['ob_lat'].append(lat)
                 idata['ob_lon'].append(lon)
-                idata['ob_dtg'].append(ddtg)
+                #idata['ob_dtg'].append(ddtg)
+                idata['ob_dtg'].append(dtg)  # provide absolute time
                 idata['ob_lvl'].append(lvl)
                 idata['ob_sal'].append(self.odata['ob_sal'][n][l])
                 idata['ob_sal_err'].append(self.odata['ob_sal_err'][n][l])
@@ -243,6 +248,79 @@ class profile(object):
 
         return
 
+    def _to_NcWriter(self, writer):
+        '''
+        Selectively (e.g. salinity, temperature) convert odata into idata
+        idata is the IODA required data structure, where profiles are stacked
+        on top of each other into a single vector.
+        '''
+
+        # idata is the dictionary containing IODA friendly data structure
+        idata = defaultdict(lambda: defaultdict(dict))
+
+        tmpName = 'sea_water_temperature'
+        tmp_valKey = tmpName, writer.OvalName()
+        tmp_errKey = tmpName, writer.OerrName()
+        tmp_qcKey = tmpName, writer.OqcName()
+
+        salName = 'sea_water_salinity'
+        sal_valKey = salName, writer.OvalName()
+        sal_errKey = salName, writer.OerrName()
+        sal_qcKey = salName, writer.OqcName()
+
+        for n in range(self.odata['n_obs']):
+
+            lat = self.odata['ob_lat'][n]
+            lon = self.odata['ob_lon'][n]
+            dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
+
+            tmp_qc = self.odata['ob_tmp_qc'][n]
+            sal_qc = self.odata['ob_sal_qc'][n]
+
+            for l, lvl in enumerate(self.odata['ob_lvl'][n]):
+
+                locKey = lat, lon, lvl, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                print("val = %f" % self.odata['ob_tmp'][n][l])
+
+                idata[n][locKey][tmp_valKey] = self.odata['ob_tmp'][n][l]
+                idata[n][locKey][tmp_errKey] = self.odata['ob_tmp_err'][n][l]
+                idata[n][locKey][tmp_qcKey] = tmp_qc
+
+                idata[n][locKey][sal_valKey] = self.odata['ob_sal'][n][l]
+                idata[n][locKey][sal_errKey] = self.odata['ob_sal_err'][n][l]
+                idata[n][locKey][sal_qcKey] = sal_qc
+
+        self.idata = idata
+
+        return
+
+    def to_iodaNcWriter(self):
+
+        if self.odata['n_obs'] <= 0:
+            print('No profile observations for IODA!')
+            return
+
+        locationKeyList = [
+            ("latitude", "float"),
+            ("longitude", "float"),
+            ("level", "float"),
+            ("date_time", "string")
+            ]
+
+        AttrData = {
+          'odb_version': 1,
+          'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+           }
+
+        writer = iconv.NcWriter(self.filename+'.nc', [], locationKeyList)
+
+        self._to_NcWriter(writer)
+
+        writer.BuildNetcdf(self.idata, AttrData)
+
+        return
+
 
 if __name__ == '__main__':
 
@@ -254,7 +332,7 @@ if __name__ == '__main__':
         '-n', '--name', help='name of the binary GODAE profile file (path)',
         type=str, required=True)
     parser.add_argument(
-        '-d', '--date', help='file date', type=str, required=True)
+        '-d', '--date', help='file date', type=str, metavar='YYYYMMDDHH', required=True)
 
     args = parser.parse_args()
 
@@ -262,4 +340,5 @@ if __name__ == '__main__':
     fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
 
     prof = profile(fname, fdate)
-    prof.to_ioda()
+    #prof.to_ioda()
+    prof.to_iodaNcWriter()
