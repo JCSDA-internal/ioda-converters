@@ -394,15 +394,16 @@ class ObsType(object):
     def bufr_float_to_actual(self, SpecList, BufrValues, ActualValues):
         # Make a separate copy of the input dictionary
         OutVals = { key : value for key, value in ActualValues.items() }
-
+        OutValsBufr = { key : value for key, value in ActualValues.items() }
         for SubSpecs, SubBvals in zip(SpecList, BufrValues):
             for VarSpec, Bval in zip(SubSpecs, SubBvals):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
                 OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
+                OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
 
-        return OutVals
+        return [OutVals, OutValsBufr]
 
     ###############################################################################
     # This method will take the four input spec lists and read the mnemonics
@@ -421,29 +422,31 @@ class ObsType(object):
         # Initialize ActualValues to a list with one entry which is an empty dictionary.
         ActualValues = []
         ActualValues.append({})
-    
+        ActualValuesBufr = []
+        ActualValuesBufr.append({})
+
         # Read and convert the individual data mnemonics. The mnemonic value is the second
         # entry in the int_spec sublist elements.
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.int_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists) 
-        ActualValues[0] = self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues[0])
+        [ActualValues[0], ActualValuesBufr[0]]= self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues[0])
 
         # Read and convert the event mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.evn_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Eflag=True) 
-        ActualValues[0] = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues[0])
+        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues[0])
 
         # Read and convert the replication mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.rep_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True) 
-        ActualValues[0] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
+        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
 
         # Read and convert the sequence mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.seq_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Sflag=True) 
-        ActualValues[0] = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues[0])
+        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues[0])
 
-        return ActualValues
+        return [ActualValues, ActualValuesBufr]
 
     ###############################################################################
     # This method will calculate the absolute date and time values from the BUFR
@@ -644,19 +647,22 @@ class ObsType(object):
                 # dictionaries where each dictionary represents one observation.
                 # A dictionary within the list is keyed by the netcdf variable
                 # name and contains the associated data value.
-                ActualValues = self.extract_bufr(bufr)
+                [ActualValues, ActualValuesBufr] = self.extract_bufr(bufr)
     
                 for i in range(len(ActualValues)):
                     # Put the message type and message date into the dictionary.
                     ActualValues[i]['msg_type'] = MsgType
                     ActualValues[i]['msg_date'] = MsgDate
-    
+   
+                    ActualValuesBufr[i]['msg_type'] = MsgType
+                    ActualValuesBufr[i]['msg_date'] = MsgDate
+
                     # Calculate the value for the Time variable (which is an offset
                     # from the reference time). Add the Time value to the dictionary.
-                    [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'], ActualValues[i]['time'] ] = self.calc_obs_date_time(ActualValues[i])
+                    [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'], ActualValues[i]['time'] ] = self.calc_obs_date_time(ActualValuesBufr[i])
 
                     # Calculate the value of lat and lon and add to the dictionary.
-                    [ ActualValues[i]['latitude'], ActualValues[i]['longitude'] ] = self.calc_obs_lat_lon(ActualValues[i])
+                    [ ActualValues[i]['latitude'], ActualValues[i]['longitude'] ] = self.calc_obs_lat_lon(ActualValuesBufr[i])
     
                     # Write out the netcdf variables.
                     for Vname, Vdata in ActualValues[i].items():
@@ -698,11 +704,11 @@ class AircraftObsType(ObsType):
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = '^NC00400[14]'
             self.int_spec = [
-                [ [ 'YEAR',   'YEAR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'MNTH',   'MNTH',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'DAYS',   'DAYS',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'HOUR',   'HOUR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
-                  [ 'MINU',   'MINU',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                [ [ 'year',   'YEAR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'mnth',   'MNTH',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'days',   'DAYS',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'hour',   'HOUR',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
+                  [ 'mInu',   'MINU',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'ACID',   'ACID',   cm.DTYPE_DOUBLE,  ['nobs'], [self.nobs] ],
                   [ 'CORN',   'CORN',   cm.DTYPE_INTEGER, ['nobs'], [self.nobs] ],
                   [ 'CLAT',   'CLAT',   cm.DTYPE_FLOAT,   ['nobs'], [self.nobs] ],
