@@ -7,8 +7,6 @@ import netCDF4 as nc
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-# TODO set the date/time correctly
-
 
 class Profile(object):
 
@@ -35,9 +33,8 @@ class Profile(object):
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
         for i in range(len(hrs)):
+            # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
-                continue
-            if obid[i] == 2220:
                 continue
 
             valKey = vName[obid[i]], self.writer.OvalName()

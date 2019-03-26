@@ -7,8 +7,6 @@ import netCDF4 as nc
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-# TODO set the date/time correctly
-
 
 class Observation(object):
 
@@ -36,12 +34,11 @@ class Observation(object):
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
 
-        count = 0
         for i in range(len(hrs)):
+            # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
                 continue
 
-            count += 1
             dt = base_date + timedelta(hours=float(hrs[i]))
             locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
