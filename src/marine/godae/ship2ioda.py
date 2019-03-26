@@ -118,7 +118,7 @@ class ship(object):
 
             lat = self.odata['ob_lat'][n]
             lon = self.odata['ob_lon'][n]
-            dtg = datetime.strptime(self.odata['ob_dtg'][i], '%Y%m%d%H%M')
+            dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
 
             locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
