@@ -400,8 +400,29 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
+
                 OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
                 OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
+                
+        return [OutVals, OutValsBufr]
+
+    ###############################################################################
+    # This method will convert bufr float data to the specified actual format.
+    # BufrValues is a list of masked arrays, where each masked array contains
+    # entries for all mnemonics in the sub-list of SpecList.
+    def bufr_float_to_actual_bufr(self, SpecList, BufrValues, ActualValues, ActualValuesBufr):
+        # Make a separate copy of the input dictionary
+        OutVals = { key : value for key, value in ActualValues.items() }
+        OutValsBufr = { key : value for key, value in ActualValuesBufr.items() }
+        for SubSpecs, SubBvals in zip(SpecList, BufrValues):
+            for VarSpec, Bval in zip(SubSpecs, SubBvals):
+                # Convert according to the spec, and add to the dictionary.
+                # Netcdf variable name is in VarSpec[0]
+                # Data type is in VarSpec[2]
+
+                OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
+                OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
+                
 
         return [OutVals, OutValsBufr]
 
@@ -429,22 +450,39 @@ class ObsType(object):
         # entry in the int_spec sublist elements.
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.int_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists) 
-        [ActualValues[0], ActualValuesBufr[0]]= self.bufr_float_to_actual(self.int_spec, BufrValues, ActualValues[0])
-
+        [ActualValues[0], ActualValuesBufr[0]]= self.bufr_float_to_actual_bufr (
+                                                self.int_spec, BufrValues, 
+                                                ActualValues[0], ActualValuesBufr[0])
+        
+        
         # Read and convert the event mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.evn_spec ]
-        BufrValues = self.read_bufr_data(bufr, Mlists, Eflag=True) 
-        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues[0])
+        BufrValues = self.read_bufr_data(bufr, Mlists, Eflag=True)
+        [ActualValues[0], ActualValuesBufr[0]]= self.bufr_float_to_actual_bufr (
+                                                self.evn_spec, BufrValues, 
+                                                ActualValues[0], ActualValuesBufr[0])
+
+#        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues[0])
+
+
+        #print('ActualValuesBufr BBBBB:', ActualValuesBufr)
+        #sys.exit()
 
         # Read and convert the replication mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.rep_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True) 
-        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
+        #[ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
+        [ActualValues[0], ActualValuesBufr[0]]= self.bufr_float_to_actual_bufr (
+                                                self.rep_spec, BufrValues, 
+                                                ActualValues[0], ActualValuesBufr[0])
+
 
         # Read and convert the sequence mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.seq_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Sflag=True) 
-        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.seq_spec, BufrValues, ActualValues[0])
+        [ActualValues[0], ActualValuesBufr[0]]= self.bufr_float_to_actual_bufr (
+                                                self.seq_spec, BufrValues, 
+                                                ActualValues[0], ActualValuesBufr[0])
 
         return [ActualValues, ActualValuesBufr]
 
@@ -659,6 +697,7 @@ class ObsType(object):
 
                     # Calculate the value for the Time variable (which is an offset
                     # from the reference time). Add the Time value to the dictionary.
+
                     [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'], ActualValues[i]['time'] ] = self.calc_obs_date_time(ActualValuesBufr[i])
 
                     # Calculate the value of lat and lon and add to the dictionary.
