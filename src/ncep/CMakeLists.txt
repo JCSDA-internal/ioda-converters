@@ -1,4 +1,4 @@
-list( APPEND PROGRAMS
+list( APPEND programs
   bufr2nc.py
   bufr2ncCommon.py
   bufr2ncObsTypes.py

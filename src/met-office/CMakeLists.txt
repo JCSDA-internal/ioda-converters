@@ -1,7 +1,7 @@
-list( APPEND PROGRAMS
+list( APPEND programs
   odbapi2nc.py
   odbapi2json.py
-  DESTINATION bin)
+)
 
 COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
 

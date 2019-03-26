@@ -1,4 +1,4 @@
-list( APPEND PROGRAMS
+list( APPEND programs
   cat_nc_files.py
   select_nc_obs.py
   prep_nc_files.py
@@ -6,7 +6,7 @@ list( APPEND PROGRAMS
   split_conv.py
   run_prep_nc_files.sh
   run_select_nc_obs.sh
-  DESTINATION bin)
+)
 
 COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
 
