@@ -34,6 +34,7 @@ class Observation(object):
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
 
+        
         count = 0
         for i in range(len(lons)):
 
@@ -47,7 +48,7 @@ class Observation(object):
 
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.1 
+            self.data[0][locKey][errKey] = 0.1
 
 
 
