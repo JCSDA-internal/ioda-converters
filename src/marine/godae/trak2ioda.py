@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     finput = args.input
     foutput = args.output if args.output is not None else finput+'.nc'
-    fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
+    fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     track = trak(finput, fdate)
     track.to_ioda(foutput)
