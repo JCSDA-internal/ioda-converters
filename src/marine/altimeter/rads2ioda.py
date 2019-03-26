@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 import dateutil.parser
 from collections import defaultdict
 
-# TODO set the date/time correctly
 
 
 class Observation(object):
