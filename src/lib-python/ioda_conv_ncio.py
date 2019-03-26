@@ -66,6 +66,10 @@ class NcWriter(object):
         self._nobs    = 0
         self._nstring = 20
 
+        # default fill values
+        self._defaultF4 = np.abs(netCDF4.default_fillvals['f4'])
+        self._defaultI4 = np.abs(netCDF4.default_fillvals['i4'])
+
         # Names assigned to record number (location metadata)
         self._rec_num_name = "record_number"
 
@@ -300,9 +304,9 @@ class NcWriter(object):
 
         # Preallocate arrays and fill them up with data from the dictionary
         ObsVars = {
-            self._oval_name  : np.zeros((self._nvars, self._nlocs), dtype='f4'),
-            self._oerr_name  : np.zeros((self._nvars, self._nlocs), dtype='f4'),
-            self._oqc_name   : np.zeros((self._nvars, self._nlocs), dtype='i4'),
+            self._oval_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
+            self._oerr_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
+            self._oqc_name   : np.full((self._nvars, self._nlocs), self._defaultI4),
             }
 
         LocMdata = { }
