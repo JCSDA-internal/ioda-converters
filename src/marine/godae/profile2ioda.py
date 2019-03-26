@@ -3,8 +3,10 @@
 from __future__ import print_function
 import numpy as np
 from datetime import datetime
-from scipy.io import FortranFile, netcdf
+from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from collections import defaultdict
+import ioda_conv_ncio as iconv
 
 
 class profile(object):
@@ -26,7 +28,7 @@ class profile(object):
         '''
 
         try:
-            fh = FortranFile(self.filename, mode='r', header_dtype='>i4')
+            fh = FortranFile(self.filename, mode='r', header_dtype='>u4')
         except IOError:
             raise IOError('%s file not found!' % self.filename)
         except Exception:
@@ -132,24 +134,42 @@ class profile(object):
 
         return
 
-    def _to_nlocs(self):
+    def to_ioda(self, foutput):
         '''
-        Selectively (e.g. salinity, temperature) convert odata into idata
-        idata is the IODA required data structure, where profiles are stacked
-        on top of each other into a single vector.
+        Selectively convert odata into idata.
+        idata is the IODA required data structure
         '''
+
+        if self.odata['n_obs'] <= 0:
+            print('No profile observations for IODA!')
+            return
+
+        locationKeyList = [
+            ("latitude", "float"),
+            ("longitude", "float"),
+            ("level", "float"),
+            ("date_time", "string")
+        ]
+
+        AttrData = {
+            'odb_version': 1,
+            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
+
+        writer = iconv.NcWriter(foutput, [], locationKeyList)
 
         # idata is the dictionary containing IODA friendly data structure
-        idata = {}
+        idata = defaultdict(lambda: defaultdict(dict))
 
-        idata['ob_lat'] = []
-        idata['ob_lon'] = []
-        idata['ob_lvl'] = []
-        idata['ob_dtg'] = []
-        idata['ob_sal'] = []
-        idata['ob_sal_err'] = []
-        idata['ob_tmp'] = []
-        idata['ob_tmp_err'] = []
+        tmpName = 'sea_water_temperature'
+        tmp_valKey = tmpName, writer.OvalName()
+        tmp_errKey = tmpName, writer.OerrName()
+        tmp_qcKey = tmpName, writer.OqcName()
+
+        salName = 'sea_water_salinity'
+        sal_valKey = salName, writer.OvalName()
+        sal_errKey = salName, writer.OerrName()
+        sal_qcKey = salName, writer.OqcName()
 
         for n in range(self.odata['n_obs']):
 
@@ -157,89 +177,22 @@ class profile(object):
             lon = self.odata['ob_lon'][n]
             dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
 
-            # Diff. between ob. time and time in the file (hrs)!
-            ddtg = (dtg - self.date).total_seconds()/3600.
+            tmp_qc = self.odata['ob_tmp_qc'][n]
+            sal_qc = self.odata['ob_sal_qc'][n]
 
             for l, lvl in enumerate(self.odata['ob_lvl'][n]):
 
-                idata['ob_lat'].append(lat)
-                idata['ob_lon'].append(lon)
-                idata['ob_dtg'].append(ddtg)
-                idata['ob_lvl'].append(lvl)
-                idata['ob_sal'].append(self.odata['ob_sal'][n][l])
-                idata['ob_sal_err'].append(self.odata['ob_sal_err'][n][l])
-                idata['ob_tmp'].append(self.odata['ob_tmp'][n][l])
-                idata['ob_tmp_err'].append(self.odata['ob_tmp_err'][n][l])
+                locKey = lat, lon, lvl, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        idata['nlocs'] = len(idata['ob_dtg'])
+                idata[n][locKey][tmp_valKey] = self.odata['ob_tmp'][n][l]
+                idata[n][locKey][tmp_errKey] = self.odata['ob_tmp_err'][n][l]
+                idata[n][locKey][tmp_qcKey] = tmp_qc
 
-        self.idata = idata
+                idata[n][locKey][sal_valKey] = self.odata['ob_sal'][n][l]
+                idata[n][locKey][sal_errKey] = self.odata['ob_sal_err'][n][l]
+                idata[n][locKey][sal_qcKey] = sal_qc
 
-        return
-
-    def to_ioda(self):
-
-        if self.odata['n_obs'] <= 0:
-            print('No profile observations for IODA!')
-            return
-
-        self._to_nlocs()
-
-        ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
-
-        ncid.createDimension('nlocs', self.idata['nlocs'])  # no. of obs per var type
-        ncid.createDimension('nrecs', 1)  # no. of profiles
-        ncid.createDimension('nvars', 1)  # no. of variables
-        ncid.createDimension('nobs', 1*self.idata['nlocs'])  # total no. of obs
-
-        longitudes = ncid.createVariable('longitude@MetaData', 'f4', ('nlocs',))
-        longitudes.units = 'degrees_east'
-
-        latitudes = ncid.createVariable('latitude@MetaData', 'f4', ('nlocs',))
-        latitudes.units = 'degrees_north'
-
-        times = ncid.createVariable('time@MetaData', 'f4', ('nlocs',))
-        times.long_name = 'observation time from date_time'
-        times.units = 'hours'
-        times.description = 'why does this have to be with a reference to, why not absolute?'
-
-        depths = ncid.createVariable('ocean_depth@MetaData', 'f4', ('nlocs',))
-        depths.units = 'meters'
-        depths.positive = 'down'
-
-        sals = ncid.createVariable('ocean_salinity@ObsValue', 'f4', ('nlocs',))
-        sals.units = 'g/kg'
-        sals.description = ''
-
-        sal_errs = ncid.createVariable(
-            'ocean_salinity@ObsError', 'f4', ('nlocs',))
-        sal_errs.units = '(g/kg)'
-        sal_errs.description = 'Standard deviation of observation error'
-
-        tmps = ncid.createVariable(
-            'insitu_temperature@ObsValue', 'f4', ('nlocs',))
-        tmps.units = 'degree_celcius'
-        tmps.description = ''
-
-        tmp_errs = ncid.createVariable(
-            'insitu_temperature@ObsError', 'f4', ('nlocs',))
-        tmp_errs.units = '(degree_celcius)'
-        tmp_errs.description = 'Standard deviation of observation error'
-
-        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
-
-        longitudes[:] = np.asarray(self.idata['ob_lon'], dtype=np.float32)
-        latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
-        depths[:] = np.asarray(self.idata['ob_lvl'], dtype=np.float32)
-        times[:] = np.asarray(self.idata['ob_dtg'], dtype=np.float32)
-
-        sals[:] = np.asarray(self.idata['ob_sal'], dtype=np.float32)
-        sal_errs[:] = np.asarray(self.idata['ob_sal_err'], dtype=np.float32)
-
-        tmps[:] = np.asarray(self.idata['ob_tmp'], dtype=np.float32)
-        tmp_errs[:] = 0.5 + np.asarray(self.idata['ob_tmp_err'], dtype=np.float32)
-
-        ncid.close()
+        writer.BuildNetcdf(idata, AttrData)
 
         return
 
@@ -251,15 +204,20 @@ if __name__ == '__main__':
         description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '-n', '--name', help='name of the binary GODAE profile file (path)',
+        '-i', '--input', help='name of the input binary GODAE profile file',
         type=str, required=True)
     parser.add_argument(
-        '-d', '--date', help='file date', type=str, required=True)
+        '-o', '--output', help='name of the output netCDF GODAE profile file',
+        type=str, required=False, default=None)
+    parser.add_argument(
+        '-d', '--date', help='file date', metavar='YYYYMMDDHH',
+        type=str, required=True)
 
     args = parser.parse_args()
 
-    fname = args.name
-    fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
+    finput = args.input
+    foutput = args.output if args.output is not None else finput+'.nc'
+    fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    prof = profile(fname, fdate)
-    prof.to_ioda()
+    prof = profile(finput, fdate)
+    prof.to_ioda(foutput)
