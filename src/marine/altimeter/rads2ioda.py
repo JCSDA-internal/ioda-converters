@@ -78,8 +78,8 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--date',
                         help="base date", type=str, required=True)
     args = parser.parse_args()
-    fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
-
+    fdate = datetime.strptime(args.date, '%Y%m%d%H')
+    print(fdate)
     writer = iconv.NcWriter(args.o, [], locationKeyList)
 
     # Read in the altimeter
