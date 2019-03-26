@@ -143,6 +143,7 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     # into the first element of the nlevs dimension. Note that there is
     # an assumption that nlevs is the first dimension of Value and
     # the second dimension of NcVar.
+
     NcVar = Fid[Vname]
     ValNdim = Value.ndim
     NcNdim = NcVar.ndim
@@ -702,9 +703,11 @@ class ObsType(object):
 
                     # Calculate the value of lat and lon and add to the dictionary.
                     [ ActualValues[i]['latitude'], ActualValues[i]['longitude'] ] = self.calc_obs_lat_lon(ActualValuesBufr[i])
-    
+                    
+
                     # Write out the netcdf variables.
                     for Vname, Vdata in ActualValues[i].items():
+
                         # Skip the write if Vdata is empty
                         if Vdata.size:
                             WriteNcVar(nc, ObsNum, Vname, Vdata)
