@@ -58,13 +58,15 @@ class NcWriter(object):
         self._nvars_dim_name = 'nvars'
         self._nobs_dim_name  = 'nobs'
         self._nstr_dim_name  = 'nstring'
+        self._ndatetime_dim_name  = 'ndatetime'
 
         # Dimension sizes
         self._nlocs   = 0
         self._nvars   = 0
         self._nrecs   = 0
         self._nobs    = 0
-        self._nstring = 20
+        self._nstring = 50
+        self._ndatetime = 20
 
         # default fill values
         self._defaultF4 = np.abs(netCDF4.default_fillvals['f4'])
@@ -151,6 +153,8 @@ class NcWriter(object):
             Vector = np.zeros((Nsize), dtype='f4')
         elif (Dtype == "string"):
             Vector = np.chararray((Nsize, self._nstring))
+        elif (Dtype == "datetime"):
+            Vector = np.chararray((Nsize, self._ndatetime))
         else:
             print("ERROR: Unrecognized vector data type: ", Dtype)
             exit(-3)
@@ -168,6 +172,9 @@ class NcWriter(object):
             Vector = Values
         elif (Dtype == "string"):
             StringType = "S{0:d}".format(self._nstring)
+            Vector = netCDF4.stringtochar(np.array(Values, StringType))
+        elif (Dtype == "datetime"):
+            StringType = "S{0:d}".format(self._ndatetime)
             Vector = netCDF4.stringtochar(np.array(Values, StringType))
         else:
             print("ERROR: Unrecognized vector data type: ", Dtype)
@@ -210,6 +217,7 @@ class NcWriter(object):
         self._fid.createDimension(self._nrecs_dim_name, self._nrecs)
         self._fid.createDimension(self._nobs_dim_name, self._nobs)
         self._fid.createDimension(self._nstr_dim_name, self._nstring)
+        self._fid.createDimension(self._ndatetime_dim_name, self._ndatetime)
 
         if (self._out_nc_version == 1):
             for Gname, Vvals in ObsVars.items():
@@ -247,7 +255,10 @@ class NcWriter(object):
                 NcVname = "{0:s}@{1:s}".format(Vname, Gname)
                 NcDtype = self.NumpyToNcDtype(Vvals.dtype)
                 if (NcDtype == 'c'):
-                    self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
+                    if (NcVname == "date_time@MetaData"):
+                        self._fid.createVariable(NcVname, NcDtype, (DimName, self._ndatetime_dim_name))
+                    else:
+                        self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
                 else:
                     self._fid.createVariable(NcVname, NcDtype, (DimName))
 
@@ -312,6 +323,10 @@ class NcWriter(object):
         LocMdata = { }
         for i in range(len(self._loc_key_list)):
             (LocVname, LocVtype) = self._loc_key_list[i]
+            # if date_time was specified as as a "string" override to
+            # define it as a "datetime"
+            if LocVname == "date_time":
+                LocVtype = "datetime"
             LocMdata[LocVname] = self.CreateNcVector(self._nlocs, LocVtype)
         LocMdata[self._rec_num_name] = self.CreateNcVector(self._nlocs, "integer")
 
@@ -341,6 +356,12 @@ class NcWriter(object):
                 # Extract the locations metadata encoded in the keys
                 for i in range(len(self._loc_key_list)):
                     (LocVname, LocVtype) = self._loc_key_list[i]
+
+                    # if date_time was specified as as a "string" override to
+                    # define it as a "datetime"
+                    if LocVname == "date_time":
+                        LocVtype = "datetime"
+
                     LocMdata[LocVname][LocNum-1] = self.FillNcVector(LocKey[i], LocVtype)
                 LocMdata[self._rec_num_name][LocNum-1] = RecNum
 
