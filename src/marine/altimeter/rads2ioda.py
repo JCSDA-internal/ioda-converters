@@ -33,6 +33,7 @@ class Observation(object):
 
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
+        qcKey = vName, self.writer.OqcName()
 
         
         count = 0
@@ -49,7 +50,7 @@ class Observation(object):
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
-
+            self.data[0][locKey][qcKey] = 0
 
 
 vName = "obs_absolute_dynamic_topography",
