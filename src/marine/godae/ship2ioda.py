@@ -83,7 +83,7 @@ class ship(object):
 
         return
 
-    def to_ioda(self):
+    def to_ioda(self, foutput):
         '''
         Selectively convert odata into idata.
         idata is the IODA required data structure
@@ -104,7 +104,7 @@ class ship(object):
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        writer = iconv.NcWriter(self.filename+'.nc', [], locationKeyList)
+        writer = iconv.NcWriter(foutput, [], locationKeyList)
 
         # idata is the dictionary containing IODA friendly data structure
         idata = defaultdict(lambda: defaultdict(dict))
@@ -137,15 +137,19 @@ if __name__ == '__main__':
     parser = ArgumentParser(description=desc,
                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '-n', '--name', help='name of the binary GODAE ship file (path)',
+        '-i', '--input', help='name of the binary GODAE ship file',
         type=str, required=True)
+    parser.add_argument(
+        '-o', '--output', help='name of the output netCDF GODAE ship file',
+        type=str, required=False, default=None)
     parser.add_argument(
         '-d', '--date', help='file date', type=str, metavar='YYYYMMDDHH', required=True)
 
     args = parser.parse_args()
 
-    fname = args.name
+    finput = args.input
+    foutput = args.output if args.output is not None else finput+'.nc'
     fdate = datetime.strptime(args.date, '%Y%m%d%H%M')
 
-    sfcobs = ship(fname, fdate)
-    sfcobs.to_ioda()
+    sfcobs = ship(finput, fdate)
+    sfcobs.to_ioda(foutput)
