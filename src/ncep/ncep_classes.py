@@ -265,6 +265,6 @@ if __name__ == '__main__':
     
     bufr = ncepbufr.open(BufrFname)
 
-    Obs.convert(bufr,NetcdfFname)
+    Obs.convert(bufr,nc)
     bufr.close()
 
