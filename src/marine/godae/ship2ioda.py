@@ -28,7 +28,7 @@ class ship(object):
         '''
 
         try:
-            fh = FortranFile(self.filename, mode='r', header_dtype='>i4')
+            fh = FortranFile(self.filename, mode='r', header_dtype='>u4')
         except IOError:
             raise IOError('%s file not found!' % self.filename)
         except Exception:
