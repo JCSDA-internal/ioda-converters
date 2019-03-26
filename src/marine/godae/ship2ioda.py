@@ -3,8 +3,10 @@
 from __future__ import print_function
 import numpy as np
 from datetime import datetime
-from scipy.io import FortranFile, netcdf
+from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from collections import defaultdict
+import ioda_conv_ncio as iconv
 
 
 class ship(object):
@@ -81,72 +83,50 @@ class ship(object):
 
         return
 
-    def _to_nlocs(self):
+    def to_ioda(self):
         '''
-        Selectively (e.g. salinity, temperature) convert odata into idata
+        Selectively convert odata into idata.
         idata is the IODA required data structure
         '''
-
-        # idata is the dictionary containing IODA friendly data structure
-        idata = self.odata
-
-        # Diff. between ob. time and time in the file (hrs)!
-        for i in range(self.odata['n_obs']):
-            dtg = datetime.strptime(self.odata['ob_dtg'][i], '%Y%m%d%H%M')
-            idata['ob_dtg'][i] = (dtg - self.date).total_seconds()/3600.
-
-        idata['nlocs'] = len(idata['ob_dtg'])
-
-        self.idata = idata
-
-        return
-
-    def to_ioda(self):
 
         if self.odata['n_obs'] <= 0:
             print('No ship observations for IODA!')
             return
 
-        self._to_nlocs()
+        locationKeyList = [
+            ("latitude", "float"),
+            ("longitude", "float"),
+            ("date_time", "string")
+        ]
 
-        ncid = netcdf.netcdf_file(self.filename + '.nc', mode='w')
+        AttrData = {
+            'odb_version': 1,
+            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
 
-        ncid.createDimension('nlocs', self.idata['nlocs'])  # no. of obs per var type
-        ncid.createDimension('nrecs', 1)  # no. of obs.
-        ncid.createDimension('nvars', 1)  # no. of variables
-        ncid.createDimension('nobs', 1*self.idata['nlocs'])  # total no. of obs
+        writer = iconv.NcWriter(self.filename+'.nc', [], locationKeyList)
 
-        longitudes = ncid.createVariable('longitude@MetaData', 'f4', ('nlocs',))
-        longitudes.units = 'degrees_east'
+        # idata is the dictionary containing IODA friendly data structure
+        idata = defaultdict(lambda: defaultdict(dict))
 
-        latitudes = ncid.createVariable('latitude@MetaData', 'f4', ('nlocs',))
-        latitudes.units = 'degrees_north'
+        varName = 'sea_surface_temperature'
+        valKey = varName, writer.OvalName()
+        errKey = varName, writer.OerrName()
+        qcKey = varName, writer.OqcName()
 
-        times = ncid.createVariable('time@MetaData', 'f4', ('nlocs',))
-        times.long_name = 'observation time from date_time'
-        times.units = 'hours'
-        times.description = 'why does this have to be with a reference to, why not absolute?'
+        for n in range(self.odata['n_obs']):
 
-        tmps = ncid.createVariable(
-            'sea_surface_temperature@ObsValue', 'f4', ('nlocs',))
-        tmps.units = 'degree_celcius'
-        tmps.description = ''
+            lat = self.odata['ob_lat'][n]
+            lon = self.odata['ob_lon'][n]
+            dtg = datetime.strptime(self.odata['ob_dtg'][i], '%Y%m%d%H%M')
 
-        tmp_errs = ncid.createVariable(
-            'sea_surface_temperature@ObsError', 'f4', ('nlocs',))
-        tmp_errs.units = '(degree_celcius)'
-        tmp_errs.description = 'Standard deviation of observation error; Fixed at 0.5'
+            locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        ncid.date_time = int(datetime.strftime(self.date, '%Y%m%d%H%M')[0:10])
+            idata[0][locKey][valKey] = self.odata['ob_sst'][n]
+            idata[0][locKey][errKey] = 0.5
+            idata[0][locKey][qcKey] = self.odata['ob_qc'][n]
 
-        longitudes[:] = np.asarray(self.idata['ob_lon'], dtype=np.float32)
-        latitudes[:] = np.asarray(self.idata['ob_lat'], dtype=np.float32)
-        times[:] = np.asarray(self.idata['ob_dtg'], dtype=np.float32)
-
-        tmps[:] = np.asarray(self.idata['ob_sst'], dtype=np.float32)
-        tmp_errs[:] = 0.5
-
-        ncid.close()
+        writer.BuildNetcdf(idata, AttrData)
 
         return
 
@@ -160,7 +140,7 @@ if __name__ == '__main__':
         '-n', '--name', help='name of the binary GODAE ship file (path)',
         type=str, required=True)
     parser.add_argument(
-        '-d', '--date', help='file date', type=str, required=True)
+        '-d', '--date', help='file date', type=str, metavar='YYYYMMDDHH', required=True)
 
     args = parser.parse_args()
 

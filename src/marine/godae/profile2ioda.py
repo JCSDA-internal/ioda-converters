@@ -3,7 +3,7 @@
 from __future__ import print_function
 import numpy as np
 from datetime import datetime
-from scipy.io import FortranFile, netcdf
+from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import defaultdict
 import ioda_conv_ncio as iconv
@@ -135,9 +135,8 @@ class profile(object):
         return
 
     def to_ioda(self):
-
         '''
-        Selectively (e.g. salinity, temperature) convert odata into idata
+        Selectively convert odata into idata.
         idata is the IODA required data structure
         '''
 
