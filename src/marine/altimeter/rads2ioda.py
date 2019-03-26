@@ -23,9 +23,9 @@ class Observation(object):
     def _read(self):
         ncd = nc.Dataset(self.filename)
         time = ncd.variables['time_mjd'][:]
-        lons = ncd.variables['lon'][:]#*ncd.scale_factor['lon'][:]
-        lats = ncd.variables['lat'][:]#*ncd.scale_factor['lat'][:]
-        vals = ncd.variables['adt_xgm2016'][:]#*ncd.scale_factor['adt_xgm2016'][:]
+        lons = ncd.variables['lon'][:]
+        lats = ncd.variables['lat'][:]
+        vals = ncd.variables['adt_xgm2016'][:]
         units = ncd.variables['time_mjd'].units[-23:-4]
         reftime = dateutil.parser.parse(units)
         
@@ -44,12 +44,10 @@ class Observation(object):
             hrs = int(hrsr)
             sec = int((hrsr - hrs)*3600)
             obs_date = reftime + timedelta(days=days,hours=hrs,seconds=sec)
-            #dt = reftime#obs_date-ref_da_time
-                
-            #dt = base_date + timedelta(hours=float(hrs[i]))
+
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.1#errs[i]
+            self.data[0][locKey][errKey] = 0.1 
 
 
 
