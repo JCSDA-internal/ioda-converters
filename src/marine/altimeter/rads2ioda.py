@@ -39,12 +39,7 @@ class Observation(object):
         for i in range(len(lons)):
 
             count += 1
-
-            days = int(time[i])
-            hrsr = (time[i]-days)*24.0
-            hrs = int(hrsr)
-            sec = int((hrsr - hrs)*3600)
-            obs_date = reftime + timedelta(days=days,hours=hrs,seconds=sec)
+            obs_date = reftime + timedelta(days=time[i])
 
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
