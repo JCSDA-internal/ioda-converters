@@ -38,23 +38,6 @@ class Profile(object):
         tb_v_aft =  np.squeeze(smap['/tb_v_aft'][:])
         tb_v_fore= np.squeeze(smap['/tb_v_fore'][:])
 
-        # Trivial QC, might not be needed in the future
-        validobs = np.where( (sss<50) & (sss>0))
-        num_validobs = np.shape(sss[validobs])[0]
-
-        # Store obs info in memory
-
-        lon    = lon[validobs]
-        times  = np.tile(times,(sss_u.shape[0],1))
-        lat    = lat[validobs]
-        sss    = sss[validobs]
-        sss_u  = sss_u[validobs]
-        sss_qc = sss_qc[validobs]
-        times  = times[validobs]
-        tb_h_aft  = tb_h_aft[validobs]
-        tb_h_fore = tb_h_fore[validobs]
-        tb_v_aft  = tb_v_aft[validobs]
-        tb_v_fore = tb_v_fore[validobs]
 
         # Write in ioda netcdf format
         valKey = vName['SSS'], self.writer.OvalName()
