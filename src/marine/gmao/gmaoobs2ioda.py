@@ -20,9 +20,9 @@ class GMAOobs(object):
             5521: 'sea_water_salinity',  # Salinity
             3073: 'sea_water_temperature',  # Temperature
             5525: 'sea_surface_temperature',  # SST
-            5526: 'sea_surface_height',  # SSH (Not used ...)
-            5351: 'sea_surface_height',  # SSH
-            6000: 'sea_ice_fraction',  # AICE
+            5526: 'sea_surface_height_above_geoid',  # SSH (Not used ...)
+            5351: 'sea_surface_height_above_geoid',  # SSH
+            6000: 'sea_ice_area_fraction',  # AICE
             6001: 'sea_ice_thickness'   # HICE
         }
 
