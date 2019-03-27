@@ -4,8 +4,6 @@ import argparse
 import ioda_conv_ncio as iconv
 import scipy.io.netcdf as netcdf
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import dateutil.parser
 from datetime import datetime, timedelta
 import glob
