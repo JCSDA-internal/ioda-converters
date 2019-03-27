@@ -75,12 +75,13 @@ class NcepObsType(ObsType):
                     intspec[j].append([self.nobs, self.nstring])
                 else:
                     print('walked off the edge')
+            
+            #TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1, it will be most stable to explicitly remove it.
+            # The issue with RRSTG is the Binary length of it, which makes the system to crash during at BufrFloatToActual string 
+            # convention
 
             self.int_spec = [intspec[x:x+1] for x in range (0, len(intspec)-1, 1)]
-            
-            #for k in self.int_spec:
-            #    print(k)
-            #sys.exit()
+             
             
             #TODO Check not sure what the evn_ and rep_ are
             self.evn_spec = []
