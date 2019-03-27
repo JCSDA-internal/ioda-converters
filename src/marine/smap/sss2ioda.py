@@ -26,35 +26,22 @@ class Salinity(object):
     def _read(self):
         smap          =  h5py.File(self.filename,'r')
         lat      =  np.squeeze(smap['/lat'][:])
-        print(lat.shape)
-        print('lat',lat)
         lon      =  np.squeeze(smap['/lon'][:])
-        print('lon',lon)
         times    =  np.squeeze(smap['/row_time'][:]) #1.03684024e+08
-        print(times.shape)
-        times  = np.tile(times,(1,lon.shape[0]))
-        print(times.shape)
         sss      =  np.squeeze(smap['/smap_sss'][:])
-        print(sss.shape)
-        print('sss',sss)
         sss_u    =  np.squeeze(smap['/smap_sss_uncertainty'][:])
         sss_qc   =  np.squeeze(smap['/quality_flag'][:])
-        print(sss_qc.shape)
-        print('qc',sss_qc)
         tb_h_aft =  np.squeeze(smap['/tb_h_aft'][:])
         tb_h_fore=  np.squeeze(smap['/tb_h_fore'][:])
         tb_v_aft =  np.squeeze(smap['/tb_v_aft'][:])
         tb_v_fore= np.squeeze(smap['/tb_v_fore'][:])
-        #lat.shape =(lat.shape[0]*lat.shape[1],1)
-        #lon.shape =(lon.shape[0]*lon.shape[1],1)
-        #times  = np.tile(times,(sss.shape[0],1))
-        #times.shape =(times.shape[0]*times.shape[1],1)
-        sss.shape =(sss.shape[0]*sss.shape[1],1)
-        print(max(sss))
-        print(min(sss))
-        print('sss',sss)
-        #sss_u.shape =(sss_u.shape[0]*sss_u.shape[1],1)
-        #sss_qc.shape =(sss_qc.shape[0]*sss_qc.shape[1],1)
+        lat.shape =(lat.shape[0]*lat.shape[1],)
+        lon.shape =(lon.shape[0]*lon.shape[1],)
+        times  = np.tile(times,(sss.shape[0],1))
+        times.shape =(times.shape[0]*times.shape[1],)
+        sss.shape =(sss.shape[0]*sss.shape[1],)
+        sss_u.shape =(sss_u.shape[0]*sss_u.shape[1],)
+        sss_qc.shape =(sss_qc.shape[0]*sss_qc.shape[1],)
 
         # Write in ioda netcdf format
         valKey = vName['SSS'], self.writer.OvalName()
@@ -63,16 +50,12 @@ class Salinity(object):
 
         count = 0
         for i in range(len(lat)):
-            #if sss_qc[i] != 0:
-            #    continue
             count += 1
-            #print(times[0,i].shape)
-            #print(times[0,i])
-            base_date=datetime(2015, 1, 1, 0, 0) + timedelta(seconds=np.double(times[0,i]))
+            base_date=datetime(2015, 1, 1, 0, 0) + timedelta(seconds=np.double(times[i]))
             dt = base_date
             locKey = lat[i], lon[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             #print(i, lat[i], lon[i], sss[i], valKey,locKey, self.data)
-            self.data[0][locKey][valKey] = sss[i]
+            self.data[0][locKey][valKey] = sss[i] 
             self.data[0][locKey][errKey] = sss_u[i]
             self.data[0][locKey][qcKey]  = sss_qc[i]
 
