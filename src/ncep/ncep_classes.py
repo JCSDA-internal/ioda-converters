@@ -63,7 +63,6 @@ class NcepObsType(ObsType):
             for i in spec_list[alt_type]:
                 if i in full_table:
                     intspecDum = [full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']]
-                    print('DD:',intspecDum)
                     if intspecDum not in intspec:
                        intspec.append([full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']])
                 #else:
@@ -76,13 +75,13 @@ class NcepObsType(ObsType):
                 else:
                     print('walked off the edge')
             
-            #TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1, it will be most stable to explicitly remove it.
-            # The issue with RRSTG is the Binary length of it, which makes the system to crash during at BufrFloatToActual string 
-            # convention
+            #TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1 below, 
+            # it will be most stable to explicitly remove it. The issue with RRSTG is the Binary length of it, 
+            # which makes the system to crash during at BufrFloatToActual string convention. Probably, there
+            # are more Mnemonics with the same problem.
 
             self.int_spec = [intspec[x:x+1] for x in range (0, len(intspec)-1, 1)]
              
-            
             #TODO Check not sure what the evn_ and rep_ are
             self.evn_spec = []
             self.rep_spec = []
@@ -113,7 +112,12 @@ def read_table(filename):
     part_a=all[2:stops[0]]
     part_b=all[stops[0]+3:stops[1]]
     part_c=all[stops[1]+3:]
-        
+    
+    dum = []
+    for x in part_a:
+        dum.append(x.replace("(","").replace(")",""))
+    part_a=dum
+    
     tbl_a={line.split('|')[1].strip():line.split('|')[3].strip().lower() for line in part_a}
     tbl_c={line.split('|')[1].strip():line.split('|')[5].strip().lower() for line in part_c}
     
@@ -205,7 +209,7 @@ if __name__ == '__main__':
 # ---- #  Define the user variables  # ---- #
     # 1. Set tank name / Obstype 
     # TODO Maybe, use  lists to go through all the observations tanks.
-    base_mnemo='NC001005'
+    base_mnemo='NC031120'
     #
     # 2. Set Observation type. This can be identical to base_mnemo or it has a more 
     # generic name that covers several tanks, e.g. Altimeters, for all the bNNN/xxNNN files
@@ -274,4 +278,3 @@ if __name__ == '__main__':
 
     Obs.convert(bufr,nc)
     bufr.close()
-
