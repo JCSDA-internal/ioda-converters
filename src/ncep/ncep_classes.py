@@ -63,6 +63,7 @@ class NcepObsType(ObsType):
             for i in spec_list[alt_type]:
                 if i in full_table:
                     intspecDum = [full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']]
+                    print('DD:',intspecDum)
                     if intspecDum not in intspec:
                        intspec.append([full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']])
                 #else:
@@ -75,9 +76,10 @@ class NcepObsType(ObsType):
                 else:
                     print('walked off the edge')
 
-            self.int_spec = [intspec[x:x+5] for x in range (0, len(intspec), 5)]
+            self.int_spec = [intspec[x:x+1] for x in range (0, len(intspec)-1, 1)]
             
-            #print(self.int_spec)
+            #for k in self.int_spec:
+            #    print(k)
             #sys.exit()
             
             #TODO Check not sure what the evn_ and rep_ are
@@ -127,7 +129,8 @@ def read_table(filename):
                  'PERCENT','%','KG/METER**2','SIEMENS/M','METERS**3/SECOND','JOULE/METER**2', \
                  'PART PER THOUSAND','PARTS/1000','METERS**2/HZ','S','METERS**2/SECOND', \
                  'VOLTS','V', \
-                 'DEGREE TRUE','DEGREES KELVIN','HERTZ','HOURS','HOUR','METER/SECOND','DEGREE']
+                 'DEGREE TRUE','DEGREES KELVIN','HERTZ','HOURS','HOUR','METER/SECOND','DEGREE', \
+                 'SECONDS']
     ##DTYPE_STRING
     string_types=['CCITT IA5']
     
@@ -201,7 +204,7 @@ if __name__ == '__main__':
 # ---- #  Define the user variables  # ---- #
     # 1. Set tank name / Obstype 
     # TODO Maybe, use  lists to go through all the observations tanks.
-    base_mnemo='NC031123'
+    base_mnemo='NC001005'
     #
     # 2. Set Observation type. This can be identical to base_mnemo or it has a more 
     # generic name that covers several tanks, e.g. Altimeters, for all the bNNN/xxNNN files
@@ -216,7 +219,7 @@ if __name__ == '__main__':
     BufrPath='/scratch4/NCEPDEV/ocean/scrub/Stylianos.Flampouris/marine_observations/dcom/us007003/20190310'
     #
     # 4.Required fields for the bufr2nc.py 
-    MaxNumMsg=1
+    MaxNumMsg=2
     ThinInterval=1
     # TODO: If the generic reader works, the BfileType could be removed.
     BfileType = cm.BFILE_BUFR
