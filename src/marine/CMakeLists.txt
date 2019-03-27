@@ -17,4 +17,4 @@ ecbuild_add_test( TARGET iodaconv_hgodas_coding_norms
                   TYPE SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
                   ARGS ${CMAKE_CURRENT_SOURCE_DIR}/hgodas ${CMAKE_SOURCE_DIR} )
->>>>>>> origin/feature/marine-cs-03-2019
+
