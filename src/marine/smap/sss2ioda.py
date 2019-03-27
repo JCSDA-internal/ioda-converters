@@ -14,7 +14,7 @@ from collections import defaultdict
 
 
 
-class Profile(object):
+class Salinity(object):
     def __init__(self, filename, date ,writer):
         self.filename = filename
         self.date     = date
@@ -91,13 +91,13 @@ if __name__ == '__main__':
 
     writer = iconv.NcWriter(args.o, [], locationKeyList)
 
-    # Read in the profiles
-    prof = Profile(args.i, fdate, writer)
+    # Read in the salinity
+    sal = Salinity(args.i, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    writer.BuildNetcdf(prof.data, AttrData)
+    writer.BuildNetcdf(sal.data, AttrData)
 
 
 
