@@ -127,7 +127,7 @@ def read_table(filename):
                  'PERCENT','%','KG/METER**2','SIEMENS/M','METERS**3/SECOND','JOULE/METER**2', \
                  'PART PER THOUSAND','PARTS/1000','METERS**2/HZ','S','METERS**2/SECOND', \
                  'VOLTS','V', \
-                 'DEGREE TRUE','DEGREES KELVIN','HERTZ','HOURS','HOUR','METER/SECOND']
+                 'DEGREE TRUE','DEGREES KELVIN','HERTZ','HOURS','HOUR','METER/SECOND','DEGREE']
     ##DTYPE_STRING
     string_types=['CCITT IA5']
     
@@ -201,7 +201,7 @@ if __name__ == '__main__':
 # ---- #  Define the user variables  # ---- #
     # 1. Set tank name / Obstype 
     # TODO Maybe, use  lists to go through all the observations tanks.
-    base_mnemo='NC031122'
+    base_mnemo='NC031123'
     #
     # 2. Set Observation type. This can be identical to base_mnemo or it has a more 
     # generic name that covers several tanks, e.g. Altimeters, for all the bNNN/xxNNN files
