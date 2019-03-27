@@ -59,9 +59,12 @@ class NcepObsType(ObsType):
             spec_list=get_int_spec(alt_type,blist)
             
             intspec=[]
+            intspecDum=[]
             for i in spec_list[alt_type]:
                 if i in full_table:
-                    intspec.append([full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']])
+                    intspecDum = [full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']]
+                    if intspecDum not in intspec:
+                       intspec.append([full_table[i]['name'].replace(' ','_'),i,full_table[i]['dtype'],full_table[i]['ddims']])
                 #else:
                 # TODO what to do if the spec is not in the full_table (or in this case, does not have a unit in the full_table)
             for j,dname in enumerate(intspec):
@@ -198,7 +201,7 @@ if __name__ == '__main__':
 # ---- #  Define the user variables  # ---- #
     # 1. Set tank name / Obstype 
     # TODO Maybe, use  lists to go through all the observations tanks.
-    base_mnemo='NC031120'
+    base_mnemo='NC031122'
     #
     # 2. Set Observation type. This can be identical to base_mnemo or it has a more 
     # generic name that covers several tanks, e.g. Altimeters, for all the bNNN/xxNNN files
@@ -213,7 +216,7 @@ if __name__ == '__main__':
     BufrPath='/scratch4/NCEPDEV/ocean/scrub/Stylianos.Flampouris/marine_observations/dcom/us007003/20190310'
     #
     # 4.Required fields for the bufr2nc.py 
-    MaxNumMsg=5
+    MaxNumMsg=1
     ThinInterval=1
     # TODO: If the generic reader works, the BfileType could be removed.
     BfileType = cm.BFILE_BUFR
