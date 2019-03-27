@@ -2,11 +2,8 @@
 from __future__ import print_function
 import argparse
 import ioda_conv_ncio as iconv
-import scipy.io.netcdf as netcdf
 import numpy as np
-import dateutil.parser
 from datetime import datetime, timedelta
-import glob
 import h5py
 from collections import defaultdict
 
@@ -48,13 +45,10 @@ class Salinity(object):
         errKey = vName['SSS'], self.writer.OerrName()
         qcKey = vName['SSS'], self.writer.OqcName()
 
-        count = 0
         for i in range(len(lat)):
-            count += 1
             base_date=datetime(2015, 1, 1, 0, 0) + timedelta(seconds=np.double(times[i]))
             dt = base_date
             locKey = lat[i], lon[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            #print(i, lat[i], lon[i], sss[i], valKey,locKey, self.data)
             self.data[0][locKey][valKey] = sss[i] 
             self.data[0][locKey][errKey] = sss_u[i]
             self.data[0][locKey][qcKey]  = sss_qc[i]
