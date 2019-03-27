@@ -52,11 +52,11 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
 
 
 if __name__ == '__main__':

@@ -49,24 +49,23 @@ class Profile(object):
 
 
 vName = {
-  'T': "sea_surface_temperature",
+    'T': "sea_surface_temperature",
 }
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description=('Read CPC Hybrid-GODAS sst files and convert '
-                     + 'to IODA format')
+        description=('Read CPC Hybrid-GODAS sst files and convert to IODA format')
     )
     parser.add_argument('-i',
                         help="name of HGODAS profile input file",
