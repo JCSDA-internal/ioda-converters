@@ -65,6 +65,8 @@ def BufrFloatToActual(Bval, Dtype):
         # return another masked array with the proper data and mask.
 
         if (Dtype == cm.DTYPE_STRING):
+            # TODO This is not generic enough to accomodate all the strings.
+            #
             # convert to list of strings
             # assume that an ID is a 1D array of float with only one
             # entry
