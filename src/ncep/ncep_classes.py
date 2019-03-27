@@ -115,9 +115,10 @@ def read_table(filename):
     
     dum = []
     for x in part_a:
-        dum.append(x.replace("(","").replace(")",""))
+        dum.append(' '.join(x.replace("(","").replace(")","").replace("-","").split()))
+
     part_a=dum
-    
+
     tbl_a={line.split('|')[1].strip():line.split('|')[3].strip().lower() for line in part_a}
     tbl_c={line.split('|')[1].strip():line.split('|')[5].strip().lower() for line in part_c}
     
