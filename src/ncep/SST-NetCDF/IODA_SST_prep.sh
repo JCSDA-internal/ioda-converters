@@ -1,101 +1,149 @@
-
-#NOTE:############################################################################
-##  read NetCDF SST from /dcomdev and 
-##  create input files for IODA marine 
-
-###################################################################################
+#!/bin/sh
+################################
+module unload NetCDF
+module load NetCDF/4.2/serial
+################################
 set -x
 echo "*** Started script $0"
 if [ $# -lt 2 ] ; then
    echo USAGE="Usage: ncoda_SST_prep_nc.sh YYYYMMDDHH Time_Window_hrs " 
    exit 2
 fi
-module unload NetCDF
-module load NetCDF/4.2/serial
-###
-for OBS in 19_G ; do
-if [ $OBS == '19_G' ] ; then
-  export OBS1='19'
-export nfilesday=24
-echo $OBS $OBS1
-fi
-export DATA0=AVHRR
-export DIR=${DATA0}$OBS1
-export DATA=$DATA0$OBS
-export DATA1=avhrr$OBS1
-export DATA2=${DATA}
-###
-export fname_template1=OSPO-L2P_GHRSST-SSTsubskin-${DATA2}-ACSPO_V2.41-v02.0-fv01.0.nc
+
+#OBS=${1:?"arg1: satellite ABI, AHI, 19_G, MTA, or VIIRS  required"}
+anldate=${1:?"arg1: analysis date in YYYYMMDDHH is required"} 
+time_window=${2:?"arg2:  time window in hours is required"}
+
+echo "Start date= '$anldate' and Temporal Window of analysis = +/- '$time_window' (hours)"
+
+#######################################################################
+
 export SSTDIR=/ocean/save/$USER/JEDI-SOCA
 export DATADIR=/dcomdev/us007003
 
-startdate=${1:?"arg1: startdate required"}   # echo warning message when arg1 is missing
-time_window=${2:?"arg1: enddate required"} 
-#enddate=${2:?"arg1: enddate required"}  #  echo's warning msg when arg2 is missing
-echo "start date = '$startdate' Temporal Window of analysis  = +/- '$time_window' (hours)"
-#echo "start date = '$startdate' end date = '$enddate'"     
+for OBS in ABI AHI 19_G MTA VIIRS; do
+    if [ $OBS == 'ABI' ] ; then
+       OBS1=goes16
+       OBS2=_G16
+       DATA0=''
+       DATA1=$OBS1
+       NAM1=STAR
+       V=V2.50-v02.0-fv01.0
+       nfilesday=24
+#       HINT=1
+       maxsec=3600
+       nchan=4
+       sid=16
+       echo $OBS $OBS1
 
+    elif [ $OBS == 'AHI' ] ; then
+       OBS1=himawari8
+       OBS2=_H08
+       DATA0=''
+       DATA1=$OBS1
+       NAM1=STAR
+       V=V2.50-v02.0-fv01.0
+       nfilesday=24
+#       HINT=1
+       maxsec=3600
+       nchan=4
+       sid=8
+       echo $OBS $OBS1
 
-ADATE=`ndate -12 $startdate`
-enddate=`ndate +12 $startdate`
+     elif [ $OBS == '19_G' ] ; then
+       OBS1=19
+       OBS2=''
+       DATA0='AVHRR'
+       DATA1=avhrr$OBS1
+       NAM1=OSPO
+       V=V2.41-v02.0-fv01.0
+       nfilesday=24
+#       HINT=1
+       maxsec=3600
+       nchan=3
+       sid=19
+       echo $OBS $OBS1
 
-#ADATE2=$ADATE'00'
-#ADATE2=`/nwprod/util/exec/ndate +24 $ADATE2 | cut -c1-8`
-#ADATE2=$ADATE
+    elif [ $OBS == 'MTA' ] ; then
+       OBS1=mta
+       OBS2=''
+       DATA0=AVHRR
+       DATA1=avhrr$OBS1
+       NAM1=OSPO
+       V=V2.41-v02.0-fv01.0
+       nfilesday=144
+#       HINT=1
+       maxsec=600
+       nchan=3
+       sid=1
+       echo $OBS $OBS1
 
+    elif [ $OBS == 'VIIRS' ] ; then
+       OBS1=viirs
+       OBS2=_NPP
+       DATA0=''
+       DATA1=$OBS1
+       NAM1=OSPO
+       V=V2.60-v02.0-fv01.0
+       nfilesday=144
+#       HINT=1
+       maxsec=600
+       nchan=3
+       nobsmx=400000000
+       sid=1
+       echo $OBS $OBS1
+    fi
 
-while [[ $ADATE -le $enddate ]]
-do
-  echo Running decoder for $ADATE
-  fname_template=$ADATE??????-${fname_template1}
-  dirou=$SSTDIR/$ADATE                          #$SSTDIR/pre_ncodaqc_SST/$ADATE
-  mkdir -p $dirou
-  cd $dirou
-#  cp $BIN/read_nc_combine_sst .
+    echo $OBS $nfilesday
+    export DATA=$DATA0$OBS$OBS2
 
+    dirou=$SSTDIR/$anldate/$DATA
+    mkdir -p $dirou
+    cd $dirou
+    rm -f filenclist
 
-  rm -f filenclist #fort.18 fort.19 osatnl
-  for file in $DATADIR/$ADATE2/sst/$fname_template ; do 
-     direct=$(dirname $file)
-     echo $direct
-     filename=$(basename $file)
-     echo $filename
-     ymdhm=$(echo $filename | cut -c1-12)
-     echo $filename
-     echo $file >> filenclist
-       find . -maxdepth 1 -type f -size 0 -delete
+    export HINT=1
+    export fname_template1=${NAM1}-L2P_GHRSST-SSTsubskin-${DATA}-ACSPO_${V}.nc
+    echo $fname_template
+    
+    ADATE=`/nwprod/util/exec/ndate -$time_window $anldate`
+    EDATE=`/nwprod/util/exec/ndate +11 $anldate`
 
- #done  # files in $ADATE2
- export nfiles=`wc -l filenclist | awk '{print $1}'`
- if [ $nfiles -lt $nfilesday ] ; then 
-    echo "$nfiles smaller than $nfilesday"
-#    exit  
- fi
- export nchfile=`wc -L filenclist | awk '{print $1}'`
- echo $nchfile
-#  nobsmx = 120000000,
-#  nobsmxi =100000,
-cat << eof > osatnl
+    ADATEHH=$ADATE
+    while [[ $ADATEHH -le $EDATE ]] ; do
+         echo "Running decoder for $anldate"
+         fname_template=${ADATEHH}????-${fname_template1}
+         DIRDATE=$(echo $ADATEHH | cut -c1-8)
 
-  &satnl
+         for file in $DATADIR/$DIRDATE/sst/$fname_template ; do
+             echo $file >> filenclist
+         done # file 
+         ADATEHH=`/nwprod/util/exec/ndate $HINT $ADATEHH`   # increment per hour
+         echo $ADATEHH
 
-  nz    =  0,
-  nchan =  3,
-  nchfile = $nchfile,
-  nmax = $nfiles,
-  maxsec = 3600,
-  sid = 19,
-  szamx = 90,
-  time_anl = $startdate
-  &end
+         nfiles=`wc -l filenclist | awk '{print $1}'`
+         if [ $nfiles -lt $nfilesday ] ; then
+            echo "$nfiles smaller than $nfilesday"
+         fi
+         nchfile=`wc -L filenclist | awk '{print $1}'`
+cat << eof > osatnl 
+    &satnl
 
+    nz     = 0,
+    nchan  = $nchan,
+    nchfile= $nchfile,
+    nmax   = $nfiles,
+    maxsec = $maxsec,
+    runtime= $anldate,
+    sid    = $sid,
+    szamx  = 90,
+    &end
 eof
-   cp -p ../src/read_nc_combine_sst_IODA .
-  ./read_nc_combine_sst #$1 $2
-     ADATE=$ADATE'00'
-     ADATE=`/nwprod/util/exec/ndate +24 $ADATE | cut -c1-8`
 
-done # while [[ $ADATE -le  $enddate ]]
-done # for OBS
-exit 0
+    done # while         
+        
+    cp -p $SSTDIR/../EMC_UMO/src/read_nc_combine_sst_IODA .
+    ./read_nc_combine_sst_IODA
+#   #ADD condition for empty files
 
+done # OBS
