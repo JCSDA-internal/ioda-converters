@@ -14,7 +14,9 @@ import io
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
 #      is unneeded in that environment (but it doesn't hurt anything). 
-#      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the 
+#      As of March 28, 2019, the ODB API python module is in the python path when you load the 
+#      jedi/gnu-mpt module on Cheyenne.
+#      If not using these environments, then note ODB API must be built on the system with the 
 #      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
 #print odbPythonPath
@@ -288,11 +290,15 @@ while row is not None:
         refDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(andate_s)], row[selectColumns.index(antime_s)])
     obsDateTimeString = ioda_conv_util.IntDateTimeToString(row[dateIndex], row[timeIndex])
     #Encode the 8 QC bitfields in the ODB2 file into a single value for IODA
-    qcVal = (row[rsActiveIndex]    * 128 +
+    #Flip the "active" flags so that zero is always the "good" value for all the flags,
+    #and a qcVal of zero indicates a good datum.
+    notReportStatusActive = 0 if row[rsActiveIndex] else 1
+    notDatumStatusActive = 0 if row[dsActiveIndex] else 1
+    qcVal = (notReportStatusActive * 128 +
              row[rsPassiveIndex]   *  64 +
              row[rsRejectedIndex]  *  32 +
              row[rsBlacklistIndex] *  16 +
-             row[dsActiveIndex]    *   8 +
+             notDatumStatusActive  *   8 +
              row[dsPassiveIndex]   *   4 +
              row[dsRejectedIndex]  *   2 +
              row[dsBlacklistIndex])
