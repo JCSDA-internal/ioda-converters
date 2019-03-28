@@ -9,10 +9,10 @@ import dateutil.parser
 from collections import defaultdict
 
 
-
 class Observation(object):
 
     def __init__(self, filename, date, writer):
+
         self.filename = filename
         self.date = date
         self.data = defaultdict(lambda: defaultdict(dict))
@@ -20,21 +20,20 @@ class Observation(object):
         self._read()
 
     def _read(self):
-        ncd = nc.Dataset(self.filename)
+
+        ncd = nc.MFDataset(self.filename)
         time = ncd.variables['time_mjd'][:]
         lons = ncd.variables['lon'][:]
         lats = ncd.variables['lat'][:]
         vals = ncd.variables['adt_xgm2016'][:]
         units = ncd.variables['time_mjd'].units[-23:-4]
         reftime = dateutil.parser.parse(units)
-        
         ncd.close()
 
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
 
-        
         count = 0
         for i in range(len(lons)):
 
@@ -53,11 +52,11 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
 
 
 if __name__ == '__main__':
@@ -65,8 +64,8 @@ if __name__ == '__main__':
         description=('')
     )
     parser.add_argument('-i',
-                        help="name of RADS obs input file",
-                        type=str, required=True)
+                        help="RADS obs input files (wild cards or list)",
+                        type=str, nargs='+', required=True)
     parser.add_argument('-o',
                         help="name of ioda output file",
                         type=str, required=True)
@@ -74,7 +73,6 @@ if __name__ == '__main__':
                         help="base date", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    print(fdate)
     writer = iconv.NcWriter(args.o, [], locationKeyList)
 
     # Read in the altimeter
