@@ -5,12 +5,12 @@ import ncepbufr
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 from netCDF4 import Dataset
+<<<<<<< HEAD
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from datetime import datetime
 import sys
 import os
 import yaml
-
 #import ipdb
 #ipdb.set_trace()
 
@@ -36,10 +36,6 @@ def BfilePreprocess(BufrFname, Obs):
 
     return [NumObs, Obs.num_msg_selected, Obs.num_msg_mtype]
 
-######
-
-    
-
 ##########################################################################
 ##########                  (Prep-) BUFR NCEP Observations               #
 ##########################################################################
@@ -50,6 +46,7 @@ def BfilePreprocess(BufrFname, Obs):
 class NcepObsType(ObsType):
     ### initialize data elements ###
     def __init__(self, bf_type, alt_type, tablefile, dictfile):
+        
         super(NcepObsType, self).__init__()
 
         self.bufr_ftype = bf_type
@@ -82,7 +79,7 @@ class NcepObsType(ObsType):
 
             intspec = []
             intspecDum = []
-
+            
             for i in spec_list[alt_type]:
                 if i in full_table:
                     intspecDum = [
@@ -249,7 +246,6 @@ def read_table(filename):
             full_table[key]['dtype'] = cm.DTYPE_UNDEF
             full_table[key]['ddims'] = nums_dims
 
-     
     return full_table, part_b
 
 ##########################################################################
@@ -384,8 +380,8 @@ if __name__ == '__main__':
     DictObs    = ObsType + '.dict'      # Bufr dict
     
     # Check if BufrFname exists
-    print(BufrFname)
-    if os.path.isfile(BufrFname):
+
+   if os.path.isfile(BufrFname):
         bufr = ncepbufr.open(BufrFname)
         bufr.advance()
         mnemonic = bufr.msg_type
@@ -406,7 +402,7 @@ if __name__ == '__main__':
     # Create the observation instance
 
     Obs = NcepObsType(BfileType, mnemonic, ObsTable, DictObs)
-
+    
     Obs.max_num_msg = MaxNumMsg
     Obs.thin_interval = ThinInterval
     [NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)

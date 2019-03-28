@@ -1,0 +1,1560 @@
+? ''
+: ddims: &id001 [nobs]
+  dtype: 0
+  name: ''
+  units: ''
+.AVP....:
+  ddims: *id001
+  dtype: 2
+  name: averaging period for following value
+  units: code table
+.DTH....:
+  ddims: *id001
+  dtype: 3
+  name: dur of time in hours related to following value
+  units: hours
+.DTM....:
+  ddims: *id001
+  dtype: 2
+  name: dur of time in mins related to following value
+  units: minutes
+3HPC:
+  ddims: *id001
+  dtype: 0
+  name: 3hour pressure change
+  units: pa
+AASF:
+  ddims: *id001
+  dtype: 2
+  name: auxilliary altimeter state flags
+  units: flag table
+ACAV:
+  ddims: *id001
+  dtype: 3
+  name: total num. with respect to accum. or average
+  units: numeric
+ACCC:
+  ddims: *id001
+  dtype: 3
+  name: altimeter correction calibration constant
+  units: meters
+ACDT:
+  ddims: *id001
+  dtype: 3
+  name: altimeter correction dry troposphere
+  units: meters
+ACID:
+  ddims: &id002 [nobs, nstring]
+  dtype: 1
+  name: aircraft flight number
+  units: ccitt ia5
+ACIO:
+  ddims: *id001
+  dtype: 3
+  name: altimeter correction ionosphere
+  units: meters
+ACRS:
+  ddims: *id001
+  dtype: 3
+  name: attenuation correction on sigma0
+  units: db
+ACWT:
+  ddims: *id001
+  dtype: 3
+  name: altimeter correction wet troposphere
+  units: meters
+ADQF:
+  ddims: *id001
+  dtype: 2
+  name: altimeter data quality flag
+  units: flag table
+AETP:
+  ddims: *id001
+  dtype: 2
+  name: altimeter echo type
+  units: code table
+AICK:
+  ddims: *id001
+  dtype: 3
+  name: altimeter ionospheric correction on ku band
+  units: m
+ALRE:
+  ddims: *id001
+  dtype: 3
+  name: altitude of cog above reference ellipsoid
+  units: m
+ALRF:
+  ddims: *id001
+  dtype: 2
+  name: altimeter rain flag
+  units: flag table
+ALTPE:
+  ddims: *id001
+  dtype: 3
+  name: altitude platform to ellipsoid
+  units: meters
+AOOP:
+  ddims: *id001
+  dtype: 2
+  name: agency in charge of operating the observing platform
+  units: code table
+ARQF:
+  ddims: *id001
+  dtype: 2
+  name: altimeter correction quality flag
+  units: flag table
+ASFL:
+  ddims: *id001
+  dtype: 2
+  name: altimeter state flag
+  units: flag table
+ATMSSQ:
+  ddims: *id001
+  dtype: 2
+  name: scan level quality flags
+  units: flag table
+AVGPER:
+  ddims: *id001
+  dtype: 2
+  name: averaging periods for trackob parameters
+  units: code table
+BBB:
+  ddims: *id002
+  dtype: 1
+  name: bulletin being monitored bbb
+  units: ccitt ia5
+BC20:
+  ddims: *id001
+  dtype: 3
+  name: 20 hz ocean backscatter coefficient
+  units: db
+BKST:
+  ddims: *id001
+  dtype: 3
+  name: backscatter
+  units: decibels
+BORG:
+  ddims: *id002
+  dtype: 1
+  name: bulletin being monitored cccc
+  units: ccitt ia5
+BPID:
+  ddims: *id001
+  dtype: 3
+  name: buoy/platform identifier
+  units: numeric
+BSACQF:
+  ddims: *id001
+  dtype: 2
+  name: band specific altimeter correction quality flag
+  units: flag table
+BSADQF:
+  ddims: *id001
+  dtype: 2
+  name: band specific altimeter data quality flag
+  units: flag table
+BUHD:
+  ddims: *id002
+  dtype: 1
+  name: bulletin being monitored ttaaii
+  units: ccitt ia5
+BULTIM:
+  ddims: *id002
+  dtype: 1
+  name: bulletin being monitored yygggg
+  units: ccitt ia5
+BUYT:
+  ddims: *id001
+  dtype: 2
+  name: type of data buoy
+  units: code table
+BUYTS:
+  ddims: *id001
+  dtype: 2
+  name: buoy type
+  units: code table
+CAGC:
+  ddims: *id001
+  dtype: 3
+  name: c band automatic gain control
+  units: db
+CBIC:
+  ddims: *id001
+  dtype: 3
+  name: c band net instrumental correction
+  units: m
+CBOR:
+  ddims: *id001
+  dtype: 3
+  name: c band ocean range
+  units: m
+CBSW:
+  ddims: *id001
+  dtype: 3
+  name: c band significant wave height
+  units: m
+CCOB:
+  ddims: *id001
+  dtype: 3
+  name: c band corrected ocean backscatter coefficient
+  units: db
+CGBC:
+  ddims: *id001
+  dtype: 3
+  name: corrected ocog backscatter coefficient
+  units: db
+CHNM:
+  ddims: *id001
+  dtype: 3
+  name: channel number
+  units: numeric
+CHPT:
+  ddims: *id001
+  dtype: 2
+  name: characteristic of pressure tendency
+  units: code table
+CLAT:
+  ddims: *id001
+  dtype: 3
+  name: latitude coarse accuracy
+  units: degrees
+CLATH:
+  ddims: *id001
+  dtype: 3
+  name: latitude high accuracy
+  units: degrees
+CLON:
+  ddims: *id001
+  dtype: 3
+  name: longitude coarse accuracy
+  units: degrees
+CLONH:
+  ddims: *id001
+  dtype: 3
+  name: longitude high accuracy
+  units: degrees
+CNCS:
+  ddims: *id001
+  dtype: 3
+  name: c band net instrumental correction for significant wave
+  units: m
+CNIA:
+  ddims: *id001
+  dtype: 3
+  name: c band net instrumental correction for agc
+  units: db
+COBC:
+  ddims: *id001
+  dtype: 3
+  name: specific band corrected ocean backscatter coefficient
+  units: db
+CORN:
+  ddims: *id001
+  dtype: 2
+  name: corrected report indicator
+  units: code table
+DATSIG:
+  ddims: *id001
+  dtype: 2
+  name: data significance
+  units: code table
+DAYS:
+  ddims: *id001
+  dtype: 2
+  name: day
+  units: day
+DBSS:
+  ddims: *id001
+  dtype: 3
+  name: depth below sea/water surface
+  units: meters
+DBSSX:
+  ddims: *id001
+  dtype: 3
+  name: depth below sea/water surface cm
+  units: m
+DCLS:
+  ddims: *id001
+  dtype: 2
+  name: data collection and/or location system
+  units: code table
+DDAYS:
+  ddims: *id001
+  dtype: 2
+  name: day
+  units: day
+DIPR:
+  ddims: *id001
+  dtype: 2
+  name: direction of profile
+  units: code table
+DMNTH:
+  ddims: *id001
+  dtype: 2
+  name: month
+  units: month
+DOMO:
+  ddims: *id001
+  dtype: 3
+  name: direction of motion of moving observing platform
+  units: degree true
+DOWA:
+  ddims: *id001
+  dtype: 3
+  name: direction of waves
+  units: degree true
+DOXY2:
+  ddims: *id001
+  dtype: 0
+  name: dissolved oxygen
+  units: umol/kg
+DROC:
+  ddims: *id001
+  dtype: 3
+  name: direction of current
+  units: degrees true
+DSSC:
+  ddims: *id001
+  dtype: 3
+  name: direction of sea surface current
+  units: degree true
+DSST:
+  ddims: *id001
+  dtype: 2
+  name: radiometer sensed surface type
+  units: code table
+DTCC:
+  ddims: *id001
+  dtype: 2
+  name: duration and time of current measurement
+  units: code table
+DYEAR:
+  ddims: *id001
+  dtype: 2
+  name: year
+  units: year
+ECLN:
+  ddims: *id001
+  dtype: 3
+  name: longitude at which satellite track crosses equator
+  units: degrees
+EENO:
+  ddims: *id001
+  dtype: 2
+  name: 3d error estimate of the navigator orbit
+  units: code table
+FCYN:
+  ddims: *id001
+  dtype: 3
+  name: float cycle number
+  units: numeric
+FOST:
+  ddims: *id001
+  dtype: 2
+  name: first order statistics
+  units: code table
+GDRFLG:
+  ddims: *id001
+  dtype: 2
+  name: gdr origin flag
+  units: code table
+GEODH:
+  ddims: *id001
+  dtype: 3
+  name: geoid's height
+  units: m
+GGQF:
+  ddims: *id001
+  dtype: 2
+  name: global gtspp quality flag
+  units: code table
+GPTH:
+  ddims: *id001
+  dtype: 3
+  name: geocentric pole tide height
+  units: m
+GRAN:
+  ddims: *id001
+  dtype: 3
+  name: ocog range
+  units: m
+HFSTC:
+  ddims: *id001
+  dtype: 3
+  name: high frequency fluctuations of the sea surface topograp
+  units: m
+HFVC:
+  ddims: *id001
+  dtype: 3
+  name: high frequency variability correction
+  units: m
+HINC:
+  ddims: *id001
+  dtype: 3
+  name: height increment
+  units: meters
+HMSL:
+  ddims: *id001
+  dtype: 3
+  name: height or altitude
+  units: m
+HOUR:
+  ddims: *id001
+  dtype: 3
+  name: hour
+  units: hour
+HOWV:
+  ddims: *id001
+  dtype: 3
+  name: height of waves
+  units: meters
+HSALG:
+  ddims: *id001
+  dtype: 3
+  name: height of sensor above local ground or deck of marine
+  units: m
+HSAWS:
+  ddims: *id001
+  dtype: 3
+  name: height of sensor above water surface
+  units: m
+HXXL:
+  ddims: *id001
+  dtype: 3
+  name: height of xbt/xctd launcher
+  units: m
+IALR:
+  ddims: *id001
+  dtype: 3
+  name: instantaneous altitude rate
+  units: m/s
+IBCO:
+  ddims: *id001
+  dtype: 3
+  name: inverted barometer correction
+  units: m
+ICMDC:
+  ddims: *id002
+  dtype: 1
+  name: identifier of the cruise or mission under which the dat
+  units: ccitt ia5
+ICMK:
+  ddims: *id001
+  dtype: 3
+  name: ionospheric correction from model on ku band
+  units: m
+ICMSB:
+  ddims: *id001
+  dtype: 3
+  name: ionospheric correction from model on specific band
+  units: m
+IDGT:
+  ddims: *id001
+  dtype: 2
+  name: indicator for digitization
+  units: code table
+IDPF:
+  ddims: *id002
+  dtype: 1
+  name: unique identifier for the profile
+  units: ccitt ia5
+IFDT:
+  ddims: *id001
+  dtype: 2
+  name: interpolation flag for mean diurnal tide
+  units: code table
+IMON:
+  ddims: *id001
+  dtype: 3
+  name: imo number. unique lloyd's register
+  units: numeric
+INTF:
+  ddims: *id001
+  dtype: 2
+  name: interpolation flag
+  units: flag table
+IPIN:
+  ddims: *id001
+  dtype: 2
+  name: ice presence indicator
+  units: code table
+ISCS:
+  ddims: *id001
+  dtype: 2
+  name: indicator for sea surface current speed
+  units: code table
+ISNW:
+  ddims: *id002
+  dtype: 1
+  name: instrument serial number for water temperature profile
+  units: ccitt ia5
+IUCSPD:
+  ddims: *id001
+  dtype: 2
+  name: indicator for units of sea surface current speed
+  units: code table
+IWTEMP:
+  ddims: *id001
+  dtype: 2
+  name: instrument type for water temperature profile meas
+  units: code table
+KAGC:
+  ddims: *id001
+  dtype: 3
+  name: ku band automatic gain control
+  units: db
+KBIC:
+  ddims: *id001
+  dtype: 3
+  name: ku band net instrumental correction
+  units: m
+KBOR:
+  ddims: *id001
+  dtype: 3
+  name: ku band ocean range
+  units: m
+KBSW:
+  ddims: *id001
+  dtype: 3
+  name: ku band significant wave height
+  units: m
+KNCS:
+  ddims: *id001
+  dtype: 3
+  name: ku band net instrumental correction for significant wav
+  units: m
+KNIC:
+  ddims: *id001
+  dtype: 3
+  name: ku band net instrumental correction for agc
+  units: db
+KOBC:
+  ddims: *id001
+  dtype: 3
+  name: ku band corrected ocean backscatter coefficient
+  units: db
+KORQ:
+  ddims: *id001
+  dtype: 2
+  name: ku band ocean retracking quality
+  units: flag table
+KUBP:
+  ddims: *id001
+  dtype: 3
+  name: ku band peakiness
+  units: numeric
+L1PF:
+  ddims: *id001
+  dtype: 2
+  name: l1 processing flag
+  units: code table
+L1PQ:
+  ddims: *id001
+  dtype: 3
+  name: l1 processing quality
+  units: '%'
+L2PF:
+  ddims: *id001
+  dtype: 2
+  name: l2 processing flag
+  units: code table
+L2PS:
+  ddims: *id001
+  dtype: 2
+  name: l2 product status
+  units: code table
+LPTH:
+  ddims: *id001
+  dtype: 3
+  name: long period tide height
+  units: m
+LRMP:
+  ddims: *id001
+  dtype: 3
+  name: lrm mode per cent
+  units: '%'
+LSQL:
+  ddims: *id001
+  dtype: 2
+  name: land/sea qualifier
+  units: code table
+LSTN:
+  ddims: *id002
+  dtype: 1
+  name: long station or site name
+  units: ccitt ia5
+LTHS1:
+  ddims: *id001
+  dtype: 3
+  name: loading tide height geocentric ocean tide solution 1
+  units: m
+LTHS2:
+  ddims: *id001
+  dtype: 3
+  name: loading tide height geocentric ocean tide solution 2
+  units: m
+MCMS:
+  ddims: *id001
+  dtype: 2
+  name: method of current measurement
+  units: code table
+MDCL:
+  ddims: *id001
+  dtype: 2
+  name: method of depth calculation
+  units: code table
+MDTC:
+  ddims: *id001
+  dtype: 3
+  name: model dry tropospheric correction
+  units: m
+MDYT:
+  ddims: *id001
+  dtype: 3
+  name: mean dynamic topography
+  units: m
+MEFR:
+  ddims: *id001
+  dtype: 3
+  name: mean frequency
+  units: hertz
+MINU:
+  ddims: *id001
+  dtype: 2
+  name: minute
+  units: minute
+MMAC:
+  ddims: *id001
+  dtype: 2
+  name: meteorological map availability
+  units: code table
+MNTH:
+  ddims: *id001
+  dtype: 2
+  name: month
+  units: month
+MRMV:
+  ddims: *id001
+  dtype: 2
+  name: meth of rmv velocity and motion of platform from curren
+  units: code table
+MSCM:
+  ddims: *id001
+  dtype: 2
+  name: method of sea/water current measurement
+  units: code table
+MSDM:
+  ddims: *id001
+  dtype: 2
+  name: method of salinity/depth measurement
+  units: code table
+MSHA:
+  ddims: *id001
+  dtype: 3
+  name: mean sea surface height from altimeter only
+  units: m
+MSSH:
+  ddims: *id001
+  dtype: 3
+  name: mean seasurface height
+  units: m
+MSST:
+  ddims: *id001
+  dtype: 2
+  name: method of water temperature and/or salinity measurement
+  units: code table
+MWBT:
+  ddims: *id001
+  dtype: 2
+  name: method of wetbulb temperature measurement
+  units: code table
+MWTC:
+  ddims: *id001
+  dtype: 3
+  name: model wet tropospheric correction
+  units: m
+MXGD:
+  ddims: *id001
+  dtype: 3
+  name: maximum wind gust direction
+  units: degree true
+MXGS:
+  ddims: *id001
+  dtype: 3
+  name: maximum wind speed gusts
+  units: meters/second
+N20GBC:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for ocog backscatter coeff
+  units: numeric
+N20NBC:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for ocean backscatter coef
+  units: numeric
+N20NR:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for ocean range
+  units: numeric
+N20SWHS:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for swh squared
+  units: numeric
+NGEO:
+  ddims: *id001
+  dtype: 3
+  name: ngdr geiod height
+  units: meters
+NIAGC:
+  ddims: *id001
+  dtype: 3
+  name: specific band net instrumental correction for agc
+  units: db
+NINB:
+  ddims: *id001
+  dtype: 3
+  name: ngdr inverse barometer
+  units: meters
+NISWH:
+  ddims: *id001
+  dtype: 3
+  name: specific band net instrument correction for signficant
+  units: m
+NLTH:
+  ddims: *id001
+  dtype: 3
+  name: nonequilibrium long period tide height
+  units: m
+NMS2:
+  ddims: *id001
+  dtype: 3
+  name: ngdr mean sea surface ii
+  units: meters
+NMSI:
+  ddims: *id001
+  dtype: 3
+  name: ngdr mean sea surface i
+  units: meters
+NOBS:
+  ddims: *id001
+  dtype: 3
+  name: number of observations
+  units: numeric
+NPBT:
+  ddims: *id001
+  dtype: 3
+  name: ngdr satellite pass time
+  units: seconds
+NSIG:
+  ddims: *id001
+  dtype: 3
+  name: ngdr sigma0
+  units: decibels
+NSLR:
+  ddims: *id001
+  dtype: 3
+  name: number of altimeter records averaged to obtain slhd
+  units: numeric
+NSWHC:
+  ddims: *id001
+  dtype: 3
+  name: ngdr net swh corrected
+  units: meters
+NUMID:
+  ddims: *id002
+  dtype: 1
+  name: numerical model identifier
+  units: ccitt ia5
+NVCSW:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for c band significant wav
+  units: numeric
+NVKG:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for ku band automatic gain contr
+  units: numeric
+NVKSW:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for ku band significant wa
+  units: numeric
+NVPAGC:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for specific band automatic gain
+  units: numeric
+NVPBS:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for specific band backscatter
+  units: numeric
+NVPC:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for c band
+  units: numeric
+NVPCA:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for c band automatic gain contro
+  units: numeric
+NVPCB:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for c band backscatter
+  units: numeric
+NVPK2:
+  ddims: *id001
+  dtype: 3
+  name: number of 20 hz valid points for ku band
+  units: numeric
+NVPKB:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for ku band backscatter
+  units: numeric
+NVPP:
+  ddims: *id001
+  dtype: 3
+  name: no. valid points per sec. used to derive prev. parms
+  units: numeric
+NVPSB:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for specific band
+  units: numeric
+NVPSWH:
+  ddims: *id001
+  dtype: 3
+  name: number of valid points for specific band significant wa
+  units: numeric
+OBQL:
+  ddims: *id001
+  dtype: 2
+  name: observation quality
+  units: flag table
+ODLE:
+  ddims: *id001
+  dtype: 3
+  name: ocean depth/land elevation
+  units: m
+OGCE:
+  ddims: *id001
+  dtype: 0
+  name: originating/generating center
+  units: code table c-1
+OLCA:
+  ddims: *id001
+  dtype: 3
+  name: open loop correction auto gain control
+  units: decibels
+OLCH:
+  ddims: *id001
+  dtype: 3
+  name: open loop correction heighttime loop
+  units: meters
+ONAP:
+  ddims: *id001
+  dtype: 3
+  name: squared off nadir angle of the satellite from platform
+  units: degree**2
+ONAS:
+  ddims: *id001
+  dtype: 3
+  name: off nadir angle of the satellite from platform data
+  units: degree
+OPMM:
+  ddims: *id002
+  dtype: 1
+  name: observing platform manufacturer's model
+  units: ccitt ia5
+OPMS:
+  ddims: *id002
+  dtype: 1
+  name: observing platform manufacturer's serial number
+  units: ccitt ia5
+ORBN:
+  ddims: *id001
+  dtype: 3
+  name: orbit number
+  units: numeric
+OSQN:
+  ddims: *id001
+  dtype: 3
+  name: observation sequence number
+  units: numeric
+PCAT:
+  ddims: *id001
+  dtype: 3
+  name: precision of temperature observation
+  units: degrees kelvin
+PCID:
+  ddims: *id002
+  dtype: 1
+  name: processing centre id code
+  units: ccitt ia5
+PEAK:
+  ddims: *id001
+  dtype: 3
+  name: peakiness
+  units: numeric
+PK20:
+  ddims: *id001
+  dtype: 3
+  name: 20 hz ku band peakiness
+  units: numeric
+PMSL:
+  ddims: *id001
+  dtype: 0
+  name: pressure reduced to mean sea level
+  units: pa
+POWV:
+  ddims: *id001
+  dtype: 3
+  name: period of waves
+  units: s
+PRES:
+  ddims: *id001
+  dtype: 0
+  name: pressure
+  units: pa
+PTIDC:
+  ddims: *id002
+  dtype: 1
+  name: platform transmitter id number
+  units: ccitt ia5
+QFQF:
+  ddims: *id001
+  dtype: 2
+  name: qualifier for gtspp quality flag
+  units: code table
+QMAT:
+  ddims: *id001
+  dtype: 2
+  name: quips quality mark for temperature future?
+  units: code table
+QMRK:
+  ddims: *id001
+  dtype: 2
+  name: quality information
+  units: code table
+QMST:
+  ddims: *id001
+  dtype: 2
+  name: quips quality mark for sea surface temperature future?
+  units: code table
+QMWN:
+  ddims: *id001
+  dtype: 2
+  name: quips quality mark for wind future?
+  units: code table
+RAPC:
+  ddims: *id001
+  dtype: 2
+  name: radar altimeter product confidence
+  units: flag table
+RBIF:
+  ddims: *id001
+  dtype: 2
+  name: radiometer brightness temperature interpretation flag
+  units: code table
+RCAGC:
+  ddims: *id001
+  dtype: 3
+  name: rms c band automatic gain control
+  units: db
+RCBOR:
+  ddims: *id001
+  dtype: 3
+  name: rms of c band ocean range
+  units: m
+RCCOB:
+  ddims: *id001
+  dtype: 3
+  name: rms c band corrected ocean backscatter coefficient
+  units: db
+RCDY:
+  ddims: *id001
+  dtype: 2
+  name: day time of receipt
+  units: day
+RCHR:
+  ddims: *id001
+  dtype: 3
+  name: hour time of receipt
+  units: hour
+RCMI:
+  ddims: *id001
+  dtype: 2
+  name: minute time of receipt
+  units: minute
+RCMO:
+  ddims: *id001
+  dtype: 2
+  name: month time of receipt
+  units: month
+RCSW:
+  ddims: *id001
+  dtype: 3
+  name: rms 20 hz c band significant wave height
+  units: m
+RCTS:
+  ddims: *id001
+  dtype: 2
+  name: receipt time significance
+  units: code table
+RCYR:
+  ddims: *id001
+  dtype: 2
+  name: year time of receipt
+  units: year
+RDLC:
+  ddims: *id001
+  dtype: 3
+  name: radiometer liquid content
+  units: kg/m**2
+RDQF:
+  ddims: *id001
+  dtype: 2
+  name: radiometer data quality flag
+  units: flag table
+REHU:
+  ddims: *id001
+  dtype: 3
+  name: relative humidity
+  units: '%'
+RKAGC:
+  ddims: *id001
+  dtype: 3
+  name: rms ku band automatic gain control
+  units: db
+RKBOR:
+  ddims: *id001
+  dtype: 3
+  name: rms of 20 hz ku band ocean range
+  units: m
+RKSW:
+  ddims: *id001
+  dtype: 3
+  name: rms 20 hz ku band significant wave height
+  units: m
+RLQC:
+  ddims: *id001
+  dtype: 3
+  name: radiometer liquid content
+  units: kg/m**2
+RMSAGC:
+  ddims: *id001
+  dtype: 3
+  name: rms specific band automatic gain control
+  units: db
+RMSOCR:
+  ddims: *id001
+  dtype: 3
+  name: rms of specific band ocean range
+  units: m
+RMSSWH:
+  ddims: *id001
+  dtype: 3
+  name: rms specific band significant wave height
+  units: m
+RPID:
+  ddims: *id002
+  dtype: 1
+  name: report identifier
+  units: ccitt ia5
+RRSTG:
+  ddims: *id002
+  dtype: 1
+  name: raw report string
+  units: ccitt ia5
+RSFL:
+  ddims: *id001
+  dtype: 2
+  name: radiometer state flag
+  units: flag table
+RSST:
+  ddims: *id001
+  dtype: 2
+  name: remotely sensed surface type
+  units: code table
+RWTC:
+  ddims: *id001
+  dtype: 3
+  name: radiometer wet tropospheric correction
+  units: m
+RWVC:
+  ddims: *id001
+  dtype: 3
+  name: radiometer water vapor content
+  units: kg/m**2
+S20GBC:
+  ddims: *id001
+  dtype: 3
+  name: std of 20 hz ocog backscatter coefficient
+  units: db
+S20GR:
+  ddims: *id001
+  dtype: 3
+  name: std of 20 hz ocog range
+  units: m
+S20NR:
+  ddims: *id001
+  dtype: 3
+  name: std of 20 hz ocean range
+  units: m
+S20SWHS:
+  ddims: *id001
+  dtype: 3
+  name: std of 20 hz swh squared
+  units: m**2
+SACLYN:
+  ddims: *id001
+  dtype: 3
+  name: ngdr satellite cycle number
+  units: numeric
+SACS:
+  ddims: *id001
+  dtype: 2
+  name: satellite altimeter calibration status
+  units: flag table
+SACYLN:
+  ddims: *id001
+  dtype: 3
+  name: satellite cycle number
+  units: numeric
+SAGC:
+  ddims: *id001
+  dtype: 3
+  name: specific band automatic gain control
+  units: db
+SAID:
+  ddims: *id001
+  dtype: 2
+  name: satellite identifier
+  units: code table
+SAIM:
+  ddims: *id001
+  dtype: 2
+  name: satellite altimeter instrument mode
+  units: flag table
+SALN:
+  ddims: *id001
+  dtype: 3
+  name: salinity
+  units: parts/1000
+SALNH:
+  ddims: *id001
+  dtype: 3
+  name: salinity
+  units: part per thousand
+SBCC:
+  ddims: *id001
+  dtype: 3
+  name: sea state bias correction on c band
+  units: m
+SBCK:
+  ddims: *id001
+  dtype: 3
+  name: sea state bias correction on ku band
+  units: m
+SBCSB:
+  ddims: *id001
+  dtype: 3
+  name: sea state bias correction on specific band
+  units: m
+SBNIC:
+  ddims: *id001
+  dtype: 3
+  name: specific band net instrumental correction
+  units: m
+SBOCR:
+  ddims: *id001
+  dtype: 3
+  name: specific band ocean range
+  units: m
+SBPI:
+  ddims: *id002
+  dtype: 1
+  name: stationary buoy platform id
+  units: ccitt ia5
+SBSWH:
+  ddims: *id001
+  dtype: 3
+  name: specific band significant wave height
+  units: m
+SCCF:
+  ddims: *id001
+  dtype: 3
+  name: satellite channel center frequency
+  units: hz
+SCLF:
+  ddims: *id001
+  dtype: 2
+  name: satellite classification
+  units: code table
+SCOBC:
+  ddims: *id001
+  dtype: 3
+  name: std specific band corrected ocean backscatter coefficie
+  units: db
+SDAL:
+  ddims: *id001
+  dtype: 3
+  name: standard deviation of altitude
+  units: meters
+SDHS:
+  ddims: *id001
+  dtype: 3
+  name: standard deviation of horizontal wind speed
+  units: meters/second
+SDOM:
+  ddims: *id001
+  dtype: 2
+  name: instrument type/sensor for dissolved oxygen measurement
+  units: code table
+SDWH:
+  ddims: *id001
+  dtype: 3
+  name: standard deviation of significant wave height
+  units: m
+SECO:
+  ddims: *id001
+  dtype: 3
+  name: second
+  units: second
+SECW:
+  ddims: *id001
+  dtype: 3
+  name: second within a minute microsecond accuracy
+  units: second
+SELV:
+  ddims: *id001
+  dtype: 3
+  name: height of station
+  units: meters
+SEQNUM:
+  ddims: *id002
+  dtype: 1
+  name: channel sequence number
+  units: ccitt ia5
+SETH:
+  ddims: *id001
+  dtype: 3
+  name: solid earth tide height
+  units: m
+SGWH:
+  ddims: *id001
+  dtype: 3
+  name: significant wave height
+  units: meters
+SHPC8:
+  ddims: *id002
+  dtype: 1
+  name: ship call sign 8 characters
+  units: ccitt ia5
+SIDU:
+  ddims: *id001
+  dtype: 2
+  name: satellite instrument data used in processing
+  units: flag table
+SIIC:
+  ddims: *id001
+  dtype: 2
+  name: siral instrument configuration
+  units: code table
+SIID:
+  ddims: *id001
+  dtype: 2
+  name: satellite instruments
+  units: code table
+SKOBC:
+  ddims: *id001
+  dtype: 3
+  name: std ku band corrected ocean backscatter coefficient
+  units: db
+SLHD:
+  ddims: *id001
+  dtype: 3
+  name: sealevel height deviation from the 3yr mean of 19939
+  units: meters
+SLHD1:
+  ddims: *id001
+  dtype: 3
+  name: sealevel height deviation from 8yr mean of 19932000
+  units: meters
+SLNO:
+  ddims: *id002
+  dtype: 1
+  name: ship line number according to soop
+  units: ccitt ia5
+SMID:
+  ddims: *id002
+  dtype: 1
+  name: ship or mobile land station identifier
+  units: ccitt ia5
+SMMO:
+  ddims: *id001
+  dtype: 3
+  name: speed of motion of moving observing platform
+  units: meters/second
+SOFTV:
+  ddims: *id002
+  dtype: 1
+  name: software identification and version number
+  units: ccitt ia5
+SONA:
+  ddims: *id001
+  dtype: 0
+  name: square of the offnadir angle
+  units: degrees**2
+SONAW:
+  ddims: *id001
+  dtype: 3
+  name: squared off nadir angle of the satellite from waveform
+  units: degree**2
+SPOC:
+  ddims: *id001
+  dtype: 3
+  name: speed of current
+  units: meters/second
+SSHA:
+  ddims: *id001
+  dtype: 3
+  name: sea surface height anomoly
+  units: m
+SSHC:
+  ddims: *id001
+  dtype: 3
+  name: ngdr ssh corrected
+  units: meters
+SSIN:
+  ddims: *id001
+  dtype: 2
+  name: satellite sensor indicator
+  units: code table
+SSS0:
+  ddims: *id001
+  dtype: 3
+  name: sea surface salinity
+  units: part per thousand
+SSSC:
+  ddims: *id001
+  dtype: 3
+  name: speed of sea surface current
+  units: m/s
+SST0:
+  ddims: *id001
+  dtype: 3
+  name: sea surface temperature
+  units: k
+SST1:
+  ddims: *id001
+  dtype: 3
+  name: sea/water temperature
+  units: k
+SSTH:
+  ddims: *id001
+  dtype: 3
+  name: sea/water temperature
+  units: k
+STAQ:
+  ddims: *id002
+  dtype: 1
+  name: station acquisition
+  units: ccitt ia5
+STKO:
+  ddims: *id001
+  dtype: 2
+  name: ascending/descending orbit qualifier
+  units: code table
+STMID:
+  ddims: *id002
+  dtype: 1
+  name: storm identifier
+  units: ccitt ia5
+STMP:
+  ddims: *id001
+  dtype: 3
+  name: sea temperature at specified depth
+  units: degrees kelvin
+STNO:
+  ddims: *id001
+  dtype: 3
+  name: ship transect number according to soop
+  units: numeric
+SWCM:
+  ddims: *id001
+  dtype: 2
+  name: satellite derived wind computation method
+  units: code table
+SWHS:
+  ddims: *id001
+  dtype: 3
+  name: square of significant wave height
+  units: m**2
+SWHS20:
+  ddims: *id001
+  dtype: 3
+  name: 20 hz significant wave height squared
+  units: m**2
+SWID:
+  ddims: *id001
+  dtype: 3
+  name: software identification
+  units: numeric
+TEVF:
+  ddims: *id001
+  dtype: 2
+  name: trailing edge variation flag
+  units: flag table
+TGOTH1:
+  ddims: *id001
+  dtype: 3
+  name: total geocentric ocean tide height solution 1
+  units: m
+TGOTH2:
+  ddims: *id001
+  dtype: 3
+  name: total geocentric ocean tide height solution 2
+  units: m
+TILH:
+  ddims: *id001
+  dtype: 3
+  name: tidal loading height
+  units: m
+TIWM:
+  ddims: *id001
+  dtype: 2
+  name: type of instrumentation for wind measurement
+  units: flag table
+TMBR:
+  ddims: *id001
+  dtype: 3
+  name: brightness temperature
+  units: degrees kelvin
+TMBR22:
+  ddims: *id001
+  dtype: 3
+  name: ngdr brightness temperature 22ghz
+  units: degrees kelvin
+TMBR37:
+  ddims: *id001
+  dtype: 3
+  name: ngdr brightness temperature 37ghz
+  units: degrees kelvin
+TMBRST:
+  ddims: *id001
+  dtype: 3
+  name: brightness temperature
+  units: k
+TMDB:
+  ddims: *id001
+  dtype: 3
+  name: temperature/dry bulb temperature
+  units: degrees kelvin
+TMDP:
+  ddims: *id001
+  dtype: 3
+  name: dewpoint temperature
+  units: k
+TMWB:
+  ddims: *id001
+  dtype: 3
+  name: wetbulb temperature
+  units: k
+TOBD:
+  ddims: *id001
+  dtype: 2
+  name: type of band
+  units: code table
+TOST:
+  ddims: *id001
+  dtype: 2
+  name: type of station
+  units: code table
+TOWD:
+  ddims: *id001
+  dtype: 3
+  name: total water depth
+  units: meters
+TPMI:
+  ddims: *id001
+  dtype: 2
+  name: time period or displacement
+  units: minute
+TSIG:
+  ddims: *id001
+  dtype: 2
+  name: time significance
+  units: code table
+UMWV:
+  ddims: *id001
+  dtype: 3
+  name: ucomponent of the model wind vector
+  units: m/s
+VSSO:
+  ddims: *id001
+  dtype: 2
+  name: vertical significance sfc observation
+  units: code table
+VWMV:
+  ddims: *id001
+  dtype: 3
+  name: vcomponent of the model wind vector
+  units: m/s
+WDIR:
+  ddims: *id001
+  dtype: 3
+  name: wind direction
+  units: degrees true
+WMOP:
+  ddims: *id001
+  dtype: 3
+  name: wmo marine observing platform extended identifier
+  units: numeric
+WPRES:
+  ddims: *id001
+  dtype: 0
+  name: water pressure
+  units: pa
+WS10:
+  ddims: *id001
+  dtype: 3
+  name: wind speed at 10 meters
+  units: meters/second
+WSPA:
+  ddims: *id001
+  dtype: 3
+  name: wind speed from altimeter
+  units: m/s
+WSPD:
+  ddims: *id001
+  dtype: 3
+  name: wind speed
+  units: meters/second
+WSPR:
+  ddims: *id001
+  dtype: 3
+  name: wind speed from radiometer
+  units: m/s
+WTEMPR:
+  ddims: *id001
+  dtype: 2
+  name: water temperature profile recorder types
+  units: code table
+XXLT:
+  ddims: *id001
+  dtype: 2
+  name: xbt/xctd launcher type
+  units: code table
+YEAR:
+  ddims: *id001
+  dtype: 2
+  name: year
+  units: year
