@@ -6,7 +6,7 @@ module load NetCDF/4.2/serial
 set -x
 echo "*** Started script $0"
 if [ $# -lt 2 ] ; then
-   echo USAGE="Usage: ncoda_SST_prep_nc.sh YYYYMMDDHH Time_Window_hrs " 
+   echo USAGE="Usage: IODA_SST_prep_nc.sh YYYYMMDDHH Time_Window_hrs " 
    exit 2
 fi
 
