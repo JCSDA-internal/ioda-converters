@@ -1,10 +1,15 @@
+/usr/bin/env python
+
 import numpy as np
 import ncepbufr
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 from netCDF4 import Dataset
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from datetime import datetime
 import sys
 import os
+import yaml
 
 #import ipdb
 #ipdb.set_trace()
@@ -31,6 +36,10 @@ def BfilePreprocess(BufrFname, Obs):
 
     return [NumObs, Obs.num_msg_selected, Obs.num_msg_mtype]
 
+######
+
+    
+
 ##########################################################################
 ##########                  (Prep-) BUFR NCEP Observations               #
 ##########################################################################
@@ -40,7 +49,7 @@ def BfilePreprocess(BufrFname, Obs):
 #
 class NcepObsType(ObsType):
     ### initialize data elements ###
-    def __init__(self, bf_type, alt_type, tablefile):
+    def __init__(self, bf_type, alt_type, tablefile, dictfile):
         super(NcepObsType, self).__init__()
 
         self.bufr_ftype = bf_type
@@ -61,11 +70,19 @@ class NcepObsType(ObsType):
 
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = alt_type  # alt_type is the BUFR mnemonic
-            full_table, blist = read_table(tablefile)  # i.e. 'NC031120'
+            
+            if os.path.isfile (dictfile):
+               full_table = read_yaml(dictfile)           # i.e. 'NC031120.dict'
+               _ , blist = read_table(tablefile) 
+            else:
+               full_table, blist = read_table(tablefile)  # i.e. 'NC031120.tbl'
+               write_yaml (full_table, dictfile)
+               
             spec_list = get_int_spec(alt_type, blist)
 
             intspec = []
             intspecDum = []
+
             for i in spec_list[alt_type]:
                 if i in full_table:
                     intspecDum = [
@@ -110,6 +127,18 @@ class NcepObsType(ObsType):
 # read bufr table and return new table with bufr names and units
 ##########################################################################
 
+def write_yaml ( dictionary, dictfileName ):
+    f=open(dictfileName, 'w')
+    yaml.dump(dictionary,f)
+    f.close()
+
+def read_yaml ( dictfileName ):
+     f=open(dictfileName, 'r')
+     dictionary = yaml.load(f) 
+     f.close()
+     
+     return dictionary
+      
 def read_table(filename):
     all = []
     with open(filename) as f:
@@ -220,6 +249,7 @@ def read_table(filename):
             full_table[key]['dtype'] = cm.DTYPE_UNDEF
             full_table[key]['ddims'] = nums_dims
 
+     
     return full_table, part_b
 
 ##########################################################################
@@ -273,7 +303,8 @@ def get_int_spec(mnemonic, part_b):
 ##########################################################################
 
 def get_fname(base_mnemo, BufrPath):
-    BufrFname = BufrPath + '/b' + base_mnemo[2:5] + '/xx' + base_mnemo[5:]
+    #BufrFname = BufrPath + '/b' + base_mnemo[2:5] + '/xx' + base_mnemo[5:]
+    BufrFname = BufrPath + BufrFname
     BufrTname = base_mnemo + '.tbl'
     NetcdfFname = 'xx' + base_mnemo[5:] + '.nc'
 
@@ -292,38 +323,68 @@ def create_bufrtable(BufrFname, ObsTable):
 ##########################################################################
 
 if __name__ == '__main__':
-    #
-    # ---- #  Define the user variables  # ---- #
-    # 1. Set tank name / Obstype
-    # TODO Maybe, use  lists to go through all the observations tanks.
-    base_mnemo = 'NC031120'
-    #
-    # 2. Set Observation type. This can be identical to base_mnemo or it has a more
-    # generic name that covers several tanks, e.g. Altimeters, for all the bNNN/xxNNN files
-    # with altimeter observations.
+    
+    desc='Read NCEP BUFR data and convert to IODA netCDF4 format /n\
+          example: ncep_clases -p /path/to/obs/ -i obs_filename -t observation type'
+    
+    parser = ArgumentParser(
+        description=desc,
+        formatter_class=ArgumentDefaultsHelpFormatter)
 
-    BufrObsType = 'Altimeter'  # /   BufrObsType='NC031120'
-    #
-    # 3.Set the path of the observations.
-    # TODO make the PDY variable for cycling.
-    # BufrFname='/scratch4/NCEPDEV/ocean/scrub/Stylianos.Flampouris/marine_observations/dcom/us007003/20190310/b031/xx120'
+    parser.add_argument(
+        '-p', '--obs_path', help='path with the observations',
+        type=str, required=True)
 
-    BufrPath = '/scratch4/NCEPDEV/ocean/scrub/Stylianos.Flampouris/marine_observations/dcom/us007003/20190310'
-    #
-    # 4.Required fields for the bufr2nc.py
-    MaxNumMsg = 2
-    ThinInterval = 1
-    # TODO: If the generic reader works, the BfileType could be removed.
-    BfileType = cm.BFILE_BUFR
-    #
-    ####### Basic Setup Internal #######
-    #
-    # # Create Bufr File Name (BufrFname), Bufr Table Name (ObsTable), and NC output file name (NetcdfFname)
+    parser.add_argument(
+        '-i', '--input_bufr', help='name of the input BUFR file',
+        type=str, required=True)
+    
+    parser.add_argument(
+        '-ot', '--obs_type', help='Submessage of the input BUFR file, e.g., NC031120',
+        type=str, required=True)
 
-    BufrFname, ObsTable, NetcdfFname = get_fname(base_mnemo, BufrPath)
-    #
-    # # Check if BufrFname exists
+    parser.add_argument(
+        '-o', '--output_netcdf', help='name of the output NC file',
+        type=str, required=False, default=None)
 
+    parser.add_argument(
+        '-m', '--maxmsgs', help="maximum number of messages to keep",
+        type=int, required=False, default=1,metavar="<max_num_msgs>")
+    
+    parser.add_argument(
+        '-Th', '--thin', type=int, default=1,
+         help="select every nth message (thinning)", metavar="<thin_interval>")
+ 
+    parser.add_argument(
+        '-d', '--date', help='file date', metavar='YYYYMMDDHH',
+        type=str, required=True)
+    parser.add_argument(
+        '-Pr', '--bufr', action='store_true', default=1,
+        help='input BUFR file is in prepBUFR format')  
+
+    args = parser.parse_args()
+
+    BufrPath     = args.obs_path    # Path of the observations
+    MaxNumMsg    = args.maxmsgs     # Maximum number of messages to be imported
+    ThinInterval = args.thin        # Thinning window. TODO: To be removed, legacy
+    ObsType      = args.obs_type    # Observation type. e.g., NC031120
+    BufrFname    = BufrPath + args.input_bufr  # path and name of BUFR name
+    DateCentral  = datetime.strptime(args.date,'%Y%m%d%H') #DateHH of analysis
+    if (args.bufr):
+          BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
+    else:
+       BfileType = cm.BFILE_PREPBUFR
+
+    if (args.output_netcdf):        
+       NetcdfFname = args.output_netcdf   # Filename of the netcdf ioda file
+    else: 
+       NetcdfFname = 'ioda.' + ObsType + '.' + DateCentral.strftime("%Y%m%d%H") + '.nc'
+    
+    ObsTable     = ObsType + '.tbl'       # Bufr table from the data. 
+    DictObs    = ObsType + '.dict'      # Bufr dict
+    
+    # Check if BufrFname exists
+    print(BufrFname)
     if os.path.isfile(BufrFname):
         bufr = ncepbufr.open(BufrFname)
         bufr.advance()
@@ -332,26 +393,23 @@ if __name__ == '__main__':
         print('Mnemonic name is ', mnemonic)
     else:
         sys.exit('The ',BufrFname, 'does not exist.' )
-    #
-    # # Check if Bufr Observation Table exists, if not created.
-    # # The table is defined as base_mnemo.tbl, it is a text file.
+  
+    #  Check if Bufr Observation Table exists, if not created.
+    #  The table is defined as base_mnemo.tbl, it is a text file.
 
     if os.path.isfile(ObsTable):
         print('ObsTable exists: ', ObsTable)
     else:
         print('ObsTable does not exist, the ', ObsTable, 'is created!')
         create_bufrtable(BufrFname, ObsTable)
-    #
-    # # Create the observation instance
+    
+    # Create the observation instance
 
-    Obs = NcepObsType(BfileType, mnemonic, ObsTable)
-    print('Out of NcepObsType')
+    Obs = NcepObsType(BfileType, mnemonic, ObsTable, DictObs)
 
     Obs.max_num_msg = MaxNumMsg
     Obs.thin_interval = ThinInterval
     [NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)
-
-    print('Out of BfilePreprocess')
 
     Obs.set_nobs(NumObs)
 
