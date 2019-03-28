@@ -1,11 +1,10 @@
-/usr/bin/env python
+#!/usr/bin/env python
 
 import numpy as np
 import ncepbufr
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 from netCDF4 import Dataset
-<<<<<<< HEAD
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from datetime import datetime
 import sys
@@ -367,7 +366,7 @@ if __name__ == '__main__':
     BufrFname    = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral  = datetime.strptime(args.date,'%Y%m%d%H') #DateHH of analysis
     if (args.bufr):
-          BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
+       BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
     else:
        BfileType = cm.BFILE_PREPBUFR
 
@@ -381,14 +380,14 @@ if __name__ == '__main__':
     
     # Check if BufrFname exists
 
-   if os.path.isfile(BufrFname):
-        bufr = ncepbufr.open(BufrFname)
-        bufr.advance()
-        mnemonic = bufr.msg_type
-        bufr.close()
-        print('Mnemonic name is ', mnemonic)
+    if os.path.isfile(BufrFname):
+       bufr = ncepbufr.open(BufrFname)
+       bufr.advance()
+       mnemonic = bufr.msg_type
+       bufr.close()
+       print('Mnemonic name is ', mnemonic)
     else:
-        sys.exit('The ',BufrFname, 'does not exist.' )
+       sys.exit('The ',BufrFname, 'does not exist.' )
   
     #  Check if Bufr Observation Table exists, if not created.
     #  The table is defined as base_mnemo.tbl, it is a text file.
