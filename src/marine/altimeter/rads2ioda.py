@@ -30,7 +30,6 @@ class Observation(object):
         reftime = dateutil.parser.parse(units)
         ncd.close()
 
-        print('reftime='+reftime)
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
@@ -65,7 +64,7 @@ if __name__ == '__main__':
         description=('')
     )
     parser.add_argument('-i',
-                        help="name of RADS obs input file",
+                        help="RADS obs input files (wild cards or list)",
                         type=str, nargs='+', required=True)
     parser.add_argument('-o',
                         help="name of ioda output file",
@@ -74,7 +73,6 @@ if __name__ == '__main__':
                         help="base date", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    print(fdate)
     writer = iconv.NcWriter(args.o, [], locationKeyList)
 
     # Read in the altimeter
