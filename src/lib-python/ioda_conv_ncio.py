@@ -5,6 +5,7 @@ import numpy as np
 import netCDF4
 from netCDF4 import Dataset
 import datetime as dt
+import sys
 
 ###################################################################################
 # SUBROUTINES
@@ -24,6 +25,18 @@ def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
         # write to obs file
         Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
         Ovar[...] = Vvals[...]
+
+def CharVectorToString(CharVec):
+    # Need to do this differently given the Python version (2 vs 3)
+    #
+    # sys.version_info[0] yeilds the Python major version number.
+    if (sys.version_info[0] == 2):
+      String = CharVec.tostring().rstrip('\x00')
+    else:
+      String = str(CharVec.tostring(), 'utf-8').rstrip('\x00')
+
+    return String
+    
 
 ###################################################################################
 # CLASSES
@@ -134,7 +147,7 @@ class NcWriter(object):
 
         TimeOffset = np.zeros((self._nlocs), dtype = 'f4')
         for i in range(len(TimeStrings)):
-            Tstring = TimeStrings[i].tostring()
+            Tstring = CharVectorToString(TimeStrings[i])
             ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
 
             TimeDelta = ObsDt - self._ref_date_time
@@ -224,7 +237,7 @@ class NcWriter(object):
                 for i in range(self._nvars):
                     # The rstrip trims off the null bytes that correspond to '' chars
                     # in the character array.
-                    Vname = VarMdata['variable_names'][i,:].tostring().rstrip('\x00')
+                    Vname = CharVectorToString(VarMdata['variable_names'][i,:])
                     NcVname = "{0:s}@{1:s}".format(Vname, Gname)
                     NcVvals = Vvals[i,:]
 
