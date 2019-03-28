@@ -155,9 +155,9 @@ print("  Number of observations selected: {0:d}".format(NumObs))
 print("")
 
 # Now that we have the number of observations we will be recording, set the dimension
-# size in the obs object. Note the set_nobs() method needs to be called before creating
+# size in the obs object. Note the set_nlocs() method needs to be called before creating
 # netcdf variables.
-Obs.set_nobs(NumObs)
+Obs.set_nlocs(NumObs)
 
 # Create the dimensions and variables in the netCDF file in preparation for
 # recording the selected observations.
