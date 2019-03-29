@@ -48,7 +48,7 @@ def write_to_file(din, fileout, nlocs, flag):
   for var in din.variables.values():
     vname = var.name
     #print "        Variable: ", vname
-    vdata = var[...].data
+    vdata = din.variables[vname]
     var_out = dout.createVariable(vname, vdata.dtype, var.dimensions)
     var_out[...] = vdata[flag,...]
   dout.close()
@@ -61,15 +61,19 @@ date='2018041500'
 files = ['aircraft_tsen', 'satwind_uv', 'scatwind_uv', 'sfc_tsen', 'sfc_uv',   \
          'sfcship_tsen', 'sfcship_uv', 'sondes_tsen', 'sondes_tv', 'sondes_uv', \
          'vadwind_uv', 'windprof_uv', 'rass_tsen']
-files = ['aircraft', 'satwind', 'scatwind', 'sfc', 'sfc_uv', 'sfcship', 'sfcship_uv', \
-         'sondes', 'sondes_tv', 'sondes_uv', 'vadwind', 'rass']
-files = ['aircraft']
+#files = ['aircraft', 'satwind', 'scatwind', 'sfc', 'sfc_uv', 'sfcship', 'sfcship_uv', \
+#         'sondes', 'sondes_tv', 'sondes_uv', 'vadwind', 'rass']
+#files = ['aircraft']
 for name in files:
   if ('_uv' in name or name == 'rass'):
-    create_dimensions(name+'_obs_'+date+'.nc4')
+    try:
+      create_dimensions(name+'_obs_'+date+'.nc4')
+    except:
+      pass
   d = Dataset(name+'_obs_'+date+'.nc4', 'r')
   st = create_station_id(d)
-  if (name in ['satwind', 'scatwind']):
+  if (name in ['satwind_uv', 'scatwind_uv']):
+  #if (name in ['satwind', 'scatwind']):
     nlocs = 100
     flag = random.sample(np.arange(0,d.dimensions['nlocs'].size), nlocs)
     print nlocs, ', locs: ', flag

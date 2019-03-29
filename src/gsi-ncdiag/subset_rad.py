@@ -30,7 +30,7 @@ def write_to_file(din, fileout, nlocs, flag):
   for var in din.variables.values():
     vname = var.name
     print "        Variable: ", vname
-    vdata = var[...]
+    vdata = din.variables[vname]
     var_out = dout.createVariable(vname, var.dtype, var.dimensions)
     if (var.dimensions[0] == "nlocs"):
       var_out[...] = vdata[flag,...]
@@ -57,18 +57,22 @@ date='2018041500'
 random.seed(5)
 
 for name in rads:
-  d = Dataset(name+'_obs_'+date+'.nc4', 'r')
-  nlocs = 100
-  flag = random.sample(np.arange(0, len(d.dimensions['nlocs'])), nlocs)
-  print nlocs, ', locs: ', flag
-  flag1obs = np.arange(0,1)
-  # create multi obs files (10 "records" or 100 locations
-  print name, ' writing out ', len(flag), ' locs'
-  write_to_file(d, name+"_obs_"+date+"_m.nc4", len(flag), flag)
-  write_to_file(d, name+"_obs_"+date+"_s.nc4", len(flag1obs), flag1obs)
-  d.close()
-  d = Dataset(name+'_geoval_'+date+'.nc4', 'r')
-  write_to_file(d, name+"_geoval_"+date+"_m.nc4", len(flag), flag)
-  write_to_file(d, name+"_geoval_"+date+"_s.nc4", len(flag1obs), flag1obs)
-  d.close()
+  try:
+    d = Dataset(name+'_obs_'+date+'.nc4', 'r')
+    nlocs = 100
+    flag = random.sample(np.arange(0, len(d.dimensions['nlocs'])), nlocs)
+    print nlocs, ', locs: ', flag
+    flag1obs = np.arange(0,1)
+    # create multi obs files (10 "records" or 100 locations
+    print name, ' writing out ', len(flag), ' locs'
+    write_to_file(d, name+"_obs_"+date+"_m.nc4", len(flag), flag)
+    write_to_file(d, name+"_obs_"+date+"_s.nc4", len(flag1obs), flag1obs)
+    d.close()
+    d = Dataset(name+'_geoval_'+date+'.nc4', 'r')
+    write_to_file(d, name+"_geoval_"+date+"_m.nc4", len(flag), flag)
+    write_to_file(d, name+"_geoval_"+date+"_s.nc4", len(flag1obs), flag1obs)
+    d.close()
+  except:
+    print(name+" failed...")
+    pass
 

@@ -71,8 +71,11 @@ def add_to_obsfile(fname, fname_add):
       if noobs:
         add_variables(); noobs = False
       for var in variable_names:
-        d[var][ind]   = d_add[var][i]
-        d_add[var][i] = ma.masked
+        print(var)
+        d.variables[var][ind]   = d_add.variables[var][i]
+        print(d.variables[var].shape)
+        print(d_add.variables[var].shape)
+        d_add.variables[var][i] = ma.masked
   print "wrote ", nwrite, " out of ", d_add.dimensions['nlocs'].size, " locs from ", fname_add
   if d_add[variable_names[0]][:].count() == 0:
     print fname_add, " now empty!"

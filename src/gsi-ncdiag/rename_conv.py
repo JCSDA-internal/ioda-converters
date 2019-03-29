@@ -26,7 +26,7 @@ def write_to_obsfile(din, fileout, filevarnames):
     if (vname in metadata_dict.keys()) or (vname in variables_dict.keys()) \
                                        or (vname in uv_variables_dict.keys()):
       print "   Variable: ", vname
-      vdata = var[...].data
+      vdata = din.variables[vname]
       dims = ("nlocs",)+var.dimensions[1:] # replace nobs by nlocs
       if vname in metadata_dict.keys():
         var_out = dout.createVariable(metadata_dict[vname]+"@MetaData", \
@@ -71,7 +71,7 @@ def write_to_geovalsfile(din, fileout):
     vname = var.name
     if (vname in geovals_metadata_dict.keys()) or (vname in geovals_vars):
       print "   Variable: ", vname
-      vdata = var[...].data
+      vdata = din.variables[vname]
       if vname in geovals_metadata_dict.keys():
         dims = ("nlocs",)+var.dimensions[1:]
         var_out = dout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)

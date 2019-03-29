@@ -30,6 +30,9 @@ def write_to_file(din, fileout, nobs, flag):
     vname = var.name
     print "        Variable: ", vname
     vdata = var[...].data
+    dims = tuple([len(din.dimensions[d]) for d in var.dimensions])
+    vdata = np.frombuffer(vdata,dtype=var.dtype)
+    vdata = np.reshape(vdata,dims)
     var_out = dout.createVariable(vname, var.dtype, var.dimensions)
     var_out[...] = vdata[flag,...]
   dout.close()
