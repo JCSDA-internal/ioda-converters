@@ -42,15 +42,16 @@ class Profile(object):
             qcKey = vName[obid[i]], self.writer.OqcName()
 
             dt = base_date + timedelta(hours=float(hrs[i]))
-            locKey = lats[i], lons[i], dpth[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            locKey = lats[i], lons[i], dpth[i], dt.strftime(
+                "%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = qcs[i]
 
 
 vName = {
-  2210 : "sea_water_temperature",
-  2220 : "sea_water_salinity",
+    2210: "sea_water_temperature",
+    2220: "sea_water_salinity",
 }
 
 locationKeyList = [
@@ -58,11 +59,11 @@ locationKeyList = [
     ("longitude", "float"),
     ("depth", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
 
 
 if __name__ == '__main__':

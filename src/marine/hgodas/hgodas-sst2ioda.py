@@ -49,18 +49,18 @@ class Profile(object):
 
 
 vName = {
-  'T': "sea_surface_temperature",
+    'T': "sea_surface_temperature",
 }
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
 
 
 if __name__ == '__main__':

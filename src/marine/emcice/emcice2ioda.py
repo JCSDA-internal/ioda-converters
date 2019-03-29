@@ -5,12 +5,14 @@ import argparse
 import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
+import dateutil.parser
 from collections import defaultdict
 
 
 class Observation(object):
 
     def __init__(self, filename, date, writer):
+        print(date)
         self.filename = filename
         self.date = date
         self.data = defaultdict(lambda: defaultdict(dict))
@@ -18,35 +20,34 @@ class Observation(object):
         self._read()
 
     def _read(self):
-        ncd = nc.Dataset(self.filename)
-        time = ncd.variables['time'][:]
-        lons = ncd.variables['lon'][:]
-        lats = ncd.variables['lat'][:]
-        hrs = ncd.variables['hr'][:]
-        vals = ncd.variables['val'][:]
-        errs = ncd.variables['err'][:]
-        qcs = ncd.variables['qc'][:]
+        ncd = nc.MFDataset(self.filename)
+        # zeroing out due to bug in original data
+        time = 0.0*ncd.variables['date_time_group'][:]
+        lons = ncd.variables['longitude'][:]
+        lats = ncd.variables['latitude'][:]
+        vals = ncd.variables['ice_concentration'][:]
+        qc = ncd.variables['quality'][:]
         ncd.close()
-
-        base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
 
-        for i in range(len(hrs)):
-            # there shouldn't be any bad obs, but just in case remove them all
-            if qcs[i] != 0:
-                continue
+        # reftime =
+        count = 0
+        for i in range(len(lons)):
 
-            dt = base_date + timedelta(hours=float(hrs[i]))
-            locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            count += 1
+
+            obs_date = self.date
+
+            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
-            self.data[0][locKey][qcKey] = qcs[i]
+            self.data[0][locKey][errKey] = 0.1
+            self.data[0][locKey][qcKey] = qc[i]
 
 
-vName = "obs_absolute_dynamic_topography",
+vName = "sea_ice_area_fraction",
 
 locationKeyList = [
     ("latitude", "float"),
@@ -64,8 +65,8 @@ if __name__ == '__main__':
         description=('')
     )
     parser.add_argument('-i',
-                        help="name of HGODAS obs input file",
-                        type=str, required=True)
+                        help="EMC ice fraction obs input file",
+                        type=str, nargs='+', required=True)
     parser.add_argument('-o',
                         help="name of ioda output file",
                         type=str, required=True)
@@ -76,10 +77,10 @@ if __name__ == '__main__':
 
     writer = iconv.NcWriter(args.o, [], locationKeyList)
 
-    # Read in the profiles
-    prof = Observation(args.i, fdate, writer)
+    # Read in
+    ice = Observation(args.i, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    writer.BuildNetcdf(prof.data, AttrData)
+    writer.BuildNetcdf(ice.data, AttrData)
