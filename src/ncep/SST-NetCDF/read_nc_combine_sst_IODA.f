@@ -103,7 +103,7 @@ c not over snow or ice
 c
 ! SP ************************************************
       real (kind=8), allocatable :: delta_t_hr(:,:), time_hr(:) 
-      integer :: nmind_obs, nmind_anl
+      integer :: nmind_obs, nmind_anl, runtime_int
       integer :: run_yr,run_mon,run_day,run_hr,run_min
 !****************************************************
 c
@@ -773,6 +773,7 @@ c discard seconds
           read(runtime(7:8), *) run_day
           read(runtime(9:10), *) run_hr
           run_min = 0
+          read(runtime,*) runtime_int
 !          read(runtime(11:12), *) iMin
 
 !          print *, 'reading runDate'
@@ -955,7 +956,7 @@ c    +           write(6,*)'n_obs_ist',n_obs_ist
      +             runtime(7:8)//'.nc'
 !         write(*,*) FNAME_nc
          call IODA_sst_nc4( FNAME_nc,n_obs_sst,lond,latd,runtime,sstd,
-     +                      errd,time_hr )
+     +                      errd,time_hr,runtime_int )
       endif         
 C
 
@@ -1002,11 +1003,12 @@ c
 ! IODA netcdf4 
 !************************************************************************************
       subroutine IODA_sst_nc4 (FNAME_nc,nobs,lon_data,lat_data,runtime, 
-     +                         obsValue_data, obsError_data, time_data) 
+     +             obsValue_data, obsError_data, time_data,runtime_int) 
 !, oceanUpLvlTmp_data) TO BE ADDED LATER
       use netcdf
 
       character (len=10) :: runtime
+      integer            :: runtime_int
       character (len=50) :: FNAME_nc
       character (len=50) :: NLOCS_NAME = "nlocs"
       character (len=50) :: NRECS_NAME = "nrecs"
@@ -1017,7 +1019,7 @@ c
      + "Station_ID_maxstrlen"
       character (len=50), parameter :: longitude_NAME = "longitude"
       character (len=50), parameter :: latitude_NAME = "latitude"
-      character (len=50), parameter :: time_NAME = "time"
+      character (len=50), parameter :: time_NAME = "time@MetaData"
       character (len=50), parameter :: obs_sstObsValue_NAME =
      + "obs_sst@ObsValue"
       character (len=50), parameter :: obs_sstObsError_NAME = 
@@ -1072,7 +1074,7 @@ c
       call check ( nf90_put_att(ncid, obsError_varID, "description",
      +             "Observation error standard deviation"))
       call check ( nf90_put_att(ncid, nf90_global, "date_time",
-     +             runtime ))
+     +            runtime_int ))
 
 ! End Definition
       call check ( nf90_enddef(ncid) )

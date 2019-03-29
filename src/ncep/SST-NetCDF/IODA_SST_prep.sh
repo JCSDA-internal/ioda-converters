@@ -17,10 +17,10 @@ time_window=${2:?"arg2:  time window in hours is required"}
 echo "Start date= '$anldate' and Temporal Window of analysis = +/- '$time_window' (hours)"
 
 #######################################################################
-# Output Directory on theia: To Change 
-export SSTDIR=/ocean/save/$USER/JEDI-SOCA
+# Output Directory on theia: To be changed by the $USER 
+export SSTDIR=/scratch3/NCEPDEV/marine/save/Shastri.Paturi/JEDI-SOCA/NCEP_data/JEDI-SOCA/src
 # Data Directory on theia: mapped from WCOSS
-export DATADIR=/dcomdev/us007003
+export DATADIR=/scratch4/NCEPDEV/ocean/scrub/Stylianos.Flampouris/marine_observations/dcomdev/us007003/
 
 for OBS in ABI AHI 19_G MTA VIIRS; do
     if [ $OBS == 'ABI' ] ; then
