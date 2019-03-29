@@ -6,7 +6,7 @@ import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 from netCDF4 import Dataset
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from datetime import datetime
+from datetime import datetime as dt
 import sys
 import os
 import yaml
@@ -14,9 +14,8 @@ import yaml
 #ipdb.set_trace()
 
 ##########################################################################
-# SUBROUTINES To be deleted.
+# SUBROUTINES To be deleted (maybe).
 ##########################################################################
-
 
 def BfilePreprocess(BufrFname, Obs):
     # This routine will read the BUFR file and figure out how many observations
@@ -40,7 +39,7 @@ def BfilePreprocess(BufrFname, Obs):
 ##########################################################################
 #
 # The class is developed to import all the entries to any BUFR family data set that
-# the tables A, B, C of BUFR embedded to the files.
+# the tables A, B, D of BUFR are embedded to the files.
 #
 class NcepObsType(ObsType):
     ### initialize data elements ###
@@ -364,7 +363,7 @@ if __name__ == '__main__':
     ThinInterval = args.thin        # Thinning window. TODO: To be removed, legacy
     ObsType      = args.obs_type    # Observation type. e.g., NC031120
     BufrFname    = BufrPath + args.input_bufr  # path and name of BUFR name
-    DateCentral  = datetime.strptime(args.date,'%Y%m%d%H') #DateHH of analysis
+    DateCentral  = dt.strptime(args.date,'%Y%m%d%H') #DateHH of analysis
     if (args.bufr):
        BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
     else:
