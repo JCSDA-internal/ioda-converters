@@ -29,3 +29,8 @@ ecbuild_add_test( TARGET iodaconv_gmao_coding_norms
                   TYPE SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
                   ARGS ${CMAKE_CURRENT_SOURCE_DIR}/gmao ${CMAKE_SOURCE_DIR} )
+
+ecbuild_add_test( TARGET iodaconv_emcice_coding_norms
+                  TYPE SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
+                  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/emcice ${CMAKE_SOURCE_DIR} )
