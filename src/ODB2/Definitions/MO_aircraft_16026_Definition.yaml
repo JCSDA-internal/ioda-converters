@@ -53,7 +53,7 @@ vertco_variables:
 #
 # Format: <key: value> = <varno value: variable name>
 varno_variables:
-    2: temperature
+    2: air_temperature
     3: eastward_wind
     4: northward_wind
 
@@ -73,7 +73,7 @@ varno_variables:
 #
 # Format: list of variable names
 ioda_variables:
-    - temperature
+    - air_temperature
     - eastward_wind
     - northward_wind
 
