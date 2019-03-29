@@ -123,8 +123,12 @@ for rad in rads:
   fname = "diag_"+rad+"_ges."+date+"_ensmean.nc4"
   if os.path.isfile(fname):
     print "Processing ", fname
-    d = Dataset(fname, 'r')
-    write_to_obsfile(d, rad+"_obs_"+date+".nc4")
-    write_to_geovalsfile(d, rad+"_geoval_"+date+".nc4")
-    d.close()
+    try:
+      d = Dataset(fname, 'r')
+      write_to_obsfile(d, rad+"_obs_"+date+".nc4")
+      write_to_geovalsfile(d, rad+"_geoval_"+date+".nc4")
+      d.close()
+    except:
+      print(fname+" failed")
+      pass
 
