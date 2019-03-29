@@ -8,65 +8,91 @@ import h5py
 from collections import defaultdict
 
 
+class Smap:
+    def __init__(self, fname):
+        self.filename = fname
+        smap = h5py.File(self.filename, 'r')
+        self.lat = smap['/lat'][:]
+        self.lon = smap['/lon'][:]
+        self.times = smap['/row_time'][:]
+        self.sss = smap['/smap_sss'][:]
+        self.sss_u = smap['/smap_sss_uncertainty'][:]
+        self.sss_qc = smap['/quality_flag'][:]
+
+        nt = self.sss.shape[0]
+        ns = self.lat.shape[0]*self.lat.shape[1]
+        self.ns = ns
+
+        self.lat.shape = (ns,)
+        self.lon.shape = (ns,)
+        self.times = np.tile(self.times, (nt, 1))
+        self.times.shape = (ns,)
+        self.sss.shape = (ns,)
+        self.sss_u.shape = (ns,)
+        self.sss_qc.shape = (ns,)
+
+    def append(self, other):
+        # Append other to self
+        self.lon = np.append(self.lon, other.lon)
+        self.lat = np.append(self.lat, other.lat)
+        self.times = np.append(self.times, other.times)
+        self.sss = np.append(self.sss, other.sss)
+        self.sss_u = np.append(self.sss_u, other.sss_u)
+        self.sss_qc = np.append(self.sss_qc, other.sss_qc)
+
 
 class Salinity(object):
-    def __init__(self, filename, date ,writer):
-        self.filename = filename
-        self.date     = date
-        self.data     = defaultdict(lambda: defaultdict(dict))
-        self.writer   = writer
-        # Save observation source 
-        self.source   = filename
+    def __init__(self, filenames, date, writer):
+        self.filenames = filenames
+        self.date = date
+        self.data = defaultdict(lambda: defaultdict(dict))
+        self.writer = writer
+        # Save observation sources
+        self.source = filenames
         self._read()
 
         # Open obs file and read/load relevant info
     def _read(self):
-        smap          =  h5py.File(self.filename,'r')
-        lat      =  np.squeeze(smap['/lat'][:])
-        lon      =  np.squeeze(smap['/lon'][:])
-        times    =  np.squeeze(smap['/row_time'][:]) #1.03684024e+08
-        sss      =  np.squeeze(smap['/smap_sss'][:])
-        sss_u    =  np.squeeze(smap['/smap_sss_uncertainty'][:])
-        sss_qc   =  np.squeeze(smap['/quality_flag'][:])
-        tb_h_aft =  np.squeeze(smap['/tb_h_aft'][:])
-        tb_h_fore=  np.squeeze(smap['/tb_h_fore'][:])
-        tb_v_aft =  np.squeeze(smap['/tb_v_aft'][:])
-        tb_v_fore= np.squeeze(smap['/tb_v_fore'][:])
-        lat.shape =(lat.shape[0]*lat.shape[1],)
-        lon.shape =(lon.shape[0]*lon.shape[1],)
-        times  = np.tile(times,(sss.shape[0],1))
-        times.shape =(times.shape[0]*times.shape[1],)
-        sss.shape =(sss.shape[0]*sss.shape[1],)
-        sss_u.shape =(sss_u.shape[0]*sss_u.shape[1],)
-        sss_qc.shape =(sss_qc.shape[0]*sss_qc.shape[1],)
+        count = 0
+        for fname in self.filenames:
+            print(fname)
+            if (count == 0):
+                salt = Smap(fname)
+            else:
+                tmp_salt = Smap(fname)
+                salt.append(tmp_salt)
+
+            count += 1
 
         # Write in ioda netcdf format
         valKey = vName['SSS'], self.writer.OvalName()
         errKey = vName['SSS'], self.writer.OerrName()
         qcKey = vName['SSS'], self.writer.OqcName()
 
-        for i in range(len(lat)):
-            base_date=datetime(2015, 1, 1, 0, 0) + timedelta(seconds=np.double(times[i]))
+        for i in range(len(salt.lat)):
+            base_date = datetime(2015, 1, 1, 0, 0) + \
+                timedelta(seconds=np.double(salt.times[i]))
             dt = base_date
-            locKey = lat[i], lon[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = sss[i] 
-            self.data[0][locKey][errKey] = sss_u[i]
-            self.data[0][locKey][qcKey]  = sss_qc[i]
+            locKey = salt.lat[i], salt.lon[i], dt.strftime(
+                "%Y-%m-%dT%H:%M:%SZ")
+            self.data[0][locKey][valKey] = salt.sss[i]
+            self.data[0][locKey][errKey] = salt.sss_u[i]
+            self.data[0][locKey][qcKey] = salt.sss_qc[i]
 
 
 vName = {
-  'SSS': "sea_surface_salinity",
+    'SSS': "sea_surface_salinity",
 }
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -75,7 +101,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('-i',
                         help="name of sss input file",
-                        type=str, required=True)
+                        type=str, nargs='+', required=True)
     parser.add_argument('-o',
                         help="name of ioda output file",
                         type=str, required=True)
@@ -93,8 +119,3 @@ if __name__ == '__main__':
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     writer.BuildNetcdf(sal.data, AttrData)
-
-
-
-
-

@@ -147,7 +147,7 @@ class profile(object):
         locationKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
-            ("level", "float"),
+            ("depth", "float"),
             ("date_time", "string")
         ]
 
