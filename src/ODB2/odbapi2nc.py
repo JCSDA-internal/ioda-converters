@@ -137,19 +137,19 @@ if Trace:
 with io.open(DefFname, 'r') as defstream:
     importDef = yaml.load(defstream)
 
-columnVariableDict = importDef['column_variables']
+columnVariableDict = importDef.get('column_variables')
 if Trace:
     print "column_variables:"
     print str(columnVariableDict)
-vertcoVariableDict = importDef['vertco_variables']
+vertcoVariableDict = importDef.get('vertco_variables')
 if Trace:
     print "vertco_variables:"
     print str(vertcoVariableDict)
-varnoVariableDict = importDef['varno_variables']
+varnoVariableDict = importDef.get('varno_variables')
 if Trace:
     print "varno_variables:"
     print str(varnoVariableDict)
-varnoVertcoVariableDict = importDef['varno_vertco_variables']
+varnoVertcoVariableDict = importDef.get('varno_vertco_variables')
 if Trace:
     print "varno_vertco_variables:"
     print str(varnoVertcoVariableDict)
