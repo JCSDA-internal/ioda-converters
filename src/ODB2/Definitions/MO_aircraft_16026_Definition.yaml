@@ -1,15 +1,16 @@
 ---
 #
-# yaml IODA import configuration file for ECMWF
-# Radiosonde reports.
+# yaml IODA import configuration file for Met Office
+# aircraft report number 16026.
 #
 # This yaml file is designed as input for the ioda-converters
 # python script odbapi2nc.py.
 #
-# Use for ECMWF report types:
-# 16013, 16015, 16019, 16022, 16045
+# Use for Met Office report types:
+# 16026
+# (Report type 16029 contains relative_humidity, but 16026 does not.)
 #
-# Do not use for Met Office Radiosonde reports.
+# Do not use for ECMWF reports.
 #
 
 ###########################################################
@@ -45,7 +46,7 @@ column_variables:
 #
 # Format: <key: value> = <variable name: vertco_type value>
 vertco_variables:
-    air_pressure: 1
+    air_pressure: 11
 
 # varno_variables are read from the obsvalue, obs_error, and
 # QC columns when the varno column has the specified value.
@@ -55,7 +56,6 @@ varno_variables:
     2: temperature
     3: eastward_wind
     4: northward_wind
-    7: specific_humidity
 
 
 ###########################################################
@@ -76,7 +76,6 @@ ioda_variables:
     - temperature
     - eastward_wind
     - northward_wind
-    - specific_humidity
 
 # Every unique combination of record_key field values defines
 # a new IODA record. (For radiosonde data a record is a profile.)
@@ -85,12 +84,6 @@ ioda_variables:
 record_key:
   station_id: string
   analysis_date_time: string
-
-# record_metadata is non-key metadata about a record
-#
-# Format: list of variable names
-record_metadata:
-  - station_elevation
 
 # Every unique combination of location_key field values defines
 # a new IODA location.

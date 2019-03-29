@@ -1,7 +1,7 @@
 ---
 #
 # yaml IODA import configuration file for Met Office
-# atovs reports.
+# atovs reports, importing the amsu-a data therein.
 #
 # This yaml file is designed as input for the ioda-converters
 # python script odbapi2nc.py.
