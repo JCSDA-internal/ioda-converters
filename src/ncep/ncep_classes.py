@@ -10,6 +10,7 @@ from datetime import datetime as dt
 import sys
 import os
 import yaml
+from collections import Counter
 #import ipdb
 #ipdb.set_trace()
 
@@ -51,17 +52,17 @@ class NcepObsType(ObsType):
         self.multi_level = False
 
         # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nobs], [nobs,nlevs] ).
+        # vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
-            ['ObsTime', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs]])
+            ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['ObsDate', '', cm.DTYPE_INTEGER, ['nobs'], [self.nobs]])
+            ['ObsDate@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['time', '', cm.DTYPE_DOUBLE, ['nobs'], [self.nobs]])
+            ['time@MetaData', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['latitude', '', cm.DTYPE_FLOAT, ['nobs'], [self.nobs]])
+            ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['longitude', '', cm.DTYPE_FLOAT, ['nobs'], [self.nobs]])
+            ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
 
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = alt_type  # alt_type is the BUFR mnemonic
@@ -78,28 +79,38 @@ class NcepObsType(ObsType):
             intspec = []
             intspecDum = []
             
-            for i in spec_list[alt_type]:
-                if i in full_table:
-                    intspecDum = [
-                        full_table[i]['name'].replace(
-                            ' ',
-                            '_'),
-                        i,
-                        full_table[i]['dtype'],
-                        full_table[i]['ddims']]
-                    if intspecDum not in intspec:
-                        intspec.append([full_table[i]['name'].replace(
-                            ' ', '_'), i, full_table[i]['dtype'], full_table[i]['ddims']])
-                # else:
-                # TODO what to do if the spec is not in the full_table (or in
-                # this case, does not have a unit in the full_table)
-            for j, dname in enumerate(intspec):
-                if len(dname[3]) == 1:
-                    intspec[j].append([self.nobs])
-                elif len(dname[3]) == 2:
-                    intspec[j].append([self.nobs, self.nstring])
-                else:
-                    print('walked off the edge')
+            if not os.path.isfile ('intespec.yaml'):
+               for i in spec_list[alt_type]:
+                   if i in full_table:
+                       intspecDum = [
+                           full_table[i]['name'].replace(
+                               ' ',
+                               '_'),
+                           i,
+                           full_table[i]['dtype'],
+                           full_table[i]['ddims']]
+                       if intspecDum not in intspec:
+                           intspec.append([full_table[i]['name'].replace(
+                               ' ', '_'), i, full_table[i]['dtype'], full_table[i]['ddims']])
+                   # else:
+                   # TODO what to do if the spec is not in the full_table (or in
+                   # this case, does not have a unit in the full_table)
+               for j, dname in enumerate(intspec):
+                   if len(dname[3]) == 1:
+                       intspec[j].append([self.nlocs])
+                   elif len(dname[3]) == 2:
+                       intspec[j].append([self.nlocs, self.nstring])
+                   else:
+                       print('walked off the edge')
+               
+               write_yaml ( intspec, 'intespec.yaml' )
+            else:
+               intspec = read_yaml('intespec.yaml')  
+            
+            self.nvars = 0; 
+            for k in intspec:  
+               if '@ObsValue' in (" ".join(map(str,k))):
+                  self.nvars += 1
 
             # TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1 below,
             # it will be most stable to explicitly remove it. The issue with RRSTG is the Binary length of it,
@@ -114,6 +125,8 @@ class NcepObsType(ObsType):
             self.rep_spec = []
             # TODO Check the intspec for "SQ" if exist, added at seq_spec
             self.seq_spec = []
+
+            self.nrecs = 1    #place holder
 
         # Set the dimension specs.
         super(NcepObsType, self).init_dim_spec()
@@ -227,8 +240,8 @@ def read_table(filename):
     # DTYPE_STRING
     string_types = ['CCITT IA5']
 
-    string_dims = ['nobs', 'nstring']
-    nums_dims = ['nobs']
+    string_dims = ['nlocs', 'nstring']
+    nums_dims = ['nlocs']
 
     for key, item in full_table.items():
         if item['units'].upper() in integer_types:
@@ -304,7 +317,6 @@ def get_fname(base_mnemo, BufrPath):
 
     return BufrFname, BufrTname, NetcdfFname
 
-
 def create_bufrtable(BufrFname, ObsTable):
     bufr = ncepbufr.open(BufrFname)
     bufr.advance()
@@ -364,6 +376,7 @@ if __name__ == '__main__':
     ObsType      = args.obs_type    # Observation type. e.g., NC031120
     BufrFname    = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral  = dt.strptime(args.date,'%Y%m%d%H') #DateHH of analysis
+
     if (args.bufr):
        BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
     else:
@@ -373,6 +386,8 @@ if __name__ == '__main__':
        NetcdfFname = args.output_netcdf   # Filename of the netcdf ioda file
     else: 
        NetcdfFname = 'ioda.' + ObsType + '.' + DateCentral.strftime("%Y%m%d%H") + '.nc'
+    
+    date_time = DateCentral.strftime("%Y%m%d%H")
     
     ObsTable     = ObsType + '.tbl'       # Bufr table from the data. 
     DictObs    = ObsType + '.dict'      # Bufr dict
@@ -403,11 +418,15 @@ if __name__ == '__main__':
     
     Obs.max_num_msg = MaxNumMsg
     Obs.thin_interval = ThinInterval
+    Obs.date_central = DateCentral
+
     [NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)
 
-    Obs.set_nobs(NumObs)
-
+    Obs.set_nlocs(NumObs)
+    
     nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
+    
+    nc.date_time = int(date_time[0:9])
 
     Obs.create_nc_datasets(nc)
     Obs.fill_coords(nc)
