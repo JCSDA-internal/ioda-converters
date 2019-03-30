@@ -306,7 +306,7 @@ class ObsType(object):
                 for var_spec in sub_slist:
                     # dimension names are in the list given by var_spec[3]
                     AllDimNames = AllDimNames | set(var_spec[3])
-
+        
         # AllDimNames holds the list of unique dimension names.
         # Keep the following list of dimensions in sync with the __init__ method in
         # in the ObsType base class.
@@ -329,7 +329,6 @@ class ObsType(object):
             else:
                 print("ERROR: init_dim_spec: Unknown dimension name: {0:s}".format(dname))
                 sys.exit(3)
-
             DimList.append([ dname, dname, cm.DTYPE_UINT, [ dname ], [ dsize ] ])
 
         self.dim_spec = [ DimList ]
@@ -564,13 +563,13 @@ class ObsType(object):
 
         else:
             # raw BUFR: use YEAR, MNTH, ...
-            Year   = int(ActualValues['YEAR@MetaData'].data)
-            Month  = int(ActualValues['MNTH@MetaData'].data)
-            Day    = int(ActualValues['DAYS@MetaData'].data)
-            Hour   = int(ActualValues['HOUR@MetaData'].data)
-            Minute = int(ActualValues['MINU@MetaData'].data)
-            if ('SECO@MetaData' in ActualValues):
-                Second = int(ActualValues['SECO@MetaData'].data)
+            Year   = int(ActualValues['YEAR'].data)
+            Month  = int(ActualValues['MNTH'].data)
+            Day    = int(ActualValues['DAYS'].data)
+            Hour   = int(ActualValues['HOUR'].data)
+            Minute = int(ActualValues['MINU'].data)
+            if ('SECO' in ActualValues):
+                Second = int(ActualValues['SECO'].data)
             else:
                 Second = int(0)
 
@@ -617,11 +616,11 @@ class ObsType(object):
         else:
             # Try CLATH and CLONH first.
             if ('CLATH@MetaData' in ActualValues):
-                Lon = ActualValues['CLONH@MetaData'].data
-                Lat = ActualValues['CLATH@MetaData'].data
+                Lon = ActualValues['CLONH'].data
+                Lat = ActualValues['CLATH'].data
             else:
-                Lon = ActualValues['CLON@MetaData'].data
-                Lat = ActualValues['CLAT@MetaData'].data
+                Lon = ActualValues['CLON'].data
+                Lat = ActualValues['CLAT'].data
 
         return [ Lat, Lon ]
 
@@ -686,6 +685,8 @@ class ObsType(object):
         print("Converting BUFR to netcdf:")
         ObsNum = 0
         self.start_msg_selector()
+
+        
         while (self.select_next_msg(bufr)):
             MsgType = np.ma.array(bufr.msg_type)
             MsgDate = np.ma.array([bufr.msg_date])
@@ -697,7 +698,7 @@ class ObsType(object):
                 # A dictionary within the list is keyed by the netcdf variable
                 # name and contains the associated data value.
                 [ActualValues, ActualValuesBufr] = self.extract_bufr(bufr)
-    
+   
                 for i in range(len(ActualValues)):
                     # Put the message type and message date into the dictionary.
                     ActualValues[i]['msg_type@MetaData'] = MsgType
@@ -718,6 +719,11 @@ class ObsType(object):
 #
 #=======
                     [ ActualValues[i]['ObsDate@MetaData'], ActualValues[i]['ObsTime@MetaData'], ActualValues[i]['time@MetaData'] ] = self.calc_obs_date_time(ActualValuesBufr[i])
+                    
+
+
+                    ActualValues[i]['time@MetaData'] = ((ActualValues[i]['time@MetaData']).astype(np.float) - \
+                                np.array(dt.datetime.strptime(str(nc.date_time),'%Y%m%d%H').replace(tzinfo=dt.timezone.utc).timestamp())) / 3600
 
                     # Calculate the value of lat and lon and add to the dictionary.
                     [ ActualValues[i]['latitude@MetaData'], ActualValues[i]['longitude@MetaData'] ] = self.calc_obs_lat_lon(ActualValuesBufr[i])
