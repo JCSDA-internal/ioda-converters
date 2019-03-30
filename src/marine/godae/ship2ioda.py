@@ -34,122 +34,153 @@ class ship(object):
         except Exception:
             raise Exception('Unknown error opening %s' % self.filename)
 
-        # odata is the dictionary with data structure as in ocn_obs.f
-        odata = {}
+        # data is the dictionary with data structure as in ocn_obs.f
+        data = {}
 
-        odata['n_obs'], odata['n_lvl'], odata['n_vrsn'] = fh.read_ints('>i4')
+        data['n_obs'], data['n_lvl'], data['n_vrsn'] = fh.read_ints('>i4')
 
-        print('    number ship obs: %d' % odata['n_obs'])
-        print('  max number levels: %d' % odata['n_lvl'])
-        print('file version number: %d' % odata['n_vrsn'])
+        print('    number ship obs: %d' % data['n_obs'])
+        print('  max number levels: %d' % data['n_lvl'])
+        print('file version number: %d' % data['n_vrsn'])
 
-        if odata['n_obs'] <= 0:
+        if data['n_obs'] <= 0:
             print('No ship observations to process from %s' % self.filename)
             return
 
-        odata['ob_wm'] = fh.read_reals('>i4')
-        odata['ob_glb'] = fh.read_reals('>f4')
-        odata['ob_lat'] = fh.read_reals('>f4')
-        odata['ob_lon'] = fh.read_reals('>f4')
-        odata['ob_age'] = fh.read_reals('>f4')
-        odata['ob_clm'] = fh.read_reals('>f4')
-        odata['ob_qc'] = fh.read_reals('>f4')
-        odata['ob_rgn'] = fh.read_reals('>f4')
-        odata['ob_sst'] = fh.read_reals('>f4')
-        odata['ob_typ'] = fh.read_reals('>i4')
-        odata['ob_dtg'] = fh.read_record('>S12').astype('U12')
-        odata['ob_rcpt'] = fh.read_record('>S12').astype('U12')
-        odata['ob_scr'] = fh.read_record('>S1').astype('U1')
+        data['ob_wm'] = fh.read_reals('>i4')
+        data['ob_glb'] = fh.read_reals('>f4')
+        data['ob_lat'] = fh.read_reals('>f4')
+        data['ob_lon'] = fh.read_reals('>f4')
+        data['ob_age'] = fh.read_reals('>f4')
+        data['ob_clm'] = fh.read_reals('>f4')
+        data['ob_qc'] = fh.read_reals('>f4')
+        data['ob_rgn'] = fh.read_reals('>f4')
+        data['ob_sst'] = fh.read_reals('>f4')
+        data['ob_typ'] = fh.read_reals('>i4')
+        data['ob_dtg'] = fh.read_record('>S12').astype('U12')
+        data['ob_rcpt'] = fh.read_record('>S12').astype('U12')
+        data['ob_scr'] = fh.read_record('>S1').astype('U1')
 
-        if odata['n_vrsn'] <= 2:
-            print('verify ob_sign for version = %d' % odata['n_vrsn'])
-            odata['ob_sign'] = fh.read_record('>S7').astype('U7')
+        if data['n_vrsn'] <= 2:
+            print('verify ob_sign for version = %d' % data['n_vrsn'])
+            data['ob_sign'] = fh.read_record('>S7').astype('U7')
         else:
-            odata['ob_sign'] = fh.read_record('>S7').astype('U7')
+            data['ob_sign'] = fh.read_record('>S7').astype('U7')
 
-        if odata['n_vrsn'] > 1:
-            odata['ob_csgm'] = fh.read_reals('>f4')
-            odata['ob_gsgm'] = fh.read_reals('>f4')
-            odata['ob_rsgm'] = fh.read_reals('>f4')
+        if data['n_vrsn'] > 1:
+            data['ob_csgm'] = fh.read_reals('>f4')
+            data['ob_gsgm'] = fh.read_reals('>f4')
+            data['ob_rsgm'] = fh.read_reals('>f4')
         else:
-            minus999 = np.ones(odata['n_obs'], dtype=np.float32) * -999.
-            odata['ob_csgm'] = minus999
-            odata['ob_gsgm'] = minus999
-            odata['ob_rsgm'] = minus999
+            minus999 = np.ones(data['n_obs'], dtype=np.float32) * -999.
+            data['ob_csgm'] = minus999
+            data['ob_gsgm'] = minus999
+            data['ob_rsgm'] = minus999
 
         fh.close()
 
-        self.odata = odata
+        self.data = data
 
         return
 
-    def to_ioda(self, foutput):
+
+class IODA(object):
+
+    def __init__(self, filename, date, varDict, obsList):
         '''
-        Selectively convert odata into idata.
-        idata is the IODA required data structure
+        Initialize IODA writer class,
+        transform to IODA data structure and,
+        write out to IODA file.
         '''
 
-        if self.odata['n_obs'] <= 0:
-            print('No ship observations for IODA!')
-            return
+        self.filename = filename
+        self.date = date
+        self.varDict = varDict
 
-        locationKeyList = [
+        self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
             ("date_time", "string")
         ]
 
-        AttrData = {
+        self.AttrData = {
             'odb_version': 1,
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        writer = iconv.NcWriter(foutput, [], locationKeyList)
+        self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
 
-        # idata is the dictionary containing IODA friendly data structure
-        idata = defaultdict(lambda: defaultdict(dict))
+        self.keyDict = defaultdict(lambda: defaultdict(dict))
+        for key in self.varDict.keys():
+            value = self.varDict[key]
+            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
+            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
+            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
 
-        varName = 'sea_surface_temperature'
-        valKey = varName, writer.OvalName()
-        errKey = varName, writer.OerrName()
-        qcKey = varName, writer.OqcName()
+        # data is the dictionary containing IODA friendly data structure
+        self.data = defaultdict(lambda: defaultdict(dict))
 
-        for n in range(self.odata['n_obs']):
+        recKey = 0
 
-            lat = self.odata['ob_lat'][n]
-            lon = self.odata['ob_lon'][n]
-            dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
+        for obs in obsList:
 
-            locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if obs.data['n_obs'] <= 0:
+                print('No ship observations for IODA!')
+                continue
 
-            idata[0][locKey][valKey] = self.odata['ob_sst'][n]
-            idata[0][locKey][errKey] = 0.5
-            idata[0][locKey][qcKey] = self.odata['ob_qc'][n]
+            for n in range(obs.data['n_obs']):
 
-        writer.BuildNetcdf(idata, AttrData)
+                lat = obs.data['ob_lat'][n]
+                lon = obs.data['ob_lon'][n]
+                dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
+
+                locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                for key in self.varDict.keys():
+
+                    val = obs.data[key][n]
+                    err = 0.5
+                    qc = obs.data['ob_qc'][n]
+
+                    valKey = self.keyDict[key]['valKey']
+                    errKey = self.keyDict[key]['errKey']
+                    qcKey = self.keyDict[key]['qcKey']
+
+                    self.data[recKey][locKey][valKey] = val
+                    self.data[recKey][locKey][errKey] = err
+                    self.data[recKey][locKey][qcKey] = qc
+
+        self.writer.BuildNetcdf(self.data, self.AttrData)
 
         return
 
 
 if __name__ == '__main__':
 
-    desc = 'Read GODAE binary ship file and convert to IODA netCDF4 format'
+    desc = 'Convert GODAE binary ship data to IODA netCDF4 format'
     parser = ArgumentParser(description=desc,
                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='name of the binary GODAE ship file',
-        type=str, required=True)
+        type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output', help='name of the output netCDF GODAE ship file',
-        type=str, required=False, default=None)
+        type=str, required=True, default=None)
     parser.add_argument(
         '-d', '--date', help='file date', type=str, metavar='YYYYMMDDHH', required=True)
 
     args = parser.parse_args()
 
-    finput = args.input
-    foutput = args.output if args.output is not None else finput+'.nc'
+    fList = args.input
+    foutput = args.output
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    sfcobs = ship(finput, fdate)
-    sfcobs.to_ioda(foutput)
+    obsList = []
+    for fname in fList:
+        obsList.append(ship(fname, fdate))
+
+    varDict = {
+        'ob_sst': 'sea_surface_temperature',
+    }
+
+    IODA(foutput, fdate, varDict, obsList)

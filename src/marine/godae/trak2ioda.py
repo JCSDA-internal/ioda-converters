@@ -34,146 +34,158 @@ class trak(object):
         except Exception:
             raise Exception('Unknown error opening %s' % self.filename)
 
-        # odata is the dictionary with data structure as in ocn_obs.f
-        odata = {}
+        # data is the dictionary with data structure as in ocn_obs.f
+        data = {}
 
-        odata['n_obs'], odata['n_lvl'], odata['n_vrsn'] = fh.read_ints('>i4')
+        data['n_obs'], data['n_lvl'], data['n_vrsn'] = fh.read_ints('>i4')
 
-        print('    number trak obs: %d' % odata['n_obs'])
-        print('  max number levels: %d' % odata['n_lvl'])
-        print('file version number: %d' % odata['n_vrsn'])
+        print('    number trak obs: %d' % data['n_obs'])
+        print('  max number levels: %d' % data['n_lvl'])
+        print('file version number: %d' % data['n_vrsn'])
 
-        if odata['n_obs'] <= 0:
+        if data['n_obs'] <= 0:
             print('No trak observations to process from %s' % self.filename)
             return
 
-        odata['ob_wm'] = fh.read_reals('>i4')
-        odata['ob_gsal'] = fh.read_reals('>f4')
-        odata['ob_gsst'] = fh.read_reals('>f4')
-        odata['ob_lat'] = fh.read_reals('>f4')
-        odata['ob_lon'] = fh.read_reals('>f4')
-        odata['ob_age'] = fh.read_reals('>f4')
-        odata['ob_csal'] = fh.read_reals('>f4')
-        odata['ob_csst'] = fh.read_reals('>f4')
-        odata['ob_qc_sal'] = fh.read_reals('>f4')
-        odata['ob_qc_sst'] = fh.read_reals('>f4')
-        odata['ob_qc_vel'] = fh.read_reals('>f4')
-        odata['ob_rsal'] = fh.read_reals('>f4')
-        odata['ob_rsst'] = fh.read_reals('>f4')
-        odata['ob_sal'] = fh.read_reals('>f4')
-        odata['ob_sst'] = fh.read_reals('>f4')
-        odata['ob_typ'] = fh.read_reals('>i4')
-        odata['ob_uuu'] = fh.read_reals('>f4')
-        odata['ob_vvv'] = fh.read_reals('>f4')
-        odata['ob_dtg'] = fh.read_record('>S12').astype('U12')
-        odata['ob_rcpt'] = fh.read_record('>S12').astype('U12')
-        odata['ob_scr'] = fh.read_record('>S1').astype('U1')
-        odata['ob_sgn'] = fh.read_record('>S6').astype('U6')
-        odata['ob_csgm'] = fh.read_reals('>f4')
-        odata['ob_gsgm'] = fh.read_reals('>f4')
-        odata['ob_rsgm'] = fh.read_reals('>f4')
+        data['ob_wm'] = fh.read_reals('>i4')
+        data['ob_gsal'] = fh.read_reals('>f4')
+        data['ob_gsst'] = fh.read_reals('>f4')
+        data['ob_lat'] = fh.read_reals('>f4')
+        data['ob_lon'] = fh.read_reals('>f4')
+        data['ob_age'] = fh.read_reals('>f4')
+        data['ob_csal'] = fh.read_reals('>f4')
+        data['ob_csst'] = fh.read_reals('>f4')
+        data['ob_qc_sal'] = fh.read_reals('>f4')
+        data['ob_qc_sst'] = fh.read_reals('>f4')
+        data['ob_qc_vel'] = fh.read_reals('>f4')
+        data['ob_rsal'] = fh.read_reals('>f4')
+        data['ob_rsst'] = fh.read_reals('>f4')
+        data['ob_sal'] = fh.read_reals('>f4')
+        data['ob_sst'] = fh.read_reals('>f4')
+        data['ob_typ'] = fh.read_reals('>i4')
+        data['ob_uuu'] = fh.read_reals('>f4')
+        data['ob_vvv'] = fh.read_reals('>f4')
+        data['ob_dtg'] = fh.read_record('>S12').astype('U12')
+        data['ob_rcpt'] = fh.read_record('>S12').astype('U12')
+        data['ob_scr'] = fh.read_record('>S1').astype('U1')
+        data['ob_sgn'] = fh.read_record('>S6').astype('U6')
+        data['ob_csgm'] = fh.read_reals('>f4')
+        data['ob_gsgm'] = fh.read_reals('>f4')
+        data['ob_rsgm'] = fh.read_reals('>f4')
 
         fh.close()
 
-        self.odata = odata
+        self.data = data
 
         return
 
-    def to_ioda(self, foutput):
+
+class IODA(object):
+
+    def __init__(self, filename, date, varDict, obsList):
         '''
-        Selectively convert odata into idata.
-        idata is the IODA required data structure
+        Initialize IODA writer class,
+        transform to IODA data structure and,
+        write out to IODA file.
         '''
 
-        if self.odata['n_obs'] <= 0:
-            print('No trak observations for IODA!')
-            return
+        self.filename = filename
+        self.date = date
+        self.varDict = varDict
 
-        locationKeyList = [
+        self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
             ("date_time", "string")
         ]
 
-        AttrData = {
+        self.AttrData = {
             'odb_version': 1,
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        writer = iconv.NcWriter(foutput, [], locationKeyList)
+        self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
 
-        # idata is the dictionary containing IODA friendly data structure
-        idata = defaultdict(lambda: defaultdict(dict))
+        self.keyDict = defaultdict(lambda: defaultdict(dict))
+        for key in self.varDict.keys():
+            value = self.varDict[key]
+            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
+            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
+            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
 
-        var1Name = 'sea_surface_temperature'
-        val1Key = var1Name, writer.OvalName()
-        err1Key = var1Name, writer.OerrName()
-        qc1Key = var1Name, writer.OqcName()
+        # data is the dictionary containing IODA friendly data structure
+        self.data = defaultdict(lambda: defaultdict(dict))
 
-        var2Name = 'sea_surface_salinity'
-        val2Key = var2Name, writer.OvalName()
-        err2Key = var2Name, writer.OerrName()
-        qc2Key = var2Name, writer.OqcName()
+        recKey = 0
 
-        var3Name = 'sea_surface_zonal_wind'
-        val3Key = var3Name, writer.OvalName()
-        err3Key = var3Name, writer.OerrName()
-        qc3Key = var3Name, writer.OqcName()
+        for obs in obsList:
 
-        var4Name = 'sea_surface_meriodional_wind'
-        val4Key = var4Name, writer.OvalName()
-        err4Key = var4Name, writer.OerrName()
-        qc4Key = var4Name, writer.OqcName()
+            if obs.data['n_obs'] <= 0:
+                print('No trak observations for IODA!')
+                continue
 
-        for n in range(self.odata['n_obs']):
+            for n in range(obs.data['n_obs']):
 
-            lat = self.odata['ob_lat'][n]
-            lon = self.odata['ob_lon'][n]
-            dtg = datetime.strptime(self.odata['ob_dtg'][n], '%Y%m%d%H%M')
+                lat = obs.data['ob_lat'][n]
+                lon = obs.data['ob_lon'][n]
+                dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
 
-            locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+                locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            idata[0][locKey][val1Key] = self.odata['ob_sst'][n]
-            idata[0][locKey][err1Key] = 1.0
-            idata[0][locKey][qc1Key] = self.odata['ob_qc_sst'][n]
+                for key in self.varDict.keys():
 
-            idata[0][locKey][val2Key] = self.odata['ob_sal'][n]
-            idata[0][locKey][err2Key] = 1.0
-            idata[0][locKey][qc2Key] = self.odata['ob_qc_sal'][n]
+                    if key in ['ob_uuu', 'ob_vvv']:
+                        varName = 'vel'
+                    else:
+                        varName = key.split('_')[-1]
 
-            idata[0][locKey][val3Key] = self.odata['ob_uuu'][n]
-            idata[0][locKey][err3Key] = 1.0
-            idata[0][locKey][qc3Key] = self.odata['ob_qc_vel'][n]
+                    val = obs.data[key][n]
+                    err = 1.0
+                    qc = obs.data['ob_qc_'+varName][n]
 
-            idata[0][locKey][val4Key] = self.odata['ob_vvv'][n]
-            idata[0][locKey][err4Key] = 1.0
-            idata[0][locKey][qc4Key] = self.odata['ob_qc_vel'][n]
+                    valKey = self.keyDict[key]['valKey']
+                    errKey = self.keyDict[key]['errKey']
+                    qcKey = self.keyDict[key]['qcKey']
 
-        writer.BuildNetcdf(idata, AttrData)
+                    self.data[recKey][locKey][valKey] = val
+                    self.data[recKey][locKey][errKey] = err
+                    self.data[recKey][locKey][qcKey] = qc
+
+        self.writer.BuildNetcdf(self.data, self.AttrData)
 
         return
 
 
 if __name__ == '__main__':
 
-    desc = 'Read GODAE binary track file and convert to IODA netCDF4 format'
+    desc = 'Convert GODAE binary track data to IODA netCDF4 format'
     parser = ArgumentParser(
         description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='name of the binary GODAE track file',
-        type=str, required=True)
+        type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output', help='name of the output netCDF GODAE ship file',
-        type=str, required=False, default=None)
+        type=str, required=True, default=None)
     parser.add_argument(
         '-d', '--date', help='file date', type=str, metavar='YYYYMMDDHH', required=True)
 
     args = parser.parse_args()
 
-    finput = args.input
-    foutput = args.output if args.output is not None else finput+'.nc'
+    fList = args.input
+    foutput = args.output
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    track = trak(finput, fdate)
-    track.to_ioda(foutput)
+    obsList = []
+    for fname in fList:
+        obsList.append(trak(fname, fdate))
+
+    varDict = {
+        'ob_sst': 'sea_surface_temperature',
+        'ob_sal': 'sea_surface_salinity',
+        'ob_uuu': 'sea_surface_zonal_wind',
+        'ob_vvv': 'sea_surface_meriodional_wind'
+    }
+
+    IODA(foutput, fdate, varDict, obsList)
