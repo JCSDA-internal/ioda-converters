@@ -6,52 +6,8 @@ import os
 import argparse
 from math import exp
 import ioda_conv_ncio as iconv
-
-#This function takes two integers like date=20180415 time=61532 and converts them to a
-#ISO 8601 standard date/time string like "2018-04-15T06:15:32Z"
-def IntDateTimeToString(date, time):
-    #Make sure passed values are int's since we're counting on integer division
-    date = int(date)
-    time = int(time)
-    #Define consts to prevent new int objects being created every time we use these numbers
-    TEN_THOW = 10000
-    HUNDRED = 100
-
-    year = date // TEN_THOW
-    date = date - year * TEN_THOW
-    month = date // HUNDRED
-    day = date - month * HUNDRED
-
-    hour = time // TEN_THOW
-    time = time - hour * TEN_THOW
-    minute = time // HUNDRED
-    second = time - minute * HUNDRED
-
-    return "%d-%02d-%02dT%02d:%02d:%02dZ" % (year, month, day, hour, minute, second)
-
-def ConvertRelativeToSpecificHumidity(rh, rh_err, t, p):
-    T_KELVIN = 273.15
-    ES_ALPHA = 6.112
-    ES_BETA = 17.67
-    ES_GAMMA = 243.5
-    GAS_CONSTANT = 287.0
-    GAS_CONSTANT_V = 461.6
-    HUNDRED = 100.0
-    
-    rdOverRv = GAS_CONSTANT / GAS_CONSTANT_V
-    rdOverRv1 = 1.0 - rdOverRv
-    t_celcius = t - T_KELVIN
-    #p = p / HUNDRED # Convert from Pa to hPa
-
-    #Calculate saturation vapor pressure
-    es = ES_ALPHA * exp(ES_BETA * t_celcius / (t_celcius + ES_GAMMA))
-    #Calculate saturation specific humidity
-    qs = rdOverRv * es / (p - rdOverRv1 * es)
-    #Calculate specific humidity
-    q = qs * rh / HUNDRED
-    q_err = qs * rh_err / HUNDRED
-    return q, q_err
-
+import ioda_conv_util
+import var_convert
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
@@ -87,7 +43,7 @@ MyArgs = ap.parse_args()
 
 #ObsType = MyArgs.obs_type
 Odb2Fname = MyArgs.input_odb2
-NetcdfFname = MyArgs.output_netcdf
+jsonFname = MyArgs.output_netcdf
 ClobberOfile = MyArgs.clobber
 qcFilter = MyArgs.qcfilter
 
@@ -98,12 +54,12 @@ if (not os.path.isfile(Odb2Fname)):
     print("")
     BadArgs = True
 
-if (os.path.isfile(NetcdfFname)):
+if (os.path.isfile(jsonFname)):
     if (ClobberOfile):
-        print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(ScriptName, NetcdfFname))
+        print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(ScriptName, jsonFname))
         print("")
     else:
-        print("ERROR: {0:s}: Specified nc file already exists: {1:s}".format(ScriptName, NetcdfFname))
+        print("ERROR: {0:s}: Specified nc file already exists: {1:s}".format(ScriptName, jsonFname))
         print("ERROR: {0:s}:   Use -c option to overwrite.".format(ScriptName))
         print("")
         BadArgs = True
@@ -132,7 +88,7 @@ locationKeyList = [
 
 # Instantiate a netcdf writer object, and get the obs data names from
 # the writer object.
-nc_writer = iconv.NcWriter(NetcdfFname, recordKeyList, locationKeyList)
+nc_writer = iconv.NcWriter(jsonFname, recordKeyList, locationKeyList)
 
 ncOvalName = nc_writer.OvalName()
 ncOerrName = nc_writer.OerrName()
@@ -173,10 +129,10 @@ row = c.fetchone()
 refDateTimeString = "UnSeT"
 while row is not None:
     row = FetchRow._make(row)
-    anDateTimeString = IntDateTimeToString(row.andate, row.antime)
+    anDateTimeString = ioda_conv_util.IntDateTimeToString(row.andate, row.antime)
     if (refDateTimeString == "UnSeT"):
         refDateTimeString = anDateTimeString
-    obsDateTimeString = IntDateTimeToString(row.date, row.time)
+    obsDateTimeString = ioda_conv_util.IntDateTimeToString(row.date, row.time)
     #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
     qcVal = (row.report_status_active      * 128 +
              row.report_status_passive     *  64 +
@@ -243,7 +199,7 @@ for profileKey in obsDataDictTree:
             p = locationKey[2]
             if (t is not None and rh is not None and rh_err is not None and p is not None and 
             t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
-                q, q_err = ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
+                q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                 obsDict[("specific_humidity", ncOvalName)] = q
                 obsDict[("specific_humidity", ncOerrName)] = q_err
@@ -257,12 +213,77 @@ for profileKey in obsDataDictTree:
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
 
-# Call the writer. Pass in the reference date time string for writing the
-# version 1 netcdf file. The reference date time string won't be necessary when
-# we switch to the version 2 netcdf file.
-AttrData = {
-  'odb_version' : 2,
-  'date_time_string' : refDateTimeString
-   }
+#Construct new dictionary that we'll dump to JSON, that can then be imported to MongoDB if desired
+t_val = []
+t_err = []
+t_qc = []
+q_val = []
+q_err = []
+q_qc = []
+u_val = []
+u_err = []
+u_qc = []
+v_val = []
+v_err = []
+v_qc = []
+lat = []
+lon = []
+press = []
+date_time = []
 
-nc_writer.BuildNetcdf(obsDataDictTree, AttrData)
+for profileKey in obsDataDictTree:
+    for locationKey in obsDataDictTree[profileKey]:
+        lat.append(locationKey[0])
+        lon.append(locationKey[1])
+        press.append(locationKey[2])
+        date_time.append(locationKey[3])
+        obsDict = obsDataDictTree[profileKey][locationKey]
+        q_val.append(obsDict[("specific_humidity", ncOvalName)])
+        q_err.append(obsDict[("specific_humidity", ncOerrName)])
+        q_qc.append(obsDict[("specific_humidity", ncOqcName)])
+        t_val.append(obsDict[("air_temperature", ncOvalName)])
+        t_err.append(obsDict[("air_temperature", ncOerrName)])
+        t_qc.append(obsDict[("air_temperature", ncOqcName)])
+        u_val.append(obsDict[("eastward_wind", ncOvalName)])
+        u_err.append(obsDict[("eastward_wind", ncOerrName)])
+        u_qc.append(obsDict[("eastward_wind", ncOqcName)])
+        v_val.append(obsDict[("northward_wind", ncOvalName)])
+        v_err.append(obsDict[("northward_wind", ncOerrName)])
+        v_qc.append(obsDict[("northward_wind", ncOqcName)])
+
+outputDict = {}
+outputDict["latitude"] = lat
+outputDict["longitude"] = lon
+outputDict["pressure"] = press
+outputDict["date_time"] = date_time
+air_temperature = {}
+air_temperature["obs_value"] = t_val
+air_temperature["obs_err"] = t_err
+air_temperature["obs_preqc"] = t_qc
+specific_humidity = {}
+specific_humidity["obs_value"] = q_val
+specific_humidity["obs_err"] = q_err
+specific_humidity["obs_preqc"] = q_qc
+eastward_wind = {}
+eastward_wind["obs_value"] = u_val
+eastward_wind["obs_err"] = u_err
+eastward_wind["obs_preqc"] = u_qc
+northward_wind = {}
+northward_wind["obs_value"] = v_val
+northward_wind["obs_err"] = v_err
+northward_wind["obs_preqc"] = v_qc
+variables = {}
+variables["air_temperature"] = air_temperature
+variables["specific_humidity"] = specific_humidity
+variables["eastward_wind"] = eastward_wind
+variables["northward_wind"] = northward_wind
+outputDict["variables"] = variables
+
+#print outputDict["latitude"]
+
+import json
+print str(json.dumps(outputDict, sort_keys=True, indent=4, separators=(',', ': ')))
+# f = open(jsonFname, "w")
+# print(json.dumps(outputDict, sort_keys=True, indent=4, separators=(',', ': ')), file=f)
+# f.close()
+
