@@ -6,6 +6,7 @@ import netCDF4
 from netCDF4 import Dataset
 import datetime as dt
 import sys
+from collections import OrderedDict
 
 ###################################################################################
 # SUBROUTINES
@@ -322,7 +323,7 @@ class NcWriter(object):
         self._nvars = len(VarList)
         self._nobs = self._nvars * self._nlocs
 
-        VarMap = { }
+        VarMap = OrderedDict()
         for i in range(self._nvars):
             VarMap[VarList[i]] = i
 
@@ -333,7 +334,7 @@ class NcWriter(object):
             self._oqc_name   : np.full((self._nvars, self._nlocs), self._defaultI4),
             }
 
-        LocMdata = { }
+        LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):
             (LocVname, LocVtype) = self._loc_key_list[i]
             # if date_time was specified as as a "string" override to
@@ -343,10 +344,10 @@ class NcWriter(object):
             LocMdata[LocVname] = self.CreateNcVector(self._nlocs, LocVtype)
         LocMdata[self._rec_num_name] = self.CreateNcVector(self._nlocs, "integer")
 
-        VarMdata = { }
+        VarMdata = OrderedDict()
         VarMdata[self._var_list_name] = self.CreateNcVector(self._nvars, "string")
 
-        RecMdata = { }
+        RecMdata = OrderedDict()
         for i in range(len(self._rec_key_list)):
             (RecVname, RecVtype) = self._rec_key_list[i]
             RecMdata[RecVname] = self.CreateNcVector(self._nrecs, RecVtype)
