@@ -142,7 +142,7 @@ def write_yaml ( dictionary, dictfileName ):
 
 def read_yaml ( dictfileName ):
      f=open(dictfileName, 'r')
-     dictionary = yaml.load(f) 
+     dictionary = yaml.safe_load(f) 
      f.close()
      
      return dictionary

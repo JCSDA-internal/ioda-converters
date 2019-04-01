@@ -472,12 +472,6 @@ class ObsType(object):
                                                 self.evn_spec, BufrValues, 
                                                 ActualValues[0], ActualValuesBufr[0])
 
-#        [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.evn_spec, BufrValues, ActualValues[0])
-
-
-        #print('ActualValuesBufr BBBBB:', ActualValuesBufr)
-        #sys.exit()
-
         # Read and convert the replication mnemonics
         Mlists = [ [ Mlist[1] for Mlist in SubList] for SubList in self.rep_spec ]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True) 
@@ -709,15 +703,6 @@ class ObsType(object):
 
                     # Calculate the value for the Time variable (which is an offset
                     # from the reference time). Add the Time value to the dictionary.
-#<<<<<<< HEAD
-#
-#                    [ ActualValues[i]['ObsDate'], ActualValues[i]['ObsTime'], ActualValues[i]['time'] ] = self.calc_obs_date_time(ActualValuesBufr[i])
-#
-#                    # Calculate the value of lat and lon and add to the dictionary.
-#                    [ ActualValues[i]['latitude'], ActualValues[i]['longitude'] ] = self.calc_obs_lat_lon(ActualValuesBufr[i])
-#                    
-#
-#=======
                     [ ActualValues[i]['ObsDate@MetaData'], ActualValues[i]['ObsTime@MetaData'], ActualValues[i]['time@MetaData'] ] = self.calc_obs_date_time(ActualValuesBufr[i])
                     
 
@@ -728,7 +713,6 @@ class ObsType(object):
                     # Calculate the value of lat and lon and add to the dictionary.
                     [ ActualValues[i]['latitude@MetaData'], ActualValues[i]['longitude@MetaData'] ] = self.calc_obs_lat_lon(ActualValuesBufr[i])
     
-#>>>>>>> feature/update-bufr2nc
                     # Write out the netcdf variables.
                     for Vname, Vdata in ActualValues[i].items():
 
