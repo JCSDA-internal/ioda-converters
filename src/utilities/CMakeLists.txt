@@ -1,4 +1,3 @@
 install (PROGRAMS
-  odbapi2nc.py
-  odbapi2json.py
+  ioda_conv_util.py
   DESTINATION bin)
