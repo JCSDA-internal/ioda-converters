@@ -41,7 +41,7 @@ Python scripts to convert GODAE data (binary) to netCDF4 file that can be ingest
 See [here](src/marine/godae/README.md) for usage.
 
 The python script to convert (prep-)BUFR with embedded BUFR table to netCDF4 file that can be ingested into IODA.
-See [here] (src/ncep/README.md) for usage.
+See [here](src/ncep/README.md) for usage.
 
 
 ## odbapi2nc
