@@ -2,6 +2,7 @@ list( APPEND programs
   bufr2nc.py
   bufr2ncCommon.py
   bufr2ncObsTypes.py
+  ncep_classes.py
 )
 
 COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
