@@ -50,3 +50,5 @@ The users can update the **intespec.yaml** according to their naming requirement
 
 In case that the user provide the **intespec.yaml**, the provided file will be used for the netCDF naming conventions, e.g. CF netCDF naming convention.
 
+High level flowchart of the BUFR to IODA NetCDF converter, and the importance of the dictionary existence:
+![alt text](UMO_CS.jpg)
