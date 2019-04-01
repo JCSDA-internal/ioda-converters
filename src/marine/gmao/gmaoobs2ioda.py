@@ -15,102 +15,113 @@ class GMAOobs(object):
         self.filename = filename
         self.date = date
 
-        # obsid_dict as defined in ocean_obs.py
-        self.obsid_dict = {
-            5521: 'sea_water_salinity',  # Salinity
-            3073: 'sea_water_temperature',  # Temperature
-            5525: 'sea_surface_temperature',  # SST
-            5526: 'obs_absolute_dynamic_topography',  # SSH (Not used ...)
-            5351: 'obs_absolute_dynamic_topography',  # SSH
-            6000: 'sea_ice_area_fraction',  # AICE
-            6001: 'sea_ice_thickness'   # HICE
-        }
-
+        # Read GMAO data
         self._read()
 
         return
 
     def _read(self):
 
-        odata = {}
+        data = {}
 
         nc = nc4.Dataset(self.filename)
 
-        odata['nobs'] = len(nc.dimensions['nobs'])
+        data['nobs'] = len(nc.dimensions['nobs'])
 
-        odata['typ'] = nc.variables['typ'][:].data
-        odata['lon'] = nc.variables['lon'][:].data
-        odata['lat'] = nc.variables['lat'][:].data
-        odata['depth'] = nc.variables['depth'][:].data
-        odata['value'] = nc.variables['value'][:].data
-        odata['oerr'] = nc.variables['oerr'][:].data
+        data['typ'] = nc.variables['typ'][:].data
+        data['lon'] = nc.variables['lon'][:].data
+        data['lat'] = nc.variables['lat'][:].data
+        data['depth'] = nc.variables['depth'][:].data
+        data['value'] = nc.variables['value'][:].data
+        data['oerr'] = nc.variables['oerr'][:].data
 
         nc.close()
 
-        self.odata = odata
+        self.data = data
 
         return
 
-    def to_ioda(self, foutput):
 
-        if self.odata['nobs'] <= 0:
-            print('No GMAO observations for IODA!')
-            return
+class IODA(object):
 
-        locationKeyList = [
+    def __init__(self, filename, date, varDict, obsList):
+        '''
+        Initialize IODA writer class,
+        transform to IODA data structure and,
+        write out to IODA file.
+        '''
+
+        self.filename = filename
+        self.date = date
+        self.varDict = varDict
+
+        self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
-            ("level", "float"),
+            ("depth", "float"),
             ("date_time", "string")
         ]
 
-        AttrData = {
+        self.AttrData = {
             'odb_version': 1,
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        writer = iconv.NcWriter(foutput, [], locationKeyList)
+        self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
 
-        keyDict = defaultdict(lambda: defaultdict(dict))
-        for key in self.obsid_dict.keys():
-            keyDict[key]['name'] = self.obsid_dict[key]
-            keyDict[key]['valKey'] = keyDict[key]['name'], writer.OvalName()
-            keyDict[key]['errKey'] = keyDict[key]['name'], writer.OerrName()
-            keyDict[key]['qcKey'] = keyDict[key]['name'], writer.OqcName()
+        self.keyDict = defaultdict(lambda: defaultdict(dict))
+        for key in self.varDict.keys():
+            value = self.varDict[key]
+            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
+            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
+            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
 
-        # idata is the dictionary containing IODA friendly data structure
-        idata = defaultdict(lambda: defaultdict(dict))
+        # data is the dictionary containing IODA friendly data structure
+        self.data = defaultdict(lambda: defaultdict(dict))
 
-        for n in range(self.odata['nobs']):
+        recKey = 0
 
-            lat = self.odata['lat'][n]
-            lon = self.odata['lon'][n]
-            lvl = self.odata['depth'][n]
+        for obs in obsList:
 
-            locKey = lat, lon, lvl, self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if obs.data['nobs'] <= 0:
+                print('No GMAO observations for IODA!')
+                continue
 
-            typ = self.odata['typ'][n]
-            val = self.odata['value'][n]
-            oerr = self.odata['oerr'][n]
+            for n in range(obs.data['nobs']):
 
-            idata[0][locKey][keyDict[typ]['valKey']] = val
-            idata[0][locKey][keyDict[typ]['errKey']] = oerr
-            idata[0][locKey][keyDict[typ]['qcKey']] = 0
+                lat = obs.data['lat'][n]
+                lon = obs.data['lon'][n]
+                lvl = obs.data['depth'][n]
 
-        writer.BuildNetcdf(idata, AttrData)
+                locKey = lat, lon, lvl, obs.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                typ = obs.data['typ'][n]
+                val = obs.data['value'][n]
+                err = obs.data['oerr'][n]
+                qc = 0
+
+                valKey = self.keyDict[typ]['valKey']
+                errKey = self.keyDict[typ]['errKey']
+                qcKey = self.keyDict[typ]['qcKey']
+
+                self.data[recKey][locKey][valKey] = val
+                self.data[recKey][locKey][errKey] = err
+                self.data[recKey][locKey][qcKey] = qc
+
+        self.writer.BuildNetcdf(self.data, self.AttrData)
 
         return
 
 
 if __name__ == '__main__':
 
-    desc = 'Convert GMAO ocean observations to IODA netCDF4 format'
+    desc = 'Convert GMAO ocean data to IODA netCDF4 format'
     parser = ArgumentParser(
         description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='name of the input GMAO ocean obs file',
-        type=str, required=True)
+        type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output', help='name of the output IODA file',
         type=str, required=True)
@@ -120,9 +131,23 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    finput = args.input
+    fList = args.input
     foutput = args.output
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    gmao = GMAOobs(finput, fdate)
-    gmao.to_ioda(foutput)
+    obsList = []
+    for fname in fList:
+        obsList.append(GMAOobs(fname, fdate))
+
+    # varDict is defined as obsid_dict in ocean_obs.py
+    varDict = {
+        5521: 'sea_water_salinity',  # Salinity
+        3073: 'sea_water_temperature',  # Temperature
+        5525: 'sea_surface_temperature',  # SST
+        5526: 'obs_absolute_dynamic_topography',  # SSH (Not used ...)
+        5351: 'obs_absolute_dynamic_topography',  # SSH
+        6000: 'sea_ice_area_fraction',  # AICE
+        6001: 'sea_ice_thickness'   # HICE
+    }
+
+    IODA(foutput, fdate, varDict, obsList)

@@ -4,79 +4,121 @@ import argparse
 import ioda_conv_ncio as iconv
 import numpy as np
 from datetime import datetime, timedelta
-import h5py
+import netCDF4 as nc
 from collections import defaultdict
+import re
+import sys
+import dateutil.parser
 
+vName = "sea_surface_salinity"
 
-
-class Salinity(object):
-    def __init__(self, filename, date ,writer):
-        self.filename = filename
-        self.date     = date
-        self.data     = defaultdict(lambda: defaultdict(dict))
-        self.writer   = writer
-        # Save observation source 
-        self.source   = filename
-        self._read()
-
-        # Open obs file and read/load relevant info
-    def _read(self):
-        smap          =  h5py.File(self.filename,'r')
-        lat      =  np.squeeze(smap['/lat'][:])
-        lon      =  np.squeeze(smap['/lon'][:])
-        times    =  np.squeeze(smap['/row_time'][:]) #1.03684024e+08
-        sss      =  np.squeeze(smap['/smap_sss'][:])
-        sss_u    =  np.squeeze(smap['/smap_sss_uncertainty'][:])
-        sss_qc   =  np.squeeze(smap['/quality_flag'][:])
-        tb_h_aft =  np.squeeze(smap['/tb_h_aft'][:])
-        tb_h_fore=  np.squeeze(smap['/tb_h_fore'][:])
-        tb_v_aft =  np.squeeze(smap['/tb_v_aft'][:])
-        tb_v_fore= np.squeeze(smap['/tb_v_fore'][:])
-        lat.shape =(lat.shape[0]*lat.shape[1],)
-        lon.shape =(lon.shape[0]*lon.shape[1],)
-        times  = np.tile(times,(sss.shape[0],1))
-        times.shape =(times.shape[0]*times.shape[1],)
-        sss.shape =(sss.shape[0]*sss.shape[1],)
-        sss_u.shape =(sss_u.shape[0]*sss_u.shape[1],)
-        sss_qc.shape =(sss_qc.shape[0]*sss_qc.shape[1],)
-
-        # Write in ioda netcdf format
-        valKey = vName['SSS'], self.writer.OvalName()
-        errKey = vName['SSS'], self.writer.OerrName()
-        qcKey = vName['SSS'], self.writer.OqcName()
-
-        for i in range(len(lat)):
-            base_date=datetime(2015, 1, 1, 0, 0) + timedelta(seconds=np.double(times[i]))
-            dt = base_date
-            locKey = lat[i], lon[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = sss[i] 
-            self.data[0][locKey][errKey] = sss_u[i]
-            self.data[0][locKey][qcKey]  = sss_qc[i]
-
-
-vName = {
-  'SSS': "sea_surface_salinity",
-}
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("date_time", "string")
-    ]
+]
 
 AttrData = {
-  'odb_version': 1,
-   }
+    'odb_version': 1,
+}
+
+
+class Salinity(object):
+    def __init__(self, filenames, date, writer):
+        self.filenames = filenames
+        self.date = date
+        self.data = defaultdict(lambda: defaultdict(dict))
+        self.writer = writer
+        self._read()
+
+    # Open obs file and read/load relevant info
+    def _read(self):
+        valKey = vName, self.writer.OvalName()
+        errKey = vName, self.writer.OerrName()
+        qcKey = vName, self.writer.OqcName()
+        
+        for f in self.filenames:
+            ncd = nc.Dataset(f, 'r')
+
+            # determine if this is JPL or RSS file.
+            # the variable names depend on which type of file it is.
+            source = ncd.institution
+            if re.search("^Remote Sensing Systems.*", source) is not None:
+                source = 'RSS'
+                source_var_name={
+                    'time'    : 'time',
+                    'lat'     : 'cellat',
+                    'lon'     : 'cellon',
+                    'sss'     : 'sss_smap',
+                    'sss_qc'  : 'iqc_flag',
+                    }
+            elif re.search("^JPL.*", source) is not None:
+                source = 'JPL'
+                source_var_name = {
+                    'time'    : 'row_time',
+                    'lat'     : 'lat',
+                    'lon'     : 'lon',
+                    'sss'     : 'smap_sss',
+                    'sss_err' : 'smap_sss_uncertainty',
+                    'sss_qc'  : 'quality_flag'
+                    }
+            else:
+                print ("Error: unknown source: "+ source)
+                print ("Only JPL or RSS sources are handled")
+                sys.exit(1)
+
+            # make sure this is lvl 2
+            # TODO: handle L3 files at somepoint?)
+            if ncd.processing_level[:2] != 'L2':
+                print ("Error: only L2 files handled for now.")
+                sys.exit(1)
+            
+            # get base date for file
+            s=' '.join(ncd.variables[source_var_name['time']].units.split(' ')[2:3])
+            basetime = dateutil.parser.parse(s)
+
+            # read in the fields
+            data = {}
+            for v in source_var_name:
+                data[v] = ncd.variables[source_var_name[v]][:].flatten()
+
+            # JPL files have a time for each row,
+            # RSS has time for each cell, account for this
+            if source == 'JPL':
+                col = len(data['lon']) / len(data['time'])
+                data['time'] = np.tile(np.array(data['time']), (col,1)).T.flatten()
+
+            # remove masked gridpoints
+            # TODO: currently also removing bad qc obs, don't do this
+            #  once PreQC is working correctly with IODA            
+            mask = np.logical_not(data['sss'].mask)
+            mask = np.logical_and(mask, data['sss_qc'] == 0)
+            for v in source_var_name:
+                data[v] = data[v][mask]
+
+            # for each observation
+            for i in range(len(data['time'])):
+                obs_date = basetime + timedelta(seconds=float(data['time'][i]))
+                locKey = data['lat'][i], data['lon'][i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                self.data[0][locKey][valKey] = data['sss'][i]
+                self.data[0][locKey][qcKey] = data['sss_qc'][i]                
+                if 'sss_err' in data:
+                    self.data[0][locKey][errKey] = data['sss_err'][i]
+                else:
+                    self.data[0][locKey][errKey] = 1.0
+            ncd.close()
+ 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description=('Read JPL SMAP sss files and convert '
+        description=('Read JPL/RSS SMAP SSS files and convert '
                      + 'to IODA format')
     )
-    parser.add_argument('-i',
+    parser.add_argument('-i', '--input',
                         help="name of sss input file",
-                        type=str, required=True)
-    parser.add_argument('-o',
+                        type=str, nargs='+', required=True)
+    parser.add_argument('-o', '--output',
                         help="name of ioda output file",
                         type=str, required=True)
     parser.add_argument('-d', '--date',
@@ -84,17 +126,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.o, [], locationKeyList)
+    writer = iconv.NcWriter(args.output, [], locationKeyList)
 
     # Read in the salinity
-    sal = Salinity(args.i, fdate, writer)
+    sal = Salinity(args.input, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     writer.BuildNetcdf(sal.data, AttrData)
-
-
-
-
-
