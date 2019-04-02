@@ -42,15 +42,15 @@ class Observation(object):
             basetime = dateutil.parser.parse(time_units)
             basetime += timedelta(seconds=float(time))
 
-            lons = ncd.variables['lon'][:].flatten()
-            lats = ncd.variables['lat'][:].flatten()
-            sst_qc   = ncd.variables['quality_level'][:].flatten()
+            lons = ncd.variables['lon'][:].ravel()
+            lats = ncd.variables['lat'][:].ravel()
+            sst_qc   = ncd.variables['quality_level'][:].ravel()
 
             if lvl[:2] == 'L3':
                 # If L3, we need to convert 1D lat/lon to 2D lat/lon
                 lons,lats=np.meshgrid(lons,lats)
-                lons=lons.flatten()
-                lats=lats.flatten()
+                lons=lons.ravel()
+                lats=lats.ravel()
                 mask = np.logical_not(sst_qc.mask)
             else:
                 mask = sst_qc >= 0
@@ -61,14 +61,22 @@ class Observation(object):
             #  once the preqc filter works
             mask = np.logical_and(mask, sst_qc == 5)
 
+            # TODO: this is also currently a hack.
+            #  jedi is not handling thinning the way I need, so
+            #  obs are optionally thinned here.
+            #  This should be removed once OOPS thins in a better way.
+            np.random.seed(0)
+            mask_thin = np.random.uniform(size=len(mask)) > args.thin
+            mask = np.logical_and(mask, mask_thin)
+            
             lons = lons[mask]
             lats = lats[mask]
             sst_qc = sst_qc[mask]
 
-            dtime = ncd.variables['sst_dtime'][:].flatten()[mask]
-            sst_skin = ncd.variables['sea_surface_temperature'][:].flatten()[mask] -273.15
-            sst_bias = ncd.variables['sses_bias'][:].flatten()[mask]
-            sst_err  = ncd.variables['sses_standard_deviation'][:].flatten()[mask]
+            dtime = ncd.variables['sst_dtime'][:].ravel()[mask]
+            sst_skin = ncd.variables['sea_surface_temperature'][:].ravel()[mask] -273.15
+            sst_bias = ncd.variables['sses_bias'][:].ravel()[mask]
+            sst_err  = ncd.variables['sses_standard_deviation'][:].ravel()[mask]
                 
             sst_bulk = sst_skin - sst_bias
 
@@ -107,20 +115,26 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('')
     )
-    parser.add_argument('-i',
+    parser.add_argument('-i', '--input',
                         help="NESDIS SST obs input files (wild cards or list)",
                         type=str, nargs='+', required=True)
-    parser.add_argument('-o',
+    parser.add_argument('-o', '--output',
                         help="name of ioda output file",
                         type=str, required=True)
     parser.add_argument('-d', '--date',
                         help="base date", type=str, required=True)
+    parser.add_argument('-t', '--thin',
+                        help="amount of random thinning, from 0.0 to 1.0",
+                        type=float, default=0.0)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.o, [], locationKeyList)
+    writer = iconv.NcWriter(args.output, [], locationKeyList)
 
+    if args.thin != 0.0:
+        AttrData['thinning'] = args.thin
+    
     # Read in the altimeter
-    altim = Observation(args.i, fdate, writer)
+    altim = Observation(args.input, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
