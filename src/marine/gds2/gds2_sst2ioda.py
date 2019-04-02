@@ -42,6 +42,8 @@ class Observation(object):
         sst_skin_errKey = sst_skin_name, self.writer.OerrName()
         sst_skin_qcKey = sst_skin_name, self.writer.OqcName()
 
+        np.random.seed(int((self.date-datetime(1970, 1, 1)).total_seconds()))
+
         for f in self.filename:
             ncd = nc.Dataset(f, 'r')
             lvl = ncd.processing_level
@@ -88,7 +90,6 @@ class Observation(object):
             #  jedi is not handling thinning the way I need, so
             #  obs are optionally thinned here.
             #  This should be removed once OOPS thins in a better way.
-            np.random.seed(0)
             mask_thin = np.random.uniform(size=len(mask)) > args.thin
             mask = np.logical_and(mask, mask_thin)
 
