@@ -5,6 +5,8 @@ import numpy as np
 import netCDF4
 from netCDF4 import Dataset
 import datetime as dt
+import sys
+from collections import OrderedDict
 
 ###################################################################################
 # SUBROUTINES
@@ -24,6 +26,18 @@ def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
         # write to obs file
         Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
         Ovar[...] = Vvals[...]
+
+def CharVectorToString(CharVec):
+    # Need to do this differently given the Python version (2 vs 3)
+    #
+    # sys.version_info[0] yeilds the Python major version number.
+    if (sys.version_info[0] == 2):
+      String = CharVec.tostring().rstrip('\x00')
+    else:
+      String = str(CharVec.tostring(), 'utf-8').rstrip('\x00')
+
+    return String
+    
 
 ###################################################################################
 # CLASSES
@@ -134,7 +148,7 @@ class NcWriter(object):
 
         TimeOffset = np.zeros((self._nlocs), dtype = 'f4')
         for i in range(len(TimeStrings)):
-            Tstring = TimeStrings[i].tostring()
+            Tstring = CharVectorToString(TimeStrings[i])
             ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
 
             TimeDelta = ObsDt - self._ref_date_time
@@ -224,7 +238,7 @@ class NcWriter(object):
                 for i in range(self._nvars):
                     # The rstrip trims off the null bytes that correspond to '' chars
                     # in the character array.
-                    Vname = VarMdata['variable_names'][i,:].tostring().rstrip('\x00')
+                    Vname = CharVectorToString(VarMdata['variable_names'][i,:])
                     NcVname = "{0:s}@{1:s}".format(Vname, Gname)
                     NcVvals = Vvals[i,:]
 
@@ -309,7 +323,7 @@ class NcWriter(object):
         self._nvars = len(VarList)
         self._nobs = self._nvars * self._nlocs
 
-        VarMap = { }
+        VarMap = OrderedDict()
         for i in range(self._nvars):
             VarMap[VarList[i]] = i
 
@@ -320,7 +334,7 @@ class NcWriter(object):
             self._oqc_name   : np.full((self._nvars, self._nlocs), self._defaultI4),
             }
 
-        LocMdata = { }
+        LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):
             (LocVname, LocVtype) = self._loc_key_list[i]
             # if date_time was specified as as a "string" override to
@@ -330,10 +344,10 @@ class NcWriter(object):
             LocMdata[LocVname] = self.CreateNcVector(self._nlocs, LocVtype)
         LocMdata[self._rec_num_name] = self.CreateNcVector(self._nlocs, "integer")
 
-        VarMdata = { }
+        VarMdata = OrderedDict()
         VarMdata[self._var_list_name] = self.CreateNcVector(self._nvars, "string")
 
-        RecMdata = { }
+        RecMdata = OrderedDict()
         for i in range(len(self._rec_key_list)):
             (RecVname, RecVtype) = self._rec_key_list[i]
             RecMdata[RecVname] = self.CreateNcVector(self._nrecs, RecVtype)

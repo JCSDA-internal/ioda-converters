@@ -38,10 +38,9 @@ def MakeTime(Dtime):
 
 def MakeEpochTime(Dtime):
     # This routine will take in a datetime object and return time since the
-    # epoch (Jan 1, 1970, 00Z).
-    #
-    # Need to mark the Dtime object as UTC time before accessing the epoch timestamp.
-    EpochTime = Dtime.replace(tzinfo=dt.timezone.utc).timestamp()
+    # Epoch (Jan 1, 1970).
+    EpochDtime = dt.datetime(1970, 1, 1);
+    EpochTime = (Dtime - EpochDtime).total_seconds()
 
     return EpochTime
 
