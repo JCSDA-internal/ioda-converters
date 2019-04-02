@@ -40,8 +40,8 @@ column_variables:
     satellite_id: satellite_identifier
     sat_zenith_angle: zenith
     sat_azimuth_angle: azimuth
-    solar_zenith_angle: solar_zenith
-    solar_azimuth_angle: solar_azimuth
+    sol_zenith_angle: solar_zenith
+    sol_azimuth_angle: solar_azimuth
     scan_position: scanpos
     height: surface_height
 
@@ -146,8 +146,8 @@ location_key:
   date_time: string
   sat_zenith_angle: float
   sat_azimuth_angle: float
-  solar_zenith_angle: float
-  solar_azimuth_angle: float
+  sol_zenith_angle: float
+  sol_azimuth_angle: float
   scan_position: integer
   height: float
 
