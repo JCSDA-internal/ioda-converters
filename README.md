@@ -40,6 +40,10 @@ A fourth script, list_sid_raob.py, can be used to create the file containing a l
 Python scripts to convert GODAE data (binary) to netCDF4 file that can be ingested into IODA.
 See [here](src/marine/godae/README.md) for usage.
 
+The python script to convert (prep-)BUFR with embedded BUFR table to netCDF4 file that can be ingested into IODA.
+See [here](src/ncep/README.md) for usage.
+
+
 ## odbapi2nc
 
 Python script, odbapi2nc.py, for converting Met Office ODB API files to netCDF4 files formatted for use by IODA.
