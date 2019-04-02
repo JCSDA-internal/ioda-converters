@@ -1,3 +1,5 @@
+# GSIDiag.py
+
 conv_vars = ["tv","tsen","uv","ps","q"]
 
 class GSIDiagFile:
@@ -210,6 +212,7 @@ class GSIDiagFile:
     Optional Parameters:
     clobber - default=True, if false will not overwrite file
     """
+    import geovals
     print("Converting "+self.filename)
     print("Obstype="+self.obstype+"; nobs={:d}".format(self.nobs))
     # subclasses for which type of splitting to perform
@@ -226,10 +229,18 @@ class GSIDiagFile:
 
 ##########################################################################
   def _geovals_conv(self,OutDir,clobber=True):
-    print(" placeholder")
+    # get the output file name from the input filename
+    x = self.filename.split('/')[-1].split('_')
+    ncout = OutDir+'/'+x[1]+'_'+x[2]+'_'+x[3]+'.nc4'
+    # call the conversion function from geovals.py
+    exitcode = geovals.gen_conv(self.filename,ncout,clobber=clobber)
 ##########################################################################
   def _geovals_rad(self,OutDir,clobber=True):
-    print(" placeholder")
+    # get the output file name from the input filename
+    x = self.filename.split('/')[-1].split('_')
+    ncout = OutDir+'/'+x[1]+'_'+x[2]+'_'+x[3]+'.nc4'
+    # call the conversion function from geovals.py
+    exitcode = geovals.gen_rad(self.filename,ncout,clobber=clobber)
 ##########################################################################
 def write_split_file(ncin,ncout,nobs,flag):
   """Copies variable from GSI ncdiag (ncin) file into ncdiag (ncout)
