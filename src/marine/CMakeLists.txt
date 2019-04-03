@@ -4,6 +4,7 @@ add_subdirectory(smap)
 add_subdirectory(hgodas)
 add_subdirectory(gmao)
 add_subdirectory(gds2)
+add_subdirectory(emcice)
 
 ecbuild_add_test( TARGET iodaconv_altimeter_coding_norms
                   TYPE SCRIPT
