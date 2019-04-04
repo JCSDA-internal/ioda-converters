@@ -5,6 +5,8 @@ import numpy as np
 import netCDF4
 from netCDF4 import Dataset
 import datetime as dt
+import sys
+from collections import OrderedDict
 
 ###################################################################################
 # SUBROUTINES
@@ -24,6 +26,18 @@ def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
         # write to obs file
         Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
         Ovar[...] = Vvals[...]
+
+def CharVectorToString(CharVec):
+    # Need to do this differently given the Python version (2 vs 3)
+    #
+    # sys.version_info[0] yeilds the Python major version number.
+    if (sys.version_info[0] == 2):
+      String = CharVec.tostring().rstrip('\x00')
+    else:
+      String = str(CharVec.tostring(), 'utf-8').rstrip('\x00')
+
+    return String
+    
 
 ###################################################################################
 # CLASSES
@@ -58,13 +72,19 @@ class NcWriter(object):
         self._nvars_dim_name = 'nvars'
         self._nobs_dim_name  = 'nobs'
         self._nstr_dim_name  = 'nstring'
+        self._ndatetime_dim_name  = 'ndatetime'
 
         # Dimension sizes
         self._nlocs   = 0
         self._nvars   = 0
         self._nrecs   = 0
         self._nobs    = 0
-        self._nstring = 20
+        self._nstring = 50
+        self._ndatetime = 20
+
+        # default fill values
+        self._defaultF4 = np.abs(netCDF4.default_fillvals['f4'])
+        self._defaultI4 = np.abs(netCDF4.default_fillvals['i4'])
 
         # Names assigned to record number (location metadata)
         self._rec_num_name = "record_number"
@@ -128,7 +148,7 @@ class NcWriter(object):
 
         TimeOffset = np.zeros((self._nlocs), dtype = 'f4')
         for i in range(len(TimeStrings)):
-            Tstring = TimeStrings[i].tostring()
+            Tstring = CharVectorToString(TimeStrings[i])
             ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
 
             TimeDelta = ObsDt - self._ref_date_time
@@ -147,6 +167,8 @@ class NcWriter(object):
             Vector = np.zeros((Nsize), dtype='f4')
         elif (Dtype == "string"):
             Vector = np.chararray((Nsize, self._nstring))
+        elif (Dtype == "datetime"):
+            Vector = np.chararray((Nsize, self._ndatetime))
         else:
             print("ERROR: Unrecognized vector data type: ", Dtype)
             exit(-3)
@@ -164,6 +186,9 @@ class NcWriter(object):
             Vector = Values
         elif (Dtype == "string"):
             StringType = "S{0:d}".format(self._nstring)
+            Vector = netCDF4.stringtochar(np.array(Values, StringType))
+        elif (Dtype == "datetime"):
+            StringType = "S{0:d}".format(self._ndatetime)
             Vector = netCDF4.stringtochar(np.array(Values, StringType))
         else:
             print("ERROR: Unrecognized vector data type: ", Dtype)
@@ -206,13 +231,14 @@ class NcWriter(object):
         self._fid.createDimension(self._nrecs_dim_name, self._nrecs)
         self._fid.createDimension(self._nobs_dim_name, self._nobs)
         self._fid.createDimension(self._nstr_dim_name, self._nstring)
+        self._fid.createDimension(self._ndatetime_dim_name, self._ndatetime)
 
         if (self._out_nc_version == 1):
             for Gname, Vvals in ObsVars.items():
                 for i in range(self._nvars):
                     # The rstrip trims off the null bytes that correspond to '' chars
                     # in the character array.
-                    Vname = VarMdata['variable_names'][i,:].tostring().rstrip('\x00')
+                    Vname = CharVectorToString(VarMdata['variable_names'][i,:])
                     NcVname = "{0:s}@{1:s}".format(Vname, Gname)
                     NcVvals = Vvals[i,:]
 
@@ -243,7 +269,10 @@ class NcWriter(object):
                 NcVname = "{0:s}@{1:s}".format(Vname, Gname)
                 NcDtype = self.NumpyToNcDtype(Vvals.dtype)
                 if (NcDtype == 'c'):
-                    self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
+                    if (NcVname == "date_time@MetaData"):
+                        self._fid.createVariable(NcVname, NcDtype, (DimName, self._ndatetime_dim_name))
+                    else:
+                        self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
                 else:
                     self._fid.createVariable(NcVname, NcDtype, (DimName))
 
@@ -294,27 +323,31 @@ class NcWriter(object):
         self._nvars = len(VarList)
         self._nobs = self._nvars * self._nlocs
 
-        VarMap = { }
+        VarMap = OrderedDict()
         for i in range(self._nvars):
             VarMap[VarList[i]] = i
 
         # Preallocate arrays and fill them up with data from the dictionary
         ObsVars = {
-            self._oval_name  : np.zeros((self._nvars, self._nlocs), dtype='f4'),
-            self._oerr_name  : np.zeros((self._nvars, self._nlocs), dtype='f4'),
-            self._oqc_name   : np.zeros((self._nvars, self._nlocs), dtype='i4'),
+            self._oval_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
+            self._oerr_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
+            self._oqc_name   : np.full((self._nvars, self._nlocs), self._defaultI4),
             }
 
-        LocMdata = { }
+        LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):
             (LocVname, LocVtype) = self._loc_key_list[i]
+            # if date_time was specified as as a "string" override to
+            # define it as a "datetime"
+            if LocVname == "date_time":
+                LocVtype = "datetime"
             LocMdata[LocVname] = self.CreateNcVector(self._nlocs, LocVtype)
         LocMdata[self._rec_num_name] = self.CreateNcVector(self._nlocs, "integer")
 
-        VarMdata = { }
+        VarMdata = OrderedDict()
         VarMdata[self._var_list_name] = self.CreateNcVector(self._nvars, "string")
 
-        RecMdata = { }
+        RecMdata = OrderedDict()
         for i in range(len(self._rec_key_list)):
             (RecVname, RecVtype) = self._rec_key_list[i]
             RecMdata[RecVname] = self.CreateNcVector(self._nrecs, RecVtype)
@@ -337,6 +370,12 @@ class NcWriter(object):
                 # Extract the locations metadata encoded in the keys
                 for i in range(len(self._loc_key_list)):
                     (LocVname, LocVtype) = self._loc_key_list[i]
+
+                    # if date_time was specified as as a "string" override to
+                    # define it as a "datetime"
+                    if LocVname == "date_time":
+                        LocVtype = "datetime"
+
                     LocMdata[LocVname][LocNum-1] = self.FillNcVector(LocKey[i], LocVtype)
                 LocMdata[self._rec_num_name][LocNum-1] = RecNum
 
