@@ -40,6 +40,7 @@ C-----------------------------------------------------------------------
       character*12 idate
       character*10 runtime
       character*50 FNAME_nc
+      character*10 sat_name
       character*8  idate0
       character*4  iyear
       integer millisec
@@ -96,7 +97,7 @@ c snow and ice
      +                       bt4di(:)
 c not over snow or ice
       real*4, allocatable :: biasd(:),errd(:),latd(:),
-     &                       lond(:), sstd(:),
+     &                       lond(:), sstd(:),sstd_bulk(:,:),
      &                       szad(:),bt1d(:),bt2d(:),bt3d(:),bt4d(:)
 
       real*4 undef,tmp
@@ -105,6 +106,7 @@ c
       real (kind=8), allocatable :: delta_t_hr(:,:), time_hr(:) 
       integer :: nmind_obs, nmind_anl, runtime_int
       integer :: run_yr,run_mon,run_day,run_hr,run_min
+      integer, parameter :: nlev_sst = 1
 !****************************************************
 c
 c nz 0 for surface
@@ -117,7 +119,7 @@ c maxsec time span of the nc file in seconds (10min or 1hr in sec)
 c sid satellite id
 c szamx maximum zenith angle
       namelist /satnl/nz,nchan,nchfile,nmax,nobsmx,nobsmxi
-     +                ,maxsec,runtime,sid,szamx
+     +                ,maxsec,runtime,sat_name,sid,szamx
       nz=0
       nobsmx=250000000
       nobsmxi=100000
@@ -170,6 +172,9 @@ c not over snow or ice
       allocate (satidd(nobsmx))
       allocate (typd(nobsmx))
       allocate (sstd(nobsmx))
+!SP      
+      allocate (sstd_bulk(nobsmx,nlev_sst))
+
       allocate (szad(nobsmx))
       allocate (bt1d(nobsmx))
       allocate (bt2d(nobsmx))
@@ -834,12 +839,12 @@ c    +           write(6,*)'n_obs_ist',n_obs_ist
                latdi(n_obs_ist)=yt(j,i)
                londi(n_obs_ist)=xt(j,i)
                satiddi(n_obs_ist)=sid
-               if (flag10(j,i).eq.1) then 
-                typdi(n_obs_ist)=151 !day
-               else
-                typdi(n_obs_ist)=152 !night
-               endif
-               if (flag12(j,i).eq.1) typdi(n_obs_ist)=159 !twylight
+!               if (flag10(j,i).eq.1) then 
+!                typdi(n_obs_ist)=151 !day
+!               else
+!                typdi(n_obs_ist)=152 !night
+!               endif
+!               if (flag12(j,i).eq.1) typdi(n_obs_ist)=159 !twylight
                sstdi(n_obs_ist)=sst(j,i)
                szadi(n_obs_ist)=sza(j,i)
                if (nchan.eq.3) then
@@ -865,23 +870,24 @@ c    +           write(6,*)'n_obs_ist',n_obs_ist
                time_hr(n_obs_sst)=delta_t_hr(j,i)
 !               write(*,*) 'IODA time=',time_hr(n_obs_sst)
                satidd(n_obs_sst)=sid
-               if (flag10(j,i).eq.1) then 
-                typd(n_obs_sst)=151 !day
-               else
-                typd(n_obs_sst)=152 !night
-               endif
-               if (flag12(j,i).eq.1) typd(n_obs_sst)=159 !twylight
-               sstd(n_obs_sst)=sst(j,i)
+!               if (flag10(j,i).eq.1) then 
+!                typd(n_obs_sst)=151 !day
+!               else
+!                typd(n_obs_sst)=152 !night
+!               endif
+!               if (flag12(j,i).eq.1) typd(n_obs_sst)=159 !twylight
+               sstd(n_obs_sst)=sst(j,i)     ! SST skin
+               sstd_bulk(n_obs_sst,nlev_sst) = sst(j,i) - bias(j,i) ! code Sprint March-April, 2019 
                szad(n_obs_sst)=sza(j,i)
                if (nchan.eq.3) then
-               bt1d(n_obs_sst)=bt3(j,i)
-               bt2d(n_obs_sst)=bt1(j,i)
-               bt3d(n_obs_sst)=bt2(j,i)
+                  bt1d(n_obs_sst)=bt3(j,i)
+                  bt2d(n_obs_sst)=bt1(j,i)
+                  bt3d(n_obs_sst)=bt2(j,i)
                else if (nchan.eq.4) then
-               bt1d(n_obs_sst)=bt1(j,i)
-               bt2d(n_obs_sst)=bt2(j,i)
-               bt3d(n_obs_sst)=bt3(j,i)
-               bt4d(n_obs_sst)=bt4(j,i)
+                  bt1d(n_obs_sst)=bt1(j,i)
+                  bt2d(n_obs_sst)=bt2(j,i)
+                  bt3d(n_obs_sst)=bt3(j,i)
+                  bt4d(n_obs_sst)=bt4(j,i)
                endif !nchan
              endif
 
@@ -941,22 +947,18 @@ c    +           write(6,*)'n_obs_ist',n_obs_ist
       enddo ! n cycle over files
       write(6,*)'number and avg change time', nchtim, avchtim/nchtim
       
-!  write out $data.ist.a.${ymdhm} file
-!      if (n_obs_ist.gt.0) then
-!       open(16,form='formatted',access='sequential',status='unknown')
-!       write(16,'(3i10, 2x, a)',err=920) n_obs_ist,nz,nchan,idate(1:10)
-!       close(16)
-!      endif
-! write out $data.sst.a.${ymdhm} file
-
+! Write IODA NetCDF file
       if (n_obs_sst.gt.0) then
          print *, "Writing IODA SST NC4 file"
 !         write(*,*) 'time=',time_hr
-         FNAME_nc ='sst-obs-'//runtime(1:4)//'-'//runtime(5:6)//'-'//
-     +             runtime(7:8)//'.nc'
+! FNAME_NC: ioda.<satellitename>.YYYYMMDDHH.nc
+         FNAME_nc='ioda.'//trim(sat_name)//'.'//runtime//'.nc'
+!         FNAME_nc ='sst-obs-'//runtime(1:4)//'-'//runtime(5:6)//'-'//
+!     +             runtime(7:8)//'.nc'
 !         write(*,*) FNAME_nc
-         call IODA_sst_nc4( FNAME_nc,n_obs_sst,lond,latd,runtime,sstd,
-     +                      errd,time_hr,runtime_int )
+!         write(*,*) sstd(1:10), sstd_bulk(1:10,1)
+         call IODA_sst_nc4( FNAME_nc,n_obs_sst,nlev_sst,lond,latd,
+     +                 runtime,sstd,errd,sstd_bulk,time_hr,runtime_int )
       endif         
 C
 
@@ -1002,9 +1004,9 @@ c
 !*************************************************************************************
 ! IODA netcdf4 
 !************************************************************************************
-      subroutine IODA_sst_nc4 (FNAME_nc,nobs,lon_data,lat_data,runtime, 
-     +             obsValue_data, obsError_data, time_data,runtime_int) 
-!, oceanUpLvlTmp_data) TO BE ADDED LATER
+      subroutine IODA_sst_nc4 (FNAME_nc,nobs,nlev,lon_data,lat_data, 
+     +           runtime,obsValue_data,obsError_data,oceanUpLvlTmp_data, 
+     +           time_data,runtime_int) 
       use netcdf
 
       character (len=10) :: runtime
@@ -1021,14 +1023,14 @@ c
       character (len=50), parameter :: latitude_NAME = "latitude"
       character (len=50), parameter :: time_NAME = "time@MetaData"
       character (len=50), parameter :: obs_sstObsValue_NAME =
-     + "obs_sst@ObsValue"
+     + "sea_surface_temperature@ObsValue"
       character (len=50), parameter :: obs_sstObsError_NAME = 
-     + "obs_sst@ObsError"
+     + "sea_surface_temperature@ObsError"
       character (len=50), parameter :: ocean_UpLVL_Temp_NAME = 
-     + "ocean_upper_level_temperature"
+     + "sea_surface_skin_temperature@ObsValue"
 
-      integer :: ncid, status, nobs
-      integer, parameter :: nrecs=1, nvars=1, nlev=1
+      integer :: ncid, status, nobs, nlev
+      integer, parameter :: nrecs=1, nvars=1 !, nlev=1
       real :: lon_data(nobs), lat_data(nobs), obsValue_data(nobs), 
      +        time_data_real(nobs),obsError_data(nobs), 
      +        oceanUpLvlTmp_data(nobs, nlev)
@@ -1067,7 +1069,7 @@ c
       call check( nf90_def_var(ncid, obs_sstObsError_NAME, nf90_float,
      & nlocsID, obsError_varID) )
       call check( nf90_def_var(ncid, ocean_UpLVL_Temp_NAME, 
-     & nf90_float, (/nlevID, nlocsID/), oceanUpLvlTmp_varID) )
+     & nf90_float, (/nobsID, nlevID/), oceanUpLvlTmp_varID) )
 
       call check ( nf90_put_att(ncid, obsValue_varID, "units", "C"))
       call check ( nf90_put_att(ncid, obsError_varID, "units", "C"))
@@ -1078,19 +1080,14 @@ c
 
 ! End Definition
       call check ( nf90_enddef(ncid) )
-
-!      read(time_data,*) time_data_real
-!       write(*,*) time_data
-!       time_data = 24.1
-! Put values
-      call check ( nf90_put_var(ncid, lon_varID, lon_data))
+      
       call check ( nf90_put_var(ncid, lat_varID, lat_data))
       call check ( nf90_put_var(ncid, time_varID, time_data))
       call check ( nf90_put_var(ncid, obsValue_varID, obsValue_data))
       call check ( nf90_put_var(ncid, obsError_varID, obsError_data))
       call check ( nf90_put_var(ncid, obsError_varID, obsError_data))
-!      call check ( nf90_put_var(ncid, oceanUpLvlTmp_varID, 
-!     +           oceanUpLvlTmp_data))
+      call check ( nf90_put_var(ncid, oceanUpLvlTmp_varID, 
+     +           oceanUpLvlTmp_data))
 
 ! Close NetCDF File
       call check ( nf90_close(ncid) )

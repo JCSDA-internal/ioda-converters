@@ -130,14 +130,15 @@ for OBS in ABI AHI 19_G MTA VIIRS; do
 cat << eof > osatnl 
     &satnl
 
-    nz     = 0,
-    nchan  = $nchan,
-    nchfile= $nchfile,
-    nmax   = $nfiles,
-    maxsec = $maxsec,
-    runtime= $anldate,
-    sid    = $sid,
-    szamx  = 90,
+    nz      = 0,
+    nchan   = $nchan,
+    nchfile = $nchfile,
+    nmax    = $nfiles,
+    maxsec  = $maxsec,
+    runtime = $anldate,
+    sat_name= $DATA,
+    sid     = $sid,
+    szamx   = 90,
     &end
 eof
 
