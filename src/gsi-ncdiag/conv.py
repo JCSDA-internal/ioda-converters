@@ -48,7 +48,72 @@ class Conv:
  if model state fields are in the GSI diag file, create
  GeoVaLs in an output file for use by JEDI/UFO
     """
-    
+    # note, this is a temporary construct and thus, there is no
+    # ioda_conv_ncio or equivalent to handle the format
+    import conv_dicts as cd
+    import numpy as np
+    import netCDF4 as nc
+    # get list of platforms to process for the given obstype
+    try: 
+      platforms = cd.conv_platforms[self.obstype]
+    except:
+      print(self.obstype+" is not currently supported. Exiting.")
+      return
+    # loop through obsvariables and platforms to do processing
+    for v in self.obsvars:
+      for p in platforms:
+        print(p)
+        # set up a NcWriter class
+        outname = OutDir+'/'+p+'_'+v+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        if not clobber:
+          if (os.path.exists(outname)):
+            print("File exists. Skipping and not overwriting:")
+            print(outname)
+            continue
+        OutVars = []
+        InVars = []
+        for ncv in self.df.variables:
+          if ncv in cd.geovals_vars:
+            OutVars.append(cd.geovals_vars[ncv])
+            InVars.append(ncv) 
+
+        idx = grabobsidx(self.df,p,v)
+        if (np.sum(idx)==0):
+          print("No matching observations for:")
+          print("Platform:"+p+" Var:"+v)
+          continue 
+        # set up output file
+	ncout = nc.Dataset(outname,'w',format='NETCDF4')
+        ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+        # get nlocs
+        nlocs = np.sum(idx)
+        ncout.createDimension("nlocs",nlocs)
+        # other dims 
+        ncout.createDimension("nlevs",self.df.dimensions["atmosphere_ln_pressure_coordinate_arr_dim"].size)
+        dimname = "Station_ID_maxstrlen" 
+        ncout.createDimension(dimname, self.df.dimensions[dimname].size)
+        dimname = "Observation_Class_maxstrlen"
+        ncout.createDimension(dimname, self.df.dimensions[dimname].size)
+        for var in self.df.variables.values():
+          vname = var.name
+          if (vname in cd.geovals_metadata_dict.keys()) or (vname in cd.geovals_vars.keys()):
+            vdata = self.df.variables[vname]
+            if vname in cd.geovals_metadata_dict.keys():
+              dims = ("nlocs",)+var.dimensions[1:]
+              var_out = ncout.createVariable(cd.geovals_metadata_dict[vname], vdata.dtype, dims)
+              var_out[...] = vdata[idx,...]
+            if vname in cd.geovals_vars.keys():
+              if (len(var.dimensions) == 1):
+                dims = ("nlocs",)
+              else:
+                dims = ("nlocs", "nlevs")
+              var_out = ncout.createVariable(cd.geovals_vars[vname], vdata.dtype, dims)
+              var_out[:] = vdata[idx,:]
+              # also output pressure not just ln pressure
+              if vname == "atmosphere_ln_pressure_coordinate":
+                var_out = ncout.createVariable("air_pressure", vdata.dtype, dims)
+                var_out[:] = 1000.*np.exp(vdata[idx,:])
+        ncout.close() 
 
   def toIODAobs(self,OutDir,clobber=True):
     """ toIODAobs(OutDir,clobber=True)
@@ -57,8 +122,8 @@ class Conv:
     """ 
     import ioda_conv_ncio as iconv
     import os
-    import conv_dicts as cd
     from collections import defaultdict
+    import conv_dicts as cd
     import numpy as np
     # get list of platforms to process for the given obstype
     try: 
@@ -98,8 +163,9 @@ class Conv:
         # grab obs to process
         idx = grabobsidx(self.df,p,v)
         if (np.sum(idx)==0):
-          print("No matching observations... returning")
-          return
+          print("No matching observations for:")
+          print("Platform:"+p+" Var:"+v)
+          continue 
         for o in range(len(outvars)):
 	  obsdata = self.df[cd.gsivarnames[v][o]][idx]
 	  obserr = 1.0/self.df['Errinv_Input'][idx]
