@@ -97,7 +97,10 @@ class Conv:
         for var in self.df.variables.values():
           vname = var.name
           if (vname in cd.geovals_metadata_dict.keys()) or (vname in cd.geovals_vars.keys()):
-            vdata = self.df.variables[vname]
+            vdata = var[...].data
+            dims = tuple([len(self.df.dimensions[d]) for d in var.dimensions])
+            vdata = np.frombuffer(vdata,dtype=var.dtype)
+            vdata = np.reshape(vdata,dims)
             if vname in cd.geovals_metadata_dict.keys():
               dims = ("nlocs",)+var.dimensions[1:]
               var_out = ncout.createVariable(cd.geovals_metadata_dict[vname], vdata.dtype, dims)
@@ -108,11 +111,11 @@ class Conv:
               else:
                 dims = ("nlocs", "nlevs")
               var_out = ncout.createVariable(cd.geovals_vars[vname], vdata.dtype, dims)
-              var_out[:] = vdata[idx,:]
+              var_out[...] = vdata[idx,...]
               # also output pressure not just ln pressure
               if vname == "atmosphere_ln_pressure_coordinate":
-                var_out = ncout.createVariable("air_pressure", vdata.dtype, dims)
-                var_out[:] = 1000.*np.exp(vdata[idx,:])
+                var_out = ncout.createVariable(u"air_pressure", vdata.dtype, dims)
+                var_out[...] = 1000.*np.exp(vdata[idx,...])
         ncout.close() 
 
   def toIODAobs(self,OutDir,clobber=True):
