@@ -311,6 +311,8 @@ class NcWriter(object):
 
         # Walk through the structure and get counts so arrays
         # can be preallocated, and variable numbers can be assigned
+	ObsVarList = []
+        ObsVarExamples = []
         for RecKey, RecDict in ObsData.items():
             self._nrecs += 1
             for LocKey, LocDict in RecDict.items():
@@ -318,6 +320,9 @@ class NcWriter(object):
                 for VarKey, VarVal in LocDict.items():
                     if (VarKey[1] == self._oval_name):
                         VarNames.add(VarKey[0])
+		    if (VarKey[1] not in ObsVarList):
+		        ObsVarList.append(VarKey[1])
+		        ObsVarExamples.append(VarVal)
 
         VarList = list(VarNames)
         self._nvars = len(VarList)
@@ -328,11 +333,27 @@ class NcWriter(object):
             VarMap[VarList[i]] = i
 
         # Preallocate arrays and fill them up with data from the dictionary
-        ObsVars = {
-            self._oval_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
-            self._oerr_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
-            self._oqc_name   : np.full((self._nvars, self._nlocs), self._defaultI4),
-            }
+        #ObsVars = {
+        #    self._oval_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
+        #    self._oerr_name  : np.full((self._nvars, self._nlocs), self._defaultF4),
+        #    self._oqc_name   : np.full((self._nvars, self._nlocs), self._defaultI4),
+        #    }
+	ObsVars = {}
+	for o in range(len(ObsVarList)):
+	    NumpyDtype = ObsVarExamples[o].dtype 
+            if (NumpyDtype == np.dtype('float64')):
+                defaultval = self._defaultF4    # convert double to float
+            elif (NumpyDtype == np.dtype('float32')):
+                defaultval = self._defaultF4
+            elif (NumpyDtype == np.dtype('int64')):
+                defaultval = self._defaultI4    # convert long to int
+            elif (NumpyDtype == np.dtype('int32')):
+                defaultval = self._defaultI4
+            elif (NumpyDtype == np.dtype('S1')):
+                defaultval = ''
+            else:
+	        continue
+            ObsVars[ObsVarList[o]] = np.full((self._nvars, self._nlocs), defaultval)
 
         LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):
@@ -381,12 +402,13 @@ class NcWriter(object):
 
                 for VarKey, VarVal in LocDict.items():
                     VarNum = VarMap[VarKey[0]]
-                    if (VarKey[1] == self._oval_name):
-                        ObsVars[self._oval_name][VarNum, LocNum-1] = VarVal
-                    elif (VarKey[1] == self._oerr_name):
-                        ObsVars[self._oerr_name][VarNum, LocNum-1] = VarVal
-                    elif (VarKey[1] == self._oqc_name):
-                        ObsVars[self._oqc_name][VarNum, LocNum-1] = VarVal
+                    #if (VarKey[1] == self._oval_name):
+                    #    ObsVars[self._oval_name][VarNum, LocNum-1] = VarVal
+                    #elif (VarKey[1] == self._oerr_name):
+                    #    ObsVars[self._oerr_name][VarNum, LocNum-1] = VarVal
+                    #elif (VarKey[1] == self._oqc_name):
+                    #    ObsVars[self._oqc_name][VarNum, LocNum-1] = VarVal
+		    ObsVars[VarKey[1]][VarNum, LocNum-1] = VarVal
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
 
