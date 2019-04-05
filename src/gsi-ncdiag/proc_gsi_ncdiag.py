@@ -7,11 +7,18 @@ import glob
 
 import conv
 
-def run_conv(convfile,outdir):
+def run_conv_obs(convfile,outdir):
   print("Processing:"+str(convfile))
   Diag = conv.Conv(convfile)
   Diag.read()
   Diag.toIODAobs(outdir)
+  return 0
+
+def run_conv_geo(convfile,outdir):
+  print("Processing:"+str(convfile))
+  Diag = conv.Conv(convfile)
+  Diag.read()
+  Diag.toGeovals(outdir)
   return 0
 
 ScriptName = os.path.basename(sys.argv[0])
@@ -40,10 +47,18 @@ if MyArgs.obs_dir:
   convfiles = glob.glob(DiagDir+'/*conv*') 
   obspool = Pool(processes=nprocs)
   for convfile in convfiles:
-    res = obspool.apply_async(run_conv,args=(convfile,ObsDir))
+    res = obspool.apply_async(run_conv_obs,args=(convfile,ObsDir))
   obspool.close()
   obspool.join()
 
 # process geovals files
 if MyArgs.geovals_dir:
-  pass
+  GeoDir=MyArgs.geovals_dir
+  ### conventional obs first
+  # get list of conv diag files
+  convfiles = glob.glob(DiagDir+'/*conv*') 
+  obspool = Pool(processes=nprocs)
+  for convfile in convfiles:
+    res = obspool.apply_async(run_conv_geo,args=(convfile,ObsDir))
+  obspool.close()
+  obspool.join()
