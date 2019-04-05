@@ -27,8 +27,10 @@ class Conv:
     # below is because T has both T and Tv, others should just be 'value' but flexibility for later (GPS?)
     if self.obstype == 'conv_t':
       self.obsvars = ['tv','tsen']
+    elif self.obstype == 'conv_gps':
+      self.obsvars = ['bend','refract']
     else:
-      self.obsvars = [splitfname[i+2]]
+      self.obsvars = [splitfname[i+i]]
 
   def read(self):
     import netCDF4 as nc
@@ -59,7 +61,11 @@ class Conv:
     from collections import defaultdict
     import numpy as np
     # get list of platforms to process for the given obstype
-    platforms = cd.conv_platforms[self.obstype]
+    try: 
+      platforms = cd.conv_platforms[self.obstype]
+    except:
+      print(self.obstype+" is not currently supported. Exiting.")
+      return
     # loop through obsvariables and platforms to do processing
     for v in self.obsvars:
       for p in platforms:
@@ -78,6 +84,7 @@ class Conv:
           if ncv in cd.LocKeyList:
             LocKeyList.append(cd.LocKeyList[ncv])
 	    LocVars.append(ncv)
+        LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
         # for now, record len is 1 and the list is empty?
         recKey=0
         writer = iconv.NcWriter(outname,RecKeyList,LocKeyList)
@@ -90,15 +97,31 @@ class Conv:
 
         # grab obs to process
         idx = grabobsidx(self.df,p,v)
+        if (np.sum(idx)==0):
+          print("No matching observations... returning")
+          return
         for o in range(len(outvars)):
 	  obsdata = self.df[cd.gsivarnames[v][o]][idx]
 	  obserr = 1.0/self.df['Errinv_Input'][idx]
-	  obsqc = self.df['Prep_QC_Mark'][idx]
+          try:
+	    obsqc = self.df['Prep_QC_Mark'][idx]
+	  except:
+            obsqc = np.ones_like(obsdata)*2
           gsivars = cd.gsi_add_vars
           gsimeta = {}
           for key, value in gsivars.items():
-            gsimeta[key] = self.df[key][idx] 
-            print(gsimeta[key].shape)
+	    # some special actions need to be taken depending on var name...
+            if "Errinv" in key:
+              gsimeta[key] = 1.0/self.df[key][idx]
+            elif "Forecast" in key:
+	      if "u_Obs" in key:
+                gsimeta[key] = self.df['u_Observation'][idx] - self.df[key][idx]
+              elif "v_Obs" in key:
+                gsimeta[key] = self.df['v_Observation'][idx] - self.df[key][idx]
+              else:
+                gsimeta[key] = self.df['Observation'][idx] - self.df[key][idx]
+            else:
+              gsimeta[key] = self.df[key][idx] 
           locKeys = []
           for l in LocVars:
             if l == 'Station_ID':
@@ -106,6 +129,7 @@ class Conv:
               locKeys.append([''.join(tmp[a]) for a in range(len(tmp))])
             else:
               locKeys.append(self.df[l][idx])
+          locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
           locKeys = np.swapaxes(np.array(locKeys),0,1)
           locKeys = [tuple(a) for a in locKeys]
           # not sure how to do this without a loop since it's a dict...
@@ -116,10 +140,10 @@ class Conv:
             outdata[recKey][locKeys[i]][varDict[outvars[o]]['errKey']] = obserr[i]
             # observation prep qc mark
             outdata[recKey][locKeys[i]][varDict[outvars[o]]['qcKey']] = obsqc[i]
+	    #print(i,obsdata[i], outdata[recKey][locKeys[i]][varDict[outvars[o]]['valKey']])
             # add additional GSI variables that are not needed long term but useful for testing
             for key, value in gsivars.items():
               gvname = outvars[o],value
-              print(gvname)
               outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i] 
           
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -143,6 +167,12 @@ def grabobsidx(obsdata,platform,var):
       idx2 = (iqt != 0)
     elif var == 'tv':
       idx2 = (iqt == 0)
+  elif var in ['bend','refract']:
+    igps = obsdata['GPS_Type'][:]
+    if var == 'bend':
+      idx2 = (igps !=0)
+    elif var == 'refract':
+      idx2 = (igps ==0) 
   else:
     # to be consistent
     idx2 = (code > -999)
