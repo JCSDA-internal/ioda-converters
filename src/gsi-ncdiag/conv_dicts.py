@@ -96,11 +96,6 @@ gsivarnames = {
 #	'Wind_Reduction_Factor_at_10m': 'gsi_wind_red_factor',
 #}
 
-#geovals_metadata_dict = {
-#	'Latitude':   'latitude',
-#	'Longitude':  'longitude',
-#	'Time':       'time',
-#}
 gsi_add_vars = {
 	'Observation_Type'  : 'ObsType',
 	'Prep_Use_Flag'     : 'PreUseFlag',
@@ -135,9 +130,22 @@ gsi_add_vars = {
 #	'v_Obs_Minus_Forecast_unadjusted' : 'northward_wind@GsiHofX',
 #}
 #
-#geovals_vars  = (
-#	'virtual_temperature', 'atmosphere_ln_pressure_coordinate',
-#	'air_temperature', 'specific_humidity', 'northward_wind',
-#	'eastward_wind', 'geopotential_height', 'height', 'surface_pressure',
-#)
 
+# geovals_vars = {gsiname:geoval_name}
+geovals_vars = {
+	'virtual_temperature':'virtual_temperature', 
+	'atmosphere_ln_pressure_coordinate':'atmosphere_ln_pressure_coordinate',	
+	'air_temperature':'air_temperature',
+	'specific_humidity':'specific_humidity',
+	'northward_wind':'northward_wind',
+	'eastward_wind':'eastward_wind',
+	'geopotential_height':'geopotential_height',
+	'height':'height_above_mean_sea_level',
+	'surface_pressure':'surface_pressure',
+}
+
+geovals_metadata_dict = {
+	'Latitude':   'latitude',
+	'Longitude':  'longitude',
+	'Time':       'time',
+}
