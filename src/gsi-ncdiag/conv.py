@@ -12,7 +12,6 @@ class Conv:
     filename    - string path to file
     validtime   - datetime object of valid observation time
     nobs        - number of observations
-    data	- data in format for NcWriter
     
 
 """
@@ -62,8 +61,6 @@ class Conv:
     # loop through obsvariables and platforms to do processing
     for v in self.obsvars:
       for p in platforms:
-        print(p)
-        # set up a NcWriter class
         outname = OutDir+'/'+p+'_'+v+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
           if (os.path.exists(outname)):

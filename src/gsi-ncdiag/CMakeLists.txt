@@ -1,9 +1,7 @@
 install (PROGRAMS
-  cat_nc_files.py
-  select_nc_obs.py
-  prep_nc_files.py
-  list_sid_raob.py
-  split_conv.py
-  run_prep_nc_files.sh
-  run_select_nc_obs.sh
+  conv.py
+  radiances.py
+  conv_dicts.py
+  rad_dicts.py
+  proc_gsi_ncdiag.py 
   DESTINATION bin)
