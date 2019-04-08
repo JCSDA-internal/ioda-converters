@@ -313,18 +313,29 @@ class NcWriter(object):
         # can be preallocated, and variable numbers can be assigned
 	ObsVarList = []
         ObsVarExamples = []
+        VMName = []
+        VMExamples = []
+        VMData = {}
         for RecKey, RecDict in ObsData.items():
             self._nrecs += 1
             for LocKey, LocDict in RecDict.items():
-                self._nlocs += 1
-                for VarKey, VarVal in LocDict.items():
-                    if (VarKey[1] == self._oval_name):
-                        VarNames.add(VarKey[0])
-		    if (VarKey[1] not in ObsVarList):
-		        ObsVarList.append(VarKey[1])
-		        ObsVarExamples.append(VarVal)
+                if LocKey != 'VarMetaData':
+                      self._nlocs += 1
+                      for VarKey, VarVal in LocDict.items():
+                           if (VarKey[1] == self._oval_name):
+                               VarNames.add(VarKey[0])
+		           if (VarKey[1] not in ObsVarList):
+		               ObsVarList.append(VarKey[1])
+		               ObsVarExamples.append(VarVal)
+                else:
+                      for MetaKey, MetaVal in LocDict.items():
+                           VMData[MetaKey] = MetaVal
+                           if MetaKey[1] not in VMName:
+                              VMName.append(MetaKey[1])
+                              VMExamples.append(MetaVal)
+            del RecDict['VarMetaData']
 
-        VarList = list(VarNames)
+        VarList = sorted(list(VarNames))
         self._nvars = len(VarList)
         self._nobs = self._nvars * self._nlocs
 
@@ -374,6 +385,26 @@ class NcWriter(object):
             RecMdata[RecVname] = self.CreateNcVector(self._nrecs, RecVtype)
 
         VarMdata[self._var_list_name] = self.FillNcVector(VarList, "string")
+
+        # VarMetaData
+        for v in range(len(VMName)):
+          vmdvals = []
+          for i in range(len(VarList)):
+            vmdvals.append(VMData[(VarList[i],VMName[v])])
+	  NumpyDtype = vmdvals[0].dtype
+          if (NumpyDtype == np.dtype('float64')):
+              vmdvtype = 'float' 
+          elif (NumpyDtype == np.dtype('float32')):
+              vmdvtype = 'float' 
+          elif (NumpyDtype == np.dtype('int64')):
+              vmdvtype = 'integer' 
+          elif (NumpyDtype == np.dtype('int32')):
+              vmdvtype = 'integer' 
+          elif (NumpyDtype == np.dtype('S1')):
+              vmdvtype = 'string' 
+          VarMdata[VMName[v]] = self.CreateNcVector(self._nvars, vmdvtype)
+          VarMdata[VMName[v]] = self.FillNcVector(np.array(vmdvals),vmdvtype)
+              
 
         RecNum = 0
         LocNum = 0
