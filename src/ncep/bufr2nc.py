@@ -2,12 +2,9 @@
 
 from __future__ import print_function
 import ncepbufr
-import numpy as np
 import sys
 import os
-import re
 import argparse
-import netCDF4
 from netCDF4 import Dataset
 
 import bufr2ncCommon as cm
@@ -17,6 +14,7 @@ import bufr2ncObsTypes as ot
 # SUBROUTINES
 ###################################################################################
 
+
 def BfilePreprocess(BufrFname, Obs):
     # This routine will read the BUFR file and figure out how many observations
     # will be read when recording data.
@@ -25,14 +23,15 @@ def BfilePreprocess(BufrFname, Obs):
 
     # The number of observations will be equal to the total number of subsets
     # contained in the selected messages.
-    NumObs = 0 
+    NumObs = 0
     Obs.start_msg_selector()
-    while (Obs.select_next_msg(bufr)): 
+    while (Obs.select_next_msg(bufr)):
         NumObs += Obs.msg_obs_count(bufr)
 
     bufr.close()
 
-    return [ NumObs, Obs.num_msg_selected, Obs.num_msg_mtype ] 
+    return [NumObs, Obs.num_msg_selected, Obs.num_msg_mtype]
+
 
 ###################################################################################
 # MAIN
@@ -68,17 +67,20 @@ else:
 
 # Check files
 BadArgs = False
-if (not os.path.isfile(BufrFname)): 
-    print("ERROR: {0:s}: Specified input BUFR file does not exist: {1:s}".format(ScriptName, BufrFname))
+if (not os.path.isfile(BufrFname)):
+    print("ERROR: {0:s}: Specified input BUFR file does not exist: {1:s}".format(
+        ScriptName, BufrFname))
     print("")
     BadArgs = True
 
 if (os.path.isfile(NetcdfFname)):
     if (ClobberOfile):
-        print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(ScriptName, NetcdfFname))
+        print("WARNING: {0:s}: Overwriting nc file: {1:s}".format(
+            ScriptName, NetcdfFname))
         print("")
     else:
-        print("ERROR: {0:s}: Specified nc file already exists: {1:s}".format(ScriptName, NetcdfFname))
+        print("ERROR: {0:s}: Specified nc file already exists: {1:s}".format(
+            ScriptName, NetcdfFname))
         print("ERROR: {0:s}:   Use -c option to overwrite.".format(ScriptName))
         print("")
         BadArgs = True
@@ -93,16 +95,19 @@ elif (ObsType == 'Amsua'):
 elif (ObsType == 'Gpsro'):
     Obs = ot.GpsroObsType(BfileType)
 else:
-    print("ERROR: {0:s}: Unknown observation type: {1:s}".format(ScriptName, ObsType))
+    print("ERROR: {0:s}: Unknown observation type: {1:s}".format(
+        ScriptName, ObsType))
     print("")
     BadArgs = True
 
 if (not BadArgs):
     if (Obs.mtype_re == 'UnDef'):
         if (BfileType == cm.BFILE_BUFR):
-            print("ERROR: {0:s}: Observation type {1:s} for BUFR format is undefined".format(ScriptName, ObsType))
+            print("ERROR: {0:s}: Observation type {1:s} for BUFR format is undefined".format(
+                ScriptName, ObsType))
         elif (BfileType == cm.BFILE_PREPBUFR):
-            print("ERROR: {0:s}: Observation type {1:s} for prepBUFR format is undefined".format(ScriptName, ObsType))
+            print("ERROR: {0:s}: Observation type {1:s} for prepBUFR format is undefined".format(
+                ScriptName, ObsType))
         print("")
         BadArgs = True
 
@@ -121,7 +126,8 @@ elif (BfileType == cm.BFILE_PREPBUFR):
     print("  Input BUFR file (prepBUFR format): {0:s}".format(BufrFname))
 print("  Output netCDF file: {0:s}".format(NetcdfFname))
 if (MaxNumMsg > 0):
-    print("  Limiting nubmer of messages to record to {0:d} messages".format(MaxNumMsg))
+    print(
+        "  Limiting nubmer of messages to record to {0:d} messages".format(MaxNumMsg))
 if (ThinInterval > 1):
     print("  Thining: selecting every {0:d}-th message".format(ThinInterval))
 print("")
@@ -147,9 +153,10 @@ print("")
 # will be set to the total number of messages that match Obs.mtype_re in the file.
 Obs.max_num_msg = MaxNumMsg
 Obs.thin_interval = ThinInterval
-[NumObs, NumMsgs, TotalMsgs ] = BfilePreprocess(BufrFname, Obs)
+[NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)
 
-print("  Total number of messages that match obs type {0:s}: {1:d}".format(ObsType, TotalMsgs))
+print("  Total number of messages that match obs type {0:s}: {1:d}".format(
+    ObsType, TotalMsgs))
 print("  Number of messages selected: {0:d}".format(NumMsgs))
 print("  Number of observations selected: {0:d}".format(NumObs))
 print("")
