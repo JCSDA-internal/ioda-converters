@@ -85,17 +85,6 @@ gsivarnames = {
 	"refract": ["Observation"],
 }
 
-#metadata_dict = {
-#	'Station_ID': 'station_id',
-#	'Latitude':   'latitude',
-#	'Longitude':  'longitude',
-#	'Station_Elevation': 'station_elevation',
-#	'Pressure':   'air_pressure',
-#	'Height':     'height',
-#	'Time':       'time',
-#	'Wind_Reduction_Factor_at_10m': 'gsi_wind_red_factor',
-#}
-
 gsi_add_vars = {
 	'Observation_Type'  : 'ObsType',
 	'Prep_Use_Flag'     : 'PreUseFlag',
@@ -106,30 +95,6 @@ gsi_add_vars = {
 	'Obs_Minus_Forecast_adjusted' : 'GsiHofXBc',
 	'Obs_Minus_Forecast_unadjusted' : 'GsiHofX',
 }
-
-#variables_dict = {
-#	'Observation_Type'  : 'ObsType',
-#	'Prep_QC_Mark'      : 'PreQC',
-#	'Prep_Use_Flag'     : 'PreUseFlag',
-#	'Analysis_Use_Flag' : 'GsiUseFlag',
-#	'Nonlinear_QC_Rel_Wgt' : 'GsiQCWeight',
-#	'Errinv_Input'      : 'ObsError',
-#	'Errinv_Adjust'     : 'GsiAdjustObsError',
-#	'Errinv_Final'      : 'GsiFinalObsError',
-#	'Observation'       : 'ObsValue', 
-#	'Obs_Minus_Forecast_adjusted' : 'GsiHofXBc',
-#	'Obs_Minus_Forecast_unadjusted' : 'GsiHofX',
-#}
-#
-#uv_variables_dict = {
-#	'u_Observation': 'eastward_wind@ObsValue',
-#	'v_Observation': 'northward_wind@ObsValue',
-#	'u_Obs_Minus_Forecast_adjusted' : 'eastward_wind@GsiHofXBc',
-#	'v_Obs_Minus_Forecast_adjusted' : 'northward_wind@GsiHofXBc',
-#	'u_Obs_Minus_Forecast_unadjusted' : 'eastward_wind@GsiHofX',
-#	'v_Obs_Minus_Forecast_unadjusted' : 'northward_wind@GsiHofX',
-#}
-#
 
 # geovals_vars = {gsiname:geoval_name}
 geovals_vars = {

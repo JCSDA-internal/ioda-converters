@@ -20,11 +20,8 @@ geovals_metadata_dict = {
 }
 
 gsi_add_vars = {
-	#'Inverse_Observation_Error': 'GsiFinalObsError',
 	'Obs_Minus_Forecast_adjusted' : 'GsiHofXBc',
 	'Obs_Minus_Forecast_unadjusted' : 'GsiHofX',
-	#'Obs_Minus_Forecast_unadjusted_clrsky' : 'GsiHofXClrsky',
-	#'QC_Flag' : 'GsiQC',
 }
 
 chan_metadata_dict = {

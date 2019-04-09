@@ -206,7 +206,6 @@ class Conv:
             outdata[recKey][locKeys[i]][varDict[outvars[o]]['errKey']] = obserr[i]
             # observation prep qc mark
             outdata[recKey][locKeys[i]][varDict[outvars[o]]['qcKey']] = obsqc[i]
-	    #print(i,obsdata[i], outdata[recKey][locKeys[i]][varDict[outvars[o]]['valKey']])
             # add additional GSI variables that are not needed long term but useful for testing
             for key, value in gsivars.items():
               gvname = outvars[o],value
