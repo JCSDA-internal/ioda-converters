@@ -1,169 +1,281 @@
 #!/usr/bin/env python
 
+#
+# (C) Copyright 2019 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
 from __future__ import print_function
 import argparse
 import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-from collections import defaultdict
 import numpy as np
+from multiprocessing import Pool
+import os
 
 
-sst_name = "sea_surface_temperature",
-sst_skin_name = "sea_surface_skin_temperature",
+output_var_names = [
+    "sea_surface_temperature",
+    "sea_surface_skin_temperature"]
 
 
-input_vars = (
-    'quality_level',
-    'sst_dtime',
-    'sses_bias',
-    'sses_standard_deviation',
-    'sea_surface_temperature')
+def read_input(input_file):
+    """
+    Reads/converts a single input file, performing optional thinning also.
+    In addition to the input argument, the global_config structure needs to
+    be populated from outside the functions as well.
+
+    Arguments:
+
+        input_file: The name of file to read
+
+    Returns:
+
+        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
+    """
+    global global_config
+
+    print("Reading ", input_file)
+    ncd = nc.Dataset(input_file, 'r')
+
+    # get the base time (should only have 1 or 2 time slots)
+    time_base = ncd.variables['time'][:]
+    basetime = dateutil.parser.parse(ncd.variables['time'].units[-20:])
+
+    # get some of the global attributes that we are interested in
+    attr_data = {}
+    for v in ('platform', 'sensor', 'processing_level'):
+        attr_data[v] = ncd.getncattr(v)
+
+    # get the QC flags, and calculate a mask from the non-missing values
+    # (since L3 files are mostly empty, fields need a mask applied immediately
+    # to avoid using way too much memory)
+    data_in = {}
+    data_in['quality_level'] = ncd.variables['quality_level'][:].ravel()
+    mask = data_in['quality_level'] >= 0
+    data_in['quality_level'] = data_in['quality_level'][mask]
+
+    # Determine the lat/lon grid.
+    # If L3, we need to convert 1D lat/lon to 2D lat/lon.
+    # If len(time) > 1, also need to repeat the lat/lon vals
+    lons = ncd.variables['lon'][:].ravel()
+    lats = ncd.variables['lat'][:].ravel()
+    if attr_data['processing_level'][:2] == 'L3':
+        len_grid = len(lons)*len(lats)
+        lons, lats = np.meshgrid(lons, lats, copy=False)
+        lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
+        lats = np.tile(lats.ravel(), len(time_base)).ravel()[mask]
+    else:
+        len_grid = len(lons)
+        lons = np.tile(lons, len(time_base)).ravel()[mask]
+        lats = np.tile(lats, len(time_base)).ravel()[mask]
+
+    # calculate the basetime offsets
+    time = np.tile(np.atleast_2d(time_base).T, (1, len_grid)).ravel()[mask]
+
+    # load in all the other data and apply the missing value mask
+    input_vars = (
+        'quality_level',
+        'sst_dtime',
+        'sses_bias',
+        'sses_standard_deviation',
+        'sea_surface_temperature')
+    for v in input_vars:
+        if v not in data_in:
+            data_in[v] = ncd.variables[v][:].ravel()[mask]
+    ncd.close()
+
+    # Create a mask for optional random thinning
+    np.random.seed(
+        int((global_config['date']-datetime(1970, 1, 1)).total_seconds()))
+    mask = np.random.uniform(size=len(lons)) > args.thin
+
+    # also, sometimes certain input variables have their own mask due to
+    # missing values
+    for v in input_vars:
+        if np.ma.is_masked(data_in[v]):
+            mask = np.logical_and(mask, np.logical_not(data_in[v].mask))
+
+    # apply the masks for thinning and missing values
+    time = time[mask]
+    lons = lons[mask]
+    lats = lats[mask]
+    for v in input_vars:
+        data_in[v] = data_in[v][mask]
+
+    # create a string version of the date for each observation
+    dates = []
+    for i in range(len(lons)):
+        obs_date = basetime + \
+            timedelta(seconds=float(time[i]+data_in['sst_dtime'][i]))
+        dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+    # calculate output values
+    # Note: the qc flags in GDS2.0 run from 0 to 5, with higher numbers
+    # being better. IODA typically expects 0 to be good, and higher numbers
+    # are bad, so the qc flags flipped here.
+    # TODO change everything in soca to handle K instead of C ?
+    val_sst_skin = data_in['sea_surface_temperature'] - 273.15
+    val_sst = val_sst_skin - data_in['sses_bias']
+    err = data_in['sses_standard_deviation']
+    qc = 5 - data_in['quality_level']
+
+    # allocate space for output depending on which variables are to be saved
+    num_vars = 0
+    if global_config['output_sst']:
+        num_vars += 1
+    if global_config['output_skin_sst']:
+        num_vars += 1
+    obs_dim = (num_vars, len(lons))
+    obs_data = {
+        global_config['oval_name']: np.zeros(obs_dim),
+        global_config['oerr_name']: np.zeros(obs_dim),
+        global_config['opqc_name']: np.zeros(obs_dim),
+    }
+
+    # create the final output structures
+    loc_data = {
+        'latitude': lats,
+        'longitude': lons,
+        'date_time': dates,
+    }
+    idx = 0
+    if global_config['output_sst']:
+        obs_data[global_config['oval_name']][idx, :] = val_sst
+        obs_data[global_config['oerr_name']][idx, :] = err
+        obs_data[global_config['opqc_name']][idx, :] = qc
+        idx += 1
+    if global_config['output_skin_sst']:
+        obs_data[global_config['oval_name']][idx, :] = val_sst_skin
+        obs_data[global_config['oerr_name']][idx, :] = err
+        obs_data[global_config['opqc_name']][idx, :] = qc
+
+    return (obs_data, loc_data, attr_data)
 
 
-class Observation(object):
-
-    def __init__(self, filename, date, writer):
-
-        self.filename = filename
-        self.date = date
-        self.data = defaultdict(lambda: defaultdict(dict))
-        self.writer = writer
-        self._read()
-
-    def _read(self):
-
-        sst_valKey = sst_name, self.writer.OvalName()
-        sst_errKey = sst_name, self.writer.OerrName()
-        sst_qcKey = sst_name, self.writer.OqcName()
-
-        sst_skin_valKey = sst_skin_name, self.writer.OvalName()
-        sst_skin_errKey = sst_skin_name, self.writer.OerrName()
-        sst_skin_qcKey = sst_skin_name, self.writer.OqcName()
-
-        np.random.seed(int((self.date-datetime(1970, 1, 1)).total_seconds()))
-
-        for f in self.filename:
-            ncd = nc.Dataset(f, 'r')
-            lvl = ncd.processing_level
-            time_base = ncd.variables['time'][:]
-            basetime = dateutil.parser.parse(ncd.variables['time'].units[-20:])
-
-            print(f)
-
-            # other global attributes we might want saved to the output file
-            for v in ('source', 'platform', 'sensor'):
-                AttrData[v] = ncd.getncattr(v)
-
-            # Determine the lat/lon grid.
-            # If L3, we need to convert 1D lat/lon to 2D lat/lon.
-            # If len(time) > 1, also need to repeat the lat/lon vals
-            lons = ncd.variables['lon'][:].ravel()
-            lats = ncd.variables['lat'][:].ravel()
-            if lvl[:2] == 'L3':
-                lons, lats = np.meshgrid(lons, lats)
-                lons = lons.ravel()
-                lats = lats.ravel()
-            lons = np.tile(lons, len(time_base)).ravel()
-            lats = np.tile(lats, len(time_base)).ravel()
-
-            # calculate the time offsets
-            time = np.tile(np.zeros(len(lons) / len(time_base)),
-                           (len(time_base), 1))
-            for i in range(len(time_base)):
-                time[i, :] = time_base[i]
-            time = time.ravel()
-
-            # load in all the other data
-            data = {}
-            for v in input_vars:
-                data[v] = ncd.variables[v][:].ravel()
-
-            # TODO: this is a currently a hack.
-            #  all questionable obs are removed.
-            #  This should be changed to include all obs and their qc flags
-            #  once the preqc filter works
-            mask = data['quality_level'] == 5
-
-            # TODO: this is also currently a hack.
-            #  jedi is not handling thinning the way I need, so
-            #  obs are optionally thinned here.
-            #  This should be removed once OOPS thins in a better way.
-            mask_thin = np.random.uniform(size=len(mask)) > args.thin
-            mask = np.logical_and(mask, mask_thin)
-
-            # sometimes the input variables have masks
-            for v in input_vars:
-                if np.ma.is_masked(data[v]):
-                    mask = np.logical_and(mask,
-                                          np.logical_not(data[v].mask))
-
-            # apply the masks
-            time = time[mask]
-            lons = lons[mask]
-            lats = lats[mask]
-            for v in input_vars:
-                data[v] = data[v][mask]
-
-            # calculate output values
-            sst_skin = data['sea_surface_temperature'] - 273.15
-            sst_bulk = sst_skin - data['sses_bias']
-
-            # for each observation, save it to the dictionary
-            for i in range(len(lons)):
-                obs_date = basetime + \
-                    timedelta(seconds=float(time[i]+data['sst_dtime'][i]))
-                locKey = lats[i], lons[i], obs_date.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ")
-
-                self.data[0][locKey][sst_valKey] = sst_bulk[i]
-                self.data[0][locKey][sst_errKey] = data['sses_standard_deviation'][i]
-                self.data[0][locKey][sst_qcKey] = 5 - data['quality_level'][i]
-
-                self.data[0][locKey][sst_skin_valKey] = sst_skin[i]
-                self.data[0][locKey][sst_skin_errKey] = data['sses_standard_deviation'][i]
-                self.data[0][locKey][sst_skin_qcKey] = 5 - \
-                    data['quality_level'][i]
-
-
-locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("date_time", "string")
-]
-
-AttrData = {
-    'odb_version': 1,
-}
+###############################################################################
+###############################################################################
 
 
 if __name__ == '__main__':
+
+    # Get command line arguments
     parser = argparse.ArgumentParser(
-        description=('')
+        description=(
+            'Reads the sea surface temperature from any GHRRST Data '
+            ' Specification (GDS2.0) formatted L2 or L3 file(s) and converts'
+            ' into IODA formatted output files. Multiple files are concatenated,'
+            ' and optional thinning can be performed.')
     )
-    parser.add_argument('-i', '--input',
-                        help="GHRSST GDS2.0 generic SST obs input files (wild cards or list)",
-                        type=str, nargs='+', required=True)
-    parser.add_argument('-o', '--output',
-                        help="name of ioda output file",
-                        type=str, required=True)
-    parser.add_argument('-d', '--date',
-                        help="base date", type=str, required=True)
-    parser.add_argument('-t', '--thin',
-                        help="amount of random thinning, from 0.0 to 1.0",
-                        type=float, default=0.0)
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
+        '-i', '--input',
+        help="path of GHRSST GDS2.0 SST observation input file(s)",
+        type=str, nargs='+', required=True)
+    required.add_argument(
+        '-o', '--output',
+        help="path of IODA output file",
+        type=str, required=True)
+    required.add_argument(
+        '-d', '--date',
+        metavar="YYYYMMDDHH",
+        help="base date for the center of the window",
+        type=str, required=True)
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-t', '--thin',
+        help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
+             " no thinning is performed. (default: %(default)s)",
+        type=float, default=0.0)
+    optional.add_argument(
+        '--threads',
+        help='multiple threads can be used to load input files in parallel.'
+             ' (default: %(default)s)',
+        type=int, default=1)
+    optional.add_argument(
+        '--sst',
+        help='if set, only the bias corrected bulk sst is output.'
+             ' Otherwise, bulk sst, and skin sst are both output.',
+        action='store_true')
+    optional.add_argument(
+        '--skin_sst',
+        help='if set, only the skin or subskin sst is output.'
+             ' Otherwise, bulk sst, and skin sst are both output.',
+        action='store_true')
+
     args = parser.parse_args()
-    fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.output, [], locationKeyList)
+    args.date = datetime.strptime(args.date, '%Y%m%d%H')
+    if not args.sst and not args.skin_sst:
+        args.sst = True
+        args.skin_sst = True
 
-    if args.thin != 0.0:
-        AttrData['thinning'] = args.thin
+    # setup the IODA writer
+    writer = iconv.NcWriter(args.output, [], [])
 
-    # Read in the altimeter
-    altim = Observation(args.input, fdate, writer)
+    # Setup the configuration that is passed to each worker process
+    # Note: Pool.map creates separate processes, and so other than the
+    # argument array passed in (args.input), it can only read global variables
+    global_config = {}
+    global_config['date'] = args.date
+    global_config['thin'] = args.thin
+    global_config['oval_name'] = writer.OvalName()
+    global_config['oerr_name'] = writer.OerrName()
+    global_config['opqc_name'] = writer.OqcName()
+    global_config['output_sst'] = args.sst
+    global_config['output_skin_sst'] = args.skin_sst
 
-    # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # read / process files in parallel
+    pool = Pool(args.threads)
+    obs = pool.map(read_input, args.input)
 
-    writer.BuildNetcdf(altim.data, AttrData)
+    # concatenate the data from the files
+    obs_data, loc_data, attr_data = obs[0]
+    loc_data['date_time'] = writer.FillNcVector(
+        loc_data['date_time'], "datetime")
+    for i in range(1, len(obs)):
+        for k in obs_data:
+            axis = len(obs[i][0][k].shape)-1
+            obs_data[k] = np.concatenate(
+                (obs_data[k], obs[i][0][k]), axis=axis)
+        for k in loc_data:
+            d = obs[i][1][k]
+            if k == 'date_time':
+                d = writer.FillNcVector(d, 'datetime')
+            loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
+
+    # prepare global attributes we want to output in the file,
+    # in addition to the ones already loaded in from the input file
+    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    attr_data['thinning'] = args.thin
+    attr_data['converter'] = os.path.basename(__file__)
+
+    # pass parameters to the IODA writer
+    # (needed because we are bypassing ExtractObsData within BuildNetcdf)
+    writer._nrecs = 1
+    writer._nvars = obs_data['ObsValue'].shape[0]
+    writer._nlocs = obs_data['ObsValue'].shape[1]
+    writer._nobs = writer._nvars * writer._nlocs
+
+    # determine which variables we are going to output
+    selected_names = []
+    if args.sst:
+        selected_names.append(output_var_names[0])
+    if args.skin_sst:
+        selected_names.append(output_var_names[1])
+    var_data = {writer._var_list_name: writer.FillNcVector(
+        selected_names, "string")}
+
+    # use the writer class to create the final output file
+    writer.WriteNcAttr(attr_data)
+    writer.WriteNcObsVars(obs_data, var_data)
+    writer.WriteNcMetadata(writer._rec_md_name, writer._nrecs_dim_name, {})
+    writer.WriteNcMetadata(writer._loc_md_name,
+                           writer._nlocs_dim_name, loc_data)
+    writer.WriteNcMetadata(writer._var_md_name,
+                           writer._nvars_dim_name, var_data)
