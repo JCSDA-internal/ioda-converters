@@ -37,7 +37,7 @@ def CharVectorToString(CharVec):
       String = str(CharVec.tostring(), 'utf-8').rstrip('\x00')
 
     return String
-    
+
 
 ###################################################################################
 # CLASSES
@@ -456,7 +456,6 @@ class NcWriter(object):
         # data sections: Obs variables, Record metadata, locations metadata
         # and variable metadata.
         self.WriteNcAttr(AttrData)
-
         self.WriteNcObsVars(ObsVars, VarMdata)
 
         self.WriteNcMetadata(self._rec_md_name, self._nrecs_dim_name, RecMdata)

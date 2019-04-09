@@ -1,12 +1,7 @@
 list( APPEND programs
   odbapi2nc.py
   odbapi2json.py
-)
-
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
-
-install (PROGRAMS
-  ${programs}
+  var_convert.py
   DESTINATION bin)
 
 ecbuild_add_test( TARGET iodaconv_met-office_coding_norms
