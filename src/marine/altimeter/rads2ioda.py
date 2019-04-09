@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+#
+# (C) Copyright 2019 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
 from __future__ import print_function
 import argparse
 import ioda_conv_ncio as iconv
@@ -59,18 +66,34 @@ AttrData = {
 }
 
 
+###############################################################################
+###############################################################################
+
+
 if __name__ == '__main__':
+
+    # Get command line arguments
     parser = argparse.ArgumentParser(
-        description=('')
+        description=(
+            'Reads absolute dynamic topography (ADT) observations'
+            ' from NESDIS file(s) and converts into IODA formatted'
+            ' output files')
     )
-    parser.add_argument('-i',
-                        help="RADS obs input files (wild cards or list)",
-                        type=str, nargs='+', required=True)
-    parser.add_argument('-o',
-                        help="name of ioda output file",
-                        type=str, required=True)
-    parser.add_argument('-d', '--date',
-                        help="base date", type=str, required=True)
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
+        '-i', '--input',
+        help="RADS observation input file(s)",
+        type=str, nargs='+', required=True)
+    required.add_argument(
+        '-o', '--output',
+        help="path of ioda output file",
+        type=str, required=True)
+    required.add_argument(
+        '-d', '--date',
+        help="base date for the center of the window",
+        metavar="YYYYMMDDHH", type=str, required=True)
+
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     writer = iconv.NcWriter(args.o, [], locationKeyList)

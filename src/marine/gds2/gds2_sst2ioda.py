@@ -168,8 +168,8 @@ if __name__ == '__main__':
         description=(
             'Reads the sea surface temperature from any GHRRST Data '
             ' Specification (GDS2.0) formatted L2 or L3 file(s) and converts'
-            ' into IODA formatted output files. Multiple files are concatenated,'
-            ' and optional thinning can be performed.')
+            ' into IODA formatted output files. Multiple files are'
+            ' concatenated and optional thinning can be performed.')
     )
 
     required = parser.add_argument_group(title='required arguments')

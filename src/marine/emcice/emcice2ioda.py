@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+#
+# (C) Copyright 2019 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
 from __future__ import print_function
 import argparse
 import ioda_conv_ncio as iconv
@@ -66,21 +73,35 @@ AttrData = {
 }
 
 
+###############################################################################
+###############################################################################
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('')
     )
-    parser.add_argument('-i',
-                        help="EMC ice fraction obs input file",
-                        type=str, nargs='+', required=True)
-    parser.add_argument('-o',
-                        help="name of ioda output file",
-                        type=str, required=True)
-    parser.add_argument('-d', '--date',
-                        help="base date", type=str, required=True)
-    parser.add_argument('-t', '--thin',
-                        help="amount of random thinning, from 0.0 to 1.0",
-                        type=float, default=0.0)
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
+        '-i', '--input',
+        help="EMC ice fraction obs input file(s)",
+        type=str, nargs='+', required=True)
+    required.add_argument(
+        '-o', '--output',
+        help="name of ioda output file",
+        type=str, required=True)
+    required.add_argument(
+        '-d', '--date',
+        help="base date for the center of the window",
+        metavar="YYYYMMDDHH", type=str, required=True)
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-t', '--thin',
+        help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
+             " no thinning is performed. (default: %(default)s)",
+        type=float, default=0.0)
 
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')

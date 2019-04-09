@@ -1,11 +1,33 @@
 #!/usr/bin/env python
 
+#
+# (C) Copyright 2019 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
 from __future__ import print_function
 import argparse
 import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
 from collections import defaultdict
+
+
+vName = {
+    'T': "sea_surface_temperature",
+}
+
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("date_time", "string")
+]
+
+AttrData = {
+    'odb_version': 1,
+}
 
 
 class Profile(object):
@@ -48,19 +70,8 @@ class Profile(object):
             self.data[0][locKey][qcKey] = qcs[i]
 
 
-vName = {
-  'T': "sea_surface_temperature",
-}
-
-locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("date_time", "string")
-    ]
-
-AttrData = {
-  'odb_version': 1,
-   }
+###############################################################################
+###############################################################################
 
 
 if __name__ == '__main__':

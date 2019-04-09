@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+#
+# (C) Copyright 2019 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
 from __future__ import print_function
 import numpy as np
 from datetime import datetime
@@ -167,7 +174,8 @@ if __name__ == '__main__':
         '-o', '--output', help='name of the output netCDF GODAE ship file',
         type=str, required=True, default=None)
     parser.add_argument(
-        '-d', '--date', help='file date', type=str, metavar='YYYYMMDDHH', required=True)
+        '-d', '--date', help='file date',
+        type=str, metavar='YYYYMMDDHH', required=True)
 
     args = parser.parse_args()
 
