@@ -7,7 +7,7 @@
 # python script odbapi2nc.py.
 #
 # Use for ECMWF (era5) report types:
-# 16026, 16029
+# 16026 (AIREP), 16029 (AMDAR)
 #
 # Do not use for Met Office reports.
 #

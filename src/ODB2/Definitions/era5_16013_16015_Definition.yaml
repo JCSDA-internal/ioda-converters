@@ -7,7 +7,7 @@
 # python script odbapi2nc.py.
 #
 # Use for ECMWF (era5) report types:
-# 16013, 16015
+# 16013 (Land PILOT), 16015 (American Wind Profiler 1)
 #
 # Do not use for Met Office Radiosonde reports.
 #
