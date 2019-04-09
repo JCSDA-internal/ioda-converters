@@ -333,7 +333,10 @@ class NcWriter(object):
                            if MetaKey[1] not in VMName:
                               VMName.append(MetaKey[1])
                               VMExamples.append(MetaVal)
-            del RecDict['VarMetaData']
+            try :
+		del RecDict['VarMetaData']
+	    except:
+	        continue	
 
         VarList = sorted(list(VarNames))
         self._nvars = len(VarList)

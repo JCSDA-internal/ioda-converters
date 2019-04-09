@@ -129,10 +129,11 @@ class Radiances:
     writer = iconv.NcWriter(outname,RecKeyList,LocKeyList)
      
     chan_number = self.df['sensor_chan'][:]
+    chan_number = chan_number[chan_number>=0]
     chan_indx = self.df['Channel_Index'][:] 
-    nlocs = self.nobs / self.nchans
     nchans = len(chan_number)
-    chanlist = np.arange(1,nchans+1) 
+    nlocs = self.nobs /nchans
+    chanlist = chan_indx[:nchans+1] 
     for a in chanlist:
       value = "brightness_temperature_{:d}".format(a)
       varDict[value]['valKey'] = value, writer.OvalName()
