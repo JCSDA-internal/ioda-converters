@@ -1,21 +1,32 @@
-loc_metadata_dict = {'Latitude':   'latitude',     \
-                     'Longitude':  'longitude',    \
-                     'Reference_Pressure':  'air_presure',       \
-                     'Time':   'time',         \
-                     'Scan_Position':       'scan_position',     \
-	             'Solar_Zenith_Angle':  'sol_zenith_angle',  \
-                     'Row_Anomaly_Index':   'row_anomaly_index'}
+sensors = [
+	'gome',
+	'sbuv2',
+]
 
-geovals_metadata_dict = {'Latitude':   'latitude',     \
-                         'Longitude':  'longitude',    \
-                         'Time':   'time'}
+LocKeyList = {
+	'Latitude':   ('latitude','float'),
+	'Longitude':  ('longitude','float'),
+	'Reference_Pressure': ('air_pressure','float'),
+	'Time': ('offset_from_analysis_time','float'),
+	'Scan_Position':('scan_position','float'),
+	'Solar_Zenith_Angle':('solar_zenith_angle','float'),
+	'Row_Anomaly_Index':('row_anomaly_index','float'),
+}
 
-variables_dict = {'Observation'       : 'ObsValue',   \
-                  'Obs_Minus_Forecast_adjusted' : 'GsiBc', \
-                  'Obs_Minus_Forecast_unadjusted' : 'GsiHofX', \
-                  'Analysis_Use_Flag' : 'GsiUseFlag', \
-                  'Inverse_Observation_Error': 'GsiFinalObsError'}
+geovals_metadata_dict = {
+	'Latitude':   'latitude',
+	'Longitude':  'longitude',
+	'Time':   'time',
+}
 
-geovals_dict = {'air_pressure_levels': 'air_pressure_levels', \
-                'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air'}
+gsi_add_vars = {
+	'Inverse_Observation_Error': 'GsiFinalObsError',
+	'Obs_Minus_Forecast_adjusted' : 'GsiHofXBc',
+	'Obs_Minus_Forecast_unadjusted' : 'GsiHofX',
+}
+
+geovals_vars = {
+	'air_pressure_levels': 'air_pressure_levels',
+	'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
+}
 
