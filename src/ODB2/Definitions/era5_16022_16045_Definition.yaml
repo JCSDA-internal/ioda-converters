@@ -7,7 +7,7 @@
 # python script odbapi2nc.py.
 #
 # Use for ECMWF (era5) report types:
-# 16022, 16045
+# 16022 (Land TEMP), 16045 (BUFR LAND TEMP)
 #
 # Do not use for Met Office Radiosonde reports.
 #
