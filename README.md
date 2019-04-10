@@ -37,11 +37,25 @@ See the script tools/build_gsi_nc_files.sh for an example of how to run the flow
 A fourth script, list_sid_raob.py, can be used to create the file containing a list of unique station ids (which is a file used by the select_nc_obs.py script for the Radiosonde and Aircraft obs types).
 
 ## marine
-Python scripts to convert GODAE data (binary) to netCDF4 file that can be ingested into IODA.
-See [here](src/marine/godae/README.md) for usage.
+The marine converters all take the following format, with some converters taking additional optional arguments as noted:
+ 
+ usage:` <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH`
 
-The python script to convert (prep-)BUFR with embedded BUFR table to netCDF4 file that can be ingested into IODA.
-See [here](src/ncep/README.md) for usage.
+* `emc_ice2ioda.py` - Ice concentration observations from EMC. Optional thinning available with `--thin AMOUNT` argument.
+* `gds2_sst2ioda.py` - Generic SST/skin-SST converter for use with any GHRSST GD2.0 L2 or L3 data file. Parallel processing of files available with `--threads THREADS` argument. Thinning of data available with `--thin AMOUNT` argument.
+* `gmao_obs2ioda.py` - NASA/GMAO ocean observations
+* GODAE insitu temperature and salinity ocean profiles from the Fleet Numerical Meteorology and Oceanography Center(FNMOC). Observations available from [here](https://www.usgodae.org/ftp/outgoing/fnmoc/data/ocn/)
+  * `godae_profile2ioda.py`
+  * `godae_ship2ioda.py`
+  * `godae_trak2ioda.py`
+* Hybrid-GODAS - preprocessed, suberobbed, and QCd observations of altimetry, insitu T/S, and SST. Used in the NCEP HGODAS project _(these are likely to be removed at some point)_
+  * `hgodas_adt2ioda.py`
+  * `hgodas_insitu2ioda.py`
+  * `hgodas_sst2ioda.py`  
+* `rads_adt2ioda.py` - absolute dynamic topography observations from NOAA/NESDIS. Observations available from [here] (ftp://ftp.star.nesdis.noaa.gov/pub/sod/lsa/rads/adt)
+* `smap_sss2ioda.py` - SMAP satellite sea surface salinity observations. Observations available from [here](ftp://podaac-ftp.jpl.nasa.gov/allData/smap/L2/RSS/V3/SCI)
+
+* `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
 
 
 ## odbapi2nc
