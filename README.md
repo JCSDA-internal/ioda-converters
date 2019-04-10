@@ -52,8 +52,8 @@ The marine converters all take the following format, with some converters taking
   * `hgodas_adt2ioda.py`
   * `hgodas_insitu2ioda.py`
   * `hgodas_sst2ioda.py`  
-* `rads_adt2ioda.py` - absolute dynamic topography observations from NOAA/NESDIS. Observations available from [here] (ftp://ftp.star.nesdis.noaa.gov/pub/sod/lsa/rads/adt)
-* `smap_sss2ioda.py` - SMAP satellite sea surface salinity observations. Observations available from [here](ftp://podaac-ftp.jpl.nasa.gov/allData/smap/L2/RSS/V3/SCI)
+* `rads_adt2ioda.py` - absolute dynamic topography observations from NOAA/NESDIS. Observations available from `ftp://ftp.star.nesdis.noaa.gov/pub/sod/lsa/rads/adt`
+* `smap_sss2ioda.py` - SMAP satellite sea surface salinity observations. Observations available from `ftp://podaac-ftp.jpl.nasa.gov/allData/smap/L2/RSS/V3/SCI`
 
 * `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
 
