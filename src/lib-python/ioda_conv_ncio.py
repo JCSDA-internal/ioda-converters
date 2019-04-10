@@ -83,8 +83,8 @@ class NcWriter(object):
         # default fill values
         self._defaultF4 = np.abs(netCDF4.default_fillvals['f4'])
         self._defaultI4 = np.abs(netCDF4.default_fillvals['i4'])
-        self._nstring = 30
-        self._ndatetime = 30
+        self._nstring = 50
+        self._ndatetime = 20
 
         # Names assigned to record number (location metadata)
         self._rec_num_name = "record_number"
@@ -227,22 +227,15 @@ class NcWriter(object):
         # level (root) group. This is convenient if we decide to
         # rearrange the group structure.
         self._fid.createDimension(self._nvars_dim_name, self._nvars)
-        print('dimnvars')
         self._fid.createDimension(self._nlocs_dim_name, self._nlocs)
-        print('dimnvars')
         self._fid.createDimension(self._nrecs_dim_name, self._nrecs)
-        print('dimnvars')
         self._fid.createDimension(self._nobs_dim_name, self._nobs)
-        print('dimnobs')
         self._fid.createDimension(self._nstr_dim_name, self._nstring)
-        print('dimnstr')
         self._fid.createDimension(self._ndatetime_dim_name, self._ndatetime)
-        print('here')
 
         if (self._out_nc_version == 1):
             for Gname, Vvals in ObsVars.items():
                 for i in range(self._nvars):
-                    print(i)
                     # The rstrip trims off the null bytes that correspond to '' chars
                     # in the character array.
                     Vname = CharVectorToString(VarMdata['variable_names'][i,:])
