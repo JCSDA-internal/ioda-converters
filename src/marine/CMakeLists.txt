@@ -1,10 +1,13 @@
-add_subdirectory(godae)
-add_subdirectory(hgodas)
-
 list(APPEND programs
   emc_ice2ioda.py
   gds2_sst2ioda.py
   gmao_obs2ioda.py
+  godae_profile2ioda.py
+  godae_ship2ioda.py
+  godae_trak2ioda.py
+  hgodas_adt2ioda.py
+  hgodas_insitu2ioda.py
+  hgodas_sst2ioda.py
   rads_adt2ioda.py
   smap_sss2ioda.py
 )
