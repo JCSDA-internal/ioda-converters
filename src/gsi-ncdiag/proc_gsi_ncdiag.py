@@ -84,7 +84,7 @@ if MyArgs.geovals_dir:
   # get list of conv diag files
   convfiles = glob.glob(DiagDir+'/*conv*') 
   for convfile in convfiles:
-    res = obspool.apply_async(run_conv_geo,args=(convfile,ObsDir))
+    res = obspool.apply_async(run_conv_geo,args=(convfile,GeoDir))
   ### radiances next
   radfiles = glob.glob(DiagDir+'/diag*')
   for radfile in radfiles:
@@ -93,6 +93,6 @@ if MyArgs.geovals_dir:
       if p in radfile:
         process = True
     if process:
-      res = obspool.apply_async(run_radiances_geo,args=(radfile,ObsDir))
+      res = obspool.apply_async(run_radiances_geo,args=(radfile,GeoDir))
   obspool.close()
   obspool.join()

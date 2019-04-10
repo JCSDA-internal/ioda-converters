@@ -148,8 +148,16 @@ class Conv:
         for ncv in self.df.variables:
           if ncv in cd.LocKeyList:
             LocKeyList.append(cd.LocKeyList[ncv])
-	    LocVars.append(ncv)
+            LocVars.append(ncv)
         LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
+
+        # grab obs to process
+        idx = grabobsidx(self.df,p,v)
+        if (np.sum(idx)==0):
+          print("No matching observations for:")
+          print("Platform:"+p+" Var:"+v)
+          continue
+
         # for now, record len is 1 and the list is empty?
         recKey=0
         writer = iconv.NcWriter(outname,RecKeyList,LocKeyList)
@@ -160,27 +168,21 @@ class Conv:
           varDict[value]['errKey'] = value, writer.OerrName()
           varDict[value]['qcKey'] = value, writer.OqcName()
 
-        # grab obs to process
-        idx = grabobsidx(self.df,p,v)
-        if (np.sum(idx)==0):
-          print("No matching observations for:")
-          print("Platform:"+p+" Var:"+v)
-          continue 
         for o in range(len(outvars)):
-	  obsdata = self.df[cd.gsivarnames[v][o]][idx]
-	  obserr = 1.0/self.df['Errinv_Input'][idx]
+          obsdata = self.df[cd.gsivarnames[v][o]][idx]
+          obserr = 1.0/self.df['Errinv_Input'][idx]
           try:
-	    obsqc = self.df['Prep_QC_Mark'][idx]
-	  except:
+            obsqc = self.df['Prep_QC_Mark'][idx]
+          except:
             obsqc = np.ones_like(obsdata)*2
           gsivars = cd.gsi_add_vars
           gsimeta = {}
           for key, value in gsivars.items():
-	    # some special actions need to be taken depending on var name...
+            # some special actions need to be taken depending on var name...
             if "Errinv" in key:
               gsimeta[key] = 1.0/self.df[key][idx]
             elif "Forecast" in key:
-	      if "u_Obs" in key:
+              if "u_Obs" in key:
                 gsimeta[key] = self.df['u_Observation'][idx] - self.df[key][idx]
               elif "v_Obs" in key:
                 gsimeta[key] = self.df['v_Observation'][idx] - self.df[key][idx]
@@ -200,7 +202,7 @@ class Conv:
           locKeys = [tuple(a) for a in locKeys]
           # not sure how to do this without a loop since it's a dict...
           for i in range(len(obsdata)):
-	    # observation data
+            # observation data
             outdata[recKey][locKeys[i]][varDict[outvars[o]]['valKey']] = obsdata[i]
             # observation error
             outdata[recKey][locKeys[i]][varDict[outvars[o]]['errKey']] = obserr[i]
@@ -213,6 +215,8 @@ class Conv:
           
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
         writer.BuildNetcdf(outdata,AttrData)
+        print("Conventional obs processed, wrote to:")
+        print(outname)
 
 def grabobsidx(obsdata,platform,var):
   """ grabobsidx(obsdata,platform,var):
