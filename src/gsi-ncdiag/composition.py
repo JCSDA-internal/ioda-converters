@@ -106,6 +106,7 @@ class AOD:
     import os
     from collections import defaultdict
     import numpy as np
+    import datetime as dt
     # set up a NcWriter class
     outname = OutDir+'/'+self.obstype+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
@@ -145,7 +146,13 @@ class AOD:
     gsivars = aodd.gsi_add_vars
     locKeys = []
     for l in LocVars:
-      locKeys.append(self.df[l][:])
+      if l == 'Obs_Time':
+        tmp = self.df[l][idx]
+        obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+        locKeys.append(obstimes)
+      else:
+        locKeys.append(self.df[l][:])
     #locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
     locKeys = np.swapaxes(np.array(locKeys),0,1)
     locKeys = [tuple(a) for a in locKeys]
@@ -153,7 +160,7 @@ class AOD:
    # loop through channels for subset
     for c in range(len(chanlist)):
       value = "aerosol_optical_depth_{:d}".format(chanlist[c])
-      idx = np.where(chan_indx == chanlist[c])
+      idx = chan_indx == chanlist[c]
       obsdatasub = obsdata[idx]
       obserrsub = obserr[idx]
       obsqcsub = obsqc[idx]
@@ -296,6 +303,7 @@ class Ozone:
     import os
     from collections import defaultdict
     import numpy as np
+    import datetime as dt
     # set up a NcWriter class
     outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
@@ -326,7 +334,14 @@ class Ozone:
     gsivars = ozd.gsi_add_vars
     locKeys = []
     for l in LocVars:
-      locKeys.append(self.df[l][:])
+      if l == 'Obs_Time':
+        tmp = self.df[l][idx]
+        obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+        locKeys.append(obstimes)
+      else:
+        locKeys.append(self.df[l][:])
+
     #locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
     locKeys = np.swapaxes(np.array(locKeys),0,1)
     locKeys = [tuple(a) for a in locKeys]

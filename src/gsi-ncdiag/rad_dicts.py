@@ -14,7 +14,7 @@ LocKeyList  = {
 	'Latitude':   ('latitude','float'),
 	'Longitude':  ('longitude','float'),
 	'Elevation':  ('height_above_mean_sea_level','float'),
-	'Obs_Time':   ('offset_from_analysis_time','float'),
+	'Obs_Time':   ('date_time','string'),
 	'Scan_Position':     ('scan_position','float'),
 	'Sat_Zenith_Angle':  ('sensor_zenith_angle','float'),
 	'Sat_Azimuth_Angle': ('sensor_azimuth_angle','float'),

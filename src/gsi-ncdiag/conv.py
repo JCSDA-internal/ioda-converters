@@ -125,6 +125,7 @@ class Conv:
     from collections import defaultdict
     import conv_dicts as cd
     import numpy as np
+    import datetime as dt
     # get list of platforms to process for the given obstype
     try: 
       platforms = cd.conv_platforms[self.obstype]
@@ -149,7 +150,7 @@ class Conv:
           if ncv in cd.LocKeyList:
             LocKeyList.append(cd.LocKeyList[ncv])
             LocVars.append(ncv)
-        LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
+        #LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
 
         # grab obs to process
         idx = grabobsidx(self.df,p,v)
@@ -195,6 +196,11 @@ class Conv:
             if l == 'Station_ID':
               tmp = self.df[l][idx]
               locKeys.append([''.join(tmp[a]) for a in range(len(tmp))])
+            elif l == 'Time': # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+              tmp = self.df[l][idx]
+              obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+              obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+              locKeys.append(obstimes)
             else:
               locKeys.append(self.df[l][idx])
           locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs

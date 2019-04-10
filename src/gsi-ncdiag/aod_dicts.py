@@ -6,7 +6,7 @@ sensors = [
 LocKeyList = {
 	'Latitude':   ('latitude','float'),
 	'Longitude':  ('longitude','float'),
-	'Obs_Time': ('offset_from_analysis_time','float'),
+	'Obs_Time': ('date_time','string'),
 	'Sol_Zenith_Angle':('solar_zenith_angle','float'),
 	'Sol_Azimuth_Angle':('solar_azimuth_angle','float'),
 	'Surface_type' : ('surface_type','integer'),
