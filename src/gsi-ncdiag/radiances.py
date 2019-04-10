@@ -108,6 +108,7 @@ class Radiances:
     from collections import defaultdict
     import rad_dicts as rd
     import numpy as np
+    import datetime as dt
     # set up a NcWriter class
     outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
@@ -133,7 +134,7 @@ class Radiances:
     chan_indx = self.df['Channel_Index'][:] 
     nchans = len(chan_number)
     nlocs = self.nobs /nchans
-    chanlist = chan_indx[:nchans+1] 
+    chanlist = chan_indx[:nchans] 
     for a in chanlist:
       value = "brightness_temperature_{:d}".format(a)
       varDict[value]['valKey'] = value, writer.OvalName()
@@ -146,15 +147,25 @@ class Radiances:
     gsivars = rd.gsi_add_vars
     locKeys = []
     for l in LocVars:
-      locKeys.append(self.df[l][:])
+      if l == 'Obs_Time':
+        tmp = self.df[l][idx]
+        obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+        locKeys.append(obstimes)
+      else:
+        locKeys.append(self.df[l][:])
     #locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
     locKeys = np.swapaxes(np.array(locKeys),0,1)
     locKeys = [tuple(a) for a in locKeys]
 
     # loop through channels for subset
     for c in range(len(chanlist)):
-      value = "brightness_temperature_{:d}".format(c+1)
-      idx = np.where(chan_indx == chanlist[c])
+      value = "brightness_temperature_{:d}".format(chanlist[c])
+      idx = chan_indx == chanlist[c]
+      if (np.sum(idx)==0):
+          print("No matching observations for:")
+          print(value)
+          continue
       obsdatasub = obsdata[idx]
       obserrsub = obserr[c]
       obsqcsub = obsqc[idx]
@@ -183,11 +194,14 @@ class Radiances:
           outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i] 
       # metadata 
       for key, value2 in rd.chan_metadata_dict.items():
+        print(key,value2)
         outdata[recKey]['VarMetaData'][(value,value2)] = self.df[key][c] 
-      
       
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
     writer.BuildNetcdf(outdata,AttrData)
+    print("Satellite radiance obs processed, wrote to:")
+    print(outname)
+
 
