@@ -1,9 +1,11 @@
 # ioda-converters
 
-The intended way to use this repository is to install in /usr/local by default, and if you cannot write into /usr/local use the CMAKE_INSTALL_PREFIX to install in your home directory. Run the scripts from the place they are installed, not the source directory. That way the scripts can reference each other without providing a path.
+The intended way to use this repository is to install in `/usr/local` by default, and if you cannot write into `/usr/local` use the CMAKE_INSTALL_PREFIX to install in your home directory. Run the scripts from the place they are installed, not the source directory. That way the scripts can reference each other without providing a path.
 
 For example,
+
 **ecbuild -DCMAKE_INSTALL_PREFIX=$HOME/tools  path_to_top_level_cmakelists_file**
+
 **make install**
 
 ## bufr2nc
