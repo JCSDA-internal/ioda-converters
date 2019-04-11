@@ -147,7 +147,7 @@ class AOD:
     locKeys = []
     for l in LocVars:
       if l == 'Obs_Time':
-        tmp = self.df[l][idx]
+        tmp = self.df[l][:]
         obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
         locKeys.append(obstimes)
@@ -196,6 +196,8 @@ class AOD:
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
     writer.BuildNetcdf(outdata,AttrData)
+    print("AOD obs processed, wrote to:")
+    print(outname)
 
 
 class Ozone:
@@ -335,7 +337,7 @@ class Ozone:
     locKeys = []
     for l in LocVars:
       if l == 'Obs_Time':
-        tmp = self.df[l][idx]
+        tmp = self.df[l][:]
         obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
         locKeys.append(obstimes)
@@ -371,4 +373,6 @@ class Ozone:
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
     writer.BuildNetcdf(outdata,AttrData)
+    print("Ozone obs processed, wrote to:")
+    print(outname)
 
