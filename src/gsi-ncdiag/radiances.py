@@ -148,7 +148,7 @@ class Radiances:
     locKeys = []
     for l in LocVars:
       if l == 'Obs_Time':
-        tmp = self.df[l][idx]
+        tmp = self.df[l][:]
         obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
         locKeys.append(obstimes)
@@ -161,6 +161,7 @@ class Radiances:
     # loop through channels for subset
     for c in range(len(chanlist)):
       value = "brightness_temperature_{:d}".format(chanlist[c])
+      print(self.obstype,value)
       idx = chan_indx == chanlist[c]
       if (np.sum(idx)==0):
           print("No matching observations for:")
@@ -194,7 +195,6 @@ class Radiances:
           outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i] 
       # metadata 
       for key, value2 in rd.chan_metadata_dict.items():
-        print(key,value2)
         outdata[recKey]['VarMetaData'][(value,value2)] = self.df[key][c] 
       
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
