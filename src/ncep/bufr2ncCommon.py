@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import numpy as np
+
 
 ###########################################################################
 # SUBROUTINES
@@ -32,23 +32,22 @@ MAX_EVENTS = 20
 MAX_LEVELS = 255
 
 # BUFR file types
-BFILE_UNDEF    = 0
-BFILE_BUFR     = 1
+BFILE_UNDEF = 0
+BFILE_BUFR = 1
 BFILE_PREPBUFR = 2
 
 # BUFR types
-BTYPE_UNDEF  = 0
+BTYPE_UNDEF = 0
 BTYPE_HEADER = 1
-BTYPE_DATA   = 2
-BTYPE_EVENT  = 3
-BTYPE_REP    = 4
+BTYPE_DATA = 2
+BTYPE_EVENT = 3
+BTYPE_REP = 4
 
 # Data types
-DTYPE_UNDEF   = 0
-DTYPE_STRING  = 1   # for CCITT IA5 units in the BUFR table
+DTYPE_UNDEF = 0
+DTYPE_STRING = 1   # for CCITT IA5 units in the BUFR table
 DTYPE_INTEGER = 2   # for CODE TABLE, FLAG TABLE units in the BUFR table
-DTYPE_FLOAT   = 3   # for all other units in the BUFR table
-DTYPE_UINT    = 4   # for dimension coordinates
-DTYPE_DOUBLE  = 5   # temporary: for strings that are expected to be double
-                    #            in downstream flows (GSI)
-
+DTYPE_FLOAT = 3   # for all other units in the BUFR table
+DTYPE_UINT = 4   # for dimension coordinates
+DTYPE_DOUBLE = 5   # temporary: for strings that are expected to be double
+#            in downstream flows (GSI)
