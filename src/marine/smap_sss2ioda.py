@@ -72,14 +72,14 @@ class Salinity(object):
                     'sss_qc': 'quality_flag'
                 }
             else:
-                print ("Error: unknown source: " + source)
-                print ("Only JPL or RSS sources are handled")
+                print("Error: unknown source: " + source)
+                print("Only JPL or RSS sources are handled")
                 sys.exit(1)
 
             # make sure this is lvl 2
             # TODO: handle L3 files at somepoint?)
             if ncd.processing_level[:2] != 'L2':
-                print ("Error: only L2 files handled for now.")
+                print("Error: only L2 files handled for now.")
                 sys.exit(1)
 
             # get base date for file
