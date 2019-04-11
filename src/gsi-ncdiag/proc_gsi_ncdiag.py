@@ -92,8 +92,8 @@ if MyArgs.obs_dir:
   ### conventional obs first
   # get list of conv diag files
   convfiles = glob.glob(DiagDir+'/*conv*') 
-  #for convfile in convfiles:
-  #  res = obspool.apply_async(run_conv_obs,args=(convfile,ObsDir))
+  for convfile in convfiles:
+    res = obspool.apply_async(run_conv_obs,args=(convfile,ObsDir))
   ### radiances next
   radfiles = glob.glob(DiagDir+'/diag*')
   for radfile in radfiles:
