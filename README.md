@@ -50,6 +50,8 @@ Definition YAML files currently created and tested:
 * Met Office Radiosonde
 * Met Office Aircraft
 * Met Office AMSU-A from atovs report
+* ECMWF Radiosonde
+* ECMWF Aircraft
 
 ## odbapi2json
 
