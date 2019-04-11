@@ -105,10 +105,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.o, [], locationKeyList)
+    writer = iconv.NcWriter(args.output, [], locationKeyList)
 
     # Read in
-    ice = Observation(args.i, fdate, writer)
+    ice = Observation(args.input, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
