@@ -349,7 +349,7 @@ class NcWriter(object):
         # Preallocate arrays and fill them up with data from the dictionary
 	ObsVars = {}
 	for o in range(len(ObsVarList)):
-	    NumpyDtype = ObsVarExamples[o].dtype 
+	    NumpyDtype = np.array(ObsVarExamples[o]).dtype 
             if (NumpyDtype == np.dtype('float64')):
                 defaultval = self._defaultF4    # convert double to float
             elif (NumpyDtype == np.dtype('float32')):
