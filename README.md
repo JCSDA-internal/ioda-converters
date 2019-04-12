@@ -1,5 +1,13 @@
 # ioda-converters
 
+The intended way to use this repository is to install in `/usr/local` by default, and if you cannot write into `/usr/local` use the CMAKE_INSTALL_PREFIX to install in your home directory. Run the scripts from the place they are installed, not the source directory. That way the scripts can reference each other without providing a path.
+
+For example,
+
+**ecbuild -DCMAKE_INSTALL_PREFIX=$HOME/tools  path_to_top_level_cmakelists_file**
+
+**make install**
+
 ## bufr2nc
 
 Python script, bufr2nc.py, for converting BUFR to netCDF4. bufr2nc is built upon the py-ncepbufr package.
@@ -68,6 +76,8 @@ Definition YAML files currently created and tested:
 * Met Office Radiosonde
 * Met Office Aircraft
 * Met Office AMSU-A from atovs report
+* ECMWF Radiosonde
+* ECMWF Aircraft
 
 ## odbapi2json
 
