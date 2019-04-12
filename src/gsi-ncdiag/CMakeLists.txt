@@ -1,11 +1,12 @@
 list( APPEND programs
-  cat_nc_files.py
-  select_nc_obs.py
-  prep_nc_files.py
-  list_sid_raob.py
-  split_conv.py
-  run_prep_nc_files.sh
-  run_select_nc_obs.sh
+  conv.py
+  radiances.py
+  composition.py 
+  conv_dicts.py
+  rad_dicts.py
+  aod_dicts.py
+  oz_dicts.py
+  proc_gsi_ncdiag.py 
 )
 
 COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
