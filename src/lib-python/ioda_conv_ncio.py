@@ -349,18 +349,15 @@ class NcWriter(object):
         # Preallocate arrays and fill them up with data from the dictionary
 	ObsVars = {}
 	for o in range(len(ObsVarList)):
-	    NumpyDtype = np.array(ObsVarExamples[o]).dtype 
-            if (NumpyDtype == np.dtype('float64')):
-                defaultval = self._defaultF4    # convert double to float
-            elif (NumpyDtype == np.dtype('float32')):
+            VarType = type(ObsVarExamples[o])
+            if (VarType in [float,np.float32,np.float64]):
                 defaultval = self._defaultF4
-            elif (NumpyDtype == np.dtype('int64')):
+            elif (VarType in [int,np.int64,np.int32]):
                 defaultval = self._defaultI4    # convert long to int
-            elif (NumpyDtype == np.dtype('int32')):
-                defaultval = self._defaultI4
-            elif (NumpyDtype == np.dtype('S1')):
+            elif (VarType in [str,np.s1]):
                 defaultval = ''
             else:
+                print('Warning: VarType',VarType,' not in float, int, str for:',ObsVarList[o])
 	        continue
             ObsVars[ObsVarList[o]] = np.full((self._nvars, self._nlocs), defaultval)
 
