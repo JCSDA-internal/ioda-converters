@@ -9,7 +9,7 @@ import netCDF4 as nc
 import os
 
 def subset(infile,nlocsout,suffix):
-  print(infile)
+  print('Processing:',infile)
   outfile = infile[:-4]+suffix
   ncin = nc.Dataset(infile)
   ncout = nc.Dataset(outfile,'w')
@@ -59,7 +59,6 @@ ap.add_argument("filedir",help="Path to files to process")
 ap.add_argument("-n","--nprocs",help="Number of tasks/processors for multiprocessing")
 
 MyArgs = ap.parse_args()
-print(MyArgs)
 
 if MyArgs.nprocs:
   nprocs = int(MyArgs.nprocs)
@@ -85,7 +84,8 @@ for infile in infiles:
   # test
   if os.path.getsize(infile) < 10000:
     continue
-  if infile[-5:] in ['_m.nc4','_s.nc4']:
+  if infile[-6:] in ['_m.nc4','_s.nc4']:
+    #print('skipping',infile)
     continue
   res = obspool.apply_async(subset,args=(infile,nobs,suffix))
 obspool.close()
