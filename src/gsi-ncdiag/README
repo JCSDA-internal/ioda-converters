@@ -1,0 +1,33 @@
+scripts to convert GSI netCDF diag files to
+GeoVaLs files and IODA-compatible obs files using ioda_conv_ncio
+
+Brief info for users:
+
+python proc_gsi_ncdiag.py
+
+ - uses Python multiprocessing to run many instances in separate processes to speed up
+   conversion process to JEDI file formats
+
+ - Note: this assumes that diag files have already been concatenated using another utility if GSI ran on multiple
+   processors, otherwise you'll have to concatenate them later 
+
+ usage: python proc_gsi_ncdiag.py -n NPROCS -o /path/to/obsout -g /path/to/geovalsout /path/to/diagfiles
+
+ - this script only processes conv and radiances right now, but it's easy enough to modify to use the other
+   currently supported classes (ozone and aod)
+
+
+Brief info to help adding a new satellite or observation type, etc.
+
+For radiances, see rad_dicts.py. One may only need to add a new sensor to the sensor list to enable it for brightness
+temperature. GSI puts all conventional data in a file by quantity measured so there are extra layers in conv_dicts.py.
+There is the dictionary conv_platforms which has entries for each diag file from GSI, and within that, a list of the
+types of observations for that variable/file. Additionally, eachof these types has a bufrtype dictionary entry to get
+the codes to match for that subset of observations.
+
+Across all of the x_dicts files there are dictionaries for converting variable names between GSI and JEDI-UFO as well as
+which variables to output for GeoVaLs (again including the 'translation' dictionaries)
+
+These scripts are still a work in progress, especially things like: how timestamps are handled, ensuring that the
+subsetted obs for channels/platform are correct, and that the variable names conform to CF conventions. This also may
+need to change as the NcWriter class in ioda_conv_ncio.py changes.
