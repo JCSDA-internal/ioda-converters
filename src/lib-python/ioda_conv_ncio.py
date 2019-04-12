@@ -314,7 +314,6 @@ class NcWriter(object):
 	ObsVarList = []
         ObsVarExamples = []
         VMName = []
-        VMExamples = []
         VMData = {}
         for RecKey, RecDict in ObsData.items():
             self._nrecs += 1
@@ -332,7 +331,6 @@ class NcWriter(object):
                            VMData[MetaKey] = MetaVal
                            if MetaKey[1] not in VMName:
                               VMName.append(MetaKey[1])
-                              VMExamples.append(MetaVal)
             try :
 		del RecDict['VarMetaData']
 	    except:
@@ -352,9 +350,9 @@ class NcWriter(object):
             VarType = type(ObsVarExamples[o])
             if (VarType in [float,np.float32,np.float64]):
                 defaultval = self._defaultF4
-            elif (VarType in [int,np.int64,np.int32]):
+            elif (VarType in [int,np.int64,np.int32,np.int8]):
                 defaultval = self._defaultI4    # convert long to int
-            elif (VarType in [str,np.s1]):
+            elif (VarType in [str,np.str_]):
                 defaultval = ''
             else:
                 print('Warning: VarType',VarType,' not in float, int, str for:',ObsVarList[o])
@@ -428,12 +426,6 @@ class NcWriter(object):
 
                 for VarKey, VarVal in LocDict.items():
                     VarNum = VarMap[VarKey[0]]
-                    #if (VarKey[1] == self._oval_name):
-                    #    ObsVars[self._oval_name][VarNum, LocNum-1] = VarVal
-                    #elif (VarKey[1] == self._oerr_name):
-                    #    ObsVars[self._oerr_name][VarNum, LocNum-1] = VarVal
-                    #elif (VarKey[1] == self._oqc_name):
-                    #    ObsVars[self._oqc_name][VarNum, LocNum-1] = VarVal
 		    ObsVars[VarKey[1]][VarNum, LocNum-1] = VarVal
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
