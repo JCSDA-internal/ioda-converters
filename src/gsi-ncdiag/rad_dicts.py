@@ -7,6 +7,7 @@ sensors = [
 	'mhs',
 	'seviri',
 	'sndrd1','sndrd2','sndrd3','sndrd4',
+        'cris-fsr',
 	]
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
