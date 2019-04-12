@@ -85,10 +85,10 @@ else:
   
 DiagDir = MyArgs.input_dir
 
+obspool = Pool(processes=nprocs)
 # process obs files
 if MyArgs.obs_dir:
   ObsDir=MyArgs.obs_dir
-  obspool = Pool(processes=nprocs)
   ### conventional obs first
   # get list of conv diag files
   convfiles = glob.glob(DiagDir+'/*conv*') 
@@ -120,13 +120,10 @@ if MyArgs.obs_dir:
         process = True
     if process:
       res = obspool.apply_async(run_oz_obs,args=(radfile,ObsDir))
-  obspool.close()
-  obspool.join()
 
 # process geovals files
 if MyArgs.geovals_dir:
   GeoDir=MyArgs.geovals_dir
-  obspool = Pool(processes=nprocs)
   ### conventional obs first
   # get list of conv diag files
   convfiles = glob.glob(DiagDir+'/*conv*') 
@@ -158,5 +155,7 @@ if MyArgs.geovals_dir:
         process = True
     if process:
       res = obspool.apply_async(run_oz_geo,args=(radfile,ObsDir))
-  obspool.close()
-  obspool.join()
+
+# process all in the same time, because sats with many channels are so slow...
+obspool.close()
+obspool.join()
