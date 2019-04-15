@@ -67,7 +67,7 @@ class AOD:
 
     # set up output file
     ncout = nc.Dataset(outname,'w',format='NETCDF4')
-    ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+    ncout.setncattr("date_time",self.df.getncattr("date_time"))
     ncout.setncattr("satellite",self.satellite)
     ncout.setncattr("sensor",self.sensor)
     # get nlocs
@@ -265,7 +265,7 @@ class Ozone:
 
     # set up output file
     ncout = nc.Dataset(outname,'w',format='NETCDF4')
-    ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+    ncout.setncattr("date_time",self.df.getncattr("date_time"))
     ncout.setncattr("satellite",self.satellite)
     ncout.setncattr("sensor",self.sensor)
     # get nlocs

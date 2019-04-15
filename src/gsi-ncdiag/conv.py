@@ -81,7 +81,7 @@ class Conv:
           continue 
         # set up output file
 	ncout = nc.Dataset(outname,'w',format='NETCDF4')
-        ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time",self.df.getncattr("date_time"))
         # get nlocs
         nlocs = np.sum(idx)
         ncout.createDimension("nlocs",nlocs)
