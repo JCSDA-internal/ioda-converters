@@ -68,9 +68,9 @@ class Radiances:
 
     # set up output file
     ncout = nc.Dataset(outname,'w',format='NETCDF4')
-    ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
-    ncout.setncattr("satellite",self.satellite)
-    ncout.setncattr("sensor",self.sensor)
+    ncout.setncattr("date_time",self.df.getncattr("date_time"))
+    ncout.setncattr_string("satellite",self.satellite)
+    ncout.setncattr_string("sensor",self.sensor)
     # get nlocs
     nlocs = self.nobs / self.nchans 
     ncout.createDimension("nlocs",nlocs)
