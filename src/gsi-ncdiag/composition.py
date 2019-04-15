@@ -52,7 +52,7 @@ class AOD:
     import netCDF4 as nc
 
     # set up output file 
-    outname = OutDir+'/'+self.obstype+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+    outname = OutDir+'/'+self.obstype+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
       if (os.path.exists(outname)):
         print("File exists. Skipping and not overwriting:")
@@ -250,7 +250,7 @@ class Ozone:
     import netCDF4 as nc
 
     # set up output file 
-    outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+    outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
       if (os.path.exists(outname)):
         print("File exists. Skipping and not overwriting:")
