@@ -150,7 +150,7 @@ class Conv:
           if ncv in cd.LocKeyList:
             LocKeyList.append(cd.LocKeyList[ncv])
             LocVars.append(ncv)
-        #LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
+        LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
 
         # grab obs to process
         idx = grabobsidx(self.df,p,v)
