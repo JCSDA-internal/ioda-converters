@@ -61,7 +61,7 @@ class Conv:
     # loop through obsvariables and platforms to do processing
     for v in self.obsvars:
       for p in platforms:
-        outname = OutDir+'/'+p+'_'+v+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        outname = OutDir+'/'+p+'_'+v+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
           if (os.path.exists(outname)):
             print("File exists. Skipping and not overwriting:")
