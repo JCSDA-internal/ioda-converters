@@ -22,6 +22,7 @@ def subset(infile,nlocsout,suffix):
   if nlocsout > nlocsin:
     nlocsout = nlocsin
   flag = random.sample(np.arange(0,nlocsin),nlocsout)
+  flag = sorted(flag)
   nobsout = nlocsout*nvars
   # copy global attributes
   for aname in ncin.ncattrs():
