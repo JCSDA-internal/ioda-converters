@@ -335,12 +335,12 @@ class Ozone:
     locKeys = []
     for l in LocVars:
       if l == 'Obs_Time':
-        tmp = self.df[l][idx]
+        tmp = self.df[l][:]
         obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
         locKeys.append(obstimes)
       else:
-        locKeys.append(self.df[l][idx])
+        locKeys.append(self.df[l][:])
 
     locKeys = np.swapaxes(np.array(locKeys),0,1)
     locKeys = [tuple(a) for a in locKeys]
