@@ -145,18 +145,6 @@ class Radiances:
     obserr = self.df['error_variance'][:]
     obsqc = self.df['QC_Flag'][:]
     gsivars = rd.gsi_add_vars
-    locKeys = []
-    for l in LocVars:
-      if l == 'Obs_Time':
-        tmp = self.df[l][:]
-        obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-        locKeys.append(obstimes)
-      else:
-        locKeys.append(self.df[l][:])
-    #locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
-    locKeys = np.swapaxes(np.array(locKeys),0,1)
-    locKeys = [tuple(a) for a in locKeys]
 
     # loop through channels for subset
     for c in range(len(chanlist)):
@@ -170,6 +158,17 @@ class Radiances:
       obsdatasub = obsdata[idx]
       obserrsub = obserr[c]
       obsqcsub = obsqc[idx]
+      locKeys = []
+      for l in LocVars:
+        if l == 'Obs_Time':
+          tmp = self.df[l][idx]
+          obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+          obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+          locKeys.append(obstimes)
+        else:
+          locKeys.append(self.df[l][idx])
+      locKeys = np.swapaxes(np.array(locKeys),0,1)
+      locKeys = [tuple(a) for a in locKeys]
       gsimeta = {}
       for key, value2 in gsivars.items():
         # some special actions need to be taken depending on var name...
@@ -183,17 +182,16 @@ class Radiances:
           gsimeta[key] = self.df[key][idx] 
       # not sure how to do this without a loop since it's a dict...
       for i in range(len(obsdatasub)):
-        j = (c*len(obsdatasub)) + i
         # observation data
-        outdata[recKey][locKeys[j]][varDict[value]['valKey']] = obsdatasub[i]
+        outdata[recKey][locKeys[i]][varDict[value]['valKey']] = obsdatasub[i]
         # observation error
-        outdata[recKey][locKeys[j]][varDict[value]['errKey']] = obserrsub
+        outdata[recKey][locKeys[i]][varDict[value]['errKey']] = obserrsub
         # observation prep qc mark
-        outdata[recKey][locKeys[j]][varDict[value]['qcKey']] = obsqcsub[i]
+        outdata[recKey][locKeys[i]][varDict[value]['qcKey']] = obsqcsub[i]
         # add additional GSI variables that are not needed long term but useful for testing
         for key, value2 in gsivars.items():
           gvname = value,value2
-          outdata[recKey][locKeys[j]][gvname] = gsimeta[key][i] 
+          outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i] 
       # metadata 
       for key, value2 in rd.chan_metadata_dict.items():
         outdata[recKey]['VarMetaData'][(value,value2)] = self.df[key][c] 
