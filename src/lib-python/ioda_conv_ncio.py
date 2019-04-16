@@ -53,24 +53,15 @@ class NcWriter(object):
         # Variable names of items in the location key
         self._loc_key_list = LocKeyList
 
-        # Output format
-        self._out_nc_version = 1   # 1 - all variables form a list of vectors in the top
-                                  #     level group
-                                  # 2 - groups for meta data, 2D tables for obs data, etc.
-
-        self._out_nc_1_descrip = "Each variable is a vector, all variables in top-level group"
-        self._out_nc_2_descrip = "Obs data are 2D arrays, metatdata are vectors in subgroups"
-
         # Names assigned to obs values, error estimates and qc marks
         self._oval_name = "ObsValue"
         self._oerr_name = "ObsError"
-        self._oqc_name  = "PreQc"
+        self._oqc_name  = "PreQC"
 
         # Names assigned to dimensions
         self._nrecs_dim_name = 'nrecs'
         self._nlocs_dim_name = 'nlocs'
         self._nvars_dim_name = 'nvars'
-        self._nobs_dim_name  = 'nobs'
         self._nstr_dim_name  = 'nstring'
         self._ndatetime_dim_name  = 'ndatetime'
 
@@ -78,7 +69,6 @@ class NcWriter(object):
         self._nlocs   = 0
         self._nvars   = 0
         self._nrecs   = 0
-        self._nobs    = 0
         self._nstring = 50
         self._ndatetime = 20
 
@@ -94,7 +84,7 @@ class NcWriter(object):
 
         # Names for metadata groups
         self._rec_md_name = "RecMetaData"
-        self._loc_md_name = "LocMetaData"
+        self._loc_md_name = "MetaData"
         self._var_md_name = "VarMetaData"
 
         # Reference date time
@@ -131,6 +121,10 @@ class NcWriter(object):
         elif (NumpyDtype == np.dtype('int64')):
             NcDtype = 'i4'    # convert long to int
         elif (NumpyDtype == np.dtype('int32')):
+            NcDtype = 'i4'
+        elif (NumpyDtype == np.dtype('int16')):
+            NcDtype = 'i4'
+        elif (NumpyDtype == np.dtype('int8')):
             NcDtype = 'i4'
         elif (NumpyDtype == np.dtype('S1')):
             NcDtype = 'c'
@@ -204,7 +198,7 @@ class NcWriter(object):
         self._fid.setncattr(self._nrecs_dim_name, np.int32(self._nrecs))
         self._fid.setncattr(self._nvars_dim_name, np.int32(self._nvars))
         self._fid.setncattr(self._nlocs_dim_name, np.int32(self._nlocs))
-        self._fid.setncattr(self._nobs_dim_name, np.int32(self._nobs))
+
         for Aname, Aval in AttrData.items():
             if (Aname == "date_time_string"):
                 # Save the datetime object in this object and convert
@@ -229,73 +223,46 @@ class NcWriter(object):
         self._fid.createDimension(self._nvars_dim_name, self._nvars)
         self._fid.createDimension(self._nlocs_dim_name, self._nlocs)
         self._fid.createDimension(self._nrecs_dim_name, self._nrecs)
-        self._fid.createDimension(self._nobs_dim_name, self._nobs)
         self._fid.createDimension(self._nstr_dim_name, self._nstring)
         self._fid.createDimension(self._ndatetime_dim_name, self._ndatetime)
 
-        if (self._out_nc_version == 1):
-            for Gname, Vvals in ObsVars.items():
-                for i in range(self._nvars):
-                    # The rstrip trims off the null bytes that correspond to '' chars
-                    # in the character array.
-                    Vname = CharVectorToString(VarMdata['variable_names'][i,:])
-                    NcVname = "{0:s}@{1:s}".format(Vname, Gname)
-                    NcVvals = Vvals[i,:]
+        for VarKey, Vvals in ObsVars.items():
+            (Vname, Gname) = VarKey
+            NcVname = "{0:s}@{1:s}".format(Vname, Gname)
 
-                    self._fid.createVariable(NcVname, self.NumpyToNcDtype(NcVvals.dtype), (self._nlocs_dim_name))
-                    self._fid[NcVname][:] = NcVvals
+            self._fid.createVariable(NcVname, self.NumpyToNcDtype(Vvals.dtype), (self._nlocs_dim_name))
+            self._fid[NcVname][:] = Vvals
 
-        elif (self._out_nc_version == 2):
-            for Vname, Vvals in ObsVars.items():
-                self._fid.createVariable(Vname, self.NumpyToNcDtype(Vvals.dtype), (self._nvars_dim_name, self._nlocs_dim_name))
-                self._fid[Vname][:] = Vvals
 
     def WriteNcMetadata(self, MdataGroup, DimName, Mdata):
         ############################################################
         # This method will create variables in the output netcdf
         # file for the given metadata group.
 
-        if (self._out_nc_version == 1):
-            if (MdataGroup == self._loc_md_name):
-                Gname = "MetaData"
+        if (MdataGroup == self._loc_md_name):
+            # Will be adding the time offset to the location metadata
+            ToffsetName = "time@{0:s}".format(MdataGroup)
+            self._fid.createVariable(ToffsetName, "f4", (DimName))
 
-                # Will be adding the time offset to the location metadata
-                ToffsetName = "time@{0:s}".format(Gname)
-                self._fid.createVariable(ToffsetName, "f4", (DimName))
+        for Vname, Vvals in Mdata.items():
+            NcVname = "{0:s}@{1:s}".format(Vname, MdataGroup)
+            NcDtype = self.NumpyToNcDtype(Vvals.dtype)
+            if (NcDtype == 'c'):
+                if (NcVname == "datetime@MetaData"):
+                    self._fid.createVariable(NcVname, NcDtype, (DimName, self._ndatetime_dim_name))
+                else:
+                    self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
             else:
-                Gname = MdataGroup
+                self._fid.createVariable(NcVname, NcDtype, (DimName))
 
-            for Vname, Vvals in Mdata.items():
-                NcVname = "{0:s}@{1:s}".format(Vname, Gname)
-                NcDtype = self.NumpyToNcDtype(Vvals.dtype)
-                if (NcDtype == 'c'):
-                    if (NcVname == "date_time@MetaData"):
-                        self._fid.createVariable(NcVname, NcDtype, (DimName, self._ndatetime_dim_name))
-                    else:
-                        self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
-                else:
-                    self._fid.createVariable(NcVname, NcDtype, (DimName))
+            self._fid[NcVname][:] = Vvals
 
-                self._fid[NcVname][:] = Vvals
-
-                # If we are writing out the date_time string, then we also
-                # need to write out the time offset (from the reference date_time
-                # attribute value).
-                if (NcVname == "date_time@MetaData"):
-                    ToffsetValues = self.ConvertToTimeOffset(Vvals)
-                    self._fid[ToffsetName][:] = ToffsetValues
-
-        elif (self._out_nc_version == 2):
-            MdGroup = self._fid.createGroup(MdataGroup)
-
-            for Vname, Vvals in Mdata.items():
-                NcDtype = self.NumpyToNcDtype(Vvals.dtype)
-                if (NcDtype == 'c'):
-                    MdGroup.createVariable(Vname, NcDtype, (DimName, self._nstr_dim_name))
-                else:
-                    MdGroup.createVariable(Vname, NcDtype, (DimName))
-
-                MdGroup[Vname][:] = Vvals
+            # If we are writing out the datetime string, then we also
+            # need to write out the time offset (from the reference date_time
+            # attribute value).
+            if (NcVname == "datetime@MetaData"):
+                ToffsetValues = self.ConvertToTimeOffset(Vvals)
+                self._fid[ToffsetName][:] = ToffsetValues
 
     def ExtractObsData(self, ObsData):
         ############################################################
@@ -323,8 +290,8 @@ class NcWriter(object):
                       for VarKey, VarVal in LocDict.items():
                            if (VarKey[1] == self._oval_name):
                                VarNames.add(VarKey[0])
-		           if (VarKey[1] not in ObsVarList):
-		               ObsVarList.append(VarKey[1])
+		           if (VarKey not in ObsVarList):
+		               ObsVarList.append(VarKey)
 		               ObsVarExamples.append(VarVal)
                 else:
                       for MetaKey, MetaVal in LocDict.items():
@@ -338,14 +305,9 @@ class NcWriter(object):
 
         VarList = sorted(list(VarNames))
         self._nvars = len(VarList)
-        self._nobs = self._nvars * self._nlocs
-
-        VarMap = OrderedDict()
-        for i in range(self._nvars):
-            VarMap[VarList[i]] = i
 
         # Preallocate arrays and fill them up with data from the dictionary
-	ObsVars = {}
+	ObsVars = OrderedDict()
 	for o in range(len(ObsVarList)):
             VarType = type(ObsVarExamples[o])
             if (VarType in [float,np.float32,np.float64]):
@@ -357,14 +319,14 @@ class NcWriter(object):
             else:
                 print('Warning: VarType',VarType,' not in float, int, str for:',ObsVarList[o])
 	        continue
-            ObsVars[ObsVarList[o]] = np.full((self._nvars, self._nlocs), defaultval)
+            ObsVars[ObsVarList[o]] = np.full((self._nlocs), defaultval)
 
         LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):
             (LocVname, LocVtype) = self._loc_key_list[i]
-            # if date_time was specified as as a "string" override to
+            # if datetime was specified as as a "string" override to
             # define it as a "datetime"
-            if LocVname == "date_time":
+            if LocVname == "datetime":
                 LocVtype = "datetime"
             LocMdata[LocVname] = self.CreateNcVector(self._nlocs, LocVtype)
         LocMdata[self._rec_num_name] = self.CreateNcVector(self._nlocs, "integer")
@@ -416,21 +378,20 @@ class NcWriter(object):
                 for i in range(len(self._loc_key_list)):
                     (LocVname, LocVtype) = self._loc_key_list[i]
 
-                    # if date_time was specified as as a "string" override to
+                    # if datetime was specified as as a "string" override to
                     # define it as a "datetime"
-                    if LocVname == "date_time":
+                    if LocVname == "datetime":
                         LocVtype = "datetime"
 
                     LocMdata[LocVname][LocNum-1] = self.FillNcVector(LocKey[i], LocVtype)
                 LocMdata[self._rec_num_name][LocNum-1] = RecNum
 
                 for VarKey, VarVal in LocDict.items():
-                    VarNum = VarMap[VarKey[0]]
-		    ObsVars[VarKey[1]][VarNum, LocNum-1] = VarVal
+		    ObsVars[VarKey][LocNum-1] = VarVal
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
 
-    def BuildNetcdf(self, ObsData, AttrData):
+    def BuildNetcdf(self, ObsVars, RecMdata, LocMdata, VarMdata, AttrData):
         ############################################################
         # This method will create an output netcdf file, and dump
         # the contents of the ObsData dictionary into that file.
@@ -450,7 +411,7 @@ class NcWriter(object):
         #     /ObsError
         #         2D float array, nvars X nlocs
         #         Observation errors
-        #     /PreQc
+        #     /PreQC
         #         2D integer array, nvars X nlocs
         #         Observation QC marks
         #     /VarMetaData/
@@ -462,35 +423,11 @@ class NcWriter(object):
         #         Group holding 1D vectors of various data types, nlocs
         #         latitude
         #         longitude
-        #         date_time
+        #         datetime
         #     /RecMetaData/
         #         Group holding 1D vectors of various data types, nrecs
         #         station_id
         #         analysis_date_time
-
-        # Check the output format setting
-        if (self._out_nc_version == 1):
-           print("BuildNetcdf: Writing output netcdf version 1")
-           print("  ", self._out_nc_1_descrip)
-        elif (self._out_nc_version == 2):
-           print("BuildNetcdf: Writing output netcdf version 2")
-           print("  ", self._out_nc_2_descrip)
-        else:
-           print("ERROR: Undefined version number output netcdf file: ", self._out_nc_version)
-           print("ERROR:   Recognized version numbers:")
-           print("ERROR:     1:", self._out_nc_1_descrip)
-           print("ERROR:     2:", self._out_nc_2_descrip)
-           exit(-1)
-        print("")
-
-        # The structure of the input ObsData dictionary is:
-        #     ObsData[Record][Location][Variable]
-        #
-        # Each entry has a single value; either a float, integer or string.
-        # We want to write the data into the file as arrays (nvars X nlocs)
-        # or vectors (nlocs) so we need to reformat ObsData to make it
-        # convenient to write the file.
-        (ObsVars, RecMdata, LocMdata, VarMdata) = self.ExtractObsData(ObsData)
 
         # Write out the global attributes followed by the different
         # data sections: Obs variables, Record metadata, locations metadata

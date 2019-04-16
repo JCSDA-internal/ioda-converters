@@ -126,33 +126,33 @@ def read_input(input_file):
 
     # allocate space for output depending on which variables are to be saved
     num_vars = 0
+    obs_dim = (len(lons))
+    obs_data = { }
     if global_config['output_sst']:
+        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim),
+        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim),
+        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim),
         num_vars += 1
     if global_config['output_skin_sst']:
+        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim),
+        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim),
+        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim),
         num_vars += 1
-    obs_dim = (num_vars, len(lons))
-    obs_data = {
-        global_config['oval_name']: np.zeros(obs_dim),
-        global_config['oerr_name']: np.zeros(obs_dim),
-        global_config['opqc_name']: np.zeros(obs_dim),
-    }
 
     # create the final output structures
     loc_data = {
         'latitude': lats,
         'longitude': lons,
-        'date_time': dates,
+        'datetime': dates,
     }
-    idx = 0
     if global_config['output_sst']:
-        obs_data[global_config['oval_name']][idx, :] = val_sst
-        obs_data[global_config['oerr_name']][idx, :] = err
-        obs_data[global_config['opqc_name']][idx, :] = qc
-        idx += 1
+        obs_data[(output_var_names[0], global_config['oval_name'])] = val_sst
+        obs_data[(output_var_names[0], global_config['oerr_name'])] = err
+        obs_data[(output_var_names[0], global_config['opqc_name'])] = qc
     if global_config['output_skin_sst']:
-        obs_data[global_config['oval_name']][idx, :] = val_sst_skin
-        obs_data[global_config['oerr_name']][idx, :] = err
-        obs_data[global_config['opqc_name']][idx, :] = qc
+        obs_data[(output_var_names[1], global_config['oval_name'])] = val_sst_skin
+        obs_data[(output_var_names[1], global_config['oerr_name'])] = err
+        obs_data[(output_var_names[1], global_config['opqc_name'])] = qc
 
     return (obs_data, loc_data, attr_data)
 
@@ -236,8 +236,8 @@ if __name__ == '__main__':
 
     # concatenate the data from the files
     obs_data, loc_data, attr_data = obs[0]
-    loc_data['date_time'] = writer.FillNcVector(
-        loc_data['date_time'], "datetime")
+    loc_data['datetime'] = writer.FillNcVector(
+        loc_data['datetime'], "datetime")
     for i in range(1, len(obs)):
         for k in obs_data:
             axis = len(obs[i][0][k].shape)-1
@@ -245,7 +245,7 @@ if __name__ == '__main__':
                 (obs_data[k], obs[i][0][k]), axis=axis)
         for k in loc_data:
             d = obs[i][1][k]
-            if k == 'date_time':
+            if k == 'datetime':
                 d = writer.FillNcVector(d, 'datetime')
             loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
 
@@ -254,13 +254,6 @@ if __name__ == '__main__':
     attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     attr_data['thinning'] = args.thin
     attr_data['converter'] = os.path.basename(__file__)
-
-    # pass parameters to the IODA writer
-    # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    writer._nrecs = 1
-    writer._nvars = obs_data['ObsValue'].shape[0]
-    writer._nlocs = obs_data['ObsValue'].shape[1]
-    writer._nobs = writer._nvars * writer._nlocs
 
     # determine which variables we are going to output
     selected_names = []
@@ -271,11 +264,11 @@ if __name__ == '__main__':
     var_data = {writer._var_list_name: writer.FillNcVector(
         selected_names, "string")}
 
+    # pass parameters to the IODA writer
+    # (needed because we are bypassing ExtractObsData within BuildNetcdf)
+    writer._nrecs = 1
+    writer._nvars = len(selected_names)
+    writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
+
     # use the writer class to create the final output file
-    writer.WriteNcAttr(attr_data)
-    writer.WriteNcObsVars(obs_data, var_data)
-    writer.WriteNcMetadata(writer._rec_md_name, writer._nrecs_dim_name, {})
-    writer.WriteNcMetadata(writer._loc_md_name,
-                           writer._nlocs_dim_name, loc_data)
-    writer.WriteNcMetadata(writer._var_md_name,
-                           writer._nvars_dim_name, var_data)
+    writer.BuildNetcdf(obs_data, {}, loc_data, var_data, attr_data)
