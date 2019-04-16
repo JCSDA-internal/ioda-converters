@@ -53,12 +53,12 @@ class Observation(object):
             self.data[0][locKey][qcKey] = 0
 
 
-vName = "obs_absolute_dynamic_topography",
+vName = "obs_absolute_dynamic_topography"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("date_time", "string")
+    ("datetime", "string")
 ]
 
 AttrData = {
@@ -104,4 +104,5 @@ if __name__ == '__main__':
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    writer.BuildNetcdf(altim.data, AttrData)
+    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(altim.data)
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
