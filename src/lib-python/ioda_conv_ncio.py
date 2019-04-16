@@ -316,6 +316,11 @@ class NcWriter(object):
                 defaultval = self._defaultI4    # convert long to int
             elif (VarType in [str,np.str_]):
                 defaultval = ''
+            elif (VarType in [np.ma.core.MaskedConstant]):
+                # If we happened to pick an invalid value (inf, nan, etc.) from
+                # a masked array, then the type is a MaskedConstant, and that implies
+                # floating point values.
+                defaultval = self._defaultF4
             else:
                 print('Warning: VarType',VarType,' not in float, int, str for:',ObsVarList[o])
 	        continue
