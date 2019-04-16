@@ -199,7 +199,8 @@ class Radiances:
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
-    writer.BuildNetcdf(outdata,AttrData)
+    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata,AttrData)
     print("Satellite radiance obs processed, wrote to:")
     print(outname)
 
