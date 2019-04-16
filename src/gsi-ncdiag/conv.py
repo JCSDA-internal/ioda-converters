@@ -61,7 +61,7 @@ class Conv:
     # loop through obsvariables and platforms to do processing
     for v in self.obsvars:
       for p in platforms:
-        outname = OutDir+'/'+p+'_'+v+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        outname = OutDir+'/'+p+'_'+v+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
           if (os.path.exists(outname)):
             print("File exists. Skipping and not overwriting:")
@@ -81,7 +81,7 @@ class Conv:
           continue 
         # set up output file
 	ncout = nc.Dataset(outname,'w',format='NETCDF4')
-        ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time",np.int32(self.validtime.strftime("%Y%m%d%H")))
         # get nlocs
         nlocs = np.sum(idx)
         ncout.createDimension("nlocs",nlocs)
@@ -150,7 +150,7 @@ class Conv:
           if ncv in cd.LocKeyList:
             LocKeyList.append(cd.LocKeyList[ncv])
             LocVars.append(ncv)
-        #LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
+        LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
 
         # grab obs to process
         idx = grabobsidx(self.df,p,v)
