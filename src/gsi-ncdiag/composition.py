@@ -52,7 +52,7 @@ class AOD:
     import netCDF4 as nc
 
     # set up output file 
-    outname = OutDir+'/'+self.obstype+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+    outname = OutDir+'/'+self.obstype+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
       if (os.path.exists(outname)):
         print("File exists. Skipping and not overwriting:")
@@ -67,7 +67,7 @@ class AOD:
 
     # set up output file
     ncout = nc.Dataset(outname,'w',format='NETCDF4')
-    ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+    ncout.setncattr("date_time",np.int32(self.validtime.strftime("%Y%m%d%H")))
     ncout.setncattr("satellite",self.satellite)
     ncout.setncattr("sensor",self.sensor)
     # get nlocs
@@ -122,7 +122,6 @@ class AOD:
       if ncv in aodd.LocKeyList:
         LocKeyList.append(aodd.LocKeyList[ncv])
         LocVars.append(ncv)
-    #LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
     # for now, record len is 1 and the list is empty?
     recKey=0
     writer = iconv.NcWriter(outname,RecKeyList,LocKeyList)
@@ -144,18 +143,6 @@ class AOD:
     obsqc = self.df['QC_Flag'][:]
 
     gsivars = aodd.gsi_add_vars
-    locKeys = []
-    for l in LocVars:
-      if l == 'Obs_Time':
-        tmp = self.df[l][:]
-        obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-        locKeys.append(obstimes)
-      else:
-        locKeys.append(self.df[l][:])
-    #locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
-    locKeys = np.swapaxes(np.array(locKeys),0,1)
-    locKeys = [tuple(a) for a in locKeys]
 
    # loop through channels for subset
     for c in range(len(chanlist)):
@@ -164,6 +151,17 @@ class AOD:
       obsdatasub = obsdata[idx]
       obserrsub = obserr[idx]
       obsqcsub = obsqc[idx]
+      locKeys = []
+      for l in LocVars:
+        if l == 'Obs_Time':
+          tmp = self.df[l][idx]
+          obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+          obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+          locKeys.append(obstimes)
+        else:
+          locKeys.append(self.df[l][idx])
+      locKeys = np.swapaxes(np.array(locKeys),0,1)
+      locKeys = [tuple(a) for a in locKeys]
       gsimeta = {}
       for key, value2 in gsivars.items():
         # some special actions need to be taken depending on var name...
@@ -252,7 +250,7 @@ class Ozone:
     import netCDF4 as nc
 
     # set up output file 
-    outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_geovals_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+    outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
     if not clobber:
       if (os.path.exists(outname)):
         print("File exists. Skipping and not overwriting:")
@@ -267,7 +265,7 @@ class Ozone:
 
     # set up output file
     ncout = nc.Dataset(outname,'w',format='NETCDF4')
-    ncout.setncattr("date_time",int(self.validtime.strftime("%Y%m%d%H")))
+    ncout.setncattr("date_time",np.int32(self.validtime.strftime("%Y%m%d%H")))
     ncout.setncattr("satellite",self.satellite)
     ncout.setncattr("sensor",self.sensor)
     # get nlocs
@@ -322,7 +320,6 @@ class Ozone:
       if ncv in ozd.LocKeyList:
         LocKeyList.append(ozd.LocKeyList[ncv])
         LocVars.append(ncv)
-    #LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
     # for now, record len is 1 and the list is empty?
     recKey=0
     writer = iconv.NcWriter(outname,RecKeyList,LocKeyList)
@@ -345,7 +342,6 @@ class Ozone:
       else:
         locKeys.append(self.df[l][:])
 
-    #locKeys.append(np.arange(1,len(obsdata)+1)) # again to ensure unique obs
     locKeys = np.swapaxes(np.array(locKeys),0,1)
     locKeys = [tuple(a) for a in locKeys]
 

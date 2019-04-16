@@ -201,10 +201,10 @@ class NcWriter(object):
         # This method will dump out the netcdf global attribute data
         # contained in the dictionary AttrData.
 
-        self._fid.setncattr(self._nrecs_dim_name, self._nrecs)
-        self._fid.setncattr(self._nvars_dim_name, self._nvars)
-        self._fid.setncattr(self._nlocs_dim_name, self._nlocs)
-        self._fid.setncattr(self._nobs_dim_name, self._nobs)
+        self._fid.setncattr(self._nrecs_dim_name, np.int32(self._nrecs))
+        self._fid.setncattr(self._nvars_dim_name, np.int32(self._nvars))
+        self._fid.setncattr(self._nlocs_dim_name, np.int32(self._nlocs))
+        self._fid.setncattr(self._nobs_dim_name, np.int32(self._nobs))
         for Aname, Aval in AttrData.items():
             if (Aname == "date_time_string"):
                 # Save the datetime object in this object and convert
@@ -214,7 +214,7 @@ class NcWriter(object):
                                self._ref_date_time.month * 10000 +
                                self._ref_date_time.day * 100 +
                                self._ref_date_time.hour)
-                self._fid.setncattr("date_time", refDateTime)
+                self._fid.setncattr("date_time", np.int32(refDateTime))
             else:
                 self._fid.setncattr(Aname, Aval)
 
