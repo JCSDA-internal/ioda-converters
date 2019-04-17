@@ -182,10 +182,10 @@ class AOD:
       outdata[varDict[value]['errKey']] = obserrsub.data
       outdata[varDict[value]['qcKey']] = obsqcsub.data
 
-    # add additional GSI variables that are not needed long term but useful for testing
-    for key, value2 in gsivars.items():
-      gvname = value,value2
-      outdata[gvname] = gsimeta[key].data
+      # add additional GSI variables that are not needed long term but useful for testing
+      for key, value2 in gsivars.items():
+        gvname = value,value2
+        outdata[gvname] = gsimeta[key].data
 
     # var metadata
     var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
