@@ -7,7 +7,7 @@ LocKeyList = {
 	'Latitude':   ('latitude','float'),
 	'Longitude':  ('longitude','float'),
 	'Reference_Pressure': ('air_pressure','float'),
-	'Time': ('date_time','string'),
+	'Time': ('datetime','string'),
 	'Scan_Position':('scan_position','float'),
 	'Solar_Zenith_Angle':('solar_zenith_angle','float'),
 	'Row_Anomaly_Index':('row_anomaly_index','float'),

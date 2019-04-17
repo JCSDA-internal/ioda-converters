@@ -117,6 +117,7 @@ class AOD:
     RecKeyList = [] ; LocKeyList = [] ; LocVars = [] ; AttrData = {}
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: defaultdict(dict))
+    var_mdata = defaultdict(lambda: defaultdict(dict))
     # get list of location variable for this var/platform
     for ncv in self.df.variables:
       if ncv in aodd.LocKeyList:
@@ -131,7 +132,7 @@ class AOD:
     chan_indx = self.df['Channel_Index'][:]
     nchans = len(chan_number)
     nlocs = self.nobs /nchans
-    chanlist = chan_indx[:nchans+1] 
+    chanlist = chan_indx[:nchans] 
     for a in chanlist:
       value = "aerosol_optical_depth_{:d}".format(a)
       varDict[value]['valKey'] = value, writer.OvalName()
@@ -188,13 +189,26 @@ class AOD:
           outdata[recKey][locKeys[j]][gvname] = gsimeta[key][i]
       # metadata 
       for key, value2 in aodd.chan_metadata_dict.items():
-        outdata[recKey]['VarMetaData'][(value,value2)] = self.df[key][c]
-
+        var_mdata[value][value2] = self.df[key][c]
 
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
-    writer.BuildNetcdf(outdata,AttrData)
+    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
+    # Append the var metadata
+    ivar = 0
+    for VarNameKey in VarMdata['variable_names']:
+        VarName = iconv.CharVectorToString(VarNameKey)
+        for VmdataName, VmdataVal in var_mdata[VarName].items():
+            if (ivar == 0):
+                VarType = writer.NumpyToIodaDtype(VmdataVal.dtype)
+                VarMdata[VmdataName] = writer.CreateNcVector(writer._nvars, VarType)
+
+            VarMdata[VmdataName][ivar] = VmdataVal
+
+        ivar += 1
+
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
     print("AOD obs processed, wrote to:")
     print(outname)
 
@@ -334,7 +348,7 @@ class Ozone:
     gsivars = ozd.gsi_add_vars
     locKeys = []
     for l in LocVars:
-      if l == 'Obs_Time':
+      if l == 'Time':
         tmp = self.df[l][:]
         obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -369,7 +383,8 @@ class Ozone:
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
-    writer.BuildNetcdf(outdata,AttrData)
+    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
     print("Ozone obs processed, wrote to:")
     print(outname)
 
