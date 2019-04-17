@@ -9,14 +9,6 @@ install (PROGRAMS
   odbapi2nc.py
   odbapi2json.py
   var_convert.py
-)
-
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
-
-install (PROGRAMS
-  odbapi2nc.py
-  odbapi2json.py
-  var_convert.py
   DESTINATION bin)
 
 ecbuild_add_test( TARGET iodaconv_odb2_coding_norms
