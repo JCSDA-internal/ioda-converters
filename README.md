@@ -70,7 +70,7 @@ The marine converters all take the following format, with some converters taking
 
 Python script, odbapi2nc.py, for converting Met Office or ECMWF ODB2 files to netCDF4 files formatted for use by IODA.
 
-Usage: odbapi2nc.py [-h] [-c] [-q] [-t] [-v] input_odb2 definition_yaml output_netcdf
+Usage: odbapi2nc.py [-h] [-c] [-q] [-t] [-v] [-b] input_odb2 definition_yaml output_netcdf
 
 Definition YAML files currently created and tested:
 * Met Office Radiosonde
