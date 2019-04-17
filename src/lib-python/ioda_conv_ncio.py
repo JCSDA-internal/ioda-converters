@@ -12,6 +12,7 @@ from collections import OrderedDict
 # SUBROUTINES
 ###################################################################################
 
+
 def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
     ###############################################################
     # This method will write out the variable into the appropriate
@@ -27,14 +28,15 @@ def WriteNcVar(Gfid, Ofid, OutDest, Vname, Vdtype, Vdims, Vvals):
         Ovar = Ofid.createVariable(Vname, Vdtype, Vdims)
         Ovar[...] = Vvals[...]
 
+
 def CharVectorToString(CharVec):
     # Need to do this differently given the Python version (2 vs 3)
     #
     # sys.version_info[0] yeilds the Python major version number.
     if (sys.version_info[0] == 2):
-      String = CharVec.tostring().rstrip('\x00')
+        String = CharVec.tostring().rstrip('\x00')
     else:
-      String = str(CharVec.tostring(), 'utf-8').rstrip('\x00')
+        String = str(CharVec.tostring(), 'utf-8').rstrip('\x00')
 
     return String
 
@@ -44,7 +46,7 @@ def CharVectorToString(CharVec):
 ###################################################################################
 
 class NcWriter(object):
-    #### Constructor ####
+    # Constructor
     def __init__(self, NcFname, RecKeyList, LocKeyList):
 
         # Variable names of items in the record key
@@ -56,19 +58,19 @@ class NcWriter(object):
         # Names assigned to obs values, error estimates and qc marks
         self._oval_name = "ObsValue"
         self._oerr_name = "ObsError"
-        self._oqc_name  = "PreQC"
+        self._oqc_name = "PreQC"
 
         # Names assigned to dimensions
         self._nrecs_dim_name = 'nrecs'
         self._nlocs_dim_name = 'nlocs'
         self._nvars_dim_name = 'nvars'
-        self._nstr_dim_name  = 'nstring'
-        self._ndatetime_dim_name  = 'ndatetime'
+        self._nstr_dim_name = 'nstring'
+        self._ndatetime_dim_name = 'ndatetime'
 
         # Dimension sizes
-        self._nlocs   = 0
-        self._nvars   = 0
-        self._nrecs   = 0
+        self._nlocs = 0
+        self._nvars = 0
+        self._nrecs = 0
         self._nstring = 50
         self._ndatetime = 20
 
@@ -93,12 +95,12 @@ class NcWriter(object):
         # Open the netcdf file for writing
         self._fid = Dataset(NcFname, 'w', format='NETCDF4')
 
-    #### Destructor ####
+    # Destructor
     def __del__(self):
         # Close the netcdf file
         self._fid.close()
 
-    #### Methods ####
+    # Methods
 
     def OvalName(self):
         return self._oval_name
@@ -165,7 +167,7 @@ class NcWriter(object):
         # given by TimeStrings into floating point offsets from
         # the reference date_time.
 
-        TimeOffset = np.zeros((self._nlocs), dtype = 'f4')
+        TimeOffset = np.zeros((self._nlocs), dtype='f4')
         for i in range(len(TimeStrings)):
             Tstring = CharVectorToString(TimeStrings[i])
             ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
@@ -229,10 +231,10 @@ class NcWriter(object):
                 # Save the datetime object in this object and convert
                 # to integer representation for the netcdf file
                 self._ref_date_time = dt.datetime.strptime(Aval, "%Y-%m-%dT%H:%M:%SZ")
-                refDateTime = (self._ref_date_time.year * 1000000 +
-                               self._ref_date_time.month * 10000 +
-                               self._ref_date_time.day * 100 +
-                               self._ref_date_time.hour)
+                refDateTime = self._ref_date_time.year * 1000000
+                refDateTime += self._ref_date_time.month * 10000
+                refDateTime += self._ref_date_time.day * 100
+                refDateTime += self._ref_date_time.hour
                 self._fid.setncattr("date_time", np.int32(refDateTime))
             else:
                 self._fid.setncattr(Aname, Aval)
@@ -257,7 +259,6 @@ class NcWriter(object):
 
             self._fid.createVariable(NcVname, self.NumpyToNcDtype(Vvals.dtype), (self._nlocs_dim_name))
             self._fid[NcVname][:] = Vvals
-
 
     def WriteNcMetadata(self, MdataGroup, DimName, Mdata):
         ############################################################
@@ -303,7 +304,7 @@ class NcWriter(object):
 
         # Walk through the structure and get counts so arrays
         # can be preallocated, and variable numbers can be assigned
-	ObsVarList = []
+        ObsVarList = []
         ObsVarExamples = []
         VMName = []
         VMData = {}
@@ -312,24 +313,24 @@ class NcWriter(object):
             for LocKey, LocDict in RecDict.items():
                 self._nlocs += 1
                 for VarKey, VarVal in LocDict.items():
-                     if (VarKey[1] == self._oval_name):
-                         VarNames.add(VarKey[0])
-		     if (VarKey not in ObsVarList):
-		         ObsVarList.append(VarKey)
-		         ObsVarExamples.append(VarVal)
+                    if (VarKey[1] == self._oval_name):
+                        VarNames.add(VarKey[0])
+                    if (VarKey not in ObsVarList):
+                        ObsVarList.append(VarKey)
+                        ObsVarExamples.append(VarVal)
 
         VarList = sorted(list(VarNames))
         self._nvars = len(VarList)
 
         # Preallocate arrays and fill them up with data from the dictionary
-	ObsVars = OrderedDict()
-	for o in range(len(ObsVarList)):
+        ObsVars = OrderedDict()
+        for o in range(len(ObsVarList)):
             VarType = type(ObsVarExamples[o])
-            if (VarType in [float,np.float32,np.float64]):
+            if (VarType in [float, np.float32, np.float64]):
                 defaultval = self._defaultF4
-            elif (VarType in [int,np.int64,np.int32,np.int8]):
+            elif (VarType in [int, np.int64, np.int32, np.int8]):
                 defaultval = self._defaultI4    # convert long to int
-            elif (VarType in [str,np.str_]):
+            elif (VarType in [str, np.str_]):
                 defaultval = ''
             elif (VarType in [np.ma.core.MaskedConstant]):
                 # If we happened to pick an invalid value (inf, nan, etc.) from
@@ -337,8 +338,8 @@ class NcWriter(object):
                 # floating point values.
                 defaultval = self._defaultF4
             else:
-                print('Warning: VarType',VarType,' not in float, int, str for:',ObsVarList[o])
-	        continue
+                print('Warning: VarType', VarType, ' not in float, int, str for:', ObsVarList[o])
+                continue
             ObsVars[ObsVarList[o]] = np.full((self._nlocs), defaultval)
 
         LocMdata = OrderedDict()
@@ -387,7 +388,7 @@ class NcWriter(object):
                 LocMdata[self._rec_num_name][LocNum-1] = RecNum
 
                 for VarKey, VarVal in LocDict.items():
-		    ObsVars[VarKey][LocNum-1] = VarVal
+                    ObsVars[VarKey][LocNum-1] = VarVal
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
 
