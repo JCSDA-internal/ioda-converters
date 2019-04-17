@@ -91,6 +91,8 @@ ap.add_argument("-t", "--trace", action="store_true",
                 help="Print trace statements")
 ap.add_argument("-v", "--convertvars", action="store_true",
                 help="Convert relative_humidity to specific_humidity and output both")
+ap.add_argument("-b", "--usecorvalue", action="store_true",
+                help="Copy 'corvalue' column (bias-corrected value) instead of 'obsvalue' column")
 
 MyArgs = ap.parse_args()
 
@@ -102,6 +104,7 @@ ClobberOfile = MyArgs.clobber
 qcFilter = MyArgs.qcfilter
 Trace = MyArgs.trace
 ConvertVars = MyArgs.convertvars
+UseCorvalue = MyArgs.usecorvalue
 
 # Check files
 BadArgs = False
@@ -183,6 +186,11 @@ selectColumns.append("datum_status.active")
 selectColumns.append("datum_status.passive")
 selectColumns.append("datum_status.rejected")
 selectColumns.append("datum_status.blacklisted")
+
+if UseCorvalue:
+    selectColumns.append("corvalue")
+    if Trace:
+        print "Copying corvalue column (bias-corrected) value instead of obsvalue column."
 
 # The columns above are always selected.
 # Next we add the columns that are required by the variables
@@ -273,10 +281,11 @@ dsRejectedIndex = selectColumns.index("datum_status.rejected")
 dsBlacklistIndex = selectColumns.index("datum_status.blacklisted")
 dateIndex = selectColumns.index(date_s)
 timeIndex = selectColumns.index(time_s)
-obsvalueIndex = selectColumns.index("obsvalue")
 obs_errorIndex = selectColumns.index("obs_error")
 varnoIndex = selectColumns.index("varno")
 vertcoRef1Index = selectColumns.index(vertco_reference_1_s)
+
+obsvalueIndex = selectColumns.index("corvalue") if UseCorvalue else selectColumns.index("obsvalue")
 
 rowCount = 0
 
