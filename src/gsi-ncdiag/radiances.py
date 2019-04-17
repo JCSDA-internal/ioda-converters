@@ -119,6 +119,7 @@ class Radiances:
     RecKeyList = [] ; LocKeyList = [] ; LocVars = [] ; AttrData = {}
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: defaultdict(dict))
+    var_mdata = defaultdict(lambda: defaultdict(dict))
     # get list of location variable for this var/platform
     for ncv in self.df.variables:
       if ncv in rd.LocKeyList:
@@ -194,13 +195,26 @@ class Radiances:
           outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i] 
       # metadata 
       for key, value2 in rd.chan_metadata_dict.items():
-        outdata[recKey]['VarMetaData'][(value,value2)] = self.df[key][c] 
+        var_mdata[value][value2] = self.df[key][c]
       
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
     (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
-    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata,AttrData)
+    # Append the var metadata
+    ivar = 0
+    for VarNameKey in VarMdata['variable_names']:
+        VarName = iconv.CharVectorToString(VarNameKey)
+        for VmdataName, VmdataVal in var_mdata[VarName].items():
+            if (ivar == 0):
+                VarType = writer.NumpyToIodaDtype(VmdataVal.dtype)
+                VarMdata[VmdataName] = writer.CreateNcVector(writer._nvars, VarType)
+
+            VarMdata[VmdataName][ivar] = VmdataVal
+
+        ivar += 1
+
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
     print("Satellite radiance obs processed, wrote to:")
     print(outname)
 

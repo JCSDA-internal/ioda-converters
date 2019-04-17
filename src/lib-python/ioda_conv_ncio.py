@@ -134,6 +134,31 @@ class NcWriter(object):
 
         return NcDtype
 
+    def NumpyToIodaDtype(self, NumpyDtype):
+        ############################################################
+        # This method converts the numpy data type to the
+        # corresponding ioda datatype
+
+        if (NumpyDtype == np.dtype('float64')):
+            IodaDtype = 'float'    # convert double to float
+        elif (NumpyDtype == np.dtype('float32')):
+            IodaDtype = 'float'
+        elif (NumpyDtype == np.dtype('int64')):
+            IodaDtype = 'integer'    # convert long to int
+        elif (NumpyDtype == np.dtype('int32')):
+            IodaDtype = 'integer'
+        elif (NumpyDtype == np.dtype('int16')):
+            IodaDtype = 'integer'
+        elif (NumpyDtype == np.dtype('int8')):
+            IodaDtype = 'integer'
+        elif (NumpyDtype == np.dtype('S1')):
+            IodaDtype = 'string'
+        else:
+            print("ERROR: Unrecognized numpy data type: ", NumpyDtype)
+            exit(-2)
+
+        return IodaDtype
+
     def ConvertToTimeOffset(self, TimeStrings):
         ############################################################
         # This method will convert the absoute time in the string
@@ -285,23 +310,13 @@ class NcWriter(object):
         for RecKey, RecDict in ObsData.items():
             self._nrecs += 1
             for LocKey, LocDict in RecDict.items():
-                if LocKey != 'VarMetaData':
-                      self._nlocs += 1
-                      for VarKey, VarVal in LocDict.items():
-                           if (VarKey[1] == self._oval_name):
-                               VarNames.add(VarKey[0])
-		           if (VarKey not in ObsVarList):
-		               ObsVarList.append(VarKey)
-		               ObsVarExamples.append(VarVal)
-                else:
-                      for MetaKey, MetaVal in LocDict.items():
-                           VMData[MetaKey] = MetaVal
-                           if MetaKey[1] not in VMName:
-                              VMName.append(MetaKey[1])
-            try :
-		del RecDict['VarMetaData']
-	    except:
-	        pass	
+                self._nlocs += 1
+                for VarKey, VarVal in LocDict.items():
+                     if (VarKey[1] == self._oval_name):
+                         VarNames.add(VarKey[0])
+		     if (VarKey not in ObsVarList):
+		         ObsVarList.append(VarKey)
+		         ObsVarExamples.append(VarVal)
 
         VarList = sorted(list(VarNames))
         self._nvars = len(VarList)
@@ -345,26 +360,6 @@ class NcWriter(object):
             RecMdata[RecVname] = self.CreateNcVector(self._nrecs, RecVtype)
 
         VarMdata[self._var_list_name] = self.FillNcVector(VarList, "string")
-
-        # VarMetaData
-        for v in range(len(VMName)):
-          vmdvals = []
-          for i in range(len(VarList)):
-            vmdvals.append(VMData[(VarList[i],VMName[v])])
-	  NumpyDtype = vmdvals[0].dtype
-          if (NumpyDtype == np.dtype('float64')):
-              vmdvtype = 'float' 
-          elif (NumpyDtype == np.dtype('float32')):
-              vmdvtype = 'float' 
-          elif (NumpyDtype == np.dtype('int64')):
-              vmdvtype = 'integer' 
-          elif (NumpyDtype == np.dtype('int32')):
-              vmdvtype = 'integer' 
-          elif (NumpyDtype == np.dtype('S1')):
-              vmdvtype = 'string' 
-          VarMdata[VMName[v]] = self.CreateNcVector(self._nvars, vmdvtype)
-          VarMdata[VMName[v]] = self.FillNcVector(np.array(vmdvals),vmdvtype)
-              
 
         RecNum = 0
         LocNum = 0
