@@ -127,7 +127,7 @@ def read_input(input_file):
     # allocate space for output depending on which variables are to be saved
     num_vars = 0
     obs_dim = (len(lons))
-    obs_data = { }
+    obs_data = {}
     if global_config['output_sst']:
         obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim),
         obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim),
