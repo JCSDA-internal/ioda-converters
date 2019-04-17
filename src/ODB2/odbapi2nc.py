@@ -37,7 +37,7 @@ antime_s = "antime"
 vertco_type_s = "vertco_type"
 vertco_reference_1_s = "vertco_reference_1"
 analysis_date_time_s = "analysis_date_time"
-date_time_s = "date_time"
+date_time_s = "datetime"
 float_s = "float"
 string_s = "string"
 varnoVertco_s = "USE_VERTCO"
@@ -421,7 +421,8 @@ AttrData = {
   'date_time_string' : refDateTimeString
    }
 
-nc_writer.BuildNetcdf(obsDataDictTree, AttrData)
+(ObsVars, RecMdata, LocMdata, VarMdata) = nc_writer.ExtractObsData(obsDataDictTree)
+nc_writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
 
 if Trace:
     print "End: " + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
