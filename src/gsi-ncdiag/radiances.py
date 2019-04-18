@@ -171,7 +171,7 @@ class Radiances:
           obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
           loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
         else:
-          loc_mdata[loc_mdata_name] = self.df[l][idx].data
+          loc_mdata[loc_mdata_name] = self.df[l][idx]
       gsimeta = {}
       for key, value2 in gsivars.items():
         # some special actions need to be taken depending on var name...
@@ -185,19 +185,19 @@ class Radiances:
           gsimeta[key] = self.df[key][idx] 
 
       # store values in output data dictionary
-      outdata[varDict[value]['valKey']] = obsdatasub.data
+      outdata[varDict[value]['valKey']] = obsdatasub
       outdata[varDict[value]['errKey']] = obserrsub
-      outdata[varDict[value]['qcKey']] = obsqcsub.data
+      outdata[varDict[value]['qcKey']] = obsqcsub
 
       # add additional GSI variables that are not needed long term but useful for testing
       for key, value2 in gsivars.items():
         gvname = value,value2
-        outdata[gvname] = gsimeta[key].data
+        outdata[gvname] = gsimeta[key]
 
     # var metadata
     var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
     for key, value2 in rd.chan_metadata_dict.items():
-      var_mdata[value2] = self.df[key][:nchans].data
+      var_mdata[value2] = self.df[key][:nchans]
 
     # dummy record metadata, for now
     nrecs = 1
