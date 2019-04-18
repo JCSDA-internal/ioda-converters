@@ -83,8 +83,8 @@ class NcWriter(object):
         self._ndatetime = 20
 
         # default fill values
-        self._defaultF4 = np.float32(np.abs(netCDF4.default_fillvals['f4']))
-        self._defaultI4 = np.int32(np.abs(netCDF4.default_fillvals['i4']))
+        self._defaultF4 = np.abs(netCDF4.default_fillvals['f4'])
+        self._defaultI4 = np.abs(netCDF4.default_fillvals['i4'])
 
         # Names assigned to record number (location metadata)
         self._rec_num_name = "record_number"
@@ -357,7 +357,7 @@ class NcWriter(object):
             else:
                 print('Warning: VarType',VarType,' not in float, int, str for:',ObsVarList[o])
 	        continue
-            ObsVars[ObsVarList[o]] = np.full((self._nvars, self._nlocs), defaultval)
+            ObsVars[ObsVarList[o]] = np.full((self._nvars, self._nlocs), defaultval,dtype=defaultval.dtype)
 
         LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):
