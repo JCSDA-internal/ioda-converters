@@ -340,7 +340,7 @@ class NcWriter(object):
             else:
                 print('Warning: VarType', VarType, ' not in float, int, str for:', ObsVarList[o])
                 continue
-            ObsVars[ObsVarList[o]] = np.full((self._nlocs), defaultval)
+            ObsVars[ObsVarList[o]] = np.full((self._nvars, self._nlocs), defaultval, dtype=defaultval.dtype)
 
         LocMdata = OrderedDict()
         for i in range(len(self._loc_key_list)):

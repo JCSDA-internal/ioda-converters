@@ -79,10 +79,10 @@ if __name__ == '__main__':
         description=('Read CPC Hybrid-GODAS sst files and convert'
                      ' to IODA format')
     )
-    parser.add_argument('-i',
+    parser.add_argument('-i', '--input',
                         help="name of HGODAS profile input file",
                         type=str, required=True)
-    parser.add_argument('-o',
+    parser.add_argument('-o', '--output',
                         help="name of ioda output file",
                         type=str, required=True)
     parser.add_argument('-d', '--date',
