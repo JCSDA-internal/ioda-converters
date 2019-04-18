@@ -79,6 +79,7 @@ include_directories( ${IODACONV_INCLUDE_DIRS} ${IODACONV_EXTRA_INCLUDE_DIRS} )
 include( iodaconv_extra_macros )
 add_subdirectory( src )
 add_subdirectory( tools )
+add_subdirectory( test )
 
 if(ECBUILD_INSTALL_FORTRAN_MODULES)
   install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} DESTINATION ${INSTALL_INCLUDE_DIR} )
