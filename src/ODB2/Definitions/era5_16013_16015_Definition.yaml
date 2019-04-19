@@ -97,6 +97,6 @@ location_key:
   latitude: float
   longitude: float
   air_pressure: float
-  date_time: string
+  datetime: string
 
 ...

@@ -158,7 +158,7 @@ class IODA(object):
             ("latitude", "float"),
             ("longitude", "float"),
             ("depth", "float"),
-            ("date_time", "string")
+            ("datetime", "string")
         ]
 
         self.AttrData = {
@@ -212,7 +212,8 @@ class IODA(object):
 
                 recKey += 1
 
-        self.writer.BuildNetcdf(self.data, self.AttrData)
+        (ObsVars, RecMdata, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
+        self.writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, self.AttrData)
 
         return
 
