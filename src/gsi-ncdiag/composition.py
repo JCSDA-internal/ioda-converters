@@ -117,6 +117,9 @@ class AOD:
     RecKeyList = [] ; LocKeyList = [] ; LocVars = [] ; AttrData = {}
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: defaultdict(dict))
+    rec_mdata = defaultdict(lambda: defaultdict(dict))
+    loc_mdata = defaultdict(lambda: defaultdict(dict))
+    var_mdata = defaultdict(lambda: defaultdict(dict))
     # get list of location variable for this var/platform
     for ncv in self.df.variables:
       if ncv in aodd.LocKeyList:
@@ -131,7 +134,7 @@ class AOD:
     chan_indx = self.df['Channel_Index'][:]
     nchans = len(chan_number)
     nlocs = self.nobs /nchans
-    chanlist = chan_indx[:nchans+1] 
+    chanlist = chan_indx[:nchans] 
     for a in chanlist:
       value = "aerosol_optical_depth_{:d}".format(a)
       varDict[value]['valKey'] = value, writer.OvalName()
@@ -145,23 +148,23 @@ class AOD:
     gsivars = aodd.gsi_add_vars
 
    # loop through channels for subset
+    var_names = []
     for c in range(len(chanlist)):
       value = "aerosol_optical_depth_{:d}".format(chanlist[c])
+      var_names.append(value)
       idx = chan_indx == chanlist[c]
       obsdatasub = obsdata[idx]
       obserrsub = obserr[idx]
       obsqcsub = obsqc[idx]
-      locKeys = []
       for l in LocVars:
+        loc_mdata_name = aodd.LocKeyList[l][0]
         if l == 'Obs_Time':
           tmp = self.df[l][idx]
           obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
           obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-          locKeys.append(obstimes)
+          loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
         else:
-          locKeys.append(self.df[l][idx])
-      locKeys = np.swapaxes(np.array(locKeys),0,1)
-      locKeys = [tuple(a) for a in locKeys]
+          loc_mdata[loc_mdata_name] = self.df[l][idx]
       gsimeta = {}
       for key, value2 in gsivars.items():
         # some special actions need to be taken depending on var name...
@@ -173,28 +176,38 @@ class AOD:
           gsimeta[key] = self.df[key][idx] - self.df["Obs_Minus_Forecast_unadjusted"][idx]
         else:
           gsimeta[key] = self.df[key][idx]
-      # not sure how to do this without a loop since it's a dict...
-      for i in range(len(obsdatasub)):
-        j = (c*len(obsdatasub)) + i
-        # observation data
-        outdata[recKey][locKeys[j]][varDict[value]['valKey']] = obsdatasub[i]
-        # observation error
-        outdata[recKey][locKeys[j]][varDict[value]['errKey']] = obserrsub[i]
-        # observation prep qc mark
-        outdata[recKey][locKeys[j]][varDict[value]['qcKey']] = obsqcsub[i]
-        # add additional GSI variables that are not needed long term but useful for testing
-        for key, value2 in gsivars.items():
-          gvname = value,value2
-          outdata[recKey][locKeys[j]][gvname] = gsimeta[key][i]
-      # metadata 
-      for key, value2 in aodd.chan_metadata_dict.items():
-        outdata[recKey]['VarMetaData'][(value,value2)] = self.df[key][c]
 
+      # store values in output data dictionary
+      outdata[varDict[value]['valKey']] = obsdatasub
+      outdata[varDict[value]['errKey']] = obserrsub
+      outdata[varDict[value]['qcKey']] = obsqcsub
 
+      # add additional GSI variables that are not needed long term but useful for testing
+      for key, value2 in gsivars.items():
+        gvname = value,value2
+        outdata[gvname] = gsimeta[key]
+
+    # var metadata
+    var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
+    for key, value2 in aodd.chan_metadata_dict.items():
+      var_mdata[value2] = self.df[key][:nchans]
+
+    # dummy record metadata, for now
+    nrecs = 1
+    rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
+    loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
+
+    # global attributes
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
-    writer.BuildNetcdf(outdata,AttrData)
+
+    # set dimension lengths in the writer since we are bypassing ExtractObsData
+    writer._nrecs = nrecs
+    writer._nvars = nchans
+    writer._nlocs = nlocs
+
+    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
     print("AOD obs processed, wrote to:")
     print(outname)
 
@@ -334,7 +347,7 @@ class Ozone:
     gsivars = ozd.gsi_add_vars
     locKeys = []
     for l in LocVars:
-      if l == 'Obs_Time':
+      if l == 'Time':
         tmp = self.df[l][:]
         obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -369,7 +382,8 @@ class Ozone:
     AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     AttrData["satellite"] = self.satellite
     AttrData["sensor"] = self.sensor
-    writer.BuildNetcdf(outdata,AttrData)
+    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
     print("Ozone obs processed, wrote to:")
     print(outname)
 

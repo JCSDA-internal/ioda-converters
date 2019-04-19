@@ -57,7 +57,7 @@ bufrtypes = {
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
 LocKeyList = {
 		'Station_ID':	('station_id','string'),
-		'Time':		('date_time','string'),
+		'Time':		('datetime','string'),
 		'Latitude':	('latitude','float'),
 		'Longitude':	('longitude','float'),
 		'Station_Elevation': ('station_elevation','float'),
