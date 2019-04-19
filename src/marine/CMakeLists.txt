@@ -12,20 +12,10 @@ list(APPEND programs
   smap_sss2ioda.py
 )
 
-# "build" each script for testing purposes. The idea is to walk through the
-# ${programs} list and trigger a copy to the build bin directory when a script
-# if modified.
-foreach( script ${programs} )
-  set( source_file ${CMAKE_CURRENT_SOURCE_DIR}/${script} )
-  set( dest_file ${CMAKE_BINARY_DIR}/bin/${script} )
-  list( APPEND marine_scripts_deps ${dest_file} )
-  add_custom_command (
-    OUTPUT ${dest_file}
-    DEPENDS ${source_file}
-    COMMAND cp ${source_file} ${dest_file}
-    COMMAND chmod +x ${dest_file}
-  )
-endforeach( script )
+SET_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}
+                   marine_scripts_deps)
 add_custom_target( marine_scripts ALL DEPENDS ${marine_scripts_deps} )
 
 install (PROGRAMS
