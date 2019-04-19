@@ -2,7 +2,11 @@ list( APPEND programs
     lint.sh
 )
 
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
+SET_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}
+                   tools_scripts_deps)
+add_custom_target( tools_scripts ALL DEPENDS ${tools_scripts_deps} )
 
 install (PROGRAMS
   lint.sh
