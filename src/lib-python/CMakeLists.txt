@@ -5,7 +5,11 @@ list( APPEND programs
   run-mccabe.py
 )
 
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
+SET_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}
+                   lib_python_scripts_deps)
+add_custom_target( lib_python_scripts ALL DEPENDS ${lib_python_scripts_deps} )
 
 install (PROGRAMS
   ioda_conv_ncio.py

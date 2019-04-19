@@ -9,7 +9,11 @@ list( APPEND programs
   proc_gsi_ncdiag.py 
 )
 
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
+SET_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}
+                   gsi_ncdiag_scripts_deps)
+add_custom_target( gsi_ncdiag_scripts ALL DEPENDS ${gsi_ncdiag_scripts_deps} )
 
 install (PROGRAMS
   ${programs}

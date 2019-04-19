@@ -3,7 +3,12 @@ list( APPEND programs
   odbapi2json.py
   var_convert.py)
 
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
+
+SET_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}
+                   odb2_scripts_deps)
+add_custom_target( odb2_scripts ALL DEPENDS ${odb2_scripts_deps} )
 
 install (PROGRAMS
   odbapi2nc.py

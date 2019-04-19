@@ -5,7 +5,11 @@ list( APPEND programs
   ncep_classes.py
 )
 
-COPY_FILES( "${programs}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/bin )
+SET_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}
+                   ncep_scripts_deps)
+add_custom_target( ncep_scripts ALL DEPENDS ${ncep_scripts_deps} )
 
 install (PROGRAMS
   ${programs}
