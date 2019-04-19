@@ -29,7 +29,7 @@ class Conv:
     elif self.obstype == 'conv_gps':
       self.obsvars = ['bend','refract']
     else:
-      self.obsvars = [splitfname[i+i]]
+      self.obsvars = [splitfname[i+1]]
 
   def read(self):
     import netCDF4 as nc
@@ -220,7 +220,8 @@ class Conv:
               outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i] 
           
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-        writer.BuildNetcdf(outdata,AttrData)
+        (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
+        writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
         print("Conventional obs processed, wrote to:")
         print(outname)
 

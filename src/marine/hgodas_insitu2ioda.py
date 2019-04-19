@@ -24,7 +24,7 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("depth", "float"),
-    ("date_time", "string")
+    ("datetime", "string")
 ]
 
 AttrData = {
@@ -104,4 +104,5 @@ if __name__ == '__main__':
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    writer.BuildNetcdf(prof.data, AttrData)
+    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
+    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
