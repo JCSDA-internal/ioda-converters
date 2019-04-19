@@ -311,7 +311,7 @@ class NcWriter(object):
 
         # Walk through the structure and get counts so arrays
         # can be preallocated, and variable numbers can be assigned
-	ObsVarList = []
+        ObsVarList = []
         ObsVarExamples = []
         VMName = []
         VMData = {}
