@@ -14,6 +14,7 @@ SET_TARGETS_DEPS( "${libs}"
                    lib_python_scripts_deps)
 add_custom_target( lib_python_scripts ALL DEPENDS ${lib_python_scripts_deps} )
 
+# Configure files for local bin
 set( SCRIPT_LIB_PATH "${CMAKE_BINARY_DIR}/lib" )
 CONF_TARGETS_DEPS( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
@@ -23,9 +24,18 @@ add_custom_target( bin_python_scripts ALL
     COMMAND chmod +x ${bin_python_scripts_deps}
     DEPENDS ${bin_python_scripts_deps} )
 
+# Configure files for install prefix bin
+set( SCRIPT_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib" )
+CONF_TARGETS_DEPS( "${programs}"
+                   ${CMAKE_CURRENT_SOURCE_DIR}
+                   ${CMAKE_BINARY_DIR}/install-bin
+                   install_bin_python_scripts_deps)
+add_custom_target( install_bin_python_scripts ALL
+    COMMAND chmod +x ${install_bin_python_scripts_deps}
+    DEPENDS ${install_bin_python_scripts_deps} )
+
 install( PROGRAMS
-  run-pyflakes.py
-  run-mccabe.py
+  ${install_bin_python_scripts_deps}
   DESTINATION bin
 )
 
