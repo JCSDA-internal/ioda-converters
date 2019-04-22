@@ -187,7 +187,7 @@ class Radiances:
                     obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                     loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
                 else:
-                    loc_mdata[loc_mdata_name] = self.df[l][idx]
+                    loc_mdata[loc_mdata_name] = self.df[lvar][idx]
             gsimeta = {}
             for key, value2 in gsivars.items():
                 # some special actions need to be taken depending on var
