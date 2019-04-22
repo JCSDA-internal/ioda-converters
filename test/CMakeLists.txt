@@ -17,6 +17,10 @@ list( APPEND test_input
   testinput/smap_sss_rss.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
+  testinput/gsidiag_conv.nc
+  testinput/gsidiag_rad.nc
+  testinput/gsidiag_oz.nc
+  testinput/gsidiag_aod.nc
 )
 
 list( APPEND test_output
@@ -29,6 +33,10 @@ list( APPEND test_output
   testoutput/smap_sss_rss.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
+  testoutput/gsidiag_conv.nc
+  testoutput/gsidiag_rad.nc
+  testoutput/gsidiag_oz.nc
+  testoutput/gsidiag_aod.nc
 )
 
 # create test directories and make links to the input files
@@ -138,6 +146,18 @@ ecbuild_add_test( TARGET test_iodaconv_hgodas_sst
                        -o testrun/hgodas_sst.nc
                        -d 2018041512"
                       hgodas_sst.nc)
+
+#===============================================================================
+# GSI ncdiag converters
+#===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_gsidiag_conv
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
+                       -i testinput/gsidiag_conv.nc
+                       -o testrun/gsidiag_conv.nc"
+                      gsidiag_conv.nc)
 
 #===============================================================================
 #===============================================================================
