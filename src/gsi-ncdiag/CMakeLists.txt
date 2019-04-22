@@ -7,6 +7,7 @@ list( APPEND programs
   aod_dicts.py
   oz_dicts.py
   proc_gsi_ncdiag.py 
+  test_gsidiag.py
 )
 
 SET_TARGETS_DEPS( "${programs}"

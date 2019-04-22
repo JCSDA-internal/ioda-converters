@@ -226,7 +226,7 @@ class Conv:
                             obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                             locKeys.append(obstimes)
                         else:
-                            locKeys.append(self.df[l][idx])
+                            locKeys.append(self.df[lvar][idx])
                     # again to ensure unique obs
                     locKeys.append(np.arange(1, len(obsdata) + 1))
                     locKeys = np.swapaxes(np.array(locKeys), 0, 1)
