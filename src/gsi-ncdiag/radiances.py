@@ -180,7 +180,7 @@ class Radiances:
                 print(value)
                 continue
             obsdatasub = obsdata[idx]
-            obsdatasub[obsdatasub>1e6] = np.nan
+            obsdatasub[obsdatasub>9e5] = np.nan
             obserrsub = np.full((nlocs), obserr[c])
             obsqcsub = obsqc[idx]
             for lvar in LocVars:
