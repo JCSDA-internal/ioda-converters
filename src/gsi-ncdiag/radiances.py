@@ -44,6 +44,9 @@ class Radiances:
         self.nchans = len(df.dimensions['nchans'])
         self.df = df
 
+    def close(self):
+        self.df.close()
+
     def toGeovals(self, OutDir, clobber=True):
         """ toGeovals(OutDir,clobber=True)
      if model state fields are in the GSI diag file, create
@@ -177,6 +180,7 @@ class Radiances:
                 print(value)
                 continue
             obsdatasub = obsdata[idx]
+            obsdatasub[obsdatasub>1e6] = np.nan
             obserrsub = np.full((nlocs), obserr[c])
             obsqcsub = obsqc[idx]
             for lvar in LocVars:

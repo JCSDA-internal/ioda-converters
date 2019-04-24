@@ -97,6 +97,19 @@ gsi_add_vars = {
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
 }
 
+gsi_add_vars_uv = {
+    'Observation_Type': 'ObsType',
+    'Prep_Use_Flag': 'PreUseFlag',
+    'Analysis_Use_Flag': 'GsiUseFlag',
+    'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
+    'Errinv_Adjust': 'GsiAdjustObsError',
+    'Errinv_Final': 'GsiFinalObsError',
+    'u_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'u_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'v_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'v_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+}
+
 # geovals_vars = {gsiname:geoval_name}
 geovals_vars = {
     'virtual_temperature': 'virtual_temperature',

@@ -45,6 +45,9 @@ class Conv:
         self.nobs = len(df['Observation_Type'][:])
         self.df = df
 
+    def close(self):
+        self.df.close()
+
     def toGeovals(self, OutDir, clobber=True):
         """ toGeovals(OutDir,clobber=True)
      if model state fields are in the GSI diag file, create
@@ -83,6 +86,8 @@ class Conv:
                     print("No matching observations for:")
                     print("Platform:" + p + " Var:" + v)
                     continue
+                print(str(np.sum(idx))+" matching observations for:")
+                print("Platform:" + p + " Var:" + v)
                 # set up output file
                 ncout = nc.Dataset(outname, 'w', format='NETCDF4')
                 ncout.setncattr(
@@ -195,7 +200,10 @@ class Conv:
                         obsqc = self.df['Prep_QC_Mark'][idx]
                     except BaseException:
                         obsqc = np.ones_like(obsdata) * 2
-                    gsivars = cd.gsi_add_vars
+                    if (v == 'uv'):
+                        gsivars = cd.gsi_add_vars_uv
+                    else:
+                        gsivars = cd.gsi_add_vars
                     gsimeta = {}
                     for key, value in gsivars.items():
                         # some special actions need to be taken depending on
@@ -254,7 +262,7 @@ class Conv:
                  VarMdata) = writer.ExtractObsData(outdata)
                 writer.BuildNetcdf(
                     ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
-                print("Conventional obs processed, wrote to:")
+                print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
 
