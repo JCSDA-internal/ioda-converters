@@ -18,6 +18,7 @@ def run_conv_obs(convfile, outdir):
     Diag = conv.Conv(convfile)
     Diag.read()
     Diag.toIODAobs(outdir)
+    Diag.close()
     return 0
 
 
@@ -26,6 +27,7 @@ def run_radiances_obs(radfile, outdir):
     Diag = radiances.Radiances(radfile)
     Diag.read()
     Diag.toIODAobs(outdir)
+    Diag.close()
     return 0
 
 
