@@ -2,7 +2,6 @@
 import oz_dicts as ozd
 import aod_dicts as aodd
 
-
 class AOD:
     """ class AOD - aerosol optical depth satellite observations
 
@@ -105,7 +104,8 @@ class AOD:
 """
         import ioda_conv_ncio as iconv
         import os
-        from collections import defaultdict
+        from collections import defaultdict,OrderedDict
+        from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
         # set up a NcWriter class
@@ -120,10 +120,10 @@ class AOD:
         LocVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
-        outdata = defaultdict(lambda: defaultdict(dict))
-        rec_mdata = defaultdict(lambda: defaultdict(dict))
-        loc_mdata = defaultdict(lambda: defaultdict(dict))
-        var_mdata = defaultdict(lambda: defaultdict(dict))
+        outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in aodd.LocKeyList:
@@ -318,7 +318,8 @@ class Ozone:
         """
         import ioda_conv_ncio as iconv
         import os
-        from collections import defaultdict
+        from collections import defaultdict,OrderedDict
+        from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
         # set up a NcWriter class
@@ -333,7 +334,7 @@ class Ozone:
         LocVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
-        outdata = defaultdict(lambda: defaultdict(dict))
+        outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in ozd.LocKeyList:

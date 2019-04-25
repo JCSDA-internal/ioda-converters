@@ -120,7 +120,8 @@ class Radiances:
         """
         import ioda_conv_ncio as iconv
         import os
-        from collections import defaultdict
+        from collections import defaultdict, OrderedDict
+        from orddicts import DefaultOrderedDict
         import rad_dicts as rd
         import numpy as np
         import datetime as dt
@@ -137,10 +138,10 @@ class Radiances:
         LocVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
-        outdata = defaultdict(lambda: defaultdict(dict))
-        rec_mdata = defaultdict(lambda: defaultdict(dict))
-        loc_mdata = defaultdict(lambda: defaultdict(dict))
-        var_mdata = defaultdict(lambda: defaultdict(dict))
+        outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in rd.LocKeyList:

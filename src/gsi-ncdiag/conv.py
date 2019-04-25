@@ -141,7 +141,8 @@ class Conv:
         """
         import ioda_conv_ncio as iconv
         import os
-        from collections import defaultdict
+        from collections import defaultdict, OrderedDict
+        from orddicts import DefaultOrderedDict
         import conv_dicts as cd
         import numpy as np
         import datetime as dt
@@ -167,7 +168,7 @@ class Conv:
                 LocVars = []
                 AttrData = {}
                 varDict = defaultdict(lambda: defaultdict(dict))
-                outdata = defaultdict(lambda: defaultdict(dict))
+                outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
                     if ncv in cd.LocKeyList:
