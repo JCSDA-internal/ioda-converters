@@ -6,6 +6,7 @@ list( APPEND programs
   rad_dicts.py
   aod_dicts.py
   oz_dicts.py
+  orddicts.py
   proc_gsi_ncdiag.py 
   test_gsidiag.py
 )

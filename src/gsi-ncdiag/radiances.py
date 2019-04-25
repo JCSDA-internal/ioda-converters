@@ -125,6 +125,7 @@ class Radiances:
         import rad_dicts as rd
         import numpy as np
         import datetime as dt
+        import netCDF4 as nc
         # set up a NcWriter class
         outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -181,7 +182,7 @@ class Radiances:
                 print(value)
                 continue
             obsdatasub = obsdata[idx]
-            obsdatasub[obsdatasub>9e5] = np.nan
+            obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
             obserrsub = np.full((nlocs), obserr[c])
             obsqcsub = obsqc[idx]
             for lvar in LocVars:

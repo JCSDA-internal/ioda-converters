@@ -2,6 +2,7 @@
 import oz_dicts as ozd
 import aod_dicts as aodd
 
+
 class AOD:
     """ class AOD - aerosol optical depth satellite observations
 
@@ -104,7 +105,7 @@ class AOD:
 """
         import ioda_conv_ncio as iconv
         import os
-        from collections import defaultdict,OrderedDict
+        from collections import defaultdict, OrderedDict
         from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
@@ -318,7 +319,7 @@ class Ozone:
         """
         import ioda_conv_ncio as iconv
         import os
-        from collections import defaultdict,OrderedDict
+        from collections import defaultdict, OrderedDict
         from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
