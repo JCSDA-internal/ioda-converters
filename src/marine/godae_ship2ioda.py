@@ -12,7 +12,7 @@ import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from collections import defaultdict
+from orddicts import DefaultOrderedDict
 import ioda_conv_ncio as iconv
 
 
@@ -117,7 +117,7 @@ class IODA(object):
 
         self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
 
-        self.keyDict = defaultdict(lambda: defaultdict(dict))
+        self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
             value = self.varDict[key]
             self.keyDict[key]['valKey'] = value, self.writer.OvalName()
@@ -125,7 +125,7 @@ class IODA(object):
             self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
 
         # data is the dictionary containing IODA friendly data structure
-        self.data = defaultdict(lambda: defaultdict(dict))
+        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
         recKey = 0
 
