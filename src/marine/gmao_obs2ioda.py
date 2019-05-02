@@ -12,7 +12,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import ioda_conv_ncio as iconv
 import netCDF4 as nc4
 from datetime import datetime
-from collections import defaultdict
+from orddicts import DefaultOrderedDict
 
 
 class GMAOobs(object):
@@ -76,7 +76,7 @@ class IODA(object):
 
         self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
 
-        self.keyDict = defaultdict(lambda: defaultdict(dict))
+        self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
             value = self.varDict[key]
             self.keyDict[key]['valKey'] = value, self.writer.OvalName()
@@ -84,7 +84,7 @@ class IODA(object):
             self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
 
         # data is the dictionary containing IODA friendly data structure
-        self.data = defaultdict(lambda: defaultdict(dict))
+        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
         recKey = 0
 
