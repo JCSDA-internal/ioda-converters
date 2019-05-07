@@ -21,6 +21,7 @@ def concat_ioda(FileList, OutFile):
     RecKeyList = []
     LocKeyList = [] 
     AttrData = {}
+    LocKeyList.append(('datetime','string'))
     for f in FileList:
         ncf = nc.Dataset(f, mode='r')
         for key, value in ncf.variables.items():
@@ -41,18 +42,26 @@ def concat_ioda(FileList, OutFile):
                         dtype = 'string'
                     elif vtype == 'int32':
                         dtype = 'integer'
-                    if vs[0] != 'time':
+                    if vs[0] not in ['time','gsi_wind_red_factor']:
                         LocKeyList.append((vs[0],dtype))
                         LocVars.append(key)
+                elif vs[1] == 'VarMetaData':
+                    pass
                 else:
                     DataVars.append(key)
         
         nloc = ncf.dimensions['nlocs'].size
         validtime = dt.datetime.strptime(str(ncf.getncattr('date_time')),"%Y%m%d%H")
-        print(validtime)
-        recKey = 0 # fix
+        tdiff = ncf.variables['time@MetaData'][:]
         for i in range(nloc):
+            try:
+                recs = ncf.variables['record_number'][:]
+                recKey = recs[i]
+            except KeyError:
+                recKey = 0
             vals = []
+            timestamp = validtime + dt.timedelta(hours=float(tdiff[i]))
+            vals.append(timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"))
             for v in LocVars:
                 val = ncf.variables[v][:]
                 if (np.ma.isMaskedArray(val[i])):
@@ -61,8 +70,11 @@ def concat_ioda(FileList, OutFile):
                     vals.append(val[i])
             LocKey = tuple(vals)
             for v in DataVars:
-                dout = ncf.variables[v][:]
-                outdata[recKey][LocKey][tuple(v.split('@'))] = dout[i]
+                try:
+                    dout = ncf.variables[v][:]
+                    outdata[recKey][LocKey][tuple(v.split('@'))] = dout[i]
+                except KeyError:
+                    pass
         ncf.close()
 
     AttrData["date_time_string"] = validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
