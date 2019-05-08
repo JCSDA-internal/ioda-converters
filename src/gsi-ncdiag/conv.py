@@ -227,7 +227,7 @@ class Conv:
                     for lvar in LocVars:
                         if lvar == 'Station_ID':
                             tmp = self.df[lvar][idx]
-                            locKeys.append([''.join(tmp[a])
+                            locKeys.append([b''.join(tmp[a])
                                             for a in range(len(tmp))])
                         elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                             tmp = self.df[lvar][idx]
