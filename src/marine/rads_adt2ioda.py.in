@@ -8,12 +8,15 @@
 #
 
 from __future__ import print_function
+import sys
 import argparse
-import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
 from collections import defaultdict
+
+sys.path.extend("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
 
 
 class Observation(object):
