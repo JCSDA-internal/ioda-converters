@@ -5,14 +5,16 @@ import sys
 import os
 import argparse
 from math import exp
+
+sys.path.extend("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 import ioda_conv_util
 import var_convert
 
 #NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
-#      is unneeded in that environment (but it doesn't hurt anything). 
-#      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the 
+#      is unneeded in that environment (but it doesn't hurt anything).
+#      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the
 #      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
 #print odbPythonPath
@@ -49,7 +51,7 @@ qcFilter = MyArgs.qcfilter
 
 # Check files
 BadArgs = False
-if (not os.path.isfile(Odb2Fname)): 
+if (not os.path.isfile(Odb2Fname)):
     print("ERROR: {0:s}: Specified input file does not exist: {1:s}".format(ScriptName, Odb2Fname))
     print("")
     BadArgs = True
@@ -156,11 +158,11 @@ while row is not None:
     oerr = row.obs_error if row.obs_error is not None else IODA_MISSING_VAL
     if qcVal is None:
         qcVal = IODA_MISSING_VAL
-    
+
     #Assignment code below is done this way for two reasons:
-    # 1. Want to make sure all locations get into IODA, even if they only have 
+    # 1. Want to make sure all locations get into IODA, even if they only have
     #    missing values. (Preserve all the data we can.)
-    # 2. There can be multiple entries in the file for each locationKey, but 
+    # 2. There can be multiple entries in the file for each locationKey, but
     #    we can only keep one. So we choose an entry that is not null/missing, if present.
     if (ovalKey not in obsDataDictTree[profileKey][locationKey] or
          obsDataDictTree[profileKey][locationKey][ovalKey] == IODA_MISSING_VAL):
@@ -175,7 +177,7 @@ while row is not None:
     # obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
     # obsDataDictTree[profileKey][locationKey][oerrKey] = row.obs_error
     # obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
-    
+
     row = c.fetchone()
 
 #After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
@@ -197,7 +199,7 @@ for profileKey in obsDataDictTree:
             rh_err = obsDict[("relative_humidity", ncOerrName)]
             t = obsDict.get(("air_temperature", ncOvalName))
             p = locationKey[2]
-            if (t is not None and rh is not None and rh_err is not None and p is not None and 
+            if (t is not None and rh is not None and rh_err is not None and p is not None and
             t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
                 q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
