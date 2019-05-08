@@ -6,6 +6,7 @@ list( APPEND libs
 list( APPEND programs
   run-pyflakes.py
   run-mccabe.py
+  orddicts.py
 )
 
 SET_TARGETS_DEPS( "${libs}"
