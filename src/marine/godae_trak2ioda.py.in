@@ -8,11 +8,14 @@
 #
 
 from __future__ import print_function
+import sys
 import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import defaultdict
+
+sys.path.extend("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 
 
