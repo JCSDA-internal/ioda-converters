@@ -70,6 +70,9 @@ if( HAVE_ODB_API )
   list( APPEND IODACONV_EXTRA_LIBRARIES     Odb    )
 endif()
 
+# Location of .pycodestyle for norm checking within IODA-converters
+set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+
 ################################################################################
 # Sources
 ################################################################################

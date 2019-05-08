@@ -17,6 +17,8 @@ list( APPEND test_input
   testinput/smap_sss_rss.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
+  testinput/gsidiag_conv_t_sfc_test.nc
+  testinput/gsidiag_amsua_aqua_radiance_test.nc
 )
 
 list( APPEND test_output
@@ -29,6 +31,8 @@ list( APPEND test_output
   testoutput/smap_sss_rss.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
+  testoutput/sfc_tv_obs_2018041500.nc4
+  testoutput/amsua_aqua_obs_2018041500.nc4
 )
 
 # create test directories and make links to the input files
@@ -138,6 +142,28 @@ ecbuild_add_test( TARGET test_iodaconv_hgodas_sst
                        -o testrun/hgodas_sst.nc
                        -d 2018041512"
                       hgodas_sst.nc)
+
+#===============================================================================
+# GSI ncdiag converters
+#===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_gsidiag_conv
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
+                       -i testinput/gsidiag_conv_t_sfc_test.nc
+                       -o testrun/
+                       -t conv"
+                      sfc_tv_obs_2018041500.nc4)
+
+ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
+                       -i testinput/gsidiag_amsua_aqua_radiance_test.nc
+                       -o testrun/
+                       -t rad"
+                      amsua_aqua_obs_2018041500.nc4)
 
 #===============================================================================
 #===============================================================================

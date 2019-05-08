@@ -3,6 +3,7 @@ list( APPEND programs
   collect_sources.py
   run-pyflakes.py
   run-mccabe.py
+  orddicts.py
 )
 
 SET_TARGETS_DEPS( "${programs}"
@@ -21,4 +22,4 @@ install (PROGRAMS
 ecbuild_add_test( TARGET iodaconv_lib-python_coding_norms
                   TYPE SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
-                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR} )
+                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
