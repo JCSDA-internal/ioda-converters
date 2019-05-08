@@ -121,9 +121,9 @@ geovals_vars = {
     'geopotential_height': 'geopotential_height',
     'height': 'height_above_mean_sea_level',
     'surface_pressure': 'surface_pressure',
-    'atmosphere_pressure_coordinate': 'air_pressure',
     'surface_temperature': 'surface_temperature',
     'surface_roughness': 'surface_roughness_length',
+    'surface_height': 'surface_geopotential_height',
     'landmask': 'Land_Fraction',
 }
 
