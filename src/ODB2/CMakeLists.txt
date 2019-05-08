@@ -11,9 +11,7 @@ SET_TARGETS_DEPS( "${programs}"
 add_custom_target( odb2_scripts ALL DEPENDS ${odb2_scripts_deps} )
 
 install (PROGRAMS
-  odbapi2nc.py
-  odbapi2json.py
-  var_convert.py
+  ${programs}
   DESTINATION bin)
 
 ecbuild_add_test( TARGET iodaconv_odb2_coding_norms

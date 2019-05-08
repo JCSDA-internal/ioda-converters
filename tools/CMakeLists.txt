@@ -9,5 +9,5 @@ SET_TARGETS_DEPS( "${programs}"
 add_custom_target( tools_scripts ALL DEPENDS ${tools_scripts_deps} )
 
 install (PROGRAMS
-  lint.sh
+  ${programs}
   DESTINATION bin)
