@@ -3,6 +3,7 @@ list( APPEND programs
   collect_sources.py
   run-pyflakes.py
   run-mccabe.py
+  orddicts.py
 )
 
 SET_TARGETS_DEPS( "${programs}"
