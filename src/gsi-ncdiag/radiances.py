@@ -199,7 +199,9 @@ class Radiances:
                 # some special actions need to be taken depending on var
                 # name...
                 if "Inverse" in key:
-                    gsimeta[key] = 1.0 / self.df[key][idx]
+                    outvals = 1.0 / self.df[key][idx]
+                    outvals[np.isinf(outvals)] = np.abs(nc.default_fillvals['f4'])
+                    gsimeta[key] = outvals
                 elif "unadjusted" in key:
                     gsimeta[key] = obsdatasub - self.df[key][idx]
                 elif "_adjusted" in key:
