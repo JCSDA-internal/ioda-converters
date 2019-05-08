@@ -10,12 +10,12 @@ list( APPEND programs
 
 SET_TARGETS_DEPS( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
-                   ${CMAKE_BINARY_DIR}/lib
+                   ${PYIODACONV_BUILD_LIBDIR}
                    lib_python_scripts_deps)
 add_custom_target( lib_python_scripts ALL DEPENDS ${lib_python_scripts_deps} )
 
 # Configure files for local bin
-set( SCRIPT_LIB_PATH "${CMAKE_BINARY_DIR}/lib" )
+set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )
 CONF_TARGETS_DEPS( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
@@ -25,7 +25,7 @@ add_custom_target( bin_python_scripts ALL
     DEPENDS ${bin_python_scripts_deps} )
 
 # Configure files for install prefix bin
-set( SCRIPT_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib" )
+set( SCRIPT_LIB_PATH ${PYIODACONV_INSTALL_LIBDIR} )
 CONF_TARGETS_DEPS( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
@@ -40,9 +40,8 @@ install( PROGRAMS
 )
 
 install( FILES
-  ioda_conv_ncio.py
-  collect_sources.py
-  DESTINATION lib
+  ${lib_python_scripts_deps}
+  DESTINATION lib/pyiodaconv
 )
 
 ecbuild_add_test( TARGET iodaconv_lib-python_coding_norms
