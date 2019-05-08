@@ -10,30 +10,36 @@ import numpy as np
 import argparse
 from collections import defaultdict, OrderedDict
 import datetime as dt
-#from orddicts import DefaultOrderedDict
+from orddicts import DefaultOrderedDict
 
 def concat_ioda(FileList, OutFile):
+    nvars = 0
+    nlocs = 0
     varDict = defaultdict(lambda: defaultdict(dict))
-    outdata = defaultdict(lambda: defaultdict(dict)) # fix this to defaultordereddict
+    outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+    outdata_1 = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+    outdatas = []
+    rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+    loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+    loc_mdata_1 = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+    loc_mdatas = []
+    var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     VarNames = []
+    VarMetaNames = []
     DataVars = []
+    DataVarNames = []
     LocVars = []
     RecKeyList = []
     LocKeyList = [] 
     AttrData = {}
     LocKeyList.append(('datetime','string'))
+    LocVars.append('datetime@MetaData')
     for f in FileList:
         ncf = nc.Dataset(f, mode='r')
         for key, value in ncf.variables.items():
             if key not in VarNames:
                 VarNames.append(key)
                 vs = key.split('@')
-                #if vs[1] == 'ObsValue':
-                #    varDict[vs[0]]['valKey'] = vs[0], vs[1] 
-                #elif vs[1] == 'ObsError':
-                #    varDict[vs[0]]['errKey'] = vs[0], vs[1] 
-                #elif vs[1] == 'PreQC':
-                #    varDict[vs[0]]['qcKey'] = vs[0], vs[1] 
                 if vs[1] == 'MetaData': # assume all 'MetaData' are LocKeys
                     vtype = ncf.variables[key].dtype
                     if vtype == 'float32':
@@ -42,45 +48,55 @@ def concat_ioda(FileList, OutFile):
                         dtype = 'string'
                     elif vtype == 'int32':
                         dtype = 'integer'
-                    if vs[0] not in ['time','gsi_wind_red_factor']:
+                    if vs[0] not in ['datetime','time']:
                         LocKeyList.append((vs[0],dtype))
                         LocVars.append(key)
                 elif vs[1] == 'VarMetaData':
-                    pass
+                    VarMetaNames.append(key)
                 else:
+                    if vs[1] == 'ObsValue':
+                        nvars = nvars+1
+                        DataVarNames.append(vs[0])
                     DataVars.append(key)
         
         nloc = ncf.dimensions['nlocs'].size
-        validtime = dt.datetime.strptime(str(ncf.getncattr('date_time')),"%Y%m%d%H")
-        tdiff = ncf.variables['time@MetaData'][:]
-        for i in range(nloc):
-            try:
-                recs = ncf.variables['record_number'][:]
-                recKey = recs[i]
-            except KeyError:
-                recKey = 0
-            vals = []
-            timestamp = validtime + dt.timedelta(hours=float(tdiff[i]))
-            vals.append(timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"))
-            for v in LocVars:
-                val = ncf.variables[v][:]
-                if (np.ma.isMaskedArray(val[i])):
-                    vals.append(b''.join(np.ma.getdata(val[i])))
-                else:
-                    vals.append(val[i])
-            LocKey = tuple(vals)
-            for v in DataVars:
-                try:
-                    dout = ncf.variables[v][:]
-                    outdata[recKey][LocKey][tuple(v.split('@'))] = dout[i]
-                except KeyError:
-                    pass
-        ncf.close()
-
-    AttrData["date_time_string"] = validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
+        nlocs = max(nlocs,nloc)
+        validtime = dt.datetime.strptime(str(ncf.getncattr('date_time')),"%Y%m%d%H") 
+    ncf.close()
     writer = iconv.NcWriter(OutFile, RecKeyList, LocKeyList)
-    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
-    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+    for f in FileList:
+        print("Processing:"+f)
+        ncf = nc.Dataset(f, mode='r')
+        #recKeys = ncf.variables['record_number'][:]
+        for idx, lvar in enumerate(LocVars):
+            loc_mdata_name = LocKeyList[idx][0]
+            #loc_mdata[loc_mdata_name] = np.append(loc_mdata[loc_mdata_name],ncf.variables[lvar][:])
+            loc_mdata_1[loc_mdata_name] = ncf.variables[lvar][:] 
+        loc_mdatas.append(loc_mdata_1)
+        for idx, lvar in enumerate(DataVars):
+            data_mdata_name = tuple(lvar.split('@'))
+            try:
+                outdata_1[data_mdata_name] = ncf.variables[lvar][:]
+            except KeyError:
+                pass
+        outdatas.append(outdata_1)
+    for d in loc_mdatas:
+        loc_mdata.update(d)
+    for d in outdatas:
+        outdata.update(d)
+    print(loc_mdata['latitude'])
+    print(len(loc_mdata['latitude']))
+
+    nrecs = 1
+    rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
+    var_mdata['variable_names'] = writer.FillNcVector(DataVarNames, "string")
+    AttrData["date_time_string"] = validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
+    writer._nrecs = nrecs
+    writer._nvars = nvars
+    writer._nlocs = nlocs
+    print(nlocs)
+    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData) 
 
 ######################################################
 ######################################################

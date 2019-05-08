@@ -8,6 +8,8 @@ list( APPEND programs
   oz_dicts.py
   proc_gsi_ncdiag.py 
   test_gsidiag.py
+  combine_conv.py
+  subset_files.py
 )
 
 SET_TARGETS_DEPS( "${programs}"
