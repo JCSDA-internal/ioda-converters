@@ -1,5 +1,5 @@
 add_subdirectory(lib-python)
-#add_subdirectory(gsi-ncdiag)
+add_subdirectory(gsi-ncdiag)
 add_subdirectory(marine)
 #add_subdirectory(ODB2)
 #add_subdirectory(ncep)

@@ -1,12 +1,12 @@
 list( APPEND libs
   ioda_conv_ncio.py
   collect_sources.py
+  orddicts.py
 )
 
 list( APPEND programs
   run-pyflakes.py
   run-mccabe.py
-  orddicts.py
 )
 
 SET_TARGETS_DEPS( "${libs}"
