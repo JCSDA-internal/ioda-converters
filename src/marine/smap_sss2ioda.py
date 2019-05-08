@@ -13,7 +13,7 @@ import ioda_conv_ncio as iconv
 import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
-from collections import defaultdict
+from orddicts import DefaultOrderedDict
 import re
 import sys
 import dateutil.parser
@@ -36,7 +36,7 @@ class Salinity(object):
     def __init__(self, filenames, date, writer):
         self.filenames = filenames
         self.date = date
-        self.data = defaultdict(lambda: defaultdict(dict))
+        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
         self._read()
 
