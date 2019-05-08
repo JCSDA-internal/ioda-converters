@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # script to run to test if the GSI ncdiag converters are still working
+import sys
+import argparse
+
+sys.path.extend("@SCRIPT_LIB_PATH@")
 import radiances
 import conv
 import composition
-import argparse
 
 parser = argparse.ArgumentParser(
     description=('Test for GSI netCDF diag file to IODA Obs/GeoVaLs files converters'))

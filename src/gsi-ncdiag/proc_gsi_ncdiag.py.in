@@ -5,6 +5,7 @@ import sys
 from multiprocessing import Pool
 import glob
 
+sys.path.extend("@SCRIPT_LIB_PATH@")
 import conv
 import radiances
 import composition
