@@ -1,5 +1,6 @@
 list( APPEND programs
   ioda_conv_ncio.py
+  ioda_conv_util.py
   collect_sources.py
   run-pyflakes.py
   run-mccabe.py
