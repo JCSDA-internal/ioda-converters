@@ -1,5 +1,6 @@
 list( APPEND libs
   ioda_conv_ncio.py
+  ioda_conv_util.py
   collect_sources.py
   orddicts.py
 )
