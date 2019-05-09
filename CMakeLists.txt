@@ -73,6 +73,10 @@ endif()
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 
+# Location of installed python iodaconv libraries
+set( PYIODACONV_BUILD_LIBDIR   ${CMAKE_BINARY_DIR}/lib/pyiodaconv )
+set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/pyiodaconv )
+
 ################################################################################
 # Sources
 ################################################################################

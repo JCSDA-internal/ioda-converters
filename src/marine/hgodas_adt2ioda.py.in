@@ -8,16 +8,17 @@
 #
 
 from __future__ import print_function
+import sys
 import argparse
-import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
+
+sys.path.append("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = {
-    'T': "sea_surface_temperature",
-}
+vName = "obs_absolute_dynamic_topography",
 
 locationKeyList = [
     ("latitude", "float"),
@@ -30,7 +31,7 @@ AttrData = {
 }
 
 
-class Profile(object):
+class Observation(object):
 
     def __init__(self, filename, date, writer):
         self.filename = filename
@@ -52,17 +53,15 @@ class Profile(object):
 
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
-        valKey = vName['T'], self.writer.OvalName()
-        errKey = vName['T'], self.writer.OerrName()
-        qcKey = vName['T'], self.writer.OqcName()
+        valKey = vName, self.writer.OvalName()
+        errKey = vName, self.writer.OerrName()
+        qcKey = vName, self.writer.OqcName()
 
-        count = 0
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
                 continue
 
-            count += 1
             dt = base_date + timedelta(hours=float(hrs[i]))
             locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
@@ -76,24 +75,32 @@ class Profile(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description=('Read CPC Hybrid-GODAS sst files and convert'
-                     ' to IODA format')
+        description=(
+            'Read absolute dynamic topography (ADT) observations'
+            ' file(s) that have already been QCd and thinned for use in'
+            ' Hybrid-GODAS system.')
     )
-    parser.add_argument('-i', '--input',
-                        help="name of HGODAS profile input file",
-                        type=str, required=True)
-    parser.add_argument('-o', '--output',
-                        help="name of ioda output file",
-                        type=str, required=True)
-    parser.add_argument('-d', '--date',
-                        help="base date", type=str, required=True)
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
+        '-i', '--input',
+        help="name of HGODAS observation input file(s)",
+        type=str, required=True)
+    required.add_argument(
+        '-o', '--output',
+        help="path of ioda output file",
+        type=str, required=True)
+    required.add_argument(
+        '-d', '--date',
+        help="base date for the center of the window",
+        metavar="YYYYMMDDHH", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     writer = iconv.NcWriter(args.output, [], locationKeyList)
 
     # Read in the profiles
-    prof = Profile(args.input, fdate, writer)
+    prof = Observation(args.input, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")

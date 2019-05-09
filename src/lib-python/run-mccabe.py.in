@@ -3,7 +3,8 @@
 import sys
 import ast
 import mccabe
-from .utils import collect_sources
+sys.path.append("@SCRIPT_LIB_PATH@")
+from utils import collect_sources
 
 
 def process(py_source, max_complexity):
