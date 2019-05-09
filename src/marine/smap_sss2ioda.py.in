@@ -23,7 +23,6 @@ import ioda_conv_ncio as iconv
 
 vName = "sea_surface_salinity"
 
-
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
