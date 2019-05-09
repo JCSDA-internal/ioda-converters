@@ -13,7 +13,7 @@ from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 

@@ -3,7 +3,7 @@
 import sys
 import argparse
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import radiances
 import conv
 import composition

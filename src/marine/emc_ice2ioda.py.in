@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 import numpy as np
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderDict
 
