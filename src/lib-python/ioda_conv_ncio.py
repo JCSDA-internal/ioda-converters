@@ -130,6 +130,10 @@ class NcWriter(object):
             NcDtype = 'i4'
         elif (NumpyDtype == np.dtype('S1')):
             NcDtype = 'c'
+        elif (NumpyDtype == np.dtype('U1')):
+            NcDtype = 'c'
+        elif (NumpyDtype == np.dtype('S32')):
+            NcDtype = 'c'
         else:
             print("ERROR: Unrecognized numpy data type: ", NumpyDtype)
             exit(-2)
