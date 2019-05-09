@@ -12,7 +12,7 @@ import argparse
 import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
-from collections import defaultdict
+from orddicts import DefaultOrderedDict
 
 
 vName = {
@@ -37,7 +37,7 @@ class Profile(object):
     def __init__(self, filename, date, writer):
         self.filename = filename
         self.date = date
-        self.data = defaultdict(lambda: defaultdict(dict))
+        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
         self._read()
 
