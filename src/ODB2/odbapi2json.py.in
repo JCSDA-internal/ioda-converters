@@ -6,7 +6,7 @@ import os
 import argparse
 from math import exp
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 import ioda_conv_util
 import var_convert

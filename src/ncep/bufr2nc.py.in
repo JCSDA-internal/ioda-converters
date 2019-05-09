@@ -7,7 +7,7 @@ import os
 import argparse
 from netCDF4 import Dataset
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import bufr2ncCommon as cm
 import bufr2ncObsTypes as ot
 

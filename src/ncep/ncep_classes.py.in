@@ -8,7 +8,7 @@ import sys
 import os
 import yaml
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 

@@ -13,9 +13,10 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import netCDF4 as nc4
 from datetime import datetime
 
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
+
 
 class GMAOobs(object):
 

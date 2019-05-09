@@ -3,7 +3,7 @@
 import sys
 import ast
 import mccabe
-sys.path.extend("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 from utils import collect_sources
 
 
