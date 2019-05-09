@@ -13,11 +13,11 @@ import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-from collections import defaultdict
 import numpy as np
 
 sys.path.extend("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
+from orddicts import DefaultOrderDict
 
 
 class Observation(object):
@@ -26,7 +26,7 @@ class Observation(object):
         print(date)
         self.filename = filename
         self.date = date
-        self.data = defaultdict(lambda: defaultdict(dict))
+        self.data = DefaultOrderDict(lambda: DefaultOrderDict(dict))
         self.writer = writer
         self._read()
 
