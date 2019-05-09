@@ -8,10 +8,13 @@
 #
 
 from __future__ import print_function
+import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import ioda_conv_ncio as iconv
 import netCDF4 as nc4
 from datetime import datetime
+
+sys.path.append("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 

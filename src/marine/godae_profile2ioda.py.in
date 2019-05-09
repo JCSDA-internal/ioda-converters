@@ -8,11 +8,14 @@
 #
 
 from __future__ import print_function
+import sys
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from orddicts import DefaultOrderedDict
+
+sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
+from orddicts import DefaultOrderedDict
 
 
 class profile(object):

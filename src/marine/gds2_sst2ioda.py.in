@@ -8,8 +8,8 @@
 #
 
 from __future__ import print_function
+import sys
 import argparse
-import ioda_conv_ncio as iconv
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -17,6 +17,8 @@ import numpy as np
 from multiprocessing import Pool
 import os
 
+sys.path.append("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
 
 output_var_names = [
     "sea_surface_temperature",
