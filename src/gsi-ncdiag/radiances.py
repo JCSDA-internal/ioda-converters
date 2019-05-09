@@ -157,7 +157,7 @@ class Radiances:
         chan_number = chan_number[chan_number >= 0]
         chan_indx = self.df['Channel_Index'][:]
         nchans = len(chan_number)
-        nlocs = self.nobs / nchans
+        nlocs = int(self.nobs / nchans)
         chanlist = chan_indx[:nchans]
         for a in chanlist:
             value = "brightness_temperature_{:d}".format(a)
@@ -183,7 +183,7 @@ class Radiances:
                 continue
             obsdatasub = obsdata[idx]
             obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
-            obserrsub = np.full((nlocs), obserr[c])
+            obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
             for lvar in LocVars:
                 loc_mdata_name = rd.LocKeyList[lvar][0]
