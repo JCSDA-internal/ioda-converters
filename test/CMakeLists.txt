@@ -19,6 +19,7 @@ list( APPEND test_input
   testinput/hgodas_sst.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
+  testinput/odb_sonde_16019.odb
 )
 
 list( APPEND test_output
@@ -33,6 +34,7 @@ list( APPEND test_output
   testoutput/hgodas_sst.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
+  testoutput/odb_sonde_16019.nc4
 )
 
 # create test directories and make links to the input files
@@ -166,4 +168,13 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
                       amsua_aqua_obs_2018041500.nc4)
 
 #===============================================================================
+# ODB2 converter
 #===============================================================================
+ecbuild_add_test( TARGET test_iodaconv_odb2_conv
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/odbapi2nc.py -c
+                       testinput/odb_sonde_16019.odb
+                       ../../../code/ioda-converters/src/ODB2/Definitions/MO_radiosonde_Definition.yaml
+                       testrun/odb_sonde_16019.nc4"
+                      odb_sonde_16019.nc4)
