@@ -4,12 +4,15 @@
 # one output file with matching corresponding locations
 # and missing data where applicable
 
+import sys
 import netCDF4 as nc
-import ioda_conv_ncio as iconv
 import numpy as np
 import argparse
 from collections import defaultdict, OrderedDict
 import datetime as dt
+
+sys.path.append("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 vtypedict = {
