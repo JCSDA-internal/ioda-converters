@@ -76,11 +76,8 @@ AttrData = {
 }
 
 
-###############################################################################
-###############################################################################
+def main():
 
-
-if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('')
     )
@@ -118,3 +115,7 @@ if __name__ == '__main__':
 
     (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(ice.data)
     writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+
+if __name__ == '__main__':
+    main()
