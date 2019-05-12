@@ -122,12 +122,12 @@ def concat_ioda(FileList, OutFile):
         DataVarIdx.append(tmpvaridx)
     DataVarData = np.vstack(DataVarData)
     DataVarIdx = np.vstack(DataVarIdx)
-    DataVarUnique = np.ones((len(DataVarData),len(idx)))*np.abs(nc.default_fillvals['f4'])
+    DataVarUnique = np.ones((len(DataVarData), len(idx)))*np.abs(nc.default_fillvals['f4'])
     for ii, jj in np.ndindex(DataVarData.shape):
-        i = DataVarIdx[ii,jj]
+        i = DataVarIdx[ii, jj]
         j = inv[jj]
-        if DataVarData[ii,jj] != nc.default_fillvals['i4'] and DataVarData[ii,jj] != np.abs(nc.default_fillvals['f4']):
-            DataVarUnique[i,j] = DataVarData[ii,jj]
+        if DataVarData[ii, jj] != nc.default_fillvals['i4'] and DataVarData[ii, jj] != np.abs(nc.default_fillvals['f4']):
+            DataVarUnique[i, j] = DataVarData[ii, jj]
     # set up things for the Ncwriter
     ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
     Recs = set(MetaVarUnique[ridx, :].astype('int'))
