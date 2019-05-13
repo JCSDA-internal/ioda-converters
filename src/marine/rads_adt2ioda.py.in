@@ -69,11 +69,7 @@ AttrData = {
 }
 
 
-###############################################################################
-###############################################################################
-
-
-if __name__ == '__main__':
+def main():
 
     # Get command line arguments
     parser = argparse.ArgumentParser(
@@ -109,3 +105,7 @@ if __name__ == '__main__':
 
     (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(altim.data)
     writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+
+if __name__ == '__main__':
+    main()

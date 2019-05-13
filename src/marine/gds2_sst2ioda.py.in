@@ -25,21 +25,22 @@ output_var_names = [
     "sea_surface_skin_temperature"]
 
 
-def read_input(input_file):
+def read_input(input_args):
     """
     Reads/converts a single input file, performing optional thinning also.
-    In addition to the input argument, the global_config structure needs to
-    be populated from outside the functions as well.
 
     Arguments:
 
-        input_file: The name of file to read
+        input_args: A tuple of input filename and global_config
+            input_file: The name of file to read
+            global_config: structure for global arguments related to read
 
     Returns:
 
         A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
     """
-    global global_config
+    input_file = input_args[0]
+    global_config = input_args[1]
 
     print("Reading ", input_file)
     ncd = nc.Dataset(input_file, 'r')
@@ -94,7 +95,7 @@ def read_input(input_file):
     # Create a mask for optional random thinning
     np.random.seed(
         int((global_config['date']-datetime(1970, 1, 1)).total_seconds()))
-    mask = np.random.uniform(size=len(lons)) > args.thin
+    mask = np.random.uniform(size=len(lons)) > global_config['thin']
 
     # also, sometimes certain input variables have their own mask due to
     # missing values
@@ -159,11 +160,7 @@ def read_input(input_file):
     return (obs_data, loc_data, attr_data)
 
 
-###############################################################################
-###############################################################################
-
-
-if __name__ == '__main__':
+def main():
 
     # Get command line arguments
     parser = argparse.ArgumentParser(
@@ -221,8 +218,9 @@ if __name__ == '__main__':
     writer = iconv.NcWriter(args.output, [], [])
 
     # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes, and so other than the
-    # argument array passed in (args.input), it can only read global variables
+    # Note: Pool.map creates separate processes, and can only take iterable
+    # objects. Rather than using global variables, embed them into
+    # the iterable object together with argument array passed in (args.input)
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
@@ -231,10 +229,11 @@ if __name__ == '__main__':
     global_config['opqc_name'] = writer.OqcName()
     global_config['output_sst'] = args.sst
     global_config['output_skin_sst'] = args.skin_sst
+    pool_inputs = [(i, global_config) for i in args.input]
 
     # read / process files in parallel
     pool = Pool(args.threads)
-    obs = pool.map(read_input, args.input)
+    obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
     obs_data, loc_data, attr_data = obs[0]
@@ -274,3 +273,7 @@ if __name__ == '__main__':
 
     # use the writer class to create the final output file
     writer.BuildNetcdf(obs_data, {}, loc_data, var_data, attr_data)
+
+
+if __name__ == '__main__':
+    main()
