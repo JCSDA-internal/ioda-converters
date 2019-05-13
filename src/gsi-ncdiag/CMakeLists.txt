@@ -12,6 +12,7 @@ list( APPEND programs
   proc_gsi_ncdiag.py
   test_gsidiag.py
   combine_conv.py
+  combine_geoval.py
   subset_files.py
 )
 
