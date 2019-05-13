@@ -69,11 +69,7 @@ class Observation(object):
             self.data[0][locKey][qcKey] = qcs[i]
 
 
-###############################################################################
-###############################################################################
-
-
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         description=(
             'Read absolute dynamic topography (ADT) observations'
@@ -107,3 +103,7 @@ if __name__ == '__main__':
 
     (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
     writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+
+if __name__ == '__main__':
+    main()
