@@ -416,7 +416,7 @@ if ConvertVars and (29 in varnoVariableDict):
                 else:
                     obsDict[(specific_humidity_s, ncOvalName)] = IODA_MISSING_VAL
                     obsDict[(specific_humidity_s, ncOerrName)] = IODA_MISSING_VAL
-                obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
+                    obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
     if Trace:
         print "Finished humidity conversion."
 

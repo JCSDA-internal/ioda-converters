@@ -209,7 +209,7 @@ for profileKey in obsDataDictTree:
             else:
                 obsDict[("specific_humidity", ncOvalName)] = IODA_MISSING_VAL
                 obsDict[("specific_humidity", ncOerrName)] = IODA_MISSING_VAL
-            obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
+                obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
             # print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
 
 # print "Top level len: ", len(obsDataDictTree)
