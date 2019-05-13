@@ -175,6 +175,6 @@ ecbuild_add_test( TARGET test_iodaconv_odb2_conv
                   COMMAND iodaconv_comp.sh
                   ARGS "${CMAKE_BINARY_DIR}/bin/odbapi2nc.py -c
                        testinput/odb_sonde_16019.odb
-                       ../../../code/ioda-converters/src/ODB2/Definitions/MO_radiosonde_Definition.yaml
+                       ${CMAKE_BINARY_DIR}/etc/pyiodaconv/MO_radiosonde_Definition.yaml
                        testrun/odb_sonde_16019.nc4"
                       odb_sonde_16019.nc4)
