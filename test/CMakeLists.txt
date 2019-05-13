@@ -170,11 +170,13 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
 #===============================================================================
 # ODB2 converter
 #===============================================================================
-ecbuild_add_test( TARGET test_iodaconv_odb2_conv
-                  TYPE SCRIPT
-                  COMMAND iodaconv_comp.sh
-                  ARGS "${CMAKE_BINARY_DIR}/bin/odbapi2nc.py -c
-                       testinput/odb_sonde_16019.odb
-                       ${CMAKE_BINARY_DIR}/etc/pyiodaconv/MO_radiosonde_Definition.yaml
-                       testrun/odb_sonde_16019.nc4"
-                      odb_sonde_16019.nc4)
+if (ODB_API_HAVE_PYTHON)
+  ecbuild_add_test( TARGET test_iodaconv_odb2_conv
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS "${CMAKE_BINARY_DIR}/bin/odbapi2nc.py -c
+                         testinput/odb_sonde_16019.odb
+                         ${CMAKE_BINARY_DIR}/etc/pyiodaconv/MO_radiosonde_Definition.yaml
+                         testrun/odb_sonde_16019.nc4"
+                        odb_sonde_16019.nc4)
+endif (ODB_API_HAVE_PYTHON)
