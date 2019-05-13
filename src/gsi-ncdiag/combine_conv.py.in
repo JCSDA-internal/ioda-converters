@@ -75,7 +75,6 @@ def concat_ioda(FileList, OutFile):
                 MetaInAll[v] = False
             ncf.close()
     # extract metadata and generate a numpy array
-    print(MetaVars)
     MetaVarData = []
     MetaVarUnique = []
     for v in MetaVars:
@@ -94,16 +93,19 @@ def concat_ioda(FileList, OutFile):
             tmpvardata = np.hstack(tmpvardata)
         MetaVarData.append(tmpvardata)
     MetaVarData = np.vstack(MetaVarData)
-    MetaVarUnique, idx = np.unique(MetaVarData, return_index=True, axis=1)
+    MetaVarUnique, idx, inv, cnt = np.unique(MetaVarData, return_index=True, return_inverse=True, return_counts=True, axis=1)
     # grab variables to write out
     DataVarData = []
+    DataVarIdx = []
     for idx2, v in enumerate(DataVars):
         tmpvardata = []
+        tmpvaridx = []
         for f in FileList:
             ncf = nc.Dataset(f, mode='r')
             try:
                 tmpdata = ncf.variables[v][:]
                 tmpvardata.append(tmpdata)
+                tmpvaridx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
             except KeyError:
                 tmpdata = np.ones_like(ncf.variables['record_number@MetaData'][:]).astype(DataVType[idx2])
                 if DataVType[idx2] == np.int32:
@@ -111,12 +113,21 @@ def concat_ioda(FileList, OutFile):
                 else:
                     tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
                 tmpvardata.append(tmpdata)
+                tmpvaridx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
             validtime = dt.datetime.strptime(str(ncf.getncattr('date_time')), "%Y%m%d%H")
             ncf.close()
         tmpvardata = np.hstack(tmpvardata)
+        tmpvaridx = np.hstack(tmpvaridx)
         DataVarData.append(tmpvardata)
+        DataVarIdx.append(tmpvaridx)
     DataVarData = np.vstack(DataVarData)
-    DataVarUnique = DataVarData[..., idx]
+    DataVarIdx = np.vstack(DataVarIdx)
+    DataVarUnique = np.ones((len(DataVarData), len(idx)))*np.abs(nc.default_fillvals['f4'])
+    for ii, jj in np.ndindex(DataVarData.shape):
+        i = DataVarIdx[ii, jj]
+        j = inv[jj]
+        if DataVarData[ii, jj] != nc.default_fillvals['i4'] and DataVarData[ii, jj] != np.abs(nc.default_fillvals['f4']):
+            DataVarUnique[i, j] = DataVarData[ii, jj]
     # set up things for the Ncwriter
     ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
     Recs = set(MetaVarUnique[ridx, :].astype('int'))
