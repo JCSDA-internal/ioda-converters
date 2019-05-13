@@ -136,13 +136,13 @@ while row is not None:
         refDateTimeString = anDateTimeString
     obsDateTimeString = ioda_conv_util.IntDateTimeToString(row.date, row.time)
     # Encode the 8 QC bitfields in the ODB API file into a single value for IODA
-    qcVal = (row.report_status_active * 128 +
-             row.report_status_passive * 64 +
-             row.report_status_rejected * 32 +
-             row.report_status_blacklisted * 16 +
-             row.datum_status_active * 8 +
-             row.datum_status_passive * 4 +
-             row.datum_status_rejected * 2 +
+    qcVal = (row.report_status_active      * 128 +
+             row.report_status_passive     *  64 +
+             row.report_status_rejected    *  32 +
+             row.report_status_blacklisted *  16 +
+             row.datum_status_active       *   8 +
+             row.datum_status_passive      *   4 +
+             row.datum_status_rejected     *   2 +
              row.datum_status_blacklisted)
     varName = sondeVarnoDict[row.varno]
 

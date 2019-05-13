@@ -307,12 +307,12 @@ while row is not None:
     notReportStatusActive = 0 if row[rsActiveIndex] else 1
     notDatumStatusActive = 0 if row[dsActiveIndex] else 1
     qcVal = (notReportStatusActive * 128 +
-             row[rsPassiveIndex] * 64 +
-             row[rsRejectedIndex] * 32 +
-             row[rsBlacklistIndex] * 16 +
-             notDatumStatusActive * 8 +
-             row[dsPassiveIndex] * 4 +
-             row[dsRejectedIndex] * 2 +
+             row[rsPassiveIndex]   *  64 +
+             row[rsRejectedIndex]  *  32 +
+             row[rsBlacklistIndex] *  16 +
+             notDatumStatusActive  *   8 +
+             row[dsPassiveIndex]   *   4 +
+             row[dsRejectedIndex]  *   2 +
              row[dsBlacklistIndex])
 
     # For conventional obs, varName is usually found using only varno.

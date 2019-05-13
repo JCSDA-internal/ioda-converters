@@ -5,6 +5,8 @@ list( APPEND programs
   odbapi2nc.py
   odbapi2json.py)
 
+set ( ODB2_PYCODESTYLE_CONFIG ${CMAKE_CURRENT_SOURCE_DIR} )
+
 SET_TARGETS_DEPS( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
@@ -43,4 +45,4 @@ install( FILES
 ecbuild_add_test( TARGET iodaconv_odb2_coding_norms
                   TYPE SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
-                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
+                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${ODB2_PYCODESTYLE_CONFIG} )
