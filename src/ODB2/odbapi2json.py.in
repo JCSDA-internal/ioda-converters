@@ -11,13 +11,13 @@ import ioda_conv_ncio as iconv
 import ioda_conv_util
 import var_convert
 
-#NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
+# NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
 #      is unneeded in that environment (but it doesn't hurt anything).
 #      If not in Singularity/Charliecloud, then note ODB API must be built on the system with the
 #      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
-#print odbPythonPath
+# print odbPythonPath
 
 try:
     sys.path.index(odbPythonPath)
@@ -33,7 +33,7 @@ ScriptName = os.path.basename(sys.argv[0])
 
 # Parse command line
 ap = argparse.ArgumentParser()
-#ap.add_argument("obs_type", help="observation type")
+# ap.add_argument("obs_type", help="observation type")
 ap.add_argument("input_odb2", help="path to input Met Office ODB API file")
 ap.add_argument("output_netcdf", help="path to output netCDF4 file")
 ap.add_argument("-c", "--clobber", action="store_true",
@@ -43,7 +43,7 @@ ap.add_argument("-q", "--qcfilter", action="store_true",
 
 MyArgs = ap.parse_args()
 
-#ObsType = MyArgs.obs_type
+# ObsType = MyArgs.obs_type
 Odb2Fname = MyArgs.input_odb2
 jsonFname = MyArgs.output_netcdf
 ClobberOfile = MyArgs.clobber
@@ -70,23 +70,23 @@ if (BadArgs):
     sys.exit(2)
 
 sondeVarnoDict = {
-    2:  "air_temperature",
-    3:  "eastward_wind",
-    4:  "northward_wind",
+    2: "air_temperature",
+    3: "eastward_wind",
+    4: "northward_wind",
     29: "relative_humidity"
 }
 
 recordKeyList = [
-    ( "station_id", "string" ),
-    ( "analysis_date_time", "string" )
-    ]
+    ("station_id", "string"),
+    ("analysis_date_time", "string")
+]
 
 locationKeyList = [
-    ( "latitude", "float" ),
-    ( "longitude", "float" ),
-    ( "air_pressure", "float" ),
-    ( "date_time", "string" )
-    ]
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("air_pressure", "float"),
+    ("date_time", "string")
+]
 
 # Instantiate a netcdf writer object, and get the obs data names from
 # the writer object.
@@ -94,15 +94,15 @@ nc_writer = iconv.NcWriter(jsonFname, recordKeyList, locationKeyList)
 
 ncOvalName = nc_writer.OvalName()
 ncOerrName = nc_writer.OerrName()
-ncOqcName  = nc_writer.OqcName()
+ncOqcName = nc_writer.OqcName()
 
-IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
+IODA_MISSING_VAL = 1.0e9  # IODA converts any value larger than 1e8 to "Missing Value"
 varCategories = [ncOvalName, ncOerrName, ncOqcName]
 
-#The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
-#The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
-#The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
-obsDataDictTree = defaultdict(lambda:defaultdict(dict))
+# The top-level dictionary is keyed by (statid, andate, antime), which uniquely identifiies a profile (balloon launch).
+# The second-level dictionary is keyed by (lat, lon, pressure, date, time), which uniquely identifies a location
+# The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
+obsDataDictTree = defaultdict(lambda: defaultdict(dict))
 
 fetchColumns = 'statid, andate, antime, stalt, lon, lat, vertco_reference_1, date, time, obsvalue, varno, obs_error, ' \
                'report_status.active, report_status.passive, report_status.rejected, report_status.blacklisted, ' \
@@ -112,8 +112,8 @@ FetchRow = namedtuple('FetchRow', tupleNames)
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
-#vertco_type=1 indicates pressure
-#vertco_type=11 indicates "derived pressure", which is a pressure value calculated from airplane flight level
+# vertco_type=1 indicates pressure
+# vertco_type=11 indicates "derived pressure", which is a pressure value calculated from airplane flight level
 #               instead of directly measured. Derived pressure is not present in radiosonde files, but is in
 #               aircraft files. We are treating both types identically in this code.
 sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
@@ -121,10 +121,10 @@ sql = "select " + fetchColumns + " from \"" + Odb2Fname + "\"" + \
     "(varno=2 or varno=3 or varno=4 or varno=29)"
 if qcFilter:
     sql += " and report_status.active=1 and report_status.passive=0 and report_status.rejected=0 and" \
-    " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
-    " and datum_status.blacklisted=0"
+           " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
+           " and datum_status.blacklisted=0"
 sql += ';'
-#print sql
+# print sql
 
 c.execute(sql)
 row = c.fetchone()
@@ -135,7 +135,7 @@ while row is not None:
     if (refDateTimeString == "UnSeT"):
         refDateTimeString = anDateTimeString
     obsDateTimeString = ioda_conv_util.IntDateTimeToString(row.date, row.time)
-    #Encode the 8 QC bitfields in the ODB API file into a single value for IODA
+    # Encode the 8 QC bitfields in the ODB API file into a single value for IODA
     qcVal = (row.report_status_active      * 128 +
              row.report_status_passive     *  64 +
              row.report_status_rejected    *  32 +
@@ -147,7 +147,7 @@ while row is not None:
     varName = sondeVarnoDict[row.varno]
 
     profileKey = row.statid.rstrip(), anDateTimeString
-    #TODO: For now we convert pressure (vertco_reference_1) to hPa here. No units stored yet.
+    # TODO: For now we convert pressure (vertco_reference_1) to hPa here. No units stored yet.
     pressure = row.vertco_reference_1 / 100.0 if row.vertco_reference_1 is not None else IODA_MISSING_VAL
     locationKey = row.lat, row.lon, pressure, obsDateTimeString
     ovalKey = varName, ncOvalName
@@ -159,19 +159,19 @@ while row is not None:
     if qcVal is None:
         qcVal = IODA_MISSING_VAL
 
-    #Assignment code below is done this way for two reasons:
+    # Assignment code below is done this way for two reasons:
     # 1. Want to make sure all locations get into IODA, even if they only have
     #    missing values. (Preserve all the data we can.)
     # 2. There can be multiple entries in the file for each locationKey, but
     #    we can only keep one. So we choose an entry that is not null/missing, if present.
     if (ovalKey not in obsDataDictTree[profileKey][locationKey] or
-         obsDataDictTree[profileKey][locationKey][ovalKey] == IODA_MISSING_VAL):
+            obsDataDictTree[profileKey][locationKey][ovalKey] == IODA_MISSING_VAL):
         obsDataDictTree[profileKey][locationKey][ovalKey] = oval
     if (oerrKey not in obsDataDictTree[profileKey][locationKey] or
-         obsDataDictTree[profileKey][locationKey][oerrKey] == IODA_MISSING_VAL):
+            obsDataDictTree[profileKey][locationKey][oerrKey] == IODA_MISSING_VAL):
         obsDataDictTree[profileKey][locationKey][oerrKey] = oerr
     if (oqcKey not in obsDataDictTree[profileKey][locationKey] or
-         obsDataDictTree[profileKey][locationKey][oqcKey] == IODA_MISSING_VAL):
+            obsDataDictTree[profileKey][locationKey][oqcKey] == IODA_MISSING_VAL):
         obsDataDictTree[profileKey][locationKey][oqcKey] = qcVal
 
     # obsDataDictTree[profileKey][locationKey][ovalKey] = row.obsvalue
@@ -180,7 +180,7 @@ while row is not None:
 
     row = c.fetchone()
 
-#After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
+# After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
 for profileKey in obsDataDictTree:
     for locationKey in obsDataDictTree[profileKey]:
         for varName in sondeVarnoDict.values():
@@ -188,9 +188,9 @@ for profileKey in obsDataDictTree:
                 if (varName, varCat) not in obsDataDictTree[profileKey][locationKey]:
                     obsDataDictTree[profileKey][locationKey][varName, varCat] = IODA_MISSING_VAL
 
-#For now, we convert relative to specific humidity here.
-#This code should be removed eventually, as this is not the right place to convert variables.
-#print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
+# For now, we convert relative to specific humidity here.
+# This code should be removed eventually, as this is not the right place to convert variables.
+# print "statid,lat,lon,datetime,rh,rh_err,t,p,q,q_err"
 for profileKey in obsDataDictTree:
     for locationKey in obsDataDictTree[profileKey]:
         if ("relative_humidity", ncOvalName) in obsDataDictTree[profileKey][locationKey]:
@@ -200,7 +200,7 @@ for profileKey in obsDataDictTree:
             t = obsDict.get(("air_temperature", ncOvalName))
             p = locationKey[2]
             if (t is not None and rh is not None and rh_err is not None and p is not None and
-            t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
+                    t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
                 q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                 obsDict[("specific_humidity", ncOvalName)] = q
@@ -209,13 +209,13 @@ for profileKey in obsDataDictTree:
             else:
                 obsDict[("specific_humidity", ncOvalName)] = IODA_MISSING_VAL
                 obsDict[("specific_humidity", ncOerrName)] = IODA_MISSING_VAL
-            obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
-                #print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
+                obsDict[("specific_humidity", ncOqcName)] = obsDict[("relative_humidity", ncOqcName)]
+            # print ",".join(map(lambda x: str(x), [profileKey[0],locationKey[0],locationKey[1],locationKey[3],rh,rh_err,t,p,q,q_err]))
 
 # print "Top level len: ", len(obsDataDictTree)
 # print "Num Locations: ", len(obsDataDictTree[profileKey])
 
-#Construct new dictionary that we'll dump to JSON, that can then be imported to MongoDB if desired
+# Construct new dictionary that we'll dump to JSON, that can then be imported to MongoDB if desired
 t_val = []
 t_err = []
 t_qc = []
@@ -281,11 +281,10 @@ variables["eastward_wind"] = eastward_wind
 variables["northward_wind"] = northward_wind
 outputDict["variables"] = variables
 
-#print outputDict["latitude"]
+# print outputDict["latitude"]
 
 import json
 print str(json.dumps(outputDict, sort_keys=True, indent=4, separators=(',', ': ')))
 # f = open(jsonFname, "w")
 # print(json.dumps(outputDict, sort_keys=True, indent=4, separators=(',', ': ')), file=f)
 # f.close()
-
