@@ -12,7 +12,7 @@ import ioda_conv_ncio as iconv
 import ioda_conv_util
 import var_convert
 
-#NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
+# NOTE: As of December 11, 2018, the ODB API python package is built into the Singularity image and
 #      put in /usr/local/lib/python2.7/dist-packages/odb, so the code below regarding the path
 #      is unneeded in that environment (but it doesn't hurt anything).
 #      As of March 28, 2019, the ODB API python module is in the python path when you load the
@@ -20,7 +20,7 @@ import var_convert
 #      If not using these environments, then note ODB API must be built on the system with the
 #      ENABLE_PYTHON flag on or else the python module won't be there.
 odbPythonPath = os.getenv('ODBPYTHONPATH', os.environ['HOME'] + '/projects/odb/install/lib/python2.7/site-packages/odb')
-#print odbPythonPath
+# print odbPythonPath
 
 try:
     sys.path.index(odbPythonPath)
@@ -42,7 +42,8 @@ date_time_s = "datetime"
 float_s = "float"
 string_s = "string"
 varnoVertco_s = "USE_VERTCO"
-IODA_MISSING_VAL = 1.0e9 #IODA converts any value larger than 1e8 to "Missing Value"
+IODA_MISSING_VAL = 1.0e9  # IODA converts any value larger than 1e8 to "Missing Value"
+
 
 def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoVarDict):
     returnKey = []
@@ -62,7 +63,7 @@ def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoV
         elif keyVariableName == date_time_s:
             keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(date_s)], row[selectColumns.index(time_s)])
 
-        if keyVariableValue == None:
+        if keyVariableValue is None:
             if keyDefinitionDict[keyVariableName] == float_s:
                 keyVariableValue = IODA_MISSING_VAL
             elif keyDefinitionDict[keyVariableName] == string_s:
@@ -73,6 +74,7 @@ def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoV
         returnKey.append(keyVariableValue)
     returnKey = tuple(returnKey)
     return returnKey
+
 
 ###################################################################################
 # MAIN
@@ -97,7 +99,7 @@ ap.add_argument("-b", "--usecorvalue", action="store_true",
 
 MyArgs = ap.parse_args()
 
-#ObsType = MyArgs.obs_type
+# ObsType = MyArgs.obs_type
 Odb2Fname = MyArgs.input_odb2
 DefFname = MyArgs.input_def
 NetcdfFname = MyArgs.output_netcdf
@@ -160,13 +162,13 @@ if Trace:
 
 # Define strings that act as keys in yaml definition file.
 # The passed yaml file must use these strings, of course.
-#yamlColumnVariables = 'column_variables'
+# yamlColumnVariables = 'column_variables'
 # yamlVarnoVariables = 'varno_variables'
 # yamlVertcoVariables = 'vertco_variables'
-yamlRecordKey ='record_key'
+yamlRecordKey = 'record_key'
 yamlLocationKey = 'location_key'
 
-#print columnVariableDict
+# print columnVariableDict
 
 # Assemble list of columns to select
 selectColumns = []
@@ -240,25 +242,25 @@ nc_writer = iconv.NcWriter(NetcdfFname, recordKeyList, locationKeyList)
 
 ncOvalName = nc_writer.OvalName()
 ncOerrName = nc_writer.OerrName()
-ncOqcName  = nc_writer.OqcName()
+ncOqcName = nc_writer.OqcName()
 
 varCategories = [ncOvalName, ncOerrName, ncOqcName]
 
-#The top-level dictionary is keyed by the fields in recordKeyList, which uniquely identifiies a record.
-#The second-level dictionary is keyed by the fields in locationKeyList, which uniquely identifies a location
-#The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
-obsDataDictTree = defaultdict(lambda:defaultdict(dict))
+# The top-level dictionary is keyed by the fields in recordKeyList, which uniquely identifiies a record.
+# The second-level dictionary is keyed by the fields in locationKeyList, which uniquely identifies a location
+# The third (bottom) level is keyed by a variable name and contains the value of the variable at the location.
+obsDataDictTree = defaultdict(lambda: defaultdict(dict))
 
 conn = odb.connect(Odb2Fname)
 c = conn.cursor()
 
 # Construct the entire sql statement
 sql = "select " + selectColumnsString + " from \"" + Odb2Fname + "\"" + \
-    " where (" + vertcoTypeSqlString +") and (" + varnoSqlString + ")"
+    " where (" + vertcoTypeSqlString + ") and (" + varnoSqlString + ")"
 if qcFilter:
     sql += " and report_status.active=1 and report_status.passive=0 and report_status.rejected=0 and" \
-    " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
-    " and datum_status.blacklisted=0"
+           " report_status.blacklisted=0 and datum_status.active=1 and datum_status.passive=0 and datum_status.rejected=0" \
+           " and datum_status.blacklisted=0"
 sql += ';'
 
 if Trace:
@@ -270,8 +272,8 @@ c.execute(sql)
 row = c.fetchone()
 refDateTimeString = None
 
-#Defining these sql row indexes outside the main loop prevents new objects
-#from being created for each one every iteration.
+# Defining these sql row indexes outside the main loop prevents new objects
+# from being created for each one every iteration.
 rsActiveIndex = selectColumns.index("report_status.active")
 rsPassiveIndex = selectColumns.index("report_status.passive")
 rsRejectedIndex = selectColumns.index("report_status.rejected")
@@ -299,9 +301,9 @@ while row is not None:
     if (refDateTimeString is None):
         refDateTimeString = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(andate_s)], row[selectColumns.index(antime_s)])
     obsDateTimeString = ioda_conv_util.IntDateTimeToString(row[dateIndex], row[timeIndex])
-    #Encode the 8 QC bitfields in the ODB2 file into a single value for IODA
-    #Flip the "active" flags so that zero is always the "good" value for all the flags,
-    #and a qcVal of zero indicates a good datum.
+    # Encode the 8 QC bitfields in the ODB2 file into a single value for IODA
+    # Flip the "active" flags so that zero is always the "good" value for all the flags,
+    # and a qcVal of zero indicates a good datum.
     notReportStatusActive = 0 if row[rsActiveIndex] else 1
     notDatumStatusActive = 0 if row[dsActiveIndex] else 1
     qcVal = (notReportStatusActive * 128 +
@@ -341,19 +343,19 @@ while row is not None:
     if qcVal is None:
         qcVal = IODA_MISSING_VAL
 
-    #Assignment code below is done this way for two reasons:
+    # Assignment code below is done this way for two reasons:
     # 1. Want to make sure all locations get into IODA, even if they only have
     #    missing values. (Preserve all the data we can.)
     # 2. There can be multiple entries in the file for each locationKey, but
     #    we can only keep one. So we choose an entry that is not null/missing, if present.
     if (ovalKey not in obsDataDictTree[recordKey][locationKey] or
-         obsDataDictTree[recordKey][locationKey][ovalKey] == IODA_MISSING_VAL):
+            obsDataDictTree[recordKey][locationKey][ovalKey] == IODA_MISSING_VAL):
         obsDataDictTree[recordKey][locationKey][ovalKey] = oval
     if (oerrKey not in obsDataDictTree[recordKey][locationKey] or
-         obsDataDictTree[recordKey][locationKey][oerrKey] == IODA_MISSING_VAL):
+            obsDataDictTree[recordKey][locationKey][oerrKey] == IODA_MISSING_VAL):
         obsDataDictTree[recordKey][locationKey][oerrKey] = oerr
     if (oqcKey not in obsDataDictTree[recordKey][locationKey] or
-         obsDataDictTree[recordKey][locationKey][oqcKey] == IODA_MISSING_VAL):
+            obsDataDictTree[recordKey][locationKey][oqcKey] == IODA_MISSING_VAL):
         obsDataDictTree[recordKey][locationKey][oqcKey] = qcVal
 
     row = c.fetchone()
@@ -361,7 +363,7 @@ while row is not None:
 if Trace:
     print "Finished reading file. Now populating missing values."
 
-#After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
+# After all the data from the file is in the dictionary tree, populate "gaps" with IODA missing value.
 for recordKey in obsDataDictTree:
     for locationKey in obsDataDictTree[recordKey]:
         for varno in varnoVariableDict:
@@ -379,8 +381,8 @@ for recordKey in obsDataDictTree:
 if Trace:
     print "Finished populating missing values."
 
-#For now, we allow converting relative humidity (varno=29) to specific humidity here.
-#This code should be removed eventually, as this is not the right place to convert variables.
+# For now, we allow converting relative humidity (varno=29) to specific humidity here.
+# This code should be removed eventually, as this is not the right place to convert variables.
 if ConvertVars and (29 in varnoVariableDict):
     if Trace:
         print "Converting relative humidity to specific humidity."
@@ -388,8 +390,8 @@ if ConvertVars and (29 in varnoVariableDict):
     specific_humidity_s = "specific_humidity"
     temperature_s = "temperature"
 
-    #In order to retrieve the pressure value from the location key, we need to know
-    #what position of the tuple it's in.
+    # In order to retrieve the pressure value from the location key, we need to know
+    # what position of the tuple it's in.
     pressureIndex = -1
     for index, varName in enumerate(importDef[yamlLocationKey]):
         if varName == "air_pressure":
@@ -405,7 +407,7 @@ if ConvertVars and (29 in varnoVariableDict):
                 t = obsDict.get((temperature_s, ncOvalName))
                 p = locationKey[pressureIndex]
                 if (t is not None and rh is not None and rh_err is not None and p is not None and
-                t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
+                        t != IODA_MISSING_VAL and rh != IODA_MISSING_VAL and rh_err != IODA_MISSING_VAL and p != IODA_MISSING_VAL):
                     q, q_err = var_convert.ConvertRelativeToSpecificHumidity(rh, rh_err, t, p)
 
                     obsDict[(specific_humidity_s, ncOvalName)] = q
@@ -414,7 +416,7 @@ if ConvertVars and (29 in varnoVariableDict):
                 else:
                     obsDict[(specific_humidity_s, ncOvalName)] = IODA_MISSING_VAL
                     obsDict[(specific_humidity_s, ncOerrName)] = IODA_MISSING_VAL
-                obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
+                    obsDict[(specific_humidity_s, ncOqcName)] = obsDict[(relative_humidity_s, ncOqcName)]
     if Trace:
         print "Finished humidity conversion."
 
@@ -427,9 +429,9 @@ if Trace:
 # version 1 netcdf file. The reference date time string won't be necessary when
 # we switch to the version 2 netcdf file.
 AttrData = {
-  'odb_version' : 2,
-  'date_time_string' : refDateTimeString
-   }
+    'odb_version': 2,
+    'date_time_string': refDateTimeString
+}
 
 (ObsVars, RecMdata, LocMdata, VarMdata) = nc_writer.ExtractObsData(obsDataDictTree)
 nc_writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
