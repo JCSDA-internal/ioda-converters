@@ -1,7 +1,7 @@
-# gsi_ncdiag.py     
+# gsi_ncdiag.py
 # a collection of classes, and supporting information
-# to read in GSI netCDF diagnostic files and rewrite them                          
-# into JEDI UFO GeoVaLs and IODA observation files 
+# to read in GSI netCDF diagnostic files and rewrite them
+# into JEDI UFO GeoVaLs and IODA observation files
 ###############################################################################
 ###############################################################################
 # dictionaries and lists
@@ -82,7 +82,9 @@ all_LocKeyList = {
     'MODIS_deep_blue_flag': ('modis_deep_blue_flag', 'integer'),
     'Reference_Pressure': ('air_pressure', 'float'),
     'Solar_Zenith_Angle': ('solar_zenith_angle', 'float'),
-    'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
+    'Row_Anomaly_Index': ('row_anomaly_index', 'integer'),
+    'TopLevelPressure': ('top_level_pressure', 'float'),
+    'BottomLevelPressure': ('bottom_level_pressure', 'float'),
 }
 
 conv_varnames = {
@@ -129,6 +131,12 @@ gsi_add_vars_uv = {
     'v_Forecast_adjusted': 'GsiHofXBc',
     'v_Forecast_unadjusted': 'GsiHofX',
 }
+
+# values that should be integers
+gsiint = [
+    'PreUseFlag',
+    'GsiUseFlag',
+]
 
 # geovals_vars = {gsiname:geoval_name}
 geovals_vars = {
@@ -421,7 +429,7 @@ class Conv:
                     varDict[value]['qcKey'] = value, writer.OqcName()
 
                 for o in range(len(outvars)):
-                    obsdata = self.df[gsivarnames[v][o]][idx]
+                    obsdata = self.df[conv_gsivarnames[v][o]][idx]
                     obserr = 1.0 / self.df['Errinv_Input'][idx]
                     try:
                         obsqc = self.df['Prep_QC_Mark'][idx]
@@ -436,9 +444,15 @@ class Conv:
                         # some special actions need to be taken depending on
                         # var name...
                         if "Errinv" in key:
-                            gsimeta[key] = 1.0 / self.df[key][idx]
+                            try:
+                                gsimeta[key] = 1.0 / self.df[key][idx]
+                            except IndexError:
+                                pass
                         else:
-                            gsimeta[key] = self.df[key][idx]
+                            try:
+                                gsimeta[key] = self.df[key][idx]
+                            except IndexError:
+                                pass
                     locKeys = []
                     for lvar in LocVars:
                         if lvar == 'Station_ID':
@@ -462,13 +476,21 @@ class Conv:
                         # observation error
                         outdata[recKey][locKeys[i]][varDict[outvars[o]]['errKey']] = obserr[i]
                         # observation prep qc mark
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['qcKey']] = obsqc[i]
+                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['qcKey']] = int(obsqc[i])
                         # add additional GSI variables that are not needed long
                         # term but useful for testing
                         for key, value in gsivars.items():
                             gvname = outvars[o], value
-                            outdata[recKey][locKeys[i]
-                                            ][gvname] = gsimeta[key][i]
+                            if value in gsiint:
+                                try:
+                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[key][i])
+                                except KeyError:
+                                    pass
+                            else:
+                                try:
+                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
+                                except KeyError:
+                                    pass
 
                 AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
                 (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
@@ -586,25 +608,20 @@ class Radiances:
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
-        ncout.setncattr("date_time", np.int32(
-                self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("satellite", self.satellite)
         ncout.setncattr("sensor", self.sensor)
         # get nlocs
         nlocs = self.nobs / self.nchans
         ncout.createDimension("nlocs", nlocs)
         # other dims
-        ncout.createDimension(
-            "nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
-        ncout.createDimension(
-            "nlevsp1",
-            self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
+        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
                 dims = ("nlocs",)
-                var_out = ncout.createVariable(
-                    geovals_metadata_dict[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
@@ -615,8 +632,7 @@ class Radiances:
                     dims = ("nlocs", "nlevsp1")
                 else:
                     dims = ("nlocs", "nlevs")
-                var_out = ncout.createVariable(
-                    geovals_vars[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
                 var_out[...] = vdata
@@ -677,7 +693,7 @@ class Radiances:
 
         obsdata = self.df['Observation'][:]
         obserr = self.df['error_variance'][:]
-        obsqc = self.df['QC_Flag'][:]
+        obsqc = self.df['QC_Flag'][:].astype(int)
         gsivars = gsi_add_vars
 
         # loop through channels for subset
@@ -709,29 +725,46 @@ class Radiances:
                 # some special actions need to be taken depending on var
                 # name...
                 if "Inverse" in key:
-                    outvals = 1.0 / self.df[key][idx]
-                    outvals[np.isinf(outvals)] = np.abs(nc.default_fillvals['f4'])
-                    gsimeta[key] = outvals
+                    try:
+                        outvals = 1.0 / self.df[key][idx]
+                        outvals[np.isinf(outvals)] = np.abs(nc.default_fillvals['f4'])
+                        gsimeta[key] = outvals
+                    except IndexError:
+                        pass
                 else:
-                    gsimeta[key] = self.df[key][idx]
+                    try:
+                        gsimeta[key] = self.df[key][idx]
+                    except IndexError:
+                        pass
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
             outdata[varDict[value]['errKey']] = obserrsub
-            outdata[varDict[value]['qcKey']] = obsqcsub
+            outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
 
             # add additional GSI variables that are not needed long term but
             # useful for testing
             for key, value2 in gsivars.items():
                 gvname = value, value2
-                outdata[gvname] = gsimeta[key]
+                if value2 in gsiint:
+                    try:
+                        outdata[gvname] = gsimeta[key].astype(int)
+                        print(gvname)
+                        print(outdata[gvname])
+                    except KeyError:
+                        pass
+                else:
+                    try:
+                        outdata[gvname] = gsimeta[key]
+                    except KeyError:
+                        pass
 
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         for key, value2 in chan_metadata_dict.items():
             try:
                 var_mdata[value2] = self.df[key][:nchans]
-            except KeyError:
+            except IndexError:
                 pass
 
         # dummy record metadata, for now
@@ -741,8 +774,7 @@ class Radiances:
 
         # global attributes
 
-        AttrData["date_time_string"] = self.validtime.strftime(
-            "%Y-%m-%dT%H:%M:%SZ")
+        AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
         AttrData["satellite"] = self.satellite
         AttrData["sensor"] = self.sensor
 
@@ -903,7 +935,7 @@ class AOD:
 
         obsdata = self.df['Observation'][:]
         obserr = 1.0/self.df['Observation_Error'][:]
-        obsqc = self.df['QC_Flag'][:]
+        obsqc = self.df['QC_Flag'][:].astype(int)
 
         gsivars = gsi_add_vars
 
@@ -929,9 +961,15 @@ class AOD:
             for key, value2 in gsivars.items():
                 # some special actions need to be taken depending on var name...
                 if "Inverse" in key:
-                    gsimeta[key] = 1.0/self.df[key][idx]
+                    try:
+                        gsimeta[key] = 1.0/self.df[key][idx]
+                    except IndexError:
+                        pass
                 else:
-                    gsimeta[key] = self.df[key][idx]
+                    try:
+                        gsimeta[key] = self.df[key][idx]
+                    except IndexError:
+                        pass
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
@@ -941,14 +979,23 @@ class AOD:
             # add additional GSI variables that are not needed long term but useful for testing
             for key, value2 in gsivars.items():
                 gvname = value, value2
-                outdata[gvname] = gsimeta[key]
+                if value2 in gsiint:
+                    try:
+                        outdata[gvname] = gsimeta[key].astype(int)
+                    except KeyError:
+                        pass
+                else:
+                    try:
+                        outdata[gvname] = gsimeta[key]
+                    except KeyError:
+                        pass
 
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         for key, value2 in chan_metadata_dict.items():
             try:
                 var_mdata[value2] = self.df[key][:nchans]
-            except KeyError:
+            except IndexError:
                 pass
 
         # dummy record metadata, for now
@@ -1125,12 +1172,12 @@ class Ozone:
             if "Inverse" in key:
                 try:
                     gsimeta[key] = 1.0/self.df[key][:]
-                except KeyError:
+                except IndexError:
                     pass
             else:
                 try:
                     gsimeta[key] = self.df[key][:]
-                except KeyError:
+                except IndexError:
                     pass
         # not sure how to do this without a loop since it's a dict...
         for i in range(len(obsdata)):
@@ -1138,11 +1185,17 @@ class Ozone:
             outdata[recKey][locKeys[i]][varDict[value]['valKey']] = obsdata[i]
             # add additional GSI variables that are not needed long term but useful for testing
             for key, value2 in gsi_add_vars.items():
-                try:
-                    gvname = value, value2
-                    outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
-                except KeyError:
-                    pass
+                gvname = value, value2
+                if value2 in gsiint:
+                    try:
+                        outdata[gvname] = int(gsimeta[key][i])
+                    except KeyError:
+                        pass
+                else:
+                    try:
+                        outdata[gvname] = gsimeta[key][i]
+                    except KeyError:
+                        pass
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
         AttrData["satellite"] = self.satellite
