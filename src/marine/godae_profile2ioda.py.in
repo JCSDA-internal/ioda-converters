@@ -221,7 +221,7 @@ class IODA(object):
         return
 
 
-if __name__ == '__main__':
+def main():
 
     desc = 'Convert GODAE binary profile data to IODA netCDF4 format'
     parser = ArgumentParser(
@@ -254,3 +254,7 @@ if __name__ == '__main__':
     }
 
     IODA(foutput, fdate, varDict, obsList)
+
+
+if __name__ == '__main__':
+    main()
