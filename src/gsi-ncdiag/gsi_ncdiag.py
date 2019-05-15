@@ -82,7 +82,7 @@ all_LocKeyList = {
     'MODIS_deep_blue_flag': ('modis_deep_blue_flag', 'integer'),
     'Reference_Pressure': ('air_pressure', 'float'),
     'Solar_Zenith_Angle': ('solar_zenith_angle', 'float'),
-    'Row_Anomaly_Index': ('row_anomaly_index', 'integer'),
+    'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
 }
@@ -1147,12 +1147,14 @@ class Ozone:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
-        value = "mass_concentration_of_ozone_in_air"
-        varDict[value]['valKey'] = value, writer.OvalName()
-        varDict[value]['errKey'] = value, writer.OerrName()
-        varDict[value]['qcKey'] = value, writer.OqcName()
+        vname = "mass_concentration_of_ozone_in_air"
+        varDict[vname]['valKey'] = vname, writer.OvalName()
+        varDict[vname]['errKey'] = vname, writer.OerrName()
+        varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.df['Observation'][:]
+        obserr = 1.0 / self.df['Inverse_Observation_Error'][:]
+        obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
         locKeys = []
         for lvar in LocVars:
             if lvar == 'Time':
@@ -1182,18 +1184,20 @@ class Ozone:
         # not sure how to do this without a loop since it's a dict...
         for i in range(len(obsdata)):
             # observation data
-            outdata[recKey][locKeys[i]][varDict[value]['valKey']] = obsdata[i]
+            outdata[recKey][locKeys[i]][varDict[vname]['valKey']] = obsdata[i]
+            outdata[recKey][locKeys[i]][varDict[vname]['errKey']] = obserr[i]
+            outdata[recKey][locKeys[i]][varDict[vname]['qcKey']] = obsqc[i]
             # add additional GSI variables that are not needed long term but useful for testing
             for key, value2 in gsi_add_vars.items():
-                gvname = value, value2
+                gvname = vname, value2
                 if value2 in gsiint:
                     try:
-                        outdata[gvname] = int(gsimeta[key][i])
+                        outdata[recKey][locKeys[i]][gvname] = int(gsimeta[key][i])
                     except KeyError:
                         pass
                 else:
                     try:
-                        outdata[gvname] = gsimeta[key][i]
+                        outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
                     except KeyError:
                         pass
 
