@@ -138,23 +138,6 @@ gsiint = [
     'GsiUseFlag',
 ]
 
-# geovals_vars = {gsiname:geoval_name}
-geovals_vars = {
-    'virtual_temperature': 'virtual_temperature',
-    'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
-    'air_temperature': 'air_temperature',
-    'specific_humidity': 'specific_humidity',
-    'northward_wind': 'northward_wind',
-    'eastward_wind': 'eastward_wind',
-    'geopotential_height': 'geopotential_height',
-    'height': 'height_above_mean_sea_level',
-    'surface_pressure': 'surface_pressure',
-    'surface_temperature': 'surface_temperature',
-    'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geopotential_height',
-    'landmask': 'Land_Fraction',
-}
-
 geovals_metadata_dict = {
     'Latitude': 'latitude',
     'Longitude': 'longitude',
@@ -184,7 +167,20 @@ chan_metadata_dict = {
     'mean_lapse_rate': 'mean_lapse_rate',
 }
 
+# geovals_vars = {gsiname:geoval_name}
 geovals_vars = {
+    'virtual_temperature': 'virtual_temperature',
+    'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
+    'specific_humidity': 'specific_humidity',
+    'northward_wind': 'northward_wind',
+    'eastward_wind': 'eastward_wind',
+    'geopotential_height': 'geopotential_height',
+    'height': 'height_above_mean_sea_level',
+    'surface_pressure': 'surface_pressure',
+    'surface_temperature': 'surface_temperature',
+    'surface_roughness': 'surface_roughness_length',
+    'surface_height': 'surface_geopotential_height',
+    'landmask': 'Land_Fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
     'air_pressure_levels': 'air_pressure_levels',
@@ -228,7 +224,7 @@ geovals_vars = {
     'seas2': 'seas2',
     'seas3': 'seas3',
     'seas4': 'seas4',
-    'Sfc_height': 'Sfc_height',
+    'Sfc_height': 'surface_geopotential_height',
     'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
 }
 
