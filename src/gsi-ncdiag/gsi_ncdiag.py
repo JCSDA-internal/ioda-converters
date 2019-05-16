@@ -183,6 +183,7 @@ geovals_vars = {
     'landmask': 'Land_Fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
+    'atmosphere_pressure_coordinate': 'air_pressure',
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mass_concentration_of_carbon_dioxide_in_air',
