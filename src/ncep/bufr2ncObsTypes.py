@@ -236,11 +236,11 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
 #                          False - nc variable has not been created
 #
 
-################################# Base Observation Type ############################
+# ############################### Base Observation Type ############################
 
 
 class ObsType(object):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self):
         self.bufr_ftype = cm.BFILE_UNDEF
 
@@ -271,7 +271,7 @@ class ObsType(object):
              ['msg_date@MetaData', '', cm.DTYPE_UINT,   ['nlocs'],            [self.nlocs]]]
         ]
 
-    ### methods ###
+    # # methods ###
 
     ###############################################################################
     # This method will set the number of observations. This must be called
@@ -486,7 +486,7 @@ class ObsType(object):
         # Read and convert the replication mnemonics
         Mlists = [[Mlist[1] for Mlist in SubList] for SubList in self.rep_spec]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True)
-        #[ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
+        # [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
         [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual_bufr(
             self.rep_spec, BufrValues,
             ActualValues[0], ActualValuesBufr[0])
@@ -718,8 +718,9 @@ class ObsType(object):
                     [ActualValues[i]['ObsDate@MetaData'], ActualValues[i]['ObsTime@MetaData'],
                         ActualValues[i]['time@MetaData']] = self.calc_obs_date_time(ActualValuesBufr[i])
 
-                    ActualValues[i]['time@MetaData'] = ((ActualValues[i]['time@MetaData']).astype(np.float) -
-                                                        np.array(dt.datetime.strptime(str(nc.date_time), '%Y%m%d%H').replace(tzinfo=dt.timezone.utc).timestamp())) / 3600
+                    _t1 = (ActualValues[i]['time@MetaData']).astype(np.float)
+                    _t2 = np.array(dt.datetime.strptime(str(nc.date_time), '%Y%m%d%H'))
+                    ActualValues[i]['time@MetaData'] = (_t1 - _t2) / 3600
 
                     # Calculate the value of lat and lon and add to the dictionary.
                     [ActualValues[i]['latitude@MetaData'], ActualValues[i]
@@ -746,11 +747,11 @@ class ObsType(object):
         print("  Total converted observations: ", ObsNum)
         print("")
 
-################################# Aircraft Observation Type ############################
+# ############################### Aircraft Observation Type ############################
 
 
 class AircraftObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(AircraftObsType, self).__init__()
 
@@ -877,12 +878,12 @@ class AircraftObsType(ObsType):
         # Set the dimension specs.
         super(AircraftObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
 
-################################# Radiosonde Observation Type ############################
+# ############################### Radiosonde Observation Type ############################
 class SondesObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(SondesObsType, self).__init__()
 
@@ -976,12 +977,12 @@ class SondesObsType(ObsType):
         # Set the dimension specs.
         super(SondesObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
 
-########################### Radiance (AMSU-A) Observation Type ############################
+# ######################### Radiance (AMSU-A) Observation Type ############################
 class AmsuaObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(AmsuaObsType, self).__init__()
 
@@ -1055,13 +1056,13 @@ class AmsuaObsType(ObsType):
         # Set the dimension specs.
         super(AmsuaObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
-########################### GPSRO Observation Type ############################
+# ######################### GPSRO Observation Type ############################
 
 
 class GpsroObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(GpsroObsType, self).__init__()
 
@@ -1159,7 +1160,7 @@ class GpsroObsType(ObsType):
         # Set the dimension specs.
         super(GpsroObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
     ########################################################################
     # This method will extract counts from the BUFR file which are useful
