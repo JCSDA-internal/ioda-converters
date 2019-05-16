@@ -4,9 +4,7 @@ import sys
 import argparse
 
 sys.path.append("@SCRIPT_LIB_PATH@")
-import radiances
-import conv
-import composition
+import gsi_ncdiag as gsid
 
 parser = argparse.ArgumentParser(
     description=('Test for GSI netCDF diag file to IODA Obs/GeoVaLs files converters'))
@@ -24,13 +22,13 @@ args = parser.parse_args()
 infile = args.input
 outdir = args.output
 if (args.type == 'conv'):
-    diag = conv.Conv(infile)
+    diag = gsid.Conv(infile)
 elif (args.type == 'rad'):
-    diag = radiances.Radiances(infile)
+    diag = gsid.Radiances(infile)
 elif (args.type == 'aod'):
-    diag = composition.AOD(infile)
+    diag = gsid.AOD(infile)
 elif (args.type == 'oz'):
-    diag = composition.Ozone(infile)
+    diag = gsid.Ozone(infile)
 else:
     raise ValueError
 diag.read()
