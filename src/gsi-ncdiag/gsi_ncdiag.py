@@ -468,6 +468,7 @@ class Conv:
                         elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
                             tmp = self.df[lvar][idx]
                             tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
+                            tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4']) # for u,v sfc Height values that are 10+9999
                             # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
                             # this is correctly 10m agl though for u,v obs
                             if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
