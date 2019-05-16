@@ -6,17 +6,12 @@ from multiprocessing import Pool
 import glob
 
 sys.path.append("@SCRIPT_LIB_PATH@")
-import conv
-import radiances
-import composition
-import aod_dicts as aodd
-import oz_dicts as od
-import rad_dicts as rd
+import gsi_ncdiag as gsid
 
 
 def run_conv_obs(convfile, outdir):
     print("Processing:"+str(convfile))
-    Diag = conv.Conv(convfile)
+    Diag = gsid.Conv(convfile)
     Diag.read()
     Diag.toIODAobs(outdir)
     Diag.close()
@@ -25,7 +20,7 @@ def run_conv_obs(convfile, outdir):
 
 def run_radiances_obs(radfile, outdir):
     print("Processing:"+str(radfile))
-    Diag = radiances.Radiances(radfile)
+    Diag = gsid.Radiances(radfile)
     Diag.read()
     Diag.toIODAobs(outdir)
     Diag.close()
@@ -34,7 +29,7 @@ def run_radiances_obs(radfile, outdir):
 
 def run_aod_obs(aodfile, outdir):
     print("Processing:"+str(aodfile))
-    Diag = composition.AOD(aodfile)
+    Diag = gsid.AOD(aodfile)
     Diag.read()
     Diag.toIODAobs(outdir)
     return 0
@@ -42,7 +37,7 @@ def run_aod_obs(aodfile, outdir):
 
 def run_oz_obs(ozfile, outdir):
     print("Processing:"+str(ozfile))
-    Diag = composition.Ozone(ozfile)
+    Diag = gsid.Ozone(ozfile)
     Diag.read()
     Diag.toIODAobs(outdir)
     return 0
@@ -50,7 +45,7 @@ def run_oz_obs(ozfile, outdir):
 
 def run_conv_geo(convfile, outdir):
     print("Processing:"+str(convfile))
-    Diag = conv.Conv(convfile)
+    Diag = gsid.Conv(convfile)
     Diag.read()
     Diag.toGeovals(outdir)
     return 0
@@ -58,7 +53,7 @@ def run_conv_geo(convfile, outdir):
 
 def run_radiances_geo(radfile, outdir):
     print("Processing:"+str(radfile))
-    Diag = radiances.Radiances(radfile)
+    Diag = gsid.Radiances(radfile)
     Diag.read()
     Diag.toGeovals(outdir)
     return 0
@@ -66,7 +61,7 @@ def run_radiances_geo(radfile, outdir):
 
 def run_aod_geo(aodfile, outdir):
     print("Processing:"+str(aodfile))
-    Diag = composition.AOD(aodfile)
+    Diag = gsid.AOD(aodfile)
     Diag.read()
     Diag.toGeovals(outdir)
     return 0
@@ -74,7 +69,7 @@ def run_aod_geo(aodfile, outdir):
 
 def run_oz_geo(ozfile, outdir):
     print("Processing:"+str(ozfile))
-    Diag = composition.Ozone(ozfile)
+    Diag = gsid.Ozone(ozfile)
     Diag.read()
     Diag.toGeovals(outdir)
     return 0
@@ -114,17 +109,16 @@ if MyArgs.obs_dir:
     radfiles = glob.glob(DiagDir+'/diag*')
     for radfile in radfiles:
         process = False
-        for p in rd.sensors:
+        for p in gsid.rad_sensors:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(
-                run_radiances_obs, args=(radfile, ObsDir))
+            res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir))
     # atmospheric composition observations
     # aod first
     for radfile in radfiles:
         process = False
-        for p in aodd.sensors:
+        for p in gsid.aod_sensors:
             if p in radfile:
                 process = True
         if process:
@@ -132,7 +126,7 @@ if MyArgs.obs_dir:
     # ozone
     for radfile in radfiles:
         process = False
-        for p in od.sensors:
+        for p in gsid.oz_sensors:
             if p in radfile:
                 process = True
         if process:
@@ -150,17 +144,16 @@ if MyArgs.geovals_dir:
     radfiles = glob.glob(DiagDir+'/diag*')
     for radfile in radfiles:
         process = False
-        for p in rd.sensors:
+        for p in gsid.rad_sensors:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(
-                run_radiances_geo, args=(radfile, GeoDir))
+            res = obspool.apply_async(run_radiances_geo, args=(radfile, GeoDir))
     # atmospheric composition observations
     # aod first
     for radfile in radfiles:
         process = False
-        for p in aodd.sensors:
+        for p in gsid.aod_sensors:
             if p in radfile:
                 process = True
         if process:
@@ -168,7 +161,7 @@ if MyArgs.geovals_dir:
     # ozone
     for radfile in radfiles:
         process = False
-        for p in od.sensors:
+        for p in gsid.oz_sensors:
             if p in radfile:
                 process = True
         if process:
