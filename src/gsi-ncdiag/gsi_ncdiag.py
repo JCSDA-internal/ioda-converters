@@ -380,6 +380,7 @@ class Conv:
         from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
+        import netCDF4 as nc
         # get list of platforms to process for the given obstype
         try:
             platforms = conv_platforms[self.obstype]
@@ -457,13 +458,24 @@ class Conv:
                     for lvar in LocVars:
                         if lvar == 'Station_ID':
                             tmp = self.df[lvar][idx]
-                            locKeys.append([b''.join(tmp[a])
-                                            for a in range(len(tmp))])
+                            locKeys.append([b''.join(tmp[a]) for a in range(len(tmp))])
                         elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                             tmp = self.df[lvar][idx]
                             obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                             obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                             locKeys.append(obstimes)
+                        # special logic for missing station_elevation and height for surface obs
+                        elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
+                            tmp = self.df[lvar][idx]
+                            tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
+                            # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
+                            # this is correctly 10m agl though for u,v obs
+                            if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
+                                elev = self.df['Station_Elevation'][idx]
+                                hgt = elev + 2.
+                                hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
+                                tmp = hgt
+                            locKeys.append(tmp)
                         else:
                             locKeys.append(self.df[lvar][idx])
                     # again to ensure unique obs
