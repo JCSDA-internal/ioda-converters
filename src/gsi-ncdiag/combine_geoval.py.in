@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# combine_geoval.py
+# combine geovals from multiple input files into
+# one output file with matching corresponding locations
+# and missing data where applicable
+
+import netCDF4 as nc
+import numpy as np
+import argparse
+import datetime as dt
+
+# the GeoVaLs script here is not as smart as the obs one
+# we will just assume that entries are repeated if they have
+# the same lat/lon/time tuple and that hopefully will work
+MetaVars = [
+    'latitude', 'longitude', 'time', 'surface_pressure',
+]
+
+
+def concat_geoval(FileList, OutFile, ForceAll):
+    VarNames = []
+    Vars2D = []
+    Vars1D = []
+    VarTypes = []
+    VarDims = []
+    # get lists of variables
+    for f in FileList:
+        ncf = nc.Dataset(f, mode='r')
+        for key, value in ncf.variables.items():
+            if key not in VarNames and key not in MetaVars:
+                VarNames.append(key)
+                vtype = ncf.variables[key].dtype
+                VarTypes.append(vtype)
+                VarDims.append(ncf.variables[key].shape)
+        ncf.close()
+    # extract metadata and generate a numpy array
+    MetaVarData = []
+    MetaVarUnique = []
+    for v in MetaVars:
+        tmpvardata = []
+        for f in FileList:
+            ncf = nc.Dataset(f, mode='r')
+            tmpdata = ncf.variables[v][:]
+            tmpvardata.append(tmpdata)
+            ncf.close()
+        tmpvardata = np.hstack(tmpvardata)
+        MetaVarData.append(tmpvardata)
+    MetaVarData = np.vstack(MetaVarData)
+    MetaVarUnique, idx, inv, cnts = np.unique(MetaVarData, return_index=True, return_inverse=True, return_counts=True, axis=1)
+    if ForceAll:
+        idx = np.arange(0, len(MetaVarData[0]))
+        MetaVarUnique = MetaVarData[..., idx]
+    # grab variables to write out
+    DataVarData1D = []
+    DataVarData2D = []
+    for idx2, v in enumerate(VarNames):
+        tmpvardata1d = []
+        tmpvardata2d = []
+        for f in FileList:
+            ncf = nc.Dataset(f, mode='r')
+            try:
+                tmpdata = ncf.variables[v][:]
+            except KeyError:
+                tmpdata = np.ones(VarDims[idx2]).astype(VarTypes[idx2])
+                if VarTypes[idx2] == np.int32:
+                    tmpdata = tmpdata * nc.default_fillvals['i4']
+                else:
+                    tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+            try:
+                shp = tmpdata.shape[1]
+                tmpvardata2d.append(tmpdata)
+                if v not in Vars2D:
+                    Vars2D.append(v)
+            except IndexError:
+                tmpvardata1d.append(tmpdata)
+                if v not in Vars1D:
+                    Vars1D.append(v)
+            validtime = dt.datetime.strptime(str(ncf.getncattr('date_time')), "%Y%m%d%H")
+            ncf.close()
+        try:
+            tmpvardata1d = np.hstack(tmpvardata1d)
+            DataVarData1D.append(tmpvardata1d)
+        except ValueError:
+            pass
+        try:
+            tmpvardata2d = np.vstack(tmpvardata2d)
+            DataVarData2D.append(tmpvardata2d)
+        except ValueError:
+            pass
+    DataVarData1D = np.vstack(DataVarData1D)
+    DataVarUnique1D = DataVarData1D[..., idx]
+    DataVarData2D = np.dstack(DataVarData2D)
+    DataVarUnique2D = DataVarData2D[idx, ...]
+    print(MetaVarData.shape)
+    print(DataVarData1D.shape)
+    print(DataVarData2D.shape)
+    print(MetaVarUnique.shape)
+    print(DataVarUnique1D.shape)
+    print(DataVarUnique2D.shape)
+
+    # write out the output netCDF file and all of the concatenated fields
+    # note GeoVaLs doesn't use Ncwriter!
+    nco = nc.Dataset(OutFile, 'w', format='NETCDF4')
+    nco.setncattr("date_time", np.int32(validtime.strftime("%Y%m%d%H")))
+    nlocs = len(MetaVarUnique[0])
+    nlevs = len(DataVarData2D[0])
+    nco.createDimension("nlocs", nlocs)
+    nco.createDimension("nlevs", nlevs)
+    for ivar, var in enumerate(MetaVars):
+        var_out = nco.createVariable(var, "f4", ("nlocs", ))
+        var_out[...] = MetaVarUnique[ivar, ...]
+    for ivar, var in enumerate(Vars2D):
+        dims = ("nlocs", "nlevs")
+        var_out = nco.createVariable(var, VarTypes[ivar], dims)
+        var_out[...] = DataVarUnique2D[..., ivar]
+    for ivar, var in enumerate(Vars1D):
+        dims = ("nlocs", )
+        var_out = nco.createVariable(var, VarTypes[ivar], dims)
+        var_out[...] = DataVarUnique1D[ivar, ...]
+
+
+######################################################
+######################################################
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Combine GeoVaLs in netCDF format into one output file',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '-i', '--input', help='list of the input files to combine',
+        type=str, nargs='+', required=True)
+    parser.add_argument(
+        '-o', '--output', help='name of the output GeoVaLs file',
+        type=str, required=True, default=None)
+    parser.add_argument(
+        '-f', '--forceall', help='force all values and not remove duplicates',
+        action='store_true', required=False,)
+
+    args = parser.parse_args()
+
+    FileList = args.input
+    OutFile = args.output
+    ForceAll = args.forceall
+
+    concat_geoval(FileList, OutFile, ForceAll)
