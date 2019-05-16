@@ -73,11 +73,8 @@ class Profile(object):
             self.data[0][locKey][qcKey] = qcs[i]
 
 
-###############################################################################
-###############################################################################
+def main():
 
-
-if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('Read CPC Hybrid-GODAS sst files and convert'
                      ' to IODA format')
@@ -103,3 +100,7 @@ if __name__ == '__main__':
 
     (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
     writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+
+if __name__ == '__main__':
+    main()
