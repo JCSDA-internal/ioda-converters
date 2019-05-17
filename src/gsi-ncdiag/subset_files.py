@@ -23,7 +23,7 @@ def subset(infile, nlocsout, suffix):
         nvars = 1
     if nlocsout > nlocsin:
         nlocsout = nlocsin
-    flag = random.sample(np.arange(0, nlocsin), nlocsout)
+    flag = random.sample(list(np.arange(0, nlocsin)), nlocsout)
     flag = sorted(flag)
     nobsout = nlocsout*nvars
     # copy global attributes
@@ -95,6 +95,7 @@ for infile in infiles:
     if infile[-6:] in ['_m.nc4', '_s.nc4']:
         # print('skipping',infile)
         continue
-    res = obspool.apply_async(subset, args=(infile, nobs, suffix))
+    #res = obspool.apply_async(subset, args=(infile, nobs, suffix))
+    subset(infile, nobs, suffix)
 obspool.close()
 obspool.join()

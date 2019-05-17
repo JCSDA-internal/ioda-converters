@@ -704,14 +704,40 @@ class Radiances:
         obsdata = self.df['Observation'][:]
         obserr = self.df['error_variance'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
-        gsivars = gsi_add_vars
+
+        idx = chan_indx == chanlist[0]
+        for lvar in LocVars:
+            loc_mdata_name = all_LocKeyList[lvar][0]
+            if lvar == 'Obs_Time':
+                tmp = self.df[lvar][idx]
+                obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+            else:
+                loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+
+        # check for additional GSI output for each variable 
+        for gsivar, iodavar in gsi_add_vars.items():
+            if gsivar in self.df.variables:
+                if "Inverse" in gsivar:
+                    tmp = 1.0 / self.df[gsivar][:]
+                    tmp[np.isinf(tmp)] = np.abs(nc.default_fillvals['f4'])
+                else:
+                    tmp = self.df[gsivar][:]
+                if gsivar in gsiint:
+                    tmp = tmp.astype(int)
+                for ii, ch in enumerate(chanlist):
+                    varname = "brightness_temperature_{:d}".format(ch)
+                    gvname = varname, iodavar
+                    idx = chan_indx == chanlist[ii]
+                    outvals = tmp[idx]
+                    outdata[gvname] = outvals 
 
         # loop through channels for subset
         var_names = []
         for c in range(len(chanlist)):
             value = "brightness_temperature_{:d}".format(chanlist[c])
             var_names.append(value)
-            print(self.obstype, value)
             idx = chan_indx == chanlist[c]
             if (np.sum(idx) == 0):
                 print("No matching observations for:")
@@ -721,53 +747,11 @@ class Radiances:
             obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
             obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
-            for lvar in LocVars:
-                loc_mdata_name = all_LocKeyList[lvar][0]
-                if lvar == 'Obs_Time':
-                    tmp = self.df[lvar][idx]
-                    obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-                    obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                    loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
-                else:
-                    loc_mdata[loc_mdata_name] = self.df[lvar][idx]
-            gsimeta = {}
-            for key, value2 in gsivars.items():
-                # some special actions need to be taken depending on var
-                # name...
-                if "Inverse" in key:
-                    try:
-                        outvals = 1.0 / self.df[key][idx]
-                        outvals[np.isinf(outvals)] = np.abs(nc.default_fillvals['f4'])
-                        gsimeta[key] = outvals
-                    except IndexError:
-                        pass
-                else:
-                    try:
-                        gsimeta[key] = self.df[key][idx]
-                    except IndexError:
-                        pass
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
             outdata[varDict[value]['errKey']] = obserrsub
             outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
-
-            # add additional GSI variables that are not needed long term but
-            # useful for testing
-            for key, value2 in gsivars.items():
-                gvname = value, value2
-                if value2 in gsiint:
-                    try:
-                        outdata[gvname] = gsimeta[key].astype(int)
-                        print(gvname)
-                        print(outdata[gvname])
-                    except KeyError:
-                        pass
-                else:
-                    try:
-                        outdata[gvname] = gsimeta[key]
-                    except KeyError:
-                        pass
 
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
