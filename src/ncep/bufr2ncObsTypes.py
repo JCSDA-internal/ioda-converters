@@ -236,11 +236,11 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
 #                          False - nc variable has not been created
 #
 
-################################# Base Observation Type ############################
+# ############################### Base Observation Type ############################
 
 
 class ObsType(object):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self):
         self.bufr_ftype = cm.BFILE_UNDEF
 
@@ -268,10 +268,10 @@ class ObsType(object):
         self.dim_spec = []
         self.misc_spec = [
             [['msg_type@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]],
-             ['msg_date@MetaData', '', cm.DTYPE_UINT,   ['nlocs'],            [self.nlocs]]]
+             ['msg_date@MetaData', '', cm.DTYPE_UINT, ['nlocs'], [self.nlocs]]]
         ]
 
-    ### methods ###
+    # # methods ###
 
     ###############################################################################
     # This method will set the number of observations. This must be called
@@ -486,7 +486,7 @@ class ObsType(object):
         # Read and convert the replication mnemonics
         Mlists = [[Mlist[1] for Mlist in SubList] for SubList in self.rep_spec]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True)
-        #[ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
+        # [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
         [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual_bufr(
             self.rep_spec, BufrValues,
             ActualValues[0], ActualValuesBufr[0])
@@ -718,8 +718,9 @@ class ObsType(object):
                     [ActualValues[i]['ObsDate@MetaData'], ActualValues[i]['ObsTime@MetaData'],
                         ActualValues[i]['time@MetaData']] = self.calc_obs_date_time(ActualValuesBufr[i])
 
-                    ActualValues[i]['time@MetaData'] = ((ActualValues[i]['time@MetaData']).astype(np.float) -
-                                                        np.array(dt.datetime.strptime(str(nc.date_time), '%Y%m%d%H').replace(tzinfo=dt.timezone.utc).timestamp())) / 3600
+                    _t1 = (ActualValues[i]['time@MetaData']).astype(np.float)
+                    _t2 = np.array(dt.datetime.strptime(str(nc.date_time), '%Y%m%d%H'))
+                    ActualValues[i]['time@MetaData'] = (_t1 - _t2) / 3600
 
                     # Calculate the value of lat and lon and add to the dictionary.
                     [ActualValues[i]['latitude@MetaData'], ActualValues[i]
@@ -746,11 +747,11 @@ class ObsType(object):
         print("  Total converted observations: ", ObsNum)
         print("")
 
-################################# Aircraft Observation Type ############################
+# ############################### Aircraft Observation Type ############################
 
 
 class AircraftObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(AircraftObsType, self).__init__()
 
@@ -762,61 +763,61 @@ class AircraftObsType(ObsType):
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
-            ['ObsTime@MetaData',   '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['ObsDate@MetaData',   '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsDate@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['time@MetaData',      '', cm.DTYPE_DOUBLE,  ['nlocs'], [self.nlocs]])
+            ['time@MetaData', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['latitude@MetaData',  '', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]])
+            ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['longitude@MetaData', '', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]])
+            ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
 
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = '^NC00400[14]'
             self.int_spec = [
-                [['year@MetaData',   'YEAR',   cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['mnth@MetaData',   'MNTH',   cm.DTYPE_INTEGER,
+                [['year@MetaData', 'YEAR', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['mnth@MetaData', 'MNTH', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['days@MetaData',   'DAYS',   cm.DTYPE_INTEGER,
+                 ['days@MetaData', 'DAYS', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['hour@MetaData',   'HOUR',   cm.DTYPE_INTEGER,
+                 ['hour@MetaData', 'HOUR', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['mInu@MetaData',   'MINU',   cm.DTYPE_INTEGER,
+                 ['mInu@MetaData', 'MINU', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['ACID@MetaData',   'ACID',   cm.DTYPE_DOUBLE,
+                 ['ACID@MetaData', 'ACID', cm.DTYPE_DOUBLE,
                      ['nlocs'], [self.nlocs]],
-                 ['CORN@MetaData',   'CORN',   cm.DTYPE_INTEGER,
+                 ['CORN@MetaData', 'CORN', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['CLAT@MetaData',   'CLAT',   cm.DTYPE_FLOAT,
+                 ['CLAT@MetaData', 'CLAT', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['CLON@MetaData',   'CLON',   cm.DTYPE_FLOAT,
+                 ['CLON@MetaData', 'CLON', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['FLVL@MetaData',   'FLVL',   cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]]],
+                 ['FLVL@MetaData', 'FLVL', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
 
-                [['air_temperature@ObsValue',      'TMDB',   cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['relative_humidity@ObsValue',    'REHU',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['wind_speed@ObsValue',           'WSPD',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['wind_to_direction@ObsValue',    'WDIR',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['air_temperature@PreQC',   'QMAT',
+                [['air_temperature@ObsValue', 'TMDB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['relative_humidity@ObsValue', 'REHU',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['wind_speed@ObsValue', 'WSPD',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['wind_to_direction@ObsValue', 'WDIR',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['air_temperature@PreQC', 'QMAT',
                      cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
                  ['relative_humidity@PreQC', 'QMDD',
                      cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['wind@PreQC',              'QMWN',   cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
+                 ['wind@PreQC', 'QMWN', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
 
-                [['SEQNUM@MetaData', 'SEQNUM', cm.DTYPE_STRING,  ['nlocs', 'nstring'], [self.nlocs, self.nstring]],
-                 ['BUHD@MetaData',   'BUHD',   cm.DTYPE_STRING,  [
+                [['SEQNUM@MetaData', 'SEQNUM', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]],
+                 ['BUHD@MetaData', 'BUHD', cm.DTYPE_STRING, [
                      'nlocs', 'nstring'], [self.nlocs, self.nstring]],
-                 ['BORG@MetaData',   'BORG',   cm.DTYPE_STRING,  [
+                 ['BORG@MetaData', 'BORG', cm.DTYPE_STRING, [
                      'nlocs', 'nstring'], [self.nlocs, self.nstring]],
-                 ['BULTIM@MetaData', 'BULTIM', cm.DTYPE_STRING,  [
+                 ['BULTIM@MetaData', 'BULTIM', cm.DTYPE_STRING, [
                      'nlocs', 'nstring'], [self.nlocs, self.nstring]],
-                 ['BBB@MetaData',    'BBB',    cm.DTYPE_STRING,  [
+                 ['BBB@MetaData', 'BBB', cm.DTYPE_STRING, [
                      'nlocs', 'nstring'], [self.nlocs, self.nstring]],
-                 ['RPID@MetaData',   'RPID',   cm.DTYPE_STRING,  ['nlocs', 'nstring'], [self.nlocs, self.nstring]]],
+                 ['RPID@MetaData', 'RPID', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]]],
             ]
             self.evn_spec = []
             self.rep_spec = []
@@ -824,50 +825,50 @@ class AircraftObsType(ObsType):
         elif (bf_type == cm.BFILE_PREPBUFR):
             self.mtype_re = 'AIRC[AF][RT]'
             self.int_spec = [
-                [['SID@MetaData',  'SID',  cm.DTYPE_DOUBLE,  ['nlocs'], [self.nlocs]],
-                 ['ACID@MetaData', 'ACID', cm.DTYPE_DOUBLE,  ['nlocs'], [self.nlocs]],
-                 ['XOB@MetaData',  'XOB',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['YOB@MetaData',  'YOB',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['DHR@MetaData',  'DHR',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['TYP@MetaData',  'TYP',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['ELV@MetaData',  'ELV',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
+                [['SID@MetaData', 'SID', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]],
+                 ['ACID@MetaData', 'ACID', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]],
+                 ['XOB@MetaData', 'XOB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['YOB@MetaData', 'YOB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['DHR@MetaData', 'DHR', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['TYP@MetaData', 'TYP', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['ELV@MetaData', 'ELV', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
                  ['SAID@MetaData', 'SAID', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['T29@MetaData',  'T29',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
+                 ['T29@MetaData', 'T29', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
 
-                [['air_pressure@MetaData',          'POB',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['height@MetaData',                'ZOB',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['specific_humidity@ObsValue',     'QOB',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['air_temperature@ObsValue',       'TOB',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['eastward_wind@ObsValue',         'UOB',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['northward_wind@ObsValue',        'VOB',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]]],
+                [['air_pressure@MetaData', 'POB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['height@MetaData', 'ZOB',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['specific_humidity@ObsValue', 'QOB',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['air_temperature@ObsValue', 'TOB',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['eastward_wind@ObsValue', 'UOB',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['northward_wind@ObsValue', 'VOB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
 
-                [['air_pressure@PreQC',       'PQM',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['specific_humidity@PreQC',  'QQM',
+                [['air_pressure@PreQC', 'PQM', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['specific_humidity@PreQC', 'QQM',
                      cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['air_temperature@PreQC',    'TQM',
+                 ['air_temperature@PreQC', 'TQM',
                      cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['WQM@PreQC',                   'WQM',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
+                 ['WQM@PreQC', 'WQM', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
 
-                [['air_pressure@ObsError',       'POE',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['specific_humidity@ObsError',  'QOE',
-                     cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['air_temperature@ObsError',    'TOE',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]]],
+                [['air_pressure@ObsError', 'POE', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['specific_humidity@ObsError', 'QOE',
+                     cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['air_temperature@ObsError', 'TOE', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
 
-                [['HOVI@MetaData', 'HOVI', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['CAT@MetaData',  'CAT',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['XDR@MetaData',  'XDR',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['YDR@MetaData',  'YDR',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['HRDR@MetaData', 'HRDR', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
+                [['HOVI@MetaData', 'HOVI', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['CAT@MetaData', 'CAT', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['XDR@MetaData', 'XDR', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['YDR@MetaData', 'YDR', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['HRDR@MetaData', 'HRDR', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
                  ['POAF@MetaData', 'POAF', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['IALR@MetaData', 'IALR', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]]],
+                 ['IALR@MetaData', 'IALR', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
             ]
             self.evn_spec = [
                 [['TPC_bevn@MetaData', 'TPC', cm.DTYPE_INTEGER, ['nlocs', 'nevents'], [self.nlocs, self.nevents]],
-                 ['TOB_bevn@MetaData', 'TOB', cm.DTYPE_FLOAT,   [
+                 ['TOB_bevn@MetaData', 'TOB', cm.DTYPE_FLOAT, [
                      'nlocs', 'nevents'], [self.nlocs, self.nevents]],
                  ['TQM_bevn@MetaData', 'TQM', cm.DTYPE_INTEGER, ['nlocs', 'nevents'], [self.nlocs, self.nevents]]],
             ]
@@ -877,12 +878,12 @@ class AircraftObsType(ObsType):
         # Set the dimension specs.
         super(AircraftObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
 
-################################# Radiosonde Observation Type ############################
+# ############################### Radiosonde Observation Type ############################
 class SondesObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(SondesObsType, self).__init__()
 
@@ -893,15 +894,15 @@ class SondesObsType(ObsType):
 
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nlocs], [nlocs,nlevs] ).
-        self.misc_spec[0].append(['ObsTime@MetaData',   '', cm.DTYPE_INTEGER, [
+        self.misc_spec[0].append(['ObsTime@MetaData', '', cm.DTYPE_INTEGER, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
-        self.misc_spec[0].append(['ObsDate@MetaData',   '', cm.DTYPE_INTEGER, [
+        self.misc_spec[0].append(['ObsDate@MetaData', '', cm.DTYPE_INTEGER, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
-        self.misc_spec[0].append(['time@MetaData',      '', cm.DTYPE_DOUBLE,  [
+        self.misc_spec[0].append(['time@MetaData', '', cm.DTYPE_DOUBLE, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
-        self.misc_spec[0].append(['latitude@MetaData',  '', cm.DTYPE_FLOAT,   [
+        self.misc_spec[0].append(['latitude@MetaData', '', cm.DTYPE_FLOAT, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
-        self.misc_spec[0].append(['longitude@MetaData', '', cm.DTYPE_FLOAT,   [
+        self.misc_spec[0].append(['longitude@MetaData', '', cm.DTYPE_FLOAT, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
 
         if (bf_type == cm.BFILE_BUFR):
@@ -921,52 +922,52 @@ class SondesObsType(ObsType):
             #          5. location info?
             #
             # Clara: PREPBUFR FILES INCLUDE (BUT NOT READ BY GSI):
-            #            'TSB',  'ITP',  'SQN','PROCN',  'RPT', 'TCOR', 'SIRC',
+            #            'TSB', 'ITP', 'SQN','PROCN', 'RPT', 'TCOR', 'SIRC',
             #        EVENTS VARS? *PC, *RC, *FC , TVO
             #
             self.mtype_re = 'ADPUPA'
             self.int_spec = [
-                [['SID@MetaData',  'SID',  cm.DTYPE_DOUBLE,  ['nlocs'], [self.nlocs]],
-                 ['XOB@MetaData',  'XOB',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['YOB@MetaData',  'YOB',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['DHR@MetaData',  'DHR',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['TYP@MetaData',  'TYP',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['ELV@MetaData',  'ELV',  cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]],
-                 ['T29@MetaData',  'T29',  cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
+                [['SID@MetaData', 'SID', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]],
+                 ['XOB@MetaData', 'XOB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['YOB@MetaData', 'YOB', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['DHR@MetaData', 'DHR', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['TYP@MetaData', 'TYP', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['ELV@MetaData', 'ELV', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['T29@MetaData', 'T29', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
 
-                [['air_pressure@MetaData',          'POB',  cm.DTYPE_FLOAT,   ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['height@MetaData',                'ZOB',  cm.DTYPE_FLOAT,
+                [['air_pressure@MetaData', 'POB', cm.DTYPE_FLOAT, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
+                 ['height@MetaData', 'ZOB', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['specific_humidity@ObsValue',     'QOB',  cm.DTYPE_FLOAT,
+                 ['specific_humidity@ObsValue', 'QOB', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['air_temperature@ObsValue',       'TOB',  cm.DTYPE_FLOAT,
+                 ['air_temperature@ObsValue', 'TOB', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['eastward_wind@ObsValue',         'UOB',  cm.DTYPE_FLOAT,
+                 ['eastward_wind@ObsValue', 'UOB', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['northward_wind@ObsValue',        'VOB',  cm.DTYPE_FLOAT,   ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]]],
+                 ['northward_wind@ObsValue', 'VOB', cm.DTYPE_FLOAT, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]]],
 
-                [['air_pressure@PreQC',       'PQM',  cm.DTYPE_INTEGER, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['specific_humidity@PreQC',  'QQM',  cm.DTYPE_INTEGER,
+                [['air_pressure@PreQC', 'PQM', cm.DTYPE_INTEGER, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
+                 ['specific_humidity@PreQC', 'QQM', cm.DTYPE_INTEGER,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['air_temperature@PreQC',    'TQM',  cm.DTYPE_INTEGER,
+                 ['air_temperature@PreQC', 'TQM', cm.DTYPE_INTEGER,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['WQM@PreQC',                'WQM',  cm.DTYPE_INTEGER, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]]],
+                 ['WQM@PreQC', 'WQM', cm.DTYPE_INTEGER, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]]],
 
-                [['air_pressure@ObsError',        'POE',  cm.DTYPE_FLOAT,   ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['specific_humidity@ObsError',   'QOE',  cm.DTYPE_FLOAT,
+                [['air_pressure@ObsError', 'POE', cm.DTYPE_FLOAT, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
+                 ['specific_humidity@ObsError', 'QOE', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['air_temperature@ObsError',     'TOE',  cm.DTYPE_FLOAT,
+                 ['air_temperature@ObsError', 'TOE', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['XDR@MetaData',                     'XDR',  cm.DTYPE_FLOAT,
+                 ['XDR@MetaData', 'XDR', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['YDR@MetaData',                     'YDR',  cm.DTYPE_FLOAT,
+                 ['YDR@MetaData', 'YDR', cm.DTYPE_FLOAT,
                      ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]],
-                 ['HRDR@MetaData',                    'HRDR', cm.DTYPE_FLOAT,   ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]]],
+                 ['HRDR@MetaData', 'HRDR', cm.DTYPE_FLOAT, ['nlocs', 'nlevs'], [self.nlocs, self.nlevs]]],
 
             ]
             self.evn_spec = [
                 [['TPC_bevn@MetaData', 'TPC', cm.DTYPE_INTEGER, ['nlocs', 'nlevs', 'nevents'], [self.nlocs, self.nlevs, self.nevents]],
-                 ['TOB_bevn@MetaData', 'TOB', cm.DTYPE_FLOAT,   [
+                 ['TOB_bevn@MetaData', 'TOB', cm.DTYPE_FLOAT, [
                      'nlocs', 'nlevs', 'nevents'], [self.nlocs, self.nlevs, self.nevents]],
                  ['TQM_bevn@MetaData', 'TQM', cm.DTYPE_INTEGER, ['nlocs', 'nlevs', 'nevents'], [self.nlocs, self.nlevs, self.nevents]]]
             ]
@@ -976,12 +977,12 @@ class SondesObsType(ObsType):
         # Set the dimension specs.
         super(SondesObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
 
-########################### Radiance (AMSU-A) Observation Type ############################
+# ######################### Radiance (AMSU-A) Observation Type ############################
 class AmsuaObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(AmsuaObsType, self).__init__()
 
@@ -993,55 +994,55 @@ class AmsuaObsType(ObsType):
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
-            ['ObsTime@MetaData',   '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['ObsDate@MetaData',   '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsDate@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['time@MetaData',      '', cm.DTYPE_DOUBLE,  ['nlocs'], [self.nlocs]])
+            ['time@MetaData', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['latitude@MetaData',  '', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]])
+            ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['longitude@MetaData', '', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]])
+            ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
 
         if (bf_type == cm.BFILE_BUFR):
 
             self.mtype_re = '^NC021023'
             self.int_spec = [
-                [['SAID@MetaData',   'SAID',   cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['FOVN@MetaData',   'FOVN',   cm.DTYPE_INTEGER,
+                [['SAID@MetaData', 'SAID', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['FOVN@MetaData', 'FOVN', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['YEAR@MetaData',   'YEAR',   cm.DTYPE_INTEGER,
+                 ['YEAR@MetaData', 'YEAR', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['MNTH@MetaData',   'MNTH',   cm.DTYPE_INTEGER,
+                 ['MNTH@MetaData', 'MNTH', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['DAYS@MetaData',   'DAYS',   cm.DTYPE_INTEGER,
+                 ['DAYS@MetaData', 'DAYS', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['HOUR@MetaData',   'HOUR',   cm.DTYPE_INTEGER,
+                 ['HOUR@MetaData', 'HOUR', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['MINU@MetaData',   'MINU',   cm.DTYPE_INTEGER,
+                 ['MINU@MetaData', 'MINU', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['SECO@MetaData',   'SECO',   cm.DTYPE_INTEGER,
+                 ['SECO@MetaData', 'SECO', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['CLAT@MetaData',   'CLAT',   cm.DTYPE_FLOAT,
+                 ['CLAT@MetaData', 'CLAT', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['CLON@MetaData',   'CLON',   cm.DTYPE_FLOAT,
+                 ['CLON@MetaData', 'CLON', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['HOLS@MetaData',   'HOLS',   cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]]],
+                 ['HOLS@MetaData', 'HOLS', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
 
-                [['sensor_zenith_angle@MetaData',  'SAZA',   cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
-                 ['solar_zenith_angle@MetaData',   'SOZA',
+                [['sensor_zenith_angle@MetaData', 'SAZA', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
+                 ['solar_zenith_angle@MetaData', 'SOZA',
                      cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
                  ['sensor_azimuth_angle@MetaData', 'BEARAZ',
                      cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]],
-                 ['solar_azimuth_angle@MetaData',  'SOLAZI', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]]
+                 ['solar_azimuth_angle@MetaData', 'SOLAZI', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]]
 
             ]
             self.evn_spec = []
             self.rep_spec = [
-                [['channel_number@MetaData',         'CHNM', cm.DTYPE_INTEGER, ['nlocs', 'nchans'], [self.nlocs, self.nchans]],
+                [['channel_number@MetaData', 'CHNM', cm.DTYPE_INTEGER, ['nlocs', 'nchans'], [self.nlocs, self.nchans]],
                  ['brightness_temperature@ObsValue', 'TMBR', cm.DTYPE_FLOAT,
                      ['nlocs', 'nchans'], [self.nlocs, self.nchans]],
-                 ['CSTC@MetaData',                   'CSTC', cm.DTYPE_FLOAT,   ['nlocs', 'nchans'], [self.nlocs, self.nchans]]]
+                 ['CSTC@MetaData', 'CSTC', cm.DTYPE_FLOAT, ['nlocs', 'nchans'], [self.nlocs, self.nchans]]]
 
             ]
             self.seq_spec = []
@@ -1055,13 +1056,13 @@ class AmsuaObsType(ObsType):
         # Set the dimension specs.
         super(AmsuaObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
-########################### GPSRO Observation Type ############################
+# ######################### GPSRO Observation Type ############################
 
 
 class GpsroObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type):
         super(GpsroObsType, self).__init__()
 
@@ -1077,42 +1078,42 @@ class GpsroObsType(ObsType):
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
-            ['ObsTime',   '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsTime', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['ObsDate',   '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsDate', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['time',      '', cm.DTYPE_DOUBLE,  ['nlocs'], [self.nlocs]])
+            ['time', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['latitude',  '', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]])
+            ['latitude', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['longitude', '', cm.DTYPE_FLOAT,   ['nlocs'], [self.nlocs]])
+            ['longitude', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
 
         if (bf_type == cm.BFILE_BUFR):
 
             self.mtype_re = '^NC003010'
             self.int_spec = [
-                [['SAID@MetaData',   'SAID',   cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
-                 ['YEAR@MetaData',   'YEAR',   cm.DTYPE_INTEGER,
+                [['SAID@MetaData', 'SAID', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]],
+                 ['YEAR@MetaData', 'YEAR', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['MNTH@MetaData',   'MNTH',   cm.DTYPE_INTEGER,
+                 ['MNTH@MetaData', 'MNTH', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['DAYS@MetaData',   'DAYS',   cm.DTYPE_INTEGER,
+                 ['DAYS@MetaData', 'DAYS', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['HOUR@MetaData',   'HOUR',   cm.DTYPE_INTEGER,
+                 ['HOUR@MetaData', 'HOUR', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['MINU@MetaData',   'MINU',   cm.DTYPE_INTEGER,
+                 ['MINU@MetaData', 'MINU', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['SECO@MetaData',   'SECO',   cm.DTYPE_INTEGER,
+                 ['SECO@MetaData', 'SECO', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['ELRC@MetaData',   'ELRC',   cm.DTYPE_FLOAT,
+                 ['ELRC@MetaData', 'ELRC', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['PCCF@MetaData',   'PCCF',   cm.DTYPE_FLOAT,
+                 ['PCCF@MetaData', 'PCCF', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['PTID@MetaData',   'PTID',   cm.DTYPE_INTEGER,
+                 ['PTID@MetaData', 'PTID', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['GEODU@MetaData',  'GEODU',  cm.DTYPE_FLOAT,
+                 ['GEODU@MetaData', 'GEODU', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
-                 ['QFRO@MetaData',   'QFRO',   cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
+                 ['QFRO@MetaData', 'QFRO', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]]],
 
             ]
             self.evn_spec = []
@@ -1129,17 +1130,17 @@ class GpsroObsType(ObsType):
             self.misc_spec[0].append(['height@MetaData',
                                       '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(
-                ['atmospheric_refractivity@ObsValue',      '', self.misc_dtype, ['nlocs'], [self.nlocs]])
+                ['atmospheric_refractivity@ObsValue', '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(
-                ['atmospheric_refractivity@ObsError',  '', self.misc_dtype, ['nlocs'], [self.nlocs]])
+                ['atmospheric_refractivity@ObsError', '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(
                 ['atmospheric_refractivity@PreQC', '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(['bending_angle@ObsValue',
                                       '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(
-                ['bending_angle@ObsError',             '', self.misc_dtype, ['nlocs'], [self.nlocs]])
+                ['bending_angle@ObsError', '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(
-                ['bending_angle@PreQc',            '', self.misc_dtype, ['nlocs'], [self.nlocs]])
+                ['bending_angle@PreQc', '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(['mean_frequency@MetaData',
                                       '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(['impact_parameter@MetaData',
@@ -1159,7 +1160,7 @@ class GpsroObsType(ObsType):
         # Set the dimension specs.
         super(GpsroObsType, self).init_dim_spec()
 
-    ### methods ###
+    # # methods ###
 
     ########################################################################
     # This method will extract counts from the BUFR file which are useful
