@@ -34,9 +34,9 @@ def BfilePreprocess(BufrFname, Obs):
 
     return [NumObs, Obs.num_msg_selected, Obs.num_msg_mtype]
 
-##########################################################################
-##########                  (Prep-) BUFR NCEP Observations               #
-##########################################################################
+# ########################################################################
+# ########                  (Prep-) BUFR NCEP Observations               #
+# ########################################################################
 #
 # The class is developed to import all the entries to any BUFR family data set that
 # the tables A, B, D of BUFR are embedded to the files.
@@ -44,7 +44,7 @@ def BfilePreprocess(BufrFname, Obs):
 
 
 class NcepObsType(ObsType):
-    ### initialize data elements ###
+    # # initialize data elements ###
     def __init__(self, bf_type, alt_type, tablefile, dictfile):
 
         super(NcepObsType, self).__init__()
@@ -318,7 +318,7 @@ def get_int_spec(mnemonic, part_b):
 
 
 def get_fname(base_mnemo, BufrPath):
-    #BufrFname = BufrPath + '/b' + base_mnemo[2:5] + '/xx' + base_mnemo[5:]
+    # BufrFname = BufrPath + '/b' + base_mnemo[2:5] + '/xx' + base_mnemo[5:]
     BufrFname = BufrPath + BufrFname
     BufrTname = base_mnemo + '.tbl'
     NetcdfFname = 'xx' + base_mnemo[5:] + '.nc'
