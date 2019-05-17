@@ -32,20 +32,34 @@ Currently supported obs types
 | AOD                | N        | N/A      |
 
 ## gsi-ncdiag
+These scripts use classes defined in the gsincdiag Python library to convert output from GSI netCDF diag files into
+IODA observation files and GeoVaLs for UFO. To run GSI and produce the necessary files, see the feature/files_for_jedi
+branch in the ProdGSI repository.
 
-Set of Python scripts to convert GSI ncdiag output to netcdf file that can be ingested into IODA.
-The GSI output is a collection of many netcdf files containing obs and geovals data.
-The flow consists of running three scripts in succession:
-* `cat_nc_files.py`
-    * This script concatenates files containing the same obs variable into single files
-* `select_nc_obs.py`
-    * This script selects subsets of observations from the output of the `cat_nc_files.py` script
-    * This is used to create the small and medium test cases
-* `prep_nc_files.py`
-    * This script formats the output of `select_nc_obs.py` into files that can be ingested by IODA
+The following executable scripts are to be used by the user:
+* `proc_gsi_ncdiag.py`
+    * This script uses Python multiprocessing to run multiple instances in separate processes to convert the files in
+      parallel.
+    * `usage: python proc_gsi_ncdiag.py -n NPROCS -o /path/to/obsout -g /path/to/geovalsout /path/to/diagfiles`
+       where NPROCS is the number of parallel processes that will run at one time (should be equal to the number of
+       cores on one node.
+* `subset_files.py`
+    * `usage: subset_files.py -m/-s -n NPROCS /path/to/directory`
+    * Subsets all of the files in the input directory to an output of only 100 (m) or 1 (s) location.
+    * NPROCS controls how many files can be subsetted at once to speed up the process.
+* `combine_conv.py`
+    * `usage: combine_conv.py -i /path/to/file1.nc /path/to/filen.nc -o /path/to/outputfile.nc`
+    * Finds observations for conventional data at the same locations and combines them from multiple files into one
+      output file for additional processing or analysis.
+* `test_gsidiag.py`
+    * `usage: test_gsidiag.py -i /path/to/inputfile.nc -o /path/to/outdir/ -t conv|rad|aod|oz`
+    * A script to convert just a single input GSI diag file into one Obs file and one GeoVaLs file
+    * This is called by ctest but can also be used by a user rather than `proc_gsi_ncdiag.py`
 
-See the script tools/build_gsi_nc_files.sh for an example of how to run the flow.
-A fourth script, `list_sid_raob.py`, can be used to create the file containing a list of unique station ids (which is a file used by the `select_nc_obs.py` script for the Radiosonde and Aircraft obs types).
+For developers, or for those who need to change the names of input/output variables in the scripts, see the README in
+src/gsi-ncdiag for details.
+
+
 
 ## marine
 The marine converters all take the following format, with some converters taking additional optional arguments as noted:
