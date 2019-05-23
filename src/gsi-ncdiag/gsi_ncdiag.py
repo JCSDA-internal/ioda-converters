@@ -25,13 +25,13 @@ conv_platforms = {
         'sfc',
     ],
     "conv_uv": [
+        'sfc',
         'aircraft',
         'sondes',
         'satwind',
         'vadwind',
         'windprof',
         'sfcship',
-        'sfc',
         'scatwind',
     ],
     "conv_gps": [
