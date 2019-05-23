@@ -112,7 +112,7 @@ ecbuild_add_test( TARGET test_iodaconv_godae_prof
 ecbuild_add_test( TARGET test_iodaconv_godae_ship
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-		              ARGS "${CMAKE_BINARY_DIR}/bin/godae_ship2ioda.py
+                  ARGS "${CMAKE_BINARY_DIR}/bin/godae_ship2ioda.py
                        -i testinput/godae_ship.bin
                        -o testrun/godae_ship.nc
                        -d 1998090112"
@@ -121,7 +121,7 @@ ecbuild_add_test( TARGET test_iodaconv_godae_ship
 ecbuild_add_test( TARGET test_iodaconv_godae_trak
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-		              ARGS "${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
+                  ARGS "${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
                        -i testinput/godae_trak.bin
                        -o testrun/godae_trak.nc
                        -d 2004070812"
@@ -130,7 +130,7 @@ ecbuild_add_test( TARGET test_iodaconv_godae_trak
 ecbuild_add_test( TARGET test_iodaconv_hgodas_insitu
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-		              ARGS "${CMAKE_BINARY_DIR}/bin/hgodas_insitu2ioda.py
+                  ARGS "${CMAKE_BINARY_DIR}/bin/hgodas_insitu2ioda.py
                        -i testinput/hgodas_insitu.nc
                        -o testrun/hgodas_insitu.nc
                        -d 2018041512"
@@ -170,7 +170,7 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
 #===============================================================================
 # ODB2 converter
 #===============================================================================
-if (ODB_API_HAVE_PYTHON)
+if (ODB_API_HAVE_PYTHON AND PYTHON_VERSION_STRING VERSION_LESS 3)
   ecbuild_add_test( TARGET test_iodaconv_odb2_conv
                     TYPE SCRIPT
                     COMMAND iodaconv_comp.sh
@@ -179,4 +179,4 @@ if (ODB_API_HAVE_PYTHON)
                          ${CMAKE_BINARY_DIR}/etc/pyiodaconv/MO_radiosonde_Definition.yaml
                          testrun/odb_sonde_16019.nc4"
                         odb_sonde_16019.nc4)
-endif (ODB_API_HAVE_PYTHON)
+endif ()
