@@ -23,7 +23,7 @@ def subset(infile, nlocsout, suffix):
         nvars = 1
     if nlocsout > nlocsin:
         nlocsout = nlocsin
-    flag = random.sample(np.arange(0, nlocsin), nlocsout)
+    flag = random.sample(list(np.arange(0, nlocsin)), nlocsout)
     flag = sorted(flag)
     nobsout = nlocsout*nvars
     # copy global attributes
