@@ -25,13 +25,13 @@ conv_platforms = {
         'sfc',
     ],
     "conv_uv": [
+        'sfc',
         'aircraft',
         'sondes',
         'satwind',
         'vadwind',
         'windprof',
         'sfcship',
-        'sfc',
         'scatwind',
     ],
     "conv_gps": [
@@ -87,6 +87,11 @@ all_LocKeyList = {
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
 }
 
+checkuv = {
+    "eastward_wind": "u",
+    "northward_wind": "v",
+}
+
 conv_varnames = {
     "tv": ["virtual_temperature"],
     "tsen": ["air_temperature"],
@@ -138,23 +143,6 @@ gsiint = [
     'GsiUseFlag',
 ]
 
-# geovals_vars = {gsiname:geoval_name}
-geovals_vars = {
-    'virtual_temperature': 'virtual_temperature',
-    'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
-    'air_temperature': 'air_temperature',
-    'specific_humidity': 'specific_humidity',
-    'northward_wind': 'northward_wind',
-    'eastward_wind': 'eastward_wind',
-    'geopotential_height': 'geopotential_height',
-    'height': 'height_above_mean_sea_level',
-    'surface_pressure': 'surface_pressure',
-    'surface_temperature': 'surface_temperature',
-    'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geopotential_height',
-    'landmask': 'Land_Fraction',
-}
-
 geovals_metadata_dict = {
     'Latitude': 'latitude',
     'Longitude': 'longitude',
@@ -184,9 +172,23 @@ chan_metadata_dict = {
     'mean_lapse_rate': 'mean_lapse_rate',
 }
 
+# geovals_vars = {gsiname:geoval_name}
 geovals_vars = {
+    'virtual_temperature': 'virtual_temperature',
+    'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
+    'specific_humidity': 'specific_humidity',
+    'northward_wind': 'northward_wind',
+    'eastward_wind': 'eastward_wind',
+    'geopotential_height': 'geopotential_height',
+    'height': 'height_above_mean_sea_level',
+    'surface_pressure': 'surface_pressure',
+    'surface_temperature': 'surface_temperature',
+    'surface_roughness': 'surface_roughness_length',
+    'surface_height': 'surface_geopotential_height',
+    'landmask': 'Land_Fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
+    'atmosphere_pressure_coordinate': 'air_pressure',
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mass_concentration_of_carbon_dioxide_in_air',
@@ -228,8 +230,9 @@ geovals_vars = {
     'seas2': 'seas2',
     'seas3': 'seas3',
     'seas4': 'seas4',
-    'Sfc_height': 'Sfc_height',
+    'Sfc_height': 'surface_geopotential_height',
     'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
+    'Wind_Reduction_Factor_at_10m': 'GSI_wind_reduction_factor_10m',
 }
 
 aod_sensors = [
@@ -380,6 +383,7 @@ class Conv:
         from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
+        import netCDF4 as nc
         # get list of platforms to process for the given obstype
         try:
             platforms = conv_platforms[self.obstype]
@@ -441,29 +445,45 @@ class Conv:
                         gsivars = gsi_add_vars
                     gsimeta = {}
                     for key, value in gsivars.items():
+                        gvname2 = outvars[o], key, value
                         # some special actions need to be taken depending on
                         # var name...
+                        if ("Forecast" in key) and (v == 'uv'):
+                            if (checkuv[outvars[o]] != key[0]):
+                                continue
                         if "Errinv" in key:
                             try:
-                                gsimeta[key] = 1.0 / self.df[key][idx]
+                                gsimeta[gvname2] = 1.0 / self.df[key][idx]
                             except IndexError:
                                 pass
                         else:
                             try:
-                                gsimeta[key] = self.df[key][idx]
+                                gsimeta[gvname2] = self.df[key][idx]
                             except IndexError:
                                 pass
                     locKeys = []
                     for lvar in LocVars:
                         if lvar == 'Station_ID':
                             tmp = self.df[lvar][idx]
-                            locKeys.append([b''.join(tmp[a])
-                                            for a in range(len(tmp))])
+                            locKeys.append([b''.join(tmp[a]) for a in range(len(tmp))])
                         elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                             tmp = self.df[lvar][idx]
                             obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                             obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                             locKeys.append(obstimes)
+                        # special logic for missing station_elevation and height for surface obs
+                        elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
+                            tmp = self.df[lvar][idx]
+                            tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
+                            tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
+                            # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
+                            # this is correctly 10m agl though for u,v obs
+                            if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
+                                elev = self.df['Station_Elevation'][idx]
+                                hgt = elev + 2.
+                                hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
+                                tmp = hgt
+                            locKeys.append(tmp)
                         else:
                             locKeys.append(self.df[lvar][idx])
                     # again to ensure unique obs
@@ -481,14 +501,15 @@ class Conv:
                         # term but useful for testing
                         for key, value in gsivars.items():
                             gvname = outvars[o], value
+                            gvname2 = outvars[o], key, value
                             if value in gsiint:
                                 try:
-                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[key][i])
+                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[gvname2][i])
                                 except KeyError:
                                     pass
                             else:
                                 try:
-                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
+                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[gvname2][i]
                                 except KeyError:
                                     pass
 
@@ -694,14 +715,40 @@ class Radiances:
         obsdata = self.df['Observation'][:]
         obserr = self.df['error_variance'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
-        gsivars = gsi_add_vars
+
+        idx = chan_indx == chanlist[0]
+        for lvar in LocVars:
+            loc_mdata_name = all_LocKeyList[lvar][0]
+            if lvar == 'Obs_Time':
+                tmp = self.df[lvar][idx]
+                obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+            else:
+                loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+
+        # check for additional GSI output for each variable
+        for gsivar, iodavar in gsi_add_vars.items():
+            if gsivar in self.df.variables:
+                if "Inverse" in gsivar:
+                    tmp = 1.0 / self.df[gsivar][:]
+                    tmp[np.isinf(tmp)] = np.abs(nc.default_fillvals['f4'])
+                else:
+                    tmp = self.df[gsivar][:]
+                if gsivar in gsiint:
+                    tmp = tmp.astype(int)
+                for ii, ch in enumerate(chanlist):
+                    varname = "brightness_temperature_{:d}".format(ch)
+                    gvname = varname, iodavar
+                    idx = chan_indx == chanlist[ii]
+                    outvals = tmp[idx]
+                    outdata[gvname] = outvals
 
         # loop through channels for subset
         var_names = []
         for c in range(len(chanlist)):
             value = "brightness_temperature_{:d}".format(chanlist[c])
             var_names.append(value)
-            print(self.obstype, value)
             idx = chan_indx == chanlist[c]
             if (np.sum(idx) == 0):
                 print("No matching observations for:")
@@ -711,53 +758,11 @@ class Radiances:
             obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
             obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
-            for lvar in LocVars:
-                loc_mdata_name = all_LocKeyList[lvar][0]
-                if lvar == 'Obs_Time':
-                    tmp = self.df[lvar][idx]
-                    obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-                    obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                    loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
-                else:
-                    loc_mdata[loc_mdata_name] = self.df[lvar][idx]
-            gsimeta = {}
-            for key, value2 in gsivars.items():
-                # some special actions need to be taken depending on var
-                # name...
-                if "Inverse" in key:
-                    try:
-                        outvals = 1.0 / self.df[key][idx]
-                        outvals[np.isinf(outvals)] = np.abs(nc.default_fillvals['f4'])
-                        gsimeta[key] = outvals
-                    except IndexError:
-                        pass
-                else:
-                    try:
-                        gsimeta[key] = self.df[key][idx]
-                    except IndexError:
-                        pass
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
             outdata[varDict[value]['errKey']] = obserrsub
             outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
-
-            # add additional GSI variables that are not needed long term but
-            # useful for testing
-            for key, value2 in gsivars.items():
-                gvname = value, value2
-                if value2 in gsiint:
-                    try:
-                        outdata[gvname] = gsimeta[key].astype(int)
-                        print(gvname)
-                        print(outdata[gvname])
-                    except KeyError:
-                        pass
-                else:
-                    try:
-                        outdata[gvname] = gsimeta[key]
-                    except KeyError:
-                        pass
 
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
