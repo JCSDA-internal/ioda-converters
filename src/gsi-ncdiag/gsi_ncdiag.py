@@ -87,6 +87,11 @@ all_LocKeyList = {
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
 }
 
+checkuv = {
+    "eastward_wind": "u",
+    "northward_wind": "v",
+}
+
 conv_varnames = {
     "tv": ["virtual_temperature"],
     "tsen": ["air_temperature"],
@@ -227,6 +232,7 @@ geovals_vars = {
     'seas4': 'seas4',
     'Sfc_height': 'surface_geopotential_height',
     'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
+    'Wind_Reduction_Factor_at_10m': 'GSI_wind_reduction_factor_10m',
 }
 
 aod_sensors = [
@@ -439,16 +445,20 @@ class Conv:
                         gsivars = gsi_add_vars
                     gsimeta = {}
                     for key, value in gsivars.items():
+                        gvname2 = outvars[o], key, value
                         # some special actions need to be taken depending on
                         # var name...
+                        if ("Forecast" in key) and (v == 'uv'):
+                            if (checkuv[outvars[o]] != key[0]):
+                                continue
                         if "Errinv" in key:
                             try:
-                                gsimeta[key] = 1.0 / self.df[key][idx]
+                                gsimeta[gvname2] = 1.0 / self.df[key][idx]
                             except IndexError:
                                 pass
                         else:
                             try:
-                                gsimeta[key] = self.df[key][idx]
+                                gsimeta[gvname2] = self.df[key][idx]
                             except IndexError:
                                 pass
                     locKeys = []
@@ -491,14 +501,15 @@ class Conv:
                         # term but useful for testing
                         for key, value in gsivars.items():
                             gvname = outvars[o], value
+                            gvname2 = outvars[o], key, value
                             if value in gsiint:
                                 try:
-                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[key][i])
+                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[gvname2][i])
                                 except KeyError:
                                     pass
                             else:
                                 try:
-                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
+                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[gvname2][i]
                                 except KeyError:
                                     pass
 
