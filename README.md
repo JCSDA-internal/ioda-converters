@@ -98,6 +98,21 @@ Definition YAML files currently created and tested:
 * ECMWF Radiosonde
 * ECMWF Aircraft
 
+The current ODB library (called ODB API) only supports Python 2.7.
+ECMWF will be releasing a new ODB library (called ODC) soon, that will support Python 3.
+Our expectation is that ODC will show up in the next few weeks.
+
+Until ODC arrives, we have to use python 2.7 for the ODB test and file conversion.
+
+The ODB file conversion test will be disabled by default so that developers can continue to work in Python 3.
+The ODB coding norms test will always be enabled.
+
+When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7. 
+To enable the ODB file conversion test, add the ENABLE_ODB_API option to ecbuild as follows:
+~~~~~~~~
+ecbuild -DENABLE_ODB_API=1 <other_ecbuild_options> <path_to_source_directory>
+~~~~~~~~
+
 ## odbapi2json
 
 Python script, `odbapi2json.py`, for converting Met Office ODB2 files to JSON files which can be used to load the data

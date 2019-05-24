@@ -19,6 +19,7 @@ list( APPEND test_input
   testinput/hgodas_sst.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
+  testinput/odb_sonde_16019.odb
 )
 
 list( APPEND test_output
@@ -33,6 +34,7 @@ list( APPEND test_output
   testoutput/hgodas_sst.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
+  testoutput/odb_sonde_16019.nc4
 )
 
 # create test directories and make links to the input files
@@ -110,7 +112,7 @@ ecbuild_add_test( TARGET test_iodaconv_godae_prof
 ecbuild_add_test( TARGET test_iodaconv_godae_ship
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-		              ARGS "${CMAKE_BINARY_DIR}/bin/godae_ship2ioda.py
+                  ARGS "${CMAKE_BINARY_DIR}/bin/godae_ship2ioda.py
                        -i testinput/godae_ship.bin
                        -o testrun/godae_ship.nc
                        -d 1998090112"
@@ -119,7 +121,7 @@ ecbuild_add_test( TARGET test_iodaconv_godae_ship
 ecbuild_add_test( TARGET test_iodaconv_godae_trak
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-		              ARGS "${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
+                  ARGS "${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
                        -i testinput/godae_trak.bin
                        -o testrun/godae_trak.nc
                        -d 2004070812"
@@ -128,7 +130,7 @@ ecbuild_add_test( TARGET test_iodaconv_godae_trak
 ecbuild_add_test( TARGET test_iodaconv_hgodas_insitu
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-		              ARGS "${CMAKE_BINARY_DIR}/bin/hgodas_insitu2ioda.py
+                  ARGS "${CMAKE_BINARY_DIR}/bin/hgodas_insitu2ioda.py
                        -i testinput/hgodas_insitu.nc
                        -o testrun/hgodas_insitu.nc
                        -d 2018041512"
@@ -166,4 +168,15 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
                       amsua_aqua_obs_2018041500.nc4)
 
 #===============================================================================
+# ODB2 converter
 #===============================================================================
+if (ODB_API_HAVE_PYTHON AND PYTHON_VERSION_STRING VERSION_LESS 3)
+  ecbuild_add_test( TARGET test_iodaconv_odb2_conv
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS "${CMAKE_BINARY_DIR}/bin/odbapi2nc.py -c
+                         testinput/odb_sonde_16019.odb
+                         ${CMAKE_BINARY_DIR}/etc/pyiodaconv/MO_radiosonde_Definition.yaml
+                         testrun/odb_sonde_16019.nc4"
+                        odb_sonde_16019.nc4)
+endif ()

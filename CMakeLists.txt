@@ -37,7 +37,10 @@ set( IODACONV_LINKER_LANGUAGE CXX )
 # Dependencies
 ################################################################################
 
-#odb api
+# python
+ecbuild_find_python( REQUIRED )
+
+# odb api
 ecbuild_add_option( FEATURE ODB_API
                     DEFAULT OFF
                     DESCRIPTION "Support for ODB API"
