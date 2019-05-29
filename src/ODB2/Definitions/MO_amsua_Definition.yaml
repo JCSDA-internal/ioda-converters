@@ -38,16 +38,12 @@ column_variables:
     longitude: lon
     latitude: lat
     satellite_id: satellite_identifier
-    sat_zenith_angle: zenith
-    sat_azimuth_angle: azimuth
-    sol_zenith_angle: solar_zenith
-    sol_azimuth_angle: solar_azimuth
+    sensor_zenith_angle: zenith
+    sensor_azimuth_angle: azimuth
+    solar_zenith_angle: solar_zenith
+    solar_azimuth_angle: solar_azimuth
     scan_position: scanpos
     height: surface_height
-
-#TODO: change "sat_zenith_angle" to either "sensor_zenith_angle" or
-#      "platform_zenith_angle", which are CF standard names.
-#      Only using "sat_zenith_angle" for now b/c that's what UFO has.
 
 # vertco_variables are read from the vertco_reference_1 column
 # when the vertco_type column has the specified value.
@@ -144,10 +140,10 @@ location_key:
   latitude: float
   longitude: float
   datetime: string
-  sat_zenith_angle: float
-  sat_azimuth_angle: float
-  sol_zenith_angle: float
-  sol_azimuth_angle: float
+  sensor_zenith_angle: float
+  sensor_azimuth_angle: float
+  solar_zenith_angle: float
+  solar_azimuth_angle: float
   scan_position: integer
   height: float
 

@@ -39,10 +39,6 @@ def CreateKeyTuple(keyDefinitionDict, row, selectColumns, ColumnVarDict, VertcoV
         elif keyVariableName in VertcoVarDict:
             if row[selectColumns.index(vertco_type_s)] == VertcoVarDict[keyVariableName]:
                 keyVariableValue = row[selectColumns.index(vertco_reference_1_s)]
-                # If we're returning a pressure value, we divide by 100 to convert from Pa to hPa.
-                # vertco_type=1 ==> pressure, vertco_type=11 ==> derived pressure (from aircraft altitude)
-                if (VertcoVarDict[keyVariableName] == 1 or VertcoVarDict[keyVariableName] == 11) and keyVariableValue is not None:
-                    keyVariableValue /= 100.0
         elif keyVariableName == analysis_date_time_s:
             keyVariableValue = ioda_conv_util.IntDateTimeToString(row[selectColumns.index(andate_s)], row[selectColumns.index(antime_s)])
         elif keyVariableName == date_time_s:
