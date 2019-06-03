@@ -372,7 +372,7 @@ class Conv:
                             var_out[...] = vdata[idx, ...]
                 ncout.close()
 
-    def toIODAobs(self, OutDir, clobber=True):
+    def toIODAobs(self, OutDir, clobber=True, platforms=None):
         """ toIODAobs(OutDir,clobber=True)
      output observations from the specified GSI diag file
      to the JEDI/IODA observation format
@@ -384,12 +384,13 @@ class Conv:
         import numpy as np
         import datetime as dt
         import netCDF4 as nc
-        # get list of platforms to process for the given obstype
-        try:
-            platforms = conv_platforms[self.obstype]
-        except BaseException:
-            print(self.obstype + " is not currently supported. Exiting.")
-            return
+        if not platforms:
+            # get list of platforms to process for the given obstype
+            try:
+                platforms = conv_platforms[self.obstype]
+            except BaseException:
+                print(self.obstype + " is not currently supported. Exiting.")
+                return
         # loop through obsvariables and platforms to do processing
         for v in self.obsvars:
             for p in platforms:
@@ -424,6 +425,8 @@ class Conv:
                     print("No matching observations for:")
                     print("Platform:" + p + " Var:" + v)
                     continue
+                print("Platform:" + p + " Var:" + v)
+                print(str(np.sum(idx))+" obs to process")
 
                 writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
@@ -460,41 +463,42 @@ class Conv:
                             if value in gsiint:
                                 tmp = tmp.astype(int)
                             outdata[gvname] = tmp
-                    for lvar in LocVars:
-                        loc_mdata_name = all_LocKeyList[lvar][0]
-                        if lvar == 'Station_ID':
-                            tmp = self.df[lvar][idx]
-                            StationIDs = [b''.join(tmp[a]) for a in range(len(tmp))]
-                            loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
-                        elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
-                            tmp = self.df[lvar][idx]
-                            obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-                            obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                            loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
-                        # special logic for missing station_elevation and height for surface obs
-                        elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
-                            tmp = self.df[lvar][idx]
-                            tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
-                            tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
-                            # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
-                            # this is correctly 10m agl though for u,v obs
-                            if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
-                                elev = self.df['Station_Elevation'][idx]
-                                hgt = elev + 2.
-                                hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
-                                tmp = hgt
-                            loc_mdata[loc_mdata_name] = tmp
-                        else:
-                            loc_mdata[loc_mdata_name] = self.df[lvar][idx]
-
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
                     outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(int)
-                    # record info
-                    SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
-                    rec_mdata['Station_ID'] = writer.FillNcVector(SIDUnique, "string")
-                    loc_mdata['record_number'] = invs
+
+                for lvar in LocVars:
+                    loc_mdata_name = all_LocKeyList[lvar][0]
+                    if lvar == 'Station_ID':
+                        tmp = self.df[lvar][idx]
+                        StationIDs = [b''.join(tmp[a]) for a in range(len(tmp))]
+                        loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
+                    elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                        tmp = self.df[lvar][idx]
+                        obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+                        loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                    # special logic for missing station_elevation and height for surface obs
+                    elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
+                        tmp = self.df[lvar][idx]
+                        tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
+                        tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
+                        # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
+                        # this is correctly 10m agl though for u,v obs
+                        if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
+                            elev = self.df['Station_Elevation'][idx]
+                            hgt = elev + 2.
+                            hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
+                            tmp = hgt
+                        loc_mdata[loc_mdata_name] = tmp
+                    else:
+                        loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+
+                # record info
+                SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
+                rec_mdata['Station_ID'] = writer.FillNcVector(SIDUnique, "string")
+                loc_mdata['record_number'] = invs
 
                 # var metadata
                 var_mdata['variable_names'] = writer.FillNcVector(outvars, "string")
