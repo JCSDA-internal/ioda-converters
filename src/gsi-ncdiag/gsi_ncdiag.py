@@ -407,13 +407,16 @@ class Conv:
                 AttrData = {}
                 varDict = defaultdict(lambda: defaultdict(dict))
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
                     if ncv in all_LocKeyList:
                         LocKeyList.append(all_LocKeyList[ncv])
                         LocVars.append(ncv)
-                LocKeyList.append(
-                    ('ObsIndex', 'integer'))  # to ensure unique obs
+                # use station_id for RecKey
+                RecKeyList.append('Station_ID')
 
                 # grab obs to process
                 idx = grabobsidx(self.df, p, v)
@@ -422,8 +425,6 @@ class Conv:
                     print("Platform:" + p + " Var:" + v)
                     continue
 
-                # for now, record len is 1 and the list is empty?
-                recKey = 0
                 writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
                 outvars = conv_varnames[v]
@@ -443,34 +444,33 @@ class Conv:
                         gsivars = gsi_add_vars_uv
                     else:
                         gsivars = gsi_add_vars
-                    gsimeta = {}
+
                     for key, value in gsivars.items():
-                        gvname2 = outvars[o], key, value
-                        # some special actions need to be taken depending on
-                        # var name...
-                        if ("Forecast" in key) and (v == 'uv'):
-                            if (checkuv[outvars[o]] != key[0]):
-                                continue
-                        if "Errinv" in key:
-                            try:
-                                gsimeta[gvname2] = 1.0 / self.df[key][idx]
-                            except IndexError:
-                                pass
-                        else:
-                            try:
-                                gsimeta[gvname2] = self.df[key][idx]
-                            except IndexError:
-                                pass
-                    locKeys = []
+                        if key in self.df.variables:
+                            gvname = outvars[o], value
+                            # some special actions need to be taken depending on
+                            # var name...
+                            if ("Forecast" in key) and (v == 'uv'):
+                                if (checkuv[outvars[o]] != key[0]):
+                                    continue
+                            if "Errinv" in key:
+                                tmp = 1.0 / self.df[key][idx]
+                            else:
+                                tmp = self.df[key][idx]
+                            if value in gsiint:
+                                tmp = tmp.astype(int)
+                            outdata[gvname] = tmp
                     for lvar in LocVars:
+                        loc_mdata_name = all_LocKeyList[lvar][0]
                         if lvar == 'Station_ID':
                             tmp = self.df[lvar][idx]
-                            locKeys.append([b''.join(tmp[a]) for a in range(len(tmp))])
+                            StationIDs = [b''.join(tmp[a]) for a in range(len(tmp))]
+                            loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
                         elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                             tmp = self.df[lvar][idx]
                             obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                             obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                            locKeys.append(obstimes)
+                            loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
                         # special logic for missing station_elevation and height for surface obs
                         elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
                             tmp = self.df[lvar][idx]
@@ -483,39 +483,33 @@ class Conv:
                                 hgt = elev + 2.
                                 hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
                                 tmp = hgt
-                            locKeys.append(tmp)
+                            loc_mdata[loc_mdata_name] = tmp
                         else:
-                            locKeys.append(self.df[lvar][idx])
-                    # again to ensure unique obs
-                    locKeys.append(np.arange(1, len(obsdata) + 1))
-                    locKeys = np.swapaxes(np.array(locKeys), 0, 1)
-                    locKeys = [tuple(a) for a in locKeys]
-                    for i in range(len(obsdata)):
-                        # observation data
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['valKey']] = obsdata[i]
-                        # observation error
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['errKey']] = obserr[i]
-                        # observation prep qc mark
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['qcKey']] = int(obsqc[i])
-                        # add additional GSI variables that are not needed long
-                        # term but useful for testing
-                        for key, value in gsivars.items():
-                            gvname = outvars[o], value
-                            gvname2 = outvars[o], key, value
-                            if value in gsiint:
-                                try:
-                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[gvname2][i])
-                                except KeyError:
-                                    pass
-                            else:
-                                try:
-                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[gvname2][i]
-                                except KeyError:
-                                    pass
+                            loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+
+                    # store values in output data dictionary
+                    outdata[varDict[outvars[o]]['valKey']] = obsdata
+                    outdata[varDict[outvars[o]]['errKey']] = obserr
+                    outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(int)
+                    # record info
+                    SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
+                    rec_mdata['Station_ID'] = writer.FillNcVector(SIDUnique, "string")
+                    loc_mdata['record_number'] = invs
+
+                # var metadata
+                var_mdata['variable_names'] = writer.FillNcVector(outvars, "string")
 
                 AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
-                writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+                # writer metadata
+                nvars = len(outvars)
+                nlocs = len(StationIDs)
+                nrecs = len(SIDUnique)
+
+                writer._nrecs = nrecs
+                writer._nvars = nvars
+                writer._nlocs = nlocs
+                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
                 print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
@@ -695,7 +689,6 @@ class Radiances:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
-        # LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
         # for now, record len is 1 and the list is empty?
         recKey = 0
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
