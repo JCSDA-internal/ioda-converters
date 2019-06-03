@@ -17,6 +17,9 @@ parser.add_argument('-o', '--output',
 parser.add_argument('-t', '--type',
                     help="type of input file",
                     type=str, required=True)
+parser.add_argument('-p', '--platform',
+                    help="platform to run, only works on conv",
+                    type=str, required=True)
 args = parser.parse_args()
 
 infile = args.input
@@ -32,5 +35,8 @@ elif (args.type == 'oz'):
 else:
     raise ValueError
 diag.read()
-diag.toIODAobs(outdir)
+if (args.platform and args.type == 'conv'):
+    diag.toIODAobs(outdir, platforms=[args.platform])
+else:
+    diag.toIODAobs(outdir)
 diag.toGeovals(outdir)

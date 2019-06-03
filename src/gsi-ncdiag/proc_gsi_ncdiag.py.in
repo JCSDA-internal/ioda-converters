@@ -9,11 +9,11 @@ sys.path.append("@SCRIPT_LIB_PATH@")
 import gsi_ncdiag as gsid
 
 
-def run_conv_obs(convfile, outdir):
+def run_conv_obs(convfile, outdir, platforms):
     print("Processing:"+str(convfile))
     Diag = gsid.Conv(convfile)
     Diag.read()
-    Diag.toIODAobs(outdir)
+    Diag.toIODAobs(outdir, platforms=platforms)
     Diag.close()
     return 0
 
@@ -104,7 +104,15 @@ if MyArgs.obs_dir:
     # get list of conv diag files
     convfiles = glob.glob(DiagDir+'/*conv*')
     for convfile in convfiles:
-        res = obspool.apply_async(run_conv_obs, args=(convfile, ObsDir))
+        splitfname = convfile.split('/')[-1].split('_')
+        if 'conv' in splitfname:
+            i = splitfname.index('conv')
+            c = "_".join(splitfname[i:i + 2])
+        try:
+            for p in gsid.conv_platforms[c]:
+                res = obspool.apply_async(run_conv_obs, args=(convfile, ObsDir, [p]))
+        except KeyError:
+            pass
     # radiances next
     radfiles = glob.glob(DiagDir+'/diag*')
     for radfile in radfiles:
