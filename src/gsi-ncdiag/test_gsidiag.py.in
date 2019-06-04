@@ -19,7 +19,7 @@ parser.add_argument('-t', '--type',
                     type=str, required=True)
 parser.add_argument('-p', '--platform',
                     help="platform to run, only works on conv",
-                    type=str, required=True)
+                    type=str)
 args = parser.parse_args()
 
 infile = args.input
