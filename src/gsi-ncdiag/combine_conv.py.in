@@ -210,10 +210,8 @@ def concat_ioda(FileList, OutFile, GeoDir):
                     tmpgeodata.append(tmpdata)
                     tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
                 ncf.close()
-                print(tmpdata.shape, v)
             tmpgeodata = np.hstack(tmpgeodata)
             tmpgeoidx = np.hstack(tmpgeoidx)
-            print(tmpgeodata.shape)
             GeoVarData2.append(tmpgeodata)
             GeoVarIdx2.append(tmpgeoidx)
         GeoVarData2 = np.vstack(GeoVarData2)
@@ -231,7 +229,10 @@ def concat_ioda(FileList, OutFile, GeoDir):
                     tmpgeodata.append(tmpdata)
                     tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
                 except KeyError:
-                    tmpdata = np.ones_like(ncf.variables['air_pressure'][:]).astype(GeoVarTypes3[idx2])
+                    try:
+                        tmpdata = np.ones_like(ncf.variables['air_pressure'][:]).astype(GeoVarTypes3[idx2])
+                    except KeyError:
+                        tmpdata = np.ones_like(ncf.variables['atmosphere_ln_pressure_coordinate'][:]).astype(GeoVarTypes3[idx2])
                     if GeoVarTypes3[idx2] == np.int32:
                         tmpdata = tmpdata * nc.default_fillvals['i4']
                     else:
