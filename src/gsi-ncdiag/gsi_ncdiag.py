@@ -737,7 +737,7 @@ class Radiances:
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
-                    idx = chan_indx == ii
+                    idx = chan_indx == ii+1
                     outvals = tmp[idx]
                     outdata[gvname] = outvals
 
@@ -746,7 +746,7 @@ class Radiances:
         for c in range(len(chanlist)):
             value = "brightness_temperature_{:d}".format(chanlist[c])
             var_names.append(value)
-            idx = chan_indx == c
+            idx = chan_indx == c+1
             if (np.sum(idx) == 0):
                 print("No matching observations for:")
                 print(value)
