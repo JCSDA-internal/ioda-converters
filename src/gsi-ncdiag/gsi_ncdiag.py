@@ -703,6 +703,7 @@ class Radiances:
         nchans = len(chan_number)
         nlocs = int(self.nobs / nchans)
         chanlist = chan_indx[:nchans]
+        chanlist = chan_number
         for a in chanlist:
             value = "brightness_temperature_{:d}".format(a)
             varDict[value]['valKey'] = value, writer.OvalName()
@@ -713,16 +714,15 @@ class Radiances:
         obserr = self.df['error_variance'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
 
-        idx = chan_indx == chanlist[0]
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Obs_Time':
-                tmp = self.df[lvar][idx]
+                tmp = self.df[lvar][::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
-                loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+                loc_mdata[loc_mdata_name] = self.df[lvar][::nchans]
 
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_vars.items():
@@ -737,7 +737,7 @@ class Radiances:
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
-                    idx = chan_indx == chanlist[ii]
+                    idx = chan_indx == ii
                     outvals = tmp[idx]
                     outdata[gvname] = outvals
 
@@ -746,7 +746,7 @@ class Radiances:
         for c in range(len(chanlist)):
             value = "brightness_temperature_{:d}".format(chanlist[c])
             var_names.append(value)
-            idx = chan_indx == chanlist[c]
+            idx = chan_indx == c
             if (np.sum(idx) == 0):
                 print("No matching observations for:")
                 print(value)
