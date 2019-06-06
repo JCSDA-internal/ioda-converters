@@ -346,7 +346,7 @@ class Conv:
                 ncout.createDimension("nlocs", nlocs)
                 # other dims
                 ncout.createDimension(
-                    "nlevs", self.df.dimensions["atmosphere_ln_pressure_coordinate_arr_dim"].size)
+                    "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -481,17 +481,24 @@ class Conv:
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
-                        tmp = self.df[lvar][idx]
-                        tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
-                        tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
-                        # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
-                        # this is correctly 10m agl though for u,v obs
-                        if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
-                            elev = self.df['Station_Elevation'][idx]
-                            hgt = elev + 2.
-                            hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
-                            tmp = hgt
-                        loc_mdata[loc_mdata_name] = tmp
+                        if p == 'sfc':
+                            tmp = self.df[lvar][idx]
+                            tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
+                            tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
+                            # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
+                            # this is correctly 10m agl though for u,v obs
+                            if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
+                                elev = self.df['Station_Elevation'][idx]
+                                hgt = elev + 2.
+                                hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
+                                tmp = hgt
+                            loc_mdata[loc_mdata_name] = tmp
+                        elif p == 'sondes' or p == 'aircraft':
+                            tmp = self.df[lvar][idx]
+                            tmp[tmp > 1e9] = np.abs(nc.default_fillvals['f4'])  # 1e11 is fill value for sondes, etc.
+                            loc_mdata[loc_mdata_name] = tmp
+                        else:
+                            loc_mdata[loc_mdata_name] = self.df[lvar][idx]
                     else:
                         loc_mdata[loc_mdata_name] = self.df[lvar][idx]
 
@@ -722,7 +729,9 @@ class Radiances:
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
-                loc_mdata[loc_mdata_name] = self.df[lvar][::nchans]
+                tmp = self.df[lvar][::nchans]
+                tmp[tmp > 9e8] = np.abs(nc.default_fillvals['f4'])
+                loc_mdata[loc_mdata_name] = tmp
 
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_vars.items():
@@ -755,6 +764,7 @@ class Radiances:
             obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
             obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
+            obsqcsub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
