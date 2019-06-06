@@ -165,7 +165,7 @@ if MyArgs.geovals_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_aod_geo, args=(radfile, ObsDir))
+            res = obspool.apply_async(run_aod_geo, args=(radfile, GeoDir))
     # ozone
     for radfile in radfiles:
         process = False
@@ -173,7 +173,7 @@ if MyArgs.geovals_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_oz_geo, args=(radfile, ObsDir))
+            res = obspool.apply_async(run_oz_geo, args=(radfile, GeoDir))
 
 # process all in the same time, because sats with many channels are so slow...
 obspool.close()
