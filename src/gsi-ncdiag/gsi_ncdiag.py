@@ -744,7 +744,7 @@ class Radiances:
                     tmp = tmp.astype(int)
                 else:
                     tmp[tmp > 9e8] = np.abs(nc.default_fillvals['f4'])
-                    tmp[tmp < 9e-12] = 0 
+                    tmp[tmp < 9e-12] = 0
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
