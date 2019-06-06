@@ -709,7 +709,6 @@ class Radiances:
         chan_indx = self.df['Channel_Index'][:]
         nchans = len(chan_number)
         nlocs = int(self.nobs / nchans)
-        chanlist = chan_indx[:nchans]
         chanlist = chan_number
         for a in chanlist:
             value = "brightness_temperature_{:d}".format(a)
@@ -743,6 +742,9 @@ class Radiances:
                     tmp = self.df[gsivar][:]
                 if gsivar in gsiint:
                     tmp = tmp.astype(int)
+                else:
+                    tmp[tmp > 9e8] = np.abs(nc.default_fillvals['f4'])
+                    tmp[tmp < 9e-12] = 0 
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
@@ -775,7 +777,7 @@ class Radiances:
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         for key, value2 in chan_metadata_dict.items():
             try:
-                var_mdata[value2] = self.df[key][:nchans]
+                var_mdata[value2] = self.df[key][:]
             except IndexError:
                 pass
 
