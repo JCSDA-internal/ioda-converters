@@ -160,7 +160,11 @@ def concat_ioda(FileList, OutFile, GeoDir):
         else:
             loc_mdata[vname[0]] = MetaVarUnique[idx3, ...].astype(MetaVType[idx3])
     for idx3, vname in enumerate(DataVars):
-        outdata[tuple(vname.split('@'))] = DataVarUnique[idx3, ...].astype(DataVType[idx3])
+        tmp = DataVarUnique[idx3, ...]
+        tmp = tmp.astype(DataVType[idx3])
+        if DataVType[idx3] == 'int32':
+            tmp[tmp<-1e5] = nc.default_fillvals['i4']  
+        outdata[tuple(vname.split('@'))] = tmp
     writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
 
     # now write out combined GeoVaLs file
