@@ -163,7 +163,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         tmp = DataVarUnique[idx3, ...]
         tmp = tmp.astype(DataVType[idx3])
         if DataVType[idx3] == 'int32':
-            tmp[tmp<-1e5] = nc.default_fillvals['i4']  
+            tmp[tmp < -1e5] = nc.default_fillvals['i4']
         outdata[tuple(vname.split('@'))] = tmp
     writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
 

@@ -480,7 +480,7 @@ class Conv:
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
                     # special logic for missing station_elevation and height for surface obs
-                    elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
+                    elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
                             tmp = self.df[lvar][idx]
                             tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
