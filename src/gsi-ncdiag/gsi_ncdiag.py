@@ -246,6 +246,7 @@ oz_sensors = [
 ]
 
 # units
+# 'IODA/UFO_variable_name': 'Unit'
 units_values = {
     'virtual_temperature': 'K',
     'atmosphere_ln_pressure_coordinate': '1',
@@ -303,6 +304,23 @@ units_values = {
     'seas2': '1',
     'seas3': '1',
     'seas4': '1',
+}
+
+units_metadata = {
+    'latitude': 'degree_north',
+    'longitude': 'degree_east',
+    'station_elevation': 'm',
+    'height': 'm',
+    'height_above_mean_sea_level': 'm',
+    'scan_position': '1',
+    'sensor_zenith_angle': 'degree',
+    'sensor_azimuth_angle': 'degree',
+    'solar_zenith_angle': 'degree',
+    'solar_azimuth_angle': 'degree',
+    'modis_deep_blue_flag': '1',
+    'row_anomaly_index': '1',
+    'top_level_pressure': 'Pa',
+    'bottom_level_pressure': 'Pa',
 }
 
 ###############################################################################
