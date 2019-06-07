@@ -106,17 +106,13 @@ class IODA(object):
                 locKey = lat, lon, lvl, obs.date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
                 typ = obs.data['typ'][n]
-                val = obs.data['value'][n]
-                err = obs.data['oerr'][n]
-                qc = 0
-
                 valKey = self.keyDict[typ]['valKey']
                 errKey = self.keyDict[typ]['errKey']
                 qcKey = self.keyDict[typ]['qcKey']
 
-                self.data[recKey][locKey][valKey] = val
-                self.data[recKey][locKey][errKey] = err
-                self.data[recKey][locKey][qcKey] = qc
+                self.data[recKey][locKey][valKey] = obs.data['value'][n]
+                self.data[recKey][locKey][errKey] = obs.data['oerr'][n]
+                self.data[recKey][locKey][qcKey] = 0
 
         (ObsVars, RecMdata, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
         self.writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, self.AttrData)
@@ -171,8 +167,11 @@ def main():
         6001: 'sea_ice_thickness'   # HICE
     }
 
-    IODA(foutput, fdate, varDict, obsList)
+    obsDict = separateGMAO(obsList, varDict)
 
+    for key in varDict.keys():
+        keyDict = {key: varDict[key]}
+        IODA(foutput, fdate, keyDict, obsDict[key])
 
 if __name__ == '__main__':
     main()
