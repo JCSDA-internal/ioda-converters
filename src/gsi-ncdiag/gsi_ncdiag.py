@@ -439,6 +439,7 @@ class Conv:
                 for o in range(len(outvars)):
                     obsdata = self.df[conv_gsivarnames[v][o]][idx]
                     obserr = 1.0 / self.df['Errinv_Input'][idx]
+                    obserr[obserr > 4e8] = np.abs(nc.default_fillvals['f4'])
                     try:
                         obsqc = self.df['Prep_QC_Mark'][idx]
                     except BaseException:
@@ -462,6 +463,9 @@ class Conv:
                                 tmp = self.df[key][idx]
                             if value in gsiint:
                                 tmp = tmp.astype(int)
+                                tmp[tmp > 4e4] = np.abs(nc.default_fillvals['i4'])
+                            else:
+                                tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
                             outdata[gvname] = tmp
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
@@ -493,9 +497,9 @@ class Conv:
                                 hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
                                 tmp = hgt
                             loc_mdata[loc_mdata_name] = tmp
-                        elif p == 'sondes' or p == 'aircraft':
+                        elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
                             tmp = self.df[lvar][idx]
-                            tmp[tmp > 1e9] = np.abs(nc.default_fillvals['f4'])  # 1e11 is fill value for sondes, etc.
+                            tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])  # 1e11 is fill value for sondes, etc.
                             loc_mdata[loc_mdata_name] = tmp
                         else:
                             loc_mdata[loc_mdata_name] = self.df[lvar][idx]
