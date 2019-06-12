@@ -1,21 +1,59 @@
 #!/usr/bin/env python
 
-#
 # (C) Copyright 2019 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-#
+
+"""
+Convert GMAO ocean data to IODA netCDF4 format
+"""
 
 from __future__ import print_function
 import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import netCDF4 as nc4
+import numpy as np
 from datetime import datetime
 
 sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
+
+
+# obsIdDict is defined as obsid_dict in ocean_obs.py
+obsIdDict = {
+    5521: 'sea_water_salinity',  # Salinity
+    3073: 'sea_water_temperature',  # Temperature
+    5525: 'sea_surface_temperature',  # SST
+    5526: 'obs_absolute_dynamic_topography',  # SSH (Not used ...)
+    5351: 'obs_absolute_dynamic_topography',  # SSH
+    6000: 'sea_ice_area_fraction',  # AICE
+    6001: 'sea_ice_thickness'  # HICE
+}
+
+
+varDict = {
+    'sea_water_salinity': 'sal',
+    'sea_water_temperature': 'temp',
+    'sea_surface_temperature': 'sst',
+    'obs_absolute_dynamic_topography': 'adt',
+    'sea_ice_area_fraction': 'frac',
+    'sea_ice_thickness': 'thick'
+}
+
+
+def flipDict(dictIn):
+
+    dictOut = {}
+
+    for key, value in dictIn.items():
+        if value not in dictOut:
+            dictOut[value] = [key]
+        else:
+            dictOut[value].append(key)
+
+    return dictOut
 
 
 class GMAOobs(object):
@@ -52,9 +90,20 @@ class GMAOobs(object):
         return
 
 
+class refGMAOobs(object):
+
+    def __init__(self, filename, date, data):
+
+        self.filename = filename
+        self.date = date
+        self.data = data
+
+        return
+
+
 class IODA(object):
 
-    def __init__(self, filename, date, varDict, obsList):
+    def __init__(self, filename, date, varName, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -63,7 +112,6 @@ class IODA(object):
 
         self.filename = filename
         self.date = date
-        self.varDict = varDict
 
         self.locKeyList = [
             ("latitude", "float"),
@@ -77,14 +125,23 @@ class IODA(object):
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
+        # Skip out if there are no obs!
+        totalObs = 0
+        for obs in obsList:
+            if obs.data['nobs'] <= 0:
+                continue
+            totalObs += obs.data['nobs']
+        if totalObs == 0:
+            print('No %s observations for IODA!' % varName)
+            return
+
         self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        for key in self.varDict.keys():
-            value = self.varDict[key]
-            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
-            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
-            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
+
+        self.keyDict[varName]['valKey'] = varName, self.writer.OvalName()
+        self.keyDict[varName]['errKey'] = varName, self.writer.OerrName()
+        self.keyDict[varName]['qcKey'] = varName, self.writer.OqcName()
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -94,7 +151,6 @@ class IODA(object):
         for obs in obsList:
 
             if obs.data['nobs'] <= 0:
-                print('No GMAO observations for IODA!')
                 continue
 
             for n in range(obs.data['nobs']):
@@ -105,10 +161,9 @@ class IODA(object):
 
                 locKey = lat, lon, lvl, obs.date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-                typ = obs.data['typ'][n]
-                valKey = self.keyDict[typ]['valKey']
-                errKey = self.keyDict[typ]['errKey']
-                qcKey = self.keyDict[typ]['qcKey']
+                valKey = self.keyDict[varName]['valKey']
+                errKey = self.keyDict[varName]['errKey']
+                qcKey = self.keyDict[varName]['qcKey']
 
                 self.data[recKey][locKey][valKey] = obs.data['value'][n]
                 self.data[recKey][locKey][errKey] = obs.data['oerr'][n]
@@ -120,17 +175,66 @@ class IODA(object):
         return
 
 
+def separateObs(obsList):
+
+    obsDict = {}
+    for key in obsIdDict.keys():
+
+        obsListKey = []
+
+        for obs in obsList:
+
+            date = obs.date
+            filename = obs.filename
+
+            ind = np.where(obs.data['typ'] == key)
+
+            data = {}
+            data['nobs'] = len(ind[0])
+            data['typ'] = obs.data['typ'][ind]
+            data['lon'] = obs.data['lon'][ind]
+            data['lat'] = obs.data['lat'][ind]
+            data['depth'] = obs.data['depth'][ind]
+            data['value'] = obs.data['value'][ind]
+            data['oerr'] = obs.data['oerr'][ind]
+
+            obsListKey.append(refGMAOobs(filename, date, data))
+
+        obsDict[key] = obsListKey
+
+    return obsDict
+
+
+def sortDict(obsDictIn):
+
+    # Flip the obsIdDict
+    obsIdDictFlipped = flipDict(obsIdDict)
+
+    obsDictOut = {}
+
+    # Loop over flipped obsIdDict
+    for key, values in obsIdDictFlipped.items():
+
+        obsList = []
+        for value in values:
+            obsList.append(obsDictIn[value])
+
+        # Flatten the newly created list of lists
+        obsDictOut[key] = [item for sublist in obsList for item in sublist]
+
+    return obsDictOut
+
+
 def main():
 
-    desc = 'Convert GMAO ocean data to IODA netCDF4 format'
     parser = ArgumentParser(
-        description=desc,
+        description=__doc__,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='name of the input GMAO ocean obs file(s)',
         type=str, nargs='+', required=True)
     parser.add_argument(
-        '-o', '--output', help='name of the output IODA file',
+        '-o', '--output', help='template name of the output IODA file (one per type)',
         type=str, required=True)
     parser.add_argument(
         '-d', '--date', help='datetime at the middle of the window', metavar='YYYYMMDDHH',
@@ -156,22 +260,14 @@ def main():
     for fname, idate in zip(fList, dList):
         obsList.append(GMAOobs(fname, idate))
 
-    # varDict is defined as obsid_dict in ocean_obs.py
-    varDict = {
-        5521: 'sea_water_salinity',  # Salinity
-        3073: 'sea_water_temperature',  # Temperature
-        5525: 'sea_surface_temperature',  # SST
-        5526: 'obs_absolute_dynamic_topography',  # SSH (Not used ...)
-        5351: 'obs_absolute_dynamic_topography',  # SSH
-        6000: 'sea_ice_area_fraction',  # AICE
-        6001: 'sea_ice_thickness'   # HICE
-    }
+    obsDict = separateObs(obsList)
 
-    obsDict = separateGMAO(obsList, varDict)
+    obsDictSorted = sortDict(obsDict)
 
-    for key in varDict.keys():
-        keyDict = {key: varDict[key]}
-        IODA(foutput, fdate, keyDict, obsDict[key])
+    for key, value in varDict.items():
+        fout = '%s_%s.nc' % (foutput, value)
+        IODA(fout, fdate, key, obsDictSorted[key])
+
 
 if __name__ == '__main__':
     main()
