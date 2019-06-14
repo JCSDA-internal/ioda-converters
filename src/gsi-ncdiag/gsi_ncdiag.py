@@ -733,7 +733,7 @@ class Radiances:
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
                 tmp = self.df[lvar][::nchans]
-                tmp[tmp > 9e8] = np.abs(nc.default_fillvals['f4'])
+                tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
                 loc_mdata[loc_mdata_name] = tmp
 
         # check for additional GSI output for each variable
@@ -747,7 +747,7 @@ class Radiances:
                 if gsivar in gsiint:
                     tmp = tmp.astype(int)
                 else:
-                    tmp[tmp > 9e8] = np.abs(nc.default_fillvals['f4'])
+                    tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
                     tmp[tmp < 9e-12] = 0
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
