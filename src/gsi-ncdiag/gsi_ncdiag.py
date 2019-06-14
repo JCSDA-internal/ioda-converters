@@ -741,15 +741,18 @@ class Radiances:
         for gsivar, iodavar in gsi_add_vars.items():
             if gsivar in self.df.variables:
                 if "Inverse" in gsivar:
-                    tmp = 1.0 / self.df[gsivar][:]
+                    tmp2 = self.df[gsivar][:]
+                    # fix for if some reason 1/small does not result in inf but zero
+                    tmp2[tmp2 < 9e-12] = 0
+                    tmp = 1.0 / tmp2
                     tmp[np.isinf(tmp)] = np.abs(nc.default_fillvals['f4'])
+                    derps = True
                 else:
                     tmp = self.df[gsivar][:]
                 if gsivar in gsiint:
                     tmp = tmp.astype(int)
                 else:
                     tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
-                    tmp[tmp < 9e-12] = 0
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
