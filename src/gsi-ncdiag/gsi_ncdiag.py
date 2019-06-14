@@ -122,6 +122,7 @@ gsi_add_vars = {
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
+    'Bias_Correction': 'GsiBc',
 }
 
 gsi_add_vars_uv = {
