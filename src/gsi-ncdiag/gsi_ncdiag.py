@@ -440,7 +440,7 @@ class Conv:
                 for o in range(len(outvars)):
                     obsdata = self.df[conv_gsivarnames[v][o]][idx]
                     obserr = 1.0 / self.df['Errinv_Input'][idx]
-                    obserr[obserr > 4e8] = np.abs(nc.default_fillvals['f4'])
+                    obserr[obserr > 4e8] = nc.default_fillvals['f4']
                     try:
                         obsqc = self.df['Prep_QC_Mark'][idx]
                     except BaseException:
@@ -464,9 +464,9 @@ class Conv:
                                 tmp = self.df[key][idx]
                             if value in gsiint:
                                 tmp = tmp.astype(int)
-                                tmp[tmp > 4e4] = np.abs(nc.default_fillvals['i4'])
+                                tmp[tmp > 4e4] = nc.default_fillvals['i4']
                             else:
-                                tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
+                                tmp[tmp > 4e8] = nc.default_fillvals['f4']
                             outdata[gvname] = tmp
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
@@ -488,19 +488,19 @@ class Conv:
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
                             tmp = self.df[lvar][idx]
-                            tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
-                            tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
+                            tmp[tmp == 9999.] = nc.default_fillvals['f4']
+                            tmp[tmp == 10009.] = nc.default_fillvals['f4']  # for u,v sfc Height values that are 10+9999
                             # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
                             # this is correctly 10m agl though for u,v obs
                             if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
                                 elev = self.df['Station_Elevation'][idx]
                                 hgt = elev + 2.
-                                hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
+                                hgt[hgt > 9998.] = nc.default_fillvals['f4']
                                 tmp = hgt
                             loc_mdata[loc_mdata_name] = tmp
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
                             tmp = self.df[lvar][idx]
-                            tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])  # 1e11 is fill value for sondes, etc.
+                            tmp[tmp > 4e8] = nc.default_fillvals['f4']  # 1e11 is fill value for sondes, etc.
                             loc_mdata[loc_mdata_name] = tmp
                         else:
                             loc_mdata[loc_mdata_name] = self.df[lvar][idx]
@@ -734,7 +734,7 @@ class Radiances:
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
                 tmp = self.df[lvar][::nchans]
-                tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
+                tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 loc_mdata[loc_mdata_name] = tmp
 
         # check for additional GSI output for each variable
@@ -745,14 +745,14 @@ class Radiances:
                     # fix for if some reason 1/small does not result in inf but zero
                     tmp2[tmp2 < 9e-12] = 0
                     tmp = 1.0 / tmp2
-                    tmp[np.isinf(tmp)] = np.abs(nc.default_fillvals['f4'])
+                    tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
                     derps = True
                 else:
                     tmp = self.df[gsivar][:]
                 if gsivar in gsiint:
                     tmp = tmp.astype(int)
                 else:
-                    tmp[tmp > 4e8] = np.abs(nc.default_fillvals['f4'])
+                    tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
@@ -771,10 +771,10 @@ class Radiances:
                 print(value)
                 continue
             obsdatasub = obsdata[idx]
-            obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
+            obsdatasub[obsdatasub > 9e5] = nc.default_fillvals['f4']
             obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
-            obsqcsub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
+            obsqcsub[obsdatasub > 9e5] = nc.default_fillvals['f4']
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
