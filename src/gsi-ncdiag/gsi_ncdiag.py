@@ -142,6 +142,7 @@ gsi_add_vars_uv = {
 gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
+    'ObsType',
 ]
 
 geovals_metadata_dict = {
@@ -466,6 +467,7 @@ class Conv:
                                 tmp = tmp.astype(int)
                                 tmp[tmp > 4e4] = nc.default_fillvals['i4']
                             else:
+                                print(value)
                                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                             outdata[gvname] = tmp
                     # store values in output data dictionary
