@@ -774,7 +774,7 @@ class Radiances:
             obsdatasub[obsdatasub > 9e5] = nc.default_fillvals['f4']
             obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
-            obsqcsub[obsdatasub > 9e5] = nc.default_fillvals['f4']
+            obsqcsub[obsdatasub > 9e5] = nc.default_fillvals['i4']
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
