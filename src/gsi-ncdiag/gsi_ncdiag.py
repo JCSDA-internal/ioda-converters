@@ -31,6 +31,8 @@ conv_platforms = {
         'vadwind',
         'windprof',
         'sfcship',
+        'satwind',
+        'scatwind',
     ],
     "conv_gps": [
         'gps',
