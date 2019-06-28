@@ -392,6 +392,8 @@ class NcWriter(object):
                 LocMdata[self._rec_num_name][LocNum-1] = RecNum
 
                 for VarKey, VarVal in LocDict.items():
+                    if (type(VarVal) in [np.ma.core.MaskedConstant]):
+                        VarVal = self._defaultF4
                     ObsVars[VarKey][LocNum-1] = VarVal
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
