@@ -143,6 +143,7 @@ gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
     'ObsType',
+    'Analysis_Use_Flag',
 ]
 
 geovals_metadata_dict = {
@@ -468,7 +469,6 @@ class Conv:
                                 tmp = tmp.astype(int)
                                 tmp[tmp > 4e4] = nc.default_fillvals['i4']
                             else:
-                                print(value)
                                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                             outdata[gvname] = tmp
                     # store values in output data dictionary
@@ -1143,6 +1143,7 @@ class Ozone:
    to the JEDI/IODA observation format
         """
         import ioda_conv_ncio as iconv
+        import netCDF4 as nc
         import os
         from collections import defaultdict, OrderedDict
         from orddicts import DefaultOrderedDict
@@ -1161,6 +1162,9 @@ class Ozone:
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
@@ -1184,58 +1188,53 @@ class Ozone:
         obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
         locKeys = []
         for lvar in LocVars:
+            loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time':
                 tmp = self.df[lvar][:]
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                locKeys.append(obstimes)
+                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
-                locKeys.append(self.df[lvar][:])
+                tmp = self.df[lvar][:]
+                tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                loc_mdata[loc_mdata_name] = tmp
 
-        locKeys = np.swapaxes(np.array(locKeys), 0, 1)
-        locKeys = [tuple(a) for a in locKeys]
-
-        gsimeta = {}
-        for key, value2 in gsi_add_vars.items():
+        for gsivar, iodavar in gsi_add_vars.items():
             # some special actions need to be taken depending on var name...
-            if "Inverse" in key:
-                try:
-                    tmp2 = self.df[key][:]
+            if gsivar in self.df.variables:
+                if "Inverse" in gsivar:
+                    tmp2 = self.df[gsivar][:]
+                    # fix for if some reason 1/small does not result in inf but zero
                     tmp2[tmp2 < 9e-12] = 0
                     tmp = 1.0 / tmp2
                     tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
-                    gsimeta[key] = tmp
-                except IndexError:
-                    pass
-            else:
-                try:
-                    gsimeta[key] = self.df[key][:]
-                except IndexError:
-                    pass
-        # not sure how to do this without a loop since it's a dict...
-        for i in range(len(obsdata)):
-            # observation data
-            outdata[recKey][locKeys[i]][varDict[vname]['valKey']] = obsdata[i]
-            outdata[recKey][locKeys[i]][varDict[vname]['errKey']] = obserr[i]
-            outdata[recKey][locKeys[i]][varDict[vname]['qcKey']] = obsqc[i]
-            # add additional GSI variables that are not needed long term but useful for testing
-            for key, value2 in gsi_add_vars.items():
-                gvname = vname, value2
-                if value2 in gsiint:
-                    try:
-                        outdata[recKey][locKeys[i]][gvname] = int(gsimeta[key][i])
-                    except KeyError:
-                        pass
                 else:
-                    try:
-                        outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
-                    except KeyError:
-                        pass
+                    tmp = self.df[gsivar][:]
+                if gsivar in gsiint:
+                    tmp = tmp.astype(int)
+                else:
+                    tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                gvname = vname, iodavar
+                outdata[gvname] = tmp
+        # observation data
+        outdata[varDict[vname]['valKey']] = obsdata
+        outdata[varDict[vname]['errKey']] = obserr
+        outdata[varDict[vname]['qcKey']] = obsqc
+
+        # dummy record metadata, for now
+        nrecs = 1
+        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
+        loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
         AttrData["satellite"] = self.satellite
         AttrData["sensor"] = self.sensor
-        (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
-        writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+        # set dimension lengths in the writer since we are bypassing
+        # ExtractObsData
+        writer._nrecs = nrecs
+        writer._nvars = 1
+        writer._nlocs = nlocs
+
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
         print("Ozone obs processed, wrote to:")
         print(outname)
