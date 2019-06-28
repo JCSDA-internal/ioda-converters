@@ -748,7 +748,6 @@ class Radiances:
                     tmp2[tmp2 < 9e-12] = 0
                     tmp = 1.0 / tmp2
                     tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
-                    derps = True
                 else:
                     tmp = self.df[gsivar][:]
                 if gsivar in gsiint:
@@ -1177,7 +1176,10 @@ class Ozone:
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.df['Observation'][:]
-        obserr = 1.0 / self.df['Inverse_Observation_Error'][:]
+        tmp = self.df['Inverse_Observation_Error'][:]
+        tmp[tmp < 9e-12] = 0
+        obserr = 1.0 / tmp
+        obserr[np.isinf(obserr)] = nc.default_fillvals['f4']
         obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
         locKeys = []
         for lvar in LocVars:
@@ -1197,7 +1199,11 @@ class Ozone:
             # some special actions need to be taken depending on var name...
             if "Inverse" in key:
                 try:
-                    gsimeta[key] = 1.0/self.df[key][:]
+                    tmp2 = self.df[key][:]
+                    tmp2[tmp2 < 9e-12] = 0
+                    tmp = 1.0 / tmp2
+                    tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
+                    gsimeta[key] = tmp
                 except IndexError:
                     pass
             else:
