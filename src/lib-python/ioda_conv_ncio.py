@@ -75,8 +75,8 @@ class NcWriter(object):
         self._ndatetime = 20
 
         # default fill values
-        self._defaultF4 = np.abs(netCDF4.default_fillvals['f4'])
-        self._defaultI4 = np.abs(netCDF4.default_fillvals['i4'])
+        self._defaultF4 = np.float32(netCDF4.default_fillvals['f4'])
+        self._defaultI4 = np.int32(netCDF4.default_fillvals['i4'])
 
         # Names assigned to record number (location metadata)
         self._rec_num_name = "record_number"
@@ -392,6 +392,8 @@ class NcWriter(object):
                 LocMdata[self._rec_num_name][LocNum-1] = RecNum
 
                 for VarKey, VarVal in LocDict.items():
+                    if (type(VarVal) in [np.ma.core.MaskedConstant]):
+                        VarVal = self._defaultF4
                     ObsVars[VarKey][LocNum-1] = VarVal
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
