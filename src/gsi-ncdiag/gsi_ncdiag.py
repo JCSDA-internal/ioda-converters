@@ -308,11 +308,8 @@ units_values = {
     'seas2': '1',
     'seas3': '1',
     'seas4': '1',
-}
-
-units_metadata = {
-    'latitude': 'degree_north',
-    'longitude': 'degree_east',
+    'latitude': 'degrees_north',
+    'longitude': 'degrees_east',
     'station_elevation': 'm',
     'height': 'm',
     'height_above_mean_sea_level': 'm',
@@ -606,7 +603,7 @@ class Conv:
                 writer._nrecs = nrecs
                 writer._nvars = nvars
                 writer._nlocs = nlocs
-                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
                 print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
@@ -886,7 +883,7 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
@@ -1115,7 +1112,7 @@ class AOD:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("AOD obs processed, wrote to:")
         print(outname)
 
@@ -1313,6 +1310,6 @@ class Ozone:
         writer._nvars = 1
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Ozone obs processed, wrote to:")
         print(outname)
