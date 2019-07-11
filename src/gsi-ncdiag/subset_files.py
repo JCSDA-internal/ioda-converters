@@ -9,33 +9,55 @@ import netCDF4 as nc
 import os
 
 
-def subset(infile, nlocsout, suffix):
+def subset(infile, nlocsout, suffix, geofile):
     print('Processing:', infile)
     outfile = infile[:-4]+suffix
     ncin = nc.Dataset(infile)
     ncout = nc.Dataset(outfile, 'w')
     # I think this has to be called before each call to random.sample to make it the same random set
     random.seed(5)
+    nrecsin = len(ncin.dimensions['nrecs'])
     nlocsin = len(ncin.dimensions['nlocs'])
-    try:
-        nvars = len(ncin.dimensions['nvars'])
-    except KeyError:
-        nvars = 1
+    nvars = len(ncin.dimensions['nvars'])
+    if nrecsin > 100.:
+        nsamples = int(-(-nlocsout/10.))  # just picked 10 randomly
+        nsamples = max(1, nsamples)
+        npossible = nrecsin
+        recs = True
+    else:
+        nsamples = nlocsout
+        npossible = nlocsin
+        recs = False
     if nlocsout > nlocsin:
-        nlocsout = nlocsin
-    flag = random.sample(list(np.arange(0, nlocsin)), nlocsout)
+        nsamples = npossible
+    flag = random.sample(list(np.arange(0, npossible)), nsamples)
     flag = sorted(flag)
-    nobsout = nlocsout*nvars
+    # get the nlocs where flag is true so consistent for geovals too
+    if recs:
+        nrecsout = len(flag)
+        flag2 = flag
+        flag = np.isin(ncin.variables['record_number@MetaData'][:], flag)
+        nlocsout = len(ncin.variables['record_number@MetaData'][flag, ...])
+    else:
+        flag2 = [0]
+        nrecsout = 1
+        nlocsout = len(flag)
+    # process observation file
     # copy global attributes
     for aname in ncin.ncattrs():
         avalue = ncin.getncattr(aname)
         ncout.setncattr(aname, avalue)
+    # redo nlocs, nrecs
+    ncout.setncattr("nlocs", np.int32(nlocsout))
+    ncout.setncattr("nrecs", np.int32(nrecsout))
     # copy dimensions
     for dim in ncin.dimensions.values():
         if dim.name == 'nlocs':
             d_size = nlocsout
         elif dim.name == 'nobs':
             d_size = nobsout
+        elif dim.name == 'nrecs':
+            d_size = nrecsout
         else:
             d_size = len(dim)
         ncout.createDimension(dim.name, d_size)
@@ -46,12 +68,46 @@ def subset(infile, nlocsout, suffix):
         var_out = ncout.createVariable(vname, var.dtype, var.dimensions)
         if (var.dimensions[0] == 'nlocs'):
             var_out[...] = vdata[flag, ...]
+        elif (var.dimensions[0] == 'nrecs'):
+            var_out[...] = vdata[flag2, ...]
         else:
             var_out[:] = vdata[:]
     ncin.close()
     ncout.close()
 
-    print('wrote to:', outfile)
+    print('wrote obs to:', outfile)
+    # now process geoval file if necessary
+    if geofile:
+        outfile = geofile[:-4]+suffix
+        ncin = nc.Dataset(geofile)
+        ncout = nc.Dataset(outfile, 'w')
+        # attributes
+        for aname in ncin.ncattrs():
+            avalue = ncin.getncattr(aname)
+            ncout.setncattr(aname, avalue)
+        # redo nlocs, nrecs
+        ncout.setncattr("nlocs", np.int32(nlocsout))
+        # copy dimensions
+        for dim in ncin.dimensions.values():
+            if dim.name == 'nlocs':
+                d_size = nlocsout
+            else:
+                d_size = len(dim)
+            ncout.createDimension(dim.name, d_size)
+        # copy variables
+        for var in ncin.variables.values():
+            vname = var.name
+            vdata = ncin.variables[vname]
+            var_out = ncout.createVariable(vname, var.dtype, var.dimensions)
+            if (var.dimensions[0] == 'nlocs'):
+                var_out[...] = vdata[flag, ...]
+            else:
+                var_out[:] = vdata[:]
+        ncin.close()
+        ncout.close()
+
+        print('wrote geovals to:', outfile)
+
 
 # main script ##############
 
@@ -59,10 +115,11 @@ def subset(infile, nlocsout, suffix):
 # parse command line
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--medium", action='store_true',
-                help="Subset to 100 obs")
+                help="Subset to 5 records or 100 obs")
 ap.add_argument("-s", "--single", action='store_true',
-                help="Output single observation")
-ap.add_argument("filedir", help="Path to files to process")
+                help="Output single observation or record")
+ap.add_argument("-g", "--geovals", help="Path to geoval directory")
+ap.add_argument("filedir", help="Path to obs files to process")
 ap.add_argument("-n", "--nprocs",
                 help="Number of tasks/processors for multiprocessing")
 
@@ -89,12 +146,17 @@ infiles = glob.glob(InDir+'/*.nc4')
 obspool = Pool(processes=nprocs)
 
 for infile in infiles:
-    # test
     if os.path.getsize(infile) < 10000:
         continue
     if infile[-6:] in ['_m.nc4', '_s.nc4']:
         # print('skipping',infile)
         continue
-    res = obspool.apply_async(subset, args=(infile, nobs, suffix))
+    # get geofile
+    geofile = False
+    if MyArgs.geovals:
+        inob = infile.split('/')[-1]
+        ingeo = inob.replace('obs', 'geoval')
+        geofile = MyArgs.geovals+'/'+ingeo
+    res = obspool.apply_async(subset, args=(infile, nobs, suffix, geofile))
 obspool.close()
 obspool.join()
