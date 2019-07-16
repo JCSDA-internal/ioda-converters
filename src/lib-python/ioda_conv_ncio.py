@@ -266,7 +266,7 @@ class NcWriter(object):
             # add units
             if Gname in ['ObsValue', 'ObsError', 'GsiHofX', 'GsiHofXBc']:
                 try:
-                    self._fid[NcVname].setncattr_string("Units", VarUnits[Vname])
+                    self._fid[NcVname].setncattr_string("units", VarUnits[Vname])
                 except KeyError:
                     pass
 
@@ -294,7 +294,7 @@ class NcWriter(object):
             self._fid[NcVname][:] = Vvals
             # add units
             try:
-                self._fid[NcVname].setncattr_string("Units", VarUnits[Vname])
+                self._fid[NcVname].setncattr_string("units", VarUnits[Vname])
             except KeyError:
                 pass
 
