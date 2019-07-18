@@ -30,7 +30,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
     AttrData = {}
     DataVarNames = []
     DataVars = []
-    VarUnits = {} 
+    VarUnits = {}
     DataVType = []
     MetaVars = []
     MetaVarNames = []
