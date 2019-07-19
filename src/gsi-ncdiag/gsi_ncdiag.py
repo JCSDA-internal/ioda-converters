@@ -798,6 +798,7 @@ class Radiances:
             varDict[value]['valKey'] = value, writer.OvalName()
             varDict[value]['errKey'] = value, writer.OerrName()
             varDict[value]['qcKey'] = value, writer.OqcName()
+            units_values[value] = 'K'
 
         obsdata = self.df['Observation'][:]
         obserr = self.df['error_variance'][:]
