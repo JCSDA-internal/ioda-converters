@@ -72,6 +72,10 @@ def subset(infile, nlocsout, suffix, geofile):
             var_out[...] = vdata[flag2, ...]
         else:
             var_out[:] = vdata[:]
+        # variable attributes
+        for aname in var.ncattrs():
+            avalue = var.getncattr(aname)
+            var_out.setncattr_string(aname, avalue)
     ncin.close()
     ncout.close()
 

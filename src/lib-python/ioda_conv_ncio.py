@@ -243,7 +243,7 @@ class NcWriter(object):
             else:
                 self._fid.setncattr(Aname, Aval)
 
-    def WriteNcObsVars(self, ObsVars, VarMdata):
+    def WriteNcObsVars(self, ObsVars, VarMdata, VarUnits):
         ############################################################
         # This method will create dimensions and variables in the
         # output netcdf file for the obs variables.
@@ -263,8 +263,14 @@ class NcWriter(object):
 
             self._fid.createVariable(NcVname, self.NumpyToNcDtype(Vvals.dtype), (self._nlocs_dim_name))
             self._fid[NcVname][:] = Vvals
+            # add units
+            if Gname in ['ObsValue', 'ObsError', 'GsiHofX', 'GsiHofXBc']:
+                try:
+                    self._fid[NcVname].setncattr_string("units", VarUnits[Vname])
+                except KeyError:
+                    pass
 
-    def WriteNcMetadata(self, MdataGroup, DimName, Mdata):
+    def WriteNcMetadata(self, MdataGroup, DimName, Mdata, VarUnits):
         ############################################################
         # This method will create variables in the output netcdf
         # file for the given metadata group.
@@ -286,6 +292,11 @@ class NcWriter(object):
                 self._fid.createVariable(NcVname, NcDtype, (DimName))
 
             self._fid[NcVname][:] = Vvals
+            # add units
+            try:
+                self._fid[NcVname].setncattr_string("units", VarUnits[Vname])
+            except KeyError:
+                pass
 
             # If we are writing out the datetime string, then we also
             # need to write out the time offset (from the reference date_time
@@ -293,6 +304,7 @@ class NcWriter(object):
             if (NcVname == "datetime@MetaData"):
                 ToffsetValues = self.ConvertToTimeOffset(Vvals)
                 self._fid[ToffsetName][:] = ToffsetValues
+                # self._fid[ToffsetName].setncattr_string("Units", "hours since "+self._ref_date_time.strftime("%Y-%m-%d %H:%M:%S")+" UTC")
 
     def ExtractObsData(self, ObsData):
         ############################################################
@@ -398,7 +410,7 @@ class NcWriter(object):
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
 
-    def BuildNetcdf(self, ObsVars, RecMdata, LocMdata, VarMdata, AttrData):
+    def BuildNetcdf(self, ObsVars, RecMdata, LocMdata, VarMdata, AttrData, VarUnits={}):
         ############################################################
         # This method will create an output netcdf file, and dump
         # the contents of the ObsData dictionary into that file.
@@ -435,13 +447,17 @@ class NcWriter(object):
         #         Group holding 1D vectors of various data types, nrecs
         #         station_id
         #         analysis_date_time
+        #     /VarUnits/
+        #         Dictionary holding string of units for each variable/metadata item
+        #         Key: variable, Value: unit_string
+        #         Example: VarUnits['air_temperature'] = 'K'
 
         # Write out the global attributes followed by the different
         # data sections: Obs variables, Record metadata, locations metadata
         # and variable metadata.
         self.WriteNcAttr(AttrData)
-        self.WriteNcObsVars(ObsVars, VarMdata)
+        self.WriteNcObsVars(ObsVars, VarMdata, VarUnits)
 
-        self.WriteNcMetadata(self._rec_md_name, self._nrecs_dim_name, RecMdata)
-        self.WriteNcMetadata(self._loc_md_name, self._nlocs_dim_name, LocMdata)
-        self.WriteNcMetadata(self._var_md_name, self._nvars_dim_name, VarMdata)
+        self.WriteNcMetadata(self._rec_md_name, self._nrecs_dim_name, RecMdata, VarUnits)
+        self.WriteNcMetadata(self._loc_md_name, self._nlocs_dim_name, LocMdata, VarUnits)
+        self.WriteNcMetadata(self._var_md_name, self._nvars_dim_name, VarMdata, VarUnits)
