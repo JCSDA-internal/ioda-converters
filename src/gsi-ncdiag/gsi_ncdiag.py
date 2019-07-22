@@ -188,38 +188,41 @@ geovals_vars = {
     'surface_temperature': 'surface_temperature',
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
-    'landmask': 'Land_Fraction',
+    'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
     'atmosphere_pressure_coordinate': 'air_pressure',
     'atmosphere_pressure_coordinate_interface': 'air_pressure_levels',
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
-    'atmosphere_absorber_02': 'mass_concentration_of_carbon_dioxide_in_air',
-    'atmosphere_absorber_03': 'mass_concentration_of_ozone_in_air',
-    'atmosphere_mass_content_of_cloud_01': 'atmosphere_mass_content_of_cloud_liquid_water',
+    'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
+    'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
+    'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
-    'atmosphere_mass_content_of_cloud_02': 'atmosphere_mass_content_of_cloud_ice',
+    'atmosphere_mass_content_of_cloud_02': 'mass_content_of_cloud_ice_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_02': 'effective_radius_of_cloud_ice_particle',
-    'Water_Fraction': 'Water_Fraction',
-    'Land_Fraction': 'Land_Fraction',
-    'Ice_Fraction': 'Ice_Fraction',
-    'Snow_Fraction': 'Snow_Fraction',
-    'Water_Temperature': 'Water_Temperature',
-    'Land_Temperature': 'Land_Temperature',
-    'Ice_Temperature': 'Ice_Temperature',
-    'Snow_Temperature': 'Snow_Temperature',
-    'Vegetation_Fraction': 'Vegetation_Fraction',
-    'Sfc_Wind_Speed': 'Sfc_Wind_Speed',
-    'Sfc_Wind_Direction': 'Sfc_Wind_Direction',
-    'Lai': 'Lai',
-    'Soil_Moisture': 'Soil_Moisture',
-    'Soil_Temperature': 'Soil_Temperature',
-    'Land_Type_Index': 'Land_Type_Index',
-    'Vegetation_Type': 'Vegetation_Type',
-    'Soil_Type': 'Soil_Type',
-    'Snow_Depth': 'Snow_Depth',
+    'Water_Fraction': 'water_area_fraction',
+    'Land_Fraction': 'land_area_fraction',
+    'Ice_Fraction': 'ice_area_fraction',
+    'Snow_Fraction': 'surface_snow_area_fraction',
+    'Vegetation_Fraction': 'vegetation_area_fraction',
+    'Water_Temperature': 'surface_temperature_where_sea',
+    'Land_Temperature': 'surface_temperature_where_land',
+    'Ice_Temperature': 'surface_temperature_where_ice',
+    'Snow_Temperature': 'surface_temperature_where_snow',
+    'Sfc_Wind_Speed': 'surface_wind_speed',
+    'Sfc_Wind_Direction': 'surface_wind_from_direction',
+    'Lai': 'leaf_area_index',
+    'Soil_Moisture': 'volume_fraction_of_condensed_water_in_soil',
+    'Soil_Temperature': 'soil_temperature',
+    'Land_Type_Index': 'land_type_index',
+    'Vegetation_Type': 'vegetation_type_index',
+    'Soil_Type': 'soil_type',
+    'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
+    'Sfc_height': 'surface_geopotential_height',
+    'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
+    'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
     'bc2': 'bc2',
@@ -234,9 +237,6 @@ geovals_vars = {
     'seas2': 'seas2',
     'seas3': 'seas3',
     'seas4': 'seas4',
-    'Sfc_height': 'surface_geopotential_height',
-    'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
-    'Wind_Reduction_Factor_at_10m': 'GSI_wind_reduction_factor_10m',
 }
 
 aod_sensors = [
@@ -248,6 +248,81 @@ oz_sensors = [
     'gome',
     'sbuv2',
 ]
+
+# units
+# 'IODA/UFO_variable_name': 'Unit'
+units_values = {
+    'virtual_temperature': 'K',
+    'atmosphere_ln_pressure_coordinate': '1',
+    'specific_humidity': '1',
+    'northward_wind': 'm s-1',
+    'eastward_wind': 'm s-1',
+    'geopotential_height': 'm',
+    'height_above_mean_sea_level': 'm',
+    'surface_pressure': 'Pa',
+    'surface_temperature': 'K',
+    'surface_roughness_length': 'm',
+    'surface_geopotential_height': 'm',
+    'land_area_fraction': '1',
+    'air_temperature': 'K',
+    'air_pressure': 'Pa',
+    'air_pressure_levels': 'Pa',
+    'humidity_mixing_ratio': '1',
+    'mole_fraction_of_carbon_dioxide_in_air': '1',
+    'mole_fraction_of_ozone_in_air': '1',
+    'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
+    'effective_radius_of_cloud_liquid_water_particle': 'm',
+    'atmosphere_mass_content_of_cloud_ice': 'kg m-2',
+    'effective_radius_of_cloud_ice_particle': 'm',
+    'water_area_fraction': '1',
+    'land_area_fraction': '1',
+    'ice_area_fraction': '1',
+    'surface_snow_area_fraction': '1',
+    'vegetation_area_fraction': '1',
+    'surface_temperature_where_sea': 'K',
+    'surface_temperature_where_land': 'K',
+    'surface_temperature_where_ice': 'K',
+    'surface_temperature_where_snow': 'K',
+    'surface_wind_speed': 'm s-1',
+    'surface_wind_from_direction': 'degree',
+    'leaf_area_index': '1',
+    'volume_fraction_of_condensed_water_in_soil': '1',
+    'soil_temperature': 'K',
+    'land_type_index': '1',
+    'vegetation_type_index': '1',
+    'soil_type': '1',
+    'surface_snow_thickness': 'm',
+    'humidity_mixing_ratio': '1',
+    'wind_reduction_factor_at_10m': '1',
+    'sulf': '1',
+    'bc1': '1',
+    'bc2': '1',
+    'oc1': '1',
+    'oc2': '1',
+    'dust1': '1',
+    'dust2': '1',
+    'dust3': '1',
+    'dust4': '1',
+    'dust5': '1',
+    'seas1': '1',
+    'seas2': '1',
+    'seas3': '1',
+    'seas4': '1',
+    'latitude': 'degrees_north',
+    'longitude': 'degrees_east',
+    'station_elevation': 'm',
+    'height': 'm',
+    'height_above_mean_sea_level': 'm',
+    'scan_position': '1',
+    'sensor_zenith_angle': 'degree',
+    'sensor_azimuth_angle': 'degree',
+    'solar_zenith_angle': 'degree',
+    'solar_azimuth_angle': 'degree',
+    'modis_deep_blue_flag': '1',
+    'row_anomaly_index': '1',
+    'top_level_pressure': 'Pa',
+    'bottom_level_pressure': 'Pa',
+}
 
 ###############################################################################
 ###############################################################################
@@ -528,7 +603,7 @@ class Conv:
                 writer._nrecs = nrecs
                 writer._nvars = nvars
                 writer._nlocs = nlocs
-                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
                 print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
@@ -723,6 +798,7 @@ class Radiances:
             varDict[value]['valKey'] = value, writer.OvalName()
             varDict[value]['errKey'] = value, writer.OerrName()
             varDict[value]['qcKey'] = value, writer.OqcName()
+            units_values[value] = 'K'
 
         obsdata = self.df['Observation'][:]
         obserr = self.df['error_variance'][:]
@@ -808,7 +884,7 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
@@ -1037,7 +1113,7 @@ class AOD:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("AOD obs processed, wrote to:")
         print(outname)
 
@@ -1235,6 +1311,6 @@ class Ozone:
         writer._nvars = 1
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Ozone obs processed, wrote to:")
         print(outname)

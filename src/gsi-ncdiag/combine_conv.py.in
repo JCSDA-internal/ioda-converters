@@ -30,6 +30,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
     AttrData = {}
     DataVarNames = []
     DataVars = []
+    VarUnits = {}
     DataVType = []
     MetaVars = []
     MetaVarNames = []
@@ -52,12 +53,23 @@ def concat_ioda(FileList, OutFile, GeoDir):
                         DataVars.append(key)
                         vtype = ncf.variables[key].dtype
                         DataVType.append(vtype)
+                        try:
+                            units = ncf.variables[vs[0]+"@ObsValue"].getncattr("units")
+                            VarUnits[vs[0]] = units
+                        except AttributeError:
+                            pass
+
             else:
                 if vs[1] == 'MetaData' and key not in MetaVars and vs[0] not in ['time', 'ObsIndex']:
                     MetaVars.append(key)
                     MetaVarNames.append(tuple(vs))
                     vtype = ncf.variables[key].dtype
                     MetaVType.append(vtype)
+                    try:
+                        units = ncf.variables[vs[0]+"@MetaData"].getncattr("units")
+                        VarUnits[vs[0]] = units
+                    except AttributeError:
+                        pass
                     vtypestr = vtypedict[str(vtype)]
                     if vs[1] == 'datetime':
                         vtypestr = 'datetime'
@@ -165,7 +177,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         if DataVType[idx3] == 'int32':
             tmp[tmp < -1e5] = nc.default_fillvals['i4']
         outdata[tuple(vname.split('@'))] = tmp
-    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, VarUnits)
 
     # now write out combined GeoVaLs file
     if GeoDir:
