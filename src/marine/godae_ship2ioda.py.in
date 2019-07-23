@@ -150,7 +150,7 @@ class IODA(object):
 
                     val = obs.data[key][n]
                     err = 0.5
-                    qc = obs.data['ob_qc'][n]
+                    qc = (100*obs.data['ob_qc'][n]).astype('i4')
 
                     valKey = self.keyDict[key]['valKey']
                     errKey = self.keyDict[key]['errKey']
