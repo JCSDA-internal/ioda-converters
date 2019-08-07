@@ -28,10 +28,10 @@ conv_platforms = {
         'sfc',
         'aircraft',
         'sondes',
-        'satwind',
         'vadwind',
         'windprof',
         'sfcship',
+        'satwind',
         'scatwind',
     ],
     "conv_gps": [
@@ -122,6 +122,7 @@ gsi_add_vars = {
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
+    'Bias_Correction': 'GsiBc',
 }
 
 gsi_add_vars_uv = {
@@ -141,6 +142,8 @@ gsi_add_vars_uv = {
 gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
+    'ObsType',
+    'Analysis_Use_Flag',
 ]
 
 geovals_metadata_dict = {
@@ -185,37 +188,41 @@ geovals_vars = {
     'surface_temperature': 'surface_temperature',
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
-    'landmask': 'Land_Fraction',
+    'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
     'atmosphere_pressure_coordinate': 'air_pressure',
+    'atmosphere_pressure_coordinate_interface': 'air_pressure_levels',
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
-    'atmosphere_absorber_02': 'mass_concentration_of_carbon_dioxide_in_air',
-    'atmosphere_absorber_03': 'mass_concentration_of_ozone_in_air',
-    'atmosphere_mass_content_of_cloud_01': 'atmosphere_mass_content_of_cloud_liquid_water',
+    'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
+    'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
+    'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
-    'atmosphere_mass_content_of_cloud_02': 'atmosphere_mass_content_of_cloud_ice',
+    'atmosphere_mass_content_of_cloud_02': 'mass_content_of_cloud_ice_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_02': 'effective_radius_of_cloud_ice_particle',
-    'Water_Fraction': 'Water_Fraction',
-    'Land_Fraction': 'Land_Fraction',
-    'Ice_Fraction': 'Ice_Fraction',
-    'Snow_Fraction': 'Snow_Fraction',
-    'Water_Temperature': 'Water_Temperature',
-    'Land_Temperature': 'Land_Temperature',
-    'Ice_Temperature': 'Ice_Temperature',
-    'Snow_Temperature': 'Snow_Temperature',
-    'Vegetation_Fraction': 'Vegetation_Fraction',
-    'Sfc_Wind_Speed': 'Sfc_Wind_Speed',
-    'Sfc_Wind_Direction': 'Sfc_Wind_Direction',
-    'Lai': 'Lai',
-    'Soil_Moisture': 'Soil_Moisture',
-    'Soil_Temperature': 'Soil_Temperature',
-    'Land_Type_Index': 'Land_Type_Index',
-    'Vegetation_Type': 'Vegetation_Type',
-    'Soil_Type': 'Soil_Type',
-    'Snow_Depth': 'Snow_Depth',
+    'Water_Fraction': 'water_area_fraction',
+    'Land_Fraction': 'land_area_fraction',
+    'Ice_Fraction': 'ice_area_fraction',
+    'Snow_Fraction': 'surface_snow_area_fraction',
+    'Vegetation_Fraction': 'vegetation_area_fraction',
+    'Water_Temperature': 'surface_temperature_where_sea',
+    'Land_Temperature': 'surface_temperature_where_land',
+    'Ice_Temperature': 'surface_temperature_where_ice',
+    'Snow_Temperature': 'surface_temperature_where_snow',
+    'Sfc_Wind_Speed': 'surface_wind_speed',
+    'Sfc_Wind_Direction': 'surface_wind_from_direction',
+    'Lai': 'leaf_area_index',
+    'Soil_Moisture': 'volume_fraction_of_condensed_water_in_soil',
+    'Soil_Temperature': 'soil_temperature',
+    'Land_Type_Index': 'land_type_index',
+    'Vegetation_Type': 'vegetation_type_index',
+    'Soil_Type': 'soil_type',
+    'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
+    'Sfc_height': 'surface_geopotential_height',
+    'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
+    'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
     'bc2': 'bc2',
@@ -230,9 +237,6 @@ geovals_vars = {
     'seas2': 'seas2',
     'seas3': 'seas3',
     'seas4': 'seas4',
-    'Sfc_height': 'surface_geopotential_height',
-    'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
-    'Wind_Reduction_Factor_at_10m': 'GSI_wind_reduction_factor_10m',
 }
 
 aod_sensors = [
@@ -244,6 +248,81 @@ oz_sensors = [
     'gome',
     'sbuv2',
 ]
+
+# units
+# 'IODA/UFO_variable_name': 'Unit'
+units_values = {
+    'virtual_temperature': 'K',
+    'atmosphere_ln_pressure_coordinate': '1',
+    'specific_humidity': '1',
+    'northward_wind': 'm s-1',
+    'eastward_wind': 'm s-1',
+    'geopotential_height': 'm',
+    'height_above_mean_sea_level': 'm',
+    'surface_pressure': 'Pa',
+    'surface_temperature': 'K',
+    'surface_roughness_length': 'm',
+    'surface_geopotential_height': 'm',
+    'land_area_fraction': '1',
+    'air_temperature': 'K',
+    'air_pressure': 'Pa',
+    'air_pressure_levels': 'Pa',
+    'humidity_mixing_ratio': '1',
+    'mole_fraction_of_carbon_dioxide_in_air': '1',
+    'mole_fraction_of_ozone_in_air': '1',
+    'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
+    'effective_radius_of_cloud_liquid_water_particle': 'm',
+    'atmosphere_mass_content_of_cloud_ice': 'kg m-2',
+    'effective_radius_of_cloud_ice_particle': 'm',
+    'water_area_fraction': '1',
+    'land_area_fraction': '1',
+    'ice_area_fraction': '1',
+    'surface_snow_area_fraction': '1',
+    'vegetation_area_fraction': '1',
+    'surface_temperature_where_sea': 'K',
+    'surface_temperature_where_land': 'K',
+    'surface_temperature_where_ice': 'K',
+    'surface_temperature_where_snow': 'K',
+    'surface_wind_speed': 'm s-1',
+    'surface_wind_from_direction': 'degree',
+    'leaf_area_index': '1',
+    'volume_fraction_of_condensed_water_in_soil': '1',
+    'soil_temperature': 'K',
+    'land_type_index': '1',
+    'vegetation_type_index': '1',
+    'soil_type': '1',
+    'surface_snow_thickness': 'm',
+    'humidity_mixing_ratio': '1',
+    'wind_reduction_factor_at_10m': '1',
+    'sulf': '1',
+    'bc1': '1',
+    'bc2': '1',
+    'oc1': '1',
+    'oc2': '1',
+    'dust1': '1',
+    'dust2': '1',
+    'dust3': '1',
+    'dust4': '1',
+    'dust5': '1',
+    'seas1': '1',
+    'seas2': '1',
+    'seas3': '1',
+    'seas4': '1',
+    'latitude': 'degrees_north',
+    'longitude': 'degrees_east',
+    'station_elevation': 'm',
+    'height': 'm',
+    'height_above_mean_sea_level': 'm',
+    'scan_position': '1',
+    'sensor_zenith_angle': 'degree',
+    'sensor_azimuth_angle': 'degree',
+    'solar_zenith_angle': 'degree',
+    'solar_azimuth_angle': 'degree',
+    'modis_deep_blue_flag': '1',
+    'row_anomaly_index': '1',
+    'top_level_pressure': 'Pa',
+    'bottom_level_pressure': 'Pa',
+}
 
 ###############################################################################
 ###############################################################################
@@ -346,7 +425,7 @@ class Conv:
                 ncout.createDimension("nlocs", nlocs)
                 # other dims
                 ncout.createDimension(
-                    "nlevs", self.df.dimensions["atmosphere_ln_pressure_coordinate_arr_dim"].size)
+                    "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -372,7 +451,7 @@ class Conv:
                             var_out[...] = vdata[idx, ...]
                 ncout.close()
 
-    def toIODAobs(self, OutDir, clobber=True):
+    def toIODAobs(self, OutDir, clobber=True, platforms=None):
         """ toIODAobs(OutDir,clobber=True)
      output observations from the specified GSI diag file
      to the JEDI/IODA observation format
@@ -384,12 +463,13 @@ class Conv:
         import numpy as np
         import datetime as dt
         import netCDF4 as nc
-        # get list of platforms to process for the given obstype
-        try:
-            platforms = conv_platforms[self.obstype]
-        except BaseException:
-            print(self.obstype + " is not currently supported. Exiting.")
-            return
+        if not platforms:
+            # get list of platforms to process for the given obstype
+            try:
+                platforms = conv_platforms[self.obstype]
+            except BaseException:
+                print(self.obstype + " is not currently supported. Exiting.")
+                return
         # loop through obsvariables and platforms to do processing
         for v in self.obsvars:
             for p in platforms:
@@ -407,13 +487,16 @@ class Conv:
                 AttrData = {}
                 varDict = defaultdict(lambda: defaultdict(dict))
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
                     if ncv in all_LocKeyList:
                         LocKeyList.append(all_LocKeyList[ncv])
                         LocVars.append(ncv)
-                LocKeyList.append(
-                    ('ObsIndex', 'integer'))  # to ensure unique obs
+                # use station_id for RecKey
+                RecKeyList.append('Station_ID')
 
                 # grab obs to process
                 idx = grabobsidx(self.df, p, v)
@@ -421,9 +504,9 @@ class Conv:
                     print("No matching observations for:")
                     print("Platform:" + p + " Var:" + v)
                     continue
+                print("Platform:" + p + " Var:" + v)
+                print(str(np.sum(idx))+" obs to process")
 
-                # for now, record len is 1 and the list is empty?
-                recKey = 0
                 writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
                 outvars = conv_varnames[v]
@@ -435,6 +518,7 @@ class Conv:
                 for o in range(len(outvars)):
                     obsdata = self.df[conv_gsivarnames[v][o]][idx]
                     obserr = 1.0 / self.df['Errinv_Input'][idx]
+                    obserr[obserr > 4e8] = nc.default_fillvals['f4']
                     try:
                         obsqc = self.df['Prep_QC_Mark'][idx]
                     except BaseException:
@@ -443,79 +527,83 @@ class Conv:
                         gsivars = gsi_add_vars_uv
                     else:
                         gsivars = gsi_add_vars
-                    gsimeta = {}
+
                     for key, value in gsivars.items():
-                        gvname2 = outvars[o], key, value
-                        # some special actions need to be taken depending on
-                        # var name...
-                        if ("Forecast" in key) and (v == 'uv'):
-                            if (checkuv[outvars[o]] != key[0]):
-                                continue
-                        if "Errinv" in key:
-                            try:
-                                gsimeta[gvname2] = 1.0 / self.df[key][idx]
-                            except IndexError:
-                                pass
-                        else:
-                            try:
-                                gsimeta[gvname2] = self.df[key][idx]
-                            except IndexError:
-                                pass
-                    locKeys = []
-                    for lvar in LocVars:
-                        if lvar == 'Station_ID':
+                        if key in self.df.variables:
+                            gvname = outvars[o], value
+                            # some special actions need to be taken depending on
+                            # var name...
+                            if ("Forecast" in key) and (v == 'uv'):
+                                if (checkuv[outvars[o]] != key[0]):
+                                    continue
+                            if "Errinv" in key:
+                                tmp = 1.0 / self.df[key][idx]
+                            else:
+                                tmp = self.df[key][idx]
+                            if value in gsiint:
+                                tmp = tmp.astype(int)
+                                tmp[tmp > 4e4] = nc.default_fillvals['i4']
+                            else:
+                                tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                            outdata[gvname] = tmp
+                    # store values in output data dictionary
+                    outdata[varDict[outvars[o]]['valKey']] = obsdata
+                    outdata[varDict[outvars[o]]['errKey']] = obserr
+                    outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(int)
+
+                for lvar in LocVars:
+                    loc_mdata_name = all_LocKeyList[lvar][0]
+                    if lvar == 'Station_ID':
+                        tmp = self.df[lvar][idx]
+                        StationIDs = [b''.join(tmp[a]) for a in range(len(tmp))]
+                        loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
+                    elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                        tmp = self.df[lvar][idx]
+                        obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+                        loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                    # special logic for missing station_elevation and height for surface obs
+                    elif lvar in ['Station_Elevation', 'Height']:
+                        if p == 'sfc':
                             tmp = self.df[lvar][idx]
-                            locKeys.append([b''.join(tmp[a]) for a in range(len(tmp))])
-                        elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
-                            tmp = self.df[lvar][idx]
-                            obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-                            obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                            locKeys.append(obstimes)
-                        # special logic for missing station_elevation and height for surface obs
-                        elif lvar in ['Station_Elevation', 'Height'] and p == 'sfc':
-                            tmp = self.df[lvar][idx]
-                            tmp[tmp == 9999.] = np.abs(nc.default_fillvals['f4'])
-                            tmp[tmp == 10009.] = np.abs(nc.default_fillvals['f4'])  # for u,v sfc Height values that are 10+9999
+                            tmp[tmp == 9999.] = nc.default_fillvals['f4']
+                            tmp[tmp == 10009.] = nc.default_fillvals['f4']  # for u,v sfc Height values that are 10+9999
                             # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
                             # this is correctly 10m agl though for u,v obs
                             if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
                                 elev = self.df['Station_Elevation'][idx]
                                 hgt = elev + 2.
-                                hgt[hgt > 9998.] = np.abs(nc.default_fillvals['f4'])
+                                hgt[hgt > 9998.] = nc.default_fillvals['f4']
                                 tmp = hgt
-                            locKeys.append(tmp)
+                            loc_mdata[loc_mdata_name] = tmp
+                        elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
+                            tmp = self.df[lvar][idx]
+                            tmp[tmp > 4e8] = nc.default_fillvals['f4']  # 1e11 is fill value for sondes, etc.
+                            loc_mdata[loc_mdata_name] = tmp
                         else:
-                            locKeys.append(self.df[lvar][idx])
-                    # again to ensure unique obs
-                    locKeys.append(np.arange(1, len(obsdata) + 1))
-                    locKeys = np.swapaxes(np.array(locKeys), 0, 1)
-                    locKeys = [tuple(a) for a in locKeys]
-                    for i in range(len(obsdata)):
-                        # observation data
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['valKey']] = obsdata[i]
-                        # observation error
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['errKey']] = obserr[i]
-                        # observation prep qc mark
-                        outdata[recKey][locKeys[i]][varDict[outvars[o]]['qcKey']] = int(obsqc[i])
-                        # add additional GSI variables that are not needed long
-                        # term but useful for testing
-                        for key, value in gsivars.items():
-                            gvname = outvars[o], value
-                            gvname2 = outvars[o], key, value
-                            if value in gsiint:
-                                try:
-                                    outdata[recKey][locKeys[i]][gvname] = int(gsimeta[gvname2][i])
-                                except KeyError:
-                                    pass
-                            else:
-                                try:
-                                    outdata[recKey][locKeys[i]][gvname] = gsimeta[gvname2][i]
-                                except KeyError:
-                                    pass
+                            loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+                    else:
+                        loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+
+                # record info
+                SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
+                rec_mdata['Station_ID'] = writer.FillNcVector(SIDUnique, "string")
+                loc_mdata['record_number'] = invs
+
+                # var metadata
+                var_mdata['variable_names'] = writer.FillNcVector(outvars, "string")
 
                 AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
-                writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+
+                # writer metadata
+                nvars = len(outvars)
+                nlocs = len(StationIDs)
+                nrecs = len(SIDUnique)
+
+                writer._nrecs = nrecs
+                writer._nvars = nvars
+                writer._nlocs = nlocs
+                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
                 print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
@@ -695,7 +783,6 @@ class Radiances:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
-        # LocKeyList.append(('ObsIndex','integer')) # to ensure unique obs
         # for now, record len is 1 and the list is empty?
         recKey = 0
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
@@ -705,42 +792,49 @@ class Radiances:
         chan_indx = self.df['Channel_Index'][:]
         nchans = len(chan_number)
         nlocs = int(self.nobs / nchans)
-        chanlist = chan_indx[:nchans]
+        chanlist = chan_number
         for a in chanlist:
             value = "brightness_temperature_{:d}".format(a)
             varDict[value]['valKey'] = value, writer.OvalName()
             varDict[value]['errKey'] = value, writer.OerrName()
             varDict[value]['qcKey'] = value, writer.OqcName()
+            units_values[value] = 'K'
 
         obsdata = self.df['Observation'][:]
         obserr = self.df['error_variance'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
 
-        idx = chan_indx == chanlist[0]
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Obs_Time':
-                tmp = self.df[lvar][idx]
+                tmp = self.df[lvar][::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
-                loc_mdata[loc_mdata_name] = self.df[lvar][idx]
+                tmp = self.df[lvar][::nchans]
+                tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                loc_mdata[loc_mdata_name] = tmp
 
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_vars.items():
             if gsivar in self.df.variables:
                 if "Inverse" in gsivar:
-                    tmp = 1.0 / self.df[gsivar][:]
-                    tmp[np.isinf(tmp)] = np.abs(nc.default_fillvals['f4'])
+                    tmp2 = self.df[gsivar][:]
+                    # fix for if some reason 1/small does not result in inf but zero
+                    tmp2[tmp2 < 9e-12] = 0
+                    tmp = 1.0 / tmp2
+                    tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
                 else:
                     tmp = self.df[gsivar][:]
                 if gsivar in gsiint:
                     tmp = tmp.astype(int)
+                else:
+                    tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 for ii, ch in enumerate(chanlist):
                     varname = "brightness_temperature_{:d}".format(ch)
                     gvname = varname, iodavar
-                    idx = chan_indx == chanlist[ii]
+                    idx = chan_indx == ii+1
                     outvals = tmp[idx]
                     outdata[gvname] = outvals
 
@@ -749,15 +843,16 @@ class Radiances:
         for c in range(len(chanlist)):
             value = "brightness_temperature_{:d}".format(chanlist[c])
             var_names.append(value)
-            idx = chan_indx == chanlist[c]
+            idx = chan_indx == c+1
             if (np.sum(idx) == 0):
                 print("No matching observations for:")
                 print(value)
                 continue
             obsdatasub = obsdata[idx]
-            obsdatasub[obsdatasub > 9e5] = np.abs(nc.default_fillvals['f4'])
+            obsdatasub[obsdatasub > 9e5] = nc.default_fillvals['f4']
             obserrsub = np.full(nlocs, obserr[c])
             obsqcsub = obsqc[idx]
+            obsqcsub[obsdatasub > 9e5] = nc.default_fillvals['i4']
 
             # store values in output data dictionary
             outdata[varDict[value]['valKey']] = obsdatasub
@@ -768,7 +863,7 @@ class Radiances:
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         for key, value2 in chan_metadata_dict.items():
             try:
-                var_mdata[value2] = self.df[key][:nchans]
+                var_mdata[value2] = self.df[key][:]
             except IndexError:
                 pass
 
@@ -789,7 +884,7 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
@@ -1018,7 +1113,7 @@ class AOD:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("AOD obs processed, wrote to:")
         print(outname)
 
@@ -1124,6 +1219,7 @@ class Ozone:
    to the JEDI/IODA observation format
         """
         import ioda_conv_ncio as iconv
+        import netCDF4 as nc
         import os
         from collections import defaultdict, OrderedDict
         from orddicts import DefaultOrderedDict
@@ -1142,6 +1238,9 @@ class Ozone:
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
@@ -1158,58 +1257,60 @@ class Ozone:
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.df['Observation'][:]
-        obserr = 1.0 / self.df['Inverse_Observation_Error'][:]
+        tmp = self.df['Inverse_Observation_Error'][:]
+        tmp[tmp < 9e-12] = 0
+        obserr = 1.0 / tmp
+        obserr[np.isinf(obserr)] = nc.default_fillvals['f4']
         obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
         locKeys = []
         for lvar in LocVars:
+            loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time':
                 tmp = self.df[lvar][:]
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                locKeys.append(obstimes)
+                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
-                locKeys.append(self.df[lvar][:])
+                tmp = self.df[lvar][:]
+                tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                loc_mdata[loc_mdata_name] = tmp
 
-        locKeys = np.swapaxes(np.array(locKeys), 0, 1)
-        locKeys = [tuple(a) for a in locKeys]
-
-        gsimeta = {}
-        for key, value2 in gsi_add_vars.items():
+        for gsivar, iodavar in gsi_add_vars.items():
             # some special actions need to be taken depending on var name...
-            if "Inverse" in key:
-                try:
-                    gsimeta[key] = 1.0/self.df[key][:]
-                except IndexError:
-                    pass
-            else:
-                try:
-                    gsimeta[key] = self.df[key][:]
-                except IndexError:
-                    pass
-        # not sure how to do this without a loop since it's a dict...
-        for i in range(len(obsdata)):
-            # observation data
-            outdata[recKey][locKeys[i]][varDict[vname]['valKey']] = obsdata[i]
-            outdata[recKey][locKeys[i]][varDict[vname]['errKey']] = obserr[i]
-            outdata[recKey][locKeys[i]][varDict[vname]['qcKey']] = obsqc[i]
-            # add additional GSI variables that are not needed long term but useful for testing
-            for key, value2 in gsi_add_vars.items():
-                gvname = vname, value2
-                if value2 in gsiint:
-                    try:
-                        outdata[recKey][locKeys[i]][gvname] = int(gsimeta[key][i])
-                    except KeyError:
-                        pass
+            if gsivar in self.df.variables:
+                if "Inverse" in gsivar:
+                    tmp2 = self.df[gsivar][:]
+                    # fix for if some reason 1/small does not result in inf but zero
+                    tmp2[tmp2 < 9e-12] = 0
+                    tmp = 1.0 / tmp2
+                    tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
                 else:
-                    try:
-                        outdata[recKey][locKeys[i]][gvname] = gsimeta[key][i]
-                    except KeyError:
-                        pass
+                    tmp = self.df[gsivar][:]
+                if gsivar in gsiint:
+                    tmp = tmp.astype(int)
+                else:
+                    tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                gvname = vname, iodavar
+                outdata[gvname] = tmp
+        # observation data
+        outdata[varDict[vname]['valKey']] = obsdata
+        outdata[varDict[vname]['errKey']] = obserr
+        outdata[varDict[vname]['qcKey']] = obsqc
+
+        # dummy record metadata, for now
+        nrecs = 1
+        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
+        loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
         AttrData["satellite"] = self.satellite
         AttrData["sensor"] = self.sensor
-        (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(outdata)
-        writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+        # set dimension lengths in the writer since we are bypassing
+        # ExtractObsData
+        writer._nrecs = nrecs
+        writer._nvars = 1
+        writer._nlocs = nlocs
+
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Ozone obs processed, wrote to:")
         print(outname)

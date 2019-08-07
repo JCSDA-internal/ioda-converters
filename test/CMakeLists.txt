@@ -155,7 +155,8 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_conv
                   ARGS "${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
                        -i testinput/gsidiag_conv_t_sfc_test.nc
                        -o testrun/
-                       -t conv"
+                       -t conv
+                       -p sfc"
                       sfc_tv_obs_2018041500.nc4)
 
 ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad

@@ -4,7 +4,7 @@ The intended way to use this repository is to install in `/usr/local` by default
 
 For example,
 ```
-ecbuild --prefix=$HOME/tools  path_to_top_level_cmakelists_file
+ecbuild --prefix=$HOME/tools  /your/path/to/ioda-converters
 make
 make install
 ctest

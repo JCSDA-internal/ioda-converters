@@ -22,7 +22,7 @@ vtypedict = {
 }
 
 
-def concat_ioda(FileList, OutFile):
+def concat_ioda(FileList, OutFile, GeoDir):
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -30,11 +30,13 @@ def concat_ioda(FileList, OutFile):
     AttrData = {}
     DataVarNames = []
     DataVars = []
+    VarUnits = {}
     DataVType = []
     MetaVars = []
     MetaVarNames = []
     MetaVType = []
     VarMetaVars = []
+    RecMetaVars = []
     RecKeyList = []
     LocKeyList = []
     MetaInAll = {}
@@ -43,7 +45,7 @@ def concat_ioda(FileList, OutFile):
         ncf = nc.Dataset(f, mode='r')
         for key, value in ncf.variables.items():
             vs = key.split('@')
-            if vs[1] not in ['MetaData', 'VarMetaData']:
+            if vs[1] not in ['MetaData', 'VarMetaData', 'RecMetaData']:
                 if vs[0] not in DataVarNames:
                     DataVarNames.append(vs[0])
                 if vs[0] in DataVarNames:
@@ -51,18 +53,31 @@ def concat_ioda(FileList, OutFile):
                         DataVars.append(key)
                         vtype = ncf.variables[key].dtype
                         DataVType.append(vtype)
+                        try:
+                            units = ncf.variables[vs[0]+"@ObsValue"].getncattr("units")
+                            VarUnits[vs[0]] = units
+                        except AttributeError:
+                            pass
+
             else:
                 if vs[1] == 'MetaData' and key not in MetaVars and vs[0] not in ['time', 'ObsIndex']:
                     MetaVars.append(key)
                     MetaVarNames.append(tuple(vs))
                     vtype = ncf.variables[key].dtype
                     MetaVType.append(vtype)
+                    try:
+                        units = ncf.variables[vs[0]+"@MetaData"].getncattr("units")
+                        VarUnits[vs[0]] = units
+                    except AttributeError:
+                        pass
                     vtypestr = vtypedict[str(vtype)]
                     if vs[1] == 'datetime':
                         vtypestr = 'datetime'
                     LocKeyList.append((vs[0], vtypestr))
                 elif vs[1] == 'VarMetaData' and key not in VarMetaVars and vs[0] not in ['variable_names']:
                     VarMetaVars.append(key)
+                elif vs[1] == 'RecMetaData' and key not in RecMetaVars:
+                    RecMetaVars.append(key)
         ncf.close()
     # determine which metadata is in all files
     for v in MetaVars:
@@ -133,17 +148,16 @@ def concat_ioda(FileList, OutFile):
     Recs = set(MetaVarUnique[ridx, :].astype('int'))
     nlocs = MetaVarUnique.shape[-1]
     writer = iconv.NcWriter(OutFile, RecKeyList, LocKeyList)
-    for rec in Recs:
-        rec_mdata['rec_id'] = np.asarray([rec], dtype='i4')
     var_mdata['variable_names'] = writer.FillNcVector(DataVarNames, "string")
+    # TODO add RecMetaData for Station ID, etc...
     AttrData["date_time_string"] = validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
     writer._nrecs = len(Recs)
     writer._nvars = len(DataVarNames)
     writer._nlocs = nlocs
 
-    for idx, vname in enumerate(MetaVarNames):
+    for idx3, vname in enumerate(MetaVarNames):
         if vname[0] in ['datetime', 'station_id']:
-            tmp = MetaVarUnique[idx, :]
+            tmp = MetaVarUnique[idx3, :]
             tmp = tmp.astype(str)
             if vname[0] == 'datetime':
                 jj = 20
@@ -154,12 +168,125 @@ def concat_ioda(FileList, OutFile):
             for i in range(len(tmp)):
                 for j in range(len(tmp[i])):
                     tmp2[i, j] = str(tmp[i][j])
-            loc_mdata[vname[0]] = tmp2.astype(MetaVType[idx])
+            loc_mdata[vname[0]] = tmp2.astype(MetaVType[idx3])
         else:
-            loc_mdata[vname[0]] = MetaVarUnique[idx, ...].astype(MetaVType[idx])
-    for idx, vname in enumerate(DataVars):
-        outdata[tuple(vname.split('@'))] = DataVarUnique[idx, ...].astype(DataVType[idx])
-    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData)
+            loc_mdata[vname[0]] = MetaVarUnique[idx3, ...].astype(MetaVType[idx3])
+    for idx3, vname in enumerate(DataVars):
+        tmp = DataVarUnique[idx3, ...]
+        tmp = tmp.astype(DataVType[idx3])
+        if DataVType[idx3] == 'int32':
+            tmp[tmp < -1e5] = nc.default_fillvals['i4']
+        outdata[tuple(vname.split('@'))] = tmp
+    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, VarUnits)
+
+    # now write out combined GeoVaLs file
+    if GeoDir:
+        # get list of geoval files
+        GeoFileList = []
+        GeoVarNames2 = []
+        GeoVarTypes2 = []
+        GeoVarNames3 = []
+        GeoVarTypes3 = []
+        for f in FileList:
+            inob = f.split('/')[-1]
+            ingeo = inob.replace('obs', 'geoval')
+            g = GeoDir+'/'+ingeo
+            GeoFileList.append(g)
+        # figure out possible variable names
+        for f in GeoFileList:
+            ncf = nc.Dataset(f, mode='r')
+            for key, value in ncf.variables.items():
+                if key not in GeoVarNames2 and key not in GeoVarNames3:
+                    if value.ndim == 1:
+                        GeoVarNames2.append(key)
+                        GeoVarTypes2.append(ncf.variables[key].dtype)
+                    else:
+                        GeoVarNames3.append(key)
+                        GeoVarTypes3.append(ncf.variables[key].dtype)
+            ncf.close()
+        GeoVarData2 = []
+        GeoVarIdx2 = []
+        GeoVarData3 = []
+        GeoVarIdx3 = []
+        for idx2, v in enumerate(GeoVarNames2):
+            tmpgeodata = []
+            tmpgeoidx = []
+            for f in GeoFileList:
+                ncf = nc.Dataset(f, mode='r')
+                try:
+                    tmpdata = ncf.variables[v][:]
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                except KeyError:
+                    tmpdata = np.ones_like(ncf.variables['time'][:]).astype(GeoVarTypes2[idx2])
+                    if GeoVarTypes2[idx2] == np.int32:
+                        tmpdata = tmpdata * nc.default_fillvals['i4']
+                    else:
+                        tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                ncf.close()
+            tmpgeodata = np.hstack(tmpgeodata)
+            tmpgeoidx = np.hstack(tmpgeoidx)
+            GeoVarData2.append(tmpgeodata)
+            GeoVarIdx2.append(tmpgeoidx)
+        GeoVarData2 = np.vstack(GeoVarData2)
+        GeoVarIdx2 = np.vstack(GeoVarIdx2)
+        GeoVarData2 = np.transpose(GeoVarData2)
+        GeoVarIdx2 = np.transpose(GeoVarIdx2)
+        GeoVarUnique2 = np.ones((len(idx), len(GeoVarData2[0])))*np.abs(nc.default_fillvals['f4'])
+        for idx2, v in enumerate(GeoVarNames3):
+            tmpgeodata = []
+            tmpgeoidx = []
+            for f in GeoFileList:
+                ncf = nc.Dataset(f, mode='r')
+                try:
+                    tmpdata = ncf.variables[v][:]
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                except KeyError:
+                    try:
+                        tmpdata = np.ones_like(ncf.variables['air_pressure'][:]).astype(GeoVarTypes3[idx2])
+                    except KeyError:
+                        tmpdata = np.ones_like(ncf.variables['atmosphere_ln_pressure_coordinate'][:]).astype(GeoVarTypes3[idx2])
+                    if GeoVarTypes3[idx2] == np.int32:
+                        tmpdata = tmpdata * nc.default_fillvals['i4']
+                    else:
+                        tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+            tmpgeodata = np.vstack(tmpgeodata)
+            tmpgeoidx = np.vstack(tmpgeoidx)
+            GeoVarData3.append(tmpgeodata)
+            GeoVarIdx3.append(tmpgeoidx)
+        GeoVarData3 = np.dstack(GeoVarData3)
+        GeoVarIdx3 = np.dstack(GeoVarIdx3)
+        GeoVarUnique3 = np.ones((len(idx), len(GeoVarData3[0]), len(GeoVarData3[0, 0, :])))*np.abs(nc.default_fillvals['f4'])
+        for ii, jj in np.ndindex(GeoVarData2.shape):
+            j = GeoVarIdx2[ii, jj]
+            i = inv[ii]
+            if GeoVarData2[ii, jj] != nc.default_fillvals['i4'] and GeoVarData2[ii, jj] != np.abs(nc.default_fillvals['f4']):
+                GeoVarUnique2[i, j] = GeoVarData2[ii, jj]
+        for ii, kk, jj in np.ndindex(GeoVarData3.shape):
+            j = GeoVarIdx3[ii, kk, jj]
+            i = inv[ii]
+            if GeoVarData3[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData3[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
+                GeoVarUnique3[i, kk, j] = GeoVarData3[ii, kk, jj]
+        OutGeoFile = OutFile.replace('obs', 'geoval')
+        of = nc.Dataset(OutGeoFile, 'w', format='NETCDF4')
+        of.setncattr("date_time", ncf.getncattr("date_time"))
+        nlocs = len(GeoVarUnique3)
+        nlevs = len(GeoVarUnique3[0])
+        of.createDimension("nlocs", nlocs)
+        of.createDimension("nlevs", nlevs)
+        for ivar, var in enumerate(GeoVarNames2):
+            dims = ("nlocs", )
+            var_out = of.createVariable(var, GeoVarTypes2[ivar], dims)
+            var_out[...] = GeoVarUnique2[..., ivar]
+        for ivar, var in enumerate(GeoVarNames3):
+            dims = ("nlocs", "nlevs")
+            var_out = of.createVariable(var, GeoVarTypes3[ivar], dims)
+            var_out[...] = GeoVarUnique3[..., ivar]
 
 
 ######################################################
@@ -174,10 +301,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '-o', '--output', help='name of the output IODA observation file',
         type=str, required=True, default=None)
+    parser.add_argument('-g', '--geovals', help='path to where matching geovals should be')
 
     args = parser.parse_args()
 
     FileList = args.input
     OutFile = args.output
 
-    concat_ioda(FileList, OutFile)
+    GeoDir = False
+    if args.geovals:
+        GeoDir = args.geovals
+
+    concat_ioda(FileList, OutFile, GeoDir)
