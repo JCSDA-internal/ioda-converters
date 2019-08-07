@@ -23,6 +23,7 @@ integer, parameter :: r_kind = selected_real_kind(15) !8
 integer   :: ncid
 integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid
 integer   :: varid_lat,varid_lon,varid_time,varid_said,varid_ptid,varid_sclf,varid_asce
+integer   :: varid_recn
 integer   :: varid_geoid, varid_rfict
 integer   :: varid_ref,varid_msl,varid_refoe
 integer   :: varid_bnd,varid_bndoe,varid_impp, varid_imph,varid_azim
@@ -34,7 +35,7 @@ character,dimension(8)    :: subset
 character(len=10)         :: anatime
 integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,ptid,sclf,asce
 integer(i_kind)           :: lnbufr    = 10
-integer(i_kind)           :: nread,ndata,nvars
+integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
 integer(i_kind)           :: anatime_i
 integer(i_kind)           :: idate5(6), idate,iadate5(6)
 integer(i_kind)           :: mincy,minobs
@@ -50,6 +51,7 @@ type gpsro_type
       integer(i_kind), dimension(maxobs)    :: said
       integer(i_kind), dimension(maxobs)    :: sclf
       integer(i_kind), dimension(maxobs)    :: ptid
+      integer(i_kind), dimension(maxobs)    :: recn
       integer(i_kind), dimension(maxobs)    :: asce
       real(r_double),  dimension(maxobs)    :: time
       real(r_double), dimension(maxobs)     :: lat
@@ -83,7 +85,7 @@ character(80) hdr1a
 
 data hdr1a / 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU SCLF' / 
 data nemo /'QFRO'/ 
-nread=0
+nrec =0
 ndata=0
 nvars=2
 
@@ -180,8 +182,10 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      call ufbseq(lnbufr,data1b,50,maxlevs,levs,'ROSEQ1') 
      call ufbseq(lnbufr,data2a,50,maxlevs,levsr,'ROSEQ3') ! refractivity
 
+     nrec=nrec+1
+     ndata0 = ndata
+
      do k = 1, levs
-        nread    = nread+1  ! count observations
         rlat     = data1b(1,k)  ! earth relative latitude (degrees)
         rlon     = data1b(2,k)  ! earth relative longitude (degrees)
         azim     = data1b(3,k)
@@ -213,7 +217,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         if ( bend>=1.e+9_r_kind .or. bend<=0._r_kind .or. impact>=1.e+9_r_kind .or. impact<roc .or. bendflag == 1 ) then
            good=.false.
            write(6,*)'READ_GNSSRO: obs is missing, said=',said,'ptid=',ptid
-
         endif
 
         if ( ref>=1.e+9_r_kind .or. ref<=0._r_kind .or. refflag == 1 ) then
@@ -222,6 +225,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
     
     if(good) then
        ndata  = ndata +1 
+       gpsro_data%recn(ndata)     = nrec
        gpsro_data%lat(ndata)      = rlat
        gpsro_data%lon(ndata)      = rlon
        gpsro_data%time(ndata)     = timeo
@@ -248,22 +252,25 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      end if
 
     end do ! end of k loop
+
+    if (ndata == ndata0) nrec = nrec -1
+
   enddo read_loop   
 end do
 
 1010 continue
 call closbf(lnbufr)
 
-
 call check( nf90_create(trim(outfile), nf90_clobber, ncid))
 call check( nf90_def_dim(ncid, 'nlocs', ndata,   nlocs_dimid) )
-call check( nf90_def_dim(ncid, 'nrecs', ndata,   nrecs_dimid) )
+call check( nf90_def_dim(ncid, 'nrecs', nrec,    nrecs_dimid) )
 call check( nf90_def_dim(ncid, 'nobs',  ndata*nvars,   nobs_dimid) )
 call check( nf90_def_dim(ncid, 'nvars', nvars,   nvars_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_var(ncid, "latitude@MetaData",      NF90_FLOAT, nlocs_dimid, varid_lat) )
 call check( nf90_def_var(ncid, "longitude@MetaData",    NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_def_var(ncid, "time@MetaData",         NF90_FLOAT, nlocs_dimid, varid_time) )
+call check( nf90_def_var(ncid, "record_number@MetaData",   NF90_INT, nlocs_dimid, varid_recn))
 call check( nf90_def_var(ncid, "gnss_sat_class@MetaData",  NF90_INT, nlocs_dimid, varid_sclf))
 call check( nf90_def_var(ncid, "reference_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_ptid))
 call check( nf90_def_var(ncid, "occulting_sat_id@MetaData",  NF90_INT, nlocs_dimid, varid_said))
@@ -280,10 +287,10 @@ call check( nf90_def_var(ncid, "geoid_height_above_reference_ellipsoid@MetaData"
 call check( nf90_def_var(ncid, "earth_radius_of_curvature@MetaData",NF90_FLOAT, nlocs_dimid, varid_rfict))
 
 call check( nf90_enddef(ncid) )
-
 call check( nf90_put_var(ncid, varid_lat, gpsro_data%lat(1:ndata)) )
 call check( nf90_put_var(ncid, varid_lon, gpsro_data%lon(1:ndata)) )
 call check( nf90_put_var(ncid, varid_time, gpsro_data%time(1:ndata)) )
+call check( nf90_put_var(ncid, varid_recn, gpsro_data%recn(1:ndata)) )
 call check( nf90_put_var(ncid, varid_said, gpsro_data%said(1:ndata)) )
 call check( nf90_put_var(ncid, varid_ptid, gpsro_data%ptid(1:ndata)) )
 call check( nf90_put_var(ncid, varid_sclf, gpsro_data%sclf(1:ndata)) )
