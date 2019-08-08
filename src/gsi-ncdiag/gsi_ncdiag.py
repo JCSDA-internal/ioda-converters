@@ -1251,7 +1251,7 @@ class Ozone:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
-        vname = "mass_concentration_of_ozone_in_air"
+        vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
         varDict[vname]['qcKey'] = vname, writer.OqcName()
