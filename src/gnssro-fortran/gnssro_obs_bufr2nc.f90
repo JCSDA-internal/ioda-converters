@@ -45,27 +45,27 @@ integer(i_kind),parameter :: mxib=31
 integer(i_kind)           :: ibit(mxib),nib
 integer(i_kind),parameter :: maxlevs=500
 integer(i_kind),parameter :: n1ahdr=11
-integer(i_kind),parameter :: maxobs=2e5
+integer(i_kind)           :: maxobs
 real(r_kind) :: timeo
 type gpsro_type
-      integer(i_kind), dimension(maxobs)    :: said
-      integer(i_kind), dimension(maxobs)    :: sclf
-      integer(i_kind), dimension(maxobs)    :: ptid
-      integer(i_kind), dimension(maxobs)    :: recn
-      integer(i_kind), dimension(maxobs)    :: asce
-      real(r_double),  dimension(maxobs)    :: time
-      real(r_double), dimension(maxobs)     :: lat
-      real(r_double), dimension(maxobs)     :: lon
-      real(r_double), dimension(maxobs)     :: rfict
-      real(r_double), dimension(maxobs)     :: azim
-      real(r_double), dimension(maxobs)     :: geoid
-      real(r_double), dimension(maxobs)     :: msl_alt
-      real(r_double), dimension(maxobs)     :: ref
-      real(r_double), dimension(maxobs)     :: refoe_gsi
-      real(r_double), dimension(maxobs)     :: bend_ang
-      real(r_double), dimension(maxobs)     :: impact_para
-      real(r_double), dimension(maxobs)     :: bndoe_gsi
-end type gpsro_type 
+      integer(i_kind), allocatable, dimension(:)    :: said
+      integer(i_kind), allocatable, dimension(:)    :: sclf
+      integer(i_kind), allocatable, dimension(:)    :: ptid
+      integer(i_kind), allocatable, dimension(:)    :: recn
+      integer(i_kind), allocatable, dimension(:)    :: asce
+      real(r_double), allocatable, dimension(:)    :: time
+      real(r_double), allocatable, dimension(:)     :: lat
+      real(r_double), allocatable, dimension(:)     :: lon
+      real(r_double), allocatable, dimension(:)     :: rfict
+      real(r_double), allocatable, dimension(:)     :: azim
+      real(r_double), allocatable, dimension(:)     :: geoid
+      real(r_double), allocatable, dimension(:)     :: msl_alt
+      real(r_double), allocatable, dimension(:)     :: ref
+      real(r_double), allocatable, dimension(:)     :: refoe_gsi
+      real(r_double), allocatable, dimension(:)     :: bend_ang
+      real(r_double), allocatable, dimension(:)     :: impact_para
+      real(r_double), allocatable, dimension(:)     :: bndoe_gsi
+end type gpsro_type
 
 type(gpsro_type) :: gpsro_data
 
@@ -88,6 +88,7 @@ data nemo /'QFRO'/
 nrec =0
 ndata=0
 nvars=2
+maxobs=0
 
 call getarg(1,anatime)
 call getarg(2,infile)
@@ -105,7 +106,44 @@ open(lnbufr,file=trim(infile),form='unformatted')
 call openbf(lnbufr,'IN',lnbufr)
 call datelen(10)
 call readmg(lnbufr,subset,idate,iret)
-if (iret/=0) goto 1010
+if (iret/=0) then
+   write(6,*)'READ_GNSSRO: can not open gnssro file!'
+   stop
+end if
+
+! loop over all message to estimate maxobs
+do while(ireadmg(lnbufr,subset,idate)==0)
+   read_loop_countmaxobs:  do while(ireadsb(lnbufr)==0)
+     call ufbint(lnbufr,bfr1ahdr,n1ahdr,1,iret,hdr1a)
+     call ufbseq(lnbufr,data1b,50,maxlevs,levs,'ROSEQ1')
+     maxobs= maxobs + levs
+  enddo read_loop_countmaxobs
+end do
+
+allocate(gpsro_data%said(maxobs))
+allocate(gpsro_data%sclf(maxobs))
+allocate(gpsro_data%ptid(maxobs))
+allocate(gpsro_data%recn(maxobs))
+allocate(gpsro_data%asce(maxobs))
+allocate(gpsro_data%time(maxobs))
+allocate(gpsro_data%lat(maxobs))
+allocate(gpsro_data%lon(maxobs))
+allocate(gpsro_data%rfict(maxobs))
+allocate(gpsro_data%azim(maxobs))
+allocate(gpsro_data%geoid(maxobs))
+allocate(gpsro_data%msl_alt(maxobs))
+allocate(gpsro_data%ref(maxobs))
+allocate(gpsro_data%refoe_gsi(maxobs))
+allocate(gpsro_data%bend_ang(maxobs))
+allocate(gpsro_data%impact_para(maxobs))
+allocate(gpsro_data%bndoe_gsi(maxobs))
+
+!rewind lnbufr
+call closbf(lnbufr)
+open(lnbufr,file=trim(infile),form='unformatted')
+call openbf(lnbufr,'IN',lnbufr)
+call datelen(10)
+call readmg(lnbufr,subset,idate,iret)
 
 do while(ireadmg(lnbufr,subset,idate)==0)
    read_loop:  do while(ireadsb(lnbufr)==0)
@@ -258,7 +296,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
   enddo read_loop   
 end do
 
-1010 continue
 call closbf(lnbufr)
 
 call check( nf90_create(trim(outfile), nf90_clobber, ncid))
@@ -306,6 +343,24 @@ call check( nf90_put_var(ncid, varid_azim, gpsro_data%azim(1:ndata)) )
 call check( nf90_put_var(ncid, varid_geoid, gpsro_data%geoid(1:ndata)) )
 call check( nf90_put_var(ncid, varid_rfict, gpsro_data%rfict(1:ndata)) )
 call check( nf90_close(ncid) ) 
+
+deallocate(gpsro_data%said)
+deallocate(gpsro_data%sclf)
+deallocate(gpsro_data%ptid)
+deallocate(gpsro_data%recn)
+deallocate(gpsro_data%asce)
+deallocate(gpsro_data%time)
+deallocate(gpsro_data%lat)
+deallocate(gpsro_data%lon)
+deallocate(gpsro_data%rfict)
+deallocate(gpsro_data%azim)
+deallocate(gpsro_data%geoid)
+deallocate(gpsro_data%msl_alt)
+deallocate(gpsro_data%ref)
+deallocate(gpsro_data%refoe_gsi)
+deallocate(gpsro_data%bend_ang)
+deallocate(gpsro_data%impact_para)
+deallocate(gpsro_data%bndoe_gsi)
 
 contains
  subroutine check(status)
