@@ -1,0 +1,13 @@
+&setup
+obsdate=20180415,
+obsmin=0,
+obsPath='./',
+obsfilename='prepbufr',
+savePath='./',
+prefixobssavename='conv',
+/
+&obsset
+numobstype=1,
+obstype=120,
+timewindow=1.0,
+/
