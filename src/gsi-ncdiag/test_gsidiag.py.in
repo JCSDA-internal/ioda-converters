@@ -32,6 +32,8 @@ elif (args.type == 'aod'):
     diag = gsid.AOD(infile)
 elif (args.type == 'oz'):
     diag = gsid.Ozone(infile)
+elif (args.type == 'radar')
+    diag = gsid.Radar(infile)
 else:
     raise ValueError
 diag.read()
