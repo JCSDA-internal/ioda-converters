@@ -1464,7 +1464,6 @@ class Radar:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
-        print self.obstype
         if self.obstype == "dbz.nc":
             radar_varnames = {
                 'obsdbz': 'reflectivity',
