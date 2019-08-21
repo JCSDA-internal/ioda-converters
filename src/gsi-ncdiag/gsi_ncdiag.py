@@ -139,16 +139,15 @@ gsi_add_vars_uv = {
     'v_Forecast_unadjusted': 'GsiHofX',
 }
 
-radar_varnames = {
-    'obsdbz': 'reflectivity',
-}
 
 radar_qc = {
     'obsdbz': 'dbzuse',
+    'obsrw': 'rwuse',
 }
 
 radar_err = {
     'obsdbz': 'dbzerror',
+    'obsrw': 'rwerror',
 }
 
 # values that should be integers
@@ -254,6 +253,8 @@ geovals_vars = {
     'seas2': 'seas2',
     'seas3': 'seas3',
     'seas4': 'seas4',
+    'dbzges': 'equivalent_reflectivity_factor',
+    'vertical_wind': 'vertical_wind',
 }
 
 aod_sensors = [
@@ -1463,6 +1464,16 @@ class Radar:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
+        print self.obstype
+        if self.obstype == "dbz.nc":
+            radar_varnames = {
+                'obsdbz': 'reflectivity',
+            }
+        elif self.obstype == "rw.nc":
+            radar_varnames = {
+                'obsrw': 'radial_velocity',
+            }
+
         for key, value in radar_varnames.items():
             varDict[value]['valKey'] = value, writer.OvalName()
             varDict[value]['errKey'] = value, writer.OerrName()
