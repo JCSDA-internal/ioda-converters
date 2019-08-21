@@ -163,6 +163,7 @@ rad_sensors = [
     'seviri',
     'sndrd1', 'sndrd2', 'sndrd3', 'sndrd4',
     'cris-fsr',
+    'ssmis',
 ]
 
 chan_metadata_dict = {
