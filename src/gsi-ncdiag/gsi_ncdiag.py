@@ -143,6 +143,14 @@ radar_varnames = {
     'obsdbz': 'reflectivity',
 }
 
+radar_qc = {
+    'obsdbz': 'dbzuse',
+}
+
+radar_err = {
+    'obsdbz': 'dbzerror',
+}
+
 # values that should be integers
 gsiint = [
     'PreUseFlag',
@@ -1461,15 +1469,36 @@ class Radar:
             varDict[value]['qcKey'] = value, writer.OqcName()
 
             obsdata = self.df[key][:]
-            tmp = self.df['Inverse_Observation_Error'][:]
-            tmp[tmp < 9e-12] = 0
-            obserr = 1.0 / tmp
+            #tmp = self.df['Inverse_Observation_Error'][:]
+            #tmp[tmp < 9e-12] = 0
+            #obserr = 1.0 / tmp
+            errvarname = radar_err[key]
+            qcvarname = radar_qc[key]
+            obserr = self.df[errvarname][:]
             obserr[np.isinf(obserr)] = nc.default_fillvals['f4']
-            obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
+            obsqc = self.df[qcvarname][:].astype(int)
             # observation data
-            outdata[value['valKey']] = obsdata
-            outdata[value['errKey']] = obserr
-            outdata[value['qcKey']] = obsqc
+            outdata[varDict[value]['valKey']] = obsdata
+            outdata[varDict[value]['errKey']] = obserr
+            outdata[varDict[value]['qcKey']] = obsqc
+            vname = value
+            for gsivar, iodavar in gsi_add_vars.items():
+                # some special actions need to be taken depending on var name...
+                if gsivar in self.df.variables:
+                    if "Inverse" in gsivar:
+                        tmp2 = self.df[gsivar][:]
+                        # fix for if some reason 1/small does not result in inf but zero
+                        tmp2[tmp2 < 9e-12] = 0
+                        tmp = 1.0 / tmp2
+                        tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
+                    else:
+                        tmp = self.df[gsivar][:]
+                    if gsivar in gsiint:
+                        tmp = tmp.astype(int)
+                    else:
+                        tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                    gvname = vname, iodavar
+                    outdata[gvname] = tmp
         locKeys = []
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
@@ -1483,23 +1512,6 @@ class Radar:
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 loc_mdata[loc_mdata_name] = tmp
 
-        for gsivar, iodavar in gsi_add_vars.items():
-            # some special actions need to be taken depending on var name...
-            if gsivar in self.df.variables:
-                if "Inverse" in gsivar:
-                    tmp2 = self.df[gsivar][:]
-                    # fix for if some reason 1/small does not result in inf but zero
-                    tmp2[tmp2 < 9e-12] = 0
-                    tmp = 1.0 / tmp2
-                    tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
-                else:
-                    tmp = self.df[gsivar][:]
-                if gsivar in gsiint:
-                    tmp = tmp.astype(int)
-                else:
-                    tmp[tmp > 4e8] = nc.default_fillvals['f4']
-                gvname = vname, iodavar
-                outdata[gvname] = tmp
 
         # dummy record metadata, for now
         nrecs = 1
@@ -1507,7 +1519,6 @@ class Radar:
         loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-        AttrData["satellite"] = self.satellite
         AttrData["sensor"] = self.sensor
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
