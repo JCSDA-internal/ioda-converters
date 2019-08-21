@@ -1455,7 +1455,6 @@ class Radar:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
-        for value in radar_varnames:
         for key, value in radar_varnames.items():
             varDict[value]['valKey'] = value, writer.OvalName()
             varDict[value]['errKey'] = value, writer.OerrName()
