@@ -31,6 +31,7 @@ program get_obs
 
    character(len=180) :: obsfile
    character(len=180) :: savefile
+   character(len=180) :: savefile_nc
    integer :: n
 !
 !
@@ -73,11 +74,12 @@ program get_obs
       call obsall%decodeprepbufr_all(trim(obsfile))
       call obsall%list(2)
       call obsall%writept(trim(savefile))
-      if(obstype(n)==120) then
+      !if(obstype(n)==180) then
+         write(savefile_nc,'(a,a,I4.4,a)') trim(savefile),"_type",obstype(n),".nc"
          call wrtnc%initial(obsall)
-         call wrtnc%write(obsall,"test.nc")
+         call wrtnc%write(obsall,trim(savefile_nc))
          call wrtnc%destroy()
-      endif
+      !endif
 
       call obsall%destroy_prepbufr()
    enddo
