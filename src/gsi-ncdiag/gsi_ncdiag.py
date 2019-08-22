@@ -1333,6 +1333,7 @@ class Ozone:
         print("Ozone obs processed, wrote to:")
         print(outname)
 
+
 class Radar:
     """ class Radar - reflectivity and radial wind observations
 
@@ -1404,7 +1405,7 @@ class Radar:
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["nlevs"].size)
-        #ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        # ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1479,9 +1480,9 @@ class Radar:
             varDict[value]['qcKey'] = value, writer.OqcName()
 
             obsdata = self.df[key][:]
-            #tmp = self.df['Inverse_Observation_Error'][:]
-            #tmp[tmp < 9e-12] = 0
-            #obserr = 1.0 / tmp
+            # tmp = self.df['Inverse_Observation_Error'][:]
+            # tmp[tmp < 9e-12] = 0
+            # obserr = 1.0 / tmp
             errvarname = radar_err[key]
             qcvarname = radar_qc[key]
             obserr = self.df[errvarname][:]
@@ -1521,7 +1522,6 @@ class Radar:
                 tmp = self.df[lvar][:]
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 loc_mdata[loc_mdata_name] = tmp
-
 
         # dummy record metadata, for now
         nrecs = 1
