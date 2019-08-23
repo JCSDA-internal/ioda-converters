@@ -128,7 +128,7 @@ gsi_add_vars = {
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
-    'hxrw' : 'GsiHofX',
+    'hxrw': 'GsiHofX',
 }
 
 gsi_add_vars_uv = {
