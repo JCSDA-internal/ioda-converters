@@ -1,5 +1,5 @@
 &setup
-obsdate=20180415,
+obsdate=2018041500,
 obsmin=0,
 obsPath='./',
 obsfilename='prepbufr',
@@ -7,7 +7,7 @@ savePath='./',
 prefixobssavename='conv',
 /
 &obsset
-numobstype=1,
-obstype=120,
+numobstype=4,
+obstype=120,187,180,245
 timewindow=1.0,
 /
