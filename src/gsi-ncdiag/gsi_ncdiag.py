@@ -85,6 +85,10 @@ all_LocKeyList = {
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
+    'XoverR': ('radar_azimuth', 'float'),
+    'YoverR': ('radar_tilt', 'float'),
+    'ZoverR': ('radar_dir3', 'float'),
+    'Vterminal': ('vterminal', 'float'),
 }
 
 checkuv = {
@@ -124,6 +128,7 @@ gsi_add_vars = {
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
+    'hxrw': 'GsiHofX',
 }
 
 gsi_add_vars_uv = {
@@ -1466,11 +1471,11 @@ class Radar:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
-        if self.obstype == "dbz.nc":
+        if self.obstype == "dbz":
             radar_varnames = {
-                'obsdbz': 'reflectivity',
+                'obsdbz': 'equivalent_reflectivity_factor',
             }
-        elif self.obstype == "rw.nc":
+        elif self.obstype == "rw":
             radar_varnames = {
                 'obsrw': 'radial_velocity',
             }
