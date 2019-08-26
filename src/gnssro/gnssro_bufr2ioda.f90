@@ -3,14 +3,11 @@
 !  for jedi/ufo/gnssro/ operator test
 !  Hailing Zhang------ Modified june 10 
 
-!!!--------   to compile --------------------------------
-!  ifort -o   gnssro_obs_bufr2nc.exe  gnssro_obs_bufr2nc.f90  -L${NETCDF}/lib -lnetcdf -lnetcdff -lm -I${NETCDF}/include -I${NETCDF}/include   -L${NCEPBUFR}/bufr -lbufr
-
 !!!---------  to run   -----------------------------------------------------------------
-!  ./gnssro_obs_bufr2nc.exe yyyymmddhh $bufrfile_input $netcdffile_output
+!  ./gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
 
 
-program gnssro_bufr2nc
+program gnssro_bufr2ioda
 use netcdf
 implicit none
 
@@ -73,7 +70,7 @@ real(r_double),dimension(n1ahdr)     :: bfr1ahdr
 real(r_double),dimension(50,maxlevs) :: data1b
 real(r_double),dimension(50,maxlevs) :: data2a
 real(r_double),dimension(maxlevs)  :: nreps_this_ROSEQ2
-integer(i_kind)           :: iret,levs,levsr,nreps_ROSEQ1
+integer(i_kind)           :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
 real(r_double) pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
 real(r_double) height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
 real(r_double) obsErr 
@@ -233,7 +230,8 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         ref_pccf = data2a(6,k)
 
 !       Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
-        do i = 1,nreps_this_ROSEQ2(k)
+        nreps_ROSEQ2_int = nreps_this_ROSEQ2(k)
+        do i = 1,nreps_ROSEQ2_int
            m = (6*i)-2
            freq_chk=data1b(m,k)      ! frequency (hertz)
            if(nint(freq_chk).ne.0) cycle ! do not want non-zero freq., go on to next replication of ROSEQ2
@@ -243,7 +241,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
            bend_error = data1b(m+4,k)  ! RMSE in bending angle (rad)
         enddo
 
-        bend_pccf=data1b((6*nreps_this_ROSEQ2(k))+4,k)  ! percent confidence for this ROSEQ1 replication
+        bend_pccf=data1b((6*nreps_ROSEQ2_int)+4,k)  ! percent confidence for this ROSEQ1 replication
         good=.true. 
 
         if (  height<0._r_kind   .or. height>60000._r_kind .or.           &
