@@ -246,22 +246,6 @@ geovals_vars = {
     'Sfc_height': 'surface_geopotential_height',
     'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
-    'clw_guess_retrieval': 'cloud_liquid_water_content_retrieved_from_calculated_radiances',
-    'Cloud_Frac': 'retrieved_cloud_fraction',
-    'CTP': 'retrieved_cloud_top_pressure',
-    'CLW': 'cloud_liquid_water_used_in_QC',
-    'TPWC': 'total_preciptable_water_content_retrieval',
-    'clw_obs': 'cloud_liquid_water_column_retrieved_from_observations',
-    'clw_guess': 'cloud_liquid_water_column_retrieved_from_calculated_radiances',
-    'Weighted_Lapse_Rate': 'lapse_rate_convolved_with_weighting_function',
-    'BC_Constant': 'constant_bias_correction_term',
-    'BC_Cloud_Liquid_Water': 'cloud_liquid_water_bias_correction_term',
-    'BC_Lapse_Rate_Squared': 'lapse_rate_squared_bias_correction_term',
-    'BC_Lapse_Rate': 'lapse_rate_bias_correction_term',
-    'BC_Cosine_Latitude_times_Node': 'cosine_of_latitude_times_orbit_node_bias_correction_term',
-    'BC_Sine_Latitude': 'sine_of_latitude_bias_correction_term',
-    'BC_Emissivity': 'emissivity_bias_correction_term',
-    'BC_Fixed_Scan_Position': 'scan_angle_bias_correction_term',
     'sulf': 'sulf',
     'bc1': 'bc1',
     'bc2': 'bc2',
@@ -363,6 +347,27 @@ units_values = {
     'row_anomaly_index': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
+}
+
+# @TestReference
+# fields from GSI to compare to computations done in UFO
+test_fields = {
+    'clw_obs': ('cloud_liquid_water_column_retrieved_from_observations', 'float'),
+    'clw_guess_retrieval': ('cloud_liquid_water_content_retrieved_from_calculated_radiances', 'float'),
+    'Cloud_Frac': ('retrieved_cloud_fraction', 'float'),
+    'CTP': ('retrieved_cloud_top_pressure', 'float'),
+    'CLW': ('cloud_liquid_water_used_in_QC', 'float'),
+    'TPWC': ('total_preciptable_water_content_retrieval', 'float'),
+    'clw_guess': ('cloud_liquid_water_column_retrieved_from_calculated_radiances', 'float'),
+    'Weighted_Lapse_Rate': ('lapse_rate_convolved_with_weighting_function', 'float'),
+    'BC_Constant': ('constant_bias_correction_term', 'float'),
+    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
+    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
+    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
+    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
+    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
+    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
+    'BC_Fixed_Scan_Position': ('scan_angle_bias_correction_term', 'float'),
 }
 
 ###############################################################################
@@ -812,21 +817,31 @@ class Radiances:
                 return
         RecKeyList = []
         LocKeyList = []
+        TestKeyList = []
         LocVars = []
+        TestVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
+
+        # get list of TestReference variables for this var/platform
+        for ncv in self.df.variables:
+            if ncv in test_fields:
+                TestKeyList.append(test_fields[ncv])
+                TestVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
         recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList, TestKeyList=TestKeyList)
 
         chan_number = self.df['sensor_chan'][:]
         chan_number = chan_number[chan_number >= 0]
@@ -856,6 +871,13 @@ class Radiances:
                 tmp = self.df[lvar][::nchans]
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 loc_mdata[loc_mdata_name] = tmp
+
+        # put the TestReference fields in the structure for writing out
+        for tvar in TestVars:
+            test_mdata_name = test_fields[tvar][0]
+            tmp = self.df[tvar][::nchans]
+            tmp[tmp > 4e8] = nc.default_fillvals['f4']
+            test_mdata[test_mdata_name] = tmp
 
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_vars.items():
@@ -925,7 +947,8 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata,
+                           AttrData, units_values, test_mdata)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
@@ -1058,6 +1081,7 @@ class AOD:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
         recKey = 0
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
