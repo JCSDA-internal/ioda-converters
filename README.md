@@ -123,3 +123,12 @@ This script used to work, but is currently not being maintained and no longer do
 Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
 ```
 
+
+## SNODAS
+Python3 script `snodas\_pkl\_2\_ioda.py` converts SNODAS pkl files to netcdf IODA files
+
+
+Testing run
+```
+ipython3 --pdb -c "%run snodas_pkl_2_ioda.py -i ../../../../data/snodas/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl -o ../../../../data/snodas/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc -d 2019021502 "
+```
