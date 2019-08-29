@@ -310,24 +310,6 @@ class NcWriter(object):
                 self._fid[ToffsetName][:] = ToffsetValues
                 # self._fid[ToffsetName].setncattr_string("Units", "hours since "+self._ref_date_time.strftime("%Y-%m-%d %H:%M:%S")+" UTC")
 
-    def WriteNcTestRef(self, MdataGroup, DimName, Mdata):
-        ############################################################
-        # This method will create variables in the output netcdf
-        # file for the given metadata group.
-
-        for Vname, Vvals in Mdata.items():
-            NcVname = "{0:s}@{1:s}".format(Vname, MdataGroup)
-            NcDtype = self.NumpyToNcDtype(Vvals.dtype)
-            if (NcDtype == 'c'):
-                if (NcVname == "datetime@MetaData"):
-                    self._fid.createVariable(NcVname, NcDtype, (DimName, self._ndatetime_dim_name))
-                else:
-                    self._fid.createVariable(NcVname, NcDtype, (DimName, self._nstr_dim_name))
-            else:
-                self._fid.createVariable(NcVname, NcDtype, (DimName))
-
-            self._fid[NcVname][:] = Vvals
-
     def ExtractObsData(self, ObsData):
         ############################################################
         # This method will extract information from the ObsData
@@ -487,4 +469,4 @@ class NcWriter(object):
         self.WriteNcMetadata(self._loc_md_name, self._nlocs_dim_name, LocMdata, VarUnits)
         self.WriteNcMetadata(self._var_md_name, self._nvars_dim_name, VarMdata, VarUnits)
         if TestData is not None:
-            self.WriteNcTestRef(self._test_md_name, self._nlocs_dim_name, TestData)
+            self.WriteNcMetadata(self._test_md_name, self._nlocs_dim_name, TestData, VarUnits)
