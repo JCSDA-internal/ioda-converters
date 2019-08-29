@@ -261,7 +261,7 @@ geovals_vars = {
     'seas3': 'seas3',
     'seas4': 'seas4',
     'dbzges': 'equivalent_reflectivity_factor',
-    'vertical_wind': 'vertical_wind',
+    'upward_air_velocity': 'upward_air_velocity',
 }
 
 aod_sensors = [
