@@ -1,4 +1,5 @@
 
+include(GNUInstallDirs)
 find_package(NetCDF REQUIRED COMPONENTS Fortran)
 find_package(bufrlib REQUIRED)
 
@@ -11,5 +12,7 @@ target_link_libraries(gnssro_bufr2ioda ${NETCDF_LIBRARIES})
 target_compile_definitions(gnssro_bufr2ioda PUBLIC "${NETCDF_DEFINITIONS}")
 target_include_directories(gnssro_bufr2ioda PUBLIC "${NETCDF_INCLUDE_DIRS}")
 
-install(TARGETS gnssro_bufr2ioda)
-set_target_properties(gnssro_bufr2ioda PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+install(TARGETS gnssro_bufr2ioda
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_target_properties(gnssro_bufr2ioda PROPERTIES
+                      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
