@@ -1,6 +1,6 @@
 
 find_package(NetCDF REQUIRED COMPONENTS Fortran)
-find_package(Bufrlib REQUIRED)
+find_package(bufrlib REQUIRED)
 
 set(GNSSRO_SRC gnssro_bufr2ioda.f90)
 add_executable(gnssro_bufr2ioda ${GNSSRO_SRC})
