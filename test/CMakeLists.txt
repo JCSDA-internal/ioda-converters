@@ -20,6 +20,7 @@ list( APPEND test_input
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/odb_sonde_16019.odb
+  testinput/gnssro_kompsat5_20180415_00Z.bufr
 )
 
 list( APPEND test_output
@@ -35,6 +36,7 @@ list( APPEND test_output
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/odb_sonde_16019.nc4
+  testoutput/gnssro_kompsat5_2018041500.nc4
 )
 
 # create test directories and make links to the input files
@@ -47,6 +49,11 @@ foreach(FILENAME ${test_input} ${test_output} iodaconv_comp.sh)
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
 endforeach(FILENAME)
 
+# create list of library paths for finding shared libraries
+string( REPLACE ";" ":"
+        CTEST_LIBRARY_PATH
+        "${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES}" )
+message( STATUS "Library path for testing: ${CTEST_LIBRARY_PATH}" )
 
 #===============================================================================
 # The following tests use nccmp to check the difference between the output
@@ -167,6 +174,20 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
                        -o testrun/
                        -t rad"
                       amsua_aqua_obs_2018041500.nc4)
+
+#===============================================================================
+# GNSSRO BUFR converter
+#===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_gnssro_bufr_conv
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda
+                       2018041500
+                       testinput/gnssro_kompsat5_20180415_00Z.bufr
+                       testrun/gnssro_kompsat5_2018041500.nc4"
+                      gnssro_kompsat5_2018041500.nc4
+                  ENVIRONMENT CTEST_LIBRARY_PATH=${CTEST_LIBRARY_PATH} )
 
 #===============================================================================
 # ODB2 converter
