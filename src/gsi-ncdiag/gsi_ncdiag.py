@@ -85,6 +85,10 @@ all_LocKeyList = {
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
+    'XoverR': ('radar_azimuth', 'float'),
+    'YoverR': ('radar_tilt', 'float'),
+    'ZoverR': ('radar_dir3', 'float'),
+    'Vterminal': ('vterminal', 'float'),
 }
 
 checkuv = {
@@ -123,6 +127,8 @@ gsi_add_vars = {
     'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
+    'hxdbz': 'GsiHofX',
+    'hxrw': 'GsiHofX',
 }
 
 gsi_add_vars_uv = {
@@ -136,6 +142,17 @@ gsi_add_vars_uv = {
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
     'v_Forecast_unadjusted': 'GsiHofX',
+}
+
+
+radar_qc = {
+    'obsdbz': 'dbzuse',
+    'obsrw': 'rwuse',
+}
+
+radar_err = {
+    'obsdbz': 'dbzerror',
+    'obsrw': 'rwerror',
 }
 
 # values that should be integers
@@ -163,6 +180,11 @@ rad_sensors = [
     'seviri',
     'sndrd1', 'sndrd2', 'sndrd3', 'sndrd4',
     'cris-fsr',
+    'ssmis',
+]
+
+radar_sensors = [
+    'radar',
 ]
 
 chan_metadata_dict = {
@@ -210,6 +232,7 @@ geovals_vars = {
     'Land_Temperature': 'surface_temperature_where_land',
     'Ice_Temperature': 'surface_temperature_where_ice',
     'Snow_Temperature': 'surface_temperature_where_snow',
+    'tsavg5': 'average_surface_temperature_within_field_of_view',
     'Sfc_Wind_Speed': 'surface_wind_speed',
     'Sfc_Wind_Direction': 'surface_wind_from_direction',
     'Lai': 'leaf_area_index',
@@ -237,6 +260,8 @@ geovals_vars = {
     'seas2': 'seas2',
     'seas3': 'seas3',
     'seas4': 'seas4',
+    'dbzges': 'equivalent_reflectivity_factor',
+    'upward_air_velocity': 'upward_air_velocity',
 }
 
 aod_sensors = [
@@ -322,6 +347,27 @@ units_values = {
     'row_anomaly_index': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
+}
+
+# @TestReference
+# fields from GSI to compare to computations done in UFO
+test_fields = {
+    'clw_obs': ('cloud_liquid_water_column_retrieved_from_observations', 'float'),
+    'clw_guess_retrieval': ('cloud_liquid_water_content_retrieved_from_calculated_radiances', 'float'),
+    'Cloud_Frac': ('retrieved_cloud_fraction', 'float'),
+    'CTP': ('retrieved_cloud_top_pressure', 'float'),
+    'CLW': ('cloud_liquid_water_used_in_QC', 'float'),
+    'TPWC': ('total_preciptable_water_content_retrieval', 'float'),
+    'clw_guess': ('cloud_liquid_water_column_retrieved_from_calculated_radiances', 'float'),
+    'Weighted_Lapse_Rate': ('lapse_rate_convolved_with_weighting_function', 'float'),
+    'BC_Constant': ('constant_bias_correction_term', 'float'),
+    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
+    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
+    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
+    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
+    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
+    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
+    'BC_Fixed_Scan_Position': ('scan_angle_bias_correction_term', 'float'),
 }
 
 ###############################################################################
@@ -771,21 +817,31 @@ class Radiances:
                 return
         RecKeyList = []
         LocKeyList = []
+        TestKeyList = []
         LocVars = []
+        TestVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
+
+        # get list of TestReference variables for this var/platform
+        for ncv in self.df.variables:
+            if ncv in test_fields:
+                TestKeyList.append(test_fields[ncv])
+                TestVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
         recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList, TestKeyList=TestKeyList)
 
         chan_number = self.df['sensor_chan'][:]
         chan_number = chan_number[chan_number >= 0]
@@ -815,6 +871,13 @@ class Radiances:
                 tmp = self.df[lvar][::nchans]
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 loc_mdata[loc_mdata_name] = tmp
+
+        # put the TestReference fields in the structure for writing out
+        for tvar in TestVars:
+            test_mdata_name = test_fields[tvar][0]
+            tmp = self.df[tvar][::nchans]
+            tmp[tmp > 4e8] = nc.default_fillvals['f4']
+            test_mdata[test_mdata_name] = tmp
 
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_vars.items():
@@ -884,7 +947,8 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata,
+                           AttrData, units_values, test_mdata)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
@@ -1017,6 +1081,7 @@ class AOD:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
         recKey = 0
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
@@ -1251,7 +1316,7 @@ class Ozone:
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
 
         nlocs = self.nobs
-        vname = "mass_concentration_of_ozone_in_air"
+        vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
         varDict[vname]['qcKey'] = vname, writer.OqcName()
@@ -1313,4 +1378,211 @@ class Ozone:
 
         writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Ozone obs processed, wrote to:")
+        print(outname)
+
+
+class Radar:
+    """ class Radar - reflectivity and radial wind observations
+
+                Use this class to read in radar observations
+                from GSI netCDF diag files
+
+    Functions:
+
+    Attributes:
+      filename    - string path to file
+      validtime   - datetime object of valid observation time
+      nobs        - number of observations
+
+"""
+    def __init__(self, filename):
+        self.filename = filename
+        splitfname = self.filename.split('/')[-1].split('_')
+        i = False
+        for s in radar_sensors:
+            if s in splitfname:
+                i = splitfname.index(s)
+                self.obstype = "_".join(splitfname[i:i+2])
+        if not i:
+            raise ValueError("Observation is not a radar type...")
+        # sensor and satellite
+        self.sensor = splitfname[i]
+        self.obstype = splitfname[i+1]
+
+    def read(self):
+        import netCDF4 as nc
+        import datetime as dt
+        # get valid time
+        df = nc.Dataset(self.filename)
+        tstr = str(df.getncattr('date_time'))
+        self.validtime = dt.datetime.strptime(tstr, "%Y%m%d%H")
+        # number of observations
+        self.nobs = len(df.dimensions['nobs'])
+        self.df = df
+
+    def toGeovals(self, OutDir, clobber=True):
+        """ toGeovals(OutDir,clobber=True)
+   if model state fields are in the GSI diag file, create
+   GeoVaLs in an output file for use by JEDI/UFO
+        """
+        # note, this is a temporary construct and thus, there is no
+        # ioda_conv_ncio or equivalent to handle the format
+        import numpy as np
+        import netCDF4 as nc
+
+        # set up output file
+        outname = OutDir+'/'+self.sensor+'_'+self.obstype+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        if not clobber:
+            if (os.path.exists(outname)):
+                print("File exists. Skipping and not overwriting:")
+                print(outname)
+                return
+        OutVars = []
+        InVars = []
+        for ncv in self.df.variables:
+            if ncv in geovals_vars:
+                OutVars.append(geovals_vars[ncv])
+                InVars.append(ncv)
+
+        # set up output file
+        ncout = nc.Dataset(outname, 'w', format='NETCDF4')
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
+        # get nlocs
+        nlocs = self.nobs
+        ncout.createDimension("nlocs", nlocs)
+        # other dims
+        ncout.createDimension("nlevs", self.df.dimensions["nlevs"].size)
+        # ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        for var in self.df.variables.values():
+            vname = var.name
+            if vname in geovals_metadata_dict.keys():
+                dims = ("nlocs",)
+                var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
+                vdata = var[:]
+                var_out[:] = vdata
+            elif vname in geovals_vars.keys():
+                if (len(var.dimensions) == 1):
+                    dims = ("nlocs",)
+                elif "_levels" in vname:
+                    dims = ("nlocs", "nlevsp1")
+                else:
+                    dims = ("nlocs", "nlevs")
+                var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
+                vdata = var[...]
+                var_out[...] = vdata
+            else:
+                pass
+        ncout.close()
+
+    def toIODAobs(self, OutDir, clobber=True):
+        """ toIODAobs(OutDir,clobber=True)
+   output observations from the specified GSI diag file
+   to the JEDI/IODA observation format
+        """
+        import ioda_conv_ncio as iconv
+        import netCDF4 as nc
+        import os
+        from collections import defaultdict, OrderedDict
+        from orddicts import DefaultOrderedDict
+        import numpy as np
+        import datetime as dt
+        # set up a NcWriter class
+        outname = OutDir+'/'+self.sensor+'_'+self.obstype+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        if not clobber:
+            if (os.path.exists(outname)):
+                print("File exists. Skipping and not overwriting:")
+                print(outname)
+                return
+        RecKeyList = []
+        LocKeyList = []
+        LocVars = []
+        AttrData = {}
+        varDict = defaultdict(lambda: defaultdict(dict))
+        outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        # get list of location variable for this var/platform
+        for ncv in self.df.variables:
+            if ncv in all_LocKeyList:
+                LocKeyList.append(all_LocKeyList[ncv])
+                LocVars.append(ncv)
+        # for now, record len is 1 and the list is empty?
+        recKey = 0
+        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+
+        nlocs = self.nobs
+        if self.obstype == "dbz":
+            radar_varnames = {
+                'obsdbz': 'equivalent_reflectivity_factor',
+            }
+        elif self.obstype == "rw":
+            radar_varnames = {
+                'obsrw': 'radial_velocity',
+            }
+
+        for key, value in radar_varnames.items():
+            varDict[value]['valKey'] = value, writer.OvalName()
+            varDict[value]['errKey'] = value, writer.OerrName()
+            varDict[value]['qcKey'] = value, writer.OqcName()
+
+            obsdata = self.df[key][:]
+            # tmp = self.df['Inverse_Observation_Error'][:]
+            # tmp[tmp < 9e-12] = 0
+            # obserr = 1.0 / tmp
+            errvarname = radar_err[key]
+            qcvarname = radar_qc[key]
+            obserr = self.df[errvarname][:]
+            obserr[np.isinf(obserr)] = nc.default_fillvals['f4']
+            obsqc = self.df[qcvarname][:].astype(int)
+            # observation data
+            outdata[varDict[value]['valKey']] = obsdata
+            outdata[varDict[value]['errKey']] = obserr
+            outdata[varDict[value]['qcKey']] = obsqc
+            vname = value
+            for gsivar, iodavar in gsi_add_vars.items():
+                # some special actions need to be taken depending on var name...
+                if gsivar in self.df.variables:
+                    if "Inverse" in gsivar:
+                        tmp2 = self.df[gsivar][:]
+                        # fix for if some reason 1/small does not result in inf but zero
+                        tmp2[tmp2 < 9e-12] = 0
+                        tmp = 1.0 / tmp2
+                        tmp[np.isinf(tmp)] = nc.default_fillvals['f4']
+                    else:
+                        tmp = self.df[gsivar][:]
+                    if gsivar in gsiint:
+                        tmp = tmp.astype(int)
+                    else:
+                        tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                    gvname = vname, iodavar
+                    outdata[gvname] = tmp
+        locKeys = []
+        for lvar in LocVars:
+            loc_mdata_name = all_LocKeyList[lvar][0]
+            if lvar == 'Time':
+                tmp = self.df[lvar][:]
+                obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+            else:
+                tmp = self.df[lvar][:]
+                tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                loc_mdata[loc_mdata_name] = tmp
+
+        # dummy record metadata, for now
+        nrecs = 1
+        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
+        loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
+
+        AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
+        AttrData["sensor"] = self.sensor
+        # set dimension lengths in the writer since we are bypassing
+        # ExtractObsData
+        writer._nrecs = nrecs
+        writer._nvars = 1
+        writer._nlocs = nlocs
+
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        print("Radar obs processed, wrote to:")
         print(outname)

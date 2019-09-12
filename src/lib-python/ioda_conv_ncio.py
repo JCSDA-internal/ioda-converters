@@ -47,13 +47,16 @@ def CharVectorToString(CharVec):
 
 class NcWriter(object):
     # Constructor
-    def __init__(self, NcFname, RecKeyList, LocKeyList):
+    def __init__(self, NcFname, RecKeyList, LocKeyList, TestKeyList=None):
 
         # Variable names of items in the record key
         self._rec_key_list = RecKeyList
 
         # Variable names of items in the location key
         self._loc_key_list = LocKeyList
+
+        # Variable names of items in the TestReference key
+        self._test_key_list = TestKeyList
 
         # Names assigned to obs values, error estimates and qc marks
         self._oval_name = "ObsValue"
@@ -88,6 +91,7 @@ class NcWriter(object):
         self._rec_md_name = "RecMetaData"
         self._loc_md_name = "MetaData"
         self._var_md_name = "VarMetaData"
+        self._test_md_name = "TestReference"
 
         # Reference date time
         self._ref_date_time = dt.datetime(1, 1, 1, 0)
@@ -410,7 +414,7 @@ class NcWriter(object):
 
         return (ObsVars, RecMdata, LocMdata, VarMdata)
 
-    def BuildNetcdf(self, ObsVars, RecMdata, LocMdata, VarMdata, AttrData, VarUnits={}):
+    def BuildNetcdf(self, ObsVars, RecMdata, LocMdata, VarMdata, AttrData, VarUnits={}, TestData=None):
         ############################################################
         # This method will create an output netcdf file, and dump
         # the contents of the ObsData dictionary into that file.
@@ -451,6 +455,9 @@ class NcWriter(object):
         #         Dictionary holding string of units for each variable/metadata item
         #         Key: variable, Value: unit_string
         #         Example: VarUnits['air_temperature'] = 'K'
+        #     /TestData/
+        #         Group holding 1D vectors of various data types, nlocs
+        #         cloud_liquid_water_column_retrieved_from_observations for example
 
         # Write out the global attributes followed by the different
         # data sections: Obs variables, Record metadata, locations metadata
@@ -461,3 +468,5 @@ class NcWriter(object):
         self.WriteNcMetadata(self._rec_md_name, self._nrecs_dim_name, RecMdata, VarUnits)
         self.WriteNcMetadata(self._loc_md_name, self._nlocs_dim_name, LocMdata, VarUnits)
         self.WriteNcMetadata(self._var_md_name, self._nvars_dim_name, VarMdata, VarUnits)
+        if TestData is not None:
+            self.WriteNcMetadata(self._test_md_name, self._nlocs_dim_name, TestData, VarUnits)
