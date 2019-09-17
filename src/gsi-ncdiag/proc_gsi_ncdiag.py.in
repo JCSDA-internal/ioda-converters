@@ -19,6 +19,7 @@ def run_conv_obs(convfile, outdir, platforms):
 
 
 def run_radiances_obs(radfile, outdir):
+    print("Processing run_radiances_obs:")
     print("Processing:"+str(radfile))
     Diag = gsid.Radiances(radfile)
     Diag.read()
@@ -52,6 +53,7 @@ def run_conv_geo(convfile, outdir):
 
 
 def run_radiances_geo(radfile, outdir):
+    print("Processing run_radiances_geo:")
     print("Processing:"+str(radfile))
     Diag = gsid.Radiances(radfile)
     Diag.read()
@@ -74,6 +76,14 @@ def run_oz_geo(ozfile, outdir):
     Diag.toGeovals(outdir)
     return 0
 
+def run_radiances_obsdiag(radfile, outdir):
+    print("Processing run_radiances_obsdiag:")
+    print("Processing:"+str(radfile))
+    Diag = gsid.Radiances(radfile)
+    Diag.read()
+    Diag.toObsdiag(outdir)
+    return 0
+
 
 ScriptName = os.path.basename(sys.argv[0])
 
@@ -85,6 +95,8 @@ ap.add_argument("input_dir", help="Path to concatenated GSI diag files")
 ap.add_argument("-o", "--obs_dir",
                 help="Path to directory to output observations")
 ap.add_argument("-g", "--geovals_dir",
+                help="Path to directory to output observations")
+ap.add_argument("-d", "--obsdiag_dir",
                 help="Path to directory to output observations")
 
 MyArgs = ap.parse_args()
@@ -174,6 +186,19 @@ if MyArgs.geovals_dir:
                 process = True
         if process:
             res = obspool.apply_async(run_oz_geo, args=(radfile, GeoDir))
+
+# process obsdiag files
+if MyArgs.obsdiag_dir:
+    ObsdiagDir = MyArgs.obsdiag_dir
+    # radiances only 
+    radfiles = glob.glob(DiagDir+'/diag*')
+    for radfile in radfiles:
+        process = False
+        for p in gsid.rad_sensors:
+            if p in radfile:
+                process = True
+        if process:
+            res = obspool.apply_async(run_radiances_obsdiag, args=(radfile, ObsdiagDir))
 
 # process all in the same time, because sats with many channels are so slow...
 obspool.close()

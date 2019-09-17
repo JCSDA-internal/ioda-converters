@@ -170,6 +170,13 @@ geovals_metadata_dict = {
     'Obs_Time': 'time',
 }
 
+obsdiag_metadata_dict = {
+    'Latitude': 'latitude',
+    'Longitude': 'longitude',
+    'Time': 'time',
+    'Obs_Time': 'time',
+}
+
 rad_sensors = [
     'airs',
     'amsua',
@@ -206,6 +213,7 @@ geovals_vars = {
     'eastward_wind': 'eastward_wind',
     'geopotential_height': 'geopotential_height',
     'height': 'height_above_mean_sea_level',
+    'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_temperature': 'surface_temperature',
     'surface_roughness': 'surface_roughness_length',
@@ -243,7 +251,7 @@ geovals_vars = {
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
-    'Sfc_height': 'surface_geopotential_height',
+    'Sfc_Height': 'surface_geopotential_height',
     'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
@@ -262,6 +270,14 @@ geovals_vars = {
     'seas4': 'seas4',
     'dbzges': 'equivalent_reflectivity_factor',
     'upward_air_velocity': 'upward_air_velocity',
+}
+
+obsdiag_vars = {
+    'Jacobian_Surface_Temperature': 'brightness_temperature_jacobian_surface_temperature',
+    'Jacobian_Surface_Emissivity': 'brightness_temperature_jacobian_surface_emissivity',
+    'Jacobian_Temperature': 'brightness_temperature_jacobian_air_temperature',
+    'Jacobian_Moisture': 'brightness_temperature_jacobian_humidity_mixing_ratio',
+    'Layer_Optical_Depth': 'optical_thickness_of_atmosphere_layer',
 }
 
 aod_sensors = [
@@ -347,6 +363,12 @@ units_values = {
     'row_anomaly_index': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
+    'tropopause_pressure': 'Pa',
+    'brightness_temperature_jacobian_surface_temperature': '1' ,
+    'brightness_temperature_jacobian_surface_emissivity': 'K',
+    'brightness_temperature_jacobian_air_temperature': '1',
+    'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
+    'optical_thickness_of_atmosphere_layer': '1',
 }
 
 # @TestReference
@@ -772,6 +794,7 @@ class Radiances:
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -791,6 +814,96 @@ class Radiances:
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
                 var_out[...] = vdata
+            else:
+                pass
+        ncout.close()
+
+    def toObsdiag(self, OutDir, clobber=True):
+        """ toObsdiag(OutDir,clobber=True)
+     if model state fields are in the GSI diag file, create
+     Obsdiag in an output file for use by JEDI/UFO
+        """
+        # note, this is a temporary construct and thus, there is no
+        # ioda_conv_ncio or equivalent to handle the format
+        import numpy as np
+        import netCDF4 as nc
+
+        # set up output file
+        outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
+            '_obsdiag_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
+        if not clobber:
+            if (os.path.exists(outname)):
+                print("File exists. Skipping and not overwriting:")
+                print(outname)
+                return
+        OutVars = []
+        InVars = []
+        for ncv in self.df.variables:
+            if ncv in obsdiag_vars:
+                OutVars.append(obsdiag_vars[ncv])
+                InVars.append(ncv)
+
+        # set up output file
+        ncout = nc.Dataset(outname, 'w', format='NETCDF4')
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("satellite", self.satellite)
+        ncout.setncattr("sensor", self.sensor)
+        # get nlocs
+        nlocs = self.nobs / self.nchans
+        ncout.createDimension("nlocs", nlocs)
+        # other dims
+        nlevs = self.df.dimensions["air_pressure_arr_dim"].size
+        nlevsp1 = self.df.dimensions["air_pressure_levels_arr_dim"].size
+
+        ncout.createDimension("nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
+
+        # get channel info and list
+        chan_number = self.df['sensor_chan'][:]
+        chan_number = chan_number[chan_number >= 0]
+        chan_indx = self.df['Channel_Index'][:]
+        nchans = len(chan_number)
+        nlocs = int(self.nobs / nchans)
+        chanlist = chan_number
+
+        # get data 
+        for var in self.df.variables.values():
+            vname = var.name
+            if vname in obsdiag_metadata_dict.keys():
+                dims = ("nlocs",)
+                var_out = ncout.createVariable(obsdiag_metadata_dict[vname], var.dtype, dims)
+                vdata = var[:]
+                vdata = vdata[::self.nchans]
+                var_out[:] = vdata
+            elif vname in obsdiag_vars.keys():
+              # print("toObsdiag: var.shape = ", var.shape)
+                if (len(var.dimensions) == 1):
+                    dims = ("nlocs",)
+                    for c in range(len(chanlist)):
+                       var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
+                       idx = chan_indx == c+1
+                       if (np.sum(idx) == 0):
+                          print("No matching observations for:")
+                          print(value)
+                          continue
+                       var_out = ncout.createVariable(var_name, var.dtype, dims)
+                       vdata = var[:]
+                       vdata = vdata[idx]
+                       var_out[:] = vdata
+                elif "_levels" in vname:
+                    dims = ("nlocs", "nlevsp1")
+                else:
+                    dims = ("nlocs", "nlevs")
+                    for c in range(len(chanlist)):
+                       var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
+                       idx = chan_indx == c+1
+                       if (np.sum(idx) == 0):
+                          print("No matching observations for:")
+                          print(value)
+                          continue
+                       var_out = ncout.createVariable(var_name, var.dtype, dims)
+                       vdata = var[...]
+                       vdata = vdata[idx,...]
+                       var_out[...] = vdata
             else:
                 pass
         ncout.close()
