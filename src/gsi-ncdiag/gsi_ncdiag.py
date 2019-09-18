@@ -364,7 +364,7 @@ units_values = {
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
     'tropopause_pressure': 'Pa',
-    'brightness_temperature_jacobian_surface_temperature': '1' ,
+    'brightness_temperature_jacobian_surface_temperature': '1',
     'brightness_temperature_jacobian_surface_emissivity': 'K',
     'brightness_temperature_jacobian_air_temperature': '1',
     'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
@@ -865,7 +865,7 @@ class Radiances:
         nlocs = int(self.nobs / nchans)
         chanlist = chan_number
 
-        # get data 
+        # get data
         for var in self.df.variables.values():
             vname = var.name
             if vname in obsdiag_metadata_dict.keys():
@@ -875,35 +875,35 @@ class Radiances:
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
             elif vname in obsdiag_vars.keys():
-              # print("toObsdiag: var.shape = ", var.shape)
+                # print("toObsdiag: var.shape = ", var.shape)
                 if (len(var.dimensions) == 1):
                     dims = ("nlocs",)
                     for c in range(len(chanlist)):
-                       var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
-                       idx = chan_indx == c+1
-                       if (np.sum(idx) == 0):
-                          print("No matching observations for:")
-                          print(value)
-                          continue
-                       var_out = ncout.createVariable(var_name, var.dtype, dims)
-                       vdata = var[:]
-                       vdata = vdata[idx]
-                       var_out[:] = vdata
+                        var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
+                        idx = chan_indx == c+1
+                        if (np.sum(idx) == 0):
+                            print("No matching observations for:")
+                            print(value)
+                            continue
+                        var_out = ncout.createVariable(var_name, var.dtype, dims)
+                        vdata = var[:]
+                        vdata = vdata[idx]
+                        var_out[:] = vdata
                 elif "_levels" in vname:
                     dims = ("nlocs", "nlevsp1")
                 else:
                     dims = ("nlocs", "nlevs")
                     for c in range(len(chanlist)):
-                       var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
-                       idx = chan_indx == c+1
-                       if (np.sum(idx) == 0):
-                          print("No matching observations for:")
-                          print(value)
-                          continue
-                       var_out = ncout.createVariable(var_name, var.dtype, dims)
-                       vdata = var[...]
-                       vdata = vdata[idx,...]
-                       var_out[...] = vdata
+                        var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
+                        idx = chan_indx == c+1
+                        if (np.sum(idx) == 0):
+                            print("No matching observations for:")
+                            print(value)
+                            continue
+                        var_out = ncout.createVariable(var_name, var.dtype, dims)
+                        vdata = var[...]
+                        vdata = vdata[idx, ...]
+                        var_out[...] = vdata
             else:
                 pass
         ncout.close()

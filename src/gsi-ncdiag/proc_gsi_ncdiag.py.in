@@ -76,6 +76,7 @@ def run_oz_geo(ozfile, outdir):
     Diag.toGeovals(outdir)
     return 0
 
+
 def run_radiances_obsdiag(radfile, outdir):
     print("Processing run_radiances_obsdiag:")
     print("Processing:"+str(radfile))
@@ -190,7 +191,7 @@ if MyArgs.geovals_dir:
 # process obsdiag files
 if MyArgs.obsdiag_dir:
     ObsdiagDir = MyArgs.obsdiag_dir
-    # radiances only 
+    # radiances only
     radfiles = glob.glob(DiagDir+'/diag*')
     for radfile in radfiles:
         process = False
