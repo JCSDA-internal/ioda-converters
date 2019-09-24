@@ -18,8 +18,8 @@ integer, parameter :: r_kind = selected_real_kind(15) !8
 
 ! output obs data stucture
 integer   :: ncid
-integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid
-integer   :: varid_lat,varid_lon,varid_time,varid_said,varid_ptid,varid_sclf,varid_asce
+integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid,ndatetime_dimid
+integer   :: varid_lat,varid_lon,varid_time,varid_datetime,varid_said,varid_ptid,varid_sclf,varid_asce
 integer   :: varid_recn
 integer   :: varid_geoid, varid_rfict
 integer   :: varid_ref,varid_msl,varid_refoe
@@ -30,6 +30,8 @@ integer   :: varid_geo_temp,varid_geo_pres,varid_geo_shum,varid_geo_geop, varid_
 character(len=256)        :: infile, outfile
 character,dimension(8)    :: subset
 character(len=10)         :: anatime
+integer(i_kind)           :: ndatetime = 20
+character(len=20)         :: datetime
 integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,ptid,sclf,asce
 integer(i_kind)           :: lnbufr    = 10
 integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
@@ -50,7 +52,8 @@ type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: ptid
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
-      real(r_double), allocatable, dimension(:)    :: time
+      real(r_double), allocatable, dimension(:)     :: time
+      character(len=20), allocatable, dimension(:)  :: datetime
       real(r_double), allocatable, dimension(:)     :: lat
       real(r_double), allocatable, dimension(:)     :: lon
       real(r_double), allocatable, dimension(:)     :: rfict
@@ -123,6 +126,7 @@ allocate(gpsro_data%ptid(maxobs))
 allocate(gpsro_data%recn(maxobs))
 allocate(gpsro_data%asce(maxobs))
 allocate(gpsro_data%time(maxobs))
+allocate(gpsro_data%datetime(maxobs))
 allocate(gpsro_data%lat(maxobs))
 allocate(gpsro_data%lon(maxobs))
 allocate(gpsro_data%rfict(maxobs))
@@ -153,6 +157,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      idate5(3) = bfr1ahdr(3) ! day
      idate5(4) = bfr1ahdr(4) ! hour
      idate5(5) = bfr1ahdr(5) ! minute
+     idate5(6) = 0 ! seconds
      pcc  = bfr1ahdr(6)         ! profile per cent confidence
      roc  = bfr1ahdr(7)         ! Earth local radius of curvature
      said = bfr1ahdr(8)        ! Satellite identifier
@@ -161,23 +166,19 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      sclf = bfr1ahdr(11) 
 
      call w3fs21(idate5,minobs)
+     write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') idate5(1),idate5(2),idate5(3),idate5(4),idate5(5),idate5(6)
      timeo=real(minobs-mincy,r_kind)/60.0
-
-     if ( timeo<=-3.0 .or. timeo>3.0 ) then 
-          write(6,*)'READ_GNSSRO: time outside window ', timeo, ' skip this report'
-          cycle read_loop
-     endif
 
      if( roc>6450000.0_r_kind .or. roc<6250000.0_r_kind  .or.       &
          geoid>200_r_kind .or. geoid<-200._r_kind ) then
-         write(6,*)'READ_GNSSRO: priofile fails georeality check, skip this report'
+         write(6,*)'READ_GNSSRO: profile fails georeality check, skip this report'
          cycle read_loop
      endif
 
-!    profile check:  (1) CDAAC processing - cosmis-1, cosmic-2, sacc, cnofs, kompsat5
+!    profile check:  (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
      if ( ((said >= 740).and.(said <=745)).or.((said >= 750).and.(said <= 755)) .or.(said == 820).or.(said == 786).or.(said == 825)) then  !CDAAC processing
        if(pcc == 0.0) then
-          write(6,*)'READ_GNSSRO: bad profile said=',said,'ptid=',ptid, ' SKIP this report'
+          write(6,*)'READ_GNSSRO: bad profile 0.0% confidence said=',said,'ptid=',ptid, ' SKIP this report'
           cycle read_loop
         endif
      endif
@@ -252,7 +253,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         endif
         if ( bend>=1.e+9_r_kind .or. bend<=0._r_kind .or. impact>=1.e+9_r_kind .or. impact<roc .or. bendflag == 1 ) then
            good=.false.
-           write(6,*)'READ_GNSSRO: obs is missing, said=',said,'ptid=',ptid
+           write(6,*)'READ_GNSSRO: obs bend/impact is invalid, said=',said,'ptid=',ptid
         endif
 
         if ( ref>=1.e+9_r_kind .or. ref<=0._r_kind .or. refflag == 1 ) then
@@ -265,6 +266,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gpsro_data%lat(ndata)      = rlat
        gpsro_data%lon(ndata)      = rlon
        gpsro_data%time(ndata)     = timeo
+       gpsro_data%datetime(ndata) = datetime
        gpsro_data%said(ndata)     = said
        gpsro_data%sclf(ndata)     = sclf
        gpsro_data%asce(ndata)     = asce
@@ -291,20 +293,22 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 
     if (ndata == ndata0) nrec = nrec -1
 
-  enddo read_loop   
+  enddo read_loop
 end do
 
 call closbf(lnbufr)
 
-call check( nf90_create(trim(outfile), nf90_clobber, ncid))
+call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
 call check( nf90_def_dim(ncid, 'nlocs', ndata,   nlocs_dimid) )
 call check( nf90_def_dim(ncid, 'nrecs', nrec,    nrecs_dimid) )
 call check( nf90_def_dim(ncid, 'nobs',  ndata*nvars,   nobs_dimid) )
 call check( nf90_def_dim(ncid, 'nvars', nvars,   nvars_dimid) )
+call check( nf90_def_dim(ncid, 'ndatetime', ndatetime,   ndatetime_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_var(ncid, "latitude@MetaData",      NF90_FLOAT, nlocs_dimid, varid_lat) )
 call check( nf90_def_var(ncid, "longitude@MetaData",    NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_def_var(ncid, "time@MetaData",         NF90_FLOAT, nlocs_dimid, varid_time) )
+call check( nf90_def_var(ncid, "datetime@MetaData",     NF90_CHAR, (/ ndatetime_dimid, nlocs_dimid /), varid_datetime) )
 call check( nf90_def_var(ncid, "record_number@MetaData",   NF90_INT, nlocs_dimid, varid_recn))
 call check( nf90_def_var(ncid, "gnss_sat_class@MetaData",  NF90_INT, nlocs_dimid, varid_sclf))
 call check( nf90_def_var(ncid, "reference_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_ptid))
@@ -325,6 +329,7 @@ call check( nf90_enddef(ncid) )
 call check( nf90_put_var(ncid, varid_lat, gpsro_data%lat(1:ndata)) )
 call check( nf90_put_var(ncid, varid_lon, gpsro_data%lon(1:ndata)) )
 call check( nf90_put_var(ncid, varid_time, gpsro_data%time(1:ndata)) )
+call check( nf90_put_var(ncid, varid_datetime, gpsro_data%datetime(1:ndata)) )
 call check( nf90_put_var(ncid, varid_recn, gpsro_data%recn(1:ndata)) )
 call check( nf90_put_var(ncid, varid_said, gpsro_data%said(1:ndata)) )
 call check( nf90_put_var(ncid, varid_ptid, gpsro_data%ptid(1:ndata)) )
@@ -348,6 +353,7 @@ deallocate(gpsro_data%ptid)
 deallocate(gpsro_data%recn)
 deallocate(gpsro_data%asce)
 deallocate(gpsro_data%time)
+deallocate(gpsro_data%datetime)
 deallocate(gpsro_data%lat)
 deallocate(gpsro_data%lon)
 deallocate(gpsro_data%rfict)
@@ -457,42 +463,36 @@ endif
 end subroutine bendingangle_err_gsi
 !!!!!!________________________________________________________  
 
-!!!!!! SUBROUTINE W3FS21 was opied from GSI/src/libs/w3nco_v2.0.6/w3fs21.f and iw3jdn.f
-      SUBROUTINE W3FS21(IDATE, NMIN)
+!!!!!! SUBROUTINE W3FS21 was copied from GSI/src/libs/w3nco_v2.0.6/w3fs21.f and iw3jdn.f
+SUBROUTINE W3FS21(IDATE, NMIN)
+    INTEGER  IDATE(5)
+    INTEGER  NMIN
+    INTEGER  IYEAR, NDAYS, IJDN
+    INTEGER  JDN78
+    DATA  JDN78 / 2443510 /
+    NMIN  = 0
 
-      INTEGER  IDATE(5)
-      INTEGER  NMIN
-      INTEGER  IYEAR, NDAYS, IJDN
-      INTEGER  JDN78
-      DATA  JDN78 / 2443510 /
-      NMIN  = 0
-!
-      IYEAR = IDATE(1)
-!
-      IF (IYEAR.LE.99) THEN
+    IYEAR = IDATE(1)
+
+    IF (IYEAR.LE.99) THEN
         IF (IYEAR.LT.78) THEN
-          IYEAR = IYEAR + 2000
+            IYEAR = IYEAR + 2000
         ELSE
-          IYEAR = IYEAR + 1900
+            IYEAR = IYEAR + 1900
         ENDIF
-      ENDIF
-!
-!     COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
-!
-!      IJDN  = IW3JDN(IYEAR,IDATE(2),IDATE(3))
-IJDN  =   IDATE(3) - 32075      &
-                 + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
-                 + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
-                 - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
- 
-!
-!     SUBTRACT JULIAN DAY NUMBER OF JAN 1,1978 TO GET THE
-!     NUMBER OF DAYS BETWEEN DATES
-      NDAYS = IJDN - JDN78
-!
-!
-      NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
-!
-      RETURN
-      END SUBROUTINE W3FS21
+    ENDIF
+
+!   COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
+    IJDN  = IDATE(3) - 32075      &
+             + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
+             + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
+             - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
+
+!   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1978 TO GET THE
+!   NUMBER OF DAYS BETWEEN DATES
+    NDAYS = IJDN - JDN78
+    NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
+    RETURN
+END SUBROUTINE W3FS21
+
 end program
