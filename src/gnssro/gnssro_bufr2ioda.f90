@@ -297,6 +297,10 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 end do
 
 call closbf(lnbufr)
+if (nrec==0) then
+    write(6,*) "Error. No valid observations found. Cannot create NetCDF ouput."
+    stop 1
+endif
 
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
 call check( nf90_def_dim(ncid, 'nlocs', ndata,   nlocs_dimid) )
