@@ -9,7 +9,7 @@ import netCDF4 as nc
 import os
 
 
-def subset(infile, nlocsout, suffix, geofile):
+def subset(infile, nlocsout, suffix, geofile, diagfile):
     print('Processing:', infile)
     outfile = infile[:-4]+suffix
     ncin = nc.Dataset(infile)
@@ -112,6 +112,37 @@ def subset(infile, nlocsout, suffix, geofile):
 
         print('wrote geovals to:', outfile)
 
+    # now process obsdiag file if necessary
+    if diagfile:
+        outfile = diagfile[:-4]+suffix
+        ncin = nc.Dataset(diagfile)
+        ncout = nc.Dataset(outfile, 'w')
+        # attributes
+        for aname in ncin.ncattrs():
+            avalue = ncin.getncattr(aname)
+            ncout.setncattr(aname, avalue)
+        # redo nlocs, nrecs
+        ncout.setncattr("nlocs", np.int32(nlocsout))
+        # copy dimensions
+        for dim in ncin.dimensions.values():
+            if dim.name == 'nlocs':
+                d_size = nlocsout
+            else:
+                d_size = len(dim)
+            ncout.createDimension(dim.name, d_size)
+        # copy variables
+        for var in ncin.variables.values():
+            vname = var.name
+            vdata = ncin.variables[vname]
+            var_out = ncout.createVariable(vname, var.dtype, var.dimensions)
+            if (var.dimensions[0] == 'nlocs'):
+                var_out[...] = vdata[flag, ...]
+            else:
+                var_out[:] = vdata[:]
+        ncin.close()
+        ncout.close()
+
+        print('wrote obsdiag to:', outfile)
 
 # main script ##############
 
@@ -123,6 +154,7 @@ ap.add_argument("-m", "--medium", action='store_true',
 ap.add_argument("-s", "--single", action='store_true',
                 help="Output single observation or record")
 ap.add_argument("-g", "--geovals", help="Path to geoval directory")
+ap.add_argument("-d", "--obsdiag", help="Path to obsdiag directory")
 ap.add_argument("filedir", help="Path to obs files to process")
 ap.add_argument("-n", "--nprocs",
                 help="Number of tasks/processors for multiprocessing")
@@ -161,6 +193,12 @@ for infile in infiles:
         inob = infile.split('/')[-1]
         ingeo = inob.replace('obs', 'geoval')
         geofile = MyArgs.geovals+'/'+ingeo
-    res = obspool.apply_async(subset, args=(infile, nobs, suffix, geofile))
+    # get diagfile
+    diagfile = False
+    if MyArgs.obsdiag:
+        inob = infile.split('/')[-1]
+        indiag = inob.replace('obs', 'obsdiag')
+        diagfile = MyArgs.obsdiag+'/'+indiag
+    res = obspool.apply_async(subset, args=(infile, nobs, suffix, geofile, diagfile))
 obspool.close()
 obspool.join()
