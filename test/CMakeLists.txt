@@ -179,16 +179,17 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
 # GNSSRO BUFR converter
 #===============================================================================
 
-ecbuild_add_test( TARGET test_iodaconv_gnssro_bufr_conv
-                  TYPE SCRIPT
-                  COMMAND iodaconv_comp.sh
-                  ARGS "${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda
-                       2018041500
-                       testinput/gnssro_kompsat5_20180415_00Z.bufr
-                       testrun/gnssro_kompsat5_2018041500.nc4"
-                      gnssro_kompsat5_2018041500.nc4
-                  ENVIRONMENT CTEST_LIBRARY_PATH=${CTEST_LIBRARY_PATH} )
-
+if( HAVE_BUFRLIB_AND_NETCDF )
+  ecbuild_add_test( TARGET test_iodaconv_gnssro_bufr_conv
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS "${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda
+                         2018041500
+                         testinput/gnssro_kompsat5_20180415_00Z.bufr
+                         testrun/gnssro_kompsat5_2018041500.nc4"
+                        gnssro_kompsat5_2018041500.nc4
+                    ENVIRONMENT CTEST_LIBRARY_PATH=${CTEST_LIBRARY_PATH} )
+endif()  
 #===============================================================================
 # ODB2 converter
 #===============================================================================
