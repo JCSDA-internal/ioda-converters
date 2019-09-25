@@ -1,7 +1,9 @@
 !!!--------  README --------------------------------------------------------------------
 !  this is a temporary routine to generate netcdf file
 !  for jedi/ufo/gnssro/ operator test
-!  Hailing Zhang------ Modified june 10 
+!  Copyright UCAR 2019
+!  Authors: Hailing Zhang
+!           Mark Olah
 
 !!!---------  to run   -----------------------------------------------------------------
 !  ./gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
