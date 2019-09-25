@@ -56,6 +56,13 @@ endif (HAVE_ODB_API)
 # NETCDF4_FOUND
 find_package(bufrlib)
 find_package(NetCDF COMPONENTS Fortran)
+if( bufrlib_FOUND AND NETCDF4_FOUND )
+  set( HAVE_BUFRLIB_AND_NETCDF "1" )
+  message( STATUS "Fortran components enabled since both bufrlib and NETCDF are found")
+else()
+  set( HAVE_BUFRLIB_AND_NETCDF "0" )
+  message( STATUS "Fortran components disabled since both bufrlib and NETCDF are not found")
+endif()
 
 ################################################################################
 # Export package info
