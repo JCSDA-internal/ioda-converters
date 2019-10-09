@@ -63,8 +63,7 @@ class Observation(object):
             self.data[0][locKey][errKey] = 0.1
             self.data[0][locKey][qcKey] = qc[i]
 
-
-vName = "sea_ice_area_fraction",
+vName = "sea_ice_area_fraction"
 
 locationKeyList = [
     ("latitude", "float"),
