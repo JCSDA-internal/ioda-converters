@@ -22,9 +22,10 @@ from orddicts import DefaultOrderedDict
 
 class Observation(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, thin, date, writer):
         print(date)
         self.filename = filename
+        self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
@@ -32,11 +33,9 @@ class Observation(object):
 
     def _read(self):
 
-        np.random.seed(int((self.date-datetime(1970, 1, 1)).total_seconds()))
-
         ncd = nc.MFDataset(self.filename)
-        # zeroing out due to bug in original data
-        time = 0.0*ncd.variables['date_time_group'][:]
+        datein = ncd.variables['dtg_yyyymmdd'][:]
+        timein = ncd.variables['dtg_hhmm'][:]
         lons = ncd.variables['longitude'][:]
         lats = ncd.variables['latitude'][:]
         vals = ncd.variables['ice_concentration'][:]
@@ -48,15 +47,17 @@ class Observation(object):
         qcKey = vName, self.writer.OqcName()
 
         # apply thinning mask
-        mask_thin = np.random.uniform(size=len(lons)) > args.thin
-        time = time[mask_thin]
-        lons = lons[mask_thin]
-        lats = lats[mask_thin]
-        vals = vals[mask_thin]
-        qc = qc[mask_thin]
+        if self.thin > 0.0:
+            mask_thin = np.random.uniform(size=len(lons)) > self.thin
+            datein = datein[mask_thin]
+            timein = timein[mask_thin]
+            lons = lons[mask_thin]
+            lats = lats[mask_thin]
+            vals = vals[mask_thin]
+            qc = qc[mask_thin]
 
         for i in range(len(lons)):
-            obs_date = self.date
+            obs_date = datetime.combine(datetime.strptime(np.array2string(datein[i]),"%Y%m%d"), datetime.strptime(np.array2string(timein[i]),"%H%M").time())
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
@@ -74,7 +75,6 @@ locationKeyList = [
 AttrData = {
     'odb_version': 1,
 }
-
 
 def main():
 
@@ -103,12 +103,13 @@ def main():
              " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
 
+
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     writer = iconv.NcWriter(args.output, [], locationKeyList)
 
     # Read in
-    ice = Observation(args.input, fdate, writer)
+    ice = Observation(args.input,args.thin, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
