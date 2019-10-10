@@ -20,6 +20,7 @@ list( APPEND test_input
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/odb_sonde_16019.odb
+  testinput/argoclim_test.nc
 )
 
 list( APPEND test_output
@@ -35,6 +36,7 @@ list( APPEND test_output
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/odb_sonde_16019.nc4
+  testoutput/argoclim.nc
 )
 
 # create test directories and make links to the input files
@@ -144,6 +146,15 @@ ecbuild_add_test( TARGET test_iodaconv_hgodas_sst
                        -o testrun/hgodas_sst.nc
                        -d 2018041512"
                       hgodas_sst.nc)
+
+ecbuild_add_test( TARGET test_iodaconv_argoclim
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/argoClim2ioda.py
+                       -i testinput/argoclim_test.nc
+                       -o testrun/argoclim.nc
+                       -d 2019101600"
+                      argoclim.nc)
 
 #===============================================================================
 # GSI ncdiag converters
