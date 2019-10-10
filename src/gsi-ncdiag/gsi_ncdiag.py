@@ -170,6 +170,13 @@ geovals_metadata_dict = {
     'Obs_Time': 'time',
 }
 
+obsdiag_metadata_dict = {
+    'Latitude': 'latitude',
+    'Longitude': 'longitude',
+    'Time': 'time',
+    'Obs_Time': 'time',
+}
+
 rad_sensors = [
     'airs',
     'amsua',
@@ -206,6 +213,7 @@ geovals_vars = {
     'eastward_wind': 'eastward_wind',
     'geopotential_height': 'geopotential_height',
     'height': 'height_above_mean_sea_level',
+    'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_temperature': 'surface_temperature',
     'surface_roughness': 'surface_roughness_length',
@@ -243,25 +251,9 @@ geovals_vars = {
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
-    'Sfc_height': 'surface_geopotential_height',
+    'Sfc_Height': 'surface_geopotential_height',
     'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
-    'clw_guess_retrieval': 'cloud_liquid_water_content_retrieved_from_calculated_radiances',
-    'Cloud_Frac': 'retrieved_cloud_fraction',
-    'CTP': 'retrieved_cloud_top_pressure',
-    'CLW': 'cloud_liquid_water_used_in_QC',
-    'TPWC': 'total_preciptable_water_content_retrieval',
-    'clw_obs': 'cloud_liquid_water_column_retrieved_from_observations',
-    'clw_guess': 'cloud_liquid_water_column_retrieved_from_calculated_radiances',
-    'Weighted_Lapse_Rate': 'lapse_rate_convolved_with_weighting_function',
-    'BC_Constant': 'constant_bias_correction_term',
-    'BC_Cloud_Liquid_Water': 'cloud_liquid_water_bias_correction_term',
-    'BC_Lapse_Rate_Squared': 'lapse_rate_squared_bias_correction_term',
-    'BC_Lapse_Rate': 'lapse_rate_bias_correction_term',
-    'BC_Cosine_Latitude_times_Node': 'cosine_of_latitude_times_orbit_node_bias_correction_term',
-    'BC_Sine_Latitude': 'sine_of_latitude_bias_correction_term',
-    'BC_Emissivity': 'emissivity_bias_correction_term',
-    'BC_Fixed_Scan_Position': 'scan_angle_bias_correction_term',
     'sulf': 'sulf',
     'bc1': 'bc1',
     'bc2': 'bc2',
@@ -277,7 +269,15 @@ geovals_vars = {
     'seas3': 'seas3',
     'seas4': 'seas4',
     'dbzges': 'equivalent_reflectivity_factor',
-    'vertical_wind': 'vertical_wind',
+    'upward_air_velocity': 'upward_air_velocity',
+}
+
+obsdiag_vars = {
+    'Jacobian_Surface_Temperature': 'brightness_temperature_jacobian_surface_temperature',
+    'Jacobian_Surface_Emissivity': 'brightness_temperature_jacobian_surface_emissivity',
+    'Jacobian_Temperature': 'brightness_temperature_jacobian_air_temperature',
+    'Jacobian_Moisture': 'brightness_temperature_jacobian_humidity_mixing_ratio',
+    'Layer_Optical_Depth': 'optical_thickness_of_atmosphere_layer',
 }
 
 aod_sensors = [
@@ -363,6 +363,33 @@ units_values = {
     'row_anomaly_index': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
+    'tropopause_pressure': 'Pa',
+    'brightness_temperature_jacobian_surface_temperature': '1',
+    'brightness_temperature_jacobian_surface_emissivity': 'K',
+    'brightness_temperature_jacobian_air_temperature': '1',
+    'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
+    'optical_thickness_of_atmosphere_layer': '1',
+}
+
+# @TestReference
+# fields from GSI to compare to computations done in UFO
+test_fields = {
+    'clw_obs': ('cloud_liquid_water_column_retrieved_from_observations', 'float'),
+    'clw_guess_retrieval': ('cloud_liquid_water_content_retrieved_from_calculated_radiances', 'float'),
+    'Cloud_Frac': ('retrieved_cloud_fraction', 'float'),
+    'CTP': ('retrieved_cloud_top_pressure', 'float'),
+    'CLW': ('cloud_liquid_water_used_in_QC', 'float'),
+    'TPWC': ('total_preciptable_water_content_retrieval', 'float'),
+    'clw_guess': ('cloud_liquid_water_column_retrieved_from_calculated_radiances', 'float'),
+    'Weighted_Lapse_Rate': ('lapse_rate_convolved_with_weighting_function', 'float'),
+    'BC_Constant': ('constant_bias_correction_term', 'float'),
+    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
+    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
+    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
+    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
+    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
+    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
+    'BC_Fixed_Scan_Position': ('scan_angle_bias_correction_term', 'float'),
 }
 
 ###############################################################################
@@ -767,6 +794,7 @@ class Radiances:
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -786,6 +814,96 @@ class Radiances:
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
                 var_out[...] = vdata
+            else:
+                pass
+        ncout.close()
+
+    def toObsdiag(self, OutDir, clobber=True):
+        """ toObsdiag(OutDir,clobber=True)
+     if model state fields are in the GSI diag file, create
+     Obsdiag in an output file for use by JEDI/UFO
+        """
+        # note, this is a temporary construct and thus, there is no
+        # ioda_conv_ncio or equivalent to handle the format
+        import numpy as np
+        import netCDF4 as nc
+
+        # set up output file
+        outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
+            '_obsdiag_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
+        if not clobber:
+            if (os.path.exists(outname)):
+                print("File exists. Skipping and not overwriting:")
+                print(outname)
+                return
+        OutVars = []
+        InVars = []
+        for ncv in self.df.variables:
+            if ncv in obsdiag_vars:
+                OutVars.append(obsdiag_vars[ncv])
+                InVars.append(ncv)
+
+        # set up output file
+        ncout = nc.Dataset(outname, 'w', format='NETCDF4')
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("satellite", self.satellite)
+        ncout.setncattr("sensor", self.sensor)
+        # get nlocs
+        nlocs = self.nobs / self.nchans
+        ncout.createDimension("nlocs", nlocs)
+        # other dims
+        nlevs = self.df.dimensions["air_pressure_arr_dim"].size
+        nlevsp1 = self.df.dimensions["air_pressure_levels_arr_dim"].size
+
+        ncout.createDimension("nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
+
+        # get channel info and list
+        chan_number = self.df['sensor_chan'][:]
+        chan_number = chan_number[chan_number >= 0]
+        chan_indx = self.df['Channel_Index'][:]
+        nchans = len(chan_number)
+        nlocs = int(self.nobs / nchans)
+        chanlist = chan_number
+
+        # get data
+        for var in self.df.variables.values():
+            vname = var.name
+            if vname in obsdiag_metadata_dict.keys():
+                dims = ("nlocs",)
+                var_out = ncout.createVariable(obsdiag_metadata_dict[vname], var.dtype, dims)
+                vdata = var[:]
+                vdata = vdata[::self.nchans]
+                var_out[:] = vdata
+            elif vname in obsdiag_vars.keys():
+                # print("toObsdiag: var.shape = ", var.shape)
+                if (len(var.dimensions) == 1):
+                    dims = ("nlocs",)
+                    for c in range(len(chanlist)):
+                        var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
+                        idx = chan_indx == c+1
+                        if (np.sum(idx) == 0):
+                            print("No matching observations for:")
+                            print(value)
+                            continue
+                        var_out = ncout.createVariable(var_name, var.dtype, dims)
+                        vdata = var[:]
+                        vdata = vdata[idx]
+                        var_out[:] = vdata
+                elif "_levels" in vname:
+                    dims = ("nlocs", "nlevsp1")
+                else:
+                    dims = ("nlocs", "nlevs")
+                    for c in range(len(chanlist)):
+                        var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
+                        idx = chan_indx == c+1
+                        if (np.sum(idx) == 0):
+                            print("No matching observations for:")
+                            print(value)
+                            continue
+                        var_out = ncout.createVariable(var_name, var.dtype, dims)
+                        vdata = var[...]
+                        vdata = vdata[idx, ...]
+                        var_out[...] = vdata
             else:
                 pass
         ncout.close()
@@ -812,21 +930,31 @@ class Radiances:
                 return
         RecKeyList = []
         LocKeyList = []
+        TestKeyList = []
         LocVars = []
+        TestVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
+
+        # get list of TestReference variables for this var/platform
+        for ncv in self.df.variables:
+            if ncv in test_fields:
+                TestKeyList.append(test_fields[ncv])
+                TestVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
         recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList, TestKeyList=TestKeyList)
 
         chan_number = self.df['sensor_chan'][:]
         chan_number = chan_number[chan_number >= 0]
@@ -856,6 +984,13 @@ class Radiances:
                 tmp = self.df[lvar][::nchans]
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 loc_mdata[loc_mdata_name] = tmp
+
+        # put the TestReference fields in the structure for writing out
+        for tvar in TestVars:
+            test_mdata_name = test_fields[tvar][0]
+            tmp = self.df[tvar][::nchans]
+            tmp[tmp > 4e8] = nc.default_fillvals['f4']
+            test_mdata[test_mdata_name] = tmp
 
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_vars.items():
@@ -925,7 +1060,8 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata,
+                           AttrData, units_values, test_mdata)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
@@ -1058,6 +1194,7 @@ class AOD:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
         recKey = 0
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
