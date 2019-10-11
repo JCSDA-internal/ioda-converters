@@ -7,8 +7,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-from orddicts import DefaultOrderedDict
-import ioda_conv_ncio as iconv
 from __future__ import print_function
 import sys
 import argparse
@@ -18,7 +16,8 @@ import dateutil.parser
 import numpy as np
 
 sys.path.append("@SCRIPT_LIB_PATH@")
-
+from orddicts import DefaultOrderedDict
+import ioda_conv_ncio as iconv
 
 class Observation(object):
 
@@ -62,7 +61,7 @@ class Observation(object):
                     np.array2string(
                         datein[i]), "%Y%m%d"), datetime.strptime(
                     np.array2string(
-                        timein[i]), "%H%M").time())
+                        timein[i]).zfill(4), "%H%M").time())
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
