@@ -19,6 +19,7 @@ sys.path.append("@SCRIPT_LIB_PATH@")
 from orddicts import DefaultOrderedDict
 import ioda_conv_ncio as iconv
 
+
 class Observation(object):
 
     def __init__(self, filename, thin, date, writer):
