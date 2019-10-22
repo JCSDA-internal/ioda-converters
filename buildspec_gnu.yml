@@ -53,20 +53,24 @@ phases:
         && cp /jcsda/.ssh/id_rsa.pub /jcsda/.ssh/authorized_keys
         && echo MPI setup for Docker done"
 
+      - git lfs install
+      - git clone https://github.com/jcsda/ioda-converters
+
   pre_build:
     commands:
       - echo Executing pre_build phase
       - git lfs install # creates .gitconfig
       - cp ~/.gitconfig /home/jcsdauser/
 
-      - mv * /jcsda/
+      - mv ioda-converters /jcsda/
+
   build:
     commands:
       - su - jcsdauser -c "cd /build_container 
         && echo $CC
         && echo $CXX
         && echo $FC
-        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild /jcsda
+        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild /jcsda/ioda-converters
         && make -j4"
 
       - export BUILD_STATUS="0"
@@ -79,7 +83,7 @@ phases:
         fi
       - echo $BUILD_STATUS
 
-      - su - jcsdauser -c "cd /build_container 
+      - su - jcsdauser -c "cd /build_container
         && ctest"
 
   post_build:
