@@ -73,7 +73,11 @@ phases:
 
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
-
+      - mv * /jcsda/
+      - ls 
+      - ls /jcsda/
+  build:
+    commands:
       - su - jcsdauser -c "export COMPILERVARS_ARCHITECTURE=intel64
         && export COMPILERVARS_PLATFORM=linux
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
@@ -86,7 +90,7 @@ phases:
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
         && cd /build_container 
         && ls
-        && ecbuild /jcsda/ufo-bundle/
+        && ecbuild /jcsda
         && cd ufo
         && make -j4
         && ctest"
