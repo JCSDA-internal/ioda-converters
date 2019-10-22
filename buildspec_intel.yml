@@ -56,6 +56,9 @@ phases:
       - export LD_LIBRARY_PATH=/usr/local/lib
       - export LIBRARY_PATH=/usr/local/lib
       - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+    
+      - git lfs install
+      - git clone https://github.com/jcsda/ioda-converters
 
   pre_build:
     commands:
@@ -63,7 +66,7 @@ phases:
       - git lfs install # creates .gitconfig
       - cp ~/.gitconfig /home/jcsdauser/
 
-      - mv * /jcsda/
+      - mv ioda-converters /jcsda/
   build:
     commands:
       - su - jcsdauser -c "export COMPILERVARS_ARCHITECTURE=intel64
@@ -78,7 +81,7 @@ phases:
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
         && cd /build_container 
         && ls
-        && ecbuild /jcsda
+        && ecbuild /jcsda/ioda-converters
         && make -j4"
 
       - export BUILD_STATUS="0"
