@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/JCSDA/ioda-converters.svg?branch=develop)](https://travis-ci.com/JCSDA/ioda-converters)
+
 # ioda-converters
 
 The intended way to use this repository is to install in `/usr/local` by default, and if you cannot write into `/usr/local` use the `--prefix` option of `ecbuild` to install in your home directory under `tools`.  Run the scripts from the place they are installed, not the source directory. That way the scripts can reference each other without providing a path.
