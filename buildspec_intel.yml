@@ -91,7 +91,6 @@ phases:
         && cd /build_container 
         && ls
         && ecbuild /jcsda
-        && cd ufo
         && make -j4
         && ctest"
 
