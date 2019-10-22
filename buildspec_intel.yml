@@ -79,7 +79,50 @@ phases:
         && cd /build_container 
         && ls
         && ecbuild /jcsda
-        && make -j4
-        && ctest
-        && ctest -VV --rerun-failed"
+        && make -j4"
 
+      - export BUILD_STATUS="0"
+      - echo $BUILD_STATUS
+      - echo $CODEBUILD_BUILD_SUCCEEDING
+
+      - if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ];
+        then export BUILD_STATUS="1";
+        echo "Build passed";
+        fi
+      - echo $BUILD_STATUS
+
+      - su - jcsdauser -c "export COMPILERVARS_ARCHITECTURE=intel64
+        && export COMPILERVARS_PLATFORM=linux
+        && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+        && export FC=mpiifort
+        && export CC=mpiicc
+        && export CXX=mpiicpc
+        && export PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        && export LD_LIBRARY_PATH=/usr/local/lib
+        && export LIBRARY_PATH=/usr/local/lib
+        && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+        && cd /build_container 
+        && ls
+        && ctest"
+ 
+  post_build:
+    commands:
+      - echo Executing post_build phase
+      - echo $CODEBUILD_BUILD_SUCCEEDING
+
+      - if [ "$BUILD_STATUS" = "1" && "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
+        then echo "Build passed, rerun failed tests";
+        su - jcsdauser -c "export COMPILERVARS_ARCHITECTURE=intel64
+        && export COMPILERVARS_PLATFORM=linux
+        && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+        && export FC=mpiifort
+        && export CC=mpiicc
+        && export CXX=mpiicpc
+        && export PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        && export LD_LIBRARY_PATH=/usr/local/lib
+        && export LIBRARY_PATH=/usr/local/lib
+        && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+        && cd /build_container
+        && ctest -VV --rerun-failed";
+        else echo "Build failed";
+        fi
