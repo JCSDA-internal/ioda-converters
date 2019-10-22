@@ -19,6 +19,7 @@ set( ENABLE_LARGE_FILE_SUPPORT OFF CACHE BOOL "Disable testing of large file sup
 set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 
 include( ecbuild_system NO_POLICY_SCOPE )
+include( GNUInstallDirs )
 
 ecbuild_requires_macro_version( 2.7 )
 
@@ -49,6 +50,19 @@ ecbuild_add_option( FEATURE ODB_API
 if (HAVE_ODB_API)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DHAVE_ODB_API")
 endif (HAVE_ODB_API)
+
+# NetCDF and bufrlib are optional. If found, the following variables are set
+# bufrlib_FOUND
+# NETCDF4_FOUND
+find_package(bufrlib)
+find_package(NetCDF COMPONENTS Fortran)
+if( bufrlib_FOUND AND NETCDF4_FOUND )
+  set( HAVE_BUFRLIB_AND_NETCDF "1" )
+  message( STATUS "Fortran components enabled since both bufrlib and NETCDF are found")
+else()
+  set( HAVE_BUFRLIB_AND_NETCDF "0" )
+  message( STATUS "Fortran components disabled since both bufrlib and NETCDF are not found")
+endif()
 
 ################################################################################
 # Export package info
