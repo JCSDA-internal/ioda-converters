@@ -110,7 +110,7 @@ phases:
       - echo Executing post_build phase
       - echo $CODEBUILD_BUILD_SUCCEEDING
 
-      - if [ "$BUILD_STATUS" = "1" && "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
+      - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
         su - jcsdauser -c "export COMPILERVARS_ARCHITECTURE=intel64
         && export COMPILERVARS_PLATFORM=linux
