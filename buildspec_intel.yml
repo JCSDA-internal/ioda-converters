@@ -80,7 +80,7 @@ phases:
         && export LIBRARY_PATH=/usr/local/lib
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
         && cd /build_container 
-        && ls
+        && echo $LD_LIBRARY_PATH
         && ecbuild /jcsda/ioda-converters
         && make -j4"
 
@@ -104,6 +104,7 @@ phases:
         && export LD_LIBRARY_PATH=/usr/local/lib
         && export LIBRARY_PATH=/usr/local/lib
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+        && echo $LD_LIBRARY_PATH
         && cd /build_container 
         && ls
         && ctest"
@@ -126,6 +127,7 @@ phases:
         && export LIBRARY_PATH=/usr/local/lib
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
         && cd /build_container
+        && echo $LD_LIBRARY_PATH
         && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi
