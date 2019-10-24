@@ -82,8 +82,7 @@ phases:
         && cd /build_container 
         && echo $LD_LIBRARY_PATH
         && ecbuild /jcsda/ioda-converters
-        && make -j4
-        && ctest"
+        && make -j4"
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
@@ -102,7 +101,7 @@ phases:
         && export CC=mpiicc
         && export CXX=mpiicpc
         && export PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        && export LD_LIBRARY_PATH=/usr/local/lib
+        && export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib/python3/dist-packages
         && export LIBRARY_PATH=/usr/local/lib
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
         && echo $LD_LIBRARY_PATH
