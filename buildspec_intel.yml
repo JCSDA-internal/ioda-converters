@@ -18,10 +18,11 @@ phases:
       - pwd
       - ls -ln /
       - ls -ln /codebuild/
-      - ls -ln /codebuild/srcDownload
-      - ls -ln /codebuild/tmp
-      - ls -ln /codebuild/default
+      - ls -ln /codebuild/input
       - ls -ln /codebuild/output
+      - ls -ln /codebuild/output/srcDownload
+      - ls -ln /codebuild/output/tmp
+      - ls -ln /codebuild/output/default
       - cd /
       - pwd
       - find . -name pyload
