@@ -1,5 +1,5 @@
 version: 0.2
-  
+
 env:
   parameter-store:
     GIT_USER: "/CodeBuild/Git_USER"
@@ -16,6 +16,9 @@ phases:
 
       - ls
       - pwd
+      - ls -ln /
+      - ls -ln /codebuild/
+      - ls -ln /codebuild/output
 
       - echo MPI setup for Docker
       - mkdir -p /var/run/sshd
@@ -44,7 +47,7 @@ phases:
         && cp /jcsda/.ssh/id_rsa.pub /jcsda/.ssh/authorized_keys
         && echo MPI setup for Docker done"
 
-      ## cannot source /etc/bash.bashrc so copy what's there for root 
+      ## cannot source /etc/bash.bashrc so copy what's there for root
       - sed '12s/INTEL_TARGET_ARCH=/INTEL_TARGET_ARCH=intel64/' /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
       - export COMPILERVARS_ARCHITECTURE=intel64
       - export COMPILERVARS_PLATFORM=linux
@@ -56,7 +59,7 @@ phases:
       - export LD_LIBRARY_PATH=/usr/local/lib
       - export LIBRARY_PATH=/usr/local/lib
       - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
-    
+
       - git lfs install
       - git clone https://github.com/jcsda/ioda-converters
 
@@ -79,7 +82,7 @@ phases:
         && export LD_LIBRARY_PATH=/usr/local/lib
         && export LIBRARY_PATH=/usr/local/lib
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
-        && cd /build_container 
+        && cd /build_container
         && echo $LD_LIBRARY_PATH
         && ecbuild /jcsda/ioda-converters
         && make -j4"
@@ -105,10 +108,10 @@ phases:
         && export LIBRARY_PATH=/usr/local/lib
         && . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
         && echo $LD_LIBRARY_PATH
-        && cd /build_container 
+        && cd /build_container
         && ls
         && ctest"
- 
+
   post_build:
     commands:
       - echo Executing post_build phase
