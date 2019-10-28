@@ -18,7 +18,14 @@ phases:
       - pwd
       - ls -ln /
       - ls -ln /codebuild/
+      - ls -ln /codebuild/srcDownload
+      - ls -ln /codebuild/tmp
+      - ls -ln /codebuild/default
       - ls -ln /codebuild/output
+      - cd /
+      - pwd
+      - find . -name pyload
+
 
       - echo MPI setup for Docker
       - mkdir -p /var/run/sshd
