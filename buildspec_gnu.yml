@@ -1,0 +1,100 @@
+version: 0.2
+
+env:
+  parameter-store:
+    GIT_USER: "/CodeBuild/Git_USER"
+    GIT_PASS: "/CodeBuild/Git_PASS"
+
+phases:
+  install:
+    commands:
+      - echo Executing install phase
+      - echo $CODEBUILD_WEBHOOK_TRIGGER
+      - echo $CODEBUILD_WEBHOOK_BASE_REF
+      - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
+      - echo $CODEBUILD_WEBHOOK_EVENT
+      - echo $CODEBUILD_BUILD_SUCCEEDING
+
+      - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PULL_REQUEST_MERGED" ];
+        then export CODEBUILD_GIT_BRANCH="develop";
+        echo $CODEBUILD_GIT_BRANCH;
+        echo "Merging to develop";
+        else CODEBUILD_GIT_BRANCH="$(git branch -a --contains $CODEBUILD_SOURCE_VERSION | sed -n 2p | awk '{ printf $1 }')";
+        export CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH#remotes/origin/};
+        fi
+
+      - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
+      - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
+
+      - echo MPI setup for Docker
+      - mkdir -p /var/run/sshd
+      - ssh-keygen -A
+      - sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/g' /etc/ssh/sshd_config
+      - sed -i 's/#RSAAuthentication yes/RSAAuthentication yes/g' /etc/ssh/sshd_config
+      - sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
+
+      - groupadd jcsda -g 9999
+      - useradd jcsdauser
+      - mkdir -p /jcsda /build_container
+      - chown -R jcsdauser:jcsda /build_container  /usr/local
+      - chmod 6755 /jcsda /build_container /usr/local
+
+      - mkdir /jcsda/.ssh ; echo "StrictHostKeyChecking no" > /jcsda/.ssh/config
+      - mkdir -p /jcsda/.openmpi
+      - mkdir -p /home/jcsdauser/.openmpi
+
+      - cp default-mca-params.conf /home/jcsdauser/.openmpi/mca-params.conf
+      - cat /home/jcsdauser/.openmpi/mca-params.conf
+      - chown -R jcsdauser:jcsda /jcsda/
+
+      - su - jcsdauser -c "ssh-keygen -f /jcsda/.ssh/id_rsa -t rsa -N ''
+        && chmod 600 /jcsda/.ssh/config
+        && chmod 700 /jcsda/.ssh
+        && cp /jcsda/.ssh/id_rsa.pub /jcsda/.ssh/authorized_keys
+        && echo MPI setup for Docker done"
+
+      - git lfs install
+      - git clone https://github.com/jcsda/ioda-converters
+
+  pre_build:
+    commands:
+      - echo Executing pre_build phase
+      - git lfs install # creates .gitconfig
+      - cp ~/.gitconfig /home/jcsdauser/
+
+      - mv ioda-converters /jcsda/
+
+  build:
+    commands:
+      - su - jcsdauser -c "cd /build_container 
+        && echo $CC
+        && echo $CXX
+        && echo $FC
+        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild /jcsda/ioda-converters
+        && make -j4"
+
+      - export BUILD_STATUS="0"
+      - echo $BUILD_STATUS
+      - echo $CODEBUILD_BUILD_SUCCEEDING
+
+      - if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ];
+        then export BUILD_STATUS="1";
+        echo "Build passed";
+        fi
+      - echo $BUILD_STATUS
+
+      - su - jcsdauser -c "cd /build_container
+        && ctest"
+
+  post_build:
+    commands:
+      - echo Executing post_build phase
+      - echo $CODEBUILD_BUILD_SUCCEEDING
+      - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
+        then echo "Build passed, rerun failed tests";
+        su - jcsdauser -c "cd /build_container
+        && ctest -VV --rerun-failed";
+        else echo "Build failed";
+        fi
+
+
