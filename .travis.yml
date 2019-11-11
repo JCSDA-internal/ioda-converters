@@ -1,0 +1,64 @@
+#======================================================================
+# Project settings
+#======================================================================
+branches:
+  only:
+    - develop
+
+language: cpp
+
+services:
+  - docker
+
+git:
+  clone: false
+
+before_install:
+  - date
+  - REPO_SOURCE_DIR=${TRAVIS_BUILD_DIR}/jcsda/src_repo
+#  create the same file structure on Travis VM and Docker container
+  - mkdir -p ${TRAVIS_BUILD_DIR}/jcsda/src_repo
+# echo branch info
+  - echo $TRAVIS_PULL_REQUEST
+  - echo $TRAVIS_PULL_REQUEST_BRANCH
+  - echo $TRAVIS_BRANCH
+  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
+#======================================================================
+# Clone all repos
+#======================================================================
+
+#  clone the testing branch of ioda-conventers
+  - git clone -b $BRANCH https://github.com/jcsda/ioda-converters.git ${REPO_SOURCE_DIR}
+
+  - cd ${REPO_SOURCE_DIR}
+  - ls ${REPO_SOURCE_DIR}
+  - find . -name \* -exec chmod 777 {} \;
+
+#======================================================================
+# get docker image
+# FROM  jcsda/docker:latest
+#======================================================================
+  - cd ${REPO_SOURCE_DIR}
+  - date
+  - docker build -t jcsda/docker --build-arg=Dockerfile .  #Dockerfile handles ssh for mpi
+  - date
+  - docker images
+  # request codecov to detect CI environment to pass through to docker
+  - ci_env=`bash <(curl -s https://codecov.io/env)`
+  - docker run -d -t $ci_env --name jcsda_container -v ${REPO_SOURCE_DIR}:/jcsda/src_repo jcsda/docker
+  - docker ps -a
+  - date
+#======================================================================
+# Here are the run steps
+#======================================================================
+script:
+  - docker exec jcsda_container ls
+  - docker exec jcsda_container ls /jcsda/src_repo
+  - docker exec jcsda_container bash -c 'cp -r /jcsda/.openmpi/ ~/'
+##  use cmake with flags to generate test coverage reports
+  - docker exec jcsda_container bash -c 'cd /build_container && cmake -DCMAKE_MODULE_PATH=/usr/local/share/ecbuild/cmake/ -DCMAKE_BUILD_TYPE=Debug -DENABLE_GPROF=ON  /jcsda/src_repo' 
+  - docker exec jcsda_container bash -c 'cd /build_container && make -j4'
+  - date
+  - docker exec jcsda_container bash -c 'cd /build_container && ctest'
+  - date
