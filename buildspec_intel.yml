@@ -14,11 +14,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
       - echo $CODEBUILD_WEBHOOK_EVENT
 
-      - cd /
-      - pwd
-      - find . -name pyload
-
-
       - echo MPI setup for Docker
       - mkdir -p /var/run/sshd
       - ssh-keygen -A
