@@ -22,6 +22,7 @@ list( APPEND test_input
   testinput/odb_sonde_16019.odb
   testinput/gnssro_kompsat5_20180415_00Z.bufr
   testinput/argoclim_test.nc
+  testinput/cryosat2_L2_test.nc
 )
 
 list( APPEND test_output
@@ -39,6 +40,7 @@ list( APPEND test_output
   testoutput/odb_sonde_16019.nc4
   testoutput/gnssro_kompsat5_2018041500.nc4
   testoutput/argoclim.nc
+  testoutput/cryosat2_L2.nc
 )
 
 # create test directories and make links to the input files
@@ -162,6 +164,16 @@ ecbuild_add_test( TARGET test_iodaconv_argoclim
                        -o testrun/argoclim.nc
                        -d 2019101600"
                       argoclim.nc)
+
+ecbuild_add_test( TARGET test_iodaconv_cryosat2
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/cryosat_ice2ioda.py
+                       -i testinput/cryosat2_L2_test.nc
+                       -o testrun/cryosat2_L2.nc
+                       -d 2019092100"
+                      cryosat2_L2.nc)
+
 
 #===============================================================================
 # GSI ncdiag converters
