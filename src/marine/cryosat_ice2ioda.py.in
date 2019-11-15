@@ -27,11 +27,11 @@ class Observation(object):
     def __init__(self, filename, thin, date, writer):
         print(date)
 
-        if os.path.exists("cryosat_classic.nc"):
-            os.remove("cryosat_classic.nc")
+        if os.path.exists("cryosat_nc4classic.nc"):
+            os.remove("cryosat_nc4classic.nc")
 
-        subprocess.call('nccopy -k classic '+filename[0]+' cryosat_classic.nc', shell=True)
-        self.filename = "cryosat_classic.nc"
+        subprocess.call('nccopy -k nc7 '+filename[0]+' cryosat_nc4classic.nc', shell=True)
+        self.filename = "cryosat_nc4classic.nc"
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -72,6 +72,8 @@ class Observation(object):
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
             self.data[0][locKey][qcKey] = qc[i]
+
+        os.remove("cryosat_nc4classic.nc")
 
 
 vName = "sea_ice_freeboard"
