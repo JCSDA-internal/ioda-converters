@@ -59,16 +59,6 @@ find_package(NetCDF COMPONENTS Fortran)
 if( bufrlib_FOUND AND NETCDF4_FOUND )
   set( HAVE_BUFRLIB_AND_NETCDF "1" )
   message( STATUS "Fortran components enabled since both bufrlib and NETCDF are found")
-  # Hack to get this working with the broken FindNetCDF.cmake script in ecbuild 2.9.4
-  # The 2.9.4 find script sets NETCDF_LIBRARIES to the following list:
-  #   "debug;optimized;path_to_netcdf_fortran_library;path_to_netcdf_c_library;etc"
-  # The keyword "optimized" in the list says to only include the following library
-  # when doing a build with optimization, thus the fortran library gets dropped in
-  # the debug case. The workaround is to remove the debug and optimized keywords
-  # which works in both the ecbuild 2.9.4 and 3.1.0 cases. Once we get drop ecbuild
-  # 2.9.4, we can get rid of this workaround.
-  list(REMOVE_ITEM NETCDF_LIBRARIES debug)
-  list(REMOVE_ITEM NETCDF_LIBRARIES optimized)
 else()
   set( HAVE_BUFRLIB_AND_NETCDF "0" )
   message( STATUS "Fortran components disabled since both bufrlib and NETCDF are not found")
