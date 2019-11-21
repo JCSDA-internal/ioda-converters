@@ -742,7 +742,7 @@ class Radiances:
                 i = splitfname.index(s)
                 self.obstype = "_".join(splitfname[i:i + 2])
         if not i:
-            raise ValueError("TESTING Observation is not a radiance type...")
+            raise ValueError("Observation is not a radiance type...")
 
     def read(self):
         import netCDF4 as nc
