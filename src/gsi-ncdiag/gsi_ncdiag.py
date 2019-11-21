@@ -188,6 +188,10 @@ rad_sensors = [
     'sndrd1', 'sndrd2', 'sndrd3', 'sndrd4',
     'cris-fsr',
     'ssmis',
+    'abi',
+    'ahi',
+    'avhrr',
+    'saphir',
 ]
 
 radar_sensors = [
