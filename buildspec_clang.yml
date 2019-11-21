@@ -26,49 +26,22 @@ phases:
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
 
-      - echo MPI setup for Docker
-      - mkdir -p /var/run/sshd
-      - ssh-keygen -A
-      - sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/g' /etc/ssh/sshd_config
-      - sed -i 's/#RSAAuthentication yes/RSAAuthentication yes/g' /etc/ssh/sshd_config
-      - sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
-
-      - groupadd jcsda -g 9999
-      - useradd jcsdauser
-      - mkdir -p /jcsda /build_container
-      - chown -R jcsdauser:jcsda /build_container  /usr/local
-      - chmod 6755 /jcsda /build_container /usr/local
-
-      - mkdir /jcsda/.ssh ; echo "StrictHostKeyChecking no" > /jcsda/.ssh/config
-      - mkdir -p /jcsda/.openmpi
-      - mkdir -p /home/jcsdauser/.openmpi
-
-      - cp default-mca-params.conf /home/jcsdauser/.openmpi/mca-params.conf
-      - cat /home/jcsdauser/.openmpi/mca-params.conf
-      - chown -R jcsdauser:jcsda /jcsda/
-
-      - su - jcsdauser -c "ssh-keygen -f /jcsda/.ssh/id_rsa -t rsa -N ''
-        && chmod 600 /jcsda/.ssh/config
-        && chmod 700 /jcsda/.ssh
-        && cp /jcsda/.ssh/id_rsa.pub /jcsda/.ssh/authorized_keys
-        && echo MPI setup for Docker done"
-
       - git lfs install
       - git clone https://github.com/jcsda/ioda-converters
 
   pre_build:
     commands:
       - echo Executing pre_build phase
-      - git lfs install # creates .gitconfig
-      - cp ~/.gitconfig /home/jcsdauser/
-
-      - mv ioda-converters /jcsda/
-
+      - mkdir /build_container
+      - mkdir /src_repo
+      - mv ioda-converters /src_repo/
   build:
     commands:
-      - su - jcsdauser -c "cd /build_container 
-        && ecbuild /jcsda/ioda-converters
-        && make -j4"
+      - cd /build_container
+      - pwd 
+      - ecbuild /jcsda/ioda-converters
+      - pwd
+      - make -j4"
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
@@ -80,8 +53,7 @@ phases:
         fi
       - echo $BUILD_STATUS
 
-      - su - jcsdauser -c "cd /build_container
-        && ctest"
+      - ctest
 
   post_build:
     commands:
@@ -89,8 +61,7 @@ phases:
       - echo $CODEBUILD_BUILD_SUCCEEDING
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
-        su - jcsdauser -c "cd /build_container
-        && ctest -VV --rerun-failed";
+        ctest -VV --rerun-failed;
         else echo "Build failed";
         fi
 
