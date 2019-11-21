@@ -188,6 +188,10 @@ rad_sensors = [
     'sndrd1', 'sndrd2', 'sndrd3', 'sndrd4',
     'cris-fsr',
     'ssmis',
+    'abi',
+    'ahi',
+    'avhrr',
+    'saphir',
 ]
 
 radar_sensors = [
@@ -738,7 +742,7 @@ class Radiances:
                 i = splitfname.index(s)
                 self.obstype = "_".join(splitfname[i:i + 2])
         if not i:
-            raise ValueError("Observation is not a radiance type...")
+            raise ValueError("TESTING Observation is not a radiance type...")
 
     def read(self):
         import netCDF4 as nc
