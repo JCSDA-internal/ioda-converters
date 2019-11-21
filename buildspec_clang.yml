@@ -52,7 +52,6 @@ phases:
         echo "Build passed";
         fi
       - echo $BUILD_STATUS
-
       - ctest
 
   post_build:
