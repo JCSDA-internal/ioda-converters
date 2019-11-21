@@ -38,9 +38,7 @@ phases:
   build:
     commands:
       - cd /build_container
-      - pwd 
       - ecbuild /src_repo/ioda-converters
-      - pwd
       - make -j4"
 
       - export BUILD_STATUS="0"
