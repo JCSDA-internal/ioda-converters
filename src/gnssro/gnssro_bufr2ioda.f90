@@ -54,7 +54,7 @@ type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: ptid
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
-      real(r_double),   allocatable, dimension(:)     :: time
+      real(r_double), allocatable, dimension(:)     :: time
       character(len=20), allocatable, dimension(:)  :: datetime
       real(r_double), allocatable, dimension(:)     :: lat
       real(r_double), allocatable, dimension(:)     :: lon
