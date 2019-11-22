@@ -15,8 +15,8 @@ implicit none
 
 integer, parameter :: i_short = selected_int_kind(4)  !2
 integer, parameter :: i_kind  = selected_int_kind(8)
-integer, parameter :: r_kind   = selected_real_kind(15) !8
 integer, parameter :: r_double = selected_real_kind(15) !8
+integer, parameter :: r_kind   = selected_real_kind(15) !8
 
 ! output obs data stucture
 integer   :: ncid
@@ -54,7 +54,7 @@ type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: ptid
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
-      real(r_kind),   allocatable, dimension(:)     :: time
+      real(r_double),   allocatable, dimension(:)     :: time
       character(len=20), allocatable, dimension(:)  :: datetime
       real(r_double), allocatable, dimension(:)     :: lat
       real(r_double), allocatable, dimension(:)     :: lon
