@@ -15,8 +15,7 @@ implicit none
 
 integer, parameter :: i_short = selected_int_kind(4)  !2
 integer, parameter :: i_kind  = selected_int_kind(8)
-integer, parameter :: r_double = selected_real_kind(15) !8
-integer, parameter :: r_kind = selected_real_kind(15) !8
+integer, parameter :: r_kind = selected_real_kind(8) !8
 
 ! output obs data stucture
 integer   :: ncid
@@ -54,32 +53,32 @@ type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: ptid
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
-      real(r_double), allocatable, dimension(:)     :: time
+      real(r_kind), allocatable, dimension(:)     :: time
       character(len=20), allocatable, dimension(:)  :: datetime
-      real(r_double), allocatable, dimension(:)     :: lat
-      real(r_double), allocatable, dimension(:)     :: lon
-      real(r_double), allocatable, dimension(:)     :: rfict
-      real(r_double), allocatable, dimension(:)     :: azim
-      real(r_double), allocatable, dimension(:)     :: geoid
-      real(r_double), allocatable, dimension(:)     :: msl_alt
-      real(r_double), allocatable, dimension(:)     :: ref
-      real(r_double), allocatable, dimension(:)     :: refoe_gsi
-      real(r_double), allocatable, dimension(:)     :: bend_ang
-      real(r_double), allocatable, dimension(:)     :: impact_para
-      real(r_double), allocatable, dimension(:)     :: bndoe_gsi
+      real(r_kind), allocatable, dimension(:)     :: lat
+      real(r_kind), allocatable, dimension(:)     :: lon
+      real(r_kind), allocatable, dimension(:)     :: rfict
+      real(r_kind), allocatable, dimension(:)     :: azim
+      real(r_kind), allocatable, dimension(:)     :: geoid
+      real(r_kind), allocatable, dimension(:)     :: msl_alt
+      real(r_kind), allocatable, dimension(:)     :: ref
+      real(r_kind), allocatable, dimension(:)     :: refoe_gsi
+      real(r_kind), allocatable, dimension(:)     :: bend_ang
+      real(r_kind), allocatable, dimension(:)     :: impact_para
+      real(r_kind), allocatable, dimension(:)     :: bndoe_gsi
 end type gpsro_type
 
 type(gpsro_type) :: gpsro_data
 
-real(r_double),dimension(n1ahdr)     :: bfr1ahdr
-real(r_double),dimension(50,maxlevs) :: data1b
-real(r_double),dimension(50,maxlevs) :: data2a
-real(r_double),dimension(maxlevs)  :: nreps_this_ROSEQ2
+real(r_kind),dimension(n1ahdr)     :: bfr1ahdr
+real(r_kind),dimension(50,maxlevs) :: data1b
+real(r_kind),dimension(50,maxlevs) :: data2a
+real(r_kind),dimension(maxlevs)  :: nreps_this_ROSEQ2
 integer(i_kind)           :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
-real(r_double) pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
-real(r_double) height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
-real(r_double) obsErr 
-real(r_double), parameter :: missingvalue=-9.9e15
+real(r_kind) :: pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
+real(r_kind) :: height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
+real(r_kind) :: obsErr
+real(r_kind),   parameter :: missingvalue=-9.9e10
 logical,        parameter :: GlobalModel = .true. ! temporary
 
 character(10) nemo
@@ -311,7 +310,6 @@ call check( nf90_def_dim(ncid, 'nobs',  ndata*nvars,   nobs_dimid) )
 call check( nf90_def_dim(ncid, 'nvars', nvars,   nvars_dimid) )
 call check( nf90_def_dim(ncid, 'ndatetime', ndatetime,   ndatetime_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime_i) )
-call check( nf90_put_att(ncid, NF90_GLOBAL, '_FillValue', missingvalue) )
 call check( nf90_def_var(ncid, "latitude@MetaData",      NF90_FLOAT, nlocs_dimid, varid_lat) )
 call check( nf90_def_var(ncid, "longitude@MetaData",    NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_def_var(ncid, "time@MetaData",         NF90_FLOAT, nlocs_dimid, varid_time) )
