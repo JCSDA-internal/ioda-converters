@@ -320,6 +320,10 @@ call check( nf90_def_var(ncid, "reference_sat_id@MetaData", NF90_INT, nlocs_dimi
 call check( nf90_def_var(ncid, "occulting_sat_id@MetaData",  NF90_INT, nlocs_dimid, varid_said))
 call check( nf90_def_var(ncid, "ascending_flag@MetaData",  NF90_INT, nlocs_dimid, varid_asce))
 call check( nf90_def_var(ncid, "refractivity@ObsValue", NF90_FLOAT, nlocs_dimid, varid_ref) )
+call check( nf90_put_att(ncid, varid_ref, "longname", "Atmospheric refractivity" ))
+call check( nf90_put_att(ncid, varid_ref, "_FillValue", real(missingvalue) ))
+call check( nf90_put_att(ncid, varid_ref, "units", "N" ))
+call check( nf90_put_att(ncid, varid_ref, "valid_range", "0-500" ))
 call check( nf90_def_var(ncid, "refractivity@ObsError", NF90_FLOAT, nlocs_dimid, varid_refoe))
 call check( nf90_def_var(ncid, "altitude@MetaData", NF90_FLOAT, nlocs_dimid, varid_msl) )
 call check( nf90_def_var(ncid, "bending_angle@ObsValue", NF90_FLOAT, nlocs_dimid, varid_bnd) )
@@ -329,8 +333,8 @@ call check( nf90_def_var(ncid, "impact_height@MetaData", NF90_FLOAT, nlocs_dimid
 call check( nf90_def_var(ncid, "sensor_azimuth_angle@MetaData",NF90_FLOAT, nlocs_dimid, varid_azim))
 call check( nf90_def_var(ncid, "geoid_height_above_reference_ellipsoid@MetaData",NF90_FLOAT, nlocs_dimid, varid_geoid))
 call check( nf90_def_var(ncid, "earth_radius_of_curvature@MetaData",NF90_FLOAT, nlocs_dimid, varid_rfict))
-
 call check( nf90_enddef(ncid) )
+
 call check( nf90_put_var(ncid, varid_lat, gpsro_data%lat(1:ndata)) )
 call check( nf90_put_var(ncid, varid_lon, gpsro_data%lon(1:ndata)) )
 call check( nf90_put_var(ncid, varid_time, gpsro_data%time(1:ndata)) )
