@@ -322,6 +322,8 @@ call check( nf90_put_att(ncid, varid_ptid, "longname", "GNSS satellite Transmitt
 call check( nf90_def_var(ncid, "occulting_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_said))
 call check( nf90_put_att(ncid, varid_said, "longname", "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755" ))
 call check( nf90_def_var(ncid, "ascending_flag@MetaData",  NF90_INT, nlocs_dimid, varid_asce))
+call check( nf90_put_att(ncid, varid_asce, "longname", "the original occultation ascending/descending flag" ))
+call check( nf90_put_att(ncid, varid_asce, "valid_range", "0/descending or 1/ascending" ))
 call check( nf90_def_var(ncid, "refractivity@ObsValue", NF90_FLOAT, nlocs_dimid, varid_ref) )
 call check( nf90_put_att(ncid, varid_ref, "longname", "Atmospheric refractivity" ))
 call check( nf90_put_att(ncid, varid_ref, "_FillValue", real(missingvalue) ))
