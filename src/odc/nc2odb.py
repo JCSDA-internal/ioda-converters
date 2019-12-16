@@ -108,16 +108,21 @@ for NcVar in NcDs.variables:
     VarDims = NcDs[NcVar].dimensions
     VarData = NcDs[NcVar][:]
 
+    # only convert the vectors that are indexed by nlocs
+    # strings have 2 dimensions (nlocs, string_size) so allow those
     if (VarDims[0] == "nlocs"):
         if (VarType == "|S1"):
             OdbType = "STRING"
             OdbData = CharArrayToStrings(VarData.filled(""))
+            IsVector = True
         if ((VarType == "int32") or (VarType == "int64")):
             OdbType = "INTEGER"
             OdbData = VarData.astype('int64').filled(IntMissingValue)
+            IsVector = (len(VarDims) == 1)
         if ((VarType == "float32") or (VarType == "float64")):
             OdbType = "DOUBLE"
             OdbData = VarData.astype('float64').filled(DoubleMissingValue)
+            IsVector = (len(VarDims) == 1)
 
         if (VarName == "datetime@MetaData"):
             (Dates, Times) = ConvertDateTime(OdbData)
@@ -125,7 +130,7 @@ for NcVar in NcDs.variables:
             VarList['time@MetaData:INTEGER'] = Times
             Nvars += 2
         else:
-            if (VarName != "time@MetaData"):
+            if ((IsVector) and (VarName != "time@MetaData")):
                 OdbName = "{}:{}".format(VarName, OdbType)
                 VarList[OdbName] = OdbData
                 Nvars += 1
