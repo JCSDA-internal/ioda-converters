@@ -20,24 +20,58 @@ def CharArrayToStrings(CharArray):
     return Strings
 
 
-def ConvertDateTime(DtStrings):
+def ConvertDtStrings(DtStrings):
     Dates = []
     Times = []
     for DtStr in DtStrings:
         Dt = dt.datetime.strptime(DtStr, "%Y-%m-%dT%H:%M:%SZ")
-
-        Date = Dt.year * 10000
-        Date += Dt.month * 100
-        Date += Dt.day
-
-        Time = Dt.hour * 10000
-        Time += Dt.minute * 100
-        Time += Dt.second
+        (Date, Time) = DtToDateTime(Dt)
 
         Dates.append(Date)
         Times.append(Time)
 
     return (Dates, Times)
+
+
+def ConvertDtRefOffset(RefDtInt, OffsetTime):
+    # convert the reference date time to a datetime object
+    TempRef = RefDtInt
+    print("tr1: ", TempRef)
+    Year = int(TempRef / 1000000)
+    TempRef = TempRef % 1000000
+    print("tr2: ", TempRef)
+    Month = int(TempRef / 10000)
+    TempRef = TempRef % 10000
+    print("tr3: ", TempRef)
+    Day = int(TempRef / 100)
+    Hour = TempRef % 100
+    print(Year, Month, Day, Hour)
+    RefDt = dt.datetime(Year, Month, Day, Hour)
+
+    Dates = []
+    Times = []
+    for Otime in OffsetTime:
+        OffsetSeconds = round(3600 * Otime)
+        OffsetDt = dt.timedelta(seconds=OffsetSeconds)
+        Dt = RefDt + OffsetDt
+        (Date, Time) = DtToDateTime(Dt)
+
+        Dates.append(Date)
+        Times.append(Time)
+
+    return (Dates, Times)
+
+
+def DtToDateTime(Dt):
+    Date = Dt.year * 10000
+    Date += Dt.month * 100
+    Date += Dt.day
+
+    Time = Dt.hour * 10000
+    Time += Dt.minute * 100
+    Time += Dt.second
+
+    return (Date, Time)
 
 
 ###################################################################################
@@ -94,14 +128,40 @@ NcDs = nc.Dataset(NetcdfFname)
 IntMissingValue = 2147483647
 DoubleMissingValue = -2147483647
 
+# Number of locations is the size of the "nlocs" dimension
 for NcDim in NcDs.dimensions:
     DimName = NcDs.dimensions[NcDim].name
     DimSize = NcDs.dimensions[NcDim].size
     if (DimName == "nlocs"):
         Nlocs = DimSize
 
-VarList = {}
-Nvars = 0
+# Determine if we have the new or old style of date time representation in the file
+# Old style is reference datetime with time offsets, new style is ISO8601 datetime
+# strings. Convert the data according to the style, and initialize the VarList
+# dictionary with these
+if ("datetime@MetaData" in NcDs.variables):
+    print("Input netcdf date time repsrentation: ISO 8601 datetime strings")
+    VarData = NcDs["datetime@MetaData"][:]
+    (Dates, Times) = ConvertDtStrings(CharArrayToStrings(VarData))
+else:
+    if (("time@MetaData" in NcDs.variables) and ("date_time" in NcDs.ncattrs())):
+        print("Input netcdf date time repsrentation: Reference date time with time offset")
+        RefDt = NcDs.getncattr("date_time")
+        VarData = NcDs["time@MetaData"][:].astype('float64')
+        (Dates, Times) = ConvertDtRefOffset(RefDt, VarData)
+    else:
+        print("ERROR: could not find date time representation in the input netcdf file")
+        sys.exit(3)
+
+VarList = {
+    'date@MetaData:INTEGER': Dates,
+    'time@MetaData:INTEGER': Times
+    }
+Nvars = len(VarList)
+
+# Walk through the variables, convert missing marks to odb values, and convert date time
+# information to date and time integer representation. Then save the processed data for
+# the building of the CSV file.
 for NcVar in NcDs.variables:
     VarName = NcDs[NcVar].name
     VarType = NcDs[NcVar].datatype
@@ -124,16 +184,10 @@ for NcVar in NcDs.variables:
             OdbData = VarData.astype('float64').filled(DoubleMissingValue)
             IsVector = (len(VarDims) == 1)
 
-        if (VarName == "datetime@MetaData"):
-            (Dates, Times) = ConvertDateTime(OdbData)
-            VarList['date@MetaData:INTEGER'] = Dates
-            VarList['time@MetaData:INTEGER'] = Times
-            Nvars += 2
-        else:
-            if ((IsVector) and (VarName != "time@MetaData")):
-                OdbName = "{}:{}".format(VarName, OdbType)
-                VarList[OdbName] = OdbData
-                Nvars += 1
+        if ((IsVector) and (VarName != "datetime@MetaData") and (VarName != "time@MetaData")):
+            OdbName = "{}:{}".format(VarName, OdbType)
+            VarList[OdbName] = OdbData
+            Nvars += 1
 
 print("Number of locations processed: ", Nlocs)
 print("Number of variables selected: ", Nvars)

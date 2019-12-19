@@ -24,6 +24,7 @@ list( APPEND test_input
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
   testinput/sondes_obs_2018041500_m.nc4
+  testinput/gnssro_obs_2018041500_s.nc4
 )
 
 list( APPEND test_output
@@ -43,6 +44,7 @@ list( APPEND test_output
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
   testoutput/sondes_obs_2018041500_m.odb
+  testoutput/gnssro_obs_2018041500_s.odb
 )
 
 # create test directories and make links to the input files
@@ -248,7 +250,7 @@ endif ()
 # ODC API based ODB converter
 #===============================================================================
 if (odc_FOUND)
-  ecbuild_add_test( TARGET test_iodaconv_nc2odb_tool
+  ecbuild_add_test( TARGET test_iodaconv_nc2odb_tool_new_dt
                     TYPE SCRIPT
                     COMMAND iodaconv_comp.sh
                     ARGS odb
@@ -256,4 +258,13 @@ if (odc_FOUND)
                          testinput/sondes_obs_2018041500_m.nc4
                          testrun/sondes_obs_2018041500_m.odb"
                         sondes_obs_2018041500_m.odb)
+
+  ecbuild_add_test( TARGET test_iodaconv_nc2odb_tool_old_dt
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS odb
+                         "${CMAKE_BINARY_DIR}/bin/nc2odb.py -c
+                         testinput/gnssro_obs_2018041500_s.nc4
+                         testrun/gnssro_obs_2018041500_s.odb"
+                        gnssro_obs_2018041500_s.odb)
 endif ()
