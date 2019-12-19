@@ -156,7 +156,7 @@ else:
 VarList = {
     'date@MetaData:INTEGER': Dates,
     'time@MetaData:INTEGER': Times
-    }
+}
 Nvars = len(VarList)
 
 # Walk through the variables, convert missing marks to odb values, and convert date time
