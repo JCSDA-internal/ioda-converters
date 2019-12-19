@@ -36,16 +36,12 @@ def ConvertDtStrings(DtStrings):
 def ConvertDtRefOffset(RefDtInt, OffsetTime):
     # convert the reference date time to a datetime object
     TempRef = RefDtInt
-    print("tr1: ", TempRef)
-    Year = int(TempRef / 1000000)
+    Year = TempRef // 1000000
     TempRef = TempRef % 1000000
-    print("tr2: ", TempRef)
-    Month = int(TempRef / 10000)
+    Month = TempRef // 10000
     TempRef = TempRef % 10000
-    print("tr3: ", TempRef)
-    Day = int(TempRef / 100)
+    Day = TempRef // 100
     Hour = TempRef % 100
-    print(Year, Month, Day, Hour)
     RefDt = dt.datetime(Year, Month, Day, Hour)
 
     Dates = []
