@@ -155,6 +155,12 @@ class IODA(object):
 
             for n in range(obs.data['nobs']):
 
+                oval = obs.data['value'][n]
+                oerr = obs.data['oerr'][n]
+
+                if discardOb(varName, oval):
+                    continue
+
                 lat = obs.data['lat'][n]
                 lon = obs.data['lon'][n]
                 lvl = obs.data['depth'][n]
@@ -164,12 +170,6 @@ class IODA(object):
                 valKey = self.keyDict[varName]['valKey']
                 errKey = self.keyDict[varName]['errKey']
                 qcKey = self.keyDict[varName]['qcKey']
-
-                oval = obs.data['value'][n]
-                oerr = obs.data['oerr'][n]
-
-                if discardOb(varName, oval):
-                    continue
 
                 self.data[recKey][locKey][valKey] = oval
                 self.data[recKey][locKey][errKey] = oerr
