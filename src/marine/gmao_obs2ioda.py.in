@@ -155,6 +155,12 @@ class IODA(object):
 
             for n in range(obs.data['nobs']):
 
+                oval = obs.data['value'][n]
+                oerr = obs.data['oerr'][n]
+
+                if discardOb(varName, oval):
+                    continue
+
                 lat = obs.data['lat'][n]
                 lon = obs.data['lon'][n]
                 lvl = obs.data['depth'][n]
@@ -165,8 +171,8 @@ class IODA(object):
                 errKey = self.keyDict[varName]['errKey']
                 qcKey = self.keyDict[varName]['qcKey']
 
-                self.data[recKey][locKey][valKey] = obs.data['value'][n]
-                self.data[recKey][locKey][errKey] = obs.data['oerr'][n]
+                self.data[recKey][locKey][valKey] = oval
+                self.data[recKey][locKey][errKey] = oerr
                 self.data[recKey][locKey][qcKey] = 0
 
         (ObsVars, RecMdata, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
@@ -223,6 +229,30 @@ def sortDict(obsDictIn):
         obsDictOut[key] = [item for sublist in obsList for item in sublist]
 
     return obsDictOut
+
+
+def discardOb(varName, obsValue):
+
+    discardOb = True
+
+    if varName in ["sea_water_salinity"]:
+        if 0. <= obsValue <= 50.:
+            discardOb = False
+    elif varName in ["sea_water_temperature", "sea_surface_temperature"]:
+        if -2. <= obsValue <= 100.:
+            discardOb = False
+    elif varName in ["obs_absolute_dynamic_topography"]:
+        if -5. <= obsValue <= 5.:
+            discardOb = False
+    elif varName in ["sea_ice_area_fraction"]:
+        if 0. <= obsValue <= 1.:
+            discardOb = False
+    elif varName in ["sea_ice_thickness"]:
+        discardOb = False
+    else:
+        raise SystemExit("Unknown observation variable %s" % varName)
+
+    return discardOb
 
 
 def main():
