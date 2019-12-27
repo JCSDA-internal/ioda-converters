@@ -7,6 +7,11 @@
 
 !!!---------  to run   -----------------------------------------------------------------
 !  ./gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
+!
+! Return codes:
+!  0 - Success.
+!  1 - Unrecoverable system or logical error.
+!  2 - All provided observations are invalid.  Cannot create NetCDF IODA file.
 
 
 program gnssro_bufr2ioda
@@ -301,7 +306,7 @@ end do
 call closbf(lnbufr)
 if (nrec==0) then
     write(6,*) "Error. No valid observations found. Cannot create NetCDF ouput."
-    stop 1
+    stop 2
 endif
 
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
