@@ -7,6 +7,11 @@
 
 !!!---------  to run   -----------------------------------------------------------------
 !  ./gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
+!
+! Return codes:
+!  0 - Success.
+!  1 - Unrecoverable system or logical error.
+!  2 - All provided observations are invalid.  Cannot create NetCDF IODA file.
 
 
 program gnssro_bufr2ioda
@@ -16,7 +21,7 @@ implicit none
 integer, parameter :: i_short = selected_int_kind(4)  !2
 integer, parameter :: i_kind  = selected_int_kind(8)
 integer, parameter :: r_double = selected_real_kind(15) !8
-integer, parameter :: r_kind = selected_real_kind(15) !8
+integer, parameter :: r_kind   = selected_real_kind(15) !8
 
 ! output obs data stucture
 integer   :: ncid
@@ -76,10 +81,10 @@ real(r_double),dimension(50,maxlevs) :: data1b
 real(r_double),dimension(50,maxlevs) :: data2a
 real(r_double),dimension(maxlevs)  :: nreps_this_ROSEQ2
 integer(i_kind)           :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
-real(r_double) pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
-real(r_double) height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
-real(r_double) obsErr 
-real(r_double), parameter :: missingvalue=-9.9e15
+real(r_double) :: pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
+real(r_double) :: height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
+real(r_double) :: obsErr
+real(r_double),   parameter :: missingvalue=-9.9e10
 logical,        parameter :: GlobalModel = .true. ! temporary
 
 character(10) nemo
@@ -301,7 +306,7 @@ end do
 call closbf(lnbufr)
 if (nrec==0) then
     write(6,*) "Error. No valid observations found. Cannot create NetCDF ouput."
-    stop 1
+    stop 2
 endif
 
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
@@ -314,24 +319,63 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_var(ncid, "latitude@MetaData",      NF90_FLOAT, nlocs_dimid, varid_lat) )
 call check( nf90_def_var(ncid, "longitude@MetaData",    NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_def_var(ncid, "time@MetaData",         NF90_FLOAT, nlocs_dimid, varid_time) )
+call check( nf90_put_att(ncid, varid_time, "longname", "time offset to analysis time" ))
+call check( nf90_put_att(ncid, varid_time, "units", "hour" ))
 call check( nf90_def_var(ncid, "datetime@MetaData",     NF90_CHAR, (/ ndatetime_dimid, nlocs_dimid /), varid_datetime) )
 call check( nf90_def_var(ncid, "record_number@MetaData",   NF90_INT, nlocs_dimid, varid_recn))
+call check( nf90_put_att(ncid, varid_recn, "longname", "GNSS RO profile identifier" ))
 call check( nf90_def_var(ncid, "gnss_sat_class@MetaData",  NF90_INT, nlocs_dimid, varid_sclf))
+call check( nf90_put_att(ncid, varid_sclf, "longname", "GNSS satellite classification, e.g, 401=GPS, 402=GLONASS" ))
 call check( nf90_def_var(ncid, "reference_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_ptid))
-call check( nf90_def_var(ncid, "occulting_sat_id@MetaData",  NF90_INT, nlocs_dimid, varid_said))
+call check( nf90_put_att(ncid, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)" ))
+call check( nf90_def_var(ncid, "occulting_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_said))
+call check( nf90_put_att(ncid, varid_said, "longname", "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755" ))
 call check( nf90_def_var(ncid, "ascending_flag@MetaData",  NF90_INT, nlocs_dimid, varid_asce))
+call check( nf90_put_att(ncid, varid_asce, "longname", "the original occultation ascending/descending flag" ))
+call check( nf90_put_att(ncid, varid_asce, "valid_range", "0/descending or 1/ascending" ))
 call check( nf90_def_var(ncid, "refractivity@ObsValue", NF90_FLOAT, nlocs_dimid, varid_ref) )
+call check( nf90_put_att(ncid, varid_ref, "longname", "Atmospheric refractivity" ))
+call check( nf90_put_att(ncid, varid_ref, "_FillValue", real(missingvalue) ))
+call check( nf90_put_att(ncid, varid_ref, "units", "N" ))
+call check( nf90_put_att(ncid, varid_ref, "valid_range", "0 - 500 N" ))
 call check( nf90_def_var(ncid, "refractivity@ObsError", NF90_FLOAT, nlocs_dimid, varid_refoe))
+call check( nf90_put_att(ncid, varid_refoe, "longname", "Input error in atmospheric refractivity" ))
+call check( nf90_put_att(ncid, varid_refoe, "_FillValue", real(missingvalue) ))
+call check( nf90_put_att(ncid, varid_refoe, "units", "N" ))
+call check( nf90_put_att(ncid, varid_refoe, "valid_range", "0 - 10 N" ))
 call check( nf90_def_var(ncid, "altitude@MetaData", NF90_FLOAT, nlocs_dimid, varid_msl) )
+call check( nf90_put_att(ncid, varid_msl, "longname", "Geometric altitude" ))
+call check( nf90_put_att(ncid, varid_msl, "units", "Meters" ))
 call check( nf90_def_var(ncid, "bending_angle@ObsValue", NF90_FLOAT, nlocs_dimid, varid_bnd) )
+call check( nf90_put_att(ncid, varid_bnd, "longname", "Bending Angle" ))
+call check( nf90_put_att(ncid, varid_bnd, "units", "Radians" ))
+call check( nf90_put_att(ncid, varid_bnd, "valid_range", "-0.001 - 0.08 Radians" ))
 call check( nf90_def_var(ncid, "bending_angle@ObsError", NF90_FLOAT, nlocs_dimid, varid_bndoe) )
+call check( nf90_put_att(ncid, varid_bndoe, "longname", "Input error in Bending Angle" ))
+call check( nf90_put_att(ncid, varid_bndoe, "units", "Radians" ))
+call check( nf90_put_att(ncid, varid_bndoe, "valid_range", "0 - 0.008 Radians" ))
 call check( nf90_def_var(ncid, "impact_parameter@MetaData", NF90_FLOAT, nlocs_dimid, varid_impp))
+call check( nf90_put_att(ncid, varid_impp, "longname", "distance from centre of curvature" ))
+call check( nf90_put_att(ncid, varid_impp, "units", "Meters" ))
+call check( nf90_put_att(ncid, varid_impp, "valid_range", "6200 - 6600 km" ))
 call check( nf90_def_var(ncid, "impact_height@MetaData", NF90_FLOAT, nlocs_dimid, varid_imph))
-call check( nf90_def_var(ncid, "sensor_azimuth_angle@MetaData",NF90_FLOAT, nlocs_dimid, varid_azim))
+call check( nf90_put_att(ncid, varid_imph, "longname", "distance from mean sea level" ))
+call check( nf90_put_att(ncid, varid_imph, "units", "Meters" ))
+call check( nf90_put_att(ncid, varid_imph, "valid_range", "0 - 200 km" ))
+call check( nf90_def_var(ncid, "sensor_azimuth_angle@MetaData", NF90_FLOAT, nlocs_dimid, varid_azim))
+call check( nf90_put_att(ncid, varid_azim, "longname", "GNSS->LEO line of sight" ))
+call check( nf90_put_att(ncid, varid_azim, "units", "Degree" ))
+call check( nf90_put_att(ncid, varid_azim, "valid_range", "0 - 360 degree" ))
 call check( nf90_def_var(ncid, "geoid_height_above_reference_ellipsoid@MetaData",NF90_FLOAT, nlocs_dimid, varid_geoid))
+call check( nf90_put_att(ncid, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
+call check( nf90_put_att(ncid, varid_geoid, "units", "Meters" ))
+call check( nf90_put_att(ncid, varid_geoid, "valid_range", "-200 - 200 m" ))
 call check( nf90_def_var(ncid, "earth_radius_of_curvature@MetaData",NF90_FLOAT, nlocs_dimid, varid_rfict))
-
+call check( nf90_put_att(ncid, varid_rfict, "longname", "Earth’s local radius of curvature" ))
+call check( nf90_put_att(ncid, varid_rfict, "units", "Meters" ))
+call check( nf90_put_att(ncid, varid_rfict, "valid_range", "6200 - 6600 km" ))
 call check( nf90_enddef(ncid) )
+
 call check( nf90_put_var(ncid, varid_lat, gpsro_data%lat(1:ndata)) )
 call check( nf90_put_var(ncid, varid_lon, gpsro_data%lon(1:ndata)) )
 call check( nf90_put_var(ncid, varid_time, gpsro_data%time(1:ndata)) )
@@ -385,12 +429,12 @@ contains
 
 
 subroutine  refractivity_err_gsi(obsLat, obsZ, GlobalModel, obsErr)
-real(r_kind), intent(in)   :: obsLat,  obsZ
-real(r_kind),  intent(out) :: obsErr
+real(r_double), intent(in)   :: obsLat,  obsZ
+real(r_double),  intent(out) :: obsErr
 logical,         intent(in)   :: GlobalModel
-real(r_kind)               :: obsZ_km
+real(r_double)               :: obsZ_km
 
-obsZ_km  = obsZ / 1000.0_r_kind
+obsZ_km  = obsZ / 1000.0
 
 if( GlobalModel ) then ! for global
 
@@ -425,11 +469,11 @@ endif
 end subroutine refractivity_err_gsi
 
 subroutine  bendingangle_err_gsi(obsLat, obsZ,  obsErr)
-real(r_kind), intent(in)   :: obsLat,  obsZ
-real(r_kind),  intent(out) :: obsErr
-real(r_kind)               :: obsZ_km
+real(r_double), intent(in)   :: obsLat,  obsZ
+real(r_double),  intent(out) :: obsErr
+real(r_double)               :: obsZ_km
 
-obsZ_km  = obsZ / 1000.0_r_kind
+obsZ_km  = obsZ / 1000.0
 if((said==41).or.(said==722).or.(said==723).or.(said==4).or.(said==42).or.&
                  (said==3).or.(said==821.or.(said==421)).or.(said==440).or.(said==43)) then
      if( abs(obsLat)>= 40.00 ) then
