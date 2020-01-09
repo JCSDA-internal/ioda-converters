@@ -1,5 +1,6 @@
 list(APPEND programs
   nc2odb.py
+  run_nc2odb.sh
 )
 
 set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )
