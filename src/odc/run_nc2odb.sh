@@ -4,6 +4,31 @@
 # files to odb equivalents. The new files will be placed alongside the original
 # netcdf files.
 
+# Check for clobber option (overwrite existing file)
+NcToOdbOpts=""
+BadArgs="F"
+while getopts "c" option
+do
+  case "${option}" in
+    c)
+      NcToOdbOpts="${NcToOdbOpts} -c"
+      ;;
+    :)
+      echo "Invalid option: $OPTARG requires an argument" 1>&2
+      ;;
+    ?)
+      BadArgs="T"
+      ;;
+  esac
+done
+shift "$(($OPTIND - 1))"
+
+if [[ "${BadArgs}" == "T" ]]
+then
+  echo "USAGE: $(basename ${0}) [-c] <list_of_directories>" 1>&2
+  exit 1
+fi
+
 # Accept a list of directories, which will be processed sequentially.
 for TopDir in ${@}
 do
@@ -18,7 +43,7 @@ do
       echo "  *********** ${NcFile} ***********"
       echo
       OdbFile=$(echo ${NcFile} | sed -e's/\.nc[4]*$/\.odb/')
-      nc2odb.py ${NcFile} ${OdbFile}
+      nc2odb.py ${NcToOdbOpts} ${NcFile} ${OdbFile}
       echo
     done
   fi
