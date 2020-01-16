@@ -46,7 +46,7 @@ if MyArgs.obs_dir:
     radfiles = glob.glob(DiagDir+'/diags_*')
     for radfile in radfiles:
         process = False
-        for p in wrfdad.rad_sensors:
+        for p in wrfdad.rad_platform_sensor_combos:
             if p in radfile:
                 process = True
         if process:
