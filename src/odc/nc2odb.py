@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import sys
+import os
 from pathlib import Path
 prefix_lib_path = Path(__file__).absolute().parent.parent/'lib'
+prefix_bin_path = prefix_lib_path.parent/'bin'
 sys.path.append(str(prefix_lib_path))
 sys.path.append(str(prefix_lib_path/'python{}.{}'.format(*sys.version_info)/'site-packages'))
+os.environ['PATH']="%s:%s"%(os.environ['PATH'],str(prefix_bin_path))
 
-import os
 import tempfile
 import argparse
 import datetime as dt
