@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
 import sys
+from pathlib import Path
+prefix_lib_path = Path(__file__).absolute().parent.parent/'lib'
+sys.path.append(str(prefix_lib_path))
+sys.path.append(str(prefix_lib_path/'python{}.{}'.format(*sys.version_info)/'site-packages'))
+
 import os
 import tempfile
 import argparse
