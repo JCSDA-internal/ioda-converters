@@ -21,6 +21,7 @@ all_LocKeyList = {
     'satazi': [('sensor_azimuth_angle', 'float')],
     'solzen': [('solar_zenith_angle', 'float')],
     'solazi': [('solar_azimuth_angle', 'float')],
+    'cloud_frac': [('retrieved_cloud_area_fraction', 'float')],
 }
 
 wrfda_add_vars = {
@@ -187,7 +188,6 @@ units_values = {
 # @TestReference
 # fields from WRFDA to compare to computations done in UFO
 test_fields = {
-    'cloud_frac': ('retrieved_cloud_fraction', 'float'),
 }
 
 ###############################################################################
