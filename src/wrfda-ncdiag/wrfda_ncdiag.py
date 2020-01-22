@@ -32,7 +32,6 @@ wrfda_add_vars = {
 #    'cloud_obs':  'WrfdaCloudObs',
 #    'cloud_mod':  'WrfdaCloudModel',
 }
-
 rad_platform_sensor_combos = [
 #    'eos-2-airs',
 #    'fy3-1-mwhs',
@@ -64,6 +63,28 @@ rad_platform_sensor_combos = [
 #    'noaa-19-amsua',
 #    'noaa-19-mhs'
 ]
+
+wrfda2crtm_satellite_map = {
+#    'eos-2':'aqua',
+#    'fy3-1':'fy3a',
+#    'fy3-2':'fy3b',
+#    'fy3-3':'fy3c',
+#    'gcom-w-1':'gcom-w1',
+    'goes-16':'g16',
+    'goes-17':'g17',
+    'himawari-8':'himawari8',
+#    'jpss-0':'npp',
+#    'metop-1':'metop-a',
+#    'metop-2':'metop-b',
+#    'msg-2':'m09',
+#    'msg-3':'m10',
+#    'noaa-15':'n15',
+#    'noaa-16':'n16',
+#    'noaa-17':'n17',
+#    'noaa-18':'n18',
+#    'noaa-19':'n19',
+#    'noaa-20':'n20',
+}
 
 sensor_chanlist_dict = {
     'abi': list(range(7,17)),
@@ -233,7 +254,13 @@ class Radiances:
         self.validtime = dt.datetime.strptime(tstr, "%Y%m%d%H")
         # sensor and satellite
         self.sensor = self.platform_sensor.split('-')[-1]
-        self.satellite = "-".join(self.platform_sensor.split('-')[0:-1])
+        satellite = "-".join(self.platform_sensor.split('-')[0:-1])
+        if satellite in wrfda2crtm_satellite_map:
+            self.satellite = wrfda2crtm_satellite_map[satellite]
+        else:
+            print("ERROR: Satellite not found in wrfda2crtm_satellite_map:")
+            print(satellite)
+            os._exit(1)
 
         # number of observations
         self.nlocs = len(df.dimensions['npixel'])
