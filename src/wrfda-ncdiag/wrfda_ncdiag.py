@@ -15,7 +15,7 @@ all_LocKeyList = {
     'lat': [('latitude', 'float')],
     'lon': [('longitude', 'float')],
     'elv': [('height_above_mean_sea_level', 'float')],
-    'scanpos': [('scan_position', 'integer')],
+    'scanpos': [('scan_position', 'float')],
     'satzen': [('sensor_zenith_angle', 'float'),
                ('sensor_view_angle', 'float')],
     'satazi': [('sensor_azimuth_angle', 'float')],
@@ -168,9 +168,11 @@ units_values = {
     'station_elevation': 'm',
     'height': 'm',
     'height_above_mean_sea_level': 'm',
+    'cloud_area_fraction': '1',
     'scan_position': '1',
-    'sensor_zenith_angle': 'degree',
     'sensor_azimuth_angle': 'degree',
+    'sensor_zenith_angle': 'degree',
+    'sensor_view_angle': 'degree',
     'solar_zenith_angle': 'degree',
     'solar_azimuth_angle': 'degree',
     'modis_deep_blue_flag': '1',
@@ -323,9 +325,11 @@ class Radiances:
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
-                tmp = self.df[lvar][:]
                 if loc_mdata_type == 'float':
+                    tmp = self.df[lvar][:].astype(float)
                     tmp[tmp <= wrfda_miss_float] = nc.default_fillvals['f4']
+                else:
+                    tmp = self.df[lvar][:]
                 loc_mdata[loc_mdata_name] = tmp
 
         # put the TestReference fields in the structure for writing out
