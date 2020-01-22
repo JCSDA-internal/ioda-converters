@@ -21,7 +21,7 @@ all_LocKeyList = {
     'satazi': [('sensor_azimuth_angle', 'float')],
     'solzen': [('solar_zenith_angle', 'float')],
     'solazi': [('solar_azimuth_angle', 'float')],
-    'cloud_frac': [('retrieved_cloud_area_fraction', 'float')],
+    'cloud_frac': [('cloud_area_fraction', 'float')],
 }
 
 wrfda_add_vars = {
@@ -249,13 +249,23 @@ class Radiances:
         """
         import ioda_conv_ncio as iconv
         import os
+        import errno
         from collections import defaultdict, OrderedDict
         from orddicts import DefaultOrderedDict
         import numpy as np
         import datetime as dt
         import netCDF4 as nc
+
+        # place files for individual dates in separate directories
+        fullOutDir = OutDir + '/' + self.validtime.strftime("%Y%m%d%H")
+        try:
+            os.makedirs(fullOutDir)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(fullOutDir):
+                pass
+
         # set up a NcWriter class
-        outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
+        outname = fullOutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
         if not clobber:
             if (os.path.exists(outname)):
