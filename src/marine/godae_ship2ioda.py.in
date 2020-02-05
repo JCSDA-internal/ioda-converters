@@ -73,7 +73,7 @@ class ship(object):
 
         if data['n_vrsn'] <= 2:
             print('verify ob_sign for version = %d' % data['n_vrsn'])
-            data['ob_sign'] = fh.read_record('>S7').astype('U7')
+            data['ob_sign'] = fh.read_record('S6').astype('U6')
         else:
             data['ob_sign'] = fh.read_record('>S7').astype('U7')
 

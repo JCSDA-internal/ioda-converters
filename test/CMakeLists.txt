@@ -21,6 +21,9 @@ list( APPEND test_input
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/odb_sonde_16019.odb
   testinput/owp_snow_obs.pkl
+  testinput/gnssro_kompsat5_20180415_00Z.bufr
+  testinput/argoclim_test.nc
+  testinput/cryosat2_L2_test.nc
 )
 
 list( APPEND test_output
@@ -37,6 +40,9 @@ list( APPEND test_output
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/odb_sonde_16019.nc4
   testoutput/owp_snow_obs.nc
+  testoutput/gnssro_kompsat5_2018041500.nc4
+  testoutput/argoclim.nc
+  testoutput/cryosat2_L2.nc
 )
 
 # create test directories and make links to the input files
@@ -49,6 +55,11 @@ foreach(FILENAME ${test_input} ${test_output} iodaconv_comp.sh)
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
 endforeach(FILENAME)
 
+# create list of library paths for finding shared libraries
+string( REPLACE ";" ":"
+        CTEST_LIBRARY_PATH
+        "${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES}" )
+message( STATUS "Library path for testing: ${CTEST_LIBRARY_PATH}" )
 
 #===============================================================================
 # The following tests use nccmp to check the difference between the output
@@ -162,6 +173,25 @@ ecbuild_add_test( TARGET test_iodaconv_hgodas_sst
                        -d 2018041512"
                       hgodas_sst.nc)
 
+ecbuild_add_test( TARGET test_iodaconv_argoclim
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/argoClim2ioda.py
+                       -i testinput/argoclim_test.nc
+                       -o testrun/argoclim.nc
+                       -d 2019101600"
+                      argoclim.nc)
+
+ecbuild_add_test( TARGET test_iodaconv_cryosat2
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/cryosat_ice2ioda.py
+                       -i testinput/cryosat2_L2_test.nc
+                       -o testrun/cryosat2_L2.nc
+                       -d 2019092100"
+                      cryosat2_L2.nc)
+
+
 #===============================================================================
 # GSI ncdiag converters
 #===============================================================================
@@ -185,6 +215,21 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
                        -t rad"
                       amsua_aqua_obs_2018041500.nc4)
 
+#===============================================================================
+# GNSSRO BUFR converter
+#===============================================================================
+
+if( HAVE_BUFRLIB_AND_NETCDF )
+  ecbuild_add_test( TARGET test_iodaconv_gnssro_bufr_conv
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS "${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda
+                         2018041500
+                         testinput/gnssro_kompsat5_20180415_00Z.bufr
+                         testrun/gnssro_kompsat5_2018041500.nc4"
+                        gnssro_kompsat5_2018041500.nc4
+                    ENVIRONMENT CTEST_LIBRARY_PATH=${CTEST_LIBRARY_PATH} )
+endif()  
 #===============================================================================
 # ODB2 converter
 #===============================================================================

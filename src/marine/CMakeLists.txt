@@ -1,4 +1,5 @@
 list(APPEND programs
+  cryosat_ice2ioda.py
   emc_ice2ioda.py
   gds2_sst2ioda.py
   gmao_obs2ioda.py
@@ -10,6 +11,7 @@ list(APPEND programs
   hgodas_sst2ioda.py
   rads_adt2ioda.py
   smap_sss2ioda.py
+  argoClim2ioda.py
 )
 
 set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )

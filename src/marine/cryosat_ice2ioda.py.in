@@ -14,6 +14,8 @@ import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
 import numpy as np
+import subprocess
+import os
 
 sys.path.append("@SCRIPT_LIB_PATH@")
 from orddicts import DefaultOrderedDict
@@ -24,7 +26,12 @@ class Observation(object):
 
     def __init__(self, filename, thin, date, writer):
         print(date)
-        self.filename = filename
+
+        if os.path.exists("cryosat_nc4classic.nc"):
+            os.remove("cryosat_nc4classic.nc")
+
+        subprocess.call('nccopy -k nc7 '+filename[0]+' cryosat_nc4classic.nc', shell=True)
+        self.filename = "cryosat_nc4classic.nc"
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -33,13 +40,16 @@ class Observation(object):
 
     def _read(self):
 
-        ncd = nc.MFDataset(self.filename)
-        datein = ncd.variables['dtg_yyyymmdd'][:]
-        timein = ncd.variables['dtg_hhmm'][:]
-        lons = ncd.variables['longitude'][:]
-        lats = ncd.variables['latitude'][:]
-        vals = ncd.variables['ice_concentration'][:]
-        qc = ncd.variables['quality'][:]
+        ncd = nc.MFDataset(self.filename, aggdim='time_20_ku')
+        time = ncd.variables['time_20_ku'][:]
+        lons = ncd.variables['lon_poca_20_ku'][:]
+        lats = ncd.variables['lat_poca_20_ku'][:]
+        vals = ncd.variables['freeboard_20_ku'][:]
+        qc = ncd.variables['flag_prod_status_20_ku'][:]
+        # get base date for file
+        s = ' '.join(
+            ncd.variables['time_20_ku'].units.split(' ')[2:3])
+        reftime = dateutil.parser.parse(s)
         ncd.close()
 
         valKey = vName, self.writer.OvalName()
@@ -57,19 +67,16 @@ class Observation(object):
             qc = qc[mask_thin]
 
         for i in range(len(lons)):
-            obs_date = datetime.combine(
-                datetime.strptime(
-                    np.array2string(
-                        datein[i]), "%Y%m%d"), datetime.strptime(
-                    np.array2string(
-                        timein[i]).zfill(4), "%H%M").time())
+            obs_date = reftime + timedelta(seconds=float(time[i]))
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
             self.data[0][locKey][qcKey] = qc[i]
 
+        os.remove("cryosat_nc4classic.nc")
 
-vName = "sea_ice_area_fraction"
+
+vName = "sea_ice_freeboard"
 
 locationKeyList = [
     ("latitude", "float"),
@@ -85,13 +92,13 @@ AttrData = {
 def main():
 
     parser = argparse.ArgumentParser(
-        description=('')
+        description=('Reads Cryosat-2 Ice Freeboard data from ESA and converts into IODA formatted NetCDF files ')
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="EMC ice fraction obs input file(s)",
+        help="Cryosat-2 ice freeboard obs input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
