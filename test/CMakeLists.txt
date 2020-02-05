@@ -20,6 +20,7 @@ list( APPEND test_input
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/odb_sonde_16019.odb
+  testinput/owp_snow_obs.pkl
 )
 
 list( APPEND test_output
@@ -35,6 +36,7 @@ list( APPEND test_output
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/odb_sonde_16019.nc4
+  testoutput/owp_snow_obs.nc
 )
 
 # create test directories and make links to the input files
@@ -57,6 +59,21 @@ endforeach(FILENAME)
 #  created in testrun/ by the converter, and one copy already present in in
 #  testoutput/)
 #===============================================================================
+
+#===============================================================================
+# owp_snow_data converters
+#===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_owp_snow_obs_pkl
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_pkl_2_ioda.py
+                       -i testinput/owp_snow_obs.pkl
+                       -o testrun/owp_snow_obs.nc
+                       -d 2019021502
+                       -t 0.5"
+                      owp_snow_obs.nc)
+
 
 #===============================================================================
 # Marine converters
@@ -181,3 +198,5 @@ if (ODB_API_HAVE_PYTHON AND PYTHON_VERSION_STRING VERSION_LESS 3)
                          testrun/odb_sonde_16019.nc4"
                         odb_sonde_16019.nc4)
 endif ()
+
+

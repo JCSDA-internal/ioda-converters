@@ -1,46 +1,73 @@
 #!/usr/bin/env python3
-# TODO JLM: is this the propoer way to use/invoke python3?
+from datetime import datetime
+from multiprocessing import Pool
+import numpy as np
+import os
+import pickle
+import sys
+# sys.path.append("/jedi/tools/lib/pyiodaconv")  # dummy before install
+sys.path.append("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
 
 # (C) Copyright 2019 UCAR
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
+# Author:
+# 2020-2-5: James McCreight
+
 # Conceptual Figure:
 # https://jointcenterforsatellitedataassimilation-jedi-docs.readthedocs-hosted.com/en/latest/_images/IODA_InMemorySchematic.png
 
-# Purpose: Convert SNODAS observations to IODA format.
+# Purpose: Convert OWP snow observations to IODA format.
 # Notes: This converter works with a temporary pickle file for converting
-# snodas obs to IODA format. The data in the pickle file are read from a
+# obs to IODA format. The data in the pickle file are read from an OWP
 # database in python and they are in a simple but unfinalized format. The
 # read_input function could be replaced by the database query code.
 
 # Example testing usage:
-# ipython --pdn -c "%run snodas_pkl_2_ioda.py -i ../../../../data/snodas/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl -o ../../../../data/snodas/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc -d 2019021502 "
+# ipython --pdb -c "%run owp_snow_obs_pkl_2_ioda.py \
+#    -i ../../../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl \
+#    -o ../../../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc \
+#    -d 2019021502 "
 
 # Input structure:
-# Data as from /Users/jamesmcc/jedi/data/snodas/example_code.py
+# The input data structure is not well documented. I (JM) have a python script
+# that more or less displays the structure in
+# /Users/jamesmcc/jedi/data/owp_snow_obs/example_code.py
 
 # Output structure:
-# Adapted from gds2_sst_l2p.nc by editing text. The goal is for the output
-# metadata to match this.
 
+# root@8bba783e233d:/jedi/repos/ioda-converters/test/testoutput# ncdump -h owp_snow_obs.nc
+# netcdf owp_snow_obs {
 # dimensions:
 # 	nvars = 1 ;
-# 	nlocs = 167136 ;
-# 	nrecs = 1 ;                                           ## TODO JLM: what is this ??
+# 	nlocs = 156 ;
+# 	nrecs = 1 ;
 # 	nstring = 50 ;
 # 	ndatetime = 20 ;
 # variables:
-# 	int snow_depth@PreQC(nlocs) ;
-# 	float snow_depth@ObsValue(nlocs) ;
+# 	float snow_depth@PreQC(nlocs) ;
 # 	float snow_depth@ObsError(nlocs) ;
-# TODO JLM: would be nice if the metadata on time@MetaData would say what the datum is and
-#           what they units are.
+# 	float snow_depth@ObsValue(nlocs) ;
 # 	float time@MetaData(nlocs) ;
 # 	float latitude@MetaData(nlocs) ;
 # 	float longitude@MetaData(nlocs) ;
 # 	char datetime@MetaData(nlocs, ndatetime) ;
+# 	char variable_names@VarMetaData(nvars, nstring) ;
 
+# // global attributes:
+# 		:nrecs = 1 ;
+# 		:nvars = 1 ;
+# 		:nlocs = 156 ;
+# 		:thinning = 0.5 ;
+# 		:date_time = 2019021502 ;
+# 		:converter = "owp_snow_obs_pkl_2_ioda.py" ;
+# }
+
+# Some todos on potentially desirable information to add in the future:
+# TODO JLM: would be nice if the metadata on time@MetaData would say what the datum is and
+#           what they units are.
 # TODO JLM: Which of these are standardized?
 #           Every variable may not have elevation.... nor station_id etc...
 #           Should these be metadata or not?
@@ -48,38 +75,14 @@
 #       float rec_elevation@MetaData(nlocs) ;
 #       char station_id@MetaData(nlocs) ;
 #       char station_name@MetaData(nlocs) ;
-
-# 	char variable_names@VarMetaData(nvars, nstring) ;
-
 # // global attributes:
-# 		:nrecs = 1 ;
-# 		:nvars = 2 ;
-# 		:nlocs = 6964 ;
-# 		:converter = "snodas_pkl_2_ioda.py" ;
-# 		:date_time = 2018041512 ;                     ## TODO JLM: what is this ??
-# 		:platform = "SNODAS" ;
-# 		:thinning = 0.5 ;
+# 		:platform = "OWP Snow Obs" ;
 # 		:sensor = "Multiple" ;
-# 		:processing_level = "SNODAS" ;
-# }
-
-from datetime import datetime
-from multiprocessing import Pool
-import numpy as np
-import os
-import pickle
-import sys
-
-sys.path.append("/jedi/tools/lib/pyiodaconv")  ## dummy before install
-#sys.path.append("@SCRIPT_LIB_PATH@")
-import ioda_conv_ncio as iconv
-
+# 		:processing_level = "??" ;
 
 arg_parse_description = (
-    'Reads the sea surface temperature from any GHRRST Data '
-    ' Specification (GDS2.0) formatted L2 or L3 file(s) and converts'
-    ' into IODA formatted output files. Multiple files are'
-    ' concatenated and optional thinning can be performed.')
+    """Reads snow OWP observations in python pkl files and converts
+    tio IODA output files. """)
 
 output_var_names = {'depth': 'snow_depth', 'swe': 'swe'}
 
@@ -120,7 +123,6 @@ def read_input(input_args: dict):
 
     attr_data = {}
 
-        
     # -----------------------------------------------------------------------------
     # Location (=space *time) Meta Data: Orange box in conceptual figure.
 
@@ -149,18 +151,18 @@ def read_input(input_args: dict):
     lons = np.tile(lons_unique, len(time_unique)).ravel()
     lats = np.tile(lats_unique, len(time_unique)).ravel()
     time = np.tile(np.atleast_2d(time_unique).T, (1, n_unique_space)).ravel()
-    # TODO JLM: I dont see formatting options in intrisic np.datetime_as_str, plus
-    #           input is not datetime.
+    # TODO JLM: I dont see formatting options in intrisic np.datetime_as_str,
+    #           plus input is not datetime.
     time_str = np.array([tt.strftime("%Y-%m-%dT%H:%M:%SZ") for tt in time])
 
     # Additional metadata?
     # The possibilities: ['station_elevation', 'station_id', 'station_name',
     # 'station_rec_elevation'])
-
     # Optional (reproducibly) random thinning: Create a thin_mask (seed
     # depends on ref_date_time).
-    np.random.seed(int((global_config['ref_date_time'] -
-                        datetime(1970, 1, 1)).total_seconds()))
+    np.random.seed(int((
+        global_config['ref_date_time'] - datetime(1970, 1, 1)
+    ).total_seconds()))
     thin_mask = np.random.uniform(size=len(lons)) > global_config['thin']
 
     # final output structure
@@ -174,16 +176,17 @@ def read_input(input_args: dict):
     # Obs data and ObsError: Blue and yellow boxes in conceptual figure.
 
     # Structure it for easy iteration in populating the output structure.
+    # TODO JLM: the err and qc multipliers are COMPLETELY MADE UP.
     var_dict = {
         'depth': {
             'values': obs_dict['values_cm'].ravel()[thin_mask],
-            'err': obs_dict['values_cm'].ravel()[thin_mask] * .1,  # making shit up
-            'qc': obs_dict['values_cm'].ravel()[thin_mask] * 0  # making shit up
+            'err': obs_dict['values_cm'].ravel()[thin_mask] * .1,
+            'qc': obs_dict['values_cm'].ravel()[thin_mask] * 0
         },
         # 'swe': {  # When we have the data....
         #     'values': obs_dict['swe_cm'][thin_mask],
-        #     'err': obs_dict['swe_cm'][thin_mask] * .1,  # making shit up
-        #     'qc': 0  # making shit up
+        #     'err': obs_dict['swe_cm'][thin_mask] * .1,
+        #     'qc': 0
         # }
     }
 
@@ -206,13 +209,14 @@ def read_input(input_args: dict):
     return (obs_data, loc_data, attr_data)
 
 
-def snodas_pkl_2_ioda(args):
+def owp_snow_obs_pkl_2_ioda(args):
 
     writer = iconv.NcWriter(args.output, [], [])
 
     # TODO JLM: Global config: is what?
     # {
-    #   'date': for what purpose - seems to only be used for setting the thinning seed
+    #   'date': for what purpose - seems to only be used for
+    #           setting the thinning seed
     #   'thin': A fractional thinning amt? 0.0,
     #   # The following just provide field names?
     #   'opqc_name': What does this mean? 'PreQC'
@@ -229,7 +233,8 @@ def snodas_pkl_2_ioda(args):
     global_config['output_swe'] = args.only_swe
 
     # Create a list of arg dicts
-    pool_inputs = [{'input': i, 'global_config': global_config} for i in args.input]
+    pool_inputs = [
+        {'input': i, 'global_config': global_config} for i in args.input]
 
     # Serial version for debugging and option to process files in parallel.
     if args.processes == 1:
@@ -238,7 +243,7 @@ def snodas_pkl_2_ioda(args):
         with Pool(processes=args.processes) as pool:
             obs = pool.map(read_input, pool_inputs)
 
-    # concatenate the data from the files
+    # TODO JLM: concatenate the data from the files
     obs_data, loc_data, attr_data = obs[0]
     loc_data['datetime'] = writer.FillNcVector(
         loc_data['datetime'], "datetime")
@@ -255,7 +260,8 @@ def snodas_pkl_2_ioda(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    # TODO JLM: is this format reformatted by the writer.BuildNetcdf? does not match output
+    # TODO JLM: is this format reformatted by the writer.BuildNetcdf? does
+    # not match output
 
     # TODO JLM: What is this date_time_string used for?
     #   Apparently it is the self._ref_date_time in the NcWriter class.
@@ -265,10 +271,12 @@ def snodas_pkl_2_ioda(args):
     #   global_config['date']
     #   arttr_data['date_time_string']
     #   self._ref_date_time
-    #   That's super confusing. I like "args.ref_date_time" -> global_config['ref_date_time'] ->
-    #   attr_data['ref_date_time'] -> self._ref_date_time
+    #   That's super confusing. I like "args.ref_date_time" ->
+    #       global_config['ref_date_time'] ->
+    #       attr_data['ref_date_time'] -> self._ref_date_time
     #   ref indicates something useful.
-    attr_data['date_time_string'] = global_config['ref_date_time'].strftime("%Y-%m-%dT%H:%M:%SZ")
+    attr_data['date_time_string'] = global_config[
+        'ref_date_time'].strftime("%Y-%m-%dT%H:%M:%SZ")
     attr_data['thinning'] = global_config['thin']
     attr_data['converter'] = os.path.basename(__file__)
 
@@ -278,6 +286,7 @@ def snodas_pkl_2_ioda(args):
         selected_names.append(output_var_names['depth'])
     if global_config['output_swe']:
         selected_names.append(output_var_names['swe'])
+
     var_data = {writer._var_list_name: writer.FillNcVector(
         selected_names, "string")}
 
@@ -301,7 +310,7 @@ def parse_arguments():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of SNODAS observation input file(s)",
+        help="path of OWP snow observation input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -324,7 +333,7 @@ def parse_arguments():
         # TODO JLM: multiprocessing.Pool provides process based parallelism.
         # TODO JLM: multiprocessing.pool.ThreadPool provides unsupported
         #           thread-based pool parallelism.
-        help='multiprocessing.Pool can be used to load input files in parallel.'
+        help='multiprocessing.Pool can load input files in parallel.'
              ' (default: %(default)s)',
         type=int, default=1)
     optional.add_argument(
@@ -349,5 +358,5 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    return_code = snodas_pkl_2_ioda(args)
+    return_code = owp_snow_obs_pkl_2_ioda(args)
     sys.exit(return_code)

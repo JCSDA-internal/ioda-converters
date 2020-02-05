@@ -124,11 +124,11 @@ Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
 ```
 
 
-## SNODAS
-Python3 script `snodas\_pkl\_2\_ioda.py` converts SNODAS pkl files to netcdf IODA files
+## owp\_snow\_obs
+(OWP = NOAA's Office of Water Prediction)
+Python3 script `owp_snow_obs\_pkl\_2\_ioda.py` converts OWP snow obs pkl files to netcdf IODA files.
 
-
-Testing run
+Example usage:
 ```
-ipython3 --pdb -c "%run snodas_pkl_2_ioda.py -i ../../../../data/snodas/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl -o ../../../../data/snodas/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc -d 2019021502 "
+ipython3 --pdb -c "%run /jedi/tools/bin/owp_snow_obs_pkl_2_ioda.py -i ../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl -o ../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc -d 2019021502 "
 ```
