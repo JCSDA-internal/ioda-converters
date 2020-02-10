@@ -2,6 +2,7 @@
 
 import sys
 import os
+import subprocess
 from pathlib import Path
 prefix_lib_path = Path(__file__).absolute().parent.parent/'lib'
 prefix_bin_path = prefix_lib_path.parent/'bin'
@@ -234,7 +235,7 @@ os.close(CsvFile)
 OdcCmd = "odc import {} {}".format(CsvFname, OdbFname)
 print("Running: ", OdcCmd)
 print("")
-os.system(OdcCmd)
+subprocess.call(OdcCmd, shell=True)
 print("")
 
 # clean up
