@@ -69,12 +69,6 @@ endif()
 #  odyssey_FOUND
 find_package(odc)
 find_package(odyssey)
-if (odc_FOUND)
-  message(STATUS "Found ODC")
-endif()
-if (odyssey_FOUND)
-  message(STATUS "Found Odyssey")
-endif()
 
 ################################################################################
 # Export package info
