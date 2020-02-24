@@ -6,6 +6,25 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
+# This program uses toolkit cryosat_toolkit.read_cryosat_L2, the following is
+# the License for the toolkit:
+# MIT License
+# Copyright (c) 2018 Tyler C Sutterley
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 from __future__ import print_function
 import sys
@@ -15,17 +34,17 @@ import netCDF4 as nc
 import dateutil.parser
 import numpy as np
 import os
+
 sys.path.append("@SCRIPT_LIB_PATH@")
 from orddicts import DefaultOrderedDict
 import ioda_conv_ncio as iconv
 import cryosat_toolkit.read_cryosat_L2 as read_cryosat_L2
 import ipdb
 
+
 class Observation(object):
 
     def __init__(self, filename, thin, date, writer):
-        print(date)
-        print(filename)
         self.filename = filename[0]
         self.thin = thin
         self.date = date
@@ -34,7 +53,6 @@ class Observation(object):
         self._read()
 
     def _read(self):
-        
         ncd = read_cryosat_L2(self.filename)
         Data_1Hz = ncd['Data_1Hz']
         Day = Data_1Hz['Day']
@@ -48,27 +66,23 @@ class Observation(object):
         Lat0 = Data_20Hz['Lat']*1e-7
         Freeboard0 = Data_20Hz['Freeboard']*1e-3
         Qflag0 = Data_20Hz['Quality_flag']
-
-        T1 = np.repeat(Time_1Hz,20)
-        T2 = T1.reshape(len(Time_1Hz),20)
+        T1 = np.repeat(Time_1Hz, 20)
+        T2 = T1.reshape(len(Time_1Hz), 20)
         Time0 = T2+D_Time.data
         time = Time0.reshape(len(T1))
-        Lon=Lon0.data
-        Lat=Lat0.data
-        FB=Freeboard0.data 
-        Qf= Qflag0.data
+        Lon = Lon0.data
+        Lat = Lat0.data
+        FB = Freeboard0.data
+        Qf = Qflag0.data
         lons = Lon.reshape(len(T1))
         lats = Lat.reshape(len(T1))
         vals = FB.reshape(len(T1))
-        qc = Qf.reshape(len(T1))
-        #ipdb.set_trace()
-        print('type lons = ',type(lons))
-        print(lons) 
-#        np.savetxt('lat.txt', Lat0, fmt='%9.3f')
+        qc1 = Qf.reshape(len(T1))
+        qc = qc1.astype(int)
         # base date for file
         reftime0 = '2000-01-01 00:00:00'
         reftime = dateutil.parser.parse(reftime0)
-        
+
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
@@ -89,9 +103,6 @@ class Observation(object):
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
             self.data[0][locKey][qcKey] = qc[i]
-        print('self type',type(self))
-        print(locKey)
-        print(vals)
 
 
 vName = "sea_ice_freeboard"
@@ -143,10 +154,6 @@ def main():
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    print('ice_type is',type(ice))
-
-    ipdb.set_trace()
-   
     (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(ice.data)
     writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
 
