@@ -217,7 +217,6 @@ class Radiances:
             if s in splitfname:
                 self.platform_sensor = s
                 i = splitfname.index(s)
-#                self.obstype = "_".join(splitfname[i:i + 2])
         if not i:
             raise ValueError("Observation is not a radiance type...")
 
