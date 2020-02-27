@@ -208,7 +208,7 @@ print("")
 
 # Write the header
 Line = ['DuMmYiNdEx@MetaData:INTEGER']
-for VarName in VarList:
+for VarName in sorted(VarList):
     Line.append(VarName)
 
 OutLine = ",".join(Line) + "\n"
@@ -218,7 +218,7 @@ os.write(CsvFile, str.encode(OutLine))
 RowNum = 0
 for i in range(Nlocs):
     Line = ["{}".format(RowNum)]
-    for VarName in VarList:
+    for VarName in sorted(VarList):
         if (VarName.endswith("STRING")):
             Line.append("{0:s}".format(VarList[VarName][i]))
         else:
@@ -231,20 +231,12 @@ for i in range(Nlocs):
 
 os.close(CsvFile)
 
-print("DEBUG: CSV file:")
-Cmd = "head -n 10 {}".format(CsvFname)
-subprocess.call(Cmd, shell=True)
-
 # Run odc import
 OdcCmd = "odc import {} {}".format(CsvFname, OdbFname)
 print("Running: ", OdcCmd)
 print("")
 subprocess.call(OdcCmd, shell=True)
 print("")
-
-print("DEBUG: ODB file:")
-Cmd = "odc header {}".format(OdbFname)
-subprocess.call(Cmd, shell=True)
 
 # clean up
 if(KeepCsv):
