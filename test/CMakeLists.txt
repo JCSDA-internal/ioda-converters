@@ -194,7 +194,8 @@ ecbuild_add_test( TARGET test_iodaconv_cryosat2
 ecbuild_add_test( TARGET test_iodaconv_cryosat2_DBL
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
-                  ARGS "${CMAKE_BINARY_DIR}/bin/cryosat_ice2ioda_DBL.py
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/cryosat_ice2ioda_DBL.py
                        -i testinput/CS_OFFL_SIR_GDR_2__20180101T225255_20180102T003208_C001.DBL
                        -o testrun/cryosat2_L2_DBL.nc
                        -d 2018010112"
