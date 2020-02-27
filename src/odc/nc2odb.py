@@ -209,6 +209,7 @@ print("")
 # Write the header
 Line = ['DuMmYiNdEx@MetaData:INTEGER']
 for VarName in VarList:
+    print("DEBUG: VarList: ", VarName)
     Line.append(VarName)
 
 OutLine = ",".join(Line) + "\n"
