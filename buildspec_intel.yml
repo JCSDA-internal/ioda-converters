@@ -37,7 +37,6 @@ phases:
     commands:
       - echo Executing pre_build phase
       - git lfs install # creates .gitconfig
-      - cp ~/.gitconfddig /home/jcsdauser/
 
       - mv ioda-converters /jcsda/
   build:
