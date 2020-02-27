@@ -84,6 +84,9 @@ phases:
       - echo $BUILD_STATUS
 
       - su - jcsdauser -c "cd /build_container
+        && echo $PYTHONPATH
+        && export PYTHONPATH=/usr/local/lib
+        && echo $PYTHONPATH
         && ctest"
 
   post_build:
@@ -93,6 +96,7 @@ phases:
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
         su - jcsdauser -c "cd /build_container
+        && export PYTHONPATH=/usr/local/lib
         && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi
