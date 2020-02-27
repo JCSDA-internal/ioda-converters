@@ -54,7 +54,11 @@ phases:
         && echo MPI setup for Docker done"
 
       - git lfs install
-      - git clone https://github.com/jcsda/ioda-converters
+      - git clone https://$GIT_USER:$GIT_PASS@github.com/jcsda/ioda-converters
+      - cd ioda-converters
+      - git checkout $CODEBUILD_GIT_BRANCH || echo "No branch named $CODEBUILD_GIT_BRANCH in saber-bundle repo"
+      - cd $CODEBUILD_SRC_DIR
+
 
   pre_build:
     commands:
