@@ -208,8 +208,7 @@ print("")
 
 # Write the header
 Line = ['DuMmYiNdEx@MetaData:INTEGER']
-for VarName in VarList:
-    print("DEBUG: VarList: ", VarName)
+for VarName in sorted(VarList):
     Line.append(VarName)
 
 OutLine = ",".join(Line) + "\n"
@@ -219,7 +218,7 @@ os.write(CsvFile, str.encode(OutLine))
 RowNum = 0
 for i in range(Nlocs):
     Line = ["{}".format(RowNum)]
-    for VarName in VarList:
+    for VarName in sorted(VarList):
         if (VarName.endswith("STRING")):
             Line.append("{0:s}".format(VarList[VarName][i]))
         else:
