@@ -231,12 +231,20 @@ for i in range(Nlocs):
 
 os.close(CsvFile)
 
+print("DEBUG: CSV file:")
+Cmd = "head -n 10 {}".format(CsvFname)
+subprocess.call(Cmd, shell=True)
+
 # Run odc import
 OdcCmd = "odc import {} {}".format(CsvFname, OdbFname)
 print("Running: ", OdcCmd)
 print("")
 subprocess.call(OdcCmd, shell=True)
 print("")
+
+print("DEBUG: ODB file:")
+Cmd = "odc header {}".format(OdbFname)
+subprocess.call(Cmd, shell=True)
 
 # clean up
 if(KeepCsv):
