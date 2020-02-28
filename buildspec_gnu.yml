@@ -54,7 +54,11 @@ phases:
         && echo MPI setup for Docker done"
 
       - git lfs install
-      - git clone https://github.com/jcsda/ioda-converters
+      - git clone https://$GIT_USER:$GIT_PASS@github.com/jcsda/ioda-converters
+      - cd ioda-converters
+      - git checkout $CODEBUILD_GIT_BRANCH || echo "No branch named $CODEBUILD_GIT_BRANCH in saber-bundle repo"
+      - cd $CODEBUILD_SRC_DIR
+
 
   pre_build:
     commands:
@@ -84,6 +88,9 @@ phases:
       - echo $BUILD_STATUS
 
       - su - jcsdauser -c "cd /build_container
+        && echo $PYTHONPATH
+        && export PYTHONPATH=/usr/local/lib
+        && echo $PYTHONPATH
         && ctest"
 
   post_build:
@@ -93,6 +100,7 @@ phases:
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
         su - jcsdauser -c "cd /build_container
+        && export PYTHONPATH=/usr/local/lib
         && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi
