@@ -92,7 +92,7 @@ AttrData = {
 def main():
 
     parser = argparse.ArgumentParser(
-        description=('Reads Cryosat-2 Ice Freeboard data from ESA and converts into IODA formatted NetCDF files ')
+        description=('Reads ESA Cryosat-2 Ice and converts into IODA NetCDF')
     )
 
     required = parser.add_argument_group(title='required arguments')
