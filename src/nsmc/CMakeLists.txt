@@ -28,5 +28,5 @@ install( PROGRAMS
 
 ecbuild_add_test( TARGET iodaconv_nsmc_coding_norms
                   TYPE
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_lint.sh
                   ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
