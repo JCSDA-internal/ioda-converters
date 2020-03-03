@@ -89,16 +89,16 @@ class LwRadiance(object):
 
             # Channel metadata associated with longwave radiance
             VarMdata['channel_wavenumber'] = self.writer.FillNcVector(
-                                   ncd.variables['LW_wnum'][:], 'float')
+                ncd.variables['LW_wnum'][:], 'float')
             VarMdata['channel_number'] = self.writer.FillNcVector(
-                                   np.ma.array(range(1,nchans+1)), 'integer')
+                np.ma.array(range(1, nchans+1)), 'integer')
 
             # The file contains a single image with a sub-second scan time. We
             # are currently retaining date-time stamps to the nearest second so
             # for now just grab the beginning scan time and use that for all locations.
             # The variables holding the time offset from 1 Jan, 0000 are problematic
             # since the python datetime package doesn't allow year zero, and it's not
-            # clear how days are coverted over several millinnea. The observation 
+            # clear how days are coverted over several millinnea. The observation
             # date and time are also in global attributes and appear to line up with
             # the file name.
             obsDate = ncd.getncattr("Observing Beginning Date").split("-")
@@ -111,23 +111,23 @@ class LwRadiance(object):
 
             # Form a vector nlocs long containing the datetime stamp
             LocMdata['datetime'] = self.writer.FillNcVector(
-                                   np.full((nlocs), obsDtimeString), 'datetime')
+                np.full((nlocs), obsDtimeString), 'datetime')
 
             # Read in the latitude and longitude associated with the long wave data
             LocMdata['latitude'] = self.writer.FillNcVector(
-                                   ncd.variables['IRLW_Latitude'][:], 'float')
+                ncd.variables['IRLW_Latitude'][:], 'float')
             LocMdata['longitude'] = self.writer.FillNcVector(
-                                    ncd.variables['IRLW_Longitude'][:], 'float')
+                ncd.variables['IRLW_Longitude'][:], 'float')
 
             # Read in the instrument meta data associated with the long wave data
             LocMdata['solar_zenith_angle'] = self.writer.FillNcVector(
-                                   ncd.variables['IRLW_SolarZenith'][:], 'float')
+                ncd.variables['IRLW_SolarZenith'][:], 'float')
             LocMdata['solar_azimuth_angle'] = self.writer.FillNcVector(
-                                    ncd.variables['IRLW_SolarAzimuth'][:], 'float')
+                ncd.variables['IRLW_SolarAzimuth'][:], 'float')
             LocMdata['sensor_zenith_angle'] = self.writer.FillNcVector(
-                                   ncd.variables['IRLW_SatelliteZenith'][:], 'float')
+                ncd.variables['IRLW_SatelliteZenith'][:], 'float')
             LocMdata['sensor_azimuth_angle'] = self.writer.FillNcVector(
-                                    ncd.variables['IRLW_SatelliteAzimuth'][:], 'float')
+                ncd.variables['IRLW_SatelliteAzimuth'][:], 'float')
 
             # Read in the long wave radiance
             # For now fabricate the QC marks and error estimates
@@ -135,11 +135,11 @@ class LwRadiance(object):
             for ivar in range(nchans):
                 varName = "longwave_radiance_%d" % (ivar + 1)
                 self.data[(varName, 'ObsValue')] = self.writer.FillNcVector(
-                                                   lwRadiance[ivar,:], 'float')
+                    lwRadiance[ivar, :], 'float')
                 self.data[(varName, 'PreQC')] = self.writer.FillNcVector(
-                                                np.full((nlocs), 0), 'integer')
+                    np.full((nlocs), 0), 'integer')
                 self.data[(varName, 'ObsError')] = self.writer.FillNcVector(
-                                                   np.full((nlocs), 2.0), 'float')
+                    np.full((nlocs), 2.0), 'float')
 
             ncd.close()
 
@@ -177,7 +177,6 @@ def main():
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Write the obs data and meta data into the ioda file
-    #(ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(lwrad.data)
     writer.BuildNetcdf(lwrad.data, RecMdata, LocMdata, VarMdata, AttrData)
 
 
