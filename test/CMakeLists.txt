@@ -10,7 +10,7 @@
 list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
-  testinput/giirs_fy4a-2017030208.nc
+  testinput/giirs_fy4a-test.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
@@ -31,6 +31,7 @@ list( APPEND test_input
 list( APPEND test_output
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
+  testoutput/giirs_fy4a_obs_2017030208.nc4
   testoutput/godae_prof.nc
   testoutput/godae_ship.nc
   testoutput/godae_trak.nc
@@ -190,6 +191,19 @@ ecbuild_add_test( TARGET test_iodaconv_cryosat2
                        -d 2019092100"
                       cryosat2_L2.nc)
 
+#===============================================================================
+# NSMC converters
+#===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_giirs_lw
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/giirs_lw2ioda.py
+                       -i testinput/giirs_fy4a-test.nc
+                       -o testrun/giirs_fy4a_obs_2017030208.nc4
+                       -d 2017030208"
+                      giirs_fy4a_obs_2017030208.nc4)
 
 #===============================================================================
 # GSI ncdiag converters
