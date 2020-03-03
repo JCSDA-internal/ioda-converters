@@ -39,40 +39,50 @@ class LwRadiance(object):
     def __init__(self, filenames, writer):
         self.filenames = filenames
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.units_values = {}  # cannot use an ordered dict for this
         self.writer = writer
-        self._read()
+        self.readInFiles()
 
-    # The mapping from input variables to ioda variables for IR LW radiance is:
-    #
-    #   dimensions:
-    #      LWchannel -> nvars
-    #      LWdetector -> nlocs
-    #
-    #   global attributes:
-    #      'Observing Beginning Date' -> YYYY-MM-DD
-    #      'Observing Beginning Time' -> HH:MM:SS
-    #      The two above attributes get translated to a single datetime value
-    #      which becomes the value for each location in datetime@MetaData.
-    #      The seconds value is a float number possibly containing fractional seconds.
-    #
-    #   variables:
-    #      LW_wnum(LWchannel) -> channel_wavenumber@VarMetaData
-    #      Number the channels starting with 1 assuming that the order
-    #      in variables indexed by LWchannel are sequential channel numbers (1..n).
-    #
-    #      IRLW_Latitude(LWdetector)  -> latitude@MetaData
-    #      IRLW_Longitude(LWdetector) -> longitude@MetaData
-    #      IRLW_SolarZenith(LWdetector) -> solar_zenith_angle@MetaData
-    #      IRLW_SolarAzimuth(LWdetector) -> solar_azimuth_angle@MetaData
-    #      IRLW_SatelliteZenith(LWdetector) -> sensor_zenith_angle@MetaData
-    #      IRLW_SatelliteAzimuth(LWdetector) -> sensor_azimuth_angle@MetaData
-    #
-    #      ES_RealLW(LWchannel, Lwdetector) -> longwave_radiance_#@ObsValue
-    #      For now, fabricate the QC marks and error esitmate by setting all
-    #      locations to 0 for longwave_radiance_#@PreQC and setting all locations
-    #      to 2.0 for longwave_radiance_#@ObsError.
+    def xferMdataVar(self, ncd, inName, outName, mData, dType):
+        # This method adds a variable to the given metadata dictionary element.
+        ncVar = ncd.variables[inName]
+        mData[outName] = self.writer.FillNcVector(ncVar[:], dType)
+        if 'units' in ncVar.ncattrs():
+            self.units_values[outName] = ncVar.getncattr('units')
 
-    def _read(self):
+    def readInFiles(self):
+        # This method will transfer variable data from the input file into a
+        # dictionary (self.data) that the netcdf writer understands.
+        #
+        # The mapping from input variables to ioda variables for IR LW radiance is:
+        #
+        #   dimensions:
+        #      LWchannel -> nvars
+        #      LWdetector -> nlocs
+        #
+        #   global attributes:
+        #      'Observing Beginning Date' -> YYYY-MM-DD
+        #      'Observing Beginning Time' -> HH:MM:SS
+        #      The two above attributes get translated to a single datetime value
+        #      which becomes the value for each location in datetime@MetaData.
+        #      The seconds value is a float number possibly containing fractional seconds.
+        #
+        #   variables:
+        #      LW_wnum(LWchannel) -> channel_wavenumber@VarMetaData
+        #      Number the channels starting with 1 assuming that the order
+        #      in variables indexed by LWchannel are sequential channel numbers (1..n).
+        #
+        #      IRLW_Latitude(LWdetector)  -> latitude@MetaData
+        #      IRLW_Longitude(LWdetector) -> longitude@MetaData
+        #      IRLW_SolarZenith(LWdetector) -> solar_zenith_angle@MetaData
+        #      IRLW_SolarAzimuth(LWdetector) -> solar_azimuth_angle@MetaData
+        #      IRLW_SatelliteZenith(LWdetector) -> sensor_zenith_angle@MetaData
+        #      IRLW_SatelliteAzimuth(LWdetector) -> sensor_azimuth_angle@MetaData
+        #
+        #      ES_RealLW(LWchannel, Lwdetector) -> longwave_radiance_#@ObsValue
+        #      For now, fabricate the QC marks and error esitmate by setting all
+        #      locations to 0 for longwave_radiance_#@PreQC and setting all locations
+        #      to 2.0 for longwave_radiance_#@ObsError.
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
@@ -88,10 +98,11 @@ class LwRadiance(object):
             self.writer._nrecs = 1
 
             # Channel metadata associated with longwave radiance
-            VarMdata['channel_wavenumber'] = self.writer.FillNcVector(
-                ncd.variables['LW_wnum'][:], 'float')
+            self.xferMdataVar(ncd, 'LW_wnum', 'channel_wavenumber', VarMdata, 'float')
+
             VarMdata['channel_number'] = self.writer.FillNcVector(
                 np.ma.array(range(1, nchans+1)), 'integer')
+            self.units_values['channel_number'] = '1'
 
             # The file contains a single image with a sub-second scan time. We
             # are currently retaining date-time stamps to the nearest second so
@@ -112,26 +123,26 @@ class LwRadiance(object):
             # Form a vector nlocs long containing the datetime stamp
             LocMdata['datetime'] = self.writer.FillNcVector(
                 np.full((nlocs), obsDtimeString), 'datetime')
+            self.units_values['datetime'] = 'ISO 8601 format'
 
             # Read in the latitude and longitude associated with the long wave data
-            LocMdata['latitude'] = self.writer.FillNcVector(
-                ncd.variables['IRLW_Latitude'][:], 'float')
-            LocMdata['longitude'] = self.writer.FillNcVector(
-                ncd.variables['IRLW_Longitude'][:], 'float')
+            self.xferMdataVar(ncd, 'IRLW_Latitude', 'latitude', LocMdata, 'float')
+            self.xferMdataVar(ncd, 'IRLW_Longitude', 'longitude', LocMdata, 'float')
 
             # Read in the instrument meta data associated with the long wave data
-            LocMdata['solar_zenith_angle'] = self.writer.FillNcVector(
-                ncd.variables['IRLW_SolarZenith'][:], 'float')
-            LocMdata['solar_azimuth_angle'] = self.writer.FillNcVector(
-                ncd.variables['IRLW_SolarAzimuth'][:], 'float')
-            LocMdata['sensor_zenith_angle'] = self.writer.FillNcVector(
-                ncd.variables['IRLW_SatelliteZenith'][:], 'float')
-            LocMdata['sensor_azimuth_angle'] = self.writer.FillNcVector(
-                ncd.variables['IRLW_SatelliteAzimuth'][:], 'float')
+            self.xferMdataVar(ncd, 'IRLW_SolarZenith', 'solar_zenith_angle', LocMdata, 'float')
+            self.xferMdataVar(ncd, 'IRLW_SolarAzimuth', 'solar_azimuth_angle', LocMdata, 'float')
+            self.xferMdataVar(ncd, 'IRLW_SatelliteZenith', 'sensor_zenith_angle', LocMdata, 'float')
+            self.xferMdataVar(ncd, 'IRLW_SatelliteAzimuth', 'sensor_azimuth_angle', LocMdata, 'float')
 
             # Read in the long wave radiance
             # For now fabricate the QC marks and error estimates
-            lwRadiance = ncd.variables['ES_RealLW'][:]
+            ncVar = ncd.variables['ES_RealLW']
+            lwRadiance = ncVar[:]
+            if 'units' in ncVar.ncattrs():
+                Units = ncVar.getncattr('units')
+            else:
+                Units = None
             for ivar in range(nchans):
                 varName = "longwave_radiance_%d" % (ivar + 1)
                 self.data[(varName, 'ObsValue')] = self.writer.FillNcVector(
@@ -140,6 +151,8 @@ class LwRadiance(object):
                     np.full((nlocs), 0), 'integer')
                 self.data[(varName, 'ObsError')] = self.writer.FillNcVector(
                     np.full((nlocs), 2.0), 'float')
+                if Units:
+                    self.units_values[varName] = Units
 
             ncd.close()
 
@@ -177,7 +190,7 @@ def main():
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Write the obs data and meta data into the ioda file
-    writer.BuildNetcdf(lwrad.data, RecMdata, LocMdata, VarMdata, AttrData)
+    writer.BuildNetcdf(lwrad.data, RecMdata, LocMdata, VarMdata, AttrData, lwrad.units_values)
 
 
 if __name__ == '__main__':
