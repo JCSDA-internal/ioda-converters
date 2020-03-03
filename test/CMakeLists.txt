@@ -10,6 +10,7 @@
 list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
+  testinput/giirs_fy4a-2017030208.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
