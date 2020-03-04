@@ -1,5 +1,5 @@
 list( APPEND programs
-    lint.sh
+    ${PROJECT_NAME}_lint.sh
 )
 
 SET_TARGETS_DEPS( "${programs}"
