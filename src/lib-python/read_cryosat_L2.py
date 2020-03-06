@@ -602,19 +602,9 @@ def cryosat_baseline_D(full_filename, UNPACK=False):
     # -- Time: day part
     Data_1Hz['Day'] = np.array(time_cor_01 / 86400.0, dtype=np.int32)
     # -- Time: second part
-    Data_1Hz['Second'] = np.array(
-        time_cor_01 -
-        Data_1Hz['Day'][:] *
-        86400.0,
-        dtype=np.int32)
+    Data_1Hz['Second'] = np.array(time_cor_01 - Data_1Hz['Day'][:] * 86400.0, dtype=np.int32)
     # -- Time: microsecond part
-    Data_1Hz['Micsec'] = np.array(
-        (time_cor_01 -
-         Data_1Hz['Day'][:] *
-         86400.0 -
-         Data_1Hz['Second'][:]) *
-        1e6,
-        dtype=np.int32)
+    Data_1Hz['Micsec'] = np.array((time_cor_01 - Data_1Hz['Day'][:] * 86400.0 - Data_1Hz['Second'][:]) * 1e6, dtype=np.int32)
     # -- Lat_1Hz: packed units (0.1 micro-degree, 1e-7 degrees)
     Data_1Hz['Lat_1Hz'] = fid.variables['lat_01'][:].copy()
     # -- Lon_1Hz: packed units (0.1 micro-degree, 1e-7 degrees)
