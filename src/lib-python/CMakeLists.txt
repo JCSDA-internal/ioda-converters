@@ -3,6 +3,7 @@ list( APPEND libs
   ioda_conv_util.py
   collect_sources.py
   orddicts.py
+  read_cryosat_L2.py
 )
 
 list( APPEND programs
