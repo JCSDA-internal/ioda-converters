@@ -36,7 +36,7 @@ conv_platforms = {
     ],
     "conv_gps": [
         'gps',
-    ]
+    ],
 #>>emily
     "conv_sst": [
         'sst',
@@ -535,8 +535,10 @@ class Conv:
                   ncout.createDimension(
                       "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
 #<<emily 
-                ncout.createDimension(
-                    "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+#>>orig
+#                ncout.createDimension(
+#                    "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+#<<orig
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -1038,7 +1040,7 @@ class Radiances:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Obs_Time':
                 tmp = self.df[lvar][::nchans]
-			obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
             else:
