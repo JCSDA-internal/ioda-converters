@@ -2,5 +2,6 @@
 *.nc4 filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
 *.bufr filter=lfs diff=lfs merge=lfs -text
+*.DBL filter=lfs diff=lfs merge=lfs -text
 *.odb filter=lfs diff=lfs merge=lfs -text
 src/ncep/xx120 filter=lfs diff=lfs merge=lfs -text
