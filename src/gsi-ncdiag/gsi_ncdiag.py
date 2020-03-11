@@ -37,11 +37,9 @@ conv_platforms = {
     "conv_gps": [
         'gps',
     ],
-#>>emily
     "conv_sst": [
         'sst',
     ]
-#<<emily
 }
 
 # note in python range, last number is not used so second values are +1
@@ -63,8 +61,8 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 42, 43, 745, 825],  #emily
-    "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202], #emily sst
+    "gps": [3, 4, 42, 43, 745, 825],
+    "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
 }
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
@@ -110,7 +108,7 @@ conv_varnames = {
     "q": ["specific_humidity"],
     "bend": ["bending_angle"],
     "refract": ["refractivity"],
-    "sst": ["sea_surface_temperature"],  #emily sst
+    "sst": ["sea_surface_temperature"],
 }
 
 conv_gsivarnames = {
@@ -121,10 +119,9 @@ conv_gsivarnames = {
     "q": ["Observation"],
     "bend": ["Observation"],
     "refract": ["Observation"],
-    "sst": ["Observation"],      #emily sst
+    "sst": ["Observation"],
 }
 
-#>>emily
 gsi_add_vars_allsky = {
     'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
@@ -134,15 +131,14 @@ gsi_add_vars_allsky = {
     'Errinv_Final': 'GsiFinalObsError',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
-    'Forecast_unadjusted_clear': 'GsiHofXClr',     #emily
+    'Forecast_unadjusted_clear': 'GsiHofXClr',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
-    'Bias_Correction_Constant': 'GsiBcConst',      #emily
-    'Bias_Correction_ScanAngle': 'GsiBcScanAng',   #emily
+    'Bias_Correction_Constant': 'GsiBcConst',
+    'Bias_Correction_ScanAngle': 'GsiBcScanAng',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
 }
-#<<emily
 
 gsi_add_vars = {
     'Observation_Type': 'ObsType',
@@ -248,7 +244,7 @@ geovals_vars = {
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_temperature': 'surface_temperature',
-    'sea_surface_temperature': 'sea_surface_temperature',   #emily
+    'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
     'landmask': 'land_area_fraction',
@@ -321,9 +317,9 @@ aod_sensors = [
 oz_sensors = [
     'gome',
     'sbuv2',
-    'omi',       #emily
-    'ompsnp',    #emily
-    'ompstc8',   #emily
+    'omi',
+    'ompsnp',
+    'ompstc8',
 ]
 
 # units
@@ -337,7 +333,7 @@ units_values = {
     'geopotential_height': 'm',
     'height_above_mean_sea_level': 'm',
     'surface_pressure': 'Pa',
-    'sea_surface_temperature': 'K',    #emily
+    'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
     'surface_geopotential_height': 'm',
@@ -412,17 +408,12 @@ units_values = {
 # fields from GSI to compare to computations done in UFO
 test_fields = {
 }
-#>>emily
 test_fields_allsky = {
     'clwp_amsua': ('clw_retrieved_from_observation', 'float'),
     'clw_guess_retrieval': ('clw_retrieved_from_background', 'float'),
 }
 test_fields_with_channels = {
-#    'Forecast_adjusted': ('GsiHofXBc', 'float'),
-#    'Forecast_unadjusted': ('GsiHofX', 'float'),
-#    'Bias_Correction': ('GsiBc', 'float'),
 }
-#<<emily
 
 ###############################################################################
 ###############################################################################
@@ -496,12 +487,9 @@ class Conv:
             for p in platforms:
                 outname = OutDir + '/' + p + '_' + v + '_geoval_' + \
                     self.validtime.strftime("%Y%m%d%H") + '.nc4'
-#>>emily
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_geoval_' + \
-                    self.validtime.strftime("%Y%m%d%H") + '.nc4'
-                print("emily checking outname = ", outname)
-#<<emily
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
                     if (os.path.exists(outname)):
                         print("File exists. Skipping and not overwriting:")
@@ -530,15 +518,9 @@ class Conv:
                 nlocs = np.sum(idx)
                 ncout.createDimension("nlocs", nlocs)
                 # other dims
-#>>emily        
-                if (v != "sst" ):
-                  ncout.createDimension(
-                      "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
-#<<emily 
-#>>orig
-#                ncout.createDimension(
-#                    "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
-#<<orig
+                if (v != "sst"):
+                    ncout.createDimension(
+                        "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -589,11 +571,9 @@ class Conv:
                 # set up a NcWriter class
                 outname = OutDir + '/' + p + '_' + v + '_obs_' + \
                     self.validtime.strftime("%Y%m%d%H") + '.nc4'
-#>>emily
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_obs_' + \
-                    self.validtime.strftime("%Y%m%d%H") + '.nc4'
-#<<emily
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
                     if (os.path.exists(outname)):
                         print("File exists. Skipping and not overwriting:")
@@ -990,14 +970,12 @@ class Radiances:
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-#>>emily
         if self.sensor == "amsua":
             test_fields = test_fields_allsky
         elif self.sensor == "atms":
             test_fields = test_fields_allsky
         else:
-             test_fields = test_fields_
-#<<emily
+            test_fields = test_fields_
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
@@ -1009,11 +987,9 @@ class Radiances:
             if ncv in test_fields:
                 TestKeyList.append(test_fields[ncv])
                 TestVars.append(ncv)
-#>>emily
             if ncv in test_fields_with_channels:
                 TestKeyList.append(test_fields_with_channels[ncv])
                 TestVars.append(ncv)
-#<<emily
         # for now, record len is 1 and the list is empty?
         recKey = 0
         writer = iconv.NcWriter(outname, RecKeyList, LocKeyList, TestKeyList=TestKeyList)
@@ -1032,8 +1008,8 @@ class Radiances:
             units_values[value] = 'K'
 
         obsdata = self.df['Observation'][:]
-#       obserr = self.df['error_variance'][:]   #orig
-        obserr = self.df['Input_ObsError'][:]   #emily
+#       obserr = self.df['error_variance'][:]
+        obserr = self.df['Input_Observation_Error'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
 
         for lvar in LocVars:
@@ -1049,37 +1025,21 @@ class Radiances:
                 loc_mdata[loc_mdata_name] = tmp
 
         # put the TestReference fields in the structure for writing out
-#>>orig
-#        for tvar in TestVars:
-#            test_mdata_name = test_fields[tvar][0]
-#            tmp = self.df[tvar][::nchans]
-#            tmp[tmp > 4e8] = nc.default_fillvals['f4']
-#            test_mdata[test_mdata_name] = tmp
-#<<orig
-#>>emily
         for tvar in TestVars:
             if tvar in test_fields_with_channels:
                 for ii, ch in enumerate(chanlist):
-                   test_mdata_name = test_fields_with_channels[tvar][0]+"_{:d}".format(ch)
-                #  tmp = self.df[tvar][::nchans]
-                   tmp = self.df[tvar][:]
-                   tmp[tmp > 4e8] = nc.default_fillvals['f4']
-                   idx = chan_indx == ii+1
-                   outvals = tmp[idx]
-                   test_mdata[test_mdata_name] = outvals
-               #    print("emily checking tvar:",tvar)
-               #    print("emily checking test_mdata_name:",test_mdata_name)
-               #    print("emily checking outvals:",outvals)
-               #    print("emily checking test_mdata:",test_mdata[test_mdata_name])
+                    test_mdata_name = test_fields_with_channels[tvar][0]+"_{:d}".format(ch)
+                #   tmp = self.df[tvar][::nchans]
+                    tmp = self.df[tvar][:]
+                    tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                    idx = chan_indx == ii+1
+                    outvals = tmp[idx]
+                    test_mdata[test_mdata_name] = outvals
             if tvar in test_fields:
                 test_mdata_name = test_fields[tvar][0]
                 tmp = self.df[tvar][::nchans]
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 test_mdata[test_mdata_name] = tmp
-             #   print("emily checking tvar:",tvar)
-             #   print("emily checking test_mdata_name:",test_mdata_name)
-             #   print("emily checking tmp:",tmp)
-             #   print("emily checking test_mdata:",test_mdata[test_mdata_name])
 
         gsi_add_radvars = gsi_add_vars
         if self.sensor == "amsua":
@@ -1087,10 +1047,8 @@ class Radiances:
 
         if self.sensor == "atms":
             gsi_add_radvars = gsi_add_vars_allsky
-#<<emily
         # check for additional GSI output for each variable
-#       for gsivar, iodavar in gsi_add_vars.items():     #orig
-        for gsivar, iodavar in gsi_add_radvars.items():  #emily
+        for gsivar, iodavar in gsi_add_radvars.items():
             if gsivar in self.df.variables:
                 if "Inverse" in gsivar:
                     tmp2 = self.df[gsivar][:]
@@ -1123,8 +1081,8 @@ class Radiances:
                 continue
             obsdatasub = obsdata[idx]
             obsdatasub[obsdatasub > 9e5] = nc.default_fillvals['f4']
-#           obserrsub = np.full(nlocs, obserr[c])    #orig
-            obserrsub = obserr[idx]                  #emily
+#           obserrsub = np.full(nlocs, obserr[c])
+            obserrsub = obserr[idx]
             obsqcsub = obsqc[idx]
             obsqcsub[obsdatasub > 9e5] = nc.default_fillvals['i4']
 
@@ -1533,11 +1491,11 @@ class Ozone:
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.df['Observation'][:]
-#       tmp = self.df['Inverse_Observation_Error'][:]   #orig
-        tmp = self.df['Input_Observation_Error'][:]     #emily
+#       tmp = self.df['Inverse_Observation_Error'][:]
+        tmp = self.df['Input_Observation_Error'][:]
         tmp[tmp < 9e-12] = 0
-#       obserr = 1.0 / tmp   #orig
-        obserr = tmp         #emily
+#       obserr = 1.0 / tmp
+        obserr = tmp
         obserr[np.isinf(obserr)] = nc.default_fillvals['f4']
         obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
         locKeys = []
