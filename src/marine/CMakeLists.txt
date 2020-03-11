@@ -1,5 +1,6 @@
 list(APPEND programs
   cryosat_ice2ioda.py
+  cryosat_ice2ioda_DBL.py
   emc_ice2ioda.py
   gds2_sst2ioda.py
   gmao_obs2ioda.py
