@@ -1008,7 +1008,6 @@ class Radiances:
             units_values[value] = 'K'
 
         obsdata = self.df['Observation'][:]
-#       obserr = self.df['error_variance'][:]
         obserr = self.df['Input_Observation_Error'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
 
@@ -1081,7 +1080,6 @@ class Radiances:
                 continue
             obsdatasub = obsdata[idx]
             obsdatasub[obsdatasub > 9e5] = nc.default_fillvals['f4']
-#           obserrsub = np.full(nlocs, obserr[c])
             obserrsub = obserr[idx]
             obsqcsub = obsqc[idx]
             obsqcsub[obsdatasub > 9e5] = nc.default_fillvals['i4']
@@ -1491,10 +1489,8 @@ class Ozone:
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.df['Observation'][:]
-#       tmp = self.df['Inverse_Observation_Error'][:]
         tmp = self.df['Input_Observation_Error'][:]
         tmp[tmp < 9e-12] = 0
-#       obserr = 1.0 / tmp
         obserr = tmp
         obserr[np.isinf(obserr)] = nc.default_fillvals['f4']
         obsqc = self.df['Analysis_Use_Flag'][:].astype(int)
