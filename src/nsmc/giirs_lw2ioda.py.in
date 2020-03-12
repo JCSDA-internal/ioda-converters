@@ -30,7 +30,6 @@ locationKeyList = [
 ]
 
 LocMdata = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-RecMdata = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 VarMdata = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 AttrData = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
@@ -95,7 +94,6 @@ class LwRadiance(object):
             nchans = ncd.dimensions["LWchannel"].size
             self.writer._nlocs = nlocs
             self.writer._nvars = nchans
-            self.writer._nrecs = 1
 
             # Channel metadata associated with longwave radiance
             self.xferMdataVar(ncd, 'LW_wnum', 'channel_wavenumber', VarMdata, 'float')
@@ -190,7 +188,7 @@ def main():
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Write the obs data and meta data into the ioda file
-    writer.BuildNetcdf(lwrad.data, RecMdata, LocMdata, VarMdata, AttrData, lwrad.units_values)
+    writer.BuildNetcdf(lwrad.data, LocMdata, VarMdata, AttrData, lwrad.units_values)
 
 
 if __name__ == '__main__':
