@@ -284,7 +284,6 @@ class Radiances:
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -384,11 +383,6 @@ class Radiances:
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         var_mdata['sensor_channel'] = np.asarray(chanlist)
 
-        # dummy record metadata, for now
-        nrecs = 1
-        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
-        loc_mdata['record_number'] = np.full((self.nlocs), 1, dtype='i4')
-
         # global attributes
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -401,7 +395,7 @@ class Radiances:
         writer._nvars = nchans
         writer._nlocs = self.nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata,
+        writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
                            AttrData, units_values, test_mdata)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
