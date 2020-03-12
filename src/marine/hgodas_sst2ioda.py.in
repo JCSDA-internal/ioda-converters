@@ -90,7 +90,7 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, [], locationKeyList)
+    writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the profiles
     prof = Profile(args.input, fdate, writer)
@@ -98,8 +98,8 @@ def main():
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    (ObsVars, RecMdata, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
-    writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, AttrData)
+    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
+    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
 
 
 if __name__ == '__main__':

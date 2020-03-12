@@ -267,12 +267,11 @@ def main():
 
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    writer._nrecs = 1
     writer._nvars = len(selected_names)
     writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
 
     # use the writer class to create the final output file
-    writer.BuildNetcdf(obs_data, {}, loc_data, var_data, attr_data)
+    writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
 
 
 if __name__ == '__main__':
