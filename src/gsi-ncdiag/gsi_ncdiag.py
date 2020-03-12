@@ -579,13 +579,11 @@ class Conv:
                         print("File exists. Skipping and not overwriting:")
                         print(outname)
                         continue
-                RecKeyList = []
                 LocKeyList = []
                 LocVars = []
                 AttrData = {}
                 varDict = defaultdict(lambda: defaultdict(dict))
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-                rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 # get list of location variable for this var/platform
@@ -593,9 +591,6 @@ class Conv:
                     if ncv in all_LocKeyList:
                         LocKeyList.append(all_LocKeyList[ncv])
                         LocVars.append(ncv)
-                # use station_id for RecKey
-                RecKeyList.append('Station_ID')
-
                 # grab obs to process
                 idx = grabobsidx(self.df, p, v)
                 if (np.sum(idx) == 0):
@@ -605,7 +600,7 @@ class Conv:
                 print("Platform:" + p + " Var:" + v)
                 print(str(np.sum(idx))+" obs to process")
 
-                writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+                writer = iconv.NcWriter(outname, LocKeyList)
 
                 outvars = conv_varnames[v]
                 for value in outvars:
@@ -685,7 +680,6 @@ class Conv:
 
                 # record info
                 SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
-                rec_mdata['Station_ID'] = writer.FillNcVector(SIDUnique, "string")
                 loc_mdata['record_number'] = invs
 
                 # var metadata
@@ -696,12 +690,10 @@ class Conv:
                 # writer metadata
                 nvars = len(outvars)
                 nlocs = len(StationIDs)
-                nrecs = len(SIDUnique)
 
-                writer._nrecs = nrecs
                 writer._nvars = nvars
                 writer._nlocs = nlocs
-                writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+                writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
                 print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
@@ -958,7 +950,6 @@ class Radiances:
                 print("File exists. Skipping and not overwriting:")
                 print(outname)
                 return
-        RecKeyList = []
         LocKeyList = []
         TestKeyList = []
         LocVars = []
@@ -966,7 +957,6 @@ class Radiances:
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -991,8 +981,7 @@ class Radiances:
                 TestKeyList.append(test_fields_with_channels[ncv])
                 TestVars.append(ncv)
         # for now, record len is 1 and the list is empty?
-        recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList, TestKeyList=TestKeyList)
+        writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
 
         chan_number = self.df['sensor_chan'][:]
         chan_number = chan_number[chan_number >= 0]
@@ -1098,8 +1087,6 @@ class Radiances:
                 pass
 
         # dummy record metadata, for now
-        nrecs = 1
-        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
         loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         # global attributes
@@ -1110,11 +1097,10 @@ class Radiances:
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nrecs = nrecs
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata,
+        writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
                            AttrData, units_values, test_mdata)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
@@ -1234,13 +1220,11 @@ class AOD:
                 print("File exists. Skipping and not overwriting:")
                 print(outname)
                 return
-        RecKeyList = []
         LocKeyList = []
         LocVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
@@ -1250,8 +1234,7 @@ class AOD:
                 LocVars.append(ncv)
 
         # for now, record len is 1 and the list is empty?
-        recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+        writer = iconv.NcWriter(outname, LocKeyList)
 
         chan_number = self.df['sensor_chan'][:]
         chan_number = chan_number[chan_number >= 0]
@@ -1331,8 +1314,6 @@ class AOD:
                 pass
 
         # dummy record metadata, for now
-        nrecs = 1
-        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
         loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         # global attributes
@@ -1341,11 +1322,10 @@ class AOD:
         AttrData["sensor"] = self.sensor
 
         # set dimension lengths in the writer since we are bypassing ExtractObsData
-        writer._nrecs = nrecs
         writer._nvars = nchans
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
         print("AOD obs processed, wrote to:")
         print(outname)
 
@@ -1464,13 +1444,11 @@ class Ozone:
                 print("File exists. Skipping and not overwriting:")
                 print(outname)
                 return
-        RecKeyList = []
         LocKeyList = []
         LocVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
@@ -1479,8 +1457,7 @@ class Ozone:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
         # for now, record len is 1 and the list is empty?
-        recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+        writer = iconv.NcWriter(outname, LocKeyList)
 
         nlocs = self.nobs
         vname = "mole_fraction_of_ozone_in_air"
@@ -1530,8 +1507,6 @@ class Ozone:
         outdata[varDict[vname]['qcKey']] = obsqc
 
         # dummy record metadata, for now
-        nrecs = 1
-        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
         loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1539,11 +1514,10 @@ class Ozone:
         AttrData["sensor"] = self.sensor
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nrecs = nrecs
         writer._nvars = 1
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Ozone obs processed, wrote to:")
         print(outname)
 
@@ -1660,13 +1634,11 @@ class Radar:
                 print("File exists. Skipping and not overwriting:")
                 print(outname)
                 return
-        RecKeyList = []
         LocKeyList = []
         LocVars = []
         AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         # get list of location variable for this var/platform
@@ -1675,8 +1647,7 @@ class Radar:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
         # for now, record len is 1 and the list is empty?
-        recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList)
+        writer = iconv.NcWriter(outname, LocKeyList)
 
         nlocs = self.nobs
         if self.obstype == "dbz":
@@ -1738,18 +1709,15 @@ class Radar:
                 loc_mdata[loc_mdata_name] = tmp
 
         # dummy record metadata, for now
-        nrecs = 1
-        rec_mdata['rec_id'] = np.asarray([999], dtype='i4')
         loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
 
         AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
         AttrData["sensor"] = self.sensor
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nrecs = nrecs
         writer._nvars = 1
         writer._nlocs = nlocs
 
-        writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
         print("Radar obs processed, wrote to:")
         print(outname)
