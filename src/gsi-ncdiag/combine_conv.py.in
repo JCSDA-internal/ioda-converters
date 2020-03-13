@@ -24,7 +24,6 @@ vtypedict = {
 
 def concat_ioda(FileList, OutFile, GeoDir):
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-    rec_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     AttrData = {}
@@ -36,8 +35,6 @@ def concat_ioda(FileList, OutFile, GeoDir):
     MetaVarNames = []
     MetaVType = []
     VarMetaVars = []
-    RecMetaVars = []
-    RecKeyList = []
     LocKeyList = []
     MetaInAll = {}
     # get lists of variables
@@ -45,7 +42,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         ncf = nc.Dataset(f, mode='r')
         for key, value in ncf.variables.items():
             vs = key.split('@')
-            if vs[1] not in ['MetaData', 'VarMetaData', 'RecMetaData']:
+            if vs[1] not in ['MetaData', 'VarMetaData']:
                 if vs[0] not in DataVarNames:
                     DataVarNames.append(vs[0])
                 if vs[0] in DataVarNames:
@@ -76,8 +73,6 @@ def concat_ioda(FileList, OutFile, GeoDir):
                     LocKeyList.append((vs[0], vtypestr))
                 elif vs[1] == 'VarMetaData' and key not in VarMetaVars and vs[0] not in ['variable_names']:
                     VarMetaVars.append(key)
-                elif vs[1] == 'RecMetaData' and key not in RecMetaVars:
-                    RecMetaVars.append(key)
         ncf.close()
     # determine which metadata is in all files
     for v in MetaVars:
@@ -145,13 +140,11 @@ def concat_ioda(FileList, OutFile, GeoDir):
             DataVarUnique[i, j] = DataVarData[ii, jj]
     # set up things for the Ncwriter
     ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
-    Recs = set(MetaVarUnique[ridx, :].astype('int'))
     nlocs = MetaVarUnique.shape[-1]
-    writer = iconv.NcWriter(OutFile, RecKeyList, LocKeyList)
+    writer = iconv.NcWriter(OutFile, LocKeyList)
     var_mdata['variable_names'] = writer.FillNcVector(DataVarNames, "string")
     # TODO add RecMetaData for Station ID, etc...
     AttrData["date_time_string"] = validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-    writer._nrecs = len(Recs)
     writer._nvars = len(DataVarNames)
     writer._nlocs = nlocs
 
@@ -177,7 +170,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         if DataVType[idx3] == 'int32':
             tmp[tmp < -1e5] = nc.default_fillvals['i4']
         outdata[tuple(vname.split('@'))] = tmp
-    writer.BuildNetcdf(outdata, rec_mdata, loc_mdata, var_mdata, AttrData, VarUnits)
+    writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, VarUnits)
 
     # now write out combined GeoVaLs file
     if GeoDir:
