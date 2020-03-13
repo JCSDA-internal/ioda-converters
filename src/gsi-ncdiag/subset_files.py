@@ -16,32 +16,17 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
     ncout = nc.Dataset(outfile, 'w')
     # I think this has to be called before each call to random.sample to make it the same random set
     random.seed(5)
-    nrecsin = len(ncin.dimensions['nrecs'])
     nlocsin = len(ncin.dimensions['nlocs'])
     nvars = len(ncin.dimensions['nvars'])
-    if nrecsin > 100.:
-        nsamples = int(-(-nlocsout/10.))  # just picked 10 randomly
-        nsamples = max(1, nsamples)
-        npossible = nrecsin
-        recs = True
-    else:
-        nsamples = nlocsout
-        npossible = nlocsin
-        recs = False
+    nsamples = nlocsout
+    npossible = nlocsin
     if nlocsout > nlocsin:
         nsamples = npossible
     flag = random.sample(list(np.arange(0, npossible)), nsamples)
     flag = sorted(flag)
     # get the nlocs where flag is true so consistent for geovals too
-    if recs:
-        nrecsout = len(flag)
-        flag2 = flag
-        flag = np.isin(ncin.variables['record_number@MetaData'][:], flag)
-        nlocsout = len(ncin.variables['record_number@MetaData'][flag, ...])
-    else:
-        flag2 = [0]
-        nrecsout = 1
-        nlocsout = len(flag)
+    flag2 = [0]
+    nlocsout = len(flag)
     # process observation file
     # copy global attributes
     for aname in ncin.ncattrs():
@@ -49,15 +34,12 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         ncout.setncattr(aname, avalue)
     # redo nlocs, nrecs
     ncout.setncattr("nlocs", np.int32(nlocsout))
-    ncout.setncattr("nrecs", np.int32(nrecsout))
     # copy dimensions
     for dim in ncin.dimensions.values():
         if dim.name == 'nlocs':
             d_size = nlocsout
         elif dim.name == 'nobs':
             d_size = nobsout
-        elif dim.name == 'nrecs':
-            d_size = nrecsout
         else:
             d_size = len(dim)
         ncout.createDimension(dim.name, d_size)
@@ -68,8 +50,6 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         var_out = ncout.createVariable(vname, var.dtype, var.dimensions)
         if (var.dimensions[0] == 'nlocs'):
             var_out[...] = vdata[flag, ...]
-        elif (var.dimensions[0] == 'nrecs'):
-            var_out[...] = vdata[flag2, ...]
         else:
             var_out[:] = vdata[:]
         # variable attributes
