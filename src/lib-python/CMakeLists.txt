@@ -3,6 +3,7 @@ list( APPEND libs
   ioda_conv_util.py
   collect_sources.py
   orddicts.py
+  read_cryosat_L2.py
 )
 
 list( APPEND programs
@@ -48,5 +49,5 @@ install( FILES
 
 ecbuild_add_test( TARGET iodaconv_lib-python_coding_norms
                   TYPE SCRIPT
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
                   ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )

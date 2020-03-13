@@ -135,7 +135,7 @@ class IODA(object):
             print('No %s observations for IODA!' % varName)
             return
 
-        self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
+        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
@@ -175,8 +175,8 @@ class IODA(object):
                 self.data[recKey][locKey][errKey] = oerr
                 self.data[recKey][locKey][qcKey] = 0
 
-        (ObsVars, RecMdata, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, self.AttrData)
+        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
+        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
 
         return
 

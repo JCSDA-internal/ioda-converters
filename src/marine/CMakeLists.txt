@@ -1,5 +1,6 @@
 list(APPEND programs
   cryosat_ice2ioda.py
+  cryosat_ice2ioda_DBL.py
   emc_ice2ioda.py
   gds2_sst2ioda.py
   gmao_obs2ioda.py
@@ -40,5 +41,5 @@ install( PROGRAMS
 
 ecbuild_add_test( TARGET iodaconv_marine_coding_norms
                   TYPE
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
                   ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
