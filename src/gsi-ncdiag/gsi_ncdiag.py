@@ -406,7 +406,7 @@ units_values = {
 
 # @TestReference
 # fields from GSI to compare to computations done in UFO
-test_fields = {
+test_fields_ = {
 }
 test_fields_allsky = {
     'clwp_amsua': ('clw_retrieved_from_observation', 'float'),
