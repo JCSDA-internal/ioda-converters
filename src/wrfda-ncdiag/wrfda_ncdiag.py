@@ -390,7 +390,6 @@ class Radiances:
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nrecs = nrecs
         writer._nvars = nchans
         writer._nlocs = self.nlocs
 
