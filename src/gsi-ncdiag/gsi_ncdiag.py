@@ -402,6 +402,9 @@ units_values = {
     'brightness_temperature_jacobian_air_temperature': '1',
     'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
     'optical_thickness_of_atmosphere_layer': '1',
+    'clw_retrieved_from_observation': 'kg/m/m',
+    'clw_retrieved_from_background': 'kg/m/m',
+    'scat_retrieved_from_observation': '1',
 }
 
 # @TestReference
