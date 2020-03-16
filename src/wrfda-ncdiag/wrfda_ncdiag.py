@@ -276,7 +276,6 @@ class Radiances:
                 print("File exists. Skipping and not overwriting:")
                 print(outname)
                 return
-        RecKeyList = []
         LocKeyList = []
         TestKeyList = []
         LocVars = []
@@ -302,7 +301,7 @@ class Radiances:
 
         # for now, record len is 1 and the list is empty?
         recKey = 0
-        writer = iconv.NcWriter(outname, RecKeyList, LocKeyList, TestKeyList=TestKeyList)
+        writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
 
         if self.sensor in sensor_chanlist_dict:
             chanlist = sensor_chanlist_dict[self.sensor]
