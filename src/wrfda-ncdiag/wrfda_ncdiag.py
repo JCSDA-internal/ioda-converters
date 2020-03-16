@@ -4,6 +4,16 @@
 # into JEDI UFO GeoVaLs and IODA observation files
 ###############################################################################
 ###############################################################################
+from collections import defaultdict, OrderedDict
+import datetime as dt
+import errno
+import ioda_conv_ncio as iconv
+import netCDF4 as nc
+import numpy as np
+from orddicts import DefaultOrderedDict
+import os
+import sys
+
 # dictionaries and lists
 # LocKeyList = { 'wrfdaname':[('IODAname','dtype')]}
 
@@ -221,8 +231,6 @@ class Radiances:
             raise ValueError("Observation is not a radiance type...")
 
     def read(self):
-        import netCDF4 as nc
-        import datetime as dt
         # get valid time
         df = nc.Dataset(self.filename)
         tstr = self.filename.split('/')[-1].split('_')[-1].split('.')[0]
@@ -235,7 +243,7 @@ class Radiances:
         else:
             print("ERROR: Satellite not found in wrfda2crtm_satellite_map:")
             print(satellite)
-            os._exit(1)
+            sys.exit(1)
 
         # number of observations
         self.nlocs = len(df.dimensions['npixel'])
@@ -251,15 +259,6 @@ class Radiances:
      output observations from the specified WRFDA diag file
      to the JEDI/IODA observation format
         """
-        import ioda_conv_ncio as iconv
-        import os
-        import errno
-        from collections import defaultdict, OrderedDict
-        from orddicts import DefaultOrderedDict
-        import numpy as np
-        import datetime as dt
-        import netCDF4 as nc
-
         # place files for individual dates in separate directories
         fullOutDir = OutDir + '/' + self.validtime.strftime("%Y%m%d%H")
         try:
