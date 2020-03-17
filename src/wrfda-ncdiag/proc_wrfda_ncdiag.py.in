@@ -9,12 +9,12 @@ sys.path.append("@SCRIPT_LIB_PATH@")
 import wrfda_ncdiag as wrfdad
 
 
-def run_radiances_obs(radfile, outdir):
+def run_radiances_obs(radfile, outdir, datesubs):
     print("Processing run_radiances_obs:")
     print("Processing:"+str(radfile))
     Diag = wrfdad.Radiances(radfile)
     Diag.read()
-    Diag.toIODAobs(outdir)
+    Diag.toIODAobs(outdir, dateSubDirs=datesubs)
     Diag.close()
     return 0
 
@@ -28,6 +28,8 @@ ap.add_argument("-n", "--nprocs",
 ap.add_argument("input_dir", help="Path to concatenated WRFDA diag files")
 ap.add_argument("-o", "--obs_dir",
                 help="Path to directory to output observations")
+ap.add_argument("-d", "--date_subdirs",
+                help="Whether to place output observations in date-specific subdirectories")
 
 MyArgs = ap.parse_args()
 
@@ -35,6 +37,14 @@ if MyArgs.nprocs:
     nprocs = int(MyArgs.nprocs)
 else:
     nprocs = 1
+
+if MyArgs.date_subdirs:
+    print(MyArgs.date_subdirs)
+    print(bool(MyArgs.date_subdirs))
+
+    datesubs = bool(MyArgs.date_subdirs)
+else:
+    datesubs = False
 
 DiagDir = MyArgs.input_dir
 
@@ -50,7 +60,7 @@ if MyArgs.obs_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir))
+            res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir, datesubs))
 
 # process all in the same time, because sats with many channels are so slow...
 obspool.close()

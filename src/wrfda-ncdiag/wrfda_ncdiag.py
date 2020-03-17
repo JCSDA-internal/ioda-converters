@@ -254,13 +254,16 @@ class Radiances:
     def close(self):
         self.df.close()
 
-    def toIODAobs(self, OutDir, clobber=True):
+    def toIODAobs(self, OutDir, clobber=True, dateSubDirs=False):
         """ toIODAobs(OutDir,clobber=True)
      output observations from the specified WRFDA diag file
      to the JEDI/IODA observation format
         """
-        # place files for individual dates in separate directories
-        fullOutDir = OutDir + '/' + self.validtime.strftime("%Y%m%d%H")
+        fullOutDir = OutDir
+        if dateSubDirs:
+            # place files for individual dates in separate directories
+            fullOutDir = fullOutDir + '/' + self.validtime.strftime("%Y%m%d%H")
+
         try:
             os.makedirs(fullOutDir)
         except OSError as exc:

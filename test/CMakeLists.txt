@@ -26,6 +26,7 @@ list( APPEND test_input
   testinput/CS_OFFL_SIR_GDR_2__20160229T132459_20160229T150412_C001.DBL
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
+  testinput/wrfdadiags_goes-16-abi_2018041500.nc
 )
 
 list( APPEND test_output
@@ -47,6 +48,7 @@ list( APPEND test_output
   testoutput/cryosat2_L2_DBL.nc
   testoutput/sondes_obs_2018041500_m.odb
   testoutput/gnssro_obs_2018041500_s.odb
+  testoutput/abi_g16_obs_2018041500.nc4
 )
 
 # create test directories and make links to the input files
@@ -225,6 +227,20 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_rad
                        -o testrun/
                        -t rad"
                       amsua_aqua_obs_2018041500.nc4)
+
+#===============================================================================
+# WRFDA ncdiag converter
+#===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_wrfdadiag_rad
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/test_wrfdadiag.py
+                       -i testinput/wrfdadiags_goes-16-abi_2018041500.nc
+                       -o testrun/
+                       -t rad"
+                      abi_g16_obs_2018041500.nc4)
 
 #===============================================================================
 # GNSSRO BUFR converter
