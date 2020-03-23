@@ -99,11 +99,11 @@ ap.add_argument("-g", "--geovals_dir",
                 help="Path to directory to output observations")
 ap.add_argument("-d", "--obsdiag_dir",
                 help="Path to directory to output observations")
-ap.add_argument("-obsbias", "--add_obsbias", default=False,
+ap.add_argument("-b", "--add_obsbias", default=False,
                 help="Add ObsBias group to output observations")
-ap.add_argument("-qcvars", "--add_qcvars", default=False,
+ap.add_argument("-q", "--add_qcvars", default=False,
                 help="Add QC variables to output observations")
-ap.add_argument("-testvars", "--add_testvars", default=False,
+ap.add_argument("-t", "--add_testvars", default=False,
                 help="Add TestReference group to output observations")
 
 MyArgs = ap.parse_args()
