@@ -26,7 +26,7 @@ parser.add_argument('-b', '--add_obsbias',
 parser.add_argument('-q', '--add_qcvars',
                     help="add qc variables, only works on rad",
                     type=str)
-parser.add_argument('-t', '--add_testvars',
+parser.add_argument('-r', '--add_testvars',
                     help="add test variables, only works on rad",
                     type=str)
 args = parser.parse_args()

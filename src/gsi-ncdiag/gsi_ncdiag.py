@@ -148,6 +148,7 @@ gsi_add_qcvars_allsky = {
 }
 
 gsi_add_vars = {
+    'ObsBias': 'ObsBias',
     'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
@@ -1030,7 +1031,7 @@ class Radiances:
                 pass
         ncout.close()
 
-    def toIODAobs(self, OutDir, ObsBias, QCVars, TestRefVars, clobber=True):
+    def toIODAobs(self, OutDir, ObsBias, QCVars, TestRefs, clobber=True):
         """ toIODAobs(OutDir,clobber=True)
      output observations from the specified GSI diag file
      to the JEDI/IODA observation format
@@ -1045,7 +1046,7 @@ class Radiances:
 
         print("Input Parameter: ObsBias =", ObsBias)
         print("Input Parameter: QCVars =", QCVars)
-        print("Input Parameter: TestRefVars =", TestRefVars)
+        print("Input Parameter: TestRefs =", TestRefs)
         # set up a NcWriter class
         outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -1090,7 +1091,7 @@ class Radiances:
                 TestVars.append(ncv)
 
         # for now, record len is 1 and the list is empty?
-        if (TestRefVars):
+        if (TestRefs):
             writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
         else:
             writer = iconv.NcWriter(outname, LocKeyList)
@@ -1303,7 +1304,7 @@ class Radiances:
         # ExtractObsData
         writer._nvars = nchans
         writer._nlocs = nlocs
-        if (TestRefVars):
+        if (TestRefs):
             writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
                                AttrData, units_values, test_mdata)
         else:
