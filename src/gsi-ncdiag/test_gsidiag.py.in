@@ -26,7 +26,7 @@ parser.add_argument('-b', '--add_obsbias',
 parser.add_argument('-q', '--add_qcvars',
                     help="add qc variables, only works on rad",
                     type=str)
-parser.add_argument('-r', '--add_testvars',
+parser.add_argument('-r', '--add_testrefs',
                     help="add test variables, only works on rad",
                     type=str)
 args = parser.parse_args()
@@ -35,7 +35,7 @@ infile = args.input
 outdir = args.output
 obsbias = args.add_obsbias
 qcvars = args.add_qcvars
-testvars = args.add_testvars
+testrefs = args.add_testrefs
 if (args.type == 'conv'):
     diag = gsid.Conv(infile)
 elif (args.type == 'rad'):
@@ -52,7 +52,7 @@ diag.read()
 if (args.platform and args.type == 'conv'):
     diag.toIODAobs(outdir, platforms=[args.platform])
 elif (args.type == 'rad'):
-    diag.toIODAobs(outdir, obsbias, qcvars, testvars)
+    diag.toIODAobs(outdir, obsbias, qcvars, testrefs)
 else:
     diag.toIODAobs(outdir)
 diag.toGeovals(outdir)
