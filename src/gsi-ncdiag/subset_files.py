@@ -23,7 +23,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
     nlocsin = len(ncin.dimensions['nlocs'])
     nvars = len(ncin.dimensions['nvars'])
     if nrecsin > 100.:
-        nsamples = int(-(-nlocsout/10.))  # just picked 10 randomly
+        nsamples = int(nlocsout/10.)  # just picked 10 randomly
         nsamples = max(1, nsamples)
         npossible = nrecsin
         recs = True
