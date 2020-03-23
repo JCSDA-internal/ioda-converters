@@ -20,13 +20,13 @@ parser.add_argument('-t', '--type',
 parser.add_argument('-p', '--platform',
                     help="platform to run, only works on conv",
                     type=str)
-parser.add_argument('-obsbias', '--add_obsbias',
+parser.add_argument('-b', '--add_obsbias',
                     help="add obsbias groups, only works on rad",
                     type=str)
-parser.add_argument('-qcvars', '--add_qcvars',
+parser.add_argument('-q', '--add_qcvars',
                     help="add qc variables, only works on rad",
                     type=str)
-parser.add_argument('-testvars', '--add_testvars',
+parser.add_argument('-t', '--add_testvars',
                     help="add test variables, only works on rad",
                     type=str)
 args = parser.parse_args()
