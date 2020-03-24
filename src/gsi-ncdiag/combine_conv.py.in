@@ -42,7 +42,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         ncf = nc.Dataset(f, mode='r')
         for key, value in ncf.variables.items():
             vs = key.split('@')
-            if vs[1] not in ['MetaData', 'VarMetaData']:
+            if vs[1] not in ['MetaData', 'VarMetaData', 'TestReference']:
                 if vs[0] not in DataVarNames:
                     DataVarNames.append(vs[0])
                 if vs[0] in DataVarNames:
