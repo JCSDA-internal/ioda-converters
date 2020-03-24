@@ -16,30 +16,46 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
     ncout = nc.Dataset(outfile, 'w')
     # I think this has to be called before each call to random.sample to make it the same random set
     random.seed(5)
+    # Get number of records (nrecsin)
+    recnum = ncin.variables['record_number@MetaData'][:]
+    recnum_uniq = np.unique(recnum)
+    nrecsin = len(recnum_uniq)
     nlocsin = len(ncin.dimensions['nlocs'])
     nvars = len(ncin.dimensions['nvars'])
-    nsamples = nlocsout
-    npossible = nlocsin
+    if nrecsin > 100.:
+        nsamples = int(nlocsout/10.)  # just picked 10 randomly
+        nsamples = max(1, nsamples)
+        npossible = nrecsin
+        recs = True
+    else:
+        nsamples = nlocsout
+        npossible = nlocsin
+        recs = False
     if nlocsout > nlocsin:
         nsamples = npossible
     flag = random.sample(list(np.arange(0, npossible)), nsamples)
     flag = sorted(flag)
     # get the nlocs where flag is true so consistent for geovals too
-    flag2 = [0]
-    nlocsout = len(flag)
+    if recs:
+        nrecsout = len(flag)
+        flag2 = flag
+        flag = np.isin(ncin.variables['record_number@MetaData'][:], flag)
+        nlocsout = len(ncin.variables['record_number@MetaData'][flag, ...])
+    else:
+        flag2 = [0]
+        nrecsout = 1
+        nlocsout = len(flag)
     # process observation file
     # copy global attributes
     for aname in ncin.ncattrs():
         avalue = ncin.getncattr(aname)
         ncout.setncattr(aname, avalue)
-    # redo nlocs, nrecs
+    # redo nlocs
     ncout.setncattr("nlocs", np.int32(nlocsout))
     # copy dimensions
     for dim in ncin.dimensions.values():
         if dim.name == 'nlocs':
             d_size = nlocsout
-        elif dim.name == 'nobs':
-            d_size = nobsout
         else:
             d_size = len(dim)
         ncout.createDimension(dim.name, d_size)
@@ -69,7 +85,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         for aname in ncin.ncattrs():
             avalue = ncin.getncattr(aname)
             ncout.setncattr(aname, avalue)
-        # redo nlocs, nrecs
+        # redo nlocs
         ncout.setncattr("nlocs", np.int32(nlocsout))
         # copy dimensions
         for dim in ncin.dimensions.values():
@@ -101,7 +117,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         for aname in ncin.ncattrs():
             avalue = ncin.getncattr(aname)
             ncout.setncattr(aname, avalue)
-        # redo nlocs, nrecs
+        # redo nlocs
         ncout.setncattr("nlocs", np.int32(nlocsout))
         # copy dimensions
         for dim in ncin.dimensions.values():
