@@ -134,13 +134,21 @@ gsi_add_vars_allsky = {
     'Forecast_unadjusted_clear': 'GsiHofXClr',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
-    'Bias_Correction_Constant': 'GsiBcConst',
-    'Bias_Correction_ScanAngle': 'GsiBcScanAng',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
 }
 
+gsi_add_qcvars_allsky = {
+    'ObsBias': 'ObsBias',
+    'Inverse_Observation_Error_after_jsfcchk': 'GsiObsError_after_jsfcchk',
+    'Inverse_Observation_Error_after_sdoei': 'GsiObsError_after_sdoei',
+    'Inverse_Observation_Error_after_grosschk': 'GsiObsError_after_grosschk',
+    'Inverse_Observation_Error_sdoei': 'GsiObsError_sdoei',
+    'Inverse_Observation_Error_grosschk': 'GsiObsError_grosschk',
+}
+
 gsi_add_vars = {
+    'ObsBias': 'ObsBias',
     'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
@@ -153,6 +161,21 @@ gsi_add_vars = {
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
+}
+
+gsi_add_qcvars = {
+    'Bias_Correction': 'ObsBias',
+    'Inverse_Observation_Error_jsfc': 'GsiObsError_jsfc',
+    'Inverse_Observation_Error_clddet': 'GsiObsError_clddet',
+    'Inverse_Observation_Error_nsstret': 'GsiObsError_nsstret',
+    'Inverse_Observation_Error_grosschk': 'GsiObsError_grosschk',
+    'Inverse_Observation_Error_after_wavenum': 'GsiObsError_after_wavenum',
+    'Inverse_Observation_Error_after_range': 'GsiObsError_after_rangechk',
+    'Inverse_Observation_Error_after_topo': 'GsiObsError_after_topo',
+    'Inverse_Observation_Error_after_transmittop': 'GsiObsError_after_transmittop',
+    'Inverse_Observation_Error_after_clddet': 'GsiObsError_after_clddet',
+    'Inverse_Observation_Error_after_nsstret': 'GsiObsError_after_nsstret',
+    'Inverse_Observation_Error_after_jsfcchk': 'GsiObsError_after_jsfcchk',
 }
 
 gsi_add_vars_uv = {
@@ -171,7 +194,6 @@ gsi_add_vars_uv = {
     'v_Forecast_adjusted': 'GsiHofXBc',
     'v_Forecast_unadjusted': 'GsiHofX',
 }
-
 
 radar_qc = {
     'obsdbz': 'dbzuse',
@@ -311,6 +333,10 @@ obsdiag_vars = {
     'Jacobian_Temperature': 'brightness_temperature_jacobian_air_temperature',
     'Jacobian_Moisture': 'brightness_temperature_jacobian_humidity_mixing_ratio',
     'Layer_Optical_Depth': 'optical_thickness_of_atmosphere_layer',
+    'Layer_to_Space_Transmittance': 'transmittances_of_atmosphere_layer',
+    'Weighting_Function': 'weightingfunction_of_atmosphere_layer',
+    'Pressure_Level_WeightFuncMax': 'pressure_level_at_peak_of_weightingfunction',
+    'Forecast_unadjusted_clear': 'brightness_temperature_assuming_clear_sky',
 }
 
 aod_sensors = [
@@ -362,6 +388,7 @@ units_values = {
     'surface_temperature_where_ice': 'K',
     'surface_temperature_where_snow': 'K',
     'surface_wind_speed': 'm s-1',
+    'wind_speed': 'm s-1',
     'surface_wind_from_direction': 'degree',
     'leaf_area_index': '1',
     'volume_fraction_of_condensed_water_in_soil': '1',
@@ -406,17 +433,68 @@ units_values = {
     'brightness_temperature_jacobian_air_temperature': '1',
     'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
     'optical_thickness_of_atmosphere_layer': '1',
+    'clw_retrieved_from_observation': 'kg/m/m',
+    'clw_retrieved_from_background': 'kg/m/m',
+    'scat_retrieved_from_observation': '1',
 }
 
 # @TestReference
 # fields from GSI to compare to computations done in UFO
-test_fields = {
+# Note: For conventional data, the combine script would fail if the
+# input subset files (_m, and _s) contain test variables.
+test_fields_conv = {
+    'wind_speed': ('wind_speed', 'float'),
 }
+
+test_fields = {}
+
 test_fields_allsky = {
     'clwp_amsua': ('clw_retrieved_from_observation', 'float'),
     'clw_guess_retrieval': ('clw_retrieved_from_background', 'float'),
+    'scat_amsua': ('scat_retrieved_from_observation', 'float'),
+}
+test_fields_with_channels_allsky = {
+    'BC_Constant': ('constant_bias_correction_term', 'float'),
+    'BC_Scan_Angle': ('scan_angle_bias_correction_term', 'float'),
+    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
+    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
+    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
+    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
+    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
+    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
+    'BC_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_term', 'float'),
+    'BC_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_term', 'float'),
+    'BC_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_term', 'float'),
+    'BC_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_term', 'float'),
+    'BC_Scan_Position_total': ('scan_angle_total_bias_correction_term', 'float'),
+    'BCPred_Constant': ('constant_bias_correction_predictor', 'float'),
+    'BCPred_Scan_Angle': ('scan_angle_bias_correction_predictor', 'float'),
+    'BCPred_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_predictor', 'float'),
+    'BCPred_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_predictor', 'float'),
+    'BCPred_Lapse_Rate': ('lapse_rate_bias_correction_predictor', 'float'),
+    'BCPred_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_predictor', 'float'),
+    'BCPred_Sine_Latitude': ('sine_of_latitude_bias_correction_predictor', 'float'),
+    'BCPred_Emissivity': ('emissivity_bias_correction_predictor', 'float'),
+    'BCPred_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_predictor', 'float'),
+    'BCPred_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_predictor', 'float'),
+    'BCPred_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_predictor', 'float'),
+    'BCPred_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_predictor', 'float'),
+    'Hydrometeor_Affected_Channels': ('Hydrometeor_Affected_Channels', 'float'),
+    'Input_Observation_Error': ('ObsError', 'float'),
+    'Cloud_Match_Index': ('Cloud_Match_Index', 'float'),
+    'Error_Inflation_Factor_sdoei': ('error_inflation_factor_sdoei', 'float'),
 }
 test_fields_with_channels = {
+    'Error_Inflation_Factor_Topo': ('error_inflation_factor_topo', 'float'),
+    'Error_Inflation_Factor_Transmittop': ('error_inflation_factor_transmittop', 'float'),
+    'Error_Inflation_Factor_Wavenum': ('error_inflation_factor_wavenum', 'float'),
+    'Error_Inflation_Factor_Jsfc': ('error_inflation_factor_jsfc', 'float'),
+    'Error_Inflation_Factor_Grosschk': ('error_inflation_factor_grosschk', 'float'),
+    'Transmittance_at_Top': ('tao_top', 'float'),
+    'Transmittance_at_Sfc': ('tao_sfc', 'float'),
+    'Cloudy_Channel': ('cloudy_channel', 'integer'),
+    'Transmittance_at_Cloud_Top': ('tao_cldtop', 'float'),
+    'NSST_Retrieval_check': ('nsstret_check', 'integer'),
 }
 
 ###############################################################################
@@ -493,6 +571,9 @@ class Conv:
                     self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_geoval_' + \
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
+                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind'):
+                    outname = OutDir + '/' + p + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
                     if (os.path.exists(outname)):
@@ -578,23 +659,35 @@ class Conv:
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
+                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind'):
+                    outname = OutDir + '/' + p + '_obs_' + \
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
                     if (os.path.exists(outname)):
                         print("File exists. Skipping and not overwriting:")
                         print(outname)
                         continue
                 LocKeyList = []
+                TestKeyList = []
                 LocVars = []
+                TestVars = []
                 AttrData = {}
                 varDict = defaultdict(lambda: defaultdict(dict))
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                test_fields_ = test_fields_conv
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
                     if ncv in all_LocKeyList:
                         LocKeyList.append(all_LocKeyList[ncv])
                         LocVars.append(ncv)
+                # get list of TestReference variables for this var/platform
+                for ncv in self.df.variables:
+                    if ncv in test_fields_:
+                        TestKeyList.append(test_fields_[ncv])
+                        TestVars.append(ncv)
                 # grab obs to process
                 idx = grabobsidx(self.df, p, v)
                 if (np.sum(idx) == 0):
@@ -604,7 +697,7 @@ class Conv:
                 print("Platform:" + p + " Var:" + v)
                 print(str(np.sum(idx))+" obs to process")
 
-                writer = iconv.NcWriter(outname, LocKeyList)
+                writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
 
                 outvars = conv_varnames[v]
                 for value in outvars:
@@ -681,7 +774,13 @@ class Conv:
                             loc_mdata[loc_mdata_name] = self.df[lvar][idx]
                     else:
                         loc_mdata[loc_mdata_name] = self.df[lvar][idx]
-
+                # put the TestReference fields in the structure for writing out
+                for tvar in TestVars:
+                    if tvar in test_fields_:
+                        test_mdata_name = test_fields_[tvar][0]
+                        tmp = self.df[tvar][idx]
+                        tmp[tmp > 4e8] = nc.default_fillvals['f4']
+                        test_mdata[test_mdata_name] = tmp
                 # record info
                 SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
                 loc_mdata['record_number'] = invs
@@ -697,7 +796,9 @@ class Conv:
 
                 writer._nvars = nvars
                 writer._nlocs = nlocs
-                writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
+
+                writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values, test_mdata)
+
                 print(str(len(obsdata))+" Conventional obs processed, wrote to:")
                 print(outname)
 
@@ -934,7 +1035,7 @@ class Radiances:
                 pass
         ncout.close()
 
-    def toIODAobs(self, OutDir, clobber=True):
+    def toIODAobs(self, OutDir, ObsBias, QCVars, TestRefs, clobber=True):
         """ toIODAobs(OutDir,clobber=True)
      output observations from the specified GSI diag file
      to the JEDI/IODA observation format
@@ -946,6 +1047,10 @@ class Radiances:
         import numpy as np
         import datetime as dt
         import netCDF4 as nc
+
+        print("Input Parameter: ObsBias =", ObsBias)
+        print("Input Parameter: QCVars =", QCVars)
+        print("Input Parameter: TestRefs =", TestRefs)
         # set up a NcWriter class
         outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -965,11 +1070,15 @@ class Radiances:
         var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         if self.sensor == "amsua":
-            test_fields = test_fields_allsky
+            test_fields_ = test_fields_allsky
+            test_fields_with_channels_ = test_fields_with_channels_allsky
         elif self.sensor == "atms":
-            test_fields = test_fields_allsky
+            test_fields_ = test_fields_allsky
+            test_fields_with_channels_ = test_fields_with_channels_allsky
         else:
-            test_fields = test_fields_
+            test_fields_ = test_fields
+            test_fields_with_channels_ = test_fields_with_channels
+
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
@@ -978,20 +1087,25 @@ class Radiances:
 
         # get list of TestReference variables for this var/platform
         for ncv in self.df.variables:
-            if ncv in test_fields:
-                TestKeyList.append(test_fields[ncv])
+            if ncv in test_fields_:
+                TestKeyList.append(test_fields_[ncv])
                 TestVars.append(ncv)
-            if ncv in test_fields_with_channels:
-                TestKeyList.append(test_fields_with_channels[ncv])
+            if ncv in test_fields_with_channels_:
+                TestKeyList.append(test_fields_with_channels_[ncv])
                 TestVars.append(ncv)
+
         # for now, record len is 1 and the list is empty?
-        writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
+        if (TestRefs):
+            writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
+        else:
+            writer = iconv.NcWriter(outname, LocKeyList)
 
         chan_number = self.df['sensor_chan'][:]
         chan_number = chan_number[chan_number >= 0]
         chan_indx = self.df['Channel_Index'][:]
         nchans = len(chan_number)
         nlocs = int(self.nobs / nchans)
+
         chanlist = chan_number
         for a in chanlist:
             value = "brightness_temperature_{:d}".format(a)
@@ -999,11 +1113,69 @@ class Radiances:
             varDict[value]['errKey'] = value, writer.OerrName()
             varDict[value]['qcKey'] = value, writer.OqcName()
             units_values[value] = 'K'
-
+            if (ObsBias):
+                valuebc = [
+                    "constant_{:d}".format(a),
+                    "scan_angle_{:d}".format(a),
+                    "cloud_liquid_water_{:d}".format(a),
+                    "lapse_rate_squared_{:d}".format(a),
+                    "lapse_rate_{:d}".format(a),
+                    "cosine_of_latitude_times_orbit_node_{:d}".format(a),
+                    "sine_of_latitude_{:d}".format(a),
+                    "emissivity_{:d}".format(a),
+                    "scan_angle_4th_order_{:d}".format(a),
+                    "scan_angle_3rd_order_{:d}".format(a),
+                    "scan_angle_2nd_order_{:d}".format(a),
+                    "scan_angle_1st_order_{:d}".format(a),
+                ]
+                ibc = 0
+                for vbc in valuebc:
+                    varDict[vbc]['bctKey'] = vbc, writer.ObiastermName()
+                    varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
+                    ibc += 1
         obsdata = self.df['Observation'][:]
         obserr = self.df['Input_Observation_Error'][:]
         obsqc = self.df['QC_Flag'][:].astype(int)
+        if (ObsBias):
+            nametbc = [
+                'BC_Constant',
+                'BC_Scan_Angle',
+                'BC_Cloud_Liquid_Water',
+                'BC_Lapse_Rate_Squared',
+                'BC_Lapse_Rate',
+                'BC_Cosine_Latitude_times_Node',
+                'BC_Sine_Latitude',
+                'BC_Emissivity',
+                'BC_Scan_Angle_4th_order',
+                'BC_Scan_Angle_3rd_order',
+                'BC_Scan_Angle_2nd_order',
+                'BC_Scan_Angle_1st_order',
+            ]
+            namepbc = [
+                'BCPred_Constant',
+                'BCPred_Scan_Angle',
+                'BCPred_Cloud_Liquid_Water',
+                'BCPred_Lapse_Rate_Squared',
+                'BCPred_Lapse_Rate',
+                'BCPred_Cosine_Latitude_times_Node',
+                'BCPred_Sine_Latitude',
+                'BCPred_Emissivity',
+                'BCPred_Scan_Angle_4th_order',
+                'BCPred_Scan_Angle_3rd_order',
+                'BCPred_Scan_Angle_2nd_order',
+                'BCPred_Scan_Angle_1st_order',
+            ]
+            obsbiasterm = []
+            ii = 0
+            for nbc in nametbc:
+                obsbiasterm.append(self.df[nametbc[ii]][:])
+                ii += 1
 
+            obsbiaspred = []
+            ii = 0
+            for nbc in namepbc:
+                obsbiaspred.append(self.df[namepbc[ii]][:])
+                ii += 1
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Obs_Time':
@@ -1018,27 +1190,35 @@ class Radiances:
 
         # put the TestReference fields in the structure for writing out
         for tvar in TestVars:
-            if tvar in test_fields_with_channels:
+            if tvar in test_fields_with_channels_:
                 for ii, ch in enumerate(chanlist):
-                    test_mdata_name = test_fields_with_channels[tvar][0]+"_{:d}".format(ch)
+                    test_mdata_name = test_fields_with_channels_[tvar][0]+"_{:d}".format(ch)
                 #   tmp = self.df[tvar][::nchans]
                     tmp = self.df[tvar][:]
                     tmp[tmp > 4e8] = nc.default_fillvals['f4']
                     idx = chan_indx == ii+1
                     outvals = tmp[idx]
                     test_mdata[test_mdata_name] = outvals
-            if tvar in test_fields:
-                test_mdata_name = test_fields[tvar][0]
+            if tvar in test_fields_:
+                test_mdata_name = test_fields_[tvar][0]
                 tmp = self.df[tvar][::nchans]
                 tmp[tmp > 4e8] = nc.default_fillvals['f4']
                 test_mdata[test_mdata_name] = tmp
 
         gsi_add_radvars = gsi_add_vars
+        if (QCVars):
+            gsi_add_radvars.update(gsi_add_qcvars)
+
         if self.sensor == "amsua":
             gsi_add_radvars = gsi_add_vars_allsky
+            if (QCVars):
+                gsi_add_radvars.update(gsi_add_qcvars_allsky)
 
         if self.sensor == "atms":
             gsi_add_radvars = gsi_add_vars_allsky
+            if (QCVars):
+                gsi_add_radvars.update(gsi_add_qcvars_allsky)
+
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_radvars.items():
             if gsivar in self.df.variables:
@@ -1081,7 +1261,32 @@ class Radiances:
             outdata[varDict[value]['valKey']] = obsdatasub
             outdata[varDict[value]['errKey']] = obserrsub
             outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
+            if (ObsBias):
+                valuebc = [
+                    "constant_{:d}".format(chanlist[c]),
+                    "scan_angle_{:d}".format(chanlist[c]),
+                    "cloud_liquid_water_{:d}".format(chanlist[c]),
+                    "lapse_rate_squared_{:d}".format(chanlist[c]),
+                    "lapse_rate_{:d}".format(chanlist[c]),
+                    "cosine_of_latitude_times_orbit_node_{:d}".format(chanlist[c]),
+                    "sine_of_latitude_{:d}".format(chanlist[c]),
+                    "emissivity_{:d}".format(chanlist[c]),
+                    "scan_angle_4th_order_{:d}".format(chanlist[c]),
+                    "scan_angle_3rd_order_{:d}".format(chanlist[c]),
+                    "scan_angle_2nd_order_{:d}".format(chanlist[c]),
+                    "scan_angle_1st_order_{:d}".format(chanlist[c]),
+                ]
+                ii = 0
+                for value in valuebc:
+                    obsbiastermsub = obsbiasterm[ii][idx]
+                    obsbiaspredsub = obsbiaspred[ii][idx]
+                    obsbiastermsub[obsbiastermsub > 9e5] = nc.default_fillvals['f4']
+                    obsbiaspredsub[obsbiaspredsub > 9e5] = nc.default_fillvals['f4']
 
+                    # store values in output data dictionary
+                    outdata[varDict[value]['bctKey']] = obsbiastermsub
+                    outdata[varDict[value]['bcpKey']] = obsbiaspredsub
+                    ii += 1
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         for key, value2 in chan_metadata_dict.items():
@@ -1103,14 +1308,19 @@ class Radiances:
         # ExtractObsData
         writer._nvars = nchans
         writer._nlocs = nlocs
+        if (TestRefs):
+            writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
+                               AttrData, units_values, test_mdata)
+        else:
+            writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
+                               AttrData, units_values)
 
-        writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
-                           AttrData, units_values, test_mdata)
         print("Satellite radiance obs processed, wrote to:")
         print(outname)
 
 
 # atmospheric composition observations
+
 class AOD:
     """ class AOD - aerosol optical depth satellite observations
 
@@ -1123,6 +1333,8 @@ class AOD:
     filename    - string path to file
     validtime   - datetime object of valid observation time
     nobs        - number of observations
+
+
 """
     def __init__(self, filename):
         self.filename = filename

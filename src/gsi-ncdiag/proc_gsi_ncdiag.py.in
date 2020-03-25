@@ -18,12 +18,12 @@ def run_conv_obs(convfile, outdir, platforms):
     return 0
 
 
-def run_radiances_obs(radfile, outdir):
+def run_radiances_obs(radfile, outdir, obsbias, qcvars, testrefs):
     print("Processing run_radiances_obs:")
     print("Processing:"+str(radfile))
     Diag = gsid.Radiances(radfile)
     Diag.read()
-    Diag.toIODAobs(outdir)
+    Diag.toIODAobs(outdir, obsbias, qcvars, testrefs)
     Diag.close()
     return 0
 
@@ -99,6 +99,12 @@ ap.add_argument("-g", "--geovals_dir",
                 help="Path to directory to output observations")
 ap.add_argument("-d", "--obsdiag_dir",
                 help="Path to directory to output observations")
+ap.add_argument("-b", "--add_obsbias", default=False,
+                help="Add ObsBias group to output observations")
+ap.add_argument("-q", "--add_qcvars", default=False,
+                help="Add QC variables to output observations")
+ap.add_argument("-r", "--add_testrefs", default=False,
+                help="Add TestReference group to output observations")
 
 MyArgs = ap.parse_args()
 
@@ -113,6 +119,9 @@ obspool = Pool(processes=nprocs)
 # process obs files
 if MyArgs.obs_dir:
     ObsDir = MyArgs.obs_dir
+    ObsBias = MyArgs.add_obsbias
+    QCVars = MyArgs.add_qcvars
+    TestRefs = MyArgs.add_testrefs
     # conventional obs first
     # get list of conv diag files
     convfiles = glob.glob(DiagDir+'/*conv*')
@@ -134,7 +143,7 @@ if MyArgs.obs_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir))
+            res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir, ObsBias, QCVars, TestRefs))
     # atmospheric composition observations
     # aod first
     for radfile in radfiles:
