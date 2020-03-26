@@ -216,7 +216,7 @@ ecbuild_add_test( TARGET test_iodaconv_gsidiag_conv_uv
                        "${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
                        -i testinput/gsidiag_conv_uv.nc
                        -o testrun/
-                       -t uv
+                       -t conv_uv
                        -p satwind"
                       conv_uv_obs_2018041500.nc4)
 
