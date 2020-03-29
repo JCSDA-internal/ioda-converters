@@ -63,8 +63,8 @@ class NcWriter(object):
         self._oqc_name = "PreQC"
 
         # Names assigned to obs bias terms and predoctirs related to observations
-        self._obiasterm_name = "ObsBiasTerm"
-        self._obiaspred_name = "ObsBiasPredictor"
+        self._obiasterm_name = "GsiObsBiasTerm"
+        self._obiaspred_name = "GsitObsBiasPredictor"
 
         # Names assigned to dimensions
         self._nlocs_dim_name = 'nlocs'
@@ -274,7 +274,7 @@ class NcWriter(object):
             # add units
             if Gname in ['ObsValue', 'ObsError', 'GsiHofX', 'GsiHofXBc',
                          'GsiHofXClr', 'GsiFinalObsError', 'GsiBc', 'GsiBcConst',
-                         'GsiBcScanAng', 'GsiAdjustObsError', 'GsiFinalObsError', 'ObsBias']:
+                         'GsiBcScanAng', 'GsiAdjustObsError', 'GsiFinalObsError', 'GsiObsBias']:
                 try:
                     self._fid[NcVname].setncattr_string("units", VarUnits[Vname])
                 except KeyError:
