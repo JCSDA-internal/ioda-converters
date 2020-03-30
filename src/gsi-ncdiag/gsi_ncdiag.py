@@ -139,7 +139,7 @@ gsi_add_vars_allsky = {
 }
 
 gsi_add_qcvars_allsky = {
-    'ObsBias': 'ObsBias',
+    'ObsBias': 'GsiObsBias',
     'Inverse_Observation_Error_after_jsfcchk': 'GsiObsError_after_jsfcchk',
     'Inverse_Observation_Error_after_sdoei': 'GsiObsError_after_sdoei',
     'Inverse_Observation_Error_after_grosschk': 'GsiObsError_after_grosschk',
@@ -148,7 +148,7 @@ gsi_add_qcvars_allsky = {
 }
 
 gsi_add_vars = {
-    'ObsBias': 'ObsBias',
+    'ObsBias': 'GsiObsBias',
     'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
@@ -164,7 +164,7 @@ gsi_add_vars = {
 }
 
 gsi_add_qcvars = {
-    'Bias_Correction': 'ObsBias',
+    'Bias_Correction': 'GsiObsBias',
     'Inverse_Observation_Error_jsfc': 'GsiObsError_jsfc',
     'Inverse_Observation_Error_clddet': 'GsiObsError_clddet',
     'Inverse_Observation_Error_nsstret': 'GsiObsError_nsstret',
@@ -447,6 +447,7 @@ test_fields = {}
 test_fields_allsky = {
     'clwp_amsua': ('clw_retrieved_from_observation', 'float'),
     'clw_guess_retrieval': ('clw_retrieved_from_background', 'float'),
+    'clw_symmetric_amount': ('clw_symmetric_amount', 'float'),
     'scat_amsua': ('scat_retrieved_from_observation', 'float'),
 }
 test_fields_with_channels_allsky = {
