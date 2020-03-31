@@ -10,8 +10,11 @@ import numpy as np
 import argparse
 from collections import defaultdict, OrderedDict
 import datetime as dt
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+prefix_lib_path = Path(__file__).absolute().parent.parent/'lib'
+sys.path.append(str(prefix_lib_path/'pyiodaconv'))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 

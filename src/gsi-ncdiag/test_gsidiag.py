@@ -2,8 +2,11 @@
 # script to run to test if the GSI ncdiag converters are still working
 import sys
 import argparse
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+prefix_lib_path = Path(__file__).absolute().parent.parent/'lib'
+sys.path.append(str(prefix_lib_path/'pyiodaconv'))
+
 import gsi_ncdiag as gsid
 
 parser = argparse.ArgumentParser(
