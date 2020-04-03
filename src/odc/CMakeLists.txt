@@ -1,5 +1,6 @@
 list(APPEND programs
   nc2odb.py
+  odb2nc.py
   run_nc2odb.sh
 )
 

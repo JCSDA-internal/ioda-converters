@@ -26,6 +26,7 @@ list( APPEND test_input
   testinput/CS_OFFL_SIR_GDR_2__20160229T132459_20160229T150412_C001.DBL
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
+  testinput/aod_viirs_obs_2018041500_s.odb
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
 )
 
@@ -48,6 +49,7 @@ list( APPEND test_output
   testoutput/cryosat2_L2_DBL.nc
   testoutput/sondes_obs_2018041500_m.odb
   testoutput/gnssro_obs_2018041500_s.odb
+  testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
 )
 
@@ -294,4 +296,13 @@ if (odc_FOUND)
                          testinput/gnssro_obs_2018041500_s.nc4
                          testrun/gnssro_obs_2018041500_s.odb"
                         gnssro_obs_2018041500_s.odb)
+
+  ecbuild_add_test( TARGET test_iodaconv_odb2nc_tool
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS netcdf
+                         "${CMAKE_BINARY_DIR}/bin/odb2nc.py -c
+                         testinput/aod_viirs_obs_2018041500_s.odb
+                         testrun/aod_viirs_obs_2018041500_s.nc4"
+                        aod_viirs_obs_2018041500_s.nc4)
 endif ()
