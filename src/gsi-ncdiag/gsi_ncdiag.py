@@ -93,6 +93,9 @@ all_LocKeyList = {
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
     'Vterminal': ('vterminal', 'float'),
+    'SWCM_spec_type': ('SpectralType','float'),
+    'SAZA_sat_zen_angle': ('SatZenAngle','float'),
+    'SCCF_chan_wavelen': ('ChanWavelen','float'),
 }
 
 checkuv = {
@@ -186,9 +189,6 @@ gsi_add_vars_uv = {
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
     'Errinv_Input': 'GsiInputObsError',
-    'SWCM_spec_type': 'SpectralType',
-    'SAZA_sat_zen_angle': 'SatZenAngle',
-    'SCCF_chan_wavelen': 'ChanWavelen',
     'u_Forecast_adjusted': 'GsiHofXBc',
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
