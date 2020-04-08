@@ -17,6 +17,9 @@ parser.add_argument('-i', '--input',
 parser.add_argument('-o', '--output',
                     help="output directory",
                     type=str, required=True)
+parser.add_argument('-g', '--geovals',
+                    help="geovals output directory",
+                    type=str, required=False)
 parser.add_argument('-t', '--type',
                     help="type of input file",
                     type=str, required=True)
@@ -58,4 +61,5 @@ elif (args.type == 'rad'):
     diag.toIODAobs(outdir, obsbias, qcvars, testrefs)
 else:
     diag.toIODAobs(outdir)
-diag.toGeovals(outdir)
+if args.geovals:
+    diag.toGeovals(outdir)
