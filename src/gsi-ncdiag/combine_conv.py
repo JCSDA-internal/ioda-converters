@@ -24,6 +24,7 @@ vtypedict = {
     'float32': 'float',
 }
 
+
 def concat_ioda(FileList, OutFile, GeoDir):
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -130,8 +131,8 @@ def concat_ioda(FileList, OutFile, GeoDir):
     DataVarData = np.vstack(DataVarData)
     DataVarUnique = np.ones((len(DataVarData), len(idx))) * nc.default_fillvals['f4']
     for ii in range(DataVarData.shape[0]):
-        mask = ~((DataVarData[ii,:] == nc.default_fillvals['i4']) | (DataVarData[ii,:] == np.abs(nc.default_fillvals['f4'])))
-        DataVarUnique[ii,inv[mask]] = DataVarData[ii,mask]
+        mask = ~((DataVarData[ii, :] == nc.default_fillvals['i4']) | (DataVarData[ii, :] == np.abs(nc.default_fillvals['f4'])))
+        DataVarUnique[ii, inv[mask]] = DataVarData[ii, mask]
 
     # set up things for the Ncwriter
     ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
@@ -145,7 +146,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
 
     for idx3, vname in enumerate(MetaVarNames):
         if vname[0] in ['datetime', 'station_id']:
-            #TODO Speed up this section creating a character array
+            # TODO Speed up this section creating a character array
             tmp = MetaVarUnique[idx3, :]
             tmp = tmp.astype(str)
             if vname[0] == 'datetime':
@@ -156,7 +157,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
             # loop and replace chars
             for i in range(len(tmp)):
                 s = tmp[i]
-                tmp2[i,:len(s)] = list(s)
+                tmp2[i, :len(s)] = list(s)
             loc_mdata[vname[0]] = tmp2.astype(MetaVType[idx3])
         else:
             loc_mdata[vname[0]] = MetaVarUnique[idx3, ...].astype(MetaVType[idx3])
