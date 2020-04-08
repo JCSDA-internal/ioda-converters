@@ -83,7 +83,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         for f in FileList:
             ncf = nc.Dataset(f, mode='r')
             try:
-                a = ncf.variables[v][0, ...]
+                a = np.array(ncf.variables[v])[0, ...]
             except KeyError:
                 MetaInAll[v] = False
             ncf.close()
@@ -95,7 +95,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
         if MetaInAll[v]:
             for f in FileList:
                 ncf = nc.Dataset(f, mode='r')
-                tmpdata = ncf.variables[v][:]
+                tmpdata = np.array(ncf.variables[v])
                 tmpvardata.append(tmpdata)
                 ncf.close()
         try:
@@ -112,35 +112,28 @@ def concat_ioda(FileList, OutFile, GeoDir):
     DataVarIdx = []
     for idx2, v in enumerate(DataVars):
         tmpvardata = []
-        tmpvaridx = []
         for f in FileList:
             ncf = nc.Dataset(f, mode='r')
             try:
-                tmpdata = ncf.variables[v][:]
+                tmpdata = np.array(ncf.variables[v])
                 tmpvardata.append(tmpdata)
-                tmpvaridx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
             except KeyError:
-                tmpdata = np.ones_like(ncf.variables['record_number@MetaData'][:]).astype(DataVType[idx2])
+                tmpdata = np.ones_like(np.array(ncf.variables['record_number@MetaData'])).astype(DataVType[idx2])
                 if DataVType[idx2] == np.int32:
                     tmpdata = tmpdata * nc.default_fillvals['i4']
                 else:
                     tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
                 tmpvardata.append(tmpdata)
-                tmpvaridx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
             validtime = dt.datetime.strptime(str(ncf.getncattr('date_time')), "%Y%m%d%H")
             ncf.close()
         tmpvardata = np.hstack(tmpvardata)
-        tmpvaridx = np.hstack(tmpvaridx)
         DataVarData.append(tmpvardata)
-        DataVarIdx.append(tmpvaridx)
     DataVarData = np.vstack(DataVarData)
-    DataVarIdx = np.vstack(DataVarIdx)
-    DataVarUnique = np.ones((len(DataVarData), len(idx)))*np.abs(nc.default_fillvals['f4'])
-    for ii, jj in np.ndindex(DataVarData.shape):
-        i = DataVarIdx[ii, jj]
-        j = inv[jj]
-        if DataVarData[ii, jj] != nc.default_fillvals['i4'] and DataVarData[ii, jj] != np.abs(nc.default_fillvals['f4']):
-            DataVarUnique[i, j] = DataVarData[ii, jj]
+    DataVarUnique = np.ones((len(DataVarData), len(idx))) * nc.default_fillvals['f4']
+    for ii in range(DataVarData.shape[0]):
+        mask = ~((DataVarData[ii, :] == nc.default_fillvals['i4']) | (DataVarData[ii, :] == np.abs(nc.default_fillvals['f4'])))
+        DataVarUnique[ii, inv[mask]] = DataVarData[ii, mask]
+
     # set up things for the Ncwriter
     ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
     nlocs = MetaVarUnique.shape[-1]
@@ -153,6 +146,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
 
     for idx3, vname in enumerate(MetaVarNames):
         if vname[0] in ['datetime', 'station_id']:
+            # TODO Speed up this section creating a character array
             tmp = MetaVarUnique[idx3, :]
             tmp = tmp.astype(str)
             if vname[0] == 'datetime':
@@ -162,8 +156,8 @@ def concat_ioda(FileList, OutFile, GeoDir):
             tmp2 = np.empty((len(tmp), jj), dtype=str)
             # loop and replace chars
             for i in range(len(tmp)):
-                for j in range(len(tmp[i])):
-                    tmp2[i, j] = str(tmp[i][j])
+                s = tmp[i]
+                tmp2[i, :len(s)] = list(s)
             loc_mdata[vname[0]] = tmp2.astype(MetaVType[idx3])
         else:
             loc_mdata[vname[0]] = MetaVarUnique[idx3, ...].astype(MetaVType[idx3])
@@ -210,11 +204,11 @@ def concat_ioda(FileList, OutFile, GeoDir):
             for f in GeoFileList:
                 ncf = nc.Dataset(f, mode='r')
                 try:
-                    tmpdata = ncf.variables[v][:]
+                    tmpdata = np.array(ncf.variables[v])
                     tmpgeodata.append(tmpdata)
                     tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
                 except KeyError:
-                    tmpdata = np.ones_like(ncf.variables['time'][:]).astype(GeoVarTypes2[idx2])
+                    tmpdata = np.ones_like(np.array(ncf.variables['time'])).astype(GeoVarTypes2[idx2])
                     if GeoVarTypes2[idx2] == np.int32:
                         tmpdata = tmpdata * nc.default_fillvals['i4']
                     else:
@@ -237,14 +231,14 @@ def concat_ioda(FileList, OutFile, GeoDir):
             for f in GeoFileList:
                 ncf = nc.Dataset(f, mode='r')
                 try:
-                    tmpdata = ncf.variables[v][:]
+                    tmpdata = np.array(ncf.variables[v])
                     tmpgeodata.append(tmpdata)
                     tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
                 except KeyError:
                     try:
-                        tmpdata = np.ones_like(ncf.variables['air_pressure'][:]).astype(GeoVarTypes3[idx2])
+                        tmpdata = np.ones_like(np.array(ncf.variables['air_pressure'])).astype(GeoVarTypes3[idx2])
                     except KeyError:
-                        tmpdata = np.ones_like(ncf.variables['atmosphere_ln_pressure_coordinate'][:]).astype(GeoVarTypes3[idx2])
+                        tmpdata = np.ones_like(np.array(ncf.variables['atmosphere_ln_pressure_coordinate'])).astype(GeoVarTypes3[idx2])
                     if GeoVarTypes3[idx2] == np.int32:
                         tmpdata = tmpdata * nc.default_fillvals['i4']
                     else:
