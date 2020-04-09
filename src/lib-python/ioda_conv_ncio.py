@@ -221,7 +221,11 @@ class NcWriter(object):
             Vector = Values
         elif (Dtype == "string"):
             StringType = "S{0:d}".format(self._nstring)
-            Vector = netCDF4.stringtochar(np.array(Values, StringType))
+            s = np.array(Values, StringType)
+            try:
+                Vector = netCDF4.stringtochar(s)
+            except (UnicodeEncodeError, UnicodeDecodeError) as e:
+                Vector = netCDF4.stringtochar(s, encoding='bytes')
         elif (Dtype == "datetime"):
             StringType = "S{0:d}".format(self._ndatetime)
             Vector = netCDF4.stringtochar(np.array(Values, StringType))
