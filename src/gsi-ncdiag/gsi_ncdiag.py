@@ -106,9 +106,11 @@ all_LocKeyList = {
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
     'Vterminal': ('vterminal', 'float'),
-    'SWCM_spec_type': ('SpectralType','float'),
-    'SAZA_sat_zen_angle': ('SatZenAngle','float'),
-    'SCCF_chan_wavelen': ('ChanWavelen','float'),
+    'SWCM_spec_type': ('satwind_spectral_type', 'float'),
+    'SAZA_sat_zen_angle': ('sensor_zenith_angle', 'float'),
+    'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
+    'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
+    'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
 }
 
 checkuv = {
