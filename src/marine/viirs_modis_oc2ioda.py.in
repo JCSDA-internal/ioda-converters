@@ -45,30 +45,28 @@ def read_input(input_args):
     print("Reading ", input_file)
     ncd = nc.Dataset(input_file, 'r')
 
-    # get some of the global attributes that we are interested in
+    # get global attributes
     attr_data = {}
     for v in ('platform', 'instrument', 'processing_level'):
         attr_data[v] = ncd.getncattr(v)
 
-    # get the QC flags, and calculate a mask from the non-missing values
-    # (since L2 files are quite empty, fields need a mask applied immediately
-    # to avoid using way too much memory)
+    # get QC flags, and calculate a mask from the non-missing values
+    # since L2 OC files are quite empty, need a mask applied immediately
+    # to avoid using too much memory)
     gpd = ncd.groups['geophysical_data']
     data_in = {}
     data_in['l2_flags'] = gpd.variables['l2_flags'][:].ravel()
     mask = data_in['l2_flags'] < 1073741824
     data_in['l2_flags'] = data_in['l2_flags'][mask]
 
-    # Determine the lat/lon grid.
-    # If L3, we need to convert 1D lat/lon to 2D lat/lon.
-    # If len(time) > 1, also need to repeat the lat/lon vals
+    # Determine the lat/lon grid
     ngd = ncd.groups['navigation_data']
     number_of_lines = len(ngd.variables['longitude'][:, 1])
     pixels_per_line = len(ngd.variables['longitude'][1, :])
     lons = ngd.variables['longitude'][:].ravel()[mask]
     lats = ngd.variables['latitude'][:].ravel()[mask]
 
-    # get the base time (should only have 1 or 2 time slots)
+    # get basetime and time as a difference in seconds
     sla = ncd.groups['scan_line_attributes']
     basetime = datetime(sla.variables['year'][0], 1, 1) + \
         timedelta(days=int(sla.variables['day'][0]-1),
