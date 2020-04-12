@@ -518,6 +518,7 @@ class BaseGSI:
     EPSILON = 9e-12
     FLOAT_FILL = nc.default_fillvals['f4']
     INT_FILL = nc.default_fillvals['i4']
+
     @staticmethod
     def _as_array(netcdf_var):
         return np.array(netcdf_var[:])
