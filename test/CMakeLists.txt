@@ -19,6 +19,7 @@ list( APPEND test_input
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
   testinput/gsidiag_conv_t_sfc_test.nc
+  testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/odb_sonde_16019.odb
   testinput/gnssro_kompsat5_20180415_00Z.bufr
@@ -42,6 +43,7 @@ list( APPEND test_output
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
   testoutput/sfc_tv_obs_2018041500.nc4
+  testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/odb_sonde_16019.nc4
   testoutput/gnssro_kompsat5_2018041500.nc4
@@ -221,6 +223,17 @@ ecbuild_add_test( TARGET test_iodaconv_giirs_lw
 #===============================================================================
 # GSI ncdiag converters
 #===============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_gsidiag_conv_uv
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
+                       -i testinput/gsidiag_conv_uv_testinput.nc
+                       -o testrun/
+                       -t conv
+                       -p satwind"
+                      satwind_obs_2018041500.nc4)
 
 ecbuild_add_test( TARGET test_iodaconv_gsidiag_conv
                   TYPE SCRIPT
