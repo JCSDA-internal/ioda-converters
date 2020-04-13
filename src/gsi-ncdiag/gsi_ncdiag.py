@@ -106,6 +106,11 @@ all_LocKeyList = {
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
     'Vterminal': ('vterminal', 'float'),
+    'SWCM_spec_type': ('satwind_spectral_type', 'float'),
+    'SAZA_sat_zen_angle': ('sensor_zenith_angle', 'float'),
+    'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
+    'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
+    'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
 }
 
 checkuv = {
@@ -198,6 +203,7 @@ gsi_add_vars_uv = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Errinv_Input': 'GsiInputObsError',
     'u_Forecast_adjusted': 'GsiHofXBc',
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
@@ -512,6 +518,7 @@ class BaseGSI:
     EPSILON = 9e-12
     FLOAT_FILL = nc.default_fillvals['f4']
     INT_FILL = nc.default_fillvals['i4']
+
     @staticmethod
     def _as_array(netcdf_var):
         return np.array(netcdf_var[:])
