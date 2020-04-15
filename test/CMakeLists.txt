@@ -222,7 +222,7 @@ ecbuild_add_test( TARGET test_iodaconv_modis_aqua_oc_l2
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
                   ARGS netcdf
-                       "${CMAKE_BINARY_DIR}/bin/modis_aqua_oc2ioda.py
+                       "${CMAKE_BINARY_DIR}/bin/viirs_modis_oc2ioda.py
                        -i testinput/modis_aqua_oc_l2.nc
                        -o testrun/modis_aqua_oc_l2.nc
                        -d 2018041512
