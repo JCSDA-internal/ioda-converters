@@ -423,7 +423,8 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-
+                print('VarSpec =', VarSpec)
+                print('Bval =',Bval)
                 OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
                 OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
 
@@ -442,6 +443,8 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
+                print('VarSpec_bufr =', VarSpec)
+                print('Bval_bufr =',Bval)
 
                 OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
                 OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
