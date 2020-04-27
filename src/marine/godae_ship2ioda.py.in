@@ -118,7 +118,7 @@ class IODA(object):
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        self.writer = iconv.NcWriter(self.filename, [], self.locKeyList)
+        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
@@ -160,8 +160,8 @@ class IODA(object):
                     self.data[recKey][locKey][errKey] = err
                     self.data[recKey][locKey][qcKey] = qc
 
-        (ObsVars, RecMdata, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, RecMdata, LocMdata, VarMdata, self.AttrData)
+        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
+        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
 
         return
 
