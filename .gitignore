@@ -2,3 +2,5 @@ build*
 *DS_Store*
 ._*
 *.swp
+_build*
+_install*
