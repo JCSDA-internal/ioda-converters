@@ -13,7 +13,7 @@ import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
 
-sys.path.append("/scratch2/NCEPDEV/marineda/Youlong.Xia/save/ioda-converters/build/lib/pyiodaconv")
+sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
