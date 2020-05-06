@@ -14,7 +14,6 @@ import tempfile
 import argparse
 import datetime as dt
 import netCDF4 as nc
-import codyssey as odc
 
 ###################################################################################
 # SUBROUTINES

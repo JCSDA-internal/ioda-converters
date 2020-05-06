@@ -129,3 +129,11 @@ This script used to work, but is currently not being maintained and no longer do
 Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
 ```
 
+## chem
+
+The chem converters include all converter scripts for arosols and related chemistry variables. Currently only one Python script, `viirs_aod2ioda.py`, is used to convert the native netCDF format for observations of optical depth from VIIRS AOD550 to IODA netCDF format. Note that it takes only AOD550 explicitly and does not take the 11 AOD channels from VIIRS. The converter uses the following format to execute:
+ 
+```
+Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE
+```
+
