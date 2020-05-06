@@ -32,9 +32,8 @@ AttrData = {}
 
 class AOD(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, writer):
         self.filename = filename
-        self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
         self._read()
@@ -113,15 +112,12 @@ def main():
     parser.add_argument('-o', '--output',
                         help="name of ioda output file",
                         type=str, required=True)
-    parser.add_argument('-d', '--date',
-                        help="base date", type=str, required=True)
     args = parser.parse_args()
-    fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the profiles
-    aod = AOD(args.input, fdate, writer)
+    aod = AOD(args.input, writer)
 
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(aod.data)
 
