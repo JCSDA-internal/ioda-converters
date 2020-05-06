@@ -30,6 +30,7 @@ list( APPEND test_input
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
+  testinput/b001xx007.20200310.bufr
 )
 
 list( APPEND test_output
@@ -55,6 +56,7 @@ list( APPEND test_output
   testoutput/sondes_obs_2018041500_m.odb
   testoutput/gnssro_obs_2018041500_s.odb
   testoutput/abi_g16_obs_2018041500.nc4
+  testoutput/ioda.NC001007.2020031012.nc
 )
 
 # create test directories and make links to the input files
@@ -230,6 +232,19 @@ ecbuild_add_test( TARGET test_iodaconv_modis_aqua_oc_l2
                        -d 2018041512
                        -t 0.5"
                       modis_aqua_oc_l2.nc)
+
+ecbuild_add_test( TARGET test_iodaconv_ncep_bufr
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/ncep_classes.py
+                       -p testinput/
+                       -i b001xx007.20200310.bufr
+                       -o testrun/ioda.NC001007.2020031012.nc
+                       -d 2020031012
+                       -m 5
+                       -ot NC001007"
+                      ioda.NC001007.2020031012.nc)
 
 #===============================================================================
 # GSI ncdiag converters

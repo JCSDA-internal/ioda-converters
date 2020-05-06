@@ -378,7 +378,7 @@ class ObsType(object):
                         Vtype = 'f4'
                     elif (Dtype == cm.DTYPE_DOUBLE):
                         Vtype = 'f8'
-
+                    # print('Vname = ',Vname)
                     # Don't specify the chunk sizes. Since all of the dimensions
                     # are of fixed size, the built-in algorithm for calculating
                     # chunk sizes will do a good job.
@@ -423,10 +423,11 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-                print('VarSpec =', VarSpec)
-                print('Bval =',Bval)
-                OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
-                OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
+                # print('VarSpec =', VarSpec)
+                # print('Bval =',Bval)
+                if (VarSpec[1] != 'RRSTG'):
+                    OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
+                    OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
 
         return [OutVals, OutValsBufr]
 
@@ -443,12 +444,11 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-                print('VarSpec_bufr =', VarSpec)
-                print('Bval_bufr =',Bval)
-
-                OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
-                OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
-
+                # print('VarSpec_bufr =', VarSpec[0],VarSpec[1],VarSpec[2])
+                if (VarSpec[1] != 'RRSTG'):
+                    # print('Bval_bufr =',Bval)
+                    OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
+                    OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
         return [OutVals, OutValsBufr]
 
     ###############################################################################
@@ -624,7 +624,7 @@ class ObsType(object):
                 Lat = ActualValues['YOB@MetaData'].data
         else:
             # Try CLATH and CLONH first.
-            if ('CLATH@MetaData' in ActualValues):
+            if ('CLATH' in ActualValues):
                 Lon = ActualValues['CLONH'].data
                 Lat = ActualValues['CLATH'].data
             else:
@@ -723,7 +723,12 @@ class ObsType(object):
 
                     _t1 = (ActualValues[i]['time@MetaData']).astype(np.float)
                     _t2 = np.array(dt.datetime.strptime(str(nc.date_time), '%Y%m%d%H'))
-                    ActualValues[i]['time@MetaData'] = (_t1 - _t2) / 3600
+                    # print('nc.date_time = ',nc.date_time)
+                    # print('_t1 = ',_t1)
+                    # print('_t2 = ',_t2)
+                    _t3 = (_t2-dt.datetime(1970,1,1)).total_seconds()
+                    # print('_t3 = ',_t3)
+                    ActualValues[i]['time@MetaData'] = (_t1 - _t3) / 3600
 
                     # Calculate the value of lat and lon and add to the dictionary.
                     [ActualValues[i]['latitude@MetaData'], ActualValues[i]
@@ -795,6 +800,10 @@ class AircraftObsType(ObsType):
                  ['CLAT@MetaData', 'CLAT', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
                  ['CLON@MetaData', 'CLON', cm.DTYPE_FLOAT,
+                     ['nlocs'], [self.nlocs]],
+                 ['CLATH@MetaData', 'CLATH', cm.DTYPE_FLOAT,
+                     ['nlocs'], [self.nlocs]],
+                 ['CLONH@MetaData', 'CLONH', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
                  ['FLVL@MetaData', 'FLVL', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
 
@@ -1029,6 +1038,10 @@ class AmsuaObsType(ObsType):
                  ['CLAT@MetaData', 'CLAT', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
                  ['CLON@MetaData', 'CLON', cm.DTYPE_FLOAT,
+                     ['nlocs'], [self.nlocs]],
+                 ['CLATH@MetaData', 'CLATH', cm.DTYPE_FLOAT,
+                     ['nlocs'], [self.nlocs]],
+                 ['CLONH@MetaData', 'CLONH', cm.DTYPE_FLOAT,
                      ['nlocs'], [self.nlocs]],
                  ['HOLS@MetaData', 'HOLS', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]]],
 
