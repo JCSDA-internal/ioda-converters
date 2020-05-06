@@ -8,7 +8,7 @@ import sys
 import os
 import yaml
 
-# sys.path.append("@SCRIPT_LIB_PATH@")
+sys.path.append("@SCRIPT_LIB_PATH@")
 # sys.path.append("/scratch2/NCEPDEV/marine/Yan.Hao/IODA_NEW/build/lib/pyiodaconv")
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
