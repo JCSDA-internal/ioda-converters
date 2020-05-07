@@ -763,7 +763,7 @@ class Conv(BaseGSI):
                     loc_mdata_name = all_LocKeyList[lvar][0]
                     if lvar == 'Station_ID':
                         tmp = self.var(lvar)[idx]
-                        StationIDs = [b''.join(tmp[a]) for a in range(len(tmp))]
+                        StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
                     elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]

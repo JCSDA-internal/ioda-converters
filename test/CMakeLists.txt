@@ -25,9 +25,12 @@ list( APPEND test_input
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
   testinput/CS_OFFL_SIR_GDR_2__20160229T132459_20160229T150412_C001.DBL
+  testinput/viirs_jpss1_oc_l2.nc
+  testinput/modis_aqua_oc_l2.nc
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
+  testinput/viirs_aod.nc
 )
 
 list( APPEND test_output
@@ -48,9 +51,12 @@ list( APPEND test_output
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
   testoutput/cryosat2_L2_DBL.nc
+  testoutput/viirs_jpss1_oc_l2.nc
+  testoutput/modis_aqua_oc_l2.nc
   testoutput/sondes_obs_2018041500_m.odb
   testoutput/gnssro_obs_2018041500_s.odb
   testoutput/abi_g16_obs_2018041500.nc4
+  testoutput/viirs_aod.nc
 )
 
 # create test directories and make links to the input files
@@ -205,6 +211,28 @@ ecbuild_add_test( TARGET test_iodaconv_cryosat2_DBL
                        -d 2016022912"
                       cryosat2_L2_DBL.nc)
 
+ecbuild_add_test( TARGET test_iodaconv_viirs_jpss1_oc_l2
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/viirs_modis_oc2ioda.py
+                       -i testinput/viirs_jpss1_oc_l2.nc
+                       -o testrun/viirs_jpss1_oc_l2.nc
+                       -d 2018041512
+                       -t 0.5"
+                      viirs_jpss1_oc_l2.nc)
+
+ecbuild_add_test( TARGET test_iodaconv_modis_aqua_oc_l2
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/viirs_modis_oc2ioda.py
+                       -i testinput/modis_aqua_oc_l2.nc
+                       -o testrun/modis_aqua_oc_l2.nc
+                       -d 2018041512
+                       -t 0.5"
+                      modis_aqua_oc_l2.nc)
+
 #===============================================================================
 # GSI ncdiag converters
 #===============================================================================
@@ -308,3 +336,17 @@ if (odc_FOUND)
                          testrun/gnssro_obs_2018041500_s.odb"
                         gnssro_obs_2018041500_s.odb)
 endif ()
+
+#==============================================================================
+# VIIRS aod converter
+#==============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_viirs_aod
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
+                       -i testinput/viirs_aod.nc
+                       -o testrun/viirs_aod.nc"
+                      viirs_aod.nc)
+
