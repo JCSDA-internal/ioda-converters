@@ -472,31 +472,31 @@ test_fields_allsky = {
     'scat_amsua': ('scat_retrieved_from_observation', 'float'),
 }
 test_fields_with_channels_allsky = {
-    'BC_Constant': ('constant_bias_correction_term', 'float'),
-    'BC_Scan_Angle': ('scan_angle_bias_correction_term', 'float'),
-    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
-    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
-    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
-    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
-    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
-    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
-    'BC_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_term', 'float'),
-    'BC_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_term', 'float'),
-    'BC_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_term', 'float'),
-    'BC_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_term', 'float'),
-    'BC_Scan_Position_total': ('scan_angle_total_bias_correction_term', 'float'),
-    'BCPred_Constant': ('constant_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle': ('scan_angle_bias_correction_predictor', 'float'),
-    'BCPred_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_predictor', 'float'),
-    'BCPred_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_predictor', 'float'),
-    'BCPred_Lapse_Rate': ('lapse_rate_bias_correction_predictor', 'float'),
-    'BCPred_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_predictor', 'float'),
-    'BCPred_Sine_Latitude': ('sine_of_latitude_bias_correction_predictor', 'float'),
-    'BCPred_Emissivity': ('emissivity_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_predictor', 'float'),
+#    'BC_Constant': ('constant_bias_correction_term', 'float'),
+#    'BC_Scan_Angle': ('scan_angle_bias_correction_term', 'float'),
+#    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
+#    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
+#    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
+#    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
+#    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
+#    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
+#    'BC_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_term', 'float'),
+#    'BC_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_term', 'float'),
+#    'BC_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_term', 'float'),
+#    'BC_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_term', 'float'),
+#    'BC_Scan_Position_total': ('scan_angle_total_bias_correction_term', 'float'),
+#    'BCPred_Constant': ('constant_bias_correction_predictor', 'float'),
+#    'BCPred_Scan_Angle': ('scan_angle_bias_correction_predictor', 'float'),
+#    'BCPred_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_predictor', 'float'),
+#    'BCPred_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_predictor', 'float'),
+#    'BCPred_Lapse_Rate': ('lapse_rate_bias_correction_predictor', 'float'),
+#    'BCPred_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_predictor', 'float'),
+#    'BCPred_Sine_Latitude': ('sine_of_latitude_bias_correction_predictor', 'float'),
+#    'BCPred_Emissivity': ('emissivity_bias_correction_predictor', 'float'),
+#    'BCPred_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_predictor', 'float'),
+#    'BCPred_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_predictor', 'float'),
+#    'BCPred_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_predictor', 'float'),
+#    'BCPred_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_predictor', 'float'),
     'Hydrometeor_Affected_Channels': ('Hydrometeor_Affected_Channels', 'float'),
     'Input_Observation_Error': ('ObsError', 'float'),
     'Cloud_Match_Index': ('Cloud_Match_Index', 'float'),
@@ -1111,22 +1111,23 @@ class Radiances(BaseGSI):
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(a),
-                    "scan_angle_{:d}".format(a),
+                    "zenith_angle_{:d}".format(a),
                     "cloud_liquid_water_{:d}".format(a),
                     "lapse_rate_squared_{:d}".format(a),
                     "lapse_rate_{:d}".format(a),
                     "cosine_of_latitude_times_orbit_node_{:d}".format(a),
                     "sine_of_latitude_{:d}".format(a),
                     "emissivity_{:d}".format(a),
-                    "scan_angle_4th_order_{:d}".format(a),
-                    "scan_angle_3rd_order_{:d}".format(a),
-                    "scan_angle_2nd_order_{:d}".format(a),
-                    "scan_angle_1st_order_{:d}".format(a),
+                    "scan_angle_order_4_{:d}".format(a),
+                    "scan_angle_order_3_{:d}".format(a),
+                    "scan_angle_order_2_{:d}".format(a),
+                    "scan_angle_{:d}".format(a),
                 ]
                 ibc = 0
                 for vbc in valuebc:
                     varDict[vbc]['bctKey'] = vbc, writer.ObiastermName()
                     varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
+                    print("emily checking valuebc 1 = ", valuebc)
                     ibc += 1
         obsdata = self.var('Observation')
         obserr = self.var('Input_Observation_Error')
@@ -1257,17 +1258,17 @@ class Radiances(BaseGSI):
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(chanlist[c]),
-                    "scan_angle_{:d}".format(chanlist[c]),
+                    "zenith_angle_{:d}".format(chanlist[c]),
                     "cloud_liquid_water_{:d}".format(chanlist[c]),
                     "lapse_rate_squared_{:d}".format(chanlist[c]),
                     "lapse_rate_{:d}".format(chanlist[c]),
                     "cosine_of_latitude_times_orbit_node_{:d}".format(chanlist[c]),
                     "sine_of_latitude_{:d}".format(chanlist[c]),
                     "emissivity_{:d}".format(chanlist[c]),
-                    "scan_angle_4th_order_{:d}".format(chanlist[c]),
-                    "scan_angle_3rd_order_{:d}".format(chanlist[c]),
-                    "scan_angle_2nd_order_{:d}".format(chanlist[c]),
-                    "scan_angle_1st_order_{:d}".format(chanlist[c]),
+                    "scan_angle_order_4_{:d}".format(chanlist[c]),
+                    "scan_angle_order_3_{:d}".format(chanlist[c]),
+                    "scan_angle_order_2_{:d}".format(chanlist[c]),
+                    "scan_angle_{:d}".format(chanlist[c]),
                 ]
                 ii = 0
                 for value in valuebc:
@@ -1279,6 +1280,7 @@ class Radiances(BaseGSI):
                     # store values in output data dictionary
                     outdata[varDict[value]['bctKey']] = obsbiastermsub
                     outdata[varDict[value]['bcpKey']] = obsbiaspredsub
+                    print("emily checking valuebc 2 = ", valuebc)
                     ii += 1
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
