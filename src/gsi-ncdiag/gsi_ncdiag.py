@@ -1102,7 +1102,6 @@ class Radiances(BaseGSI):
                 for vbc in valuebc:
                     varDict[vbc]['bctKey'] = vbc, writer.ObiastermName()
                     varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
-                    print("emily checking valuebc 1 = ", valuebc)
                     ibc += 1
         obsdata = self.var('Observation')
         obserr = self.var('Input_Observation_Error')
@@ -1255,7 +1254,6 @@ class Radiances(BaseGSI):
                     # store values in output data dictionary
                     outdata[varDict[value]['bctKey']] = obsbiastermsub
                     outdata[varDict[value]['bcpKey']] = obsbiaspredsub
-                    print("emily checking valuebc 2 = ", valuebc)
                     ii += 1
         # var metadata
         var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
