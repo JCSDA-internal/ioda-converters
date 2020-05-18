@@ -31,6 +31,7 @@ list( APPEND test_input
   testinput/gnssro_obs_2018041500_s.nc4
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
   testinput/b001xx007.20200310.bufr
+  testinput/viirs_aod.nc
 )
 
 list( APPEND test_output
@@ -57,6 +58,7 @@ list( APPEND test_output
   testoutput/gnssro_obs_2018041500_s.odb
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
+  testoutput/viirs_aod.nc
 )
 
 # create test directories and make links to the input files
@@ -349,3 +351,17 @@ if (odc_FOUND)
                          testrun/gnssro_obs_2018041500_s.odb"
                         gnssro_obs_2018041500_s.odb)
 endif ()
+
+#==============================================================================
+# VIIRS aod converter
+#==============================================================================
+
+ecbuild_add_test( TARGET test_iodaconv_viirs_aod
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
+                       -i testinput/viirs_aod.nc
+                       -o testrun/viirs_aod.nc"
+                      viirs_aod.nc)
+
