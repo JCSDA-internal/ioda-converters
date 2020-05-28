@@ -8,7 +8,7 @@ if( HAVE_BUFRLIB_AND_NETCDF )
     add_executable(gnssro_bufr2ioda ${GNSSRO_SRC})
     target_link_libraries(gnssro_bufr2ioda ${bufrlib_LIBRARIES})
     if(CMAKE_Fortran_COMPILER_ID MATCHES GNU AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
-        target_compile_options(${PROJECT_NAME} PRIVATE -fallow-argument-mismatch)
+        target_compile_options(gnssro_bufr2ioda PRIVATE -fallow-argument-mismatch)
     endif()
 
     #NetCDF4
