@@ -245,6 +245,7 @@ ecbuild_add_test( TARGET test_iodaconv_ncep_bufr
                        -o testrun/ioda.NC001007.2020031012.nc
                        -d 2020031012
                        -m 5
+                       -l NC001007.yaml
                        -ot NC001007"
                       ioda.NC001007.2020031012.nc)
 

@@ -26,7 +26,8 @@ def SplitMsgDate(yyyymmddhh):
 
 
 def MakeDate(Dtime):
-    # This routine will take in a datetime object and return an integer date yyyymmdd.
+    # This routine will take in a datetime object and return an integer date
+    # yyyymmdd.
     DateString = "%0.4i" % (Dtime.year) + \
         "%0.2i" % (Dtime.month) + "%0.2i" % (Dtime.day)
 
@@ -34,7 +35,8 @@ def MakeDate(Dtime):
 
 
 def MakeTime(Dtime):
-    # This routine will take in a datetime object and return an integer time hhmmss.
+    # This routine will take in a datetime object and return an integer time
+    # hhmmss.
     TimeString = "%0.2i" % (Dtime.hour) + \
         "%0.2i" % (Dtime.minute) + "%0.2i" % (Dtime.second)
 
@@ -106,7 +108,8 @@ def BufrFloatToActual(Bval, Dtype):
             Dval = np.ma.array(Bval.data.astype(np.float64),
                                mask=Bval.mask, dtype=np.float64)
 
-    # Squeeze the array since read_subset can return size 1 dimensions (eg. nlevs).
+    # Squeeze the array since read_subset can return size 1 dimensions (eg.
+    # nlevs).
     return Dval.squeeze()
 
 
@@ -236,7 +239,7 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
 #                          False - nc variable has not been created
 #
 
-# ############################### Base Observation Type ############################
+# ############################### Base Observation Type ##################
 
 
 class ObsType(object):
@@ -273,10 +276,11 @@ class ObsType(object):
 
     # # methods ###
 
-    ###############################################################################
+    ##########################################################################
     # This method will set the number of observations. This must be called
     # before attempting to create any netcdf variables since self.nlocs
-    # is also used to define the dimension sizes in all of the netcdf variables.
+    # is also used to define the dimension sizes in all of the netcdf
+    # variables.
     def set_nlocs(self, nlocs):
         # update the data memeber
         self.nlocs = nlocs
@@ -293,10 +297,11 @@ class ObsType(object):
                       self.dim_spec, self.misc_spec]:
             for sub_slist in slist:
                 for var_spec in sub_slist:
-                    for i in [j for j, dname in enumerate(var_spec[3]) if dname == 'nlocs']:
+                    for i in [j for j, dname in enumerate(
+                            var_spec[3]) if dname == 'nlocs']:
                         var_spec[4][i] = self.nlocs
 
-    ###############################################################################
+    ##########################################################################
     # This method is a default routine for counting the number of observations
     # in the current BUFR message. The default number of observations is simply
     # the number of subsets in this message. The reason that this is a method in
@@ -305,9 +310,10 @@ class ObsType(object):
     def msg_obs_count(self, bufr):
         return bufr._subsets()
 
-    ###############################################################################
+    ##########################################################################
     # This method will set the dimension specs (data memeber self.dim_spec). The
-    # format for the dim_spec will match that of the other specs (eg, self.int_spec).
+    # format for the dim_spec will match that of the other specs (eg,
+    # self.int_spec).
     def init_dim_spec(self):
         # Do a union on all of the dimension names.
         AllDimNames = set([])
@@ -345,7 +351,7 @@ class ObsType(object):
 
         self.dim_spec = [DimList]
 
-    ###############################################################################
+    ##########################################################################
     # This method will create dimensions and variables in the netcdf file
     # according to the obs type variable specs.
     def create_nc_datasets(self, nc):
@@ -378,14 +384,13 @@ class ObsType(object):
                         Vtype = 'f4'
                     elif (Dtype == cm.DTYPE_DOUBLE):
                         Vtype = 'f8'
-                    # print('Vname = ',Vname)
                     # Don't specify the chunk sizes. Since all of the dimensions
                     # are of fixed size, the built-in algorithm for calculating
                     # chunk sizes will do a good job.
                     nc.createVariable(Vname, Vtype, DimNames, zlib=True,
                                       shuffle=True, complevel=6)
 
-    ###############################################################################
+    ##########################################################################
     # This method will fill in the dimension variables with coordinate values.
     # For now, using dummy values which are 1..n where n is the variable size.
     def fill_coords(self, nc):
@@ -395,10 +400,11 @@ class ObsType(object):
                 Value = np.arange(VarSpec[4][0]) + 1
                 nc[Vname][:] = Value
 
-    ###############################################################################
+    ##########################################################################
     # This method will read in a list of bufr mnemonics and return a list of
     # the corresponding data values.
-    def read_bufr_data(self, bufr, Mlists, Rflag=False, Sflag=False, Eflag=False):
+    def read_bufr_data(self, bufr, Mlists, Rflag=False,
+                       Sflag=False, Eflag=False):
         BufrValues = []
 
         # Mlists contains sub-lists of mnemonic names. Process each sub-list by
@@ -410,7 +416,7 @@ class ObsType(object):
 
         return BufrValues
 
-    ###############################################################################
+    ##########################################################################
     # This method will convert bufr float data to the specified actual format.
     # BufrValues is a list of masked arrays, where each masked array contains
     # entries for all mnemonics in the sub-list of SpecList.
@@ -423,19 +429,19 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-                # print('VarSpec =', VarSpec)
-                # print('Bval =',Bval)
                 if (VarSpec[1] != 'RRSTG'):
                     OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
-                    OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
+                    OutValsBufr[VarSpec[1]] = BufrFloatToActual(
+                        Bval, VarSpec[2])
 
         return [OutVals, OutValsBufr]
 
-    ###############################################################################
+    ##########################################################################
     # This method will convert bufr float data to the specified actual format.
     # BufrValues is a list of masked arrays, where each masked array contains
     # entries for all mnemonics in the sub-list of SpecList.
-    def bufr_float_to_actual_bufr(self, SpecList, BufrValues, ActualValues, ActualValuesBufr):
+    def bufr_float_to_actual_bufr(
+            self, SpecList, BufrValues, ActualValues, ActualValuesBufr):
         # Make a separate copy of the input dictionary
         OutVals = {key: value for key, value in ActualValues.items()}
         OutValsBufr = {key: value for key, value in ActualValuesBufr.items()}
@@ -444,14 +450,13 @@ class ObsType(object):
                 # Convert according to the spec, and add to the dictionary.
                 # Netcdf variable name is in VarSpec[0]
                 # Data type is in VarSpec[2]
-                # print('VarSpec_bufr =', VarSpec[0],VarSpec[1],VarSpec[2])
                 if (VarSpec[1] != 'RRSTG'):
-                    # print('Bval_bufr =',Bval)
                     OutVals[VarSpec[0]] = BufrFloatToActual(Bval, VarSpec[2])
-                    OutValsBufr[VarSpec[1]] = BufrFloatToActual(Bval, VarSpec[2])
+                    OutValsBufr[VarSpec[1]] = BufrFloatToActual(
+                        Bval, VarSpec[2])
         return [OutVals, OutValsBufr]
 
-    ###############################################################################
+    ##########################################################################
     # This method will take the four input spec lists and read the mnemonics
     # from the bufr file. This routine will also convert the bufr values to
     # corresponding netcdf values. This method will return a dictionary keyed
@@ -465,7 +470,8 @@ class ObsType(object):
     # reading the mnemonics out of the BUFR file, and loading in the results into
     # the single dictionary.
     def extract_bufr(self, bufr):
-        # Initialize ActualValues to a list with one entry which is an empty dictionary.
+        # Initialize ActualValues to a list with one entry which is an empty
+        # dictionary.
         ActualValues = []
         ActualValues.append({})
         ActualValuesBufr = []
@@ -503,7 +509,7 @@ class ObsType(object):
 
         return [ActualValues, ActualValuesBufr]
 
-    ###############################################################################
+    ##########################################################################
     # This method will calculate the absolute date and time values from the BUFR
     # mnemonic values. The calculation depends on the type of BUFR file (raw BUFR
     # or prepBUFR). For raw BUFR, the absolute observation time comes from the
@@ -561,6 +567,7 @@ class ObsType(object):
             AbsDate = np.empty(Nlevs, dtype=np.int)
             AbsTime = np.empty(Nlevs, dtype=np.int)
             EpochTime = np.empty(Nlevs, dtype=np.int)
+
             for i in range(Nlevs):
                 OffsetDtime = dt.timedelta(hours=float(OdateOffset[i]))
                 AbsDtime = MsgDtime + OffsetDtime
@@ -592,10 +599,10 @@ class ObsType(object):
             AbsDate = np.array([MakeDate(ObsDtime)])
             AbsTime = np.array([MakeTime(ObsDtime)])
             EpochTime = np.array([MakeEpochTime(ObsDtime)])
+            DateTime = np.array(ObsDtime.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        return [AbsDate, AbsTime, EpochTime, DateTime]
 
-        return [AbsDate, AbsTime, EpochTime]
-
-    ###############################################################################
+    ##########################################################################
     # This method will calculate the lat and lon values from the BUFR
     # mnemonic values. The calculation depends on the type of BUFR file (raw BUFR
     # or prepBUFR). For raw BUFR, the lat and lon vlaues come from the
@@ -633,7 +640,7 @@ class ObsType(object):
 
         return [Lat, Lon]
 
-    ###############################################################################
+    ##########################################################################
     # This method will start the message selector. This selector method will
     # apply a few filters for selecting messages. These filters require
     # internal message counters that this method will reset.
@@ -641,7 +648,7 @@ class ObsType(object):
         self.num_msg_selected = 0
         self.num_msg_mtype = 0
 
-    ###############################################################################
+    ##########################################################################
     # This method is the message selector. It will apply selection filters
     # to the input BUFR messages. This isn't a clean as it could be, but time
     # constraints are at work here!
@@ -679,7 +686,7 @@ class ObsType(object):
 
         return got_a_msg
 
-    ###############################################################################
+    ##########################################################################
     # This method will convert the BUFR data into netcdf data. This includes
     # reading BUFR and writing netcdf. This method represents a default that can
     # be used for (hopefully) many obs types. If an obs type requires a more complex
@@ -709,39 +716,40 @@ class ObsType(object):
                 [ActualValues, ActualValuesBufr] = self.extract_bufr(bufr)
 
                 for i in range(len(ActualValues)):
-                    # Put the message type and message date into the dictionary.
+                    # Put the message type and message date into the
+                    # dictionary.
                     ActualValues[i]['msg_type@MetaData'] = MsgType
                     ActualValues[i]['msg_date@MetaData'] = MsgDate
 
                     ActualValuesBufr[i]['msg_type@MetaData'] = MsgType
                     ActualValuesBufr[i]['msg_date@MetaData'] = MsgDate
 
-                    # Calculate the value for the Time variable (which is an offset
-                    # from the reference time). Add the Time value to the dictionary.
                     [ActualValues[i]['ObsDate@MetaData'], ActualValues[i]['ObsTime@MetaData'],
-                        ActualValues[i]['time@MetaData']] = self.calc_obs_date_time(ActualValuesBufr[i])
-
+                        ActualValues[i]['time@MetaData'],
+                        ActualValues[i]['datetime@MetaData']] = self.calc_obs_date_time(ActualValuesBufr[i])
+                    # Calculate the value for the Time variable (which is an offset
+                    # from the reference time). Add the Time value to the
+                    # dictionary.
                     _t1 = (ActualValues[i]['time@MetaData']).astype(np.float)
-                    _t2 = np.array(dt.datetime.strptime(str(nc.date_time), '%Y%m%d%H'))
-                    # print('nc.date_time = ',nc.date_time)
-                    # print('_t1 = ',_t1)
-                    # print('_t2 = ',_t2)
-                    _t3 = (_t2-dt.datetime(1970,1,1)).total_seconds()
-                    # print('_t3 = ',_t3)
+                    _t2 = np.array(dt.datetime.strptime(
+                        str(nc.date_time), '%Y%m%d%H'))
+                    _t3 = (_t2 - dt.datetime(1970, 1, 1)).total_seconds()
                     ActualValues[i]['time@MetaData'] = (_t1 - _t3) / 3600
 
-                    # Calculate the value of lat and lon and add to the dictionary.
+                    # Calculate the value of lat and lon and add to the
+                    # dictionary.
                     [ActualValues[i]['latitude@MetaData'], ActualValues[i]
                         ['longitude@MetaData']] = self.calc_obs_lat_lon(ActualValuesBufr[i])
 
                     # Write out the netcdf variables.
-                    for Vname, Vdata in ActualValues[i].items():
 
+                    for Vname, Vdata in ActualValues[i].items():
                         # Skip the write if Vdata is empty
                         if Vdata.size:
                             WriteNcVar(nc, ObsNum, Vname, Vdata)
 
-                    # Increment observation number and print out progress messages.
+                    # Increment observation number and print out progress
+                    # messages.
                     ObsNum += 1
                     if ((ObsNum % 100) == 0):
                         print("  Converted {0:d} observations".format(ObsNum))
@@ -755,7 +763,7 @@ class ObsType(object):
         print("  Total converted observations: ", ObsNum)
         print("")
 
-# ############################### Aircraft Observation Type ############################
+# ############################### Aircraft Observation Type ##############
 
 
 class AircraftObsType(ObsType):
@@ -780,6 +788,8 @@ class AircraftObsType(ObsType):
             ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
             ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
+        self.misc_spec[0].append(
+            ['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]])
 
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = '^NC00400[14]'
@@ -791,7 +801,7 @@ class AircraftObsType(ObsType):
                      ['nlocs'], [self.nlocs]],
                  ['hour@MetaData', 'HOUR', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
-                 ['mInu@MetaData', 'MINU', cm.DTYPE_INTEGER,
+                 ['minu@MetaData', 'MINU', cm.DTYPE_INTEGER,
                      ['nlocs'], [self.nlocs]],
                  ['ACID@MetaData', 'ACID', cm.DTYPE_DOUBLE,
                      ['nlocs'], [self.nlocs]],
@@ -893,7 +903,7 @@ class AircraftObsType(ObsType):
     # # methods ###
 
 
-# ############################### Radiosonde Observation Type ############################
+# ############################### Radiosonde Observation Type ############
 class SondesObsType(ObsType):
     # # initialize data elements ###
     def __init__(self, bf_type):
@@ -910,6 +920,8 @@ class SondesObsType(ObsType):
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
         self.misc_spec[0].append(['ObsDate@MetaData', '', cm.DTYPE_INTEGER, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
+        self.misc_spec[0].append(['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring', 'nlevs'],
+                                  [self.nlocs, self.nstring, self.nlevs]])
         self.misc_spec[0].append(['time@MetaData', '', cm.DTYPE_DOUBLE, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
         self.misc_spec[0].append(['latitude@MetaData', '', cm.DTYPE_FLOAT, [
@@ -992,7 +1004,7 @@ class SondesObsType(ObsType):
     # # methods ###
 
 
-# ######################### Radiance (AMSU-A) Observation Type ############################
+# ######################### Radiance (AMSU-A) Observation Type ###########
 class AmsuaObsType(ObsType):
     # # initialize data elements ###
     def __init__(self, bf_type):
@@ -1011,6 +1023,8 @@ class AmsuaObsType(ObsType):
             ['ObsDate@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
             ['time@MetaData', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
+        self.misc_spec[0].append(
+            ['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]])
         self.misc_spec[0].append(
             ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
@@ -1094,15 +1108,17 @@ class GpsroObsType(ObsType):
         # Put the time and date vars in the subclasses so that their dimensions can
         # vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
-            ['ObsTime', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['ObsDate', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
+            ['ObsDate@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
             ['time', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
-            ['latitude', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
+            ['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]])
         self.misc_spec[0].append(
-            ['longitude', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
+            ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
+        self.misc_spec[0].append(
+            ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
 
         if (bf_type == cm.BFILE_BUFR):
 
@@ -1245,8 +1261,9 @@ class GpsroObsType(ObsType):
 
         return int(ObsCount)
 
-    ###############################################################################
-    # This method will return true if the subset is acceptable, false otherwise.
+    ##########################################################################
+    # This method will return true if the subset is acceptable, false
+    # otherwise.
     def select_this_subset(self, bufr, Said, Ptid, Qfro, NumBangle, BangleFreqCnts,
                            Verbose=False):
         Select = True
@@ -1264,7 +1281,8 @@ class GpsroObsType(ObsType):
         #
         # Note, (flag value == 6) indicates that reflectivity data is non-nominal. Since
         # we are preferring bending angle over reflectivity, don't skip if 6 appears in
-        # the list. Only skip if 5 (bend angle non-nominal) appears in the list.
+        # the list. Only skip if 5 (bend angle non-nominal) appears in the
+        # list.
         if (Said in [3, 4, 421, 440, 821]):
             Ibits = bufr.get_flag_table_bits('QFRO', Qfro)
             if (5 in Ibits):
@@ -1275,7 +1293,7 @@ class GpsroObsType(ObsType):
 
         return Select
 
-    ###############################################################################
+    ##########################################################################
     # This method will extract data from a subset of a Gpsro raw BUFR file and
     # load up the observations into the ActualValues data structure. ActualValues
     # is a list of dictionaries where each dictionary holds one observation.
@@ -1301,7 +1319,8 @@ class GpsroObsType(ObsType):
             BangleBvals = bufr.read_subset('ROSEQ1', seq=True)
             RfracBvals = bufr.read_subset('ROSEQ3', seq=True)
 
-            # Each replication of bend angle (and refrac) obs is a single observation.
+            # Each replication of bend angle (and refrac) obs is a single
+            # observation.
             for irep in range(NumBangle):
                 # Record the header values. It is important to use the copy() method
                 # of the HeaderVals dictionary. The copy() method will create a new
@@ -1354,7 +1373,8 @@ class GpsroObsType(ObsType):
                 # Typically, the number of refractivity obs is either zero or a match
                 # with the number of bending angle obs. Just in case a subset shows
                 # up with a different numbers of refractivity and bending angle obs, where
-                # the refractivity number is greater than zero, allow for recording those.
+                # the refractivity number is greater than zero, allow for
+                # recording those.
                 if (irep < NumRefrac):
                     HEIT = np.ma.array(
                         RfracBvals[0, irep], mask=RfracBvals.mask[0, irep])
@@ -1385,22 +1405,24 @@ class GpsroObsType(ObsType):
                 BNDA = np.ma.array([0.0], mask=[True])
                 BNDA_err = np.ma.array([0.0], mask=[True])
                 for i in range(BangleFreqCnts[irep]):
-                    m = 6*(i+1)-3
-                    if ((int(BangleBvals[m, irep]) == 0) and (not BangleBvals.mask[m, irep])):
+                    m = 6 * (i + 1) - 3
+                    if ((int(BangleBvals[m, irep]) == 0)
+                            and (not BangleBvals.mask[m, irep])):
                         # This replication has zero frequency which is not masked
                         # (that is, not marked as missing).
                         MEFR = np.ma.array(BangleBvals[m, irep],
                                            mask=BangleBvals.mask[m, irep])    # mean frequency
-                        IMPP = np.ma.array(BangleBvals[m+1, irep],
-                                           mask=BangleBvals.mask[m+1, irep])  # impact parameter
-                        BNDA = np.ma.array(BangleBvals[m+2, irep],
-                                           mask=BangleBvals.mask[m+2, irep])  # bending angle
-                        BNDA_err = np.ma.array(BangleBvals[m+4, irep],
-                                               mask=BangleBvals.mask[m+4, irep])  # bending angle error
+                        IMPP = np.ma.array(BangleBvals[m + 1, irep],
+                                           mask=BangleBvals.mask[m + 1, irep])  # impact parameter
+                        BNDA = np.ma.array(BangleBvals[m + 2, irep],
+                                           mask=BangleBvals.mask[m + 2, irep])  # bending angle
+                        BNDA_err = np.ma.array(BangleBvals[m + 4, irep],
+                                               mask=BangleBvals.mask[m + 4, irep])  # bending angle error
 
                 # BNDA_pccf is at the end of the ROSEQ1 section, i.e. one after the
-                # BangleFreqCnts[irep] replications of the current ROSEQ2 section.
-                m = 6*BangleFreqCnts[irep] + 3
+                # BangleFreqCnts[irep] replications of the current ROSEQ2
+                # section.
+                m = 6 * BangleFreqCnts[irep] + 3
                 BNDA_pccf = np.ma.array(BangleBvals[m, irep],
                                         mask=BangleBvals.mask[m, irep])   # bending angle pccf
 

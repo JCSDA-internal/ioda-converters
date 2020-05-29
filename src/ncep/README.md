@@ -27,7 +27,10 @@ $> ncep_classes.py -m  <maximum number of messages to keep (optional)>     \
 
 ** Maximum number of messages "-m" is optional. If -m is set, the output only contains the first m messages. If -m is not set, the whole bufr file is converted.
 
-** Yaml file "-l" is optional. If -l is set, the program will use the yaml file chosen by user. If -l is not set, default "bufr2ioda.yaml" will be used.
+** Yaml file "-l" is optional. If -l is set, the program will use the yaml file chosen by user. If -l is not set, default "bufr2ioda.yaml" will be used. At this moment, "bufr2ioda.yaml" is only a small sample. 
+** The yaml files for some ncep bufr tanks were already created, and they are named by bufrtank names, e.g., if you are working on b001/xx001, please choose -l NC001001.yaml. These files are located at: lib/pyiodaconv/config
+
+** If user named yaml file does not exist in the lib/pyiodaconv/config directory, a new yaml file will be created in the same lib/pyiodaconv/config directory, user can modify that yaml file if needed.
   
 ### Example:
 

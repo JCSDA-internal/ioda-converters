@@ -9,23 +9,27 @@ import os
 import yaml
 
 sys.path.append("@SCRIPT_LIB_PATH@")
-# sys.path.append("/scratch2/NCEPDEV/marine/Yan.Hao/IODA_NEW/build/lib/pyiodaconv")
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
+
+config_path = "@SCRIPT_LIB_PATH@/config/"
 
 ##########################################################################
 # SUBROUTINES To be deleted (maybe).
 ##########################################################################
-def MessageCounter (BufrFname):
+
+
+def MessageCounter(BufrFname):
     # This function counts the number of messages in the file BufrFname
     bufr = ncepbufr.open(BufrFname)
     NumMessages = 0
     Obs.start_msg_selector()
     while (Obs.select_next_msg(bufr)):
-          NumMessages += 1
+        NumMessages += 1
 
     bufr.close()
-    return [NumMessages] 
+    return [NumMessages]
+
 
 def BfilePreprocess(BufrFname, Obs):
     # This routine will read the BUFR file and figure out how many observations
@@ -72,6 +76,9 @@ class NcepObsType(ObsType):
             ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
             ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
+        self.misc_spec[0].append(
+            ['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]])
+
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = alt_type  # alt_type is the BUFR mnemonic
 
@@ -83,9 +90,8 @@ class NcepObsType(ObsType):
                 full_table, blist = read_table(
                     tablefile)  # i.e. 'NC001007.tbl'
                 write_yaml(full_table, dictfile)
-                
+
             spec_list = get_int_spec(alt_type, blist)
-            # print('sl= ',spec_list)
             intspec = []
             intspecDum = []
 
@@ -113,13 +119,12 @@ class NcepObsType(ObsType):
                     else:
                         print('walked off the edge')
 
-                write_yaml(intspec, Lexicon)  
+                write_yaml(intspec, Lexicon)
             else:
-                intspec = read_yaml(Lexicon)  
+                intspec = read_yaml(Lexicon)
 
             self.nvars = 0
             for k in intspec:
-                # print('k = ',k)
                 if '@ObsValue' in (" ".join(map(str, k))):
                     self.nvars += 1
             # TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1 below,
@@ -129,7 +134,6 @@ class NcepObsType(ObsType):
 
             self.int_spec = [intspec[x:x + 1]
                              for x in range(0, len(intspec) - 1, 1)]
-            # print('self.int_spec =', self.int_spec)
             # TODO Check not sure what the evn_ and rep_ are
             self.evn_spec = []
             self.rep_spec = []
@@ -313,7 +317,6 @@ def get_int_spec(mnemonic, part_b):
             if line.split('|')[1].find(b_monic) != -1:
                 bentries[mnemonic] = bentries[mnemonic] + \
                     ''.join(line.split('|')[2:]).strip().split()
-                # print('bentries = ',bentries)
     for c_monic in bentries[mnemonic]:
         for line in part_b:
             line = line.replace(
@@ -328,7 +331,6 @@ def get_int_spec(mnemonic, part_b):
             if line.split('|')[1].find(c_monic) != -1:
                 bentries[mnemonic] = bentries[mnemonic] + \
                     ''.join(line.split('|')[2:]).strip().split()
-                # print('bentries = ',bentries)
 
     for d_monic in bentries[mnemonic]:
         for line in part_b:
@@ -344,7 +346,6 @@ def get_int_spec(mnemonic, part_b):
             if line.split('|')[1].find(d_monic) != -1:
                 bentries[mnemonic] = bentries[mnemonic] + \
                     ''.join(line.split('|')[2:]).strip().split()
-                # print('bentries = ',bentries)
     return bentries
 
 ##########################################################################
@@ -412,10 +413,10 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-l', '--lexicon', help='yaml file with the dictionary', metavar="name_of_dict",
-        type=str, required=False, default='bufr2ioda.yaml')
-    
+        type=str, required=False, default=config_path + 'bufr2ioda.yaml')
+
     parser.add_argument(
-        '-Pr', '--bufr', action='store_true', default=1, 
+        '-Pr', '--bufr', action='store_true', default=1,
         help='input BUFR file is in prepBUFR format')
 
     args = parser.parse_args()
@@ -426,7 +427,10 @@ if __name__ == '__main__':
     ObsType = args.obs_type    # Observation type. e.g., NC001007
     BufrFname = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral = dt.strptime(args.date, '%Y%m%d%H')  # DateHH of analysis
-    Lexicon = args.lexicon     # Lexicon's name
+    if (config_path + args.lexicon):
+        Lexicon = config_path + args.lexicon  # Existing yaml file in config
+    else:
+        args.lexicon   # User defined Lexicon name
 
     if (args.bufr):
         BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
@@ -467,8 +471,7 @@ if __name__ == '__main__':
     # Create the observation instance
 
     Obs = NcepObsType(BfileType, mnemonic, ObsTable, DictObs)
-    # print(Obs.dim_spec)
-    NumMessages = MessageCounter(BufrFname) 
+    NumMessages = MessageCounter(BufrFname)
     if MaxNumMsg > 0:
         Obs.max_num_msg = MaxNumMsg
     else:
@@ -479,7 +482,6 @@ if __name__ == '__main__':
     Obs.date_central = DateCentral
 
     [NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)
-    # print(NumObs, NumMsgs, TotalMsgs)
     Obs.set_nlocs(NumObs)
 
     nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
