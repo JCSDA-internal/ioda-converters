@@ -253,7 +253,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         good=.true. 
 
         if (  height<0._r_kind   .or. height>60000._r_kind .or.           &
-           abs(azim)>360._r_kind .or.                                     &
            abs(rlat)>90._r_kind  .or. abs(rlon)>360._r_kind ) then
            good=.false.
            write(6,*)'READ_GNSSRO: obs fails georeality check, said=',said,'ptid=',ptid
@@ -267,6 +266,10 @@ do while(ireadmg(lnbufr,subset,idate)==0)
              ref = missingvalue
         endif
     
+        if ( abs(azim)>360._r_kind  .or. azim<0._r_kind ) then
+             azim = missingvalue
+        endif
+
     if(good) then
        ndata  = ndata +1 
        gpsro_data%recn(ndata)     = nrec
@@ -364,6 +367,7 @@ call check( nf90_put_att(ncid, varid_imph, "units", "Meters" ))
 call check( nf90_put_att(ncid, varid_imph, "valid_range", "0 - 200 km" ))
 call check( nf90_def_var(ncid, "sensor_azimuth_angle@MetaData", NF90_FLOAT, nlocs_dimid, varid_azim))
 call check( nf90_put_att(ncid, varid_azim, "longname", "GNSS->LEO line of sight" ))
+call check( nf90_put_att(ncid, varid_azim, "_FillValue", real(missingvalue) ))
 call check( nf90_put_att(ncid, varid_azim, "units", "Degree" ))
 call check( nf90_put_att(ncid, varid_azim, "valid_range", "0 - 360 degree" ))
 call check( nf90_def_var(ncid, "geoid_height_above_reference_ellipsoid@MetaData",NF90_FLOAT, nlocs_dimid, varid_geoid))
