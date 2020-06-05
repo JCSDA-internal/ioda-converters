@@ -1415,10 +1415,9 @@ class GpsroObsType(ObsType):
                 BNDA_err = np.ma.array([0.0], mask=[True])
                 for i in range(BangleFreqCnts[irep]):
                     m = 6 * (i + 1) - 3
-                    if ((int(BangleBvals[m, irep]) == 0)
-                            and (not BangleBvals.mask[m, irep])):
-                        # This replication has zero frequency which is not
-                        # masked (that is, not marked as missing).
+                    if ((int(BangleBvals[m, irep]) == 0) and (not BangleBvals.mask[m, irep])):
+                        # This replication has zero frequency which is not masked
+                        # (that is, not marked as missing).
                         MEFR = np.ma.array(BangleBvals[m, irep],
                                            mask=BangleBvals.mask[m, irep])    # mean frequency
                         IMPP = np.ma.array(BangleBvals[m + 1, irep],
