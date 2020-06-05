@@ -7,7 +7,6 @@ import re
 import netCDF4
 import struct
 import datetime as dt
-
 import bufr2ncCommon as cm
 
 ############################################################################
@@ -55,12 +54,13 @@ def MakeEpochTime(Dtime):
 def BufrFloatToActual(Bval, Dtype):
     # This routine will extract the value of a variable from the
     # output of read_subset(). read_subset() will return a floating point
-    # number (for any type) or an empty list if the mnemonic didn't exist. For strings
-    # (Dtype = DTYPE_STRING) read the floating point number as characters. Otherwise
-    # convert to integer or leave alone.
+    # number (for any type) or an empty list if the mnemonic didn't exist. For
+    # strings(Dtype = DTYPE_STRING) read the floating point number as
+    # characters. Otherwise convert to integer or leave alone.
     #
-    # Keep Dtype values in sync with entries in the DATA_TYPES dictionary. For now,
-    # these values are DTYPE_STRING, DTYPE_INTEGER, DTYPE_FLOAT, DTYPE_DOUBLE.
+    # Keep Dtype values in sync with entries in the DATA_TYPES dictionary. For
+    # now, these values are DTYPE_STRING, DTYPE_INTEGER, DTYPE_FLOAT,
+    # DTYPE_DOUBLE.
 
     # If the incoming Bval is empty, then return an empty masked array
     # value so that writing process can skip this value if Bval was empty.
@@ -123,33 +123,36 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
     else:
         Value = Vdata.copy()
 
-    # At this point, the dimension sizes of the netcdf variable (NcVar) and Value
-    # need to get aligned. For some dimensions, the NcVar dimension size will tend
-    # to be larger than the Value dimension size (eg, nlevs). For other dimensions,
-    # it will be the other way around (eg, nevents). The one thing that can be counted
-    # on is that the list of dimensions will match between NcVar and Value, except
-    # that NcVar will have nlevs as an extra dimension, and nlocs will be the first
-    # in the dimension list. For example, if you have a multi-level event:
+    # At this point, the dimension sizes of the netcdf variable (NcVar) and
+    # Value need to get aligned. For some dimensions, the NcVar dimension size
+    # will tend to be larger than the Value dimension size (eg, nlevs). For
+    # other dimensions, it will be the other way around (eg, nevents). The one
+    # thing that can be counted on is that the list of dimensions will match
+    # between NcVar and Value, except that NcVar will have nlevs as an extra
+    # dimension, and nlocs will be the first in the dimension list.
+    # For example, if you have a multi-level event:
     #
     #    Value dimensions will be [ nlevs, nevents ]
     #    Ncvar dimensions will be [ nlocs, nlevs, nevents ]
     #
-    # This means that to reconcile the sizes of each dimension, we need to slice
-    # out of the minimum sizes of the corresponding dimension of NcVar and Value.
+    # This means that to reconcile the sizes of each dimension, we need to
+    # slice out of the minimum sizes of the corresponding dimension of NcVar
+    # and Value.
     # Using the example above, for a multi-level event:
     #
     #    Value dimensions are [ 51, 255 ]
     #    NcVar dimensions are [ 1000, 255, 20 ]
     #
     #    nlevs size for Value is 51, for NcVar is 255 so use 51 for the slicing
-    #    nevents size for Value is 255, for NcVar is 20 so use 20 for the slicing
+    #    nevents size for Value is 255, for NcVar is 20 so use 20 for the
+    #    slicing. The assignment then becomes
     #
-    #    The assignment then becomes
     #        NcVar[ObsNum, 0:51, 0:20] = Value[0:51, 0:20]
     #
-    # Figure out how to do the slicing by looking at the number of dimensions at both
-    # Value (masked array) and NcVar (netcdf array). A masked array that gets built
-    # using a scalar data value will return 0 for the number of dimensions.
+    # Figure out how to do the slicing by looking at the number of dimensions
+    # at both Value (masked array) and NcVar (netcdf array). A masked array
+    # that gets built using a scalar data value will return 0 for the number
+    # of dimensions.
     #
     # It is possible to get single level values from a multiple level
     # obs type (such as sondes). In this case the levels dimension will
@@ -190,7 +193,8 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata):
             NcVar[ObsNum, 0:N1, 0:N2] = Value[0:N1, 0:N2]
     elif (NcNdim == 4):
         if (ValNdim == 2):
-            # Value has two dimensions and is single level (eg, [nstring,nevents])
+            # Value has two dimensions and is single level (eg,
+            # [nstring,nevents])
             # NcVar has four dimensions  (eg, [nlocs,nlevs,nstring,nevents])
             N2 = min(Value.shape[0], NcVar.shape[2])
             N3 = min(Value.shape[1], NcVar.shape[3])
@@ -291,8 +295,8 @@ class ObsType(object):
         # each variable spec is a list with the fourth item being a list of
         #    dimension names and the fifth item being a list of dimension sizes
         #
-        # for every place in the dimension name list where the name is 'nlocs', replace
-        # the corresponding size in the size list with self.nlocs
+        # for every place in the dimension name list where the name is 'nlocs',
+        # replace the corresponding size in the size list with self.nlocs
         for slist in [self.int_spec, self.evn_spec, self.rep_spec, self.seq_spec,
                       self.dim_spec, self.misc_spec]:
             for sub_slist in slist:
@@ -304,15 +308,15 @@ class ObsType(object):
     ##########################################################################
     # This method is a default routine for counting the number of observations
     # in the current BUFR message. The default number of observations is simply
-    # the number of subsets in this message. The reason that this is a method in
-    # the base class is so that derived classes (GpsroObsType, for example) can
-    # override this method with a more complex algorithm.
+    # the number of subsets in this message. The reason that this is a method
+    # in the base class is so that derived classes (GpsroObsType, for example)
+    # can override this method with a more complex algorithm.
     def msg_obs_count(self, bufr):
         return bufr._subsets()
 
     ##########################################################################
-    # This method will set the dimension specs (data memeber self.dim_spec). The
-    # format for the dim_spec will match that of the other specs (eg,
+    # This method will set the dimension specs (data memeber self.dim_spec).
+    # The format for the dim_spec will match that of the other specs (eg,
     # self.int_spec).
     def init_dim_spec(self):
         # Do a union on all of the dimension names.
@@ -325,8 +329,8 @@ class ObsType(object):
                     AllDimNames = AllDimNames | set(var_spec[3])
 
         # AllDimNames holds the list of unique dimension names.
-        # Keep the following list of dimensions in sync with the __init__ method in
-        # in the ObsType base class.
+        # Keep the following list of dimensions in sync with the
+        # __init__ method in the ObsType base class.
         DimList = []
         for dname in AllDimNames:
             if (dname == 'nlocs'):
@@ -384,7 +388,7 @@ class ObsType(object):
                         Vtype = 'f4'
                     elif (Dtype == cm.DTYPE_DOUBLE):
                         Vtype = 'f8'
-                    # Don't specify the chunk sizes. Since all of the dimensions
+                    # Don't specify the chunk size. Since all of the dimensions
                     # are of fixed size, the built-in algorithm for calculating
                     # chunk sizes will do a good job.
                     nc.createVariable(Vname, Vtype, DimNames, zlib=True,
@@ -462,13 +466,14 @@ class ObsType(object):
     # corresponding netcdf values. This method will return a dictionary keyed
     # by the netcdf variable name containing the associated values.
     #
-    # This method provides a defalut method that can be overridden by an obs type
-    # requiring a more complex algorithm (Gpsro, eg.). ActualValues is a list
-    # of dictionaries, and the default action is to create one item in that list.
+    # This method provides a defalut method that can be overridden by an obs
+    # type requiring a more complex algorithm (Gpsro, eg.). ActualValues is a
+    # list of dictionaries, and the default action is to create one item in
+    # that list.
     # This single dictionary will be filled in by simply walking through the
-    # variables in the lists contained in int_spec, evn_spec, rep_spec and seq_spec,
-    # reading the mnemonics out of the BUFR file, and loading in the results into
-    # the single dictionary.
+    # variables in the lists contained in int_spec, evn_spec, rep_spec and
+    # seq_spec, reading the mnemonics out of the BUFR file, and loading in the
+    # results into the single dictionary.
     def extract_bufr(self, bufr):
         # Initialize ActualValues to a list with one entry which is an empty
         # dictionary.
@@ -510,10 +515,10 @@ class ObsType(object):
         return [ActualValues, ActualValuesBufr]
 
     ##########################################################################
-    # This method will calculate the absolute date and time values from the BUFR
-    # mnemonic values. The calculation depends on the type of BUFR file (raw BUFR
-    # or prepBUFR). For raw BUFR, the absolute observation time comes from the
-    # mnemonics:
+    # This method will calculate the absolute date and time values from the
+    # BUFR mnemonic values. The calculation depends on the type of BUFR file
+    # (raw BUFR or prepBUFR). For raw BUFR, the absolute observation time comes
+    # from the mnemonics:
     #     YEAR  - year
     #     MNTH  - month
     #     DAYS  - day
@@ -521,12 +526,12 @@ class ObsType(object):
     #     MINU  - minute
     #     SECO  - second
     #
-    # For prepBUFR, the time relative to msg_date is held in DHR, and for multi-level
-    # obs in HRDR.
+    # For prepBUFR, the time relative to msg_date is held in DHR, and for
+    # multi-level obs in HRDR.
     #     msg_date - Message date/time
     #     DHR      - Observation time minus cycle time
-    #     HRDR     - Observation time minus cycle time on a level by level basis
-    #                   (taking drift into account)
+    #     HRDR     - Observation time minus cycle time on a level by level
+    #                   basis (taking drift into account)
     #
     def calc_obs_date_time(self, ActualValues):
         if (self.bufr_ftype == cm.BFILE_PREPBUFR):
@@ -550,15 +555,15 @@ class ObsType(object):
                 if (HrdrAvailable):
                     OdateOffset = ActualValues['HRDR@MetaData'].data
                 else:
-                    # Have a multi-level obs type, but using a single DHR value.
+                    # Have a multi-level obs type, but using a single DHR value
                     # Replicate the DHR value into a vector with the size of
                     # the multi-level obs type.
                     OdateOffset = np.repeat(
                         OdateOffset, ActualValues['HRDR@MetaData'].size)
 
             # At this point it is possible that OdateOffset is a scalar value
-            # (indicated by size == 1). If so, then cast OdateOffest into a vector
-            # of size one for the following loop.
+            # (indicated by size == 1). If so, then cast OdateOffest into a
+            # vector of size one for the following loop.
             # The datetime routines don't accept arrays as arguments so
             # need to calculate absolute times one element at a time.
             Nlevs = OdateOffset.size
@@ -588,10 +593,10 @@ class ObsType(object):
             else:
                 Second = int(0)
 
-            # Create datetime object with above data. Sometimes the SECO value is
-            # outside the range 0..59 (which is what datetime requires). Use Year through
-            # Minute to create the datetime object and add in Second via a
-            # timedelta object.
+            # Create datetime object with above data. Sometimes the SECO value
+            # is outside the range 0..59 (which is what datetime requires).
+            # Use Year through Minute to create the datetime object and add in
+            # Second via a timedelta object.
             ObsDtime = dt.datetime(
                 Year, Month, Day, Hour, Minute) + dt.timedelta(seconds=Second)
 
@@ -604,8 +609,8 @@ class ObsType(object):
 
     ##########################################################################
     # This method will calculate the lat and lon values from the BUFR
-    # mnemonic values. The calculation depends on the type of BUFR file (raw BUFR
-    # or prepBUFR). For raw BUFR, the lat and lon vlaues come from the
+    # mnemonic values. The calculation depends on the type of BUFR file (raw
+    # BUFR or prepBUFR). For raw BUFR, the lat and lon vlaues come from the
     # mnemonics:
     #     CLAT  - latitude (coarse resolution)
     #     CLON  - longitude (coarse resolution)
@@ -658,27 +663,27 @@ class ObsType(object):
         while (bufr.advance() == 0):
             # Skip this message if not the desired type
             if (re.search(self.mtype_re, bufr.msg_type)):
-                # Keep count of the messages that match the desired type, which is
-                # needed to do the selection filtering.
+                # Keep count of the messages that match the desired type, which
+                # is needed to do the selection filtering.
                 self.num_msg_mtype += 1
 
                 # Apply the filtering. Default is to take all messages
                 Select = True
 
-                # If the max_num_msg parameter is greater than zero, then use it to limit
-                # the number of messages that are selected.
+                # If the max_num_msg parameter is greater than zero, then use
+                # it to limit the number of messages that are selected.
                 if (self.max_num_msg > 0):
                     Select = (self.num_msg_selected < self.max_num_msg)
 
-                # If the thinning interval is greater than 1, then use it to further select
-                # every n-th message.
+                # If the thinning interval is greater than 1, then use it to
+                # further select every n-th message.
                 if (self.thin_interval > 1):
                     Select = Select and (
                         (self.num_msg_mtype % self.thin_interval) == 0)
 
-                # If Select is true, the current message has been selected. Keep
-                # track of how many messages have been selected, plus break out of
-                # the loop and return.
+                # If Select is true, the current message has been selected.
+                # Keep track of how many messages have been selected, plus
+                # break out of the loop and return.
                 if (Select):
                     self.num_msg_selected += 1
                     got_a_msg = True
@@ -688,16 +693,17 @@ class ObsType(object):
 
     ##########################################################################
     # This method will convert the BUFR data into netcdf data. This includes
-    # reading BUFR and writing netcdf. This method represents a default that can
-    # be used for (hopefully) many obs types. If an obs type requires a more complex
-    # method, then this one can be overridden in a derived class.
+    # reading BUFR and writing netcdf. This method represents a default that
+    # can be used for (hopefully) many obs types. If an obs type requires a
+    # more complex method, then this one can be overridden in a derived class.
     #
     # The default method provides the following:
-    #   Copy all BUFR mnemonic values in the variable specs to the output netcdf file
-    #   Calculate a time offset from the reference time and store in addition to
-    #     the BUFR mnemonic values
+    #     Copy all BUFR mnemonic values in the variable specs to the output
+    #         netcdf file.
+    #     Calculate a time offset from the reference time and store in addition
+    #         to the BUFR mnemonic values
     def convert(self, bufr, nc):
-        # Walk through the messages, selecting only those that match the regular
+        # Walk through the messages, selecting only those match the regular
         # expression for this obs type.
         print("Converting BUFR to netcdf:")
         ObsNum = 0
@@ -1015,8 +1021,8 @@ class AmsuaObsType(ObsType):
         self.multi_level = False
         self.nvars = self.nchans
 
-        # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nlocs], [nlocs,nlevs] ).
+        # Put the time and date vars in the subclasses so that their dimensions
+        # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
             ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
@@ -1105,8 +1111,8 @@ class GpsroObsType(ObsType):
 
         self.nvars = 2
 
-        # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nlocs], [nlocs,nlevs] ).
+        # Put the time and date vars in the subclasses so that their dimensions
+        # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
             ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
@@ -1153,8 +1159,8 @@ class GpsroObsType(ObsType):
             self.seq_spec = []
 
             # These are the observation variables that will be extracted by the
-            # convert method of this class (which overrides the base class convert
-            # method).
+            # convert method of this class (which overrides the base class
+            # convert method).
             self.misc_spec[0].append(['CLATH@MetaData',
                                       '', self.misc_dtype, ['nlocs'], [self.nlocs]])
             self.misc_spec[0].append(['CLONH@MetaData',
@@ -1211,9 +1217,10 @@ class GpsroObsType(ObsType):
         # Mnemonic '(ROSEQ1)' returns the number of bending angle obs
         # Mnemonic '(ROSEQ3)' returns the number of refractivity obs
         #
-        # Mnemonic '{ROSEQ2}' returns the number of frequencies within each bend angle obs
-        #                     this value is an array since the number of frequencies can
-        #                     change on each bend angle obs
+        # Mnemonic '{ROSEQ2}' returns the number of frequencies within each
+        #                     bend angle obs, this value is an array since the
+        #                     number of frequencies can change on each bend
+        #                     angle obs
         #
         BangleFreqCnts = bufr.read_subset('{ROSEQ2}').astype(int).squeeze()
 
