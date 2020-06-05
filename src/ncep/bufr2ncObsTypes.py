@@ -482,8 +482,8 @@ class ObsType(object):
         ActualValuesBufr = []
         ActualValuesBufr.append({})
 
-        # Read and convert the individual data mnemonics. The mnemonic value is the second
-        # entry in the int_spec sublist elements.
+        # Read and convert the individual data mnemonics. The mnemonic value
+        # is the second entry in the int_spec sublist elements.
         Mlists = [[Mlist[1] for Mlist in SubList] for SubList in self.int_spec]
         BufrValues = self.read_bufr_data(bufr, Mlists)
         [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual_bufr(
@@ -500,7 +500,6 @@ class ObsType(object):
         # Read and convert the replication mnemonics
         Mlists = [[Mlist[1] for Mlist in SubList] for SubList in self.rep_spec]
         BufrValues = self.read_bufr_data(bufr, Mlists, Rflag=True)
-        # [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual(self.rep_spec, BufrValues, ActualValues[0])
         [ActualValues[0], ActualValuesBufr[0]] = self.bufr_float_to_actual_bufr(
             self.rep_spec, BufrValues,
             ActualValues[0], ActualValuesBufr[0])
@@ -716,9 +715,9 @@ class ObsType(object):
                 # Grab all of the mnemonics from the bufr file, and convert
                 # from the BUFR float representation to the actual data type
                 # (integer, float, string, double). ActualValues is a list of
-                # dictionaries where each dictionary represents one observation.
-                # A dictionary within the list is keyed by the netcdf variable
-                # name and contains the associated data value.
+                # dictionaries where each dictionary represents one
+                # observation. A dictionary within the list is keyed by the
+                # netcdf variable name and contains the associated data value.
                 [ActualValues, ActualValuesBufr] = self.extract_bufr(bufr)
 
                 for i in range(len(ActualValues)):
@@ -782,8 +781,8 @@ class AircraftObsType(ObsType):
 
         self.nvars = 4
 
-        # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nlocs], [nlocs,nlevs] ).
+        # Put the time and date vars in the subclasses so that their dimensions
+        # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
             ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
@@ -920,8 +919,8 @@ class SondesObsType(ObsType):
 
         self.nvars = 4
 
-        # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nlocs], [nlocs,nlevs] ).
+        # Put the time and date vars in the subclasses so that their dimensions
+        # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(['ObsTime@MetaData', '', cm.DTYPE_INTEGER, [
                                  'nlocs', 'nlevs'], [self.nlocs, self.nlevs]])
         self.misc_spec[0].append(['ObsDate@MetaData', '', cm.DTYPE_INTEGER, [
@@ -1251,12 +1250,12 @@ class GpsroObsType(ObsType):
 
             if (self.select_this_subset(bufr, HeaderVals['SAID'], HeaderVals['PTID'],
                                         HeaderVals['QFRO'], NumBangle, BangleFreqCnts, Verbose=True)):
-                # Have same number of bending angle and refractivity observations
-                # Even though there can be multiple frequencies within a single
-                # bending angle obs, we are only going to take the zero frequency
-                # entry. That is, only one frequency per bending angle obs. Therefore,
-                # the number of obs this subset is equal to the number of bend
-                # angle obs.
+                # Have same number of bending angle and refractivity
+                # observations even though there can be multiple frequencies
+                # within a single bending angle obs, we are only going to take
+                # the zero frequency entry. That is, only one frequency per
+                # bending angle obs. Therefore, the number of obs this subset
+                # is equal to the number of bend angle obs.
                 ObsCount += NumBangle
             else:
                 print("WARNING: Gpsro: Skipping report: Message number: {0:d}, Subset number: {1:d}".format(
@@ -1275,8 +1274,8 @@ class GpsroObsType(ObsType):
                            Verbose=False):
         Select = True
 
-        # Sanity check: make sure length of bending angle frequency counts vector
-        # matches the number of bending angle obs.
+        # Sanity check: make sure length of bending angle frequency counts
+        # vector matches the number of bending angle obs.
         if (NumBangle != BangleFreqCnts.size):
             Select = False
             if (Verbose):
@@ -1284,12 +1283,12 @@ class GpsroObsType(ObsType):
                     "WARNING: Gpsro: Skip report due to mismatch in ROSEQ1 and ROSEQ2 occurence")
 
         # For certain satellite ids, skip this subset if the non-nominal flags
-        # are set for bending angle (flag value == 5). This is based on GRAS SAF specs.
-        #
-        # Note, (flag value == 6) indicates that reflectivity data is non-nominal. Since
-        # we are preferring bending angle over reflectivity, don't skip if 6 appears in
-        # the list. Only skip if 5 (bend angle non-nominal) appears in the
-        # list.
+        # are set for bending angle (flag value == 5). This is based on GRAS
+        # SAF specs.
+        # Note, (flag value == 6) indicates that reflectivity data is
+        # non-nominal. Since we are preferring bending angle over reflectivity,
+        # don't skip if 6 appears in the list. Only skip if 5 (bend angle
+        # non-nominal) appears in the list.
         if (Said in [3, 4, 421, 440, 821]):
             Ibits = bufr.get_flag_table_bits('QFRO', Qfro)
             if (5 in Ibits):
@@ -1302,8 +1301,9 @@ class GpsroObsType(ObsType):
 
     ##########################################################################
     # This method will extract data from a subset of a Gpsro raw BUFR file and
-    # load up the observations into the ActualValues data structure. ActualValues
-    # is a list of dictionaries where each dictionary holds one observation.
+    # load up the observations into the ActualValues data structure.
+    # ActualValues is a list of dictionaries where each dictionary holds one
+    # observation.
     def extract_bufr(self, bufr):
         ActualValues = []
 
@@ -1315,8 +1315,9 @@ class GpsroObsType(ObsType):
         [NumBangle, NumRefrac,
             BangleFreqCnts] = self.extract_gpsro_obs_counts(bufr)
 
-        # Run this subset through a selection filter. The warnings about skipping
-        # subsets have already been written by the msg_obs_count() method.
+        # Run this subset through a selection filter. The warnings about
+        # skipping subsets have already been written by the msg_obs_count()
+        # method.
         if (self.select_this_subset(bufr, HeaderVals['SAID'], HeaderVals['PTID'],
                                     HeaderVals['QFRO'], NumBangle, BangleFreqCnts)):
             # Update subset number.
@@ -1329,43 +1330,44 @@ class GpsroObsType(ObsType):
             # Each replication of bend angle (and refrac) obs is a single
             # observation.
             for irep in range(NumBangle):
-                # Record the header values. It is important to use the copy() method
-                # of the HeaderVals dictionary. The copy() method will create a new
-                # dictionary with references to the elements in HeaderVals. This is
-                # exactly what we want: A list of separate dictionaries where the
-                # header elements are all references to the elements in HeaderVals, and
-                # the other elements that get entered into each dictionary are
-                # separated so they can be set to anything (ie, hold unique values).
+                # Record the header values. It is important to use the copy()
+                # method of the HeaderVals dictionary. The copy() method will
+                # create a new dictionary with references to the elements in
+                # HeaderVals. This is exactly what we want: A list of separate
+                # dictionaries where the header elements are all references to
+                # the elements in HeaderVals, and the other elements that get
+                # entered into each dictionary are separated so they can be set
+                # to anything (ie, hold unique values).
                 #
-                # Note that "ActualValues.append(HeaderVals)" results in each entry
-                # in the ActualVlaues list reference the same dictionary which is the
-                # one created when HeaderVals was created. In this case, subsequent
-                # loops keep overwriting the previous loop's values and you end up
-                # with NumBangle references to the single dictionary. Ie, the entire
-                # set of NumBangle observations all have the same values for all
-                # keys.
+                # Note that "ActualValues.append(HeaderVals)" results in each
+                # entry in the ActualVlaues list reference the same dictionary
+                # which is the one created when HeaderVals was created. In this
+                # case, subsequent loops keep overwriting the previous loop's
+                # values and you end up with NumBangle references to the single
+                # dictionary. Ie, the entire set of NumBangle observations all
+                # have the same values for all keys.
                 ActualValues.append(HeaderVals.copy())
 
-                # The frequency related data from the inner sequence of ROSEQ1 got
-                # expanded and recorded in the result array (BangleBvals) by adding
-                # extra entries along the first dimension. The sequence ROSEQ1 looks
-                # like:
+                # The frequency related data from the inner sequence of ROSEQ1
+                # got expanded and recorded in the result array (BangleBvals)
+                # by adding extra entries along the first dimension. The
+                # sequence ROSEQ1 looks like:
                 #
                 #   ROSEQ1: CLATH CLONH BEARAZ {ROSEQ2} PCCF
                 #   ROSEQ2: MEFR IMPP BNDA FOST BNDA_err FOST_err
                 #
-                # ROSEQ2 can repeat n times, then the expansion ROSEQ1 looks like:
+                # ROSEQ2 can repeat n times, then the expansion ROSEQ1 is like:
                 #
-                #   CLATH CLONH BEARAZ ROSEQ2-1 PCCF                    (for n = 1)
-                #   CLATH CLONH BEARAZ ROSEQ2-1 ROSEQ2-2 ROSEQ2-3 PCCF  (for n = 3)
+                #   CLATH CLONH BEARAZ ROSEQ2-1 PCCF                    (n = 1)
+                #   CLATH CLONH BEARAZ ROSEQ2-1 ROSEQ2-2 ROSEQ2-3 PCCF  (n = 3)
                 #
-                #         where ROSEQ2-n just means the nth replication of ROSEQ2
+                #       where ROSEQ2-n just means the nth replication of ROSEQ2
                 #
-                # Each subset contains bending angle data, and refractivity data may
-                # or may not be present. The bending angle data is preferred over the
-                # refractivity data so record every subset, and check to see if
-                # refractivity data exists. If so, record them; if not, fill in
-                # ActualValue slots with "missing" data.
+                # Each subset contains bending angle data, and refractivity
+                # data may or may not be present. The bending angle data is
+                # preferred over the refractivity data so record every subset,
+                # and check to see if refractivity data exists. If so, record
+                # them; if not, fill in ActualValue slots with "missing" data.
 
                 # Grab the BUFR values for the obs data
                 # Latitude
@@ -1377,11 +1379,11 @@ class GpsroObsType(ObsType):
                     BangleBvals[1, irep], mask=BangleBvals.mask[1, irep])
 
                 # Height + Refractivity data
-                # Typically, the number of refractivity obs is either zero or a match
-                # with the number of bending angle obs. Just in case a subset shows
-                # up with a different numbers of refractivity and bending angle obs, where
-                # the refractivity number is greater than zero, allow for
-                # recording those.
+                # Typically, the number of refractivity obs is either zero or a
+                # match with the number of bending angle obs. Just in case a
+                # subset shows up with a different numbers of refractivity and
+                # bending angle obs, where the refractivity number is greater
+                # than zero, allow for recording those.
                 if (irep < NumRefrac):
                     HEIT = np.ma.array(
                         RfracBvals[0, irep], mask=RfracBvals.mask[0, irep])
@@ -1400,13 +1402,13 @@ class GpsroObsType(ObsType):
                     ARFR_pccf = np.ma.array([0.0], mask=[True])
 
                 # Bending Angle data
-                # Locate the zero frequency sequence. Use missing data if the zero
-                # frequency data is not available in the BUFR file. Note that the
-                # code below does not break out of the for loop upon finding a
-                # zero frequency. The Fortran code that served as a model for
-                # for this script (read_gps.f90 from GSI repo) did not break out
-                # as well. This shouldn't be a performance problem since the typical
-                # numbers of frequencies is either 1 or 3.
+                # Locate the zero frequency sequence. Use missing data if the
+                # zero frequency data is not available in the BUFR file. Note
+                # that the code below does not break out of the for loop upon
+                # finding a zero frequency. The Fortran code that served as a
+                # model for this script (read_gps.f90 from GSI repo) did not
+                # break out as well. This shouldn't be a performance problem
+                # since the typical numbers of frequencies is either 1 or 3.
                 MEFR = np.ma.array([0.0], mask=[True])
                 IMPP = np.ma.array([0.0], mask=[True])
                 BNDA = np.ma.array([0.0], mask=[True])
@@ -1415,8 +1417,8 @@ class GpsroObsType(ObsType):
                     m = 6 * (i + 1) - 3
                     if ((int(BangleBvals[m, irep]) == 0)
                             and (not BangleBvals.mask[m, irep])):
-                        # This replication has zero frequency which is not masked
-                        # (that is, not marked as missing).
+                        # This replication has zero frequency which is not
+                        # masked (that is, not marked as missing).
                         MEFR = np.ma.array(BangleBvals[m, irep],
                                            mask=BangleBvals.mask[m, irep])    # mean frequency
                         IMPP = np.ma.array(BangleBvals[m + 1, irep],
@@ -1426,9 +1428,9 @@ class GpsroObsType(ObsType):
                         BNDA_err = np.ma.array(BangleBvals[m + 4, irep],
                                                mask=BangleBvals.mask[m + 4, irep])  # bending angle error
 
-                # BNDA_pccf is at the end of the ROSEQ1 section, i.e. one after the
-                # BangleFreqCnts[irep] replications of the current ROSEQ2
-                # section.
+                # BNDA_pccf is at the end of the ROSEQ1 section, i.e. one
+                # after the BangleFreqCnts[irep] replications of the current
+                # ROSEQ2 section.
                 m = 6 * BangleFreqCnts[irep] + 3
                 BNDA_pccf = np.ma.array(BangleBvals[m, irep],
                                         mask=BangleBvals.mask[m, irep])   # bending angle pccf
@@ -1463,8 +1465,8 @@ class GpsroObsType(ObsType):
                                                                             self.subset_num])
 
         else:
-            # This subset has been rejected, so empty out the ActualValues list so that
-            # nothing will get recorded into the output netcdf file.
+            # This subset has been rejected, so empty out the ActualValues
+            # list so that nothing will get recorded into the output netcdf file.
             ActualValues = []
 
         return ActualValues

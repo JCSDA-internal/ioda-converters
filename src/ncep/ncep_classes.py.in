@@ -8,7 +8,7 @@ import sys
 import os
 import yaml
 
-sys.path.append("@SCRIPT_LIB_PATH@")  # noqa: E402
+sys.path.append("@SCRIPT_LIB_PATH@")
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 
@@ -51,8 +51,8 @@ def BfilePreprocess(BufrFname, Obs):
 # ########                  (Prep-) BUFR NCEP Observations               #
 # ########################################################################
 #
-# The class is developed to import all the entries to any BUFR family data set that
-# the tables A, B, D of BUFR are embedded to the files.
+# The class is developed to import all the entries to any BUFR family data set
+# that the tables A, B, D of BUFR are embedded to the files.
 #
 
 
@@ -64,8 +64,8 @@ class NcepObsType(ObsType):
 
         self.bufr_ftype = bf_type
         self.multi_level = False
-        # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nlocs], [nlocs,nlevs] ).
+        # Put the time and date vars in the subclasses so that their dimensions
+        # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
             ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
@@ -109,8 +109,8 @@ class NcepObsType(ObsType):
                             intspec.append([full_table[i]['name'].replace(
                                 ' ', '_'), i, full_table[i]['dtype'], full_table[i]['ddims']])
                     # else:
-                    # TODO what to do if the spec is not in the full_table (or in
-                    # this case, does not have a unit in the full_table)
+                    # TODO what to do if the spec is not in the full_table (or
+                    # in this case, does not have a unit in the full_table)
                 for j, dname in enumerate(intspec):
                     if len(dname[3]) == 1:
                         intspec[j].append([self.nlocs])
@@ -127,9 +127,10 @@ class NcepObsType(ObsType):
             for k in intspec:
                 if '@ObsValue' in (" ".join(map(str, k))):
                     self.nvars += 1
-            # TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1 below,
-            # it will be most stable to explicitly remove it. The issue with RRSTG is the Binary length of it,
-            # which makes the system to crash during at BufrFloatToActual string convention. Probably, there
+            # The last mnemonic (RRSTG) corresponds to the raw data, instead
+            # of -1 below, it is explicitly removed. The issue with RRSTG is
+            # the Binary length of it, which makes the system to crash
+            # during at BufrFloatToActual string convention. Probably, there
             # are more Mnemonics with the same problem.
 
             self.int_spec = [intspec[x:x + 1]
@@ -280,7 +281,7 @@ def read_table(filename):
 
 def get_int_spec(mnemonic, part_b):
     # mnemonic is the BUFR msg_type, i.e. 'NC001007'
-    # part_b from the read_table, the table entries associated with the mnemonic
+    # part_b from the read_table, table entries associated with the mnemonic
     #
     # find the table entries for the bufr msg_type (mnemonic):
     bentries = {}
@@ -354,7 +355,6 @@ def get_int_spec(mnemonic, part_b):
 
 
 def get_fname(base_mnemo, BufrPath):
-    # BufrFname = BufrPath + '/b' + base_mnemo[2:5] + '/xx' + base_mnemo[5:]
     BufrFname = BufrPath + BufrFname
     BufrTname = base_mnemo + '.tbl'
     NetcdfFname = 'xx' + base_mnemo[5:] + '.nc'
@@ -376,8 +376,9 @@ def create_bufrtable(BufrFname, ObsTable):
 
 if __name__ == '__main__':
 
-    desc = 'Read NCEP BUFR data and convert to IODA netCDF4 format /n\
-          example: ncep_clases -p /path/to/obs/ -i obs_filename -ot observation type'
+    desc = ('Read NCEP BUFR data and convert to IODA netCDF4 format'
+            'example: ncep_clases -p /path/to/obs/ -i obs_filename'
+            ' -ot observation type -l yamlfile')
 
     parser = ArgumentParser(
         description=desc,
@@ -422,9 +423,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     BufrPath = args.obs_path    # Path of the observations
-    MaxNumMsg = args.maxmsgs     # Maximum number of messages to be imported
-    ThinInterval = args.thin        # Thinning window. TODO: To be removed, legacy
-    ObsType = args.obs_type    # Observation type. e.g., NC001007
+    MaxNumMsg = args.maxmsgs    # Maximum number of messages to be imported
+    ThinInterval = args.thin    # Thinning window. TODO: To be removed, legacy
+    ObsType = args.obs_type     # Observation type. e.g., NC001007
     BufrFname = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral = dt.strptime(args.date, '%Y%m%d%H')  # DateHH of analysis
     if (config_path + args.lexicon):
@@ -433,7 +434,7 @@ if __name__ == '__main__':
         args.lexicon   # User defined Lexicon name
 
     if (args.bufr):
-        BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
+        BfileType = cm.BFILE_BUFR  # BUFR or prepBUFR. TODO: To be removed
     else:
         BfileType = cm.BFILE_PREPBUFR
 
