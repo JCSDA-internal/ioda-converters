@@ -41,6 +41,8 @@ phases:
   build:
     commands:
       - cd /build_container
+      - echo $PYTHONPATH
+      - export PYTHONPATH=/usr/local/lib
       - ecbuild /src_repo/ioda-converters
       - make -j4
 
