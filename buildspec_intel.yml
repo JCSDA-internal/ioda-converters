@@ -14,7 +14,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
       - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
-      - pip install xarray
 
       - mkdir  /build_container
       - mkdir  /jcsda
