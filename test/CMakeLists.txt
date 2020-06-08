@@ -29,6 +29,7 @@ list( APPEND test_input
   testinput/modis_aqua_oc_l2.nc
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
+  testinput/aod_viirs_obs_2018041500_s.odb
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
@@ -56,6 +57,7 @@ list( APPEND test_output
   testoutput/modis_aqua_oc_l2.nc
   testoutput/sondes_obs_2018041500_m.odb
   testoutput/gnssro_obs_2018041500_s.odb
+  testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
@@ -351,6 +353,15 @@ if (odc_FOUND)
                          testinput/gnssro_obs_2018041500_s.nc4
                          testrun/gnssro_obs_2018041500_s.odb"
                         gnssro_obs_2018041500_s.odb)
+
+  ecbuild_add_test( TARGET test_iodaconv_odb2nc_tool
+                    TYPE SCRIPT
+                    COMMAND iodaconv_comp.sh
+                    ARGS netcdf
+                         "${CMAKE_BINARY_DIR}/bin/odb2nc.py -c
+                         testinput/aod_viirs_obs_2018041500_s.odb
+                         testrun/aod_viirs_obs_2018041500_s.nc4"
+                        aod_viirs_obs_2018041500_s.nc4)
 endif ()
 
 #==============================================================================

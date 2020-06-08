@@ -87,9 +87,6 @@ phases:
       - echo $BUILD_STATUS
 
       - su - jcsdauser -c "cd /build_container
-        && echo $PYTHONPATH
-        && export PYTHONPATH=/usr/local/lib
-        && echo $PYTHONPATH
         && ctest"
 
   post_build:
