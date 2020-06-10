@@ -31,6 +31,7 @@ phases:
       - export PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       - export LD_LIBRARY_PATH=/usr/local/lib
       - export LIBRARY_PATH=/usr/local/lib
+      - export PYTHONPATH=/usr/local/lib
       - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
 
       - pip install xarray
