@@ -17,7 +17,9 @@ phases:
 
       - mkdir  /build_container
       - mkdir  /jcsda
-
+      - echo $PATH
+      - echo $LD_LIBRARY_PATH
+      - echo $PYTHONPATH
       ## cannot source /etc/bash.bashrc so copy what's there for root
       - sed '12s/INTEL_TARGET_ARCH=/INTEL_TARGET_ARCH=intel64/' /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
       - export COMPILERVARS_ARCHITECTURE=intel64
