@@ -14,10 +14,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
       - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
-      - pip install xarray
-      - echo $PATH
-      - echo $LD_LIBRARY_PATH
-      - echo $PYTHONPATH
 
       - mkdir  /build_container
       - mkdir  /jcsda
@@ -34,6 +30,11 @@ phases:
       - export LD_LIBRARY_PATH=/usr/local/lib
       - export LIBRARY_PATH=/usr/local/lib
       - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+
+      - pip install xarray
+      - echo $PATH
+      - echo $LD_LIBRARY_PATH
+      - echo $PYTHONPATH
 
   pre_build:
     commands:
