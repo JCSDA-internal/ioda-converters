@@ -90,6 +90,10 @@ phases:
         fi
       - echo $BUILD_STATUS
 
+      - su - jcsdauser -c "echo $PATH
+        && echo $PYTHONPATH
+        && echo $LD_LIBRARY_PATH"
+
       - su - jcsdauser -c "cd /build_container
         && ctest"
 
