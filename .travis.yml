@@ -60,6 +60,7 @@ script:
   - docker exec jcsda_container bash -c 'echo $PATH'
   - docker exec jcsda_container bash -c 'echo $LD_LIBRARY_PATH'
   - docker exec jcsda_container bash -c 'echo $PYTHONPATH'
+  - docker exec jcsda_container bash -c 'python jcsda/src_repo/CI/printenv.py'
 ##  use cmake with flags to generate test coverage reports
   - docker exec jcsda_container bash -c 'cd /build_container && cmake -DCMAKE_MODULE_PATH=/usr/local/share/ecbuild/cmake/ -DCMAKE_BUILD_TYPE=Debug -DENABLE_GPROF=ON  /jcsda/src_repo' 
   - docker exec jcsda_container bash -c 'cd /build_container && make -j4'
