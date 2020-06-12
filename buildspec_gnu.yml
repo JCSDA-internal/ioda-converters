@@ -106,6 +106,9 @@ phases:
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
         su - jcsdauser -c "cd /build_container
+        && export PATH=/usr/local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        && export LD_LIBRARY_PATH=/usr/local/lib
+        && export PYTHONPATH=/usr/local/lib
         && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi
