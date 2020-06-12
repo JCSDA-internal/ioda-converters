@@ -102,9 +102,9 @@ phases:
         && echo $LIBRARY_PATH"
 
       - su - jcsdauser -c "export PATH=/usr/local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        export LD_LIBRARY_PATH=/usr/local/lib
-        export PYTHONPATH=/usr/local/lib
-        cd /build_container
+        && export LD_LIBRARY_PATH=/usr/local/lib
+        && export PYTHONPATH=/usr/local/lib
+        && cd /build_container
         && ctest"
 
   post_build:
