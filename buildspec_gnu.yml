@@ -17,6 +17,7 @@ phases:
       - pip install xarray
       - echo $PATH
       - echo $LD_LIBRARY_PATH
+      - echo $LIBRARY_PATH
       - echo $PYTHONPATH
 
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PULL_REQUEST_MERGED" ];
@@ -94,9 +95,11 @@ phases:
       - python printenv.py
       - su - jcsdauser -c "python printenv.py"
 
+      - export LIBRARY_PATH=usr/local/lib 
       - su - jcsdauser -c "echo $PATH
         && echo $PYTHONPATH
-        && echo $LD_LIBRARY_PATH"
+        && echo $LD_LIBRARY_PATH
+        && echo $LIBRARY_PATH"
 
       - su - jcsdauser -c "cd /build_container
         && ctest"
@@ -108,7 +111,6 @@ phases:
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
         su - jcsdauser -c "cd /build_container
-        && export PYTHONPATH=/usr/local/lib
         && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi
