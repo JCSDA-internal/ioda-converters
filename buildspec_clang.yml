@@ -44,7 +44,7 @@ phases:
       - mv ioda-converters /src_repo/
   build:
     commands:
-      - cd /jcsda/ioda-converters
+      - cd /src_repo/ioda-converters
       - python printenv.py
 
       - cd /build_container
