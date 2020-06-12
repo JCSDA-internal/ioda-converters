@@ -93,7 +93,7 @@ phases:
 
       - cd /jcsda/ioda-converters
       - python printenv.py
-      - su - jcsdauser -c "python printenv.py"
+      - su - jcsdauser -c "python /jcsda/ioda-converters/printenv.py"
 
       - export LIBRARY_PATH=usr/local/lib 
       - su - jcsdauser -c "echo $PATH
