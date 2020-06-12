@@ -44,12 +44,7 @@ phases:
       - mv ioda-converters /src_repo/
   build:
     commands:
-      - cd /src_repo/ioda-converters
-      - python printenv.py
-
       - cd /build_container
-      - echo $PYTHONPATH
-      - export PYTHONPATH=/usr/local/lib
       - ecbuild /src_repo/ioda-converters
       - make -j4 
 

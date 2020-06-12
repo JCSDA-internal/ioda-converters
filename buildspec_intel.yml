@@ -62,9 +62,7 @@ phases:
       - mv ioda-converters /jcsda/
   build:
     commands:
-      - cd /jcsda/ioda-converters
-      - python printenv.py
-
+      
       - cd /build_container
       - ecbuild /jcsda/ioda-converters
       - make -j4
