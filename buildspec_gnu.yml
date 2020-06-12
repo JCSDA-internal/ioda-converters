@@ -90,6 +90,10 @@ phases:
         fi
       - echo $BUILD_STATUS
 
+      - cd /jcsda/ioda-converters
+      - python printenv.py
+      - su - jcsdauser -c "python printenv.py"
+
       - su - jcsdauser -c "echo $PATH
         && echo $PYTHONPATH
         && echo $LD_LIBRARY_PATH"
