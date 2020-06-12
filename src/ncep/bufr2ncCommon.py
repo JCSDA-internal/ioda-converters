@@ -11,24 +11,24 @@ from __future__ import print_function
 # CONSTANTS
 ###########################################################################
 
-# Some handy constants. These become global variables in this script. Using the
+# Some handy constants. These become global variables in this script. Using
 # naming convention of all caps to remind us that these are not to be changed.
 
-# MAX_STRING_LEN is good with 10 characters. This is the length of the long format
-# for date and time. Most of the id labels are 6 or 8 characters.
-MAX_STRING_LEN = 10
+# MAX_STRING_LEN is good with 10 characters. This is the length of the long
+# format for date and time. Most of the id labels are 6 or 8 characters.
+MAX_STRING_LEN = 20
 
 # MAX_EVENTS will usually be limited to 255 due to an array size in the Fortran
-# interface. In practice, there are typically a handful of events (4 or 5) since
-# the events are related to the steps that are gone through to convert a raw
-# BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20 is
-# a safe limit (instead of 255) for the max number of events, so set MaxEvents
-# to 20 to help conserve file space.
+# interface. In practice, there are typically a handful of events (4 or 5)
+# since the events are related to the steps that are gone through to convert a
+# raw BUFR file to a prepBUFR file (at NCEP). It is generally accepted that 20
+# is a safe limit (instead of 255) for the max number of events, so set
+# MAX_EVENTS to 20 to help conserve file space.
 MAX_EVENTS = 20
 
 # MAX_LEVELS should be limited to 255 by a Fortran array size. This may need to
-# change in the future since this number corresponds to the number of atmospheric
-# levels in an observation.
+# change in the future since this number corresponds to the number of
+# atmospheric levels in an observation.
 MAX_LEVELS = 255
 
 # BUFR file types

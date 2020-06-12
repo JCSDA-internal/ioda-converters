@@ -12,9 +12,23 @@ sys.path.append("@SCRIPT_LIB_PATH@")
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 
+config_path = "@SCRIPT_LIB_PATH@/config/"
+
 ##########################################################################
 # SUBROUTINES To be deleted (maybe).
 ##########################################################################
+
+
+def MessageCounter(BufrFname):
+    # This function counts the number of messages in the file BufrFname
+    bufr = ncepbufr.open(BufrFname)
+    NumMessages = 0
+    Obs.start_msg_selector()
+    while (Obs.select_next_msg(bufr)):
+        NumMessages += 1
+
+    bufr.close()
+    return [NumMessages]
 
 
 def BfilePreprocess(BufrFname, Obs):
@@ -29,7 +43,6 @@ def BfilePreprocess(BufrFname, Obs):
     Obs.start_msg_selector()
     while (Obs.select_next_msg(bufr)):
         NumObs += Obs.msg_obs_count(bufr)
-
     bufr.close()
 
     return [NumObs, Obs.num_msg_selected, Obs.num_msg_mtype]
@@ -38,8 +51,8 @@ def BfilePreprocess(BufrFname, Obs):
 # ########                  (Prep-) BUFR NCEP Observations               #
 # ########################################################################
 #
-# The class is developed to import all the entries to any BUFR family data set that
-# the tables A, B, D of BUFR are embedded to the files.
+# The class is developed to import all the entries to any BUFR family data set
+# that the tables A, B, D of BUFR are embedded to the files.
 #
 
 
@@ -51,9 +64,8 @@ class NcepObsType(ObsType):
 
         self.bufr_ftype = bf_type
         self.multi_level = False
-
-        # Put the time and date vars in the subclasses so that their dimensions can
-        # vary ( [nlocs], [nlocs,nlevs] ).
+        # Put the time and date vars in the subclasses so that their dimensions
+        # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
             ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
@@ -64,25 +76,26 @@ class NcepObsType(ObsType):
             ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
         self.misc_spec[0].append(
             ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
+        self.misc_spec[0].append(
+            ['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]])
 
         if (bf_type == cm.BFILE_BUFR):
             self.mtype_re = alt_type  # alt_type is the BUFR mnemonic
 
             if os.path.isfile(dictfile):
-                # i.e. 'NC031120.dict'
+                # i.e. 'NC001007.dict'
                 full_table = read_yaml(dictfile)
                 _, blist = read_table(tablefile)
             else:
                 full_table, blist = read_table(
-                    tablefile)  # i.e. 'NC031120.tbl'
+                    tablefile)  # i.e. 'NC001007.tbl'
                 write_yaml(full_table, dictfile)
 
             spec_list = get_int_spec(alt_type, blist)
-
             intspec = []
             intspecDum = []
 
-            if not os.path.isfile('intespec.yaml'):
+            if not os.path.isfile(Lexicon):
                 for i in spec_list[alt_type]:
                     if i in full_table:
                         intspecDum = [
@@ -96,8 +109,8 @@ class NcepObsType(ObsType):
                             intspec.append([full_table[i]['name'].replace(
                                 ' ', '_'), i, full_table[i]['dtype'], full_table[i]['ddims']])
                     # else:
-                    # TODO what to do if the spec is not in the full_table (or in
-                    # this case, does not have a unit in the full_table)
+                    # TODO what to do if the spec is not in the full_table (or
+                    # in this case, does not have a unit in the full_table)
                 for j, dname in enumerate(intspec):
                     if len(dname[3]) == 1:
                         intspec[j].append([self.nlocs])
@@ -106,23 +119,22 @@ class NcepObsType(ObsType):
                     else:
                         print('walked off the edge')
 
-                write_yaml(intspec, 'intespec.yaml')
+                write_yaml(intspec, Lexicon)
             else:
-                intspec = read_yaml('intespec.yaml')
+                intspec = read_yaml(Lexicon)
 
             self.nvars = 0
             for k in intspec:
                 if '@ObsValue' in (" ".join(map(str, k))):
                     self.nvars += 1
-
-            # TODO The last mnemonic (RRSTG) corresponds to the raw data, instead of -1 below,
-            # it will be most stable to explicitly remove it. The issue with RRSTG is the Binary length of it,
-            # which makes the system to crash during at BufrFloatToActual string convention. Probably, there
+            # The last mnemonic (RRSTG) corresponds to the raw data, instead
+            # of -1 below, it is explicitly removed. The issue with RRSTG is
+            # the Binary length of it, which makes the system to crash
+            # during at BufrFloatToActual string convention. Probably, there
             # are more Mnemonics with the same problem.
 
             self.int_spec = [intspec[x:x + 1]
                              for x in range(0, len(intspec) - 1, 1)]
-
             # TODO Check not sure what the evn_ and rep_ are
             self.evn_spec = []
             self.rep_spec = []
@@ -133,7 +145,6 @@ class NcepObsType(ObsType):
 
         # Set the dimension specs.
         super(NcepObsType, self).init_dim_spec()
-
 ##########################################################################
 # read bufr table and return new table with bufr names and units
 ##########################################################################
@@ -171,7 +182,6 @@ def read_table(filename):
     part_a = all[2:stops[0]]
     part_b = all[stops[0] + 3:stops[1]]
     part_c = all[stops[1] + 3:]
-
     dum = []
     for x in part_a:
         dum.append(
@@ -262,7 +272,6 @@ def read_table(filename):
         else:
             full_table[key]['dtype'] = cm.DTYPE_UNDEF
             full_table[key]['ddims'] = nums_dims
-
     return full_table, part_b
 
 ##########################################################################
@@ -271,8 +280,8 @@ def read_table(filename):
 
 
 def get_int_spec(mnemonic, part_b):
-    # mnemonic is the BUFR msg_type, i.e. 'NC031120'
-    # part_b from the read_table, the table entries associated with the mnemonic
+    # mnemonic is the BUFR msg_type, i.e. 'NC001007'
+    # part_b from the read_table, table entries associated with the mnemonic
     #
     # find the table entries for the bufr msg_type (mnemonic):
     bentries = {}
@@ -309,7 +318,35 @@ def get_int_spec(mnemonic, part_b):
             if line.split('|')[1].find(b_monic) != -1:
                 bentries[mnemonic] = bentries[mnemonic] + \
                     ''.join(line.split('|')[2:]).strip().split()
+    for c_monic in bentries[mnemonic]:
+        for line in part_b:
+            line = line.replace(
+                '{',
+                '').replace(
+                '}',
+                '').replace(
+                '<',
+                '').replace(
+                '>',
+                '')
+            if line.split('|')[1].find(c_monic) != -1:
+                bentries[mnemonic] = bentries[mnemonic] + \
+                    ''.join(line.split('|')[2:]).strip().split()
 
+    for d_monic in bentries[mnemonic]:
+        for line in part_b:
+            line = line.replace(
+                '{',
+                '').replace(
+                '}',
+                '').replace(
+                '<',
+                '').replace(
+                '>',
+                '')
+            if line.split('|')[1].find(d_monic) != -1:
+                bentries[mnemonic] = bentries[mnemonic] + \
+                    ''.join(line.split('|')[2:]).strip().split()
     return bentries
 
 ##########################################################################
@@ -318,7 +355,6 @@ def get_int_spec(mnemonic, part_b):
 
 
 def get_fname(base_mnemo, BufrPath):
-    # BufrFname = BufrPath + '/b' + base_mnemo[2:5] + '/xx' + base_mnemo[5:]
     BufrFname = BufrPath + BufrFname
     BufrTname = base_mnemo + '.tbl'
     NetcdfFname = 'xx' + base_mnemo[5:] + '.nc'
@@ -340,8 +376,9 @@ def create_bufrtable(BufrFname, ObsTable):
 
 if __name__ == '__main__':
 
-    desc = 'Read NCEP BUFR data and convert to IODA netCDF4 format /n\
-          example: ncep_clases -p /path/to/obs/ -i obs_filename -t observation type'
+    desc = ('Read NCEP BUFR data and convert to IODA netCDF4 format'
+            'example: ncep_clases -p /path/to/obs/ -i obs_filename'
+            ' -ot observation type -l yamlfile')
 
     parser = ArgumentParser(
         description=desc,
@@ -356,7 +393,7 @@ if __name__ == '__main__':
         type=str, required=True)
 
     parser.add_argument(
-        '-ot', '--obs_type', help='Submessage of the input BUFR file, e.g., NC031120',
+        '-ot', '--obs_type', help='Submessage of the input BUFR file, e.g., NC001007',
         type=str, required=True)
 
     parser.add_argument(
@@ -365,7 +402,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-m', '--maxmsgs', help="maximum number of messages to keep",
-        type=int, required=False, default=1, metavar="<max_num_msgs>")
+        type=int, required=False, default=0, metavar="<max_num_msgs>")
 
     parser.add_argument(
         '-Th', '--thin', type=int, default=1,
@@ -374,6 +411,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--date', help='file date', metavar='YYYYMMDDHH',
         type=str, required=True)
+
+    parser.add_argument(
+        '-l', '--lexicon', help='yaml file with the dictionary', metavar="name_of_dict",
+        type=str, required=False, default=config_path + 'bufr2ioda.yaml')
+
     parser.add_argument(
         '-Pr', '--bufr', action='store_true', default=1,
         help='input BUFR file is in prepBUFR format')
@@ -381,14 +423,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     BufrPath = args.obs_path    # Path of the observations
-    MaxNumMsg = args.maxmsgs     # Maximum number of messages to be imported
-    ThinInterval = args.thin        # Thinning window. TODO: To be removed, legacy
-    ObsType = args.obs_type    # Observation type. e.g., NC031120
+    MaxNumMsg = args.maxmsgs    # Maximum number of messages to be imported
+    ThinInterval = args.thin    # Thinning window. TODO: To be removed, legacy
+    ObsType = args.obs_type     # Observation type. e.g., NC001007
     BufrFname = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral = dt.strptime(args.date, '%Y%m%d%H')  # DateHH of analysis
+    if (config_path + args.lexicon):
+        Lexicon = config_path + args.lexicon  # Existing yaml file in config
+    else:
+        args.lexicon   # User defined Lexicon name
 
     if (args.bufr):
-        BfileType = cm.BFILE_BUFR       # BUFR or prepBUFR. TODO: To be removed legacy
+        BfileType = cm.BFILE_BUFR  # BUFR or prepBUFR. TODO: To be removed
     else:
         BfileType = cm.BFILE_PREPBUFR
 
@@ -426,18 +472,22 @@ if __name__ == '__main__':
     # Create the observation instance
 
     Obs = NcepObsType(BfileType, mnemonic, ObsTable, DictObs)
+    NumMessages = MessageCounter(BufrFname)
+    if MaxNumMsg > 0:
+        Obs.max_num_msg = MaxNumMsg
+    else:
+        Obs.max_num_msg = NumMessages[0]
+    print("NumMessages = ", NumMessages[0])
 
-    Obs.max_num_msg = MaxNumMsg
     Obs.thin_interval = ThinInterval
     Obs.date_central = DateCentral
 
     [NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)
-
     Obs.set_nlocs(NumObs)
 
     nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 
-    nc.date_time = int(date_time[0:9])
+    nc.date_time = int(date_time[0:10])
 
     Obs.create_nc_datasets(nc)
     Obs.fill_coords(nc)
