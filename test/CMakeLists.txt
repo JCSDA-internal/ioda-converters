@@ -308,6 +308,9 @@ ecbuild_add_test( TARGET test_iodaconv_viirs_aod
                   ARGS netcdf
                        "${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
                        -i testinput/viirs_aod.nc
-                       -o testrun/viirs_aod.nc"
+                       -o testrun/viirs_aod.nc
+                       -m nesdis
+                       -k maskout
+                       -t 0.0"
                       viirs_aod.nc)
 
