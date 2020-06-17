@@ -13,10 +13,13 @@ phases:
       - echo $CODEBUILD_WEBHOOK_BASE_REF
       - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
       - echo $CODEBUILD_WEBHOOK_EVENT
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
       - mkdir  /build_container
       - mkdir  /jcsda
-
+      - echo $PATH
+      - echo $LD_LIBRARY_PATH
+      - echo $PYTHONPATH
       ## cannot source /etc/bash.bashrc so copy what's there for root
       - sed '12s/INTEL_TARGET_ARCH=/INTEL_TARGET_ARCH=intel64/' /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
       - export COMPILERVARS_ARCHITECTURE=intel64
@@ -28,7 +31,13 @@ phases:
       - export PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       - export LD_LIBRARY_PATH=/usr/local/lib
       - export LIBRARY_PATH=/usr/local/lib
+      - export PYTHONPATH=/usr/local/lib
       - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
+
+      - pip install xarray
+      - echo $PATH
+      - echo $LD_LIBRARY_PATH
+      - echo $PYTHONPATH
 
   pre_build:
     commands:
@@ -37,9 +46,8 @@ phases:
 
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PULL_REQUEST_MERGED" ];
         then export CODEBUILD_GIT_BRANCH="develop";
-        echo $CODEBUILD_GIT_BRANCH;
         echo "Merging to develop";
-        else CODEBUILD_GIT_BRANCH="$(git branch -a --contains $CODEBUILD_SOURCE_VERSION | sed -n 2p | awk '{ printf $1 }')";
+        else CODEBUILD_GIT_BRANCH="$(git branch -a --contains $CODEBUILD_RESOLVED_SOURCE_VERSION | sed -n 2p | awk '{ printf $1 }')";
         export CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH#remotes/origin/};
         fi
 
@@ -54,6 +62,7 @@ phases:
       - mv ioda-converters /jcsda/
   build:
     commands:
+      
       - cd /build_container
       - ecbuild /jcsda/ioda-converters
       - make -j4

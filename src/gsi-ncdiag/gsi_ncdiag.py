@@ -106,6 +106,11 @@ all_LocKeyList = {
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
     'Vterminal': ('vterminal', 'float'),
+    'SWCM_spec_type': ('satwind_spectral_type', 'float'),
+    'SAZA_sat_zen_angle': ('sensor_zenith_angle', 'float'),
+    'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
+    'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
+    'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
 }
 
 checkuv = {
@@ -198,6 +203,7 @@ gsi_add_vars_uv = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Errinv_Input': 'GsiInputObsError',
     'u_Forecast_adjusted': 'GsiHofXBc',
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
@@ -246,11 +252,13 @@ rad_sensors = [
     'seviri',
     'sndrd1', 'sndrd2', 'sndrd3', 'sndrd4',
     'cris-fsr',
+    'cris',
     'ssmis',
     'abi',
     'ahi',
     'avhrr',
     'saphir',
+    'gmi',
 ]
 
 radar_sensors = [
@@ -464,31 +472,6 @@ test_fields_allsky = {
     'scat_amsua': ('scat_retrieved_from_observation', 'float'),
 }
 test_fields_with_channels_allsky = {
-    'BC_Constant': ('constant_bias_correction_term', 'float'),
-    'BC_Scan_Angle': ('scan_angle_bias_correction_term', 'float'),
-    'BC_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_term', 'float'),
-    'BC_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_term', 'float'),
-    'BC_Lapse_Rate': ('lapse_rate_bias_correction_term', 'float'),
-    'BC_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_term', 'float'),
-    'BC_Sine_Latitude': ('sine_of_latitude_bias_correction_term', 'float'),
-    'BC_Emissivity': ('emissivity_bias_correction_term', 'float'),
-    'BC_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_term', 'float'),
-    'BC_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_term', 'float'),
-    'BC_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_term', 'float'),
-    'BC_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_term', 'float'),
-    'BC_Scan_Position_total': ('scan_angle_total_bias_correction_term', 'float'),
-    'BCPred_Constant': ('constant_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle': ('scan_angle_bias_correction_predictor', 'float'),
-    'BCPred_Cloud_Liquid_Water': ('cloud_liquid_water_bias_correction_predictor', 'float'),
-    'BCPred_Lapse_Rate_Squared': ('lapse_rate_squared_bias_correction_predictor', 'float'),
-    'BCPred_Lapse_Rate': ('lapse_rate_bias_correction_predictor', 'float'),
-    'BCPred_Cosine_Latitude_times_Node': ('cosine_of_latitude_times_orbit_node_bias_correction_predictor', 'float'),
-    'BCPred_Sine_Latitude': ('sine_of_latitude_bias_correction_predictor', 'float'),
-    'BCPred_Emissivity': ('emissivity_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_4th_order': ('scan_angle_4th_order_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_3rd_order': ('scan_angle_3rd_order_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_2nd_order': ('scan_angle_2nd_order_bias_correction_predictor', 'float'),
-    'BCPred_Scan_Angle_1st_order': ('scan_angle_1st_order_bias_correction_predictor', 'float'),
     'Hydrometeor_Affected_Channels': ('Hydrometeor_Affected_Channels', 'float'),
     'Input_Observation_Error': ('ObsError', 'float'),
     'Cloud_Match_Index': ('Cloud_Match_Index', 'float'),
@@ -512,6 +495,7 @@ class BaseGSI:
     EPSILON = 9e-12
     FLOAT_FILL = nc.default_fillvals['f4']
     INT_FILL = nc.default_fillvals['i4']
+
     @staticmethod
     def _as_array(netcdf_var):
         return np.array(netcdf_var[:])
@@ -754,7 +738,7 @@ class Conv(BaseGSI):
                     loc_mdata_name = all_LocKeyList[lvar][0]
                     if lvar == 'Station_ID':
                         tmp = self.var(lvar)[idx]
-                        StationIDs = [b''.join(tmp[a]) for a in range(len(tmp))]
+                        StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
                     elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
@@ -1102,17 +1086,17 @@ class Radiances(BaseGSI):
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(a),
-                    "scan_angle_{:d}".format(a),
+                    "zenith_angle_{:d}".format(a),
                     "cloud_liquid_water_{:d}".format(a),
                     "lapse_rate_squared_{:d}".format(a),
                     "lapse_rate_{:d}".format(a),
                     "cosine_of_latitude_times_orbit_node_{:d}".format(a),
                     "sine_of_latitude_{:d}".format(a),
                     "emissivity_{:d}".format(a),
-                    "scan_angle_4th_order_{:d}".format(a),
-                    "scan_angle_3rd_order_{:d}".format(a),
-                    "scan_angle_2nd_order_{:d}".format(a),
-                    "scan_angle_1st_order_{:d}".format(a),
+                    "scan_angle_order_4_{:d}".format(a),
+                    "scan_angle_order_3_{:d}".format(a),
+                    "scan_angle_order_2_{:d}".format(a),
+                    "scan_angle_{:d}".format(a),
                 ]
                 ibc = 0
                 for vbc in valuebc:
@@ -1248,17 +1232,17 @@ class Radiances(BaseGSI):
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(chanlist[c]),
-                    "scan_angle_{:d}".format(chanlist[c]),
+                    "zenith_angle_{:d}".format(chanlist[c]),
                     "cloud_liquid_water_{:d}".format(chanlist[c]),
                     "lapse_rate_squared_{:d}".format(chanlist[c]),
                     "lapse_rate_{:d}".format(chanlist[c]),
                     "cosine_of_latitude_times_orbit_node_{:d}".format(chanlist[c]),
                     "sine_of_latitude_{:d}".format(chanlist[c]),
                     "emissivity_{:d}".format(chanlist[c]),
-                    "scan_angle_4th_order_{:d}".format(chanlist[c]),
-                    "scan_angle_3rd_order_{:d}".format(chanlist[c]),
-                    "scan_angle_2nd_order_{:d}".format(chanlist[c]),
-                    "scan_angle_1st_order_{:d}".format(chanlist[c]),
+                    "scan_angle_order_4_{:d}".format(chanlist[c]),
+                    "scan_angle_order_3_{:d}".format(chanlist[c]),
+                    "scan_angle_order_2_{:d}".format(chanlist[c]),
+                    "scan_angle_{:d}".format(chanlist[c]),
                 ]
                 ii = 0
                 for value in valuebc:

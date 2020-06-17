@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+<<<<<<< HEAD
+=======
+
+>>>>>>> develop
 #
 # (C) Copyright 2020 UCAR
 #
@@ -31,17 +35,23 @@ AttrData = {}
 
 class AOD(object):
 
+<<<<<<< HEAD
     def __init__(self, filename, method, mask, thin, writer):
         self.filename = filename
         self.method = method
         self.mask = mask
         self.thin = thin
+=======
+    def __init__(self, filename, writer):
+        self.filename = filename
+>>>>>>> develop
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
         self._read()
 
     def _read(self):
         ncd = nc.Dataset(self.filename)
+<<<<<<< HEAD
         lons = ncd.variables['Longitude'][:].ravel()
         lats = ncd.variables['Latitude'][:].ravel()
         vals = ncd.variables['AOD550'][:].ravel()
@@ -56,6 +66,14 @@ class AOD(object):
             errs = errs[mask]
             qcpath = qcpath[mask]
             qcall = qcall[mask]
+=======
+        lons = ncd.variables['Longitude'][:].flatten()
+        lats = ncd.variables['Latitude'][:].flatten()
+        vals = ncd.variables['AOD550'][:].flatten()
+        errs = ncd.variables['Residual'][:].flatten()
+        qcpath = ncd.variables['QCPath'][:].flatten()
+        qcall = ncd.variables['QCAll'][:].flatten()
+>>>>>>> develop
         # get global attributes
         gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
         base_datetime = gatts["time_coverage_end"]
@@ -67,6 +85,7 @@ class AOD(object):
         errKey = vName['A'], self.writer.OerrName()
         qcKey = vName['A'], self.writer.OqcName()
 
+<<<<<<< HEAD
         # apply thinning mask
         if self.thin > 0.0:
             mask_thin = np.random.uniform(size=len(lons)) > self.thin
@@ -77,11 +96,14 @@ class AOD(object):
             qcpath = qcpath[mask_thin]
             qcall = qcall[mask_thin]
 
+=======
+>>>>>>> develop
         # set variable keys
         sfcKey = "surface_type", "MetaData"
         szaKey = "sol_zenith_angle", "MetaData"
         saaKey = "sol_azimuth_angle", "MetaData"
         mduKey = "modis_deep_blue_flag", "MetaData"
+<<<<<<< HEAD
         biaKey = "aerosol_optical_depth_4", "KnownObsBias"
 
         # defined surface type, uncertainty, and bias array
@@ -116,12 +138,28 @@ class AOD(object):
                     bias[i] = bias1[i]
                     uncertainty[i] = uncertainty2[i]
                 errs[i] = uncertainty[i]
+=======
+
+        # defined surface type array
+        sfctyp = 0*qcall
+
+        count = 0
+        for i in range(len(lons)):
+
+            count += 1
+
+            # convert byte to integer
+            sfctyp[i] = int.from_bytes(qcpath[i], byteorder='big')
+>>>>>>> develop
 
             locKey = lats[i], lons[i], base_datetime
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = qcall[i]
+<<<<<<< HEAD
             self.data[0][locKey][biaKey] = bias[i]
+=======
+>>>>>>> develop
 
             # solar zenith angle (sza) is set all 0 for test
             # solar azimuth angle (saa) is set  all 0 for test
@@ -151,11 +189,16 @@ def main():
                      ' depth from VIIRS AOD550 to IODA netCDF format.')
     )
     parser.add_argument('-i', '--input',
+<<<<<<< HEAD
                         help="name of viirs aod input file(s)",
+=======
+                        help="name of aod550 input file(s)",
+>>>>>>> develop
                         type=str, required=True)
     parser.add_argument('-o', '--output',
                         help="name of ioda output file",
                         type=str, required=True)
+<<<<<<< HEAD
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-m', '--method',
@@ -171,12 +214,18 @@ def main():
              " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
 
+=======
+>>>>>>> develop
     args = parser.parse_args()
 
     writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the profiles
+<<<<<<< HEAD
     aod = AOD(args.input, args.method, args.mask, args.thin, writer)
+=======
+    aod = AOD(args.input, writer)
+>>>>>>> develop
 
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(aod.data)
 

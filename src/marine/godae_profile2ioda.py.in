@@ -195,14 +195,14 @@ class IODA(object):
                 lon = obs.data['ob_lon'][n]
                 dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
 
-                for l, lvl in enumerate(obs.data['ob_lvl'][n]):
+                for ilev, lvl in enumerate(obs.data['ob_lvl'][n]):
 
                     locKey = lat, lon, lvl, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
                     for key in self.varDict.keys():
 
-                        val = obs.data[key][n][l]
-                        err = obs.data[key+'_err'][n][l]
+                        val = obs.data[key][n][ilev]
+                        err = obs.data[key+'_err'][n][ilev]
                         qc = (100 * obs.data[key+'_qc'][n]).astype('i4')
 
                         valKey = self.keyDict[key]['valKey']

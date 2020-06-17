@@ -13,13 +13,16 @@ phases:
       - echo $CODEBUILD_WEBHOOK_BASE_REF
       - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
       - echo $CODEBUILD_WEBHOOK_EVENT
-      - echo $CODEBUILD_BUILD_SUCCEEDING
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - pip install xarray
+      - echo $PATH
+      - echo $LD_LIBRARY_PATH
+      - echo $PYTHONPATH
 
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PULL_REQUEST_MERGED" ];
         then export CODEBUILD_GIT_BRANCH="develop";
-        echo $CODEBUILD_GIT_BRANCH;
         echo "Merging to develop";
-        else CODEBUILD_GIT_BRANCH="$(git branch -a --contains $CODEBUILD_SOURCE_VERSION | sed -n 2p | awk '{ printf $1 }')";
+        else CODEBUILD_GIT_BRANCH="$(git branch -a --contains $CODEBUILD_RESOLVED_SOURCE_VERSION | sed -n 2p | awk '{ printf $1 }')";
         export CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH#remotes/origin/};
         fi
 
@@ -43,7 +46,7 @@ phases:
     commands:
       - cd /build_container
       - ecbuild /src_repo/ioda-converters
-      - make -j4
+      - make -j4 
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
