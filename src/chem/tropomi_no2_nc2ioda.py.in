@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+#
+# (C) Copyright 2020 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
+import sys
+import argparse
+import netCDF4 as nc
+import numpy as np
+from datetime import datetime, timedelta
+
+sys.path.append("@SCRIPT_LIB_PATH@")
+import ioda_conv_ncio as iconv
+from orddicts import DefaultOrderedDict
+
