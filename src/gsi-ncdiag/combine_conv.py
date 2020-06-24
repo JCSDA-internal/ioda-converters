@@ -89,7 +89,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
             ncf.close()
     # extract metadata and generate a numpy array
     MetaVarData = []
-    MetaVarUnique = []
+    bad_idxs = []
     for v in MetaVars:
         tmpvardata = []
         if MetaInAll[v]:
@@ -103,8 +103,16 @@ def concat_ioda(FileList, OutFile, GeoDir):
             tmpvardata = np.vstack(tmpvardata)
             tmpvardata = np.array([b''.join(td) for td in tmpvardata])
         except IndexError:
-            tmpvardata = np.hstack(tmpvardata)
-        MetaVarData.append(tmpvardata)
+            if len(tmpvardata):
+                tmpvardata = np.hstack(tmpvardata)
+        if len(tmpvardata):
+            MetaVarData.append(tmpvardata)
+        else:
+            bad_idxs.append(MetaVars.index(v))
+    for i in sorted(bad_idxs,reverse=True):
+        del MetaVars[i]
+        del MetaVarNames[i]
+        del MetaVType[i]
     MetaVarData = np.vstack(MetaVarData)
     MetaVarUnique, idx, inv, cnt = np.unique(MetaVarData, return_index=True, return_inverse=True, return_counts=True, axis=1)
     # grab variables to write out
