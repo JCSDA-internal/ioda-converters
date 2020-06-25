@@ -16,7 +16,6 @@ if( HAVE_BUFRLIB_AND_NETCDF )
     target_compile_definitions(gnssro_bufr2ioda PUBLIC "${NETCDF_DEFINITIONS}")
     target_include_directories(gnssro_bufr2ioda PUBLIC "${NETCDF_INCLUDE_DIRS}")
 
-
     install(TARGETS gnssro_bufr2ioda
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     set_target_properties(gnssro_bufr2ioda PROPERTIES
