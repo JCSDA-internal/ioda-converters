@@ -11,9 +11,9 @@ sys.path.append("@SCRIPT_LIB_PATH@")
 import bufr2ncCommon as cm
 import bufr2ncObsTypes as ot
 
-###################################################################################
+###############################################################################
 # SUBROUTINES
-###################################################################################
+###############################################################################
 
 
 def BfilePreprocess(BufrFname, Obs):
@@ -34,9 +34,9 @@ def BfilePreprocess(BufrFname, Obs):
     return [NumObs, Obs.num_msg_selected, Obs.num_msg_mtype]
 
 
-###################################################################################
+###############################################################################
 # MAIN
-###################################################################################
+###############################################################################
 ScriptName = os.path.basename(sys.argv[0])
 
 # Parse command line
@@ -115,10 +115,10 @@ if (not BadArgs):
 if (BadArgs):
     sys.exit(2)
 
-# Arguments are okay, and we've got an observation object instantiated. Note that
-# we need to have the obs object instantiated before calling BfilePreprocess()
-# routine below. This is so BfilePreprocess() can select messages in the
-# same manner as the subsequent conversion.
+# Arguments are okay, and we've got an observation object instantiated. Note
+# that we need to have the obs object instantiated before calling
+# BfilePreprocess() routine below. This is so BfilePreprocess() can select
+# messages in the same manner as the subsequent conversion.
 print("Converting BUFR to netCDF")
 print("  Observation Type: {0:s}".format(ObsType))
 if (BfileType == cm.BFILE_BUFR):
@@ -150,8 +150,8 @@ print("")
 #
 # BfilePreprocess() will use the regular expression for selecting message
 # types. NumObs will be set to the number of observations selected,
-# NumMsgs will be set to the number of messages selected, and TotalMsgs
-# will be set to the total number of messages that match Obs.mtype_re in the file.
+# NumMsgs will be set to the number of messages selected, and TotalMsgs will
+# be set to the total number of messages that match Obs.mtype_re in the file.
 Obs.max_num_msg = MaxNumMsg
 Obs.thin_interval = ThinInterval
 [NumObs, NumMsgs, TotalMsgs] = BfilePreprocess(BufrFname, Obs)
@@ -162,9 +162,9 @@ print("  Number of messages selected: {0:d}".format(NumMsgs))
 print("  Number of observations selected: {0:d}".format(NumObs))
 print("")
 
-# Now that we have the number of observations we will be recording, set the dimension
-# size in the obs object. Note the set_nlocs() method needs to be called before creating
-# netcdf variables.
+# Now that we have the number of observations we will be recording, set the
+# dimension size in the obs object. Note the set_nlocs() method needs to be
+# called before creating netcdf variables.
 Obs.set_nlocs(NumObs)
 
 # Create the dimensions and variables in the netCDF file in preparation for
@@ -172,8 +172,9 @@ Obs.set_nlocs(NumObs)
 nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 Obs.create_nc_datasets(nc)
 
-# Fill in the dimension variables with the coordinate values. Just using dummy values
-# for now which are 1..n where n is the size of the coorespoding dimension.
+# Fill in the dimension variables with the coordinate values. Just using dummy
+# values for now which are 1..n where n is the size of the coorespoding
+# dimension.
 Obs.fill_coords(nc)
 
 # Open the BUFR file and initialize the file object.

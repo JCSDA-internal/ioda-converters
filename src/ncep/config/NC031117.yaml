@@ -1,17 +1,7 @@
-- - corrected_report_indicator@MetaData
-  - CORN
-  - 2
-  - &id001 [nlocs]
-  - [-1]
-- - satellite_identifier@MetaData
-  - SAID
-  - 2
-  - *id001
-  - [-1]
 - - year@MetaData
   - YEAR
   - 2
-  - *id001
+  - &id001 [nlocs]
   - [-1]
 - - month@MetaData
   - MNTH
@@ -38,63 +28,53 @@
   - 3
   - *id001
   - [-1]
-- - latitude_coarse_accuracy@MetaData
-  - CLAT
+- - satellite_identifier@MetaData
+  - SAID
+  - 2
+  - *id001
+  - [-1]
+- - satellite_cycle_number@MetaData
+  - SACYLN
   - 3
   - *id001
   - [-1]
-- - longitude_coarse_accuracy@MetaData
-  - CLON
+- - satellite_classification@MetaData
+  - SCLF
+  - 2
+  - *id001
+  - [-1]
+- - orbit_number@MetaData
+  - ORBN
   - 3
   - *id001
   - [-1]
-- - wind_speed_at_10_meters@ObsValue
-  - WS10
+- - number_of_observations@MetaData
+  - NOBS
   - 3
   - *id001
   - [-1]
-- - height_of_waves@ObsValue
-  - HOWV
+- - observation_quality@MetaData
+  - OBQL
+  - 2
+  - *id001
+  - [-1]
+- - observation_sequence_number@MetaData
+  - OSQN
   - 3
   - *id001
   - [-1]
-- - height_of_waves@ObsError
-  - SDWH
+- - latitude_high_accuracy@MetaData
+  - CLATH
   - 3
   - *id001
   - [-1]
-- - altitude_platform_to_ellipsoid@MetaData
-  - ALTPE
+- - longitude_high_accuracy@MetaData
+  - CLONH
   - 3
   - *id001
   - [-1]
-- - peakiness@MetaData
-  - PEAK
-  - 3
-  - *id001
-  - [-1]
-- - altimeter_correction_ionosphere@MetaData
-  - ACIO
-  - 3
-  - *id001
-  - [-1]
-- - altimeter_correction_dry_troposphere@MetaData
-  - ACDT
-  - 3
-  - *id001
-  - [-1]
-- - altimeter_correction_wet_troposphere@MetaData
-  - ACWT
-  - 3
-  - *id001
-  - [-1]
-- - open_loop_correction_auto_gain_control@MetaData
-  - OLCA
-  - 3
-  - *id001
-  - [-1]
-- - backscatter@MetaData
-  - BKST
+- - sealevel_height_deviation_from_8yr_mean_of_19932000@ObsValue
+  - SLHD1
   - 3
   - *id001
   - [-1]
@@ -128,3 +108,8 @@
   - 2
   - *id001
   - [-1]
+- - raw_report_string@MetaData
+  - RRSTG
+  - 1
+  - [nlocs, nstring]
+  - [-1, 10]
