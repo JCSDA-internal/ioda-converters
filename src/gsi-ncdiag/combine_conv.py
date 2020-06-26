@@ -109,7 +109,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
             MetaVarData.append(tmpvardata)
         else:
             bad_idxs.append(MetaVars.index(v))
-    for i in sorted(bad_idxs,reverse=True):
+    for i in sorted(bad_idxs, reverse=True):
         del MetaVars[i]
         del MetaVarNames[i]
         del MetaVType[i]
