@@ -43,7 +43,7 @@
   - 3
   - *id001
   - [-1]
-- - ascending/descending_orbit_qualifier@MetaData
+- - ascending_descending_orbit_qualifier@MetaData
   - STKO
   - 2
   - *id001
@@ -163,7 +163,7 @@
   - 3
   - *id001
   - [-1]
-- - ocean_depth/land_elevation@ObsValue
+- - ocean_depth_land_elevation@ObsValue
   - ODLE
   - 3
   - *id001
