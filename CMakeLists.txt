@@ -64,9 +64,8 @@ else()
   message( STATUS "Fortran components disabled since both bufrlib and NETCDF are not found")
 endif()
 
-# ODC is optional. If found, the following variables are set
-#  odc_FOUND
-find_package(odc)
+# ODC is optional. Sets: odc_FOUND
+find_package(odc QUIET)
 
 ################################################################################
 # Export package info
