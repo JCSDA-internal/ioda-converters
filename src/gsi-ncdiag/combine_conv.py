@@ -102,7 +102,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
             ashape = tmpdata.shape[1]
             tmpvardata = np.vstack(tmpvardata)
             tmpvardata = np.array([b''.join(td) for td in tmpvardata])
-        except (IndexError,ValueError):
+        except (IndexError, ValueError):
             if len(tmpvardata):
                 tmpvardata = np.hstack(tmpvardata)
         if len(tmpvardata):
