@@ -29,7 +29,7 @@ logical :: verbose = .false.
 
 contains
 
-subroutine read_gnssro(infile)
+subroutine read_write_gnssro(infile)
 
 ! output obs data stucture
 integer   :: ncid
@@ -445,7 +445,7 @@ deallocate(gpsro_data%bend_ang)
 deallocate(gpsro_data%impact_para)
 deallocate(gpsro_data%bndoe_gsi)
 
-end subroutine read_gnssro
+end subroutine read_write_gnssro
 
 !contains
  subroutine check(status)

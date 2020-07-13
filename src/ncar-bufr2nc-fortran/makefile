@@ -7,7 +7,7 @@ LD = ifort #gfortran
 
 LIBS = -L$(NETCDF)/lib -lnetcdff -lnetcdf -L/${HOME}/extlib/intel -lbufr
 INCS = -I$(NETCDF)/include
-FFLAGS  = #-fbacktrace -ggdb -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
+FFLAGS  = -fbacktrace -ggdb -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
 LDFLAGS = $(FFLAGS) $(LIBS)
 
 OBJS = \

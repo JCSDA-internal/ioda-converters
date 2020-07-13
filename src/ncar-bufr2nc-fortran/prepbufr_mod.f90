@@ -2,34 +2,31 @@ module prepbufr_mod
 
 ! adapated from WRFDA/var/da/da_obs_io/da_read_obs_bufr.inc
 
-use kinds, only: r_kind,i_kind,r_single,r_double
-use define_types_mod, only: nobtype, set_obtype, obtype_list, xdata, &
-   nvar_met, nvar_info_int, nvar_info_float, nvar_info_char20, nvar_info_char50, &
-   name_var_met, name_var_info_int, name_var_info_float, name_var_info_char20, &
-   name_var_info_char50, head, plink, t_kelvin, missing_r, missing_i, &
-   vflag, itrue, ifalse
-use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_q, var_ps
+use kinds, only: r_kind, i_kind, r_double
+use define_types_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
+   nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
+   phead, plink, t_kelvin, missing_r, missing_i, vflag, itrue, ifalse
+use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps
 use utils_mod, only: da_advance_time
+use netcdf, only: nf90_int, nf90_float, nf90_char
 
 implicit none
 private
 public  :: read_prepbufr
-public  :: sort_convobs
-public  :: cdate_bfile
-
-character(len=10) :: cdate_bfile  ! date (ccyymmddhh) in bufr file
+public  :: sort_obs_conv
 
 contains
 
 !--------------------------------------------------------------
 
-subroutine read_prepbufr(filename)
+subroutine read_prepbufr(filename, filedate)
 
    implicit none
 
-   character (len=*), intent(in) :: filename
+   character (len=*),  intent(in)  :: filename
+   character (len=10), intent(out) :: filedate  ! ccyymmddhh
 
-   real(r_kind), parameter  :: r8bfms = 9.0D08  ! BUFR missing value threshold
+   real(r_kind), parameter  :: r8bfms = 9.0E08  ! threshold to check for BUFR missing value
 
    logical           :: match, end_of_file, drift
    character(len=8)  :: subset, subst2, csid, csid2
@@ -54,11 +51,11 @@ subroutine read_prepbufr(filename)
    integer(i_kind)   :: kx, t29
    integer(i_kind)   :: tpc
    integer(i_kind)   :: iunit, junit, itype, ivar
-   logical           :: use_errtable, combine_mass_wind
+   logical           :: use_errtable, combine_mass_wind, do_tv_to_ts
    real(r_kind)      :: oetab(300,33,6)  ! 300 ob types, 33 levels (rows), 6 variables (columns)
    real(r_kind)      :: coef
 
-   write(*,*) '--- reading prepbufr...'
+   write(*,*) '--- reading '//trim(filename)//' ---'
    hdstr='SID XOB YOB DHR TYP ELV T29'
    obstr='POB QOB TOB ZOB UOB VOB PWO CAT' ! observation
    qmstr='PQM QQM TQM ZQM WQM NUL PWQ NUL' ! quality marker
@@ -68,14 +65,15 @@ subroutine read_prepbufr(filename)
 
    ! initialize variables
 
-   if ( .not. associated(head) ) then
-      nullify ( head )
-      allocate ( head )
-      nullify ( head%next )
+   if ( .not. associated(phead) ) then
+      nullify ( phead )
+      allocate ( phead )
+      nullify ( phead%next )
    end if
 
-   use_errtable = .false.
+   use_errtable      = .false.
    combine_mass_wind = .false.
+   do_tv_to_ts       = .false.
 
    num_report_infile  = 0
 
@@ -146,7 +144,7 @@ subroutine read_prepbufr(filename)
       num_report_infile = num_report_infile + 1
 
       if (.not. associated(plink)) then
-         plink => head
+         plink => phead
       else
          allocate ( plink%next )
          plink => plink%next
@@ -160,23 +158,20 @@ subroutine read_prepbufr(filename)
       call ufbint(iunit,pco,8,255,nlevels,pcstr)
       call ufbint(iunit,obs,8,255,nlevels,obstr)
 
-      r8sid = hdr(1)
-      plink % platform % info % name(1:8)  = subset
-      plink % platform % info % name(9:40) = '                                '
-      plink % platform % info % id(1:5)    = csid(1:5)
-      plink % platform % info % id(6:40)   = '                                   '
-      plink % platform % info % dhr        = hdr(4)    ! difference in hour
-      plink % platform % info % elv        = hdr(6)
-      plink % platform % info % lon        = hdr(2)
-      plink % platform % info % lat        = hdr(3)
+      plink % msg_type = ''
+      plink % stid     = ''
 
-      ! Restrict to a range of reports, useful for debugging
-      !if (num_report < report_start) cycle reports
-      !if (num_report > report_end)  exit reports
+      r8sid = hdr(1)
+      plink % msg_type(1:8) = subset
+      plink % stid(1:5)     = csid(1:5)
+      plink % lon           = hdr(2)
+      plink % lat           = hdr(3)
+      plink % dhr           = hdr(4)    ! difference in hour
+      plink % elv           = hdr(6)
 
       ! check date
       write(cdate,'(i10)') idate
-      write(dmn,'(i4,a1)') int(plink%platform%info%dhr*60.0), 'm'
+      write(dmn,'(i4,a1)') int(plink%dhr*60.0), 'm'
       call da_advance_time (cdate(1:10), trim(dmn), obs_date)
       if ( obs_date(13:14) /= '00' ) then
          write(0,*) 'wrong date: ', trim(cdate), trim(dmn), trim(obs_date)
@@ -184,12 +179,13 @@ subroutine read_prepbufr(filename)
       else
          read (obs_date(1:12),'(i4,4i2)') iyear, imonth, iday, ihour, imin
       end if
-      write(unit=plink%platform%info%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+      write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
          iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', 0, 'Z'
 
-      cdate_bfile = cdate(1:10)
-      t29 = int(0.1 + hdr(7))
-      kx  = int(0.1+hdr(5))
+      filedate = cdate(1:10) ! date to used for construct output file name
+
+      t29 = nint(hdr(7))
+      kx  = nint(hdr(5))
 
       if ( use_errtable ) then
          do k = 1, nlevels
@@ -388,59 +384,64 @@ subroutine read_prepbufr(filename)
       plink % rptype  = kx
       plink % t29     = t29
 
-      allocate ( plink%platform%each(1:nlevels) )
+      allocate ( plink % each(1:nlevels) )
 
-      plink % platform % slp % val   = missing_r
-      plink % platform % slp % qc    = missing_i
-      plink % platform % slp % err   = missing_r
-      plink % platform % pw  % val   = missing_r
-      plink % platform % pw  % qc    = missing_i
-      plink % platform % pw  % err   = missing_r
+      plink % slp % val   = missing_r
+      plink % slp % qc    = missing_i
+      plink % slp % err   = missing_r
+      plink % pw  % val   = missing_r
+      plink % pw  % qc    = missing_i
+      plink % pw  % err   = missing_r
       if ( pmo(1,1) < r8bfms ) then
-         plink % platform % slp % val = pmo(1,1)*100.0
-         plink % platform % slp % qc  = nint(pmo(2,1))
+         plink % slp % val = pmo(1,1)*100.0
+         plink % slp % qc  = nint(pmo(2,1))
       end if
       if ( obs(7,1) < r8bfms ) then
-         plink % platform % pw % val = obs(7,1) * 0.1    ! convert to cm
+         plink % pw % val = obs(7,1) * 0.1    ! convert to cm
          if ( qms(7,1) < r8bfms ) then
-            plink % platform % pw % qc  = nint(qms(7,1))
+            plink % pw % qc  = nint(qms(7,1))
          end if
          if ( oes(7,1) < r8bfms ) then
-            plink % platform % pw % err = oes(7,1)
+            plink % pw % err = oes(7,1)
          end if
       end if
       do i = 1, nlevels
-         plink % platform % each (i) % h % val = missing_r
-         plink % platform % each (i) % h % qc  = missing_i
-         plink % platform % each (i) % h % err = missing_r
+         plink % each (i) % h % val = missing_r
+         plink % each (i) % h % qc  = missing_i
+         plink % each (i) % h % err = missing_r
 
-         plink % platform % each (i) % u % val = missing_r
-         plink % platform % each (i) % u % qc  = missing_i
-         plink % platform % each (i) % u % err = missing_r
+         plink % each (i) % u % val = missing_r
+         plink % each (i) % u % qc  = missing_i
+         plink % each (i) % u % err = missing_r
 
-         plink % platform % each (i) % v = plink % platform % each (i) % u
+         plink % each (i) % v = plink % each (i) % u
 
-         plink % platform % each (i) % t % val = missing_r
-         plink % platform % each (i) % t % qc  = missing_i
-         plink % platform % each (i) % t % err = missing_r
+         plink % each (i) % t % val = missing_r
+         plink % each (i) % t % qc  = missing_i
+         plink % each (i) % t % err = missing_r
 
-         plink % platform % each (i) % p % val = missing_r
-         plink % platform % each (i) % p % qc  = missing_i
-         plink % platform % each (i) % p % err = missing_r
+         plink % each (i) % tv % val = missing_r
+         plink % each (i) % tv % qc  = missing_i
+         plink % each (i) % tv % err = missing_r
 
-         plink % platform % each (i) % q % val = missing_r
-         plink % platform % each (i) % q % qc  = missing_i
-         plink % platform % each (i) % q % err = missing_r
+         plink % each (i) % p % val = missing_r
+         plink % each (i) % p % qc  = missing_i
+         plink % each (i) % p % err = missing_r
 
-         plink % platform % each (i) % lat     = missing_r
-         plink % platform % each (i) % lon     = missing_r
+         plink % each (i) % q % val = missing_r
+         plink % each (i) % q % qc  = missing_i
+         plink % each (i) % q % err = missing_r
+
+         plink % each (i) % lat     = missing_r
+         plink % each (i) % lon     = missing_r
       end do
 
       do k = 1, nlevels
 
          if ( drift ) then
-            if ( drf(1,k) < r8bfms ) plink % platform % each (k) % lon = drf(1,k)
-            if ( drf(2,k) < r8bfms ) plink % platform % each (k) % lat = drf(2,k)
+            if ( drf(1,k) < r8bfms ) plink % each (k) % lon = drf(1,k)
+            if ( drf(2,k) < r8bfms ) plink % each (k) % lat = drf(2,k)
+            if ( drf(3,k) < r8bfms ) plink % each (k) % dhr = drf(3,k)
          end if
 
          ! set t units to Kelvin
@@ -453,7 +454,7 @@ subroutine read_prepbufr(filename)
             obs(2,k) = obs(2,k)*1e-6
             tpc = nint(pco(3,k))
             if (obs(3,k) > -200.0 .and. obs(3,k) < 350.0) then
-               if ( tpc >= 8 ) then   ! program code 008 VIRTMP
+               if ( do_tv_to_ts .and. tpc >= 8 ) then   ! program code 008 VIRTMP
                   ! 0.61 is used in NCEP prepdata.f to convert T to Tv
                   obs(3,k) = obs(3,k) / (1.0 + 0.61 * obs(2,k))
                end if
@@ -463,59 +464,73 @@ subroutine read_prepbufr(filename)
          !Not currently used
          !cat=nint(obs(8,k))
 
-         if ( obs(3,k) < r8bfms ) then
-            plink % platform % each (k) % t % val = obs(3,k)
-            if ( qms(3,k) < r8bfms ) then
-               plink % platform % each (k) % t % qc  = nint(qms(3,k))
+         if ( do_tv_to_ts .or. tpc < 8 ) then   ! program code 008 VIRTMP
+            ! sensible temperature
+            if ( obs(3,k) < r8bfms ) then
+               plink % each (k) % t % val = obs(3,k)
+               if ( qms(3,k) < r8bfms ) then
+                  plink % each (k) % t % qc  = nint(qms(3,k))
+               end if
+               if ( oes(3,k) < r8bfms ) then
+                  plink % each (k) % t % err = oes(3,k)
+               end if
             end if
-            if ( oes(3,k) < r8bfms ) then
-               plink % platform % each (k) % t % err = oes(3,k)
+         else
+            ! virtual temperature
+            if ( obs(3,k) < r8bfms ) then
+               plink % each (k) % tv % val = obs(3,k)
+               if ( qms(3,k) < r8bfms ) then
+                  plink % each (k) % tv % qc  = nint(qms(3,k))
+               end if
+               if ( oes(3,k) < r8bfms ) then
+                  plink % each (k) % tv % err = oes(3,k)
+               end if
             end if
          end if
 
          if (obs(5,k) < r8bfms .and. obs(6,k) < r8bfms ) then
-            plink % platform % each (k) % u % val = obs(5,k)
-            plink % platform % each (k) % v % val = obs(6,k)
+            plink % each (k) % u % val = obs(5,k)
+            plink % each (k) % v % val = obs(6,k)
             if ( qms(5,k) < r8bfms ) then
-               plink % platform % each (k) % u % qc  = nint(qms(5,k))
+               plink % each (k) % u % qc  = nint(qms(5,k))
             end if
             if ( qms(6,k) < r8bfms ) then
-               plink % platform % each (k) % v % qc  = nint(qms(6,k))
+               plink % each (k) % v % qc  = nint(qms(6,k))
             else
-               plink % platform % each (k) % v % qc  = plink % platform % each (k) % u % qc
+               plink % each (k) % v % qc  = plink % each (k) % u % qc
             end if
             if ( oes(5,k) < r8bfms ) then
-               plink % platform % each (k) % u % err = oes(5,k)
+               plink % each (k) % u % err = oes(5,k)
             end if
             if ( oes(6,k) < r8bfms ) then
-               plink % platform % each (k) % v % err = oes(6,k)
+               plink % each (k) % v % err = oes(6,k)
             else
-               plink % platform % each (k) % v % err = plink % platform % each (k) % u % err
+               plink % each (k) % v % err = plink % each (k) % u % err
             end if
          end if
          if ( obs(2,k)>0.0 .and. obs(2,k)<r8bfms ) then
-            plink % platform % each (k) % q % val = obs(2,k)
-            plink % platform % each (k) % q % qc  = nint(qms(2,k))
+            plink % each (k) % q % val = obs(2,k)
+            plink % each (k) % q % qc  = nint(qms(2,k))
             ! leave q_err as missing because of lacking rh_err to q_err conversion
             !if ( oes(2,k) < r8bfms ) then
-            !   plink % platform % each (k) % q % err = oes(2,k)*10.0 ! convert to % from PREPBUFR percent divided by 10
+            !   plink % each (k) % q % err = oes(2,k)*10.0 ! convert to % from PREPBUFR percent divided by 10
             !end if
          end if
 
          if ( obs(4,k) < r8bfms )then
-            plink % platform % each (k) % h % val = obs(4,k)
+            plink % each (k) % h % val = obs(4,k)
             if ( qms(4,k) < r8bfms ) then
-               plink % platform % each (k) % h % qc  = nint(qms(4,k))
+               plink % each (k) % h % qc  = nint(qms(4,k))
             end if
          end if
 
          if ( obs(1,k) > 0.0 .and. obs(1,k) < r8bfms ) then
-            plink % platform % each (k) % p % val = obs(1,k)*100.0  ! convert to Pa
+            plink % each (k) % p % val = obs(1,k)*100.0  ! convert to Pa
             if ( qms(1,k) < r8bfms ) then
-               plink % platform % each (k) % p % qc  = nint(qms(1,k))
+               plink % each (k) % p % qc  = nint(qms(1,k))
             end if
             if ( oes(1,k) < r8bfms ) then
-               plink % platform % each (k) % p % err = oes(1,k)*100.0 ! convert to Pa
+               plink % each (k) % p % err = oes(1,k)*100.0 ! convert to Pa
             end if
          end if
       end do ! nlevels
@@ -532,35 +547,39 @@ subroutine read_prepbufr(filename)
 
 end subroutine read_prepbufr
 
-subroutine sort_convobs
+subroutine sort_obs_conv
 
    implicit none
 
-   integer(i_kind)                      :: i, iv, k
-   integer(i_kind)                      :: ityp, irec, ivar
-   integer(i_kind), dimension(nobtype)  :: nrecs
-   integer(i_kind), dimension(nobtype)  :: nlocs
-   integer(i_kind), dimension(nobtype)  :: nvar
-   integer(i_kind), dimension(nobtype)  :: iloc
-   character(len=12)                    :: obtype
-   logical,         dimension(nvar_met) :: mask ! for counting available variables for one obtype
+   integer(i_kind)                       :: i, iv, k, ii
+   integer(i_kind)                       :: ityp, irec, ivar
+   integer(i_kind), dimension(nobtype)   :: nrecs
+   integer(i_kind), dimension(nobtype)   :: nlocs
+   integer(i_kind), dimension(nobtype)   :: nvars
+   integer(i_kind), dimension(nobtype)   :: iloc
+   character(len=12)                     :: obtype
+   logical,         dimension(nvar_met)  :: vmask ! for counting available variables for one obtype
+!   logical,         dimension(nvar_info) :: imask ! for counting dimension of one var type
+!   integer(i_kind)                       :: ninfo_int
+!   integer(i_kind)                       :: ninfo_float
+!   integer(i_kind)                       :: ninfo_char
 
    nrecs(:) = 0
    nlocs(:) = 0
-   nvar(:)  = 0
+   nvars(:) = 0
 
    write(*,*) '--- sorting conv obs...'
 
    ! set obtype from dump data type t29 and
    ! and count the numbers
-   plink => head
+   plink => phead
    set_obtype_loop: do while ( associated(plink) )
-      if ( .not. allocated(plink%platform%each) ) then
+      if ( .not. allocated(plink % each) ) then
          plink => plink%next
          cycle set_obtype_loop
       end if
 
-      call set_obtype(plink%t29, plink%obtype)
+      call set_obtype_conv(plink%t29, plink%obtype)
 
       ! find index of obtype in obtype_list
       plink%obtype_idx = ufo_vars_getindex(obtype_list, plink%obtype)
@@ -578,7 +597,7 @@ subroutine sort_convobs
 
    write(*,*) 'num_report_decoded = ', sum(nrecs(:))
    do i = 1, nobtype
-      write(*,*) obtype_list(i), nrecs(i), nlocs(i)
+      write(*,'(a20,2i10)') obtype_list(i), nrecs(i), nlocs(i)
    end do
 
    ! allocate data arrays with the just counted numbers
@@ -586,18 +605,30 @@ subroutine sort_convobs
    do i = 1, nobtype
       xdata(i) % nrecs = nrecs(i)
       xdata(i) % nlocs = nlocs(i)
+      vmask = vflag(:,i) == itrue
+      nvars(i) = count(vmask)
+      xdata(i) % nvars = nvars(i)
 
       if ( nlocs(i) > 0 ) then
-         allocate (xdata(i)%xinfo_float(nvar_info_float, nlocs(i)))
-         allocate (xdata(i)%xinfo_int  (nvar_info_int,   nlocs(i)))
-         allocate (xdata(i)%xinfo_char20(nvar_info_char20,nlocs(i)))
-         allocate (xdata(i)%xinfo_char50(nvar_info_char50,nlocs(i)))
 
-         mask = vflag(:,i) == itrue
-         nvar(i) = count(mask)
-         if ( nvar(i) > 0 ) then
-            allocate (xdata(i)%xfield(nvar(i), nlocs(i)))
-            allocate (xdata(i)%var_idx(nvar(i)))
+         !imask = type_var_info(:) == nf90_int
+         !ninfo_int = count(imask)
+         !allocate (xdata(i)%xinfo_int  (ninfo_int,   nlocs(i)))
+         !imask = type_var_info(:) == nf90_float
+         !ninfo_float = count(imask)
+         !allocate (xdata(i)%xinfo_float(ninfo_float, nlocs(i)))
+         !imask = type_var_info(:) == nf90_char
+         !ninfo_char = count(imask)
+         !allocate (xdata(i)%xinfo_char (ninfo_char,  nlocs(i)))
+
+         ! easier to jsut allocate nvar_info for all types
+         allocate (xdata(i)%xinfo_int  (nvar_info, nlocs(i)))
+         allocate (xdata(i)%xinfo_float(nvar_info, nlocs(i)))
+         allocate (xdata(i)%xinfo_char (nvar_info, nlocs(i)))
+
+         if ( nvars(i) > 0 ) then
+            allocate (xdata(i)%xfield(nvars(i), nlocs(i)))
+            allocate (xdata(i)%var_idx(nvars(i)))
             ivar = 0
             do iv = 1, nvar_met
                if ( vflag(iv,i) == ifalse ) cycle
@@ -613,10 +644,10 @@ subroutine sort_convobs
    iloc(:) = 0
    irec    = 0
 
-   plink => head
+   plink => phead
    reports: do while ( associated(plink) )
       irec = irec + 1
-      if ( .not. allocated(plink%platform%each) ) then
+      if ( .not. allocated(plink%each) ) then
          plink => plink%next
          cycle reports
       end if
@@ -632,70 +663,74 @@ subroutine sort_convobs
       do k = 1, plink%nlevels
          iloc(ityp) = iloc(ityp) + 1
 
-         do i = 1, nvar_info_int
-            if ( trim(name_var_info_int(i)) == 'record_number' ) then
-               xdata(ityp)%xinfo_int(i,iloc(ityp)) = irec
-            end if
-         end do
-         do i = 1, nvar_info_float
-            if ( name_var_info_float(i) == 'time' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%info%dhr
-            else if ( trim(name_var_info_float(i)) == 'station_elevation' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%info%elv
-            else if ( trim(name_var_info_float(i)) == 'latitude' ) then
-               if ( plink%platform%each(k)%lat > missing_r ) then  ! drift
-                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%each(k)%lat
-               else
-                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%info%lat
+         do i = 1, nvar_info
+            if ( type_var_info(i) == nf90_int ) then
+               if ( name_var_info(i) == 'record_number' ) then
+                  xdata(ityp)%xinfo_int(i,iloc(ityp)) = irec
                end if
-            else if ( trim(name_var_info_float(i)) == 'longitude' ) then
-               if ( plink%platform%each(k)%lon > missing_r ) then  ! drift
-                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%each(k)%lon
-               else
-                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%info%lon
+            else if ( type_var_info(i) == nf90_float ) then
+               if ( name_var_info(i) == 'time' ) then
+                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%dhr
+               else if ( trim(name_var_info(i)) == 'station_elevation' ) then
+                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%elv
+               else if ( trim(name_var_info(i)) == 'latitude' ) then
+                  if ( plink%each(k)%lat > missing_r ) then  ! drift
+                     xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%each(k)%lat
+                     if ( plink%each(k)%dhr > missing_r ) then  ! time drift
+                        xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%each(k)%dhr
+                     end if
+                  else
+                     xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%lat
+                  end if
+               else if ( trim(name_var_info(i)) == 'longitude' ) then
+                  if ( plink%each(k)%lon > missing_r ) then  ! drift
+                     xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%each(k)%lon
+                  else
+                     xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%lon
+                  end if
+               else if ( trim(name_var_info(i)) == 'height' ) then
+                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%each(k)%h%val
                end if
-            else if ( trim(name_var_info_float(i)) == 'height' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%platform%each(k)%h%val
-            end if
-         end do
-         do i = 1, nvar_info_char20
-            if ( trim(name_var_info_char20(i)) == 'datetime' ) then
-               xdata(ityp)%xinfo_char20(i,iloc(ityp)) = plink%platform%info%datetime
-            end if
-         end do
-         do i = 1, nvar_info_char50
-            if ( trim(name_var_info_char50(i)) == 'station_id' ) then
-               xdata(ityp)%xinfo_char50(i,iloc(ityp)) = plink%platform%info%id
-            end if
+            else if ( type_var_info(i) == nf90_char ) then
+               if ( trim(name_var_info(i)) == 'datetime' ) then
+                  xdata(ityp)%xinfo_char(i,iloc(ityp)) = plink%datetime
+               else if ( trim(name_var_info(i)) == 'station_id' ) then
+                  xdata(ityp)%xinfo_char(i,iloc(ityp)) = plink%stid
+               end if
+            end if ! type_var_info
          end do
 
-         do i = 1, nvar(ityp)
+         do i = 1, nvars(ityp)
             ivar = xdata(ityp)%var_idx(i)
             if ( name_var_met(ivar) == trim(var_prs) ) then
-               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%platform%each(k)%p%val
-               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%platform%each(k)%p%qc
-               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%platform%each(k)%p%err
+               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%p%val
+               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%p%qc
+               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%p%err
             else if ( name_var_met(ivar) == trim(var_u) ) then
-               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%platform%each(k)%u%val
-               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%platform%each(k)%u%qc
-               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%platform%each(k)%u%err
+               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%u%val
+               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%u%qc
+               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%u%err
             else if ( name_var_met(ivar) == trim(var_v) ) then
-               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%platform%each(k)%v%val
-               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%platform%each(k)%v%qc
-               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%platform%each(k)%v%err
+               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%v%val
+               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%v%qc
+               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%v%err
             else if ( name_var_met(ivar) == trim(var_ts) ) then
-               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%platform%each(k)%t%val
-               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%platform%each(k)%t%qc
-               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%platform%each(k)%t%err
+               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%t%val
+               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%t%qc
+               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%t%err
+            else if ( name_var_met(ivar) == trim(var_tv) ) then
+               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%tv%val
+               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%tv%qc
+               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%tv%err
             else if ( name_var_met(ivar) == trim(var_q) ) then
-               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%platform%each(k)%q%val
-               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%platform%each(k)%q%qc
-               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%platform%each(k)%q%err
+               xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%q%val
+               xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%q%qc
+               xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%q%err
             else if ( name_var_met(ivar) == trim(var_ps) ) then
                if ( plink%obtype == 'sfc' .and. k == 1 ) then
-                  xdata(ityp)%xfield(i,iloc(ityp))%val = plink%platform%each(k)%p%val
-                  xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%platform%each(k)%p%qc
-                  xdata(ityp)%xfield(i,iloc(ityp))%err = plink%platform%each(k)%p%err
+                  xdata(ityp)%xfield(i,iloc(ityp))%val = plink%each(k)%p%val
+                  xdata(ityp)%xfield(i,iloc(ityp))%qc  = plink%each(k)%p%qc
+                  xdata(ityp)%xfield(i,iloc(ityp))%err = plink%each(k)%p%err
                end if
             end if
             xdata(ityp)%xfield(i,iloc(ityp))%rptype = plink%rptype
@@ -706,16 +741,16 @@ subroutine sort_convobs
 
    ! done with plink
    ! release the linked list
-   plink => head
+   plink => phead
    do while ( associated(plink) )
-      head => plink%next
-      if ( allocated (plink%platform%each) ) deallocate (plink%platform%each)
+      phead => plink%next
+      if ( allocated (plink%each) ) deallocate (plink%each)
       if ( associated (plink) ) deallocate (plink)
-      plink => head
+      plink => phead
    end do
-   nullify (head)
+   nullify (phead)
 
-end subroutine sort_convobs
+end subroutine sort_obs_conv
 
 end module prepbufr_mod
 

@@ -169,12 +169,17 @@ subroutine def_netcdf_dims(fileid,variable,input,output)
    integer,          intent(in)  :: input    ! size of this dimension
    integer,          intent(out) :: output   ! ncid of this dimension
 
-   integer :: ncdimid
+   integer :: ncdimid, ierr
 
+   ierr = 0
    ncstatus = nf90_def_dim(fileid,trim(adjustl(variable)),input,ncdimid)
-   if ( ncstatus /= 0 ) then
+   ierr = ierr + ncstatus
+   ncstatus = nf90_put_att(fileid, NF90_GLOBAL, variable, input)
+   ierr = ierr + ncstatus
+
+   if ( ierr /= 0 ) then
       write(0,*) 'Error defining dimension for '//trim(adjustl(variable))
-      write(0,*) 'ncstatus = ', ncstatus
+      write(0,*) 'ncstatus = ', ierr
       call stop2(31) ! stop
    endif
 
@@ -192,6 +197,7 @@ subroutine def_netcdf_var(fileid,variable,dimids,nctype)
 
    integer :: ncvarid, ierr
 
+   ierr = 0
    ncstatus = nf90_def_var(fileid,trim(adjustl(variable)),nctype,dimids,ncvarid)
    ierr = ierr + ncstatus
    if ( nctype == NF90_FLOAT ) then
