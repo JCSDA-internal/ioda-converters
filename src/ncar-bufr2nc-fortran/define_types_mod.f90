@@ -19,6 +19,7 @@ integer(i_kind), parameter :: nvar_met          = 7
 integer(i_kind), parameter :: nvar_info         = 8  ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
 integer(i_kind), parameter :: ninst             = 6
+!integer(i_kind), parameter :: ninst             = 7 ! including airs
 integer(i_kind), parameter :: write_nc_conv     = 1
 integer(i_kind), parameter :: write_nc_radiance = 2
 
@@ -63,7 +64,8 @@ character(len=nstring), dimension(ninst) :: inst_list = &
       'amsua_n19       ', &
       'amsua_metop-a   ', &
       'amsua_metop-b   ', &
-      'amsua_aqua      ' /)  ! to do
+!      'airs_aqua       ', &
+      'amsua_aqua      ' /)
 
 ! variables for outputing netcdf files
 character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
@@ -138,55 +140,19 @@ character(len=nstring), dimension(2,nsen_info) :: dim_sen_info = reshape ( &
    /), (/2,nsen_info/) )
 
 ! variables for storing data
-type field_type
+type xfield_type
    real(r_kind)       :: val          ! observation value
    integer(i_kind)    :: qc           ! observation QC
    real(r_kind)       :: err          ! observational error
    integer(i_kind)    :: rptype       ! report type
-end type field_type
-
-type each_level_type
-   type (field_type)  :: h            ! height in m
-   type (field_type)  :: u            ! Wind x-component in m/s
-   type (field_type)  :: v            ! Wind y-component in m/s
-   type (field_type)  :: p            ! Pressure in Pa
-   type (field_type)  :: t            ! Temperature in K
-   type (field_type)  :: tv           ! virtual temperature in K
-   type (field_type)  :: q            ! (kg/kg)
-   real(r_kind)       :: lat          ! Latitude in degree
-   real(r_kind)       :: lon          ! Longitude in degree
-   real(r_kind)       :: dhr          ! obs time minus analysis time in hour
-end type each_level_type
-
-type datalink_conv
-   ! data from BUFR file
-   integer(i_kind)           :: t29         ! data dump report type
-   integer(i_kind)           :: rptype      ! prepbufr report type
-   character(len=nstring)    :: msg_type    ! BUFR message type name
-   character(len=nstring)    :: stid        ! station identifier
-   character(len=ndatetime)  :: datetime    ! ccyy-mm-ddThh:mm:ssZ
-   integer(i_kind)           :: nlevels     ! number of levels
-   real(r_kind)              :: lat         ! latitude in degree
-   real(r_kind)              :: lon         ! longitude in degree
-   real(r_kind)              :: elv         ! elevation in m
-   real(r_kind)              :: dhr         ! obs time minus analysis time in hour
-   type (field_type)         :: slp         ! sea level pressure
-   type (field_type)         :: pw          ! precipitable water
-   type (each_level_type), allocatable, dimension(:) :: each
-   ! derived info
-   character(len=nstring)    :: obtype      ! ob type, eg sonde, satwnd
-   integer(i_kind)           :: obtype_idx  ! index of obtype in obtype_list
-   type(datalink_conv), pointer :: next
-end type datalink_conv
-
-type(datalink_conv), pointer :: phead=>null(), plink=>null()
+end type xfield_type
 
 type xdata_type
    integer(i_kind)                                     :: nvars
    integer(i_kind)                                     :: nrecs
    integer(i_kind)                                     :: nlocs
    integer(i_kind),        allocatable, dimension(:)   :: var_idx
-   type (field_type),      allocatable, dimension(:,:) :: xfield
+   type (xfield_type),     allocatable, dimension(:,:) :: xfield
    real(r_kind),           allocatable, dimension(:,:) :: xinfo_float
    integer(i_kind),        allocatable, dimension(:,:) :: xinfo_int
    character(len=nstring), allocatable, dimension(:,:) :: xinfo_char
@@ -196,32 +162,6 @@ type xdata_type
 end type xdata_type
 
 type(xdata_type), allocatable, dimension(:) :: xdata  ! dim: number of ob types
-
-type datalink_radiance
-
-   character(len=nstring)    :: msg_type   ! BUFR message type name
-   integer(i_kind)           :: satid      ! satellite identifier
-   integer(i_kind)           :: instid     ! instrument identifier
-   character(len=nstring)    :: inst       ! instrument name eg. amsua-n15
-   character(len=ndatetime)  :: datetime   ! ccyy-mm-ddThh:mm:ssZ
-   integer(i_kind)           :: nchan      ! number of channels
-   real(r_kind)              :: lat        ! latitude in degree
-   real(r_kind)              :: lon        ! longitude in degree
-   real(r_kind)              :: elv        ! elevation in m
-   real(r_kind)              :: dhr        ! obs time minus analysis time in hour
-   integer(i_kind)           :: inst_idx   ! index of inst in inst_list
-   integer(i_kind)           :: landsea
-   integer(i_kind)           :: scanpos
-   real(r_kind)              :: satzen
-   real(r_kind)              :: satazi
-   real(r_kind)              :: solzen
-   real(r_kind)              :: solazi
-   real(r_kind), allocatable :: tb(:)
-   real(r_kind), allocatable :: ch(:)
-   type (datalink_radiance), pointer :: next ! pointer to next data
-end type datalink_radiance
-
-type(datalink_radiance), pointer :: rhead=>null(), rlink=>null()
 
 contains
 

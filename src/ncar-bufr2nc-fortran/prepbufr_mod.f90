@@ -5,7 +5,7 @@ module prepbufr_mod
 use kinds, only: r_kind, i_kind, r_double
 use define_types_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
-   phead, plink, t_kelvin, missing_r, missing_i, vflag, itrue, ifalse
+   t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime
 use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps
 use utils_mod, only: da_advance_time
 use netcdf, only: nf90_int, nf90_float, nf90_char
@@ -14,6 +14,49 @@ implicit none
 private
 public  :: read_prepbufr
 public  :: sort_obs_conv
+
+! variables for storing data
+type field_type
+   real(r_kind)       :: val          ! observation value
+   integer(i_kind)    :: qc           ! observation QC
+   real(r_kind)       :: err          ! observational error
+end type field_type
+
+type each_level_type
+   type (field_type)  :: h            ! height in m
+   type (field_type)  :: u            ! Wind x-component in m/s
+   type (field_type)  :: v            ! Wind y-component in m/s
+   type (field_type)  :: p            ! Pressure in Pa
+   type (field_type)  :: t            ! Temperature in K
+   type (field_type)  :: tv           ! virtual temperature in K
+   type (field_type)  :: q            ! (kg/kg)
+   real(r_kind)       :: lat          ! Latitude in degree
+   real(r_kind)       :: lon          ! Longitude in degree
+   real(r_kind)       :: dhr          ! obs time minus analysis time in hour
+end type each_level_type
+
+type datalink_conv
+   ! data from BUFR file
+   integer(i_kind)           :: t29         ! data dump report type
+   integer(i_kind)           :: rptype      ! prepbufr report type
+   character(len=nstring)    :: msg_type    ! BUFR message type name
+   character(len=nstring)    :: stid        ! station identifier
+   character(len=ndatetime)  :: datetime    ! ccyy-mm-ddThh:mm:ssZ
+   integer(i_kind)           :: nlevels     ! number of levels
+   real(r_kind)              :: lat         ! latitude in degree
+   real(r_kind)              :: lon         ! longitude in degree
+   real(r_kind)              :: elv         ! elevation in m
+   real(r_kind)              :: dhr         ! obs time minus analysis time in hour
+   type (field_type)         :: slp         ! sea level pressure
+   type (field_type)         :: pw          ! precipitable water
+   type (each_level_type), allocatable, dimension(:) :: each
+   ! derived info
+   character(len=nstring)    :: obtype      ! ob type, eg sonde, satwnd
+   integer(i_kind)           :: obtype_idx  ! index of obtype in obtype_list
+   type(datalink_conv), pointer :: next
+end type datalink_conv
+
+type(datalink_conv), pointer :: phead=>null(), plink=>null()
 
 contains
 
@@ -45,7 +88,7 @@ subroutine read_prepbufr(filename, filedate)
    character(len=14) :: cdate, dmn, obs_date
    integer(i_kind)   :: idate, idate2
    integer(i_kind)   :: nlevels, nlevels2, lv1, lv2
-   integer(i_kind)   :: iyear, imonth, iday, ihour, imin
+   integer(i_kind)   :: iyear, imonth, iday, ihour, imin, isec
    integer(i_kind)   :: num_report_infile
    integer(i_kind)   :: iret, iret2, iost, n, i, j, k, i1, i2
    integer(i_kind)   :: kx, t29
@@ -122,7 +165,9 @@ subroutine read_prepbufr(filename, filedate)
    end if
    !rewind(iunit)
 
-   write(unit=*,fmt='(a,i10)') ' prepbufr file date is: ', idate
+   write(unit=*,fmt='(1x,a,a,i10)') trim(filename), ' file date is: ', idate
+
+   write(unit=filedate,fmt='(i10)') idate
 
    ! read data
    ! scan reports first
@@ -143,46 +188,12 @@ subroutine read_prepbufr(filename, filedate)
 
       num_report_infile = num_report_infile + 1
 
-      if (.not. associated(plink)) then
-         plink => phead
-      else
-         allocate ( plink%next )
-         plink => plink%next
-         nullify ( plink%next )
-      end if
-
       call ufbint(iunit,hdr,7,1,iret2,hdstr)
       call ufbint(iunit,pmo,2,1,nlevels,'PMO PMQ')
       call ufbint(iunit,qms,8,255,nlevels,qmstr)
       call ufbint(iunit,oes,8,255,nlevels,oestr)
       call ufbint(iunit,pco,8,255,nlevels,pcstr)
       call ufbint(iunit,obs,8,255,nlevels,obstr)
-
-      plink % msg_type = ''
-      plink % stid     = ''
-
-      r8sid = hdr(1)
-      plink % msg_type(1:8) = subset
-      plink % stid(1:5)     = csid(1:5)
-      plink % lon           = hdr(2)
-      plink % lat           = hdr(3)
-      plink % dhr           = hdr(4)    ! difference in hour
-      plink % elv           = hdr(6)
-
-      ! check date
-      write(cdate,'(i10)') idate
-      write(dmn,'(i4,a1)') int(plink%dhr*60.0), 'm'
-      call da_advance_time (cdate(1:10), trim(dmn), obs_date)
-      if ( obs_date(13:14) /= '00' ) then
-         write(0,*) 'wrong date: ', trim(cdate), trim(dmn), trim(obs_date)
-         stop
-      else
-         read (obs_date(1:12),'(i4,4i2)') iyear, imonth, iday, ihour, imin
-      end if
-      write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-         iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', 0, 'Z'
-
-      filedate = cdate(1:10) ! date to used for construct output file name
 
       t29 = nint(hdr(7))
       kx  = nint(hdr(5))
@@ -380,18 +391,47 @@ subroutine read_prepbufr(filename, filedate)
       !  72: NEXTRAD VAD winds
       !if ( t29 == 61 .or. t29 == 66 .or. t29 == 72 ) cycle reports
 
-      plink % nlevels = nlevels
-      plink % rptype  = kx
-      plink % t29     = t29
+      if (.not. associated(plink)) then
+         plink => phead
+      else
+         allocate ( plink%next )
+         plink => plink%next
+         nullify ( plink%next )
+      end if
 
-      allocate ( plink % each(1:nlevels) )
+      if ( nlevels > 0 ) then
+         plink % nlevels = nlevels
+         allocate ( plink % each(1:nlevels) )
+      end if
 
-      plink % slp % val   = missing_r
-      plink % slp % qc    = missing_i
-      plink % slp % err   = missing_r
-      plink % pw  % val   = missing_r
-      plink % pw  % qc    = missing_i
-      plink % pw  % err   = missing_r
+      ! initialize plink with missing values
+      call fill_datalink (plink, missing_r, missing_i)
+
+      r8sid = hdr(1)
+      plink % msg_type(1:8) = subset
+      plink % stid(1:5)     = csid(1:5)
+      plink % rptype        = kx
+      plink % t29           = t29
+      plink % lon           = hdr(2)
+      plink % lat           = hdr(3)
+      plink % dhr           = hdr(4)    ! difference in hour
+      plink % elv           = hdr(6)
+
+      write(dmn,'(i4,a1)') int(plink%dhr*60.0*60.0), 's' ! seconds
+      write(cdate,'(i10)') idate
+      call da_advance_time (cdate(1:10), trim(dmn), obs_date)
+      read (obs_date(1:14),'(i4,5i2)') iyear, imonth, iday, ihour, imin, isec
+
+      if ( iyear  > 1900 .and. iyear  < 3000 .and. &
+           imonth >=   1 .and. imonth <=  12 .and. &
+           iday   >=   1 .and. iday   <=  31 .and. &
+           ihour  >=   0 .and. ihour  <=  24 .and. &
+           imin   >=   0 .and. imin   <=  60 .and. &
+           isec   >=   0 .and. isec   <=  60 ) then
+         write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+            iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+      end if
+
       if ( pmo(1,1) < r8bfms ) then
          plink % slp % val = pmo(1,1)*100.0
          plink % slp % qc  = nint(pmo(2,1))
@@ -405,38 +445,8 @@ subroutine read_prepbufr(filename, filedate)
             plink % pw % err = oes(7,1)
          end if
       end if
-      do i = 1, nlevels
-         plink % each (i) % h % val = missing_r
-         plink % each (i) % h % qc  = missing_i
-         plink % each (i) % h % err = missing_r
 
-         plink % each (i) % u % val = missing_r
-         plink % each (i) % u % qc  = missing_i
-         plink % each (i) % u % err = missing_r
-
-         plink % each (i) % v = plink % each (i) % u
-
-         plink % each (i) % t % val = missing_r
-         plink % each (i) % t % qc  = missing_i
-         plink % each (i) % t % err = missing_r
-
-         plink % each (i) % tv % val = missing_r
-         plink % each (i) % tv % qc  = missing_i
-         plink % each (i) % tv % err = missing_r
-
-         plink % each (i) % p % val = missing_r
-         plink % each (i) % p % qc  = missing_i
-         plink % each (i) % p % err = missing_r
-
-         plink % each (i) % q % val = missing_r
-         plink % each (i) % q % qc  = missing_i
-         plink % each (i) % q % err = missing_r
-
-         plink % each (i) % lat     = missing_r
-         plink % each (i) % lon     = missing_r
-      end do
-
-      do k = 1, nlevels
+      loop_nlevels: do k = 1, nlevels
 
          if ( drift ) then
             if ( drf(1,k) < r8bfms ) plink % each (k) % lon = drf(1,k)
@@ -460,9 +470,6 @@ subroutine read_prepbufr(filename, filedate)
                end if
             end if
          end if
-
-         !Not currently used
-         !cat=nint(obs(8,k))
 
          if ( do_tv_to_ts .or. tpc < 8 ) then   ! program code 008 VIRTMP
             ! sensible temperature
@@ -533,11 +540,11 @@ subroutine read_prepbufr(filename, filedate)
                plink % each (k) % p % err = oes(1,k)*100.0 ! convert to Pa
             end if
          end if
-      end do ! nlevels
+      end do loop_nlevels
 
    end do reports
 
-   write(*,*) 'num_report_infile = ', num_report_infile
+   write(*,*) 'num_report_infile ', trim(filename), ' : ', num_report_infile
 
    call closbf(iunit)
    close(iunit)
@@ -546,6 +553,8 @@ subroutine read_prepbufr(filename, filedate)
    end if
 
 end subroutine read_prepbufr
+
+!--------------------------------------------------------------
 
 subroutine sort_obs_conv
 
@@ -595,9 +604,10 @@ subroutine sort_obs_conv
       plink => plink%next
    end do set_obtype_loop
 
-   write(*,*) 'num_report_decoded = ', sum(nrecs(:))
+   !write(*,*) 'num_report_decoded = ', sum(nrecs(:))
+   write(*,'(1x,20x,2a10)') 'nrecs', 'nlocs'
    do i = 1, nobtype
-      write(*,'(a20,2i10)') obtype_list(i), nrecs(i), nlocs(i)
+      write(*,'(1x,a20,2i10)') obtype_list(i), nrecs(i), nlocs(i)
    end do
 
    ! allocate data arrays with the just counted numbers
@@ -751,6 +761,67 @@ subroutine sort_obs_conv
    nullify (phead)
 
 end subroutine sort_obs_conv
+
+!--------------------------------------------------------------
+
+subroutine fill_datalink (datalink, rfill, ifill)
+
+   implicit none
+
+   type (datalink_conv), intent(inout) :: datalink
+   real(r_kind),         intent(in)    :: rfill     ! fill value in real
+   integer(i_kind),      intent(in)    :: ifill     ! fill value in integer
+
+   datalink % msg_type  = ''
+   datalink % stid      = ''
+   datalink % datetime  = ''
+   datalink % lon       = rfill
+   datalink % lat       = rfill
+   datalink % dhr       = rfill
+   datalink % elv       = rfill
+   datalink % rptype    = ifill
+   datalink % t29       = ifill
+   datalink % slp % val = rfill
+   datalink % slp % qc  = ifill
+   datalink % slp % err = rfill
+   datalink % pw  % val = rfill
+   datalink % pw  % qc  = ifill
+   datalink % pw  % err = rfill
+
+   if ( allocated (datalink % each) ) then
+      datalink % each (:) % h % val  = rfill
+      datalink % each (:) % h % qc   = ifill
+      datalink % each (:) % h % err  = rfill
+
+      datalink % each (:) % u % val  = rfill
+      datalink % each (:) % u % qc   = ifill
+      datalink % each (:) % u % err  = rfill
+
+      datalink % each (:) % v % val  = rfill
+      datalink % each (:) % v % qc   = ifill
+      datalink % each (:) % v % err  = rfill
+
+      datalink % each (:) % t % val  = rfill
+      datalink % each (:) % t % qc   = ifill
+      datalink % each (:) % t % err  = rfill
+
+      datalink % each (:) % tv % val = rfill
+      datalink % each (:) % tv % qc  = ifill
+      datalink % each (:) % tv % err = rfill
+
+      datalink % each (:) % p % val  = rfill
+      datalink % each (:) % p % qc   = ifill
+      datalink % each (:) % p % err  = rfill
+
+      datalink % each (:) % q % val  = rfill
+      datalink % each (:) % q % qc   = ifill
+      datalink % each (:) % q % err  = rfill
+
+      datalink % each (:) % lat      = rfill
+      datalink % each (:) % lon      = rfill
+   end if
+
+end subroutine fill_datalink
 
 end module prepbufr_mod
 
