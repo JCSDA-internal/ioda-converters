@@ -123,7 +123,6 @@ subroutine read_prepbufr(filename, filedate)
    iunit = 96
    junit = 97
 
-   !hcl-todo: inquire file in the main program
    ! open bufr file
    open (unit=iunit, file=trim(filename), &
         iostat=iost, form='unformatted', status='old')
@@ -417,7 +416,7 @@ subroutine read_prepbufr(filename, filedate)
       plink % dhr           = hdr(4)    ! difference in hour
       plink % elv           = hdr(6)
 
-      write(dmn,'(i4,a1)') int(plink%dhr*60.0*60.0), 's' ! seconds
+      write(dmn,'(i4,a1)') int(plink%dhr*60.0), 'm' ! minute
       write(cdate,'(i10)') idate
       call da_advance_time (cdate(1:10), trim(dmn), obs_date)
       read (obs_date(1:14),'(i4,5i2)') iyear, imonth, iday, ihour, imin, isec

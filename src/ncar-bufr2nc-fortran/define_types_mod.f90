@@ -56,6 +56,17 @@ integer(i_kind), dimension(nvar_met,nobtype) :: vflag = reshape ( &
       itrue, itrue, itrue, ifalse, ifalse, ifalse, ifalse  & ! ascat
    /), (/nvar_met,nobtype/) )
 
+character(len=nstring), dimension(nvar_met) :: unit_var_met = &
+   (/           &
+      'Pa    ', &
+      'm/s   ', &
+      'm/s   ', &
+      'K     ', &
+      'K     ', &
+      'kg/kg ', &
+      'Pa    '  &
+   /)
+
 ! variables for defining radiance instrument types
 character(len=nstring), dimension(ninst) :: inst_list = &
    (/                     &

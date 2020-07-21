@@ -5,7 +5,8 @@ use kinds, only: i_kind, r_single, r_kind
 use define_types_mod, only: nobtype, nvar_info, n_ncdim, nstring, ndatetime, &
    obtype_list, name_ncdim, name_var_met, name_var_info, name_sen_info, &
    xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
-   var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info
+   var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
+   unit_var_met
 use netcdf_mod, only: open_netcdf_for_write, close_netcdf, &
    def_netcdf_dims, def_netcdf_var, def_netcdf_end, &
    put_netcdf_var, get_netcdf_dims
@@ -78,7 +79,7 @@ subroutine write_obs (filedate, write_opt)
          if ( write_opt == write_nc_conv ) then
             ivar = xdata(ityp) % var_idx(i)
             ncname = trim(name_var_met(ivar))//'@ObsValue'
-            call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT)
+            call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units',unit_var_met(ivar))
             ncname = trim(name_var_met(ivar))//'@ObsError'
             call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT)
             ncname = trim(name_var_met(ivar))//'@PreQC'
@@ -89,7 +90,7 @@ subroutine write_obs (filedate, write_opt)
             write(unit=c4, fmt='(i4)') i
             name_var_tb(i) = trim(var_tb)//'_'//trim(adjustl(c4))
             ncname = trim(name_var_tb(i))//'@ObsValue'
-            call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT)
+            call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units','K')
          end if
       end do
 
@@ -127,19 +128,19 @@ subroutine write_obs (filedate, write_opt)
       call def_netcdf_end(ncfileid)
 
       ! writing netcdf variables
-      ivar = 0
       var_loop: do i = 1, xdata(ityp) % nvars
          if ( write_opt == write_nc_conv ) then
-            ivar = ivar + 1
-            if ( i /= xdata(ityp)%var_idx(ivar) ) cycle
-            ncname = trim(name_var_met(i))//'@ObsValue'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(ivar,:)%val)
-            ncname = trim(name_var_met(i))//'@ObsError'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(ivar,:)%err)
-            ncname = trim(name_var_met(i))//'@PreQC'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(ivar,:)%qc)
-            ncname = trim(name_var_met(i))//'@ObsType'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(ivar,:)%rptype)
+            ivar = xdata(ityp) % var_idx(i)
+            if ( vflag(ivar,ityp) == itrue ) then
+               ncname = trim(name_var_met(ivar))//'@ObsValue'
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%val)
+               ncname = trim(name_var_met(ivar))//'@ObsError'
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%err)
+               ncname = trim(name_var_met(ivar))//'@PreQC'
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%qc)
+               ncname = trim(name_var_met(ivar))//'@ObsType'
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%rptype)
+            end if
          else if ( write_opt == write_nc_radiance ) then
             ncname = trim(name_var_tb(i))//'@ObsValue'
             call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%val)

@@ -3,7 +3,7 @@ module netcdf_mod
 
 use netcdf
 use mpisetup, only: stop2
-use define_types_mod, only: missing_r, missing_i
+use define_types_mod, only: missing_r, missing_i, nstring
 
 implicit none
 
@@ -188,14 +188,18 @@ subroutine def_netcdf_dims(fileid,variable,input,output)
    return
 end subroutine def_netcdf_dims
 
-subroutine def_netcdf_var(fileid,variable,dimids,nctype)
+subroutine def_netcdf_var(fileid,variable,dimids,nctype,attrib_name,attrib)
 
    integer,               intent(in) :: fileid
    character(len=*),      intent(in) :: variable
    integer, dimension(:), intent(in) :: dimids
    integer,               intent(in) :: nctype
+   character(len=*),      intent(in), optional :: attrib_name
+   character(len=*),      intent(in), optional :: attrib
 
    integer :: ncvarid, ierr
+   character(len=nstring) :: att_name
+   character(len=nstring) :: att
 
    ierr = 0
    ncstatus = nf90_def_var(fileid,trim(adjustl(variable)),nctype,dimids,ncvarid)
@@ -205,6 +209,15 @@ subroutine def_netcdf_var(fileid,variable,dimids,nctype)
       ierr = ierr + ncstatus
    else if ( nctype == NF90_INT ) then
       ncstatus = nf90_def_var_fill(fileid, ncvarid, 0, missing_i)
+      ierr = ierr + ncstatus
+   end if
+
+   att_name = ''
+   att      = ''
+   if ( present(attrib_name) ) att_name = attrib_name
+   if ( present(attrib     ) ) att      = attrib
+   if ( len_trim(att_name) > 0 .and. len_trim(att) > 0 ) then
+      ncstatus = nf90_put_att(fileid, ncvarid, trim(att_name), trim(att))
       ierr = ierr + ncstatus
    end if
 
