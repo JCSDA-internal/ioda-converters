@@ -12,8 +12,82 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
+import os
 
 sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("datetime", "string")
+]
+
+obsvars = {
+           'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column',
+}
+
+AttrData = {
+    'converter': os.path.basename(__file__),
+}
+
+class tropomi(object):
+    def __init__(self, filenames, writer):
+        self.filenames = filenames
+        self.writer = writer
+        self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self._read()
+
+    # Open input file and read relevant info
+    def _read(self):
+
+
+def main():
+
+    # get command line arguments
+    parser = argparse.ArgumentParser(
+        description=(
+            'Reads TROPOMI NO2 netCDF files provided by NESDIS'
+            ' and converts into IODA formatted output files. Multiple'
+            ' files are concatenated and optional thinning can be performed.')
+    )
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
+        '-i', '--input',
+        help="path of TROPOMI L2 NO2 observation netCDF input file(s)",
+        type=str, nargs='+', required=True)
+    required.add_argument(
+        '-o', '--output',
+        help="path of IODA output file",
+        type=str, required=True)
+
+    optional = parer.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-t', '--thin',
+        help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
+             " no thinning is performed. (default: %(default)s)",
+        type=float, default=0.0)
+    # TODO: add in multiprocessing? or just call this script multiple times?
+
+    args = parser.parse_args()
+
+    # setup the IODA writer
+    writer = iconv.NcWriter(args.output, locationKeyList)
+
+    # Read in the NO2 data
+    no2 = tropomi(args.input, writer)
+
+    # write everything out
+    AttrData['thinning'] = args.thin
+    AttrData['date_created'] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    #(ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(no2.data)
+    writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData)
+
+
+if __name__ == '__main__':
+    main()
