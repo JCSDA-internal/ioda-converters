@@ -16,6 +16,7 @@ import os
 
 sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 locationKeyList = [
@@ -25,12 +26,13 @@ locationKeyList = [
 ]
 
 obsvars = {
-           'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
+'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
 }
 
 AttrData = {
     'converter': os.path.basename(__file__),
 }
+
 
 class tropomi(object):
     def __init__(self, filenames, writer):
@@ -59,7 +61,7 @@ class tropomi(object):
             # but others are just time, scanline
             lats = ncd.variables['latitude'][:]
             longitude = ncd.variables['longitude'][:]
-            qa_value = ncd.variables['qa_value'][:] #2D
+            qa_value = ncd.variables['qa_value'][:]  # 2D
             times = np.empty_like(qa_value)
             time1 = ncd.variables['time_utc'][:]
             print(times.shape, time1.shape)
@@ -89,7 +91,7 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
 
-    optional = parer.add_argument_group(title='optional arguments')
+    optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-t', '--thin',
         help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
@@ -108,7 +110,6 @@ def main():
     # write everything out
     AttrData['thinning'] = args.thin
     AttrData['date_created'] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-    #(ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(no2.data)
     writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData)
 
 
