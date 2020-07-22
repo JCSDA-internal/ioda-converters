@@ -77,8 +77,8 @@ class tropomi(object):
             else:
                 self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
                                              self.writer.FillNcVector(times, "datetime")))
-                self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats)
-                self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons)
+                self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
+                self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
             for ncvar, iodavar in obsvars.items():
                 data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
                 err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
@@ -106,7 +106,7 @@ def main():
         description=(
             'Reads TROPOMI NO2 netCDF files provided by NESDIS'
             ' and converts into IODA formatted output files. Multiple'
-            ' files are concatenated and optional thinning can be performed.')
+            ' files are able to be concatenated.')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -119,12 +119,6 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
 
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument(
-        '-t', '--thin',
-        help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
-             " no thinning is performed. (default: %(default)s)",
-        type=float, default=0.0)
     # TODO: add in multiprocessing? or just call this script multiple times?
 
     args = parser.parse_args()
