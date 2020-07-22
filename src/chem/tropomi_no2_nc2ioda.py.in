@@ -75,10 +75,10 @@ class tropomi(object):
                 self.loc_mdata['latitude'] = lats
                 self.loc_mdata['longitude'] = lons
             else:
-                self.loc_mdata['datetime'] = np.concatenate(self.loc_mdata['datetime'],
-                                             self.writer.FillNcVector(times, "datetime"))
-                self.loc_mdata['latitude'] = np.concatenate(self.loc_mdata['latitude'], lats)
-                self.loc_mdata['longitude'] = np.concatenate(self.loc_mdata['longitude'], lons)
+                self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
+                                             self.writer.FillNcVector(times, "datetime")))
+                self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats)
+                self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons)
             for ncvar, iodavar in obsvars.items():
                 data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
                 err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
@@ -88,11 +88,11 @@ class tropomi(object):
                     self.outdata[self.varDict[iodavar]['qcKey']] = qa_value
                 else:
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                               self.outdata[self.varDict[iodavar]['valKey']], data)
+                               (self.outdata[self.varDict[iodavar]['valKey']], data))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                               self.outdata[self.varDict[iodavar]['errKey']], err)
+                               (self.outdata[self.varDict[iodavar]['errKey']], err))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                               self.outdata[self.varDict[iodavar]['qcKey']], qa_value)
+                               (self.outdata[self.varDict[iodavar]['qcKey']], qa_value))
             first = False
         self.writer._nvars = len(obsvars)
         self.writer._nlocs = len(self.loc_mdata['datetime'])
