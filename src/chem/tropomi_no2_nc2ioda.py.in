@@ -25,7 +25,7 @@ locationKeyList = [
 ]
 
 obsvars = {
-           'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column',
+           'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
 }
 
 AttrData = {
@@ -44,6 +44,29 @@ class tropomi(object):
 
     # Open input file and read relevant info
     def _read(self):
+        # set up variable names for IODA
+        for ncvar, iodavar in obsvars.items():
+            varDict[iodavar]['valKey'] = iodavar, writer.OvalName()
+            varDict[iodavar]['errKey'] = iodavar, writer.OerrName()
+            varDict[iodavar]['qcKey'] = iodavar, writer.OqcName()
+        # loop through input filenames
+        for f in self.filenames:
+            ncd = nc.Dataset(f, 'r')
+            # get global attributes
+            AttrData['sensor'] = ncd.getncattr('sensor')
+            AttrData['platform'] = ncd.getncattr('platform')
+            # many variables are time, scanline, ground_pixel
+            # but others are just time, scanline
+            lats = ncd.variables['latitude'][:]
+            longitude = ncd.variables['longitude'][:]
+            qa_value = ncd.variables['qa_value'][:] #2D
+            times = np.empty_like(qa_value)
+            time1 = ncd.variables['time_utc'][:]
+            print(times.shape, time1.shape)
+
+            for ncvar, iodavar in obsvars.items():
+                data = ncd.variables[ncvar][:]
+                err = ncd.variables[ncvar+'_precision'][:]
 
 
 def main():
