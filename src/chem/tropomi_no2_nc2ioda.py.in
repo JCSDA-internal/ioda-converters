@@ -52,6 +52,7 @@ class tropomi(object):
             self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
         # loop through input filenames
+        first = True
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
             # get global attributes
@@ -59,16 +60,29 @@ class tropomi(object):
             AttrData['platform'] = ncd.getncattr('platform')
             # many variables are time, scanline, ground_pixel
             # but others are just time, scanline
-            lats = ncd.groups['PRODUCT'].variables['latitude'][:]
-            lons = ncd.groups['PRODUCT'].variables['longitude'][:]
+            lats = ncd.groups['PRODUCT'].variables['latitude'][:].flatten()
+            lons = ncd.groups['PRODUCT'].variables['longitude'][:].flatten()
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
             times = np.empty_like(qa_value)
+            qa_value = qa_value.flatten()
             time1 = ncd.groups['PRODUCT'].variables['time_utc'][:]
-            print(times.shape, time1.shape)
-
+            for t in range(len(time1[0])):
+                times[0,t,:] = time1[0,t]
+            times = times.flatten()
+            if not first:
+                print('placeholder for concatenation')
+            self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
+            self.loc_mdata['latitude'] = lats
+            self.loc_mdata['longitude'] = lons
             for ncvar, iodavar in obsvars.items():
-                data = ncd.groups['PRODUCT'].variables[ncvar][:]
-                err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:]
+                data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
+                err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
+                if not first:
+                    print('placeholder for concatenation')
+                self.outdata[self.varDict[iodavar]['valKey']] = data
+                self.outdata[self.varDict[iodavar]['errKey']] = err
+                self.outdata[self.varDict[iodavar]['qcKey']] = qa_value
+
 
 
 def main():
