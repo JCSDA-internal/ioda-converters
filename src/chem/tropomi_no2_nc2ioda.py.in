@@ -56,6 +56,7 @@ class tropomi(object):
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
             # get global attributes
+            AttrData['date_time_string'] = ncd.getncattr('time_reference')[0:19]+'Z'
             AttrData['sensor'] = ncd.getncattr('sensor')
             AttrData['platform'] = ncd.getncattr('platform')
             # many variables are time, scanline, ground_pixel
@@ -63,11 +64,11 @@ class tropomi(object):
             lats = ncd.groups['PRODUCT'].variables['latitude'][:].flatten()
             lons = ncd.groups['PRODUCT'].variables['longitude'][:].flatten()
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
-            times = np.empty_like(qa_value)
+            times = np.empty_like(qa_value,dtype=object)
             qa_value = qa_value.flatten()
             time1 = ncd.groups['PRODUCT'].variables['time_utc'][:]
             for t in range(len(time1[0])):
-                times[0,t,:] = time1[0,t]
+                times[0,t,:] = time1[0,t][0:19]+'Z'
             times = times.flatten()
             if not first:
                 print('placeholder for concatenation')
