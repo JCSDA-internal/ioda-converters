@@ -48,9 +48,9 @@ class tropomi(object):
     def _read(self):
         # set up variable names for IODA
         for ncvar, iodavar in obsvars.items():
-            varDict[iodavar]['valKey'] = iodavar, writer.OvalName()
-            varDict[iodavar]['errKey'] = iodavar, writer.OerrName()
-            varDict[iodavar]['qcKey'] = iodavar, writer.OqcName()
+            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
         # loop through input filenames
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
