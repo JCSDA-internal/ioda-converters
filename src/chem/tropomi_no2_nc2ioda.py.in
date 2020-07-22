@@ -83,6 +83,8 @@ class tropomi(object):
                 self.outdata[self.varDict[iodavar]['valKey']] = data
                 self.outdata[self.varDict[iodavar]['errKey']] = err
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa_value
+        self.writer._nvars = len(obsvars)
+        self.writer._nlocs = len(times)
 
 
 
