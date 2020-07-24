@@ -95,7 +95,7 @@ class tropomi(object):
                 self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
                 for k in range(nlevs):
                     varname = 'averaging_kernel_level_'+str(k+1)
-                    self.loc_mdata[varname] = avg_kernel[...,k].flatten()
+                    self.loc_mdata[varname] = avg_kernel[..., k].flatten()
             else:
                 self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
                                              self.writer.FillNcVector(times, "datetime")))
@@ -114,7 +114,7 @@ class tropomi(object):
                 for k in range(nlevs):
                     varname = 'averaging_kernel_level_'+str(k+1)
                     self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
-                        avg_kernel[..., k].flatten()))
+                                              avg_kernel[..., k].flatten()))
             for ncvar, iodavar in obsvars.items():
                 data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
                 err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
@@ -132,7 +132,6 @@ class tropomi(object):
             first = False
         self.writer._nvars = len(obsvars)
         self.writer._nlocs = len(self.loc_mdata['datetime'])
-
 
 
 def main():
