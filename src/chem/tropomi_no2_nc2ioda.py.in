@@ -83,8 +83,8 @@ class tropomi(object):
                            variables['air_mass_factor_troposphere'][:].flatten()
             # grab the averaging kernel
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
-            print('avg_kernel')
-            print(avg_kernel.shape)
+            nlevs = len(avg_kernel[0,0,0])
+            AttrData['averaging_kernel_levels'] = nlevs
             if first:
                 self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
                 self.loc_mdata['latitude'] = lats
@@ -93,6 +93,10 @@ class tropomi(object):
                 self.loc_mdata['troposphere_layer_index'] = trop_layer
                 self.loc_mdata['air_mass_factor_total'] = total_airmass
                 self.loc_mdata['air_mass_factor_troposphere'] = trop_airmass
+                self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
+                for k in range(nlevs):
+                    varname = 'averaging_kernel_level_'+str(k+1)
+                    self.loc_mdata[varname] = avg_kernel[...,k].flatten()
             else:
                 self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
                                              self.writer.FillNcVector(times, "datetime")))
@@ -106,6 +110,13 @@ class tropomi(object):
                                self.loc_mdata['air_mass_factor_total'], total_airmass))
                 self.loc_mdata['air_mass_factor_troposphere'] = np.concatenate((\
                                self.loc_mdata['air_mass_factor_troposphere'], trop_airmass))
+                self.loc_mdata['tropospheric_averaging_kernel_precision'] = np.concatenate((\
+                               self.loc_mdata['tropospheric_averaging_kernel_precision'],\
+                               kernel_err))
+                for k in range(nlevs):
+                    varname = 'averaging_kernel_level_'+str(k+1)
+                    self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],\
+                                              avg_kernel[...,k].flatten()))
             for ncvar, iodavar in obsvars.items():
                 data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
                 err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
@@ -157,7 +168,6 @@ def main():
     no2 = tropomi(args.input, writer)
 
     # write everything out
-    AttrData['thinning'] = args.thin
     AttrData['date_created'] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData)
 
