@@ -91,6 +91,10 @@ subroutine write_obs (filedate, write_opt)
             name_var_tb(i) = trim(var_tb)//'_'//trim(adjustl(c4))
             ncname = trim(name_var_tb(i))//'@ObsValue'
             call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units','K')
+            ncname = trim(name_var_tb(i))//'@ObsError'
+            call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT)
+            ncname = trim(name_var_tb(i))//'@PreQC'
+            call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_INT)
          end if
       end do
 
@@ -144,6 +148,10 @@ subroutine write_obs (filedate, write_opt)
          else if ( write_opt == write_nc_radiance ) then
             ncname = trim(name_var_tb(i))//'@ObsValue'
             call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%val)
+            ncname = trim(name_var_tb(i))//'@ObsError'
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%err)
+            ncname = trim(name_var_tb(i))//'@PreQC'
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(i,:)%qc)
          end if
       end do var_loop
 

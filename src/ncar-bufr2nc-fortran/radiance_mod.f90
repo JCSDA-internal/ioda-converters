@@ -3,7 +3,7 @@ module radiance_mod
 use kinds, only: r_kind,i_kind,r_double
 use define_types_mod, only: missing_r, missing_i, nstring, ndatetime, &
    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
-   nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info
+   nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr
 use ufo_vars_mod, only: ufo_vars_getindex
 use netcdf, only: nf90_float, nf90_int, nf90_char
 
@@ -136,6 +136,7 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
       call closbf(iunit)
       return
    end if
+   rewind(iunit)
 
    write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
    write(unit=filedate, fmt='(i10)') idate
@@ -161,8 +162,31 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
          num_report_infile = num_report_infile + 1
 
          call ufbint(iunit,timedat,ntime,1,iret,timestr)
-         call ufbint(iunit,infodat,ninfo,1,iret,infostr)
+
+         iyear  = nint(timedat(1))
+         imonth = nint(timedat(2))
+         iday   = nint(timedat(3))
+         ihour  = nint(timedat(4))
+         imin   = nint(timedat(5))
+         isec   = min(59, nint(timedat(6))) ! raw BUFR data that has SECO = 60.0 SECOND
+                                            ! that was probably rounded from 59.x seconds
+                                            ! reset isec to 59 rather than advancing one minute
+         if ( iyear  > 1900 .and. iyear  < 3000 .and. &
+              imonth >=   1 .and. imonth <=  12 .and. &
+              iday   >=   1 .and. iday   <=  31 .and. &
+              ihour  >=   0 .and. ihour  <   24 .and. &
+              imin   >=   0 .and. imin   <   60 .and. &
+              isec   >=   0 .and. isec   <   60 ) then
+            write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+               iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+         else
+            cycle reports
+         end if
+
          call ufbint(iunit,lalodat,nlalo,1,iret,lalostr)
+         if ( abs(lalodat(1)) > 90.0 .or. abs(lalodat(1)) > 360.0 ) cycle reports
+
+         call ufbint(iunit,infodat,ninfo,1,iret,infostr)
          call ufbrep(iunit,data1b8,2,maxchan,nchan,britstr)
 
          rlink % nchan = nchan
@@ -175,22 +199,6 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
 
          if ( lalodat(1) < r8bfms ) rlink % lat = lalodat(1)
          if ( lalodat(2) < r8bfms ) rlink % lon = lalodat(2)
-
-         iyear  = nint(timedat(1))
-         imonth = nint(timedat(2))
-         iday   = nint(timedat(3))
-         ihour  = nint(timedat(4))
-         imin   = nint(timedat(5))
-         isec   = nint(timedat(6))
-         if ( iyear  > 1900 .and. iyear  < 3000 .and. &
-              imonth >=   1 .and. imonth <=  12 .and. &
-              iday   >=   1 .and. iday   <=  31 .and. &
-              ihour  >=   0 .and. ihour  <=  24 .and. &
-              imin   >=   0 .and. imin   <=  60 .and. &
-              isec   >=   0 .and. isec   <=  60 ) then
-            write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-               iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-         end if
 
          rlink % satid  = nint(infodat(1))  ! SAID satellite identifier
          rlink % instid = nint(infodat(2))  ! SIID instrument identifier
@@ -354,6 +362,7 @@ subroutine read_airs_colocate_amsua (filename, filedate)
      call closbf(iunit)
      return
   end if
+  rewind(iunit)
 
   write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
   write(unit=filedate, fmt='(i10)') idate
@@ -407,6 +416,42 @@ subroutine read_airs_colocate_amsua (filename, filedate)
               end if
            end if
 
+           ! Read SITPSEQN / AMSUSPOT
+           call ufbseq(iunit,sensorspot_list_array,N_sensorspot_LIST,1,iret,spotname)
+
+           sensorspot = sensorspot_list( sensorspot_list_array(1),  &
+                                         sensorspot_list_array(2),  &
+                                         sensorspot_list_array(3),  &
+                                         sensorspot_list_array(4),  &
+                                         sensorspot_list_array(5),  &
+                                         sensorspot_list_array(6),  &
+                                         sensorspot_list_array(7),  &
+                                         sensorspot_list_array(8),  &
+                                         sensorspot_list_array(9),  &
+                                         sensorspot_list_array(10), &
+                                         sensorspot_list_array(11), &
+                                         sensorspot_list_array(12) )
+
+           iyear  = nint(sensorspot%year)
+           imonth = nint(sensorspot%mnth)
+           iday   = nint(sensorspot%days)
+           ihour  = nint(sensorspot%hour)
+           imin   = nint(sensorspot%minu)
+           isec   = nint(sensorspot%seco)
+           if ( iyear  > 1900 .and. iyear  < 3000 .and. &
+                imonth >=   1 .and. imonth <=  12 .and. &
+                iday   >=   1 .and. iday   <=  31 .and. &
+                ihour  >=   0 .and. ihour  <   24 .and. &
+                imin   >=   0 .and. imin   <   60 .and. &
+                isec   >=   0 .and. isec   <   60 ) then
+              write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+               iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+           else
+              cycle reports
+           end if
+
+           if ( abs(sensorspot%clath) > 90.0 .or. abs(sensorspot%clonh) > 360.0 ) cycle reports
+
            ! Read SCBTSEQN or AMSUCHAN
            call ufbseq(iunit,sensorchan_list_array,N_sensorchan_LIST,N_MAXCHAN,nchan,channame)
 
@@ -427,40 +472,8 @@ subroutine read_airs_colocate_amsua (filename, filedate)
               if ( sensorchan(ich) % chnm < r8bfms ) rlink % ch(ich) = sensorchan(ich) % chnm
            end do
 
-           ! Read SITPSEQN / AMSUSPOT
-           call ufbseq(iunit,sensorspot_list_array,N_sensorspot_LIST,1,iret,spotname)
-
-           sensorspot = sensorspot_list( sensorspot_list_array(1),  &
-                                         sensorspot_list_array(2),  &
-                                         sensorspot_list_array(3),  &
-                                         sensorspot_list_array(4),  &
-                                         sensorspot_list_array(5),  &
-                                         sensorspot_list_array(6),  &
-                                         sensorspot_list_array(7),  &
-                                         sensorspot_list_array(8),  &
-                                         sensorspot_list_array(9),  &
-                                         sensorspot_list_array(10), &
-                                         sensorspot_list_array(11), &
-                                         sensorspot_list_array(12) )
-
            if ( sensorspot%clath < r8bfms ) rlink % lat  = sensorspot%clath
            if ( sensorspot%clonh < r8bfms ) rlink % lon  = sensorspot%clonh
-
-           iyear  = nint(sensorspot%year)
-           imonth = nint(sensorspot%mnth)
-           iday   = nint(sensorspot%days)
-           ihour  = nint(sensorspot%hour)
-           imin   = nint(sensorspot%minu)
-           isec   = nint(sensorspot%seco)
-           if ( iyear  > 1900 .and. iyear  < 3000 .and. &
-                imonth >=   1 .and. imonth <=  12 .and. &
-                iday   >=   1 .and. iday   <=  31 .and. &
-                ihour  >=   0 .and. ihour  <=  24 .and. &
-                imin   >=   0 .and. imin   <=  60 .and. &
-                isec   >=   0 .and. isec   <=  60 ) then
-              write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-               iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-           end if
 
            if ( sensorspot%fovn      < r8bfms ) rlink % scanpos  = nint( sensorspot%fovn )
            if ( sensorspot%saza      < r8bfms ) rlink % satzen   = sensorspot%saza
@@ -555,8 +568,16 @@ subroutine sort_obs_radiance
          allocate (xdata(i)%xinfo_char (nvar_info, nlocs(i)))
          allocate (xdata(i)%xseninfo_float(nsen_info, nlocs(i)))
          allocate (xdata(i)%xseninfo_int  (nsen_info, nvars(i)))
+         xdata(i)%xinfo_float   (:,:) = missing_r
+         xdata(i)%xinfo_int     (:,:) = missing_i
+         xdata(i)%xinfo_char    (:,:) = ''
+         xdata(i)%xseninfo_float(:,:) = missing_r
+         xdata(i)%xseninfo_int  (:,:) = missing_i
          if ( nvars(i) > 0 ) then
             allocate (xdata(i)%xfield(nvars(i), nlocs(i)))
+            xdata(i)%xfield(:,:)%val = missing_r
+            xdata(i)%xfield(:,:)%qc  = missing_i
+            xdata(i)%xfield(:,:)%err = missing_r
             allocate (xdata(i)%var_idx(nvars(i)))
             do iv = 1, nvars(i)
                xdata(i)%var_idx(iv) = iv
@@ -633,9 +654,10 @@ subroutine sort_obs_radiance
       xdata(ityp)%xseninfo_int(iv,:) = rlink%ch(:)
 
       do i = 1, nvars(ityp)
-         do iv = 1, nvars(ityp)
-            xdata(ityp)%xfield(iv,iloc(ityp))%val = rlink%tb(iv)
-         end do
+         xdata(ityp)%xfield(i,iloc(ityp))%val = rlink%tb(i)
+         !xdata(ityp)%xfield(i,iloc(ityp))%err = 1.0
+         call set_brit_obserr(trim(rlink%inst), i, xdata(ityp)%xfield(i,iloc(ityp))%err)
+         xdata(ityp)%xfield(i,iloc(ityp))%qc  = 0
       end do
       rlink => rlink%next
    end do reports
@@ -666,7 +688,7 @@ subroutine fill_datalink (datalink, rfill, ifill)
 
    integer(i_kind) :: i
 
-   datalink % datetime = ''
+   !datalink % datetime = ''
    datalink % lat      = rfill
    datalink % lon      = rfill
    datalink % satid    = ifill

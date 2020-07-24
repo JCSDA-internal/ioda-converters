@@ -85,7 +85,7 @@ subroutine read_prepbufr(filename, filedate)
    real(r_double)    :: drf(8,255), drf2(8,255) ! for balloon drift
    equivalence (r8sid, csid), (r8sid2, csid2)
 
-   character(len=14) :: cdate, dmn, obs_date
+   character(len=14) :: cdate, dsec, obs_date
    integer(i_kind)   :: idate, idate2
    integer(i_kind)   :: nlevels, nlevels2, lv1, lv2
    integer(i_kind)   :: iyear, imonth, iday, ihour, imin, isec
@@ -97,6 +97,7 @@ subroutine read_prepbufr(filename, filedate)
    logical           :: use_errtable, combine_mass_wind, do_tv_to_ts
    real(r_kind)      :: oetab(300,33,6)  ! 300 ob types, 33 levels (rows), 6 variables (columns)
    real(r_kind)      :: coef
+   real(r_kind)      :: qs
 
    write(*,*) '--- reading '//trim(filename)//' ---'
    hdstr='SID XOB YOB DHR TYP ELV T29'
@@ -162,7 +163,7 @@ subroutine read_prepbufr(filename, filedate)
       call closbf(iunit)
       return
    end if
-   !rewind(iunit)
+   rewind(iunit)
 
    write(unit=*,fmt='(1x,a,a,i10)') trim(filename), ' file date is: ', idate
 
@@ -390,6 +391,21 @@ subroutine read_prepbufr(filename, filedate)
       !  72: NEXTRAD VAD winds
       !if ( t29 == 61 .or. t29 == 66 .or. t29 == 72 ) cycle reports
 
+      if ( abs(hdr(2)) > 360.0 .or. abs(hdr(3)) > 90.0 ) cycle reports
+
+      write(dsec,'(i4,a1)') int(hdr(4)*60.0*60.0), 's' ! seconds
+      write(cdate,'(i10)') idate
+      call da_advance_time (cdate(1:10), trim(dsec), obs_date)
+      read (obs_date(1:14),'(i4,5i2)') iyear, imonth, iday, ihour, imin, isec
+      if ( iyear  < 1900 .or. iyear  > 3000 .or. &
+           imonth <    1 .or. imonth >   12 .or. &
+           iday   <    1 .or. iday   >   31 .or. &
+           ihour  <    0 .or. ihour  >=  24 .or. &
+           imin   <    0 .or. imin   >=  60 .or. &
+           isec   <    0 .or. isec   >=  60 ) then
+         cycle reports
+      end if
+
       if (.not. associated(plink)) then
          plink => phead
       else
@@ -416,20 +432,8 @@ subroutine read_prepbufr(filename, filedate)
       plink % dhr           = hdr(4)    ! difference in hour
       plink % elv           = hdr(6)
 
-      write(dmn,'(i4,a1)') int(plink%dhr*60.0), 'm' ! minute
-      write(cdate,'(i10)') idate
-      call da_advance_time (cdate(1:10), trim(dmn), obs_date)
-      read (obs_date(1:14),'(i4,5i2)') iyear, imonth, iday, ihour, imin, isec
-
-      if ( iyear  > 1900 .and. iyear  < 3000 .and. &
-           imonth >=   1 .and. imonth <=  12 .and. &
-           iday   >=   1 .and. iday   <=  31 .and. &
-           ihour  >=   0 .and. ihour  <=  24 .and. &
-           imin   >=   0 .and. imin   <=  60 .and. &
-           isec   >=   0 .and. isec   <=  60 ) then
-         write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-            iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-      end if
+      write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+         iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
 
       if ( pmo(1,1) < r8bfms ) then
          plink % slp % val = pmo(1,1)*100.0
@@ -451,6 +455,16 @@ subroutine read_prepbufr(filename, filedate)
             if ( drf(1,k) < r8bfms ) plink % each (k) % lon = drf(1,k)
             if ( drf(2,k) < r8bfms ) plink % each (k) % lat = drf(2,k)
             if ( drf(3,k) < r8bfms ) plink % each (k) % dhr = drf(3,k)
+         end if
+
+         if ( obs(1,k) > 0.0 .and. obs(1,k) < r8bfms ) then
+            plink % each (k) % p % val = obs(1,k)*100.0  ! convert to Pa
+            if ( qms(1,k) < r8bfms ) then
+               plink % each (k) % p % qc  = nint(qms(1,k))
+            end if
+            if ( oes(1,k) < r8bfms ) then
+               plink % each (k) % p % err = oes(1,k)*100.0 ! convert to Pa
+            end if
          end if
 
          ! set t units to Kelvin
@@ -514,13 +528,22 @@ subroutine read_prepbufr(filename, filedate)
                plink % each (k) % v % err = plink % each (k) % u % err
             end if
          end if
+
          if ( obs(2,k)>0.0 .and. obs(2,k)<r8bfms ) then
             plink % each (k) % q % val = obs(2,k)
             plink % each (k) % q % qc  = nint(qms(2,k))
-            ! leave q_err as missing because of lacking rh_err to q_err conversion
-            !if ( oes(2,k) < r8bfms ) then
-            !   plink % each (k) % q % err = oes(2,k)*10.0 ! convert to % from PREPBUFR percent divided by 10
-            !end if
+            if ( oes(2,k) < r8bfms ) then
+               if ( abs(plink%each(k)%p%val - missing_r) > 0.01 ) then
+                  ! use either t or tv (ignore the difference between t and tv) for calculating qs
+                  if ( abs(plink%each(k)%t%val - missing_r) > 0.01 ) then
+                     call calc_qs(plink%each(k)%t%val, plink%each(k)%p%val, qs)
+                  else if ( abs(plink%each(k)%tv%val - missing_r) > 0.01 ) then
+                     call calc_qs(plink%each(k)%tv%val, plink%each(k)%p%val, qs)
+                  end if
+                  plink % each (k) % q % err = oes(2,k)*10.0 ! convert to % from PREPBUFR percent divided by 10
+                  plink % each (k) % q % err = plink % each (k) % q % err * qs * 0.01 ! convert from RH to q
+               end if
+            end if
          end if
 
          if ( obs(4,k) < r8bfms )then
@@ -530,15 +553,6 @@ subroutine read_prepbufr(filename, filedate)
             end if
          end if
 
-         if ( obs(1,k) > 0.0 .and. obs(1,k) < r8bfms ) then
-            plink % each (k) % p % val = obs(1,k)*100.0  ! convert to Pa
-            if ( qms(1,k) < r8bfms ) then
-               plink % each (k) % p % qc  = nint(qms(1,k))
-            end if
-            if ( oes(1,k) < r8bfms ) then
-               plink % each (k) % p % err = oes(1,k)*100.0 ! convert to Pa
-            end if
-         end if
       end do loop_nlevels
 
    end do reports
@@ -634,10 +648,16 @@ subroutine sort_obs_conv
          allocate (xdata(i)%xinfo_int  (nvar_info, nlocs(i)))
          allocate (xdata(i)%xinfo_float(nvar_info, nlocs(i)))
          allocate (xdata(i)%xinfo_char (nvar_info, nlocs(i)))
+         xdata(i)%xinfo_int  (:,:) = missing_i
+         xdata(i)%xinfo_float(:,:) = missing_r
+         xdata(i)%xinfo_char (:,:) = ''
 
          if ( nvars(i) > 0 ) then
             allocate (xdata(i)%xfield(nvars(i), nlocs(i)))
             allocate (xdata(i)%var_idx(nvars(i)))
+            xdata(i)%xfield(:,:)%val = missing_r ! initialize
+            xdata(i)%xfield(:,:)%qc  = missing_i ! initialize
+            xdata(i)%xfield(:,:)%err = missing_r ! initialize
             ivar = 0
             do iv = 1, nvar_met
                if ( vflag(iv,i) == ifalse ) cycle
@@ -699,6 +719,8 @@ subroutine sort_obs_conv
                   end if
                else if ( trim(name_var_info(i)) == 'height' ) then
                   xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%each(k)%h%val
+               else if ( trim(name_var_info(i)) == trim(var_prs) ) then
+                  xdata(ityp)%xinfo_float(i,iloc(ityp)) = plink%each(k)%p%val
                end if
             else if ( type_var_info(i) == nf90_char ) then
                if ( trim(name_var_info(i)) == 'datetime' ) then
@@ -821,6 +843,78 @@ subroutine fill_datalink (datalink, rfill, ifill)
    end if
 
 end subroutine fill_datalink
+
+subroutine calc_qs (t, p, qs, wrt_ice)
+
+! calculate saturation vapor pressure and saturation specific humidity
+! given temperature and pressure
+
+   implicit none
+
+   real(r_kind), intent(in)  :: t, p
+   real(r_kind), intent(out) :: qs
+   logical,      intent(in), optional :: wrt_ice
+
+   real(r_kind), parameter :: t_kelvin = 273.15
+   real(r_kind), parameter :: t_triple = 273.16  ! triple point of water
+   real(r_kind), parameter :: gas_constant = 287.0
+   real(r_kind), parameter :: gas_constant_v = 461.6
+   real(r_kind), parameter :: rd_over_rv = gas_constant/gas_constant_v
+   real(r_kind), parameter :: rd_over_rv1 = 1.0 - rd_over_rv
+   real(r_kind), parameter :: es_alpha = 611.2
+   real(r_kind), parameter :: es_beta  = 17.67
+   real(r_kind), parameter :: es_gamma = 243.5
+   real(r_kind), parameter :: t_c_ref1 =   0.0   ! C
+   real(r_kind), parameter :: t_c_ref2 = -20.0   ! C
+   real(r_kind), parameter :: a0 = 6.107799961
+   real(r_kind), parameter :: a1 = 4.436518521e-01
+   real(r_kind), parameter :: a2 = 1.428945805e-02
+   real(r_kind), parameter :: a3 = 2.650648471e-04
+   real(r_kind), parameter :: a4 = 3.031240396e-06
+   real(r_kind), parameter :: a5 = 2.034080948e-08
+   real(r_kind), parameter :: a6 = 6.136820929e-11
+   real(r_kind), parameter :: c1 = 9.09718
+   real(r_kind), parameter :: c2 = 3.56654
+   real(r_kind), parameter :: c3 = 0.876793
+   real(r_kind), parameter :: c4 = 6.1071
+   real(r_kind)            :: t_c, t1_c          ! T in degree C
+   real(r_kind)            :: es
+   logical                 :: ice
+
+   ice = .false.
+   if ( present(wrt_ice) ) then
+      if ( wrt_ice ) ice = .true.
+   end if
+
+   t_c  = t - t_kelvin
+   t1_c = t - t_triple
+
+   ! Calculate saturation vapor pressure es
+
+   if ( .not. ice ) then   ! over water only
+
+      es = es_alpha * exp( es_beta * t_c / ( t_c + es_gamma ) )
+
+   else   ! consider ice-water and ice effects
+
+      if ( t1_c > t_c_ref1 ) then   ! vapor pressure over water
+         es = es_alpha * exp( es_beta * t_c / ( t_c + es_gamma ) )
+      else if ( (t1_c <= t_c_ref1) .and. (t1_c >= t_c_ref2) ) then   ! vapor pressure over water below 0C
+         es = a0 + t1_c * (a1 + t1_c * (a2 + t1_c * (a3 + t1_c * (a4 + t1_c * (a5 + t1_c * a6)))))
+         es = es * 100.0  ! to Pa
+      else   ! vapor pressure over ice
+         es = 10.0 ** ( -c1 * (t_triple / t - 1.0) - c2 * alog10(t_triple / t) +  &
+                         c3 * (1.0 - t / t_triple) +      alog10(c4))
+         es = es * 100.0  ! to Pa
+      end if
+
+   end if
+
+   ! Calculate saturation specific humidity qs
+
+   qs = rd_over_rv * es / ( p - rd_over_rv1 * es )
+
+end subroutine calc_qs
 
 end module prepbufr_mod
 
