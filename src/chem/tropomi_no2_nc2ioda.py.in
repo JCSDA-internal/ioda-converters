@@ -26,7 +26,7 @@ locationKeyList = [
 ]
 
 obsvars = {
-'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
+    'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
 }
 
 AttrData = {
@@ -64,27 +64,26 @@ class tropomi(object):
             lats = ncd.groups['PRODUCT'].variables['latitude'][:].flatten()
             lons = ncd.groups['PRODUCT'].variables['longitude'][:].flatten()
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
-            times = np.empty_like(qa_value,dtype=object)
+            times = np.empty_like(qa_value, dtype=object)
             qa_value = qa_value.flatten()
             qc_flag = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS']\
-                      .variables['processing_quality_flags'][:]
+                .variables['processing_quality_flags'][:]
             qc_flag = qc_flag.flatten().astype('int32')
             time1 = ncd.groups['PRODUCT'].variables['time_utc'][:]
             for t in range(len(time1[0])):
-                times[0,t,:] = time1[0,t][0:19]+'Z'
+                times[0, t, :] = time1[0, t][0:19]+'Z'
             times = times.flatten()
             # need additional variable to use the averaging kernel for DA
             kernel_err = ncd.groups['PRODUCT'].\
-                         variables['nitrogendioxide_tropospheric_column_precision_kernel']\
-                         [:].flatten()
+                variables['nitrogendioxide_tropospheric_column_precision_kernel'][:].flatten()
             trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].flatten()
             total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].flatten()
             trop_airmass = ncd.groups['PRODUCT'].\
-                           variables['air_mass_factor_troposphere'][:].flatten()
+                variables['air_mass_factor_troposphere'][:].flatten()
             # grab the averaging kernel
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
-            nlevs = len(avg_kernel[0,0,0])
-            AttrData['averaging_kernel_levels'] = nlevs
+            nlevs = len(avg_kernel[0, 0, 0])
+            AttrData['averaging_kernel_levels'] = np.int32(nlevs)
             if first:
                 self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
                 self.loc_mdata['latitude'] = lats
@@ -102,21 +101,20 @@ class tropomi(object):
                                              self.writer.FillNcVector(times, "datetime")))
                 self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
                 self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
-                self.loc_mdata['quality_assurance_value'] = np.concatenate((\
-                               self.loc_mdata['quality_assurance_value'], qa_value))
-                self.loc_mdata['troposphere_layer_index'] = np.concatenate((\
-                               self.loc_mdata['troposphere_layer_index'], trop_layer))
-                self.loc_mdata['air_mass_factor_total'] = np.concatenate((\
-                               self.loc_mdata['air_mass_factor_total'], total_airmass))
-                self.loc_mdata['air_mass_factor_troposphere'] = np.concatenate((\
-                               self.loc_mdata['air_mass_factor_troposphere'], trop_airmass))
-                self.loc_mdata['tropospheric_averaging_kernel_precision'] = np.concatenate((\
-                               self.loc_mdata['tropospheric_averaging_kernel_precision'],\
-                               kernel_err))
+                self.loc_mdata['quality_assurance_value'] = np.concatenate((
+                    self.loc_mdata['quality_assurance_value'], qa_value))
+                self.loc_mdata['troposphere_layer_index'] = np.concatenate((
+                    self.loc_mdata['troposphere_layer_index'], trop_layer))
+                self.loc_mdata['air_mass_factor_total'] = np.concatenate((
+                    self.loc_mdata['air_mass_factor_total'], total_airmass))
+                self.loc_mdata['air_mass_factor_troposphere'] = np.concatenate((
+                    self.loc_mdata['air_mass_factor_troposphere'], trop_airmass))
+                self.loc_mdata['tropospheric_averaging_kernel_precision'] = np.concatenate((
+                    self.loc_mdata['tropospheric_averaging_kernel_precision'], kernel_err))
                 for k in range(nlevs):
                     varname = 'averaging_kernel_level_'+str(k+1)
-                    self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],\
-                                              avg_kernel[...,k].flatten()))
+                    self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
+                        avg_kernel[..., k].flatten()))
             for ncvar, iodavar in obsvars.items():
                 data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
                 err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
@@ -126,11 +124,11 @@ class tropomi(object):
                     self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
                 else:
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                               (self.outdata[self.varDict[iodavar]['valKey']], data))
+                        (self.outdata[self.varDict[iodavar]['valKey']], data))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                               (self.outdata[self.varDict[iodavar]['errKey']], err))
+                        (self.outdata[self.varDict[iodavar]['errKey']], err))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                               (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
+                        (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
         self.writer._nvars = len(obsvars)
         self.writer._nlocs = len(self.loc_mdata['datetime'])
