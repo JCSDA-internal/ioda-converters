@@ -98,7 +98,7 @@ class tropomi(object):
                     self.loc_mdata[varname] = avg_kernel[..., k].flatten()
             else:
                 self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
-                                             self.writer.FillNcVector(times, "datetime")))
+                                                            self.writer.FillNcVector(times, "datetime")))
                 self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
                 self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
                 self.loc_mdata['quality_assurance_value'] = np.concatenate((
@@ -114,7 +114,7 @@ class tropomi(object):
                 for k in range(nlevs):
                     varname = 'averaging_kernel_level_'+str(k+1)
                     self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
-                                              avg_kernel[..., k].flatten()))
+                                                             avg_kernel[..., k].flatten()))
             for ncvar, iodavar in obsvars.items():
                 data = ncd.groups['PRODUCT'].variables[ncvar][:].flatten()
                 err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].flatten()
@@ -154,8 +154,6 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
 
-    # TODO: add in multiprocessing? or just call this script multiple times?
-
     args = parser.parse_args()
 
     # setup the IODA writer
@@ -165,7 +163,6 @@ def main():
     no2 = tropomi(args.input, writer)
 
     # write everything out
-    AttrData['date_created'] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData)
 
 
