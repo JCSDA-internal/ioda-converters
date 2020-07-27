@@ -155,11 +155,13 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
       nullify ( rlink%next )
    end if
 
-   reports: do while (ireadmg(iunit,subset,idate)==0)
+   msg_loop: do while (ireadmg(iunit,subset,idate)==0)
 !print*,subset
-      do while (ireadsb(iunit)==0)
+      subset_loop: do while (ireadsb(iunit)==0)
 
          num_report_infile = num_report_infile + 1
+
+if ( mod(num_report_infile, 10) /= 0 ) cycle subset_loop ! hcl-tmp
 
          call ufbint(iunit,timedat,ntime,1,iret,timestr)
 
@@ -180,11 +182,11 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
          else
-            cycle reports
+            cycle subset_loop
          end if
 
          call ufbint(iunit,lalodat,nlalo,1,iret,lalostr)
-         if ( abs(lalodat(1)) > 90.0 .or. abs(lalodat(1)) > 360.0 ) cycle reports
+         if ( abs(lalodat(1)) > 90.0 .or. abs(lalodat(1)) > 360.0 ) cycle subset_loop
 
          call ufbint(iunit,infodat,ninfo,1,iret,infostr)
          call ufbrep(iunit,data1b8,2,maxchan,nchan,britstr)
@@ -222,8 +224,8 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
          rlink => rlink%next
          nullify ( rlink%next )
 
-      end do ! ireadsb
-   end do reports
+      end do subset_loop ! ireadsb
+   end do msg_loop ! ireadmg
 
    call closbf(iunit)
    close(iunit)
@@ -341,6 +343,8 @@ subroutine read_airs_colocate_amsua (filename, filedate)
   if ( ufo_vars_getindex(inst_list, 'amsua_aqua') > 0 ) decode_amsua = .true.
   if ( ufo_vars_getindex(inst_list, 'airs_aqua')  > 0 ) decode_airs  = .true.
 
+  num_report_infile  = 0
+
   iunit = 97
 
   ! open bufr file
@@ -381,11 +385,13 @@ subroutine read_airs_colocate_amsua (filename, filedate)
      nullify ( rlink%next )
   end if
 
-  reports: do while ( ireadmg(iunit,subset,idate)==0 )
+  msg_loop: do while ( ireadmg(iunit,subset,idate)==0 )
 
-     do while ( ireadsb(iunit)==0 )
+     subset_loop: do while ( ireadsb(iunit)==0 )
 
         num_report_infile = num_report_infile + 1
+
+if ( mod(num_report_infile, 100) /= 0 ) cycle subset_loop ! hcl-tmp
 
         ! Read SPITSEQN
         call ufbseq(iunit,satellitespot_list_array,N_satellitespot_LIST,1,iret,'SPITSEQN')
@@ -447,10 +453,10 @@ subroutine read_airs_colocate_amsua (filename, filedate)
               write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
            else
-              cycle reports
+              cycle subset_loop
            end if
 
-           if ( abs(sensorspot%clath) > 90.0 .or. abs(sensorspot%clonh) > 360.0 ) cycle reports
+           if ( abs(sensorspot%clath) > 90.0 .or. abs(sensorspot%clonh) > 360.0 ) cycle subset_loop
 
            ! Read SCBTSEQN or AMSUCHAN
            call ufbseq(iunit,sensorchan_list_array,N_sensorchan_LIST,N_MAXCHAN,nchan,channame)
@@ -490,8 +496,8 @@ subroutine read_airs_colocate_amsua (filename, filedate)
            nullify ( rlink%next )
 
         end do loop_sensor
-     end do ! ireadsb
-  end do reports
+     end do subset_loop ! ireadsb
+  end do msg_loop ! ireadmg
 
   call closbf(iunit)
   close(iunit)
@@ -563,10 +569,10 @@ subroutine sort_obs_radiance
       xdata(i) % nvars = nvars(i)
 
       if ( nlocs(i) > 0 ) then
-         allocate (xdata(i)%xinfo_float(nvar_info, nlocs(i)))
-         allocate (xdata(i)%xinfo_int  (nvar_info, nlocs(i)))
-         allocate (xdata(i)%xinfo_char (nvar_info, nlocs(i)))
-         allocate (xdata(i)%xseninfo_float(nsen_info, nlocs(i)))
+         allocate (xdata(i)%xinfo_float(nlocs(i), nvar_info))
+         allocate (xdata(i)%xinfo_int  (nlocs(i), nvar_info))
+         allocate (xdata(i)%xinfo_char (nlocs(i), nvar_info))
+         allocate (xdata(i)%xseninfo_float(nlocs(i), nsen_info))
          allocate (xdata(i)%xseninfo_int  (nsen_info, nvars(i)))
          xdata(i)%xinfo_float   (:,:) = missing_r
          xdata(i)%xinfo_int     (:,:) = missing_i
@@ -574,7 +580,7 @@ subroutine sort_obs_radiance
          xdata(i)%xseninfo_float(:,:) = missing_r
          xdata(i)%xseninfo_int  (:,:) = missing_i
          if ( nvars(i) > 0 ) then
-            allocate (xdata(i)%xfield(nvars(i), nlocs(i)))
+            allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
             xdata(i)%xfield(:,:)%val = missing_r
             xdata(i)%xfield(:,:)%qc  = missing_i
             xdata(i)%xfield(:,:)%err = missing_r
@@ -609,23 +615,23 @@ subroutine sort_obs_radiance
       do i = 1, nvar_info
          if ( type_var_info(i) == nf90_int ) then
             if ( trim(name_var_info(i)) == 'record_number' ) then
-               xdata(ityp)%xinfo_int(i,iloc(ityp)) = irec
+               xdata(ityp)%xinfo_int(iloc(ityp),i) = irec
             end if
          else if ( type_var_info(i) == nf90_float ) then
             if ( name_var_info(i) == 'time' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = missing_r !rlink%dhr
+               xdata(ityp)%xinfo_float(iloc(ityp),i) = missing_r !rlink%dhr
             else if ( trim(name_var_info(i)) == 'station_elevation' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = rlink%elv
+               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%elv
             else if ( trim(name_var_info(i)) == 'latitude' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = rlink%lat
+               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%lat
             else if ( trim(name_var_info(i)) == 'longitude' ) then
-               xdata(ityp)%xinfo_float(i,iloc(ityp)) = rlink%lon
+               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%lon
             end if
          else if ( type_var_info(i) == nf90_char ) then
             if ( trim(name_var_info(i)) == 'datetime' ) then
-               xdata(ityp)%xinfo_char(i,iloc(ityp)) = rlink%datetime
+               xdata(ityp)%xinfo_char(iloc(ityp),i) = rlink%datetime
             else if ( trim(name_var_info(i)) == 'station_id' ) then
-               xdata(ityp)%xinfo_char(i,iloc(ityp)) = rlink%inst
+               xdata(ityp)%xinfo_char(iloc(ityp),i) = rlink%inst
             end if
          end if
       end do
@@ -633,17 +639,17 @@ subroutine sort_obs_radiance
       do i = 1, nsen_info
          if ( type_sen_info(i) == nf90_float ) then
             if ( trim(name_sen_info(i)) == 'scan_position' ) then
-               xdata(ityp)%xseninfo_float(i,iloc(ityp)) = rlink%scanpos
+               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%scanpos
             else if ( trim(name_sen_info(i)) == 'sensor_zenith_angle' ) then
-               xdata(ityp)%xseninfo_float(i,iloc(ityp)) = rlink%satzen
+               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%satzen
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
-               xdata(ityp)%xseninfo_float(i,iloc(ityp)) = rlink%satazi
+               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%satazi
             else if ( trim(name_sen_info(i)) == 'solar_azimuth_angle' ) then
-               xdata(ityp)%xseninfo_float(i,iloc(ityp)) = rlink%solzen
+               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%solzen
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
-               xdata(ityp)%xseninfo_float(i,iloc(ityp)) = rlink%solazi
+               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%solazi
             else if ( trim(name_sen_info(i)) == 'sensor_view_angle' ) then
-               xdata(ityp)%xseninfo_float(i,iloc(ityp)) = missing_r
+               xdata(ityp)%xseninfo_float(iloc(ityp),i) = missing_r
             end if
 !         else if ( type_sen_info(i) == nf90_int ) then
 !         else if ( type_sen_info(i) == nf90_char ) then
@@ -654,10 +660,10 @@ subroutine sort_obs_radiance
       xdata(ityp)%xseninfo_int(iv,:) = rlink%ch(:)
 
       do i = 1, nvars(ityp)
-         xdata(ityp)%xfield(i,iloc(ityp))%val = rlink%tb(i)
-         !xdata(ityp)%xfield(i,iloc(ityp))%err = 1.0
-         call set_brit_obserr(trim(rlink%inst), i, xdata(ityp)%xfield(i,iloc(ityp))%err)
-         xdata(ityp)%xfield(i,iloc(ityp))%qc  = 0
+         xdata(ityp)%xfield(iloc(ityp),i)%val = rlink%tb(i)
+         !xdata(ityp)%xfield(iloc(ityp),i)%err = 1.0
+         call set_brit_obserr(trim(rlink%inst), i, xdata(ityp)%xfield(iloc(ityp),i)%err)
+         xdata(ityp)%xfield(iloc(ityp),i)%qc  = 0
       end do
       rlink => rlink%next
    end do reports

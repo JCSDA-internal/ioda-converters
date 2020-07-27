@@ -2,7 +2,7 @@ program bufr2nc
 
 use mpisetup
 use define_types_mod, only: write_nc_conv, write_nc_radiance
-use prepbufr_mod, only: read_prepbufr, sort_obs_conv
+use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance
 use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
@@ -37,6 +37,8 @@ if ( .not. fexist ) then
 else
    ! read prepbufr file and store data in sequential linked list for conv obs
    call read_prepbufr(filename, filedate)
+
+   call filter_obs_conv
 
    ! transfer info from limked list to arrays grouped by obs/variable types
    call sort_obs_conv
