@@ -195,7 +195,7 @@ subroutine set_obtype_conv(t29, obtype)
    obtype = 'unknown'
 
    select case(t29)
-      case (11, 12, 13, 22, 23, 31)
+      case (11, 12, 13, 22, 23, 31, 73, 77)
          obtype = 'sondes'
          !select case (kx)
          !case (120, 122, 132, 220, 222, 232)
@@ -208,7 +208,7 @@ subroutine set_obtype_conv(t29, obtype)
          obtype     = 'aircraft'
       case (522, 523)
          obtype     = 'sfc' ! 'ship'
-      case (531, 532, 561, 562)
+      case (531, 532, 561, 562, 534)
          obtype     = 'sfc' ! 'buoy'
       case (511, 514, 540) ! mesonet 540
          ! kx case (181, 281)
@@ -224,7 +224,8 @@ subroutine set_obtype_conv(t29, obtype)
          obtype     = 'ascat'
       !case (74)
       !   obtype     = 'gpspw'
-      case (71, 73, 75, 76, 77)
+      !case (71, 73, 75, 76, 77)
+      case (71, 75, 76)
          obtype     = 'profiler'
       !case (571, 65)
       !   obtype = 'ssmir' ! ssmi retrieval

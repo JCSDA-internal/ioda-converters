@@ -100,6 +100,9 @@ subroutine write_obs (filedate, write_opt)
 
       do i = 1, nvar_info
          ncname = trim(name_var_info(i))//'@MetaData'
+         if ( trim(name_var_info(i)) == 'variable_names' ) then
+            ncname = trim(name_var_info(i))//'@VarMetaData'
+         end if
          idim = ufo_vars_getindex(name_ncdim, dim_var_info(1,i))
          dim1 = ncid_ncdim(idim)
          if ( ufo_vars_getindex(name_ncdim, dim_var_info(2,i)) > 0 ) then
@@ -157,6 +160,9 @@ subroutine write_obs (filedate, write_opt)
 
       do i = 1, nvar_info
          ncname = trim(name_var_info(i))//'@MetaData'
+         if ( trim(name_var_info(i)) == 'variable_names' ) then
+            ncname = trim(name_var_info(i))//'@VarMetaData'
+         end if
          if ( type_var_info(i) == nf90_int ) then
             call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xinfo_int(:,i))
          else if ( type_var_info(i) == nf90_float ) then

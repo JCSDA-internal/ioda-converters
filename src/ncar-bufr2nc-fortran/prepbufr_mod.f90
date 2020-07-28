@@ -35,12 +35,14 @@ type each_level_type
    real(r_kind)       :: lat          ! Latitude in degree
    real(r_kind)       :: lon          ! Longitude in degree
    real(r_kind)       :: dhr          ! obs time minus analysis time in hour
+   real(r_kind)       :: pccf         ! percent confidence
 end type each_level_type
 
 type datalink_conv
    ! data from BUFR file
    integer(i_kind)           :: t29         ! data dump report type
    integer(i_kind)           :: rptype      ! prepbufr report type
+   integer(i_kind)           :: satid       ! satellite id
    character(len=nstring)    :: msg_type    ! BUFR message type name
    character(len=nstring)    :: stid        ! station identifier
    character(len=ndatetime)  :: datetime    ! ccyy-mm-ddThh:mm:ssZ
@@ -86,6 +88,7 @@ subroutine read_prepbufr(filename, filedate)
    real(r_double)    :: obs_save(8,255)
    real(r_double)    :: pob, pob1, pob2
    real(r_double)    :: drf(8,255), drf2(8,255) ! for balloon drift
+   real(r_double)    :: satqc(1), satid(1)
    equivalence (r8sid, csid), (r8sid2, csid2)
 
    character(len=14) :: cdate, dsec, obs_date
@@ -100,7 +103,7 @@ subroutine read_prepbufr(filename, filedate)
    logical           :: use_errtable, combine_mass_wind, do_tv_to_ts
    real(r_kind)      :: oetab(300,33,6)  ! 300 ob types, 33 levels (rows), 6 variables (columns)
    real(r_kind)      :: coef
-   real(r_kind)      :: qs
+   real(r_kind)      :: qs, tval
 
    write(*,*) '--- reading '//trim(filename)//' ---'
    hdstr='SID XOB YOB DHR TYP ELV T29'
@@ -191,8 +194,10 @@ subroutine read_prepbufr(filename, filedate)
 
       num_report_infile = num_report_infile + 1
 
-      call ufbint(iunit,hdr,7,1,iret2,hdstr)
-      call ufbint(iunit,pmo,2,1,nlevels,'PMO PMQ')
+      call ufbint(iunit,satqc,1,1,iret,'QIFN')
+      call ufbint(iunit,satid,1,1,iret,'SAID')
+      call ufbint(iunit,hdr,7,1,iret,hdstr)
+      call ufbint(iunit,pmo,2,1,iret,'PMO PMQ')
       call ufbint(iunit,qms,8,255,nlevels,qmstr)
       call ufbint(iunit,oes,8,255,nlevels,oestr)
       call ufbint(iunit,pco,8,255,nlevels,pcstr)
@@ -438,6 +443,13 @@ subroutine read_prepbufr(filename, filedate)
       write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
          iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
 
+      if ( satid(1) < r8bfms )  then
+         plink % satid = nint(satid(1))
+         if ( satqc(1) < r8bfms ) then
+            plink % each(:) % pccf = satqc(1)
+         end if
+      end if
+
       if ( pmo(1,1) < r8bfms ) then
          plink % slp % val = pmo(1,1)*100.0
          plink % slp % qc  = nint(pmo(2,1))
@@ -549,14 +561,16 @@ subroutine read_prepbufr(filename, filedate)
 
          if ( obs(2,k)>0.0 .and. obs(2,k)<r8bfms ) then
             plink % each (k) % q % val = obs(2,k)
-            plink % each (k) % q % qc  = nint(qms(2,k))
+            if ( qms(2,k) < r8bfms ) then
+               plink % each (k) % q % qc  = nint(qms(2,k))
+            end if
             if ( oes(2,k) < r8bfms ) then
                if ( abs(plink%each(k)%p%val - missing_r) > 0.01 ) then
-                  ! use either t or tv (ignore the difference between t and tv) for calculating qs
                   if ( abs(plink%each(k)%t%val - missing_r) > 0.01 ) then
                      call calc_qs(plink%each(k)%t%val, plink%each(k)%p%val, qs)
                   else if ( abs(plink%each(k)%tv%val - missing_r) > 0.01 ) then
-                     call calc_qs(plink%each(k)%tv%val, plink%each(k)%p%val, qs)
+                     tval = plink%each(k)%tv%val / (1.0 + 0.61 * obs(2,k))
+                     call calc_qs(tval, plink%each(k)%p%val, qs)
                   end if
                   plink % each (k) % q % err = oes(2,k)*10.0 ! convert to % from PREPBUFR percent divided by 10
                   plink % each (k) % q % err = plink % each (k) % q % err * qs * 0.01 ! convert from RH to q
@@ -621,8 +635,9 @@ subroutine sort_obs_conv
          nrecs(plink%obtype_idx) = nrecs(plink%obtype_idx) + 1
          nlocs(plink%obtype_idx) = nlocs(plink%obtype_idx) + plink%nlevels
       !else
-         !found undefined t29=534 in file
+         !found undefined t29=534/kx=180,280 in file
          !write(*,*) 't29 = ', plink%t29
+         !write(*,*) 'kx  = ', plink%rptype
       end if
 
       plink => plink%next
@@ -717,10 +732,8 @@ subroutine sort_obs_conv
                   else
                      xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%lon
                   end if
-               !else if ( trim(name_var_info(i)) == 'height' ) then
-               ! height appears to be model terrain height at ob location
-               ! which is not available in this converter
-               !   xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each(k)%h%val
+               else if ( trim(name_var_info(i)) == 'height' ) then
+                  xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each(k)%h%val
                else if ( trim(name_var_info(i)) == trim(var_prs) ) then
                   xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each(k)%p%val
                end if
@@ -740,27 +753,36 @@ subroutine sort_obs_conv
                xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%p%qc
                xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%p%err
             else if ( name_var_met(ivar) == trim(var_u) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%u%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%u%qc
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%u%err
+               if ( plink%each(k)%u%iuse == itrue ) then
+                  xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%u%val
+                  xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%u%qc
+                  xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%u%err
+               end if
             else if ( name_var_met(ivar) == trim(var_v) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%v%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%v%qc
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%v%err
+               if ( plink%each(k)%v%iuse == itrue ) then
+                  xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%v%val
+                  xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%v%qc
+                  xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%v%err
+               end if
             else if ( name_var_met(ivar) == trim(var_ts) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%t%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%t%qc
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%t%err
+               if ( plink%each(k)%t%iuse == itrue ) then
+                  xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%t%val
+                  xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%t%qc
+                  xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%t%err
+               end if
             else if ( name_var_met(ivar) == trim(var_tv) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%tv%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%tv%qc
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%tv%err
+               if ( plink%each(k)%tv%iuse == itrue ) then
+                  xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%tv%val
+                  xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%tv%qc
+                  xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%tv%err
+               end if
             else if ( name_var_met(ivar) == trim(var_q) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%q%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%q%qc
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%q%err
+               if ( plink%each(k)%q%iuse == itrue ) then
+                  xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each(k)%q%val
+                  xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%each(k)%q%qc
+                  xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each(k)%q%err
+               end if
             else if ( name_var_met(ivar) == trim(var_ps) ) then
-               ! plink%ps%iuse is set in subroutine filter_obs_conv
                if ( plink%ps%iuse == itrue ) then
                   xdata(ityp)%xfield(iloc(ityp),i)%val = plink%ps%val
                   xdata(ityp)%xfield(iloc(ityp),i)%qc  = plink%ps%qc
@@ -791,10 +813,13 @@ end subroutine sort_obs_conv
 subroutine filter_obs_conv
 
 ! refer to GSI/read_prepbufr.f90
+!
+! iuse information is extracted from global_convinfo.txt
+! to do: come up with a better way to handle iuse
 
    implicit none
 
-   logical         :: inflate_error
+   logical         :: adjust_obserr
    logical         :: noiqc
    integer(i_kind) :: lim_qm
    integer(i_kind) :: lim_zqm
@@ -802,10 +827,13 @@ subroutine filter_obs_conv
    integer(i_kind) :: lim_qqm
    integer(i_kind) :: zqm
    integer(i_kind) :: k
+   real(r_kind)    :: hpa500 = 50000.0
+   real(r_kind)    :: hpa100 = 10000.0
    real(r_kind)    :: inflate_factor = 1.2
 
-   inflate_error = .false.
-   noiqc = .false.
+   adjust_obserr = .false.
+   !noiqc = .false.
+   noiqc = .true.
    if ( noiqc ) then
       lim_qm  = 8
       lim_zqm = 7
@@ -818,6 +846,7 @@ subroutine filter_obs_conv
       lim_qqm = 4
    end if
 
+   write(*,*) '--- filtering conv obs ---'
    plink => phead
    link_loop: do while ( associated(plink) )
       if ( .not. allocated(plink % each) ) then
@@ -826,7 +855,6 @@ subroutine filter_obs_conv
       end if
 
       plink % ps % iuse = ifalse ! initialize
-      ! iuse setting in global_convinfo.txt
       if ( plink%rptype == 120 .or. &
            plink%rptype == 180 .or. &
            plink%rptype == 181 .or. &
@@ -835,7 +863,7 @@ subroutine filter_obs_conv
 
          plink % ps % iuse = itrue
 
-         if ( plink % ps % val < 50000.0 ) then
+         if ( plink % ps % val < hpa500 ) then
             plink % ps % iuse = ifalse
          end if
 
@@ -843,31 +871,225 @@ subroutine filter_obs_conv
          if ( zqm >= lim_zqm .and. zqm /= 15 .and. zqm /= 9 ) then
             plink % ps % qc = 9
          end if
-         if ( plink % ps % qc == 3 .or. plink % ps % qc == 7 ) then
-            plink % ps % err = plink % ps % err * inflate_factor
+         if ( adjust_obserr ) then
+            if ( plink % ps % qc == 3 .or. plink % ps % qc == 7 ) then
+               plink % ps % err = plink % ps % err * inflate_factor
+            end if
          end if
       end if
 
       do k = 1, plink%nlevels
 
-         if ( plink % each(k) % t % qc == 3 .or. &
-              plink % each(k) % t % qc == 7  ) then
-            plink % each(k) % t % err = plink % each(k) % t % err * inflate_factor
+         if ( plink % rptype >= 280 .and. plink % rptype < 300 ) then
+            plink % each (k) % h % val = plink % elv + 10.0
+            if ( plink % rptype == 280 ) then
+               if ( plink % t29 == 522 .or. &
+                    plink % t29 == 523 .or. &
+                    plink % t29 == 531 ) then
+                  plink % each (k) % h % val = 20.0
+               end if
+            end if
+            if ( plink % rptype == 282 ) then
+               plink % each (k) % h % val = plink % elv + 20.0
+            end if
+            if ( plink % rptype == 285 .or. &
+                 plink % rptype == 286 .or. &
+                 plink % rptype == 289 .or. &
+                 plink % rptype == 290 ) then
+               plink % each (k) % h % val = plink % elv
+               plink % elv = 0.0
+            end if
+         else
+            if ( plink % rptype >= 221 .and. plink % rptype <= 229 ) then
+               if ( abs(plink % each (k) % h % val - missing_r) > 0.01 ) then
+                  if ( plink % elv >= plink % each (k) % h % val ) then
+                     plink % each (k) % h % val = plink % elv + 10.0
+                  end if
+               end if
+            end if
          end if
 
-         if ( plink % each(k) % u % qc == 3 .or. &
-              plink % each(k) % u % qc == 7  ) then
-            plink % each(k) % u % err = plink % each(k) % u % err * inflate_factor
+         plink % each(k) % q % iuse = ifalse ! initialize
+         if ( plink%rptype == 120 .or. &
+              plink%rptype == 132 .or. &
+              plink%rptype == 133 .or. &
+              plink%rptype == 180 .or. &
+              plink%rptype == 182 ) then
+            plink % each(k) % q % iuse = itrue
          end if
 
-         if ( plink % each(k) % v % qc == 3 .or. &
-              plink % each(k) % v % qc == 7  ) then
-            plink % each(k) % v % err = plink % each(k) % v % err * inflate_factor
+         plink % each(k) % t  % iuse = ifalse ! initialize
+         plink % each(k) % tv % iuse = ifalse ! initialize
+         if ( plink%rptype == 120 .or. &
+              plink%rptype == 130 .or. &
+              plink%rptype == 132 .or. &
+              plink%rptype == 133 .or. &
+              plink%rptype == 180 .or. &
+              plink%rptype == 182 ) then
+            plink % each(k) % t  % iuse = itrue
+            plink % each(k) % tv % iuse = itrue
          end if
 
-         if ( plink % each(k) % q % qc == 3 .or. &
-              plink % each(k) % q % qc == 7  ) then
-            plink % each(k) % q % err = plink % each(k) % q % err * inflate_factor
+         plink % each(k) % u % iuse = ifalse ! initialize
+         plink % each(k) % v % iuse = ifalse ! initialize
+         if ( plink%rptype == 220 .or. &
+              plink%rptype == 221 .or. &
+              plink%rptype == 223 .or. &
+              plink%rptype == 224 .or. &
+              plink%rptype == 229 .or. &
+              plink%rptype == 230 .or. &
+              plink%rptype == 231 .or. &
+              plink%rptype == 232 .or. &
+              plink%rptype == 233 .or. &
+              plink%rptype == 280 .or. &
+              plink%rptype == 282 .or. &
+              plink%rptype == 289 .or. &
+              plink%rptype == 290 ) then
+            plink % each(k) % u % iuse = itrue
+            plink % each(k) % v % iuse = itrue
+         else if ( plink%rptype >= 241 .and. plink%rptype <= 260 ) then
+            if ( plink%rptype == 242 ) then
+               if ( plink % satid == 171 .or. &
+                    plink % satid == 172 .or. &
+                    plink % satid == 173 .or. &
+                    plink % satid == 174 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 243 ) then
+               if ( plink % satid ==  55 .or. &
+                    plink % satid ==  70 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 244 ) then
+               if ( plink % satid ==   3 .or. &
+                    plink % satid ==   4 .or. &
+                    plink % satid == 206 .or. &
+                    plink % satid == 207 .or. &
+                    plink % satid == 209 .or. &
+                    plink % satid == 223 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 245 ) then
+               if ( plink % satid == 259 .or. &
+                    plink % satid == 270 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 246 ) then
+               if ( plink % satid == 259 .or. &
+                    plink % satid == 270 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 247 ) then
+               if ( plink % satid == 259 .or. &
+                    plink % satid == 270 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 250 ) then
+               if ( plink % satid == 171 .or. &
+                    plink % satid == 172 .or. &
+                    plink % satid == 173 .or. &
+                    plink % satid == 174 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 252 ) then
+               if ( plink % satid == 171 .or. &
+                    plink % satid == 172 .or. &
+                    plink % satid == 173 .or. &
+                    plink % satid == 174 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 253 ) then
+               if ( plink % satid ==  55 .or. &
+                    plink % satid ==  70 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 254 ) then
+               if ( plink % satid ==  55 .or. &
+                    plink % satid ==  70 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 257 ) then
+               if ( plink % satid == 783 .or. &
+                    plink % satid == 784 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 258 ) then
+               if ( plink % satid == 783 .or. &
+                    plink % satid == 784 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 259 ) then
+               if ( plink % satid == 783 .or. &
+                    plink % satid == 784 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            else if ( plink%rptype == 260 ) then
+               if ( plink % satid == 224 )then
+                  plink % each(k) % u % iuse = itrue
+                  plink % each(k) % v % iuse = itrue
+               end if
+            end if
+         end if
+
+         if ( plink%rptype == 243 .or. &
+              plink%rptype == 253 .or. &
+              plink%rptype == 254 ) then
+            if (  plink % each(k) % pccf < 85.0 ) then
+               plink % each(k) % u % iuse = ifalse
+               plink % each(k) % v % iuse = ifalse
+            end if
+         end if
+
+         if ( plink % each(k) % p % qc >= lim_qm ) then
+            plink % each(k) % u  % iuse = ifalse
+            plink % each(k) % v  % iuse = ifalse
+            plink % each(k) % t  % iuse = ifalse
+            plink % each(k) % tv % iuse = ifalse
+            plink % each(k) % q  % iuse = ifalse
+         end if
+
+         if ( adjust_obserr ) then
+            if ( plink % each(k) % p % val < hpa100 ) then
+               if ( abs(plink%each(k)%t%err - missing_r) > 0.01 ) then
+                  plink % each(k) % t  % err = plink % each(k) % t  % err * inflate_factor
+               end if
+               if ( abs(plink%each(k)%tv%err - missing_r) > 0.01 ) then
+                  plink % each(k) % tv % err = plink % each(k) % tv % err * inflate_factor
+               end if
+            end if
+            if ( plink % each(k) % t % qc == 3 .or. &
+                 plink % each(k) % t % qc == 7  ) then
+               plink % each(k) % t % err = plink % each(k) % t % err * inflate_factor
+            end if
+            if ( plink % each(k) % tv % qc == 3 .or. &
+                 plink % each(k) % tv % qc == 7  ) then
+               plink % each(k) % tv % err = plink % each(k) % tv % err * inflate_factor
+            end if
+            if ( plink % each(k) % u % qc == 3 .or. &
+                 plink % each(k) % u % qc == 7  ) then
+               plink % each(k) % u % err = plink % each(k) % u % err * inflate_factor
+            end if
+            if ( plink % each(k) % v % qc == 3 .or. &
+                 plink % each(k) % v % qc == 7  ) then
+               plink % each(k) % v % err = plink % each(k) % v % err * inflate_factor
+            end if
+            if ( plink % each(k) % q % qc == 3 .or. &
+                 plink % each(k) % q % qc == 7  ) then
+               plink % each(k) % q % err = plink % each(k) % q % err * inflate_factor
+            end if
          end if
 
       end do ! nlevels
@@ -896,6 +1118,7 @@ subroutine fill_datalink (datalink, rfill, ifill)
    datalink % elv       = rfill
    datalink % rptype    = ifill
    datalink % t29       = ifill
+   datalink % satid     = ifill
    datalink % ps  % val = rfill
    datalink % ps  % qc  = ifill
    datalink % ps  % err = rfill
@@ -935,8 +1158,18 @@ subroutine fill_datalink (datalink, rfill, ifill)
       datalink % each (:) % q % qc   = ifill
       datalink % each (:) % q % err  = rfill
 
+      datalink % each (:) % u  % iuse = itrue
+      datalink % each (:) % v  % iuse = itrue
+      datalink % each (:) % t  % iuse = itrue
+      datalink % each (:) % tv % iuse = itrue
+      datalink % each (:) % p  % iuse = itrue
+      datalink % each (:) % q  % iuse = itrue
+
       datalink % each (:) % lat      = rfill
       datalink % each (:) % lon      = rfill
+      datalink % each (:) % dhr      = rfill
+
+      datalink % each (:) % pccf     = rfill
    end if
 
 end subroutine fill_datalink
