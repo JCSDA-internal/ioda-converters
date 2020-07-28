@@ -298,7 +298,7 @@ geovals_vars = {
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
-    'atmosphere_absorber_03': 'mass_concentration_of_ozone_in_air',
+    'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
     'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
     'atmosphere_mass_content_of_cloud_02': 'mass_content_of_cloud_ice_in_atmosphere_layer',
