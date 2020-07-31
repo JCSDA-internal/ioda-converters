@@ -144,7 +144,7 @@ subroutine write_obs (filedate, write_opt)
                ncname = trim(name_var_met(ivar))//'@ObsError'
                call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%err)
                ncname = trim(name_var_met(ivar))//'@PreQC'
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%qc)
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%qm)
                ncname = trim(name_var_met(ivar))//'@ObsType'
                call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%rptype)
             end if
@@ -154,7 +154,7 @@ subroutine write_obs (filedate, write_opt)
             ncname = trim(name_var_tb(i))//'@ObsError'
             call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%err)
             ncname = trim(name_var_tb(i))//'@PreQC'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%qc)
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%qm)
          end if
       end do var_loop
 

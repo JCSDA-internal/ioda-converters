@@ -9,6 +9,7 @@ implicit none
 real(r_kind),    parameter :: t_kelvin          = 273.15
 real(r_kind),    parameter :: missing_r         = -999.0
 integer(i_kind), parameter :: missing_i         = -999
+integer(i_kind), parameter :: not_use           = 100
 integer(i_kind), parameter :: itrue             = 1
 integer(i_kind), parameter :: ifalse            = 0
 integer(i_kind), parameter :: nstring           = 50
@@ -48,8 +49,8 @@ character(len=nstring), dimension(nvar_met) :: name_var_met = &
 integer(i_kind), dimension(nvar_met,nobtype) :: vflag = reshape ( &
    (/                                               &
       itrue, itrue, itrue,  itrue,  itrue,  ifalse, & ! sonde
-      itrue, itrue, itrue,  ifalse, itrue,  ifalse, & ! aircraft
-      itrue, itrue, itrue,  ifalse, itrue,  itrue,  & ! sfc
+      itrue, itrue, itrue,  itrue,  itrue,  ifalse, & ! aircraft
+      itrue, itrue, itrue,  itrue,  itrue,  itrue,  & ! sfc
       itrue, itrue, ifalse, ifalse, ifalse, ifalse, & ! satwnd
       itrue, itrue, ifalse, ifalse, ifalse, ifalse, & ! profiler
       itrue, itrue, ifalse, ifalse, ifalse, ifalse  & ! ascat
@@ -157,7 +158,7 @@ character(len=nstring), dimension(2,nsen_info) :: dim_sen_info = reshape ( &
 ! variables for storing data
 type xfield_type
    real(r_kind)       :: val          ! observation value
-   integer(i_kind)    :: qc           ! observation QC
+   integer(i_kind)    :: qm           ! observation quality marker
    real(r_kind)       :: err          ! observational error
    integer(i_kind)    :: rptype       ! report type
 end type xfield_type
@@ -195,7 +196,7 @@ subroutine set_obtype_conv(t29, obtype)
    obtype = 'unknown'
 
    select case(t29)
-      case (11, 12, 13, 22, 23, 31, 73, 77)
+      case (11, 12, 13, 22, 23, 31)
          obtype = 'sondes'
          !select case (kx)
          !case (120, 122, 132, 220, 222, 232)
@@ -225,7 +226,9 @@ subroutine set_obtype_conv(t29, obtype)
       !case (74)
       !   obtype     = 'gpspw'
       !case (71, 73, 75, 76, 77)
-      case (71, 75, 76)
+      ! t29=73/kx=229 (Wind profiler originating in PIBAL bulletins (tropical and European)
+      ! t29=77/kx=126 (Multi-Agency Profiler (MAP) RASS temperatures)
+      case (71, 73, 75, 76)
          obtype     = 'profiler'
       !case (571, 65)
       !   obtype = 'ssmir' ! ssmi retrieval

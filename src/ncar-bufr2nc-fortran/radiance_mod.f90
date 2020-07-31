@@ -161,8 +161,6 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
 
          num_report_infile = num_report_infile + 1
 
-if ( mod(num_report_infile, 10) /= 0 ) cycle subset_loop ! hcl-tmp
-
          call ufbint(iunit,timedat,ntime,1,iret,timestr)
 
          iyear  = nint(timedat(1))
@@ -391,8 +389,6 @@ subroutine read_airs_colocate_amsua (filename, filedate)
 
         num_report_infile = num_report_infile + 1
 
-if ( mod(num_report_infile, 100) /= 0 ) cycle subset_loop ! hcl-tmp
-
         ! Read SPITSEQN
         call ufbseq(iunit,satellitespot_list_array,N_satellitespot_LIST,1,iret,'SPITSEQN')
         satellitespot = satellitespot_list(             &
@@ -582,7 +578,7 @@ subroutine sort_obs_radiance
          if ( nvars(i) > 0 ) then
             allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
             xdata(i)%xfield(:,:)%val = missing_r
-            xdata(i)%xfield(:,:)%qc  = missing_i
+            xdata(i)%xfield(:,:)%qm  = missing_i
             xdata(i)%xfield(:,:)%err = missing_r
             allocate (xdata(i)%var_idx(nvars(i)))
             do iv = 1, nvars(i)
@@ -663,7 +659,7 @@ subroutine sort_obs_radiance
          xdata(ityp)%xfield(iloc(ityp),i)%val = rlink%tb(i)
          !xdata(ityp)%xfield(iloc(ityp),i)%err = 1.0
          call set_brit_obserr(trim(rlink%inst), i, xdata(ityp)%xfield(iloc(ityp),i)%err)
-         xdata(ityp)%xfield(iloc(ityp),i)%qc  = 0
+         xdata(ityp)%xfield(iloc(ityp),i)%qm  = 0
       end do
       rlink => rlink%next
    end do reports
