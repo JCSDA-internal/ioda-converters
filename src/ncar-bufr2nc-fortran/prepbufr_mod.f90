@@ -37,6 +37,7 @@ type each_level_type
    real(r_kind)       :: lon          ! Longitude in degree
    real(r_kind)       :: dhr          ! obs time minus analysis time in hour
    real(r_kind)       :: pccf         ! percent confidence
+   character(len=ndatetime) :: datetime     ! ccyy-mm-ddThh:mm:ssZ
    type (each_level_type), pointer :: next => null()
    contains
      procedure :: init => init_each_level
@@ -421,7 +422,7 @@ subroutine read_prepbufr(filename, filedate)
       ! the following allows reports at the poles
       !if ( abs(hdr(2)-360.0) < 0.01 .or. abs(hdr(3)-90.0) < 0.01 ) cycle reports
 
-      write(dsec,'(i4,a1)') int(hdr(4)*60.0*60.0), 's' ! seconds
+      write(dsec,'(i6,a1)') int(hdr(4)*60.0*60.0), 's' ! seconds
       write(cdate,'(i10)') idate
       call da_advance_time (cdate(1:10), trim(dsec), obs_date)
       read (obs_date(1:14),'(i4,5i2)') iyear, imonth, iday, ihour, imin, isec
@@ -513,7 +514,14 @@ subroutine read_prepbufr(filename, filedate)
          if ( drift ) then
             if ( drf(1,k) < r8bfms ) plink % each % lon = drf(1,k)
             if ( drf(2,k) < r8bfms ) plink % each % lat = drf(2,k)
-            if ( drf(3,k) < r8bfms ) plink % each % dhr = drf(3,k)
+            if ( drf(3,k) < r8bfms ) then
+               plink % each % dhr = drf(3,k)
+               write(dsec,'(i6,a1)') int(drf(3,k)*60.0*60.0), 's' ! seconds
+               call da_advance_time (cdate(1:10), trim(dsec), obs_date)
+               read (obs_date(1:14),'(i4,5i2)') iyear, imonth, iday, ihour, imin, isec
+               write(unit=plink%each%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+                  iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+            end if
          end if
 
          if ( obs(1,k) > 0.0 .and. obs(1,k) < r8bfms ) then
@@ -746,15 +754,16 @@ subroutine sort_obs_conv
                end if
             else if ( type_var_info(i) == nf90_float ) then
                if ( name_var_info(i) == 'time' ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%dhr
+                  if ( plink%each%dhr > missing_r ) then  ! time drift
+                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%dhr
+                  else
+                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%dhr
+                  end if
                else if ( trim(name_var_info(i)) == 'station_elevation' ) then
                   xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%elv
                else if ( trim(name_var_info(i)) == 'latitude' ) then
                   if ( plink%each%lat > missing_r ) then  ! drift
                      xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%lat
-                     if ( plink%each%dhr > missing_r ) then  ! time drift
-                        xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%dhr
-                     end if
                   else
                      xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%lat
                   end if
@@ -771,7 +780,11 @@ subroutine sort_obs_conv
                end if
             else if ( type_var_info(i) == nf90_char ) then
                if ( trim(name_var_info(i)) == 'datetime' ) then
-                  xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%datetime
+                  if ( plink%each%dhr > missing_r ) then  ! time drift
+                     xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%each%datetime
+                  else
+                     xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%datetime
+                  end if
                else if ( trim(name_var_info(i)) == 'station_id' ) then
                   xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%stid
                end if
@@ -1153,6 +1166,7 @@ subroutine init_each_level(self)
   self % lon  = rfill
   self % dhr  = rfill
   self % pccf = rfill
+  self % datetime = ''
   call self % h  % init()
   call self % u  % init()
   call self % v  % init()
