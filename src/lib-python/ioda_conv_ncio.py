@@ -187,14 +187,14 @@ class NcWriter(object):
         ref_offset = math.floor(self._ref_date_time.hour*3600. + self._ref_date_time.minute*60. + self._ref_date_time.second)/3600.  # decimal hours
         date_offset_cache = {}  # Cache a map from bytes[0:10] to the corresponding date's offset from reference date
         for i in range(len(datestr_vec)):
-            date_str = datestr_vec[i][0:10].tobytes()
-            date_offset = date_offset_cache.get(date_str)
+            date_bytes = datestr_vec[i].tobytes()
+            date_offset = date_offset_cache.get(date_bytes[0:10])
             if date_offset is None:
                 # There are at most 2 distinct dates per cycle for any window length < 24hrs
-                date_offset = (dt.date.fromisoformat(date_str.decode('ascii')) - self._ref_date_time.date()).total_seconds()/3600.
-                date_offset_cache[date_str] = date_offset
-            t = dt.time.fromisoformat(datestr_vec[i][11:19].tobytes().decode('ascii'))
-            t_offset = math.floor(t.hour*3600. + t.minute*60. + t.second)/3600.
+                delta = dt.date(int(date_bytes[0:4]), int(date_bytes[5:7]), int(date_bytes[8:10])) - self._ref_date_time.date()
+                date_offset = delta.total_seconds()/3600.
+                date_offset_cache[date_bytes[0:10]] = date_offset
+            t_offset = (int(date_bytes[11:13])*3600. + int(date_bytes[14:16])*60. + int(date_bytes[17:19]))/3600.
             offset[i] = date_offset + (t_offset - ref_offset)
         return offset
 
