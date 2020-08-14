@@ -11,6 +11,7 @@ list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
+  testinput/giirs_ssec.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
@@ -41,6 +42,7 @@ list( APPEND test_output
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
+  testoutput/giirs_ssec_ioda.nc4
   testoutput/godae_prof.nc
   testoutput/godae_ship.nc
   testoutput/godae_trak.nc
@@ -267,6 +269,20 @@ ecbuild_add_test( TARGET test_iodaconv_ncep_bufr
                        -l NC001007.yaml
                        -ot NC001007"
                       ioda.NC001007.2020031012.nc)
+
+#===============================================================================
+# SSEC GIIRS converter
+#===============================================================================
+
+ecbuild_add_test( TARGET test_giirs_ssec
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/giirs_ssec2ioda.py
+                       -i testinput/giirs_ssec.nc
+                       -o testrun/giirs_ssec_ioda.nc4
+                       -d 2020080100"
+                      giirs_ssec_ioda.nc4)
 
 #===============================================================================
 # GSI ncdiag converters
