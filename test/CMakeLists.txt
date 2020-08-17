@@ -34,6 +34,7 @@ list( APPEND test_input
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
+  testinput/tropomi_no2.nc
 )
 
 list( APPEND test_output
@@ -63,6 +64,7 @@ list( APPEND test_output
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
+  testoutput/tropomi_no2.nc
 )
 
 # create test directories and make links to the input files
@@ -380,7 +382,7 @@ if (odc_FOUND)
 endif ()
 
 #==============================================================================
-# VIIRS aod converter
+# Atmospheric Composition converters
 #==============================================================================
 
 ecbuild_add_test( TARGET test_iodaconv_viirs_aod
@@ -395,3 +397,11 @@ ecbuild_add_test( TARGET test_iodaconv_viirs_aod
                        -t 0.0"
                       viirs_aod.nc)
 
+ecbuild_add_test( TARGET test_iodaconv_tropomi_no2
+                  TYPE SCRIPT
+                  COMMAND iodaconv_comp.sh
+                  ARGS netcdf
+                       "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+                       -i testinput/tropomi_no2.nc
+                       -o testrun/tropomi_no2.nc"
+                      tropomi_no2.nc)
