@@ -20,21 +20,20 @@ $> ncep_classes.py -m  <maximum number of messages to keep (optional)>     \
                    -i  <name of the input BUFR file>                       \
                    -ot <observation type>                                  \
                    -d  <date in YYYYMMDDHH>                                \
-                   -l  <yaml file name (optional)>                         \
+                   -l  <yaml file name>                                    \
                    -o  <output filename in nc (optional)>                  \
                    -Th <thining length (optional, to be removed)>          \
                    -Pr <BUFR or prepBUFR format (optional, to be removed)>
 
 ** Maximum number of messages "-m" is optional. If -m is set, the output only contains the first m messages. If -m is not set, the whole bufr file is converted.
 
-** Yaml file "-l" is optional. If -l is set, the program will use the yaml file chosen by user. If -l is not set, default "bufr2ioda.yaml" will be used. At this moment, "bufr2ioda.yaml" is only a small sample. 
-** The yaml files for some ncep bufr tanks were already created, and they are named by bufrtank names, e.g., if you are working on b001/xx001, please choose -l NC001001.yaml. These files are located at: lib/pyiodaconv/config
+** Yaml file "-l" is required. The yaml files for some ncep bufr tanks were already created, and they are named by bufrtank names, e.g., if you are working on b001/xx001, please choose -l NC001001.yaml. These files are located at: lib/pyiodaconv/config
 
-** If user named yaml file does not exist in the lib/pyiodaconv/config directory, a new yaml file will be created in the same lib/pyiodaconv/config directory, user can modify that yaml file if needed.
+** If user named yaml file does not exist in the lib/pyiodaconv/config directory, a new yaml file will be created in the same lib/pyiodaconv/config directory. User might need to modify their own yaml file to be able to run this program.
   
 ### Example:
 
-`ncep_classes.py -m 5 -p /path/to/the/datafile -i xx007 -ot NC001007 -l NC001007.yaml -d 2020031012`
+`ncep_classes.py -m 5 -p /path/to/the/datafile/ -i xx007 -ot NC001007 -l NC001007.yaml -d 2020031012`
 
 ## Attention:
 If the following error shows up:
@@ -57,9 +56,9 @@ The expected outputs are:
 
 * The default dictionary containing all the potentially available observations and metadata in the specific observation type: If it does not exist, the code will generate the .dict file with the following name: "ObservationType.dict", e.g., NC001007.dict
 
-* The yaml file (if -l is set): the program will generate user named yaml file from the original bufr file if user's yaml file does not exist, e.g., NC001007.yaml
+* The yaml file: some yaml files are generated and modfied already. The program will generate user named yaml file if user's yaml file does not exist in /config
 
-The structure of bufr2ioda.yaml is the following:
+The structure of a typical yaml file is the following:
 ```
 - - height_of_waves     # netcdf variable name, by default the BUFR description is used with underscores instead of spaces, between the words.
   - HOWV                # BUFR variable name
@@ -69,7 +68,7 @@ The structure of bufr2ioda.yaml is the following:
 ```
 The users can update the yaml file according to their own naming requirements for the NetCDF variable names, e.g., JEDI requires significant wave height: height_of_waves@ObsValue.
 
-In case that the user provide their own version of "bufr2ioda.yaml", the provided file will be used for the netCDF naming conventions, e.g. CF netCDF naming convention.
+In case that the user provide their own version of yaml, the provided file will be used for the netCDF naming conventions, e.g. CF netCDF naming convention.
 
 High level flowchart of the BUFR to IODA NetCDF converter, and the importance of the dictionary existence:
 ![alt text](UMO_CS.jpg)
