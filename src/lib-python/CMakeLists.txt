@@ -43,7 +43,6 @@ install( PROGRAMS
   DESTINATION bin
 )
 
-include(GNUInstallDirs)
 install( FILES ${lib_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
 ecbuild_add_test( TARGET iodaconv_lib-python_coding_norms
