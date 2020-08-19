@@ -16,12 +16,7 @@ macro( SET_TARGETS_DEPS filelist source destination deplist)
     set ( SOURCE_FILE ${source}/${FILENAME} )
     set ( DEST_FILE ${destination}/${FILENAME} )
     list( APPEND ${deplist} ${DEST_FILE} )
-    add_custom_command(
-      OUTPUT ${DEST_FILE}
-      DEPENDS ${SOURCE_FILE}
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
-      COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_FILE} ${DEST_FILE}
-    )
+    configure_file( ${SOURCE_FILE} ${DEST_FILE} COPYONLY )
   endforeach(FILENAME)
 endmacro( SET_TARGETS_DEPS )
 

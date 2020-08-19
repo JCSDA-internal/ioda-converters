@@ -4,8 +4,13 @@ import sys
 import argparse
 from pathlib import Path
 
-prefix_lib_path = Path(__file__).absolute().parent.parent/'lib'
-sys.path.append(str(prefix_lib_path/'pyiodaconv'))
+# Locate src/lib-python/ioda_conv_ncio
+# TODO Replace with setup.py
+IODA_CONV_PATH = "@SCRIPT_LIB_PATH@"
+if Path(IODA_CONV_PATH).is_dir():
+    sys.path.append(IODA_CONV_PATH)
+else:
+    sys.path.append(str(Path(__file__).parent))
 
 import gsi_ncdiag as gsid
 

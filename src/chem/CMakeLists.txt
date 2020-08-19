@@ -8,24 +8,16 @@ CONF_TARGETS_DEPS( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
                    bin_chem_scripts_deps)
-add_custom_target( bin_chem_scripts ALL
-    COMMAND chmod +x ${bin_chem_scripts_deps}
-    DEPENDS ${bin_chem_scripts_deps} )
+execute_process(COMMAND chmod +x ${bin_chem_scripts_deps})
 
 # Configure files for install prefix bin
-set( SCRIPT_LIB_PATH ${PYIODACONV_INSTALL_LIBDIR} )
+file(RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
 CONF_TARGETS_DEPS( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
                    install_bin_chem_scripts_deps)
-add_custom_target( install_bin_chem_scripts ALL
-    COMMAND chmod +x ${install_bin_chem_scripts_deps}
-    DEPENDS ${install_bin_chem_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_chem_scripts_deps}
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+install( PROGRAMS ${install_bin_chem_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
 ecbuild_add_test( TARGET iodaconv_chem_coding_norms
                   TYPE
