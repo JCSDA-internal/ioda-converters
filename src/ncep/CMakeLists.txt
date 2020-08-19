@@ -70,10 +70,7 @@ install( PROGRAMS ${install_bin_ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_B
 
 install( FILES ${ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-install( FILES
-  ${config_ncep_scripts_deps}
-  DESTINATION lib/pyiodaconv/config
-)
+install( FILES ${config_ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv/config )
 
 ecbuild_add_test( TARGET iodaconv_ncep_coding_norms
                   TYPE SCRIPT
