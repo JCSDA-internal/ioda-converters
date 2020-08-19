@@ -66,15 +66,9 @@ add_custom_target( install_bin_ncep_scripts ALL
     COMMAND chmod +x ${install_bin_ncep_scripts_deps}
     DEPENDS ${install_bin_ncep_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_ncep_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES
-  ${ncep_scripts_deps}
-  DESTINATION lib/pyiodaconv
-)
+install( FILES ${ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
 install( FILES
   ${config_ncep_scripts_deps}

@@ -23,10 +23,7 @@ add_custom_target( install_bin_odc_scripts ALL
     COMMAND chmod +x ${install_bin_odc_scripts_deps}
     DEPENDS ${install_bin_odc_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_odc_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_odc_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
 ecbuild_add_test( TARGET iodaconv_odc_coding_norms
                   TYPE

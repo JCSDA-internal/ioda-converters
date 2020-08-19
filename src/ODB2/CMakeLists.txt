@@ -48,12 +48,12 @@ COPY_FILES( "${configs}"
 
 install( PROGRAMS
   ${install_bin_odb2_scripts_deps}
-  DESTINATION bin
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 install( FILES
   ${odb2_scripts_deps}
-  DESTINATION lib/pyiodaconv
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv
 )
 
 # ODB "definition" files which are configurations for the odbapi2nc.py script.

@@ -38,10 +38,7 @@ add_custom_target( install_bin_python_scripts ALL
     DEPENDS ${install_bin_python_scripts_deps} )
 
 
-install( PROGRAMS
-  ${install_bin_python_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
 install( FILES ${lib_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 

@@ -24,7 +24,7 @@ add_custom_target( install_bin_chem_scripts ALL
 
 install( PROGRAMS
   ${install_bin_chem_scripts_deps}
-  DESTINATION bin
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 ecbuild_add_test( TARGET iodaconv_chem_coding_norms

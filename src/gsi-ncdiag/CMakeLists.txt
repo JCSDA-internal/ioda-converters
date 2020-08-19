@@ -15,7 +15,7 @@ foreach(_file IN LISTS libs)
                                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
 endforeach()
 
-install(PROGRAMS ${programs} DESTINATION bin)
+install(PROGRAMS ${programs} DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${libs} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv)
 
 ecbuild_add_test( TARGET iodaconv_gsi-ncdiag_coding_norms

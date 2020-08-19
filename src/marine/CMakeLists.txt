@@ -35,10 +35,7 @@ add_custom_target( install_bin_marine_scripts ALL
     COMMAND chmod +x ${install_bin_marine_scripts_deps}
     DEPENDS ${install_bin_marine_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_marine_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_marine_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
 ecbuild_add_test( TARGET iodaconv_marine_coding_norms
                   TYPE

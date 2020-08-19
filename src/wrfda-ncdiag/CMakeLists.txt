@@ -32,15 +32,9 @@ add_custom_target( install_bin_wrfda_ncdiag_scripts ALL
     COMMAND chmod +x ${install_bin_wrfda_ncdiag_scripts_deps}
     DEPENDS ${install_bin_wrfda_ncdiag_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_wrfda_ncdiag_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES
-  ${wrfda_ncdiag_scripts_deps}
-  DESTINATION lib/pyiodaconv
-)
+install( FILES ${wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
 ecbuild_add_test( TARGET iodaconv_wrfda-ncdiag_coding_norms
                   TYPE SCRIPT
