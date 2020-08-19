@@ -34,16 +34,3 @@ macro( conf_targets_deps filelist source destination deplist)
   endforeach()
 endmacro()
 
-function(add_compare_test)
-  set(options)
-  set(single_value_args TARGET)
-  set(multi_value_args  ARGS)
-  cmake_parse_arguments(_ARG "${options}" "${single_value_args}" "${multi_value_args}"  ${ARGN})
-
-  if(_ARG_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "add_compare_test(): Unknown arguments: \"${_ARG_UNPARSED_ARGUMENTS}\"")
-  endif()
-
-
-
-endfunction()
