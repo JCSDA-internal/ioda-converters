@@ -13,28 +13,33 @@ import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 
-class ship(object):
+class trak(object):
 
     def __init__(self, filename, date):
 
         self.filename = filename
         self.date = date
 
-        # Read ship data
-        self._rd_ship()
+        # Read trak data
+        self._rd_trak()
 
         return
 
-    def _rd_ship(self):
+    def _rd_trak(self):
         '''
-        Read the surface obs data
-        Based on subroutine rd_ship in ocn_obs.f
+        Read the trak data
+        Based on subroutine rd_trak in ocn_obs.f
         '''
 
         try:
@@ -49,43 +54,39 @@ class ship(object):
 
         data['n_obs'], data['n_lvl'], data['n_vrsn'] = fh.read_ints('>i4')
 
-        print('    number ship obs: %d' % data['n_obs'])
+        print('    number trak obs: %d' % data['n_obs'])
         print('  max number levels: %d' % data['n_lvl'])
         print('file version number: %d' % data['n_vrsn'])
 
         if data['n_obs'] <= 0:
-            print('No ship observations to process from %s' % self.filename)
+            print('No trak observations to process from %s' % self.filename)
             return
 
         data['ob_wm'] = fh.read_reals('>i4')
-        data['ob_glb'] = fh.read_reals('>f4')
+        data['ob_gsal'] = fh.read_reals('>f4')
+        data['ob_gsst'] = fh.read_reals('>f4')
         data['ob_lat'] = fh.read_reals('>f4')
         data['ob_lon'] = fh.read_reals('>f4')
         data['ob_age'] = fh.read_reals('>f4')
-        data['ob_clm'] = fh.read_reals('>f4')
-        data['ob_qc'] = fh.read_reals('>f4')
-        data['ob_rgn'] = fh.read_reals('>f4')
+        data['ob_csal'] = fh.read_reals('>f4')
+        data['ob_csst'] = fh.read_reals('>f4')
+        data['ob_qc_sal'] = fh.read_reals('>f4')
+        data['ob_qc_sst'] = fh.read_reals('>f4')
+        data['ob_qc_vel'] = fh.read_reals('>f4')
+        data['ob_rsal'] = fh.read_reals('>f4')
+        data['ob_rsst'] = fh.read_reals('>f4')
+        data['ob_sal'] = fh.read_reals('>f4')
         data['ob_sst'] = fh.read_reals('>f4')
         data['ob_typ'] = fh.read_reals('>i4')
+        data['ob_uuu'] = fh.read_reals('>f4')
+        data['ob_vvv'] = fh.read_reals('>f4')
         data['ob_dtg'] = fh.read_record('>S12').astype('U12')
         data['ob_rcpt'] = fh.read_record('>S12').astype('U12')
         data['ob_scr'] = fh.read_record('>S1').astype('U1')
-
-        if data['n_vrsn'] <= 2:
-            print('verify ob_sign for version = %d' % data['n_vrsn'])
-            data['ob_sign'] = fh.read_record('S6').astype('U6')
-        else:
-            data['ob_sign'] = fh.read_record('>S7').astype('U7')
-
-        if data['n_vrsn'] > 1:
-            data['ob_csgm'] = fh.read_reals('>f4')
-            data['ob_gsgm'] = fh.read_reals('>f4')
-            data['ob_rsgm'] = fh.read_reals('>f4')
-        else:
-            minus999 = np.ones(data['n_obs'], dtype=np.float32) * -999.
-            data['ob_csgm'] = minus999
-            data['ob_gsgm'] = minus999
-            data['ob_rsgm'] = minus999
+        data['ob_sgn'] = fh.read_record('>S6').astype('U6')
+        data['ob_csgm'] = fh.read_reals('>f4')
+        data['ob_gsgm'] = fh.read_reals('>f4')
+        data['ob_rsgm'] = fh.read_reals('>f4')
 
         fh.close()
 
@@ -135,7 +136,7 @@ class IODA(object):
         for obs in obsList:
 
             if obs.data['n_obs'] <= 0:
-                print('No ship observations for IODA!')
+                print('No trak observations for IODA!')
                 continue
 
             for n in range(obs.data['n_obs']):
@@ -148,9 +149,14 @@ class IODA(object):
 
                 for key in self.varDict.keys():
 
+                    if key in ['ob_uuu', 'ob_vvv']:
+                        varName = 'vel'
+                    else:
+                        varName = key.split('_')[-1]
+
                     val = obs.data[key][n]
-                    err = 0.5
-                    qc = (100*obs.data['ob_qc'][n]).astype('i4')
+                    err = 1.0
+                    qc = (100*obs.data['ob_qc_'+varName][n]).astype('i4')
 
                     valKey = self.keyDict[key]['valKey']
                     errKey = self.keyDict[key]['errKey']
@@ -168,11 +174,12 @@ class IODA(object):
 
 def main():
 
-    desc = 'Convert GODAE binary ship data to IODA netCDF4 format'
-    parser = ArgumentParser(description=desc,
-                            formatter_class=ArgumentDefaultsHelpFormatter)
+    desc = 'Convert GODAE binary track data to IODA netCDF4 format'
+    parser = ArgumentParser(
+        description=desc,
+        formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '-i', '--input', help='name of the binary GODAE ship file',
+        '-i', '--input', help='name of the binary GODAE track file',
         type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output', help='name of the output netCDF GODAE ship file',
@@ -189,10 +196,13 @@ def main():
 
     obsList = []
     for fname in fList:
-        obsList.append(ship(fname, fdate))
+        obsList.append(trak(fname, fdate))
 
     varDict = {
         'ob_sst': 'sea_surface_temperature',
+        'ob_sal': 'sea_surface_salinity',
+        'ob_uuu': 'sea_surface_zonal_wind',
+        'ob_vvv': 'sea_surface_meriodional_wind'
     }
 
     IODA(foutput, fdate, varDict, obsList)

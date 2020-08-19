@@ -16,27 +16,27 @@ list( APPEND configs
 
 set ( ODB2_PYCODESTYLE_CONFIG ${CMAKE_CURRENT_SOURCE_DIR} )
 
-SET_TARGETS_DEPS( "${libs}"
+set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
                    odb2_scripts_deps)
 
-set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
                    bin_odb2_scripts_deps)
 execute_process(COMMAND chmod +x ${bin_odb2_scripts_deps})
 
 # Configure files for install prefix bin
-file(RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
                    install_bin_odb2_scripts_deps)
 
 # ODB "definition" files which are configurations for the odbapi2nc.py script.
-COPY_FILES( "${configs}"
+copy_files( "${configs}"
             ${CMAKE_CURRENT_SOURCE_DIR}/Definitions
             ${CMAKE_BINARY_DIR}/etc/pyiodaconv )
 
@@ -51,7 +51,6 @@ endforeach(FILENAME)
 
 install( FILES ${build_area_configs} DESTINATION ${CMAKE_INSTALL_DATADIR}/pyiodaconv )
 
-ecbuild_add_test( TARGET iodaconv_odb2_coding_norms
-                  TYPE SCRIPT
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
-                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${ODB2_PYCODESTYLE_CONFIG} )
+add_test(NAME iodaconv_odb2_coding_norms
+         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                 ${CMAKE_CURRENT_SOURCE_DIR} ${ODB2_PYCODESTYLE_CONFIG})

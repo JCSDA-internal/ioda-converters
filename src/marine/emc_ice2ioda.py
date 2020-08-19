@@ -10,22 +10,26 @@
 from __future__ import print_function
 import sys
 import argparse
-from datetime import datetime, timedelta
 import netCDF4 as nc
+from datetime import datetime, timedelta
 import dateutil.parser
 import numpy as np
-import os
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 from orddicts import DefaultOrderedDict
 import ioda_conv_ncio as iconv
-from read_cryosat_L2 import read_cryosat_L2
 
 
 class Observation(object):
 
     def __init__(self, filename, thin, date, writer):
-        self.filename = filename[0]
+        print(date)
+        self.filename = filename
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -33,35 +37,15 @@ class Observation(object):
         self._read()
 
     def _read(self):
-        ncd = read_cryosat_L2(self.filename)
-        Data_1Hz = ncd['Data_1Hz']
-        Day = Data_1Hz['Day']
-        Second = Data_1Hz['Second']
-        Micsec = Data_1Hz['Micsec']
-        Time_1Hz = Day*86400+Second+Micsec*1e-6
 
-        Data_20Hz = ncd['Data_20Hz']
-        D_Time = Data_20Hz['D_time_mics']*1e-6
-        Lon0 = Data_20Hz['Lon']*1e-7
-        Lat0 = Data_20Hz['Lat']*1e-7
-        Freeboard0 = Data_20Hz['Freeboard']*1e-3
-        Qflag0 = Data_20Hz['Quality_flag']
-        T1 = np.repeat(Time_1Hz, 20)
-        T2 = T1.reshape(len(Time_1Hz), 20)
-        Time0 = T2+D_Time.data
-        time = Time0.reshape(len(T1))
-        Lon = Lon0.data
-        Lat = Lat0.data
-        FB = Freeboard0.data
-        Qf = Qflag0.data
-        lons = Lon.reshape(len(T1))
-        lats = Lat.reshape(len(T1))
-        vals = FB.reshape(len(T1))
-        qc1 = Qf.reshape(len(T1))
-        qc = qc1.astype(int)
-        # base date for file
-        reftime0 = '2000-01-01 00:00:00'
-        reftime = dateutil.parser.parse(reftime0)
+        ncd = nc.MFDataset(self.filename)
+        datein = ncd.variables['dtg_yyyymmdd'][:]
+        timein = ncd.variables['dtg_hhmm'][:]
+        lons = ncd.variables['longitude'][:]
+        lats = ncd.variables['latitude'][:]
+        vals = ncd.variables['ice_concentration'][:]
+        qc = ncd.variables['quality'][:]
+        ncd.close()
 
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
@@ -78,14 +62,19 @@ class Observation(object):
             qc = qc[mask_thin]
 
         for i in range(len(lons)):
-            obs_date = reftime + timedelta(seconds=float(time[i]))
+            obs_date = datetime.combine(
+                datetime.strptime(
+                    np.array2string(
+                        datein[i]), "%Y%m%d"), datetime.strptime(
+                    np.array2string(
+                        timein[i]).zfill(4), "%H%M").time())
             locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = 0.1
             self.data[0][locKey][qcKey] = qc[i]
 
 
-vName = "sea_ice_freeboard"
+vName = "sea_ice_area_fraction"
 
 locationKeyList = [
     ("latitude", "float"),
@@ -101,13 +90,13 @@ AttrData = {
 def main():
 
     parser = argparse.ArgumentParser(
-        description=('Reads Cryosat-2 Ice from ESA and converts into NetCDF')
+        description=('')
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="Cryosat-2 ice freeboard obs input file(s)",
+        help="EMC ice fraction obs input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -131,6 +120,7 @@ def main():
 
     # Read in
     ice = Observation(args.input, args.thin, fdate, writer)
+
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 

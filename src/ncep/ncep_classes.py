@@ -7,12 +7,17 @@ from datetime import datetime as dt
 import sys
 import os
 import yaml
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 
-config_path = "@SCRIPT_LIB_PATH@/config/"
+config_path = str((IODA_CONV_PATH/'config').resolve())
 
 ##########################################################################
 # SUBROUTINES To be deleted (maybe).
@@ -458,7 +463,7 @@ if __name__ == '__main__':
         bufr.close()
         print('Mnemonic name is ', mnemonic)
     else:
-        sys.exit('The ', BufrFname, 'does not exist.')
+        raise RuntimeError(f'Bufr file: {BufrFname} does not exist.')
 
     #  Check if Bufr Observation Table exists, if not created.
     #  The table is defined as base_mnemo.tbl, it is a text file.

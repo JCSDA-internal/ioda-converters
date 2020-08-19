@@ -7,21 +7,21 @@ list( APPEND programs
   test_wrfdadiag.py
 )
 
-SET_TARGETS_DEPS( "${libs}"
+set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
                    wrfda_ncdiag_scripts_deps)
 
-set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
                    bin_wrfda_ncdiag_scripts_deps)
 execute_process(COMMAND chmod +x ${bin_wrfda_ncdiag_scripts_deps})
 
 # Configure files for install prefix bin
-file(RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
                    install_bin_wrfda_ncdiag_scripts_deps)
@@ -30,7 +30,6 @@ install( PROGRAMS ${install_bin_wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_I
 
 install( FILES ${wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-ecbuild_add_test( TARGET iodaconv_wrfda-ncdiag_coding_norms
-                  TYPE SCRIPT
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_lint.sh
-                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
+add_test(NAME iodaconv_wrfda-ncdiag_coding_norms
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_lint.sh
+                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR})

@@ -16,8 +16,13 @@ import netCDF4 as nc
 import re
 import dateutil.parser
 import math
+from pathlib import Path
 
-sys.path.append("/data/users/whan/JEDI/ioda-converters/build/lib/pyiodaconv")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
