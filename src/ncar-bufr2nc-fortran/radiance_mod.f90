@@ -105,6 +105,7 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
    integer(i_kind) :: ireadmg, ireadsb
 
    integer(i_kind) :: iyear, imonth, iday, ihour, imin, isec
+   real(r_double)  :: ref_time, obs_time
 
    write(*,*) '--- reading '//trim(filename)//' ---'
 
@@ -140,6 +141,8 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
 
    write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
    write(unit=filedate, fmt='(i10)') idate
+   read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
+   call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
 
    if ( .not. associated(rhead) ) then
       nullify ( rhead )
@@ -179,6 +182,8 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
               isec   >=   0 .and. isec   <   60 ) then
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+            call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+            rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
          else
             cycle subset_loop
          end if
@@ -326,6 +331,7 @@ subroutine read_airs_colocate_amsua (filename, filedate)
   ! Work variables for time
   integer(i_kind)   :: idate
   integer(i_kind)   :: iyear, imonth, iday, ihour, imin, isec
+  real(r_double)    :: ref_time, obs_time
 
   ! Other work variables
   integer(i_kind)  :: i, ich
@@ -368,6 +374,8 @@ subroutine read_airs_colocate_amsua (filename, filedate)
 
   write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
   write(unit=filedate, fmt='(i10)') idate
+  read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
+  call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
 
   if ( .not. associated(rhead) ) then
      nullify ( rhead )
@@ -448,6 +456,8 @@ subroutine read_airs_colocate_amsua (filename, filedate)
                 isec   >=   0 .and. isec   <   60 ) then
               write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+              call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+              rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
            else
               cycle subset_loop
            end if
@@ -615,7 +625,7 @@ subroutine sort_obs_radiance
             end if
          else if ( type_var_info(i) == nf90_float ) then
             if ( name_var_info(i) == 'time' ) then
-               xdata(ityp)%xinfo_float(iloc(ityp),i) = missing_r !rlink%dhr
+               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%dhr
             else if ( trim(name_var_info(i)) == 'station_elevation' ) then
                xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%elv
             else if ( trim(name_var_info(i)) == 'latitude' ) then
@@ -645,7 +655,7 @@ subroutine sort_obs_radiance
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
                xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%solazi
             else if ( trim(name_sen_info(i)) == 'sensor_view_angle' ) then
-               xdata(ityp)%xseninfo_float(iloc(ityp),i) = missing_r
+               call calc_sensor_view_angle(trim(rlink%inst), rlink%scanpos, xdata(ityp)%xseninfo_float(iloc(ityp),i))
             end if
 !         else if ( type_sen_info(i) == nf90_int ) then
 !         else if ( type_sen_info(i) == nf90_char ) then
@@ -710,5 +720,68 @@ subroutine fill_datalink (datalink, rfill, ifill)
    end if
 
 end subroutine fill_datalink
+
+subroutine calc_sensor_view_angle(name_inst, ifov, view_angle)
+
+! calculate sensor view angle from given scan position (field of view number)
+
+   implicit none
+
+   character(len=*), intent(in)  :: name_inst  ! instrument name eg. amsua_n15
+   integer(i_kind),  intent(in)  :: ifov       ! field of view number
+   real(r_kind),     intent(out) :: view_angle ! sensor view angle
+
+   integer(i_kind) :: idx
+   real(r_kind)    :: start, step
+
+   view_angle = missing_r
+
+   idx = index(name_inst, '_')
+   select case ( name_inst(1:idx-1) )
+      case ( 'amsua' )
+         start  = -48.0_r_kind - 1.0_r_kind/3.0_r_kind
+         step = 3.0_r_kind + 1.0_r_kind/3.0_r_kind
+      case ( 'amsub' )
+         start  = -48.95_r_kind
+         step   = 1.1_r_kind
+      case ( 'mhs' )
+         start  = -445.0_r_kind/9.0_r_kind
+         step   = 10.0_r_kind/9.0_r_kind
+      case ( 'atms' )
+         start  = -52.725_r_kind
+         step   = 1.11_r_kind
+      case default
+         return
+   end select
+
+   view_angle = start + float(ifov-1) * step
+
+end subroutine calc_sensor_view_angle
+
+subroutine get_julian_time(year,month,day,hour,minute,gstime)
+
+! taken from WRFDA/var/da/da_tools/da_get_julian_time.inc
+
+   implicit none
+
+   integer(i_kind), intent(in)  :: year
+   integer(i_kind), intent(in)  :: month
+   integer(i_kind), intent(in)  :: day
+   integer(i_kind), intent(in)  :: hour
+   integer(i_kind), intent(in)  :: minute
+   real(r_double),  intent(out) :: gstime
+
+   integer(i_kind) :: iw3jdn, ndays, nmind
+
+   iw3jdn  =    day - 32075 &
+              + 1461 * (year + 4800 + (month - 14) / 12) / 4 &
+              + 367 * (month - 2 - (month - 14) / 12 * 12) / 12 &
+              - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
+   ndays = iw3jdn - 2443510
+
+   nmind = ndays*1440 + hour * 60 + minute
+   gstime = float(nmind)
+
+end subroutine get_julian_time
 
 end module radiance_mod

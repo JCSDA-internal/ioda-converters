@@ -131,7 +131,7 @@ character(len=nstring), dimension(nsen_info) :: name_sen_info = &
       'sensor_azimuth_angle', &
       'solar_zenith_angle  ', &
       'sensor_zenith_angle ', &
-      'sensor_view_angle   ', &  ! to be derived from fov
+      'sensor_view_angle   ', &
       'sensor_channel      '  &
    /)
 integer(i_kind), dimension(nsen_info) :: type_sen_info = &
