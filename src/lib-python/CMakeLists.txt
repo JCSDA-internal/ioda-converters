@@ -37,15 +37,13 @@ add_custom_target( install_bin_python_scripts ALL
     COMMAND chmod +x ${install_bin_python_scripts_deps}
     DEPENDS ${install_bin_python_scripts_deps} )
 
+
 install( PROGRAMS
   ${install_bin_python_scripts_deps}
   DESTINATION bin
 )
 
-install( FILES
-  ${lib_python_scripts_deps}
-  DESTINATION lib/pyiodaconv
-)
+install( FILES ${lib_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
 ecbuild_add_test( TARGET iodaconv_lib-python_coding_norms
                   TYPE SCRIPT

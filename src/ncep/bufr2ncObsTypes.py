@@ -107,6 +107,9 @@ def BufrFloatToActual(Bval, Dtype):
             # copy doubles
             Dval = np.ma.array(Bval.data.astype(np.float64),
                                mask=Bval.mask, dtype=np.float64)
+        else:
+            Dval = np.ma.array(Bval.data.astype(np.float32),
+                               mask=Bval.mask, dtype=np.float32)
 
     # Squeeze the array since read_subset can return size 1 dimensions (eg.
     # nlevs).

@@ -123,7 +123,7 @@
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_wind@MetaData
+- - sdmedit_quips_quality_mark_for_wind@MetaData
   - QMWN
   - 2
   - *id001
@@ -138,17 +138,17 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_temperature@MetaData
+- - sdmedit_quips_quality_mark_for_temperature@MetaData
   - QMAT
   - 2
   - *id001
   - [-1]
-- - temperature/dry_bulb_temperature@ObsValue
+- - temperature_dry_bulb_temperature@ObsValue
   - TMDB
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_moisture@MetaData
+- - sdmedit_quips_quality_mark_for_moisture@MetaData
   - QMDD
   - 2
   - *id001
@@ -163,7 +163,7 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_sea_surface_temperature@MetaData
+- - sdmedit_quips_quality_mark_for_sea_surface_temperature@MetaData
   - QMST
   - 2
   - *id001
@@ -173,7 +173,7 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_pressure@MetaData
+- - sdmedit_quips_quality_mark_for_pressure@MetaData
   - QMPR
   - 2
   - *id001
@@ -203,7 +203,7 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_wave_height@MetaData
+- - sdmedit_quips_quality_mark_for_wave_height@MetaData
   - QMWH
   - 2
   - *id001
@@ -233,7 +233,7 @@
   - 2
   - *id001
   - [-1]
-- - quality_control_indicator_for_temp/salinity_profile@MetaData
+- - quality_control_indicator_for_temp_salinity_profile@MetaData
   - QCTSP
   - 2
   - *id001
@@ -243,7 +243,7 @@
   - 2
   - *id001
   - [-1]
-- - method_of_salinity/depth_measurement@MetaData
+- - method_of_salinity_depth_measurement@MetaData
   - MSDM
   - 2
   - *id001
@@ -393,7 +393,7 @@
   - 1
   - *id002
   - [-1, 10]
-- - buoy/platform_identifier@MetaData
+- - buoy_platform_identifier@MetaData
   - BPID
   - 3
   - *id001

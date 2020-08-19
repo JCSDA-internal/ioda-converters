@@ -1,6 +1,7 @@
 list(APPEND programs
   viirs_aod2ioda.py
   monet_aeronet2ioda.py  
+  tropomi_no2_nc2ioda.py
 )
 
 set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )

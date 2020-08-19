@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+import datetime as dt
+import math
+import sys
+from collections import OrderedDict
+
 import numpy as np
 import netCDF4
 from netCDF4 import Dataset
-import datetime as dt
-import sys
-from collections import OrderedDict
 
 ###################################################################################
 # SUBROUTINES
@@ -175,21 +176,27 @@ class NcWriter(object):
 
         return IodaDtype
 
-    def ConvertToTimeOffset(self, TimeStrings):
-        ############################################################
-        # This method will convert the absoute time in the string
-        # given by TimeStrings into floating point offsets from
-        # the reference date_time.
+    def ConvertToTimeOffset(self, datestr_vec):
+        """
+        Convert from date strings in ioda reference format "YYYY-mm-ddTHH:MM:SSZ" to decimal hour offsets from reference datetime.
 
-        TimeOffset = np.zeros((self._nlocs), dtype='f4')
-        for i in range(len(TimeStrings)):
-            Tstring = CharVectorToString(TimeStrings[i])
-            ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
-
-            TimeDelta = ObsDt - self._ref_date_time
-            TimeOffset[i] = TimeDelta.total_seconds() / 3600.00
-
-        return TimeOffset
+        Input: datestr_vec is an array of numpy chararrays, representing the raw bytes of the date string
+        Output: numpy dtype:'f4' array of time offsets in decimal hours from the reference date.
+        """
+        offset = np.zeros((self._nlocs), dtype='f4')
+        ref_offset = math.floor(self._ref_date_time.hour*3600. + self._ref_date_time.minute*60. + self._ref_date_time.second)/3600.  # decimal hours
+        date_offset_cache = {}  # Cache a map from bytes[0:10] to the corresponding date's offset from reference date
+        for i in range(len(datestr_vec)):
+            date_bytes = datestr_vec[i].tobytes()
+            date_offset = date_offset_cache.get(date_bytes[0:10])
+            if date_offset is None:
+                # There are at most 2 distinct dates per cycle for any window length < 24hrs
+                delta = dt.date(int(date_bytes[0:4]), int(date_bytes[5:7]), int(date_bytes[8:10])) - self._ref_date_time.date()
+                date_offset = delta.total_seconds()/3600.
+                date_offset_cache[date_bytes[0:10]] = date_offset
+            t_offset = (int(date_bytes[11:13])*3600. + int(date_bytes[14:16])*60. + int(date_bytes[17:19]))/3600.
+            offset[i] = date_offset + (t_offset - ref_offset)
+        return offset
 
     def CreateNcVector(self, Nsize, Dtype):
         ############################################################
