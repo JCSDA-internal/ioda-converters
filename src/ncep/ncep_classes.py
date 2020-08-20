@@ -17,7 +17,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import bufr2ncCommon as cm
 from bufr2ncObsTypes import ObsType
 
-config_path = str((IODA_CONV_PATH/'config').resolve())
+NCEP_CONFIG_PATH = (IODA_CONV_PATH/'config').resolve()
 
 ##########################################################################
 # SUBROUTINES To be deleted (maybe).
@@ -419,7 +419,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-l', '--lexicon', help='yaml file with the dictionary', metavar="name_of_dict",
-        type=str, required=False, default=config_path + 'bufr2ioda.yaml')
+        type=str, required=False, default=str(NCEP_CONFIG_PATH/'bufr2ioda.yaml'))
 
     parser.add_argument(
         '-Pr', '--bufr', action='store_true', default=1,
@@ -433,10 +433,10 @@ if __name__ == '__main__':
     ObsType = args.obs_type     # Observation type. e.g., NC001007
     BufrFname = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral = dt.strptime(args.date, '%Y%m%d%H')  # DateHH of analysis
-    if (config_path + args.lexicon):
-        Lexicon = config_path + args.lexicon  # Existing yaml file in config
+    if Path(args.lexicon).is_absolute():
+        Lexicon = args.lexicon   # User defined Lexicon path
     else:
-        args.lexicon   # User defined Lexicon name
+        Lexicon = str((NCEP_CONFIG_PATH/args.lexicon).resolve())  # Default Lexicon path
 
     if (args.bufr):
         BfileType = cm.BFILE_BUFR  # BUFR or prepBUFR. TODO: To be removed
