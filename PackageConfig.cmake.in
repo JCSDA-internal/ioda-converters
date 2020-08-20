@@ -13,8 +13,8 @@
 @PACKAGE_INIT@
 
 set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@)
-set_and_check(@PROJECT_NAME@_BINDIR ${PACKAGE_CONFIG_BINDIR})
-set_and_check(@PROJECT_NAME@_PYTHON_PATH ${PACKAGE_CONFIG_PYTHON_PATH})
+set_and_check(@PROJECT_NAME@_BINDIR @PACKAGE_CONFIG_BINDIR@)
+set_and_check(@PROJECT_NAME@_PYTHON_PATH @PACKAGE_CONFIG_PYTHON_PATH@)
 
 #Determine component state
 set(iodaconv_python_FOUND True) #python converters component
