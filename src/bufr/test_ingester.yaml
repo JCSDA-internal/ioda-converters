@@ -1,0 +1,33 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+datapath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
+
+bufr:
+  - id: "mhs"
+    filename: "gdas.t12z.1bmhs.tm00.bufr_d"
+    mnemonicSets:
+      - mnemonics: "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS"
+      - mnemonics: "SAZA SOZA BEARAZ SOLAZI"
+      - mnemonics: "TMBR"
+        channels : 1, 3-15
+    fieldMaps:
+      longitude: ["CLON", "CLONH"]
+      latitude: ["CLAT", "CLATH"]
+      timestamp:
+        year: "YEAR"
+        month: "MNTH"
+        day: "DAYS"
+        hour: "HOUR"
+        minute: "MINU"
+        second: "SECO"
+      observations:
+        radiance: "TMBR"
+
+
+ioda:
+  - id: "mhs"
+    src: "bufr"
+

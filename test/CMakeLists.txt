@@ -322,7 +322,7 @@ ecbuild_add_test( TARGET test_iodaconv_wrfdadiag_rad
 # GNSSRO BUFR converter
 #===============================================================================
 
-if( HAVE_BUFRLIB_AND_NETCDF )
+if( HAS_NETCDF )
   ecbuild_add_test( TARGET test_iodaconv_gnssro_bufr_conv
                     TYPE SCRIPT
                     COMMAND iodaconv_comp.sh

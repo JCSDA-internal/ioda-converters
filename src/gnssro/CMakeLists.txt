@@ -3,7 +3,7 @@
 # Build gnssro ncepbufr to ioda NetCDF4 converter
 #
 
-if( HAVE_BUFRLIB_AND_NETCDF )
+if( HAS_NETCDF )
     set(GNSSRO_SRC gnssro_bufr2ioda.f90)
     add_executable(gnssro_bufr2ioda ${GNSSRO_SRC})
     target_link_libraries(gnssro_bufr2ioda ${bufrlib_LIBRARIES})

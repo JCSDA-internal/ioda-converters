@@ -54,15 +54,23 @@ endif (HAVE_ODB_API)
 # NetCDF and bufrlib are optional. If found, the following variables are set
 # bufrlib_FOUND
 # NETCDF4_FOUND
-find_package(bufrlib)
+
 find_package(NetCDF COMPONENTS Fortran)
-if( bufrlib_FOUND AND NETCDF4_FOUND )
-  set( HAVE_BUFRLIB_AND_NETCDF "1" )
+
+if( NETCDF4_FOUND )
+  set( HAS_NETCDF "1" )
   message( STATUS "Fortran components enabled since both bufrlib and NETCDF are found")
 else()
-  set( HAVE_BUFRLIB_AND_NETCDF "0" )
+  set( HAS_NETCDF "0" )
   message( STATUS "Fortran components disabled since both bufrlib and NETCDF are not found")
 endif()
+
+find_package(bufr REQUIRED)
+find_package( Eigen3 REQUIRED NO_MODULE HINTS
+              $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
+              $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH} )
+
+find_package(eckit REQUIRED)
 
 # ODC is optional. Sets: odc_FOUND
 find_package(odc QUIET)
