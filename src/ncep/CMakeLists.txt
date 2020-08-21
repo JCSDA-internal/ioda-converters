@@ -8,80 +8,34 @@ list( APPEND programs
   ncep_classes.py
 )
 
-list( APPEND config
-  bufr2ioda.yaml
-  NC001001.yaml
-  NC001002.yaml
-  NC001003.yaml
-  NC001007.yaml
-  NC001013.yaml
-  NC001101.yaml
-  NC001102.yaml
-  NC001103.yaml
-  NC001113.yaml
-  NC031117.yaml
-  NC031118.yaml
-  NC031119.yaml
-  NC031120.yaml
-  NC031121.yaml
-  NC031122.yaml
-  NC031123.yaml
-  NC031124.yaml
-  NC031125.yaml
-  NC031126.yaml
-  NC031127.yaml
-  NC031128.yaml
-  NC031129.yaml
-  NC031130.yaml
-)
-
-SET_TARGETS_DEPS( "${libs}"
+set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
                    ncep_scripts_deps)
-add_custom_target( ncep_scripts ALL DEPENDS ${ncep_scripts_deps} )
 
-SET_TARGETS_DEPS( "${config}"
-                   ${CMAKE_CURRENT_SOURCE_DIR}/config
-                   ${PYIODACONV_BUILD_LIBDIR}/config
-                   config_ncep_scripts_deps)
-add_custom_target( config_ncep_scripts ALL DEPENDS ${config_ncep_scripts_deps} )
+file(MAKE_DIRECTORY ${PYIODACONV_BUILD_LIBDIR})
+execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/config ${PYIODACONV_BUILD_LIBDIR}/config)
 
-set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
                    bin_ncep_scripts_deps)
-add_custom_target( bin_ncep_scripts ALL
-    COMMAND chmod +x ${bin_ncep_scripts_deps}
-    DEPENDS ${bin_ncep_scripts_deps} )
+execute_process(COMMAND chmod +x ${bin_ncep_scripts_deps})
 
 # Configure files for install prefix bin
-set( SCRIPT_LIB_PATH ${PYIODACONV_INSTALL_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
                    install_bin_ncep_scripts_deps)
-add_custom_target( install_bin_ncep_scripts ALL
-    COMMAND chmod +x ${install_bin_ncep_scripts_deps}
-    DEPENDS ${install_bin_ncep_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_ncep_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES
-  ${ncep_scripts_deps}
-  DESTINATION lib/pyiodaconv
-)
+install( FILES ${ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-install( FILES
-  ${config_ncep_scripts_deps}
-  DESTINATION lib/pyiodaconv/config
-)
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-ecbuild_add_test( TARGET iodaconv_ncep_coding_norms
-                  TYPE SCRIPT
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
-                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
+add_test(NAME iodaconv_ncep_coding_norms
+         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR})

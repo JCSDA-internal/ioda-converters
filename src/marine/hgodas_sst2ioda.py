@@ -12,21 +12,24 @@ import sys
 import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 
 vName = {
-    2210: "sea_water_temperature",
-    2220: "sea_water_salinity",
+    'T': "sea_surface_temperature",
 }
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("depth", "float"),
     ("datetime", "string")
 ]
 
@@ -47,8 +50,6 @@ class Profile(object):
     def _read(self):
         ncd = nc.Dataset(self.filename)
         time = ncd.variables['time'][:]
-        obid = ncd.variables['obid'][:]
-        dpth = ncd.variables['depth'][:]
         lons = ncd.variables['lon'][:]
         lats = ncd.variables['lat'][:]
         hrs = ncd.variables['hr'][:]
@@ -59,18 +60,19 @@ class Profile(object):
 
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
+        valKey = vName['T'], self.writer.OvalName()
+        errKey = vName['T'], self.writer.OerrName()
+        qcKey = vName['T'], self.writer.OqcName()
+
+        count = 0
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
                 continue
 
-            valKey = vName[obid[i]], self.writer.OvalName()
-            errKey = vName[obid[i]], self.writer.OerrName()
-            qcKey = vName[obid[i]], self.writer.OqcName()
-
+            count += 1
             dt = base_date + timedelta(hours=float(hrs[i]))
-            locKey = lats[i], lons[i], dpth[i], dt.strftime(
-                "%Y-%m-%dT%H:%M:%SZ")
+            locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = qcs[i]
@@ -79,24 +81,17 @@ class Profile(object):
 def main():
 
     parser = argparse.ArgumentParser(
-        description=(
-            'Read insitu T/S profile observation file(s) that have already'
-            ' been QCd and thinned for use in Hybrid-GODAS system.')
+        description=('Read CPC Hybrid-GODAS sst files and convert'
+                     ' to IODA format')
     )
-
-    required = parser.add_argument_group(title='required arguments')
-    required.add_argument(
-        '-i', '--input',
-        help="name of HGODAS observation input file(s)",
-        type=str, required=True)
-    required.add_argument(
-        '-o', '--output',
-        help="path of ioda output file",
-        type=str, required=True)
-    required.add_argument(
-        '-d', '--date',
-        help="base date for the center of the window",
-        metavar="YYYYMMDDHH", type=str, required=True)
+    parser.add_argument('-i', '--input',
+                        help="name of HGODAS profile input file",
+                        type=str, required=True)
+    parser.add_argument('-o', '--output',
+                        help="name of ioda output file",
+                        type=str, required=True)
+    parser.add_argument('-d', '--date',
+                        help="base date", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
@@ -107,6 +102,7 @@ def main():
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
     writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
 

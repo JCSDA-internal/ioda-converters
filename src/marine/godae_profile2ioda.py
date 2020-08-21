@@ -12,8 +12,13 @@ import sys
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 

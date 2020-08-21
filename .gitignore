@@ -4,3 +4,4 @@ build*
 *.swp
 _build*
 _install*
+__pycache__/
