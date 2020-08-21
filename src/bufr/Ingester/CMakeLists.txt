@@ -39,5 +39,5 @@ ecbuild_add_library( TARGET   ingester
                      LIBS     ${INGESTER_LIBS_DEP}
                      INSTALL_HEADERS LISTED
                      HEADER_DESTINATION ${INSTALL_INCLUDE_DIR}/iodaconv
-                     LINKER_LANGUAGE ${OOPS_LINKER_LANGUAGE}
+                     LINKER_LANGUAGE ${IODACONV_LINKER_LANGUAGE}
                     )
