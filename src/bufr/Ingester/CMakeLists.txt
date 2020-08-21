@@ -15,8 +15,6 @@ list(APPEND _ingester_srcs
   BufrParser/BufrMnemonicSet.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
-  oops/IntSetParser.cpp
-  oops/IntSetParser.h
   BufrParser/BufrTypes.h
   BufrParser/BufrCollectors/BufrAccumulator.cpp
   BufrParser/BufrCollectors/BufrAccumulator.h
@@ -30,14 +28,16 @@ list(APPEND _ingester_srcs
   BufrParser/BufrCollectors/BufrCollectors.h
 )
 
-add_library(ingester ${_ingester_srcs} )
-target_link_libraries(ingester PUBLIC Eigen3::Eigen)
-target_link_libraries(ingester PUBLIC eckit)
-target_link_libraries(ingester PRIVATE bufr::bufr_4_DA)
+list(APPEND INGESTER_LIBS_DEP
+  Eigen3::Eigen
+  eckit
+  oops
+  bufr::bufr_4_DA)
 
-target_include_directories(ingester PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-
-target_include_directories(ingester INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:include>)
+ecbuild_add_library( TARGET   ingester
+                     SOURCES  ${_ingester_srcs}
+                     LIBS     ${INGESTER_LIBS_DEP}
+                     INSTALL_HEADERS LISTED
+                     HEADER_DESTINATION ${INSTALL_INCLUDE_DIR}/iodaconv
+                     LINKER_LANGUAGE ${OOPS_LINKER_LANGUAGE}
+                    )

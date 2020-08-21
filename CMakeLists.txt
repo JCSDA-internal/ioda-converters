@@ -52,13 +52,16 @@ if (HAVE_ODB_API)
 endif (HAVE_ODB_API)
 
 # Dependency packages
-find_package(bufr)
+find_package(bufr QUIET)
 find_package(NetCDF COMPONENTS Fortran)
 find_package(Eigen3 NO_MODULE HINTS
              $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
              $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH})
 
 find_package(eckit)
+
+ecbuild_use_package( PROJECT oops VERSION 0.2.1 QUIET )
+include_directories( ${OOPS_INCLUDE_DIRS} )
 
 # ODC is optional. Sets: odc_FOUND
 find_package(odc QUIET)
