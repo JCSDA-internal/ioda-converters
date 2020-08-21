@@ -52,6 +52,7 @@ if (HAVE_ODB_API)
 endif (HAVE_ODB_API)
 
 # Dependency packages
+# bufr is optional. Sets: bufr_FOUND
 find_package(bufr QUIET)
 find_package(NetCDF COMPONENTS Fortran)
 find_package(Eigen3 NO_MODULE HINTS
@@ -76,7 +77,16 @@ find_package(odc QUIET)
 # Export package info
 ################################################################################
 
-list( APPEND IODACONV_TPLS ) # NetCDF oops )
+list( APPEND IODACONV_TPLS NetCDF )
+if(OOPS_FOUND)
+  list( APPEND IODACONV_TPLS oops )
+endif()
+if(ECKIT_FOUND)
+  list( APPEND IODACONV_TPLS eckit )
+endif()
+if(bufr_FOUND)
+  list( APPEND IODACONV_TPLS bufr::bufr_4_DA)
+endif()
 
 set( IODACONV_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src
                        ${CMAKE_Fortran_MODULE_DIRECTORY} )
@@ -123,7 +133,7 @@ endif()
 ################################################################################
 
 # prepares a tar.gz of the sources and/or binaries
-ecbuild_install_project( NAME ioda )
+ecbuild_install_project( NAME iodaconv )
 
 # print the summary of the configuration
 ecbuild_print_summary()
