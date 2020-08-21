@@ -57,11 +57,17 @@ find_package(NetCDF COMPONENTS Fortran)
 find_package(Eigen3 NO_MODULE HINTS
              $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
              $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH})
+include_directories(${EIGEN3_INCLUDE_DIRS})
 
-find_package(eckit)
+ecbuild_use_package(PROJECT eckit VERSION 0.18.0 QUIET)
+if(ECKIT_FOUND)
+  include_directories(${ECKIT_INCLUDE_DIRS})
+endif()
 
-ecbuild_use_package( PROJECT oops VERSION 0.2.1 QUIET )
-include_directories( ${OOPS_INCLUDE_DIRS} )
+ecbuild_use_package(PROJECT oops VERSION 0.2.1 QUIET)
+if(OOPS_FOUND)
+  include_directories(${OOPS_INCLUDE_DIRS})
+endif()
 
 # ODC is optional. Sets: odc_FOUND
 find_package(odc QUIET)

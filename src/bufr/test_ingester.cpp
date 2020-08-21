@@ -9,10 +9,10 @@
 #include <iostream>
 #include <iomanip>
 
-#include <eckit/config/YAMLConfiguration.h>
-#include <eckit/filesystem/PathName.h>
+#include "eckit/config/YAMLConfiguration.h"
+#include "eckit/filesystem/PathName.h"
 
-#include "oops/IntSetParser.h"
+#include "oops/util/IntSetParser.h"
 #include "BufrParser/BufrParser.h"
 #include "BufrParser/BufrDescription.h"
 #include "BufrParser/BufrMnemonicSet.h"

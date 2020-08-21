@@ -12,7 +12,7 @@
 #include "Field.h"
 
 
-#include <eckit/config/LocalConfiguration.h>
+#include "eckit/config/LocalConfiguration.h"
 
 class FieldMap
 {

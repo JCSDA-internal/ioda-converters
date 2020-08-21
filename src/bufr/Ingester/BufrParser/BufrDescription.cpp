@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "oops/IntSetParser.h"
+#include "oops/util/IntSetParser.h"
 #include "BufrDescription.h"
 #include "BufrMnemonicSet.h"
 #include "BufrTypes.h"
