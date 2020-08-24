@@ -1,0 +1,38 @@
+
+The ncar-bufr2nc-fortran code currently runs with single processor, even though it is compiled with mpi.
+
+The code looks for the following file names in the working directory sequentially
+  gnssrobufr
+  prepbufr
+  amsuabufr
+  airsbufr
+
+If the file exists, do the conversion, otherwise skip it.
+See ioda-converters/src/ncar-bufr2nc-fortran/main.f90
+
+The output files are
+  aircraft_obs_2018041500.nc4
+  amsua_aqua_obs_2018041500.nc4
+  amsua_metop-a_obs_2018041500.nc4
+  amsua_metop-b_obs_2018041500.nc4
+  amsua_n15_obs_2018041500.nc4
+  amsua_n18_obs_2018041500.nc4
+  amsua_n19_obs_2018041500.nc4
+  ascat_obs_2018041500.nc4
+  gnssro_obs_2018041500.nc4
+  profiler_obs_2018041500.nc4
+  satwind_obs_2018041500.nc4
+  sfc_obs_2018041500.nc4
+  sondes_obs_2018041500.nc4
+
+The date in the output filename is extracted from the input bufr files.
+
+The output prefix (before _obs) is defined in src/ncar-bufr2nc-fortran/define_types_mod.f90
+The mapping of numerical report types to the named types is coded in define_types_mod.f90
+through subroutines set_obtype_conv, set_name_satellite, set_name_sensor.
+
+Subroutine fileter_obs_conv (called in main.f90 and can be commented out if it is not desired)
+applies some additional QC as in GSI's read_prepbufr.f90 for the global model.
+100 is added to the @PreQC value when the ob is flagged as not-use by filter_obs_conv.
+100 is chosen to make the original prepbufr quality marker easily readable.
+
