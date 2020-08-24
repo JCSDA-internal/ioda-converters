@@ -12,17 +12,26 @@ import sys
 import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
+from pathlib import Path
 
-sys.path.append("@SCRIPT_LIB_PATH@")
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = "obs_absolute_dynamic_topography",
+vName = {
+    2210: "sea_water_temperature",
+    2220: "sea_water_salinity",
+}
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
+    ("depth", "float"),
     ("datetime", "string")
 ]
 
@@ -31,7 +40,7 @@ AttrData = {
 }
 
 
-class Observation(object):
+class Profile(object):
 
     def __init__(self, filename, date, writer):
         self.filename = filename
@@ -43,6 +52,8 @@ class Observation(object):
     def _read(self):
         ncd = nc.Dataset(self.filename)
         time = ncd.variables['time'][:]
+        obid = ncd.variables['obid'][:]
+        dpth = ncd.variables['depth'][:]
         lons = ncd.variables['lon'][:]
         lats = ncd.variables['lat'][:]
         hrs = ncd.variables['hr'][:]
@@ -53,28 +64,29 @@ class Observation(object):
 
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
-
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
                 continue
 
+            valKey = vName[obid[i]], self.writer.OvalName()
+            errKey = vName[obid[i]], self.writer.OerrName()
+            qcKey = vName[obid[i]], self.writer.OqcName()
+
             dt = base_date + timedelta(hours=float(hrs[i]))
-            locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            locKey = lats[i], lons[i], dpth[i], dt.strftime(
+                "%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = qcs[i]
 
 
 def main():
+
     parser = argparse.ArgumentParser(
         description=(
-            'Read absolute dynamic topography (ADT) observations'
-            ' file(s) that have already been QCd and thinned for use in'
-            ' Hybrid-GODAS system.')
+            'Read insitu T/S profile observation file(s) that have already'
+            ' been QCd and thinned for use in Hybrid-GODAS system.')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -96,11 +108,10 @@ def main():
     writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the profiles
-    prof = Observation(args.input, fdate, writer)
+    prof = Profile(args.input, fdate, writer)
 
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
     writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
 

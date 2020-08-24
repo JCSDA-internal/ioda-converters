@@ -2,7 +2,13 @@
 
 import sys
 import subprocess
-sys.path.append("@SCRIPT_LIB_PATH@")
+from pathlib import Path
+
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 from utils import collect_sources
 
 
