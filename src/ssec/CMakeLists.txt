@@ -1,4 +1,5 @@
 list(APPEND programs
+  giirs_lw2ioda.py
   giirs_ssec2ioda.py
 )
 
