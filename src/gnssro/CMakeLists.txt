@@ -8,9 +8,9 @@ if( iodaconv_gnssro_ENABLED )
     add_executable(gnssro_bufr2ioda ${GNSSRO_SRC})
 
     #Link bufr library
-    if(TARGET ${bufr_LIBRARIES})
+    if(TARGET bufr::bufr)
         #jcsda/bufrlib
-        target_link_libraries(gnssro_bufr2ioda ${bufr_LIBRARIES})
+        target_link_libraries(gnssro_bufr2ioda bufr::bufr)
     elseif(TARGET bufr::bufr_4_DA)
         #NCEPLIBS-bufr
         target_link_libraries(gnssro_bufr2ioda bufr::bufr_4_DA)
