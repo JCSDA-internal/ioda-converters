@@ -96,7 +96,7 @@ add_subdirectory(src/gsi-ncdiag)
 add_subdirectory(src/lib-python)
 add_subdirectory(src/marine)
 add_subdirectory(src/ncep)
-add_subdirectory(src/nsmc)
+add_subdirectory(src/ssec)
 add_subdirectory(src/wrfda-ncdiag)
 
 # Optional components

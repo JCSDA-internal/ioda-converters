@@ -11,6 +11,7 @@ list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
+  testinput/giirs_ssec.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
@@ -41,6 +42,7 @@ list( APPEND test_output
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
+  testoutput/giirs_ssec_ioda.nc4
   testoutput/godae_prof.nc
   testoutput/godae_ship.nc
   testoutput/godae_trak.nc
@@ -191,16 +193,8 @@ add_test(NAME test_iodaconv_cryosat2_DBL
 
 
 #===============================================================================
-# NSMC converters
+# MISC converters
 #===============================================================================
-
-add_test(NAME test_iodaconv_giirs_lw
-         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
-            "${CMAKE_BINARY_DIR}/bin/giirs_lw2ioda.py
-            -i testinput/giirs_fy4a-test.nc
-            -o testrun/giirs_fy4a_obs_2017030208.nc4
-            -d 2017030208"
-            giirs_fy4a_obs_2017030208.nc4)
 
 add_test(NAME test_iodaconv_viirs_jpss1_oc_l2
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -232,6 +226,26 @@ add_test(NAME test_iodaconv_ncep_bufr
             -ot NC001007"
             ioda.NC001007.2020031012.nc)
 
+
+#===============================================================================
+# SSEC GIIRS converters
+#===============================================================================
+
+add_test( NAME test_iodaconv_giirs_tb
+          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+             "${CMAKE_BINARY_DIR}/bin/giirs_ssec2ioda.py
+             -i testinput/giirs_ssec.nc
+             -o testrun/giirs_ssec_ioda.nc4
+             -d 2020080100"
+             giirs_ssec_ioda.nc4)
+
+add_test(NAME test_iodaconv_giirs_lw
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/giirs_lw2ioda.py
+            -i testinput/giirs_fy4a-test.nc
+            -o testrun/giirs_fy4a_obs_2017030208.nc4
+            -d 2017030208"
+            giirs_fy4a_obs_2017030208.nc4)
 
 #===============================================================================
 # GSI ncdiag converters
