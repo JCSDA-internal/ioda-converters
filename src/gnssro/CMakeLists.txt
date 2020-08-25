@@ -6,8 +6,18 @@
 if( iodaconv_gnssro_ENABLED )
     set(GNSSRO_SRC gnssro_bufr2ioda.f90)
     add_executable(gnssro_bufr2ioda ${GNSSRO_SRC})
-    target_link_libraries(gnssro_bufr2ioda ${bufrlib_LIBRARIES})
+
+    #Link bufr library
+    if(TARGET ${bufr_LIBRARIES})
+        #jcsda/bufrlib
+        target_link_libraries(gnssro_bufr2ioda ${bufr_LIBRARIES})
+    elseif(TARGET bufr::bufr_4_DA)
+        #NCEPLIBS-bufr
+        target_link_libraries(gnssro_bufr2ioda bufr::bufr_4_DA)
+    endif()
+
     target_link_libraries(gnssro_bufr2ioda NetCDF::NetCDF_Fortran)
+
     if(CMAKE_Fortran_COMPILER_ID MATCHES GNU AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
         target_compile_options(gnssro_bufr2ioda PRIVATE -fallow-argument-mismatch)
     endif()
