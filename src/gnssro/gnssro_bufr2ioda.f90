@@ -173,7 +173,8 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      sclf = bfr1ahdr(11) 
 
      call w3fs21(idate5,minobs)
-     write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') idate5(1),idate5(2),idate5(3),idate5(4),idate5(5),idate5(6)
+     write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') &
+        idate5(1),idate5(2),idate5(3),idate5(4),idate5(5),idate5(6)
      timeo=real(minobs-mincy,r_kind)/60.0
 
      if( roc>6450000.0_r_kind .or. roc<6250000.0_r_kind  .or.       &
@@ -183,7 +184,8 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      endif
 
 !    profile check:  (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
-     if ( ((said >= 740).and.(said <=745)).or.((said >= 750).and.(said <= 755)) .or.(said == 820).or.(said == 786).or.(said == 825)) then  !CDAAC processing
+     if ( ((said >= 740).and.(said <=745)).or.((said >= 750).and.(said <= 755)) &
+            .or.(said == 820).or.(said == 786).or.(said == 825)) then  !CDAAC processing
        if(pcc == 0.0) then
           write(6,*)'READ_GNSSRO: bad profile 0.0% confidence said=',said,'ptid=',ptid, ' SKIP this report'
           cycle read_loop

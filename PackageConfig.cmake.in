@@ -1,0 +1,25 @@
+#@PROJECT_NAME@-config.cmake
+#
+# Variables exported:
+#  @PROJECT_NAME@_VERSION - Version
+#  @PROJECT_NAME@_BINDIR - Binary install directory
+#  @PROJECT_NAME@_PYTHON_PATH - Python library location
+#
+# Component names:
+#  python - Check for python converters enabled
+#  gnssro - Check for gnssro converters enabled
+#  odc - Check for odc converters enabled
+#  odb2 - Check for odb2 converters enabled
+@PACKAGE_INIT@
+
+set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@)
+set_and_check(@PROJECT_NAME@_BINDIR @PACKAGE_CONFIG_BINDIR@)
+set_and_check(@PROJECT_NAME@_PYTHON_PATH @PACKAGE_CONFIG_PYTHON_PATH@)
+
+#Determine component state
+set(iodaconv_python_FOUND True) #python converters component
+set(iodaconv_odb2_FOUND @iodaconv_odb2_ENABLED@) #odb2 converters component
+set(iodaconv_odc_FOUND @iodaconv_odc_ENABLED@) #odc converters component
+set(iodaconv_gnssro_FOUND @iodaconv_gnssro_ENABLED@) #gnssro converters component
+
+check_required_components("@PROJECT_NAME@")
