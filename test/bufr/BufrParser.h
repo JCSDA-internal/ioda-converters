@@ -7,6 +7,8 @@
 
 #pragma once
 
+#define ECKIT_TESTING_SELF_REGISTER_CASES 0
+
 #include <iomanip>
 #include <memory>
 #include <string>
@@ -19,6 +21,9 @@
 #include "oops/util/Expect.h"
 #include "test/TestEnvironment.h"
 
+#include "bufr/Ingester/IngesterData.h"
+#include "bufr/Ingester/BufrParser/BufrMnemonicSet.h"
+#include "bufr/Ingester/BufrParser/BufrDescription.h"
 #include "bufr/Ingester/BufrParser/BufrTypes.h"
 #include "bufr/Ingester/BufrParser/BufrParser.h"
 
@@ -27,24 +32,96 @@ namespace Ingester
 {
     namespace test
     {
-        void testConstructor()
-        {
-            util::DateTime bgn((::test::TestEnvironment::config().getString("window begin")));
-            util::DateTime end((::test::TestEnvironment::config().getString("window end")));
 
-            auto bufrParser = BufrParser();
+        class BufrParserTestFixture : private boost::noncopyable
+        {
+        public:
+            static std::shared_ptr<BufrParser>& bufrParser() { return getInstance().bufrParser_; }
+
+        private:
+            std::shared_ptr<BufrParser> bufrParser_;
+
+            static BufrParserTestFixture& getInstance()
+            {
+                static BufrParserTestFixture bufrParserTestFixture;
+                return bufrParserTestFixture;
+            }
+
+            BufrParserTestFixture()
+            {
+                const eckit::LocalConfiguration conf(::test::TestEnvironment::config());
+
+                auto datapath = conf.getString("datapath");
+
+                const auto& bufrConfs = conf.getSubConfigurations("bufr");
+
+                if (bufrConfs.size() > 0)
+                {
+                    auto description = Ingester::BufrDescription(bufrConfs.front(), datapath);
+                    bufrParser_ = std::make_shared<Ingester::BufrParser> (description);
+                }
+                else
+                {
+                    throw eckit::BadValue("Configuration File is missing the \"bufr\" section.");
+                }
+            }
+
+            ~BufrParserTestFixture() = default;
+        };
+
+
+        void test_constructor()
+        {
+            BufrParserTestFixture::bufrParser();
         }
 
-        class BufrParser : public oops::Test {
+        void test_parsePartialFile()
+        {
+            auto data = BufrParserTestFixture::bufrParser()->parse(5);
+            EXPECT(abs(data->get("TMBR")(0,0) - 248.17) < .01 );
+        }
+
+        void test_parseFileIncrementally()
+        {
+            bool endReached = false;
+            std::shared_ptr<IngesterData> data;
+            do
+            {
+                auto nextData = BufrParserTestFixture::bufrParser()->parse(10);
+
+                if (nextData->size() > 0)
+                {
+                    data = nextData;
+                }
+                else
+                {
+                    endReached = true;
+                }
+            } while(!endReached);
+        }
+
+        class BufrParser : public oops::Test
+        {
+        public:
+            BufrParser() {}
+            virtual ~BufrParser() {}
         private:
-            std::string testid() const override {return "ingester::test::BufrParser";}
+            std::string testid() const override { return "ingester::test::BufrParser"; }
             void register_tests() const override
             {
                 std::vector<eckit::testing::Test>& ts = eckit::testing::specification();
 
                 ts.emplace_back(CASE("ingester/BufrParser/testConstructor")
                 {
-                    testConstructor();
+                    test_constructor();
+                });
+                ts.emplace_back(CASE("ingester/BufrParser/testParsePartialFile")
+                {
+                    test_parsePartialFile();
+                });
+                ts.emplace_back(CASE("ingester/BufrParser/testParseFileIncrementally")
+                {
+                    test_parseFileIncrementally();
                 });
             }
         };

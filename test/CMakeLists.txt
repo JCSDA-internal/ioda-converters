@@ -420,3 +420,8 @@ ecbuild_add_test( TARGET  test_bufr_bufrdescription
                   ARGS    "testinput/bufrtest_bufrdescription.yaml"
                   LIBS    bufr_test )
 
+ecbuild_add_test( TARGET  test_bufr_bufrparser
+                  SOURCES mains/TestBufrParser.cpp
+                  ARGS    "testinput/bufrtest_bufrdescription.yaml"
+                  LIBS    bufr_test )
+
