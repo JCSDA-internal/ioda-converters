@@ -1,5 +1,6 @@
 list( APPEND programs
     ${PROJECT_NAME}_lint.sh
+    ${PROJECT_NAME}_cpplint.py
 )
 
 SET_TARGETS_DEPS( "${programs}"
