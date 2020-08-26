@@ -35,6 +35,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/bufrtest_bufrdescription.yaml
 )
 
 list( APPEND test_output
@@ -405,3 +406,17 @@ ecbuild_add_test( TARGET test_iodaconv_tropomi_no2
                        -i testinput/tropomi_no2.nc
                        -o testrun/tropomi_no2.nc"
                       tropomi_no2.nc)
+
+#####################################################################
+# Bufr Converter tests
+#####################################################################
+
+add_library(bufr_test INTERFACE)
+target_include_directories(bufr_test INTERFACE bufr)
+target_link_libraries(bufr_test INTERFACE ingester)
+
+ecbuild_add_test( TARGET  test_bufr_bufrdescription
+                  SOURCES mains/TestBufrDescription.cpp
+                  ARGS    "testinput/bufrtest_bufrdescription.yaml"
+                  LIBS    bufr_test )
+
