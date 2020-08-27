@@ -5,27 +5,27 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "BufrCollector.h"
+#pragma once
 
-#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrAccumulator.h"
+#include "BufrCollector.h"
+#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrParser/BufrTypes.h"
 
-#pragma once
 
 namespace Ingester
 {
     class BufrRepCollector : public BufrCollector
     {
-    public:
+     public:
         BufrRepCollector(const int fileUnit, BufrMnemonicSet mnemonicSet);
         ~BufrRepCollector() override;
 
         void collect() final;
         IngesterArrayMap finalize() final;
 
-    private:
+     private:
         double *scratchData_;
         const BufrMnemonicSet mnemonicSet_;
     };
-}
+}  // namespace Ingester

@@ -425,10 +425,8 @@ ecbuild_add_test( TARGET  test_bufr_bufrparser
                   ARGS    "testinput/bufrtest_bufrdescription.yaml"
                   LIBS    bufr_test )
 
-
 # CPP Linter Tests
 ecbuild_add_test( TARGET bufr_coding_norms
                   TYPE SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_cpplint.py
-                  ARGS --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}/bufr )
-
+                  ARGS --quiet --recursive ${CMAKE_SOURCE_DIR}/src/bufr )

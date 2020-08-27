@@ -5,10 +5,9 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "BufrCollector.h"
-
-#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrAccumulator.h"
+#include "BufrCollector.h"
+#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrParser/BufrTypes.h"
 
 #pragma once
@@ -17,7 +16,7 @@ namespace Ingester
 {
     class BufrIntCollector: public BufrCollector
     {
-    public:
+     public:
         explicit BufrIntCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet);
 
         ~BufrIntCollector() override;
@@ -25,9 +24,9 @@ namespace Ingester
         void collect() final;
         IngesterArrayMap finalize() final;
 
-    private:
+     private:
         double *scratchData_;
         const BufrMnemonicSet mnemonicSet_;
     };
-}
+}  // namespace Ingester
 

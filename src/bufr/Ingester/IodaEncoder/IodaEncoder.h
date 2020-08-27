@@ -11,8 +11,7 @@ namespace Ingester
 {
     class IodaEncoder
     {
-    public:
-    private:
-
+     public:
+     private:
     };
-}
+}  // namespace Ingester

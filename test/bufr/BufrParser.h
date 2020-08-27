@@ -21,24 +21,23 @@
 #include "oops/util/Expect.h"
 #include "test/TestEnvironment.h"
 
-#include "bufr/Ingester/IngesterData.h"
-#include "bufr/Ingester/BufrParser/BufrMnemonicSet.h"
 #include "bufr/Ingester/BufrParser/BufrDescription.h"
-#include "bufr/Ingester/BufrParser/BufrTypes.h"
+#include "bufr/Ingester/BufrParser/BufrMnemonicSet.h"
 #include "bufr/Ingester/BufrParser/BufrParser.h"
+#include "bufr/Ingester/BufrParser/BufrTypes.h"
+#include "bufr/Ingester/IngesterData.h"
 
 
 namespace Ingester
 {
     namespace test
     {
-
         class BufrParserTestFixture : private boost::noncopyable
         {
-        public:
+         public:
             static std::shared_ptr<BufrParser>& bufrParser() { return getInstance().bufrParser_; }
 
-        private:
+         private:
             std::shared_ptr<BufrParser> bufrParser_;
 
             static BufrParserTestFixture& getInstance()
@@ -78,7 +77,7 @@ namespace Ingester
         void test_parsePartialFile()
         {
             auto data = BufrParserTestFixture::bufrParser()->parse(5);
-            EXPECT(abs(data->get("TMBR")(0,0) - 248.17) < .01 );
+            EXPECT(abs(data->get("TMBR")(0, 0) - 248.17) < .01);
         }
 
         void test_parseFileIncrementally()
@@ -97,15 +96,16 @@ namespace Ingester
                 {
                     endReached = true;
                 }
-            } while(!endReached);
+            } while (!endReached);
         }
+
 
         class BufrParser : public oops::Test
         {
-        public:
+         public:
             BufrParser() {}
             virtual ~BufrParser() {}
-        private:
+         private:
             std::string testid() const override { return "ingester::test::BufrParser"; }
             void register_tests() const override
             {
@@ -125,5 +125,5 @@ namespace Ingester
                 });
             }
         };
-    }
-}
+    }  // namespace test
+}  // namespace Ingester

@@ -7,12 +7,13 @@
 
 #pragma once
 
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <map>
 
 #include "BufrParser/BufrTypes.h"
+
 
 namespace Ingester
 {
@@ -23,7 +24,7 @@ namespace Ingester
 
     class BufrCollectors
     {
-    public:
+     public:
         explicit BufrCollectors(unsigned int fileUnit);
         ~BufrCollectors() = default;
 
@@ -32,8 +33,8 @@ namespace Ingester
         void collect();
         std::shared_ptr<IngesterData> finalize();
 
-    private:
+     private:
         unsigned int fileUnit_;
         std::vector<std::shared_ptr<BufrCollector>> collectors_;
     };
-}
+}  // namespace Ingester

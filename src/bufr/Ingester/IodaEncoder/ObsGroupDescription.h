@@ -19,14 +19,14 @@ namespace Ingester
 
     class ObsGroupDescription
     {
-    public:
+     public:
         ObsGroupDescription() = default;
 
         void addMetaKeys(FieldName& fieldName, ObsGroupName& obsGroupName);
         void addObsValKeys(FieldName& fieldName, ObsGroupName& obsGroupName);
 
-    private:
+     private:
         NameMap metaDataFieldMap_;
         NameMap obsValFieldMap_;
     };
-}
+}  // namespace Ingester

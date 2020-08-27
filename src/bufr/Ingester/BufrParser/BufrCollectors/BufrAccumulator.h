@@ -17,7 +17,7 @@ namespace Ingester
 {
     class BufrAccumulator
     {
-    public:
+     public:
         explicit BufrAccumulator(Eigen::Index numColumns, Eigen::Index blockSize = 50000);
 
         void addRow(double* newRow);
@@ -25,10 +25,10 @@ namespace Ingester
         IngesterArray getData(Eigen::Index startCol, const Channels& channels);
         void reset();
 
-    private:
+     private:
         IngesterArray dataArray_;
         Eigen::Index numColumns_;
         Eigen::Index numDataRows_;
         Eigen::Index blockSize_;
     };
-}
+}  // namespace Ingester

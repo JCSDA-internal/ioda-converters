@@ -8,51 +8,51 @@
 #include <iostream>
 
 #include "oops/util/IntSetParser.h"
+
 #include "BufrDescription.h"
 #include "BufrMnemonicSet.h"
 #include "BufrTypes.h"
 
 
-using namespace Ingester;
-using namespace std;
-
-const string PATH_SEPERATOR =
+static const char* PATH_SEPERATOR =
 #if defined _WIN32 || defined __CYGWIN__
     "\\";
 #else
     "/";
 #endif
 
-
-const string FILENAME = "filename";
-const string MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
-const string MNEMONIC_STR_YAML_NAME = "mnemonics";
-const string CHANNEL_NAME = "channels";
-
-BufrDescription::BufrDescription(const eckit::Configuration& conf, const string& basePath)
+namespace Ingester
 {
-    setFilepath(basePath + PATH_SEPERATOR + conf.getString(FILENAME));
-    auto subConf = conf.getSubConfiguration(MNEMONIC_SETS_YAML_SECTION);
+    static const char* FILENAME = "filename";
+    static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
+    static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
+    static const char* CHANNEL_NAME = "channels";
 
-    for (const auto& mnemonicSetConf : subConf.getSubConfigurations())
+    BufrDescription::BufrDescription(const eckit::Configuration &conf, const std::string &basePath)
     {
-        Channels channels;
-        if (mnemonicSetConf.has(CHANNEL_NAME))
-        {
-            channels = oops::parseIntSet(mnemonicSetConf.getString(CHANNEL_NAME));
-        }
-        else
-        {
-            channels = {1};
-        }
+        setFilepath(basePath + std::string(PATH_SEPERATOR) + conf.getString(FILENAME));
+        auto subConf = conf.getSubConfiguration(MNEMONIC_SETS_YAML_SECTION);
 
-        addMnemonicSet(BufrMnemonicSet(mnemonicSetConf.getString(MNEMONIC_STR_YAML_NAME),
-                                       channels));
+        for (const auto &mnemonicSetConf : subConf.getSubConfigurations())
+        {
+            Channels channels;
+            if (mnemonicSetConf.has(CHANNEL_NAME))
+            {
+                channels = oops::parseIntSet(mnemonicSetConf.getString(CHANNEL_NAME));
+            }
+            else
+            {
+                channels = {1};
+            }
 
+            addMnemonicSet(BufrMnemonicSet(
+                mnemonicSetConf.getString(MNEMONIC_STR_YAML_NAME), channels));
+        }
     }
-}
 
-void BufrDescription::addMnemonicSet(BufrMnemonicSet mnemonicSet)
-{
-    mnemonicSets_.push_back(mnemonicSet);
-}
+    void BufrDescription::addMnemonicSet(BufrMnemonicSet mnemonicSet)
+    {
+        mnemonicSets_.push_back(mnemonicSet);
+    }
+
+}  // namespace Ingester

@@ -6,36 +6,35 @@
  */
 
 #include <iostream>
-#include <vector>
-#include <sstream>
 #include <iterator>
+#include <vector>
 
 #include "BufrMnemonicSet.h"
 #include "BufrTypes.h"
 
-using namespace Ingester;
-using namespace std;
-
-BufrMnemonicSet::BufrMnemonicSet(const string& nmemonicsStr, const Channels& channels) :
-    mnemonicsStr_(nmemonicsStr),
-    mnemonics_(tokenizeMnemonics(nmemonicsStr)),
-    channels_(channels)
+namespace Ingester
 {
-    maxColumn_ = 0;
-    for (auto col : channels)
+    BufrMnemonicSet::BufrMnemonicSet(const std::string& nmemonicsStr, const Channels &channels) :
+        mnemonicsStr_(nmemonicsStr),
+        mnemonics_(tokenizeMnemonics(nmemonicsStr)),
+        channels_(channels)
     {
-        if (col > (int) maxColumn_)
+        maxColumn_ = 0;
+        for (auto col : channels)
         {
-            maxColumn_ = col;
+            if (col > static_cast<int> (maxColumn_))
+            {
+                maxColumn_ = col;
+            }
         }
     }
-}
 
-vector<string> BufrMnemonicSet::tokenizeMnemonics(const string& nmemonicsStr)
-{
-    //Tokenize the string into individual mnemonic strings
-    istringstream buf(nmemonicsStr);
-    istream_iterator<string> beg(buf), end;
-    vector<string> tokens(beg, end);
-    return tokens;
-}
+    std::vector<std::string> BufrMnemonicSet::tokenizeMnemonics(const std::string& nmemonicsStr)
+    {
+        // Tokenize the string into individual mnemonic strings
+        std::istringstream buf(nmemonicsStr);
+        std::istream_iterator <std::string> beg(buf), end;
+        std::vector <std::string> tokens(beg, end);
+        return tokens;
+    }
+}  // namespace Ingester

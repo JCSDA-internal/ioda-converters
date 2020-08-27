@@ -6,120 +6,130 @@
  */
 
 #include <time.h>
-#include <iostream>
+
 #include <iomanip>
+#include <iostream>
 
 #include "eckit/config/YAMLConfiguration.h"
 #include "eckit/filesystem/PathName.h"
-
 #include "oops/util/IntSetParser.h"
-#include "BufrParser/BufrParser.h"
+
 #include "BufrParser/BufrDescription.h"
 #include "BufrParser/BufrMnemonicSet.h"
+#include "BufrParser/BufrParser.h"
 #include "IngesterData.h"
 
-using namespace Ingester;
-using namespace std;
-using namespace eckit;
+
+static const char* CONFIG_FILE =
+    "/Users/rmclaren/Work/bufr-tools/src/test_ingester.yaml";
+static const char* INPUT_FILE =
+    "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12/gdas.t12z.1bmhs.tm00.bufr_d";
 
 
-static const string CONFIG_FILE = "/Users/rmclaren/Work/bufr-tools/src/test_ingester.yaml";
-static const string INPUT_FILE = "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12/gdas.t12z.1bmhs.tm00.bufr_d";
-static const string OUTPUT_FILE = "/Users/rmclaren/Temp/ioda.nc";
-
-
-void test_createDescriptionManually()
+namespace Ingester
 {
-    //Create Description
-    auto description = BufrDescription();
-
-    description.setFilepath(INPUT_FILE);
-
-    auto set1 = BufrMnemonicSet("SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS", {1});
-    auto set2 = BufrMnemonicSet("SAZA SOZA BEARAZ SOLAZI", {1});
-    auto set3 = BufrMnemonicSet("TMBR", oops::parseIntSet("1-15"));
-
-    description.addMnemonicSet(set1);
-    description.addMnemonicSet(set2);
-    description.addMnemonicSet(set3);
-
-    //Read some data
-    auto bufrParser = BufrParser(description);
-    auto data = bufrParser.parse(4);
-
-    cout << data->get("TMBR") << endl;
-}
-
-void test_parsePartialFile()
-{
-    unique_ptr<YAMLConfiguration> yaml(new YAMLConfiguration(PathName(CONFIG_FILE)));
-
-    auto dataPath = yaml->getString("datapath");
-
-    for (const auto& conf : yaml->getSubConfigurations("bufr"))
+    void test_createDescriptionManually()
     {
-        auto description = BufrDescription(conf, dataPath);
+        // Create Description
+        auto description = BufrDescription();
+
+        description.setFilepath(INPUT_FILE);
+
+        auto set1MnemonicStr = "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS";
+        auto set2MnemonicStr = "SAZA SOZA BEARAZ SOLAZI";
+        auto set3MnemonicStr = "TMBR";
+
+        auto set1 = BufrMnemonicSet(set1MnemonicStr, {1});
+        auto set2 = BufrMnemonicSet(set2MnemonicStr, {1});
+        auto set3 = BufrMnemonicSet(set3MnemonicStr, oops::parseIntSet("1-15"));
+
+        description.addMnemonicSet(set1);
+        description.addMnemonicSet(set2);
+        description.addMnemonicSet(set3);
+
+        // Read some data
         auto bufrParser = BufrParser(description);
+        auto data = bufrParser.parse(4);
 
-        shared_ptr<IngesterData> data = bufrParser.parse(5);
-
-        cout << data->get("TMBR") << endl;
+        std::cout << data->get("TMBR") << std::endl;
     }
-}
 
-void test_parseWholeFile()
-{
-    unique_ptr<YAMLConfiguration> yaml(new YAMLConfiguration(PathName(CONFIG_FILE)));
-
-    auto dataPath = yaml->getString("datapath");
-
-    for (const auto& conf : yaml->getSubConfigurations("bufr"))
+    void test_parsePartialFile()
     {
-        auto description = BufrDescription(conf, dataPath);
-        auto bufrParser = BufrParser(description);
+        std::unique_ptr<eckit::YAMLConfiguration>
+            yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        shared_ptr<IngesterData> data = bufrParser.parse();
-    }
-}
+        auto dataPath = yaml->getString("datapath");
 
-void test_parseFileIncrementally()
-{
-    unique_ptr<YAMLConfiguration> yaml(new YAMLConfiguration(PathName(CONFIG_FILE)));
-
-    auto dataPath = yaml->getString("datapath");
-
-    for (const auto& conf : yaml->getSubConfigurations("bufr"))
-    {
-        auto description = BufrDescription(conf, dataPath);
-        auto bufrParser = BufrParser(description);
-
-        bool endReached = false;
-        shared_ptr<IngesterData> data;
-        do
+        for (const auto &conf : yaml->getSubConfigurations("bufr"))
         {
-            auto nextData = bufrParser.parse(10);
+            auto description = BufrDescription(conf, dataPath);
+            auto bufrParser = BufrParser(description);
 
-            if (nextData->size() > 0)
-            {
-                data = nextData;
-            }
-            else
-            {
-                endReached = true;
-            }
-        } while(!endReached);
+            std::shared_ptr<IngesterData> data = bufrParser.parse(5);
 
-        cout << data->get("TMBR") << endl;
+            std::cout << data->get("TMBR") << std::endl;
+        }
     }
-}
 
-int main(int, const char**)
+    void test_parseWholeFile()
+    {
+        std::unique_ptr<eckit::YAMLConfiguration>
+            yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
+
+        auto dataPath = yaml->getString("datapath");
+
+        for (const auto &conf : yaml->getSubConfigurations("bufr"))
+        {
+            auto description = BufrDescription(conf, dataPath);
+            auto bufrParser = BufrParser(description);
+
+            std::shared_ptr<IngesterData> data = bufrParser.parse();
+        }
+    }
+
+    void test_parseFileIncrementally()
+    {
+        std::unique_ptr<eckit::YAMLConfiguration>
+            yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
+
+        auto dataPath = yaml->getString("datapath");
+
+        for (const auto &conf : yaml->getSubConfigurations("bufr"))
+        {
+            auto description = BufrDescription(conf, dataPath);
+            auto bufrParser = BufrParser(description);
+
+            bool endReached = false;
+            std::shared_ptr<IngesterData> data;
+            do
+            {
+                auto nextData = bufrParser.parse(10);
+
+                if (nextData->size() > 0)
+                {
+                    data = nextData;
+                }
+                else
+                {
+                    endReached = true;
+                }
+            } while (!endReached);
+
+            std::cout << data->get("TMBR") << std::endl;
+        }
+    }
+}  // namespace Ingester
+
+int main(int, const char **)
 {
     clock_t startTime = clock();
+    Ingester::test_createDescriptionManually();
 
-    test_createDescriptionManually();
-
-    cout << "Took " << setprecision(2) << ((float)clock() - startTime)/CLOCKS_PER_SEC << " seconds to run." << endl;
+    std::cout << "Took " \
+              << std::setprecision(2) \
+              << (clock() - startTime) / CLOCKS_PER_SEC \
+              << " seconds to run." << std::endl;
 
     return 0;
 }

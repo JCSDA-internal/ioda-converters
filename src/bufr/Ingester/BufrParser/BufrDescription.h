@@ -7,10 +7,11 @@
 
 #pragma once
 
-#include "eckit/config/LocalConfiguration.h"
-
 #include <string>
 #include <vector>
+
+#include "eckit/config/LocalConfiguration.h"
+
 
 namespace Ingester
 {
@@ -18,7 +19,7 @@ namespace Ingester
 
     class BufrDescription
     {
-    public:
+     public:
         BufrDescription() = default;
         explicit BufrDescription(const eckit::Configuration& conf, const std::string& basePath);
 
@@ -28,8 +29,8 @@ namespace Ingester
         inline std::vector<BufrMnemonicSet>& getMnemonicSets() { return mnemonicSets_; }
         inline std::string filepath() { return filepath_; }
 
-    private:
+     private:
         std::vector<BufrMnemonicSet> mnemonicSets_;
         std::string filepath_;
     };
-}
+}  // namespace Ingester

@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "Eigen/Dense"
 
@@ -20,19 +20,19 @@ namespace Ingester
 {
     class BufrMnemonicSet;
     class IngesterData;
-    
+
     class BufrParser
     {
-    public:
+     public:
         explicit BufrParser(BufrDescription& description);
         ~BufrParser();
-        std::shared_ptr<IngesterData> parse(const size_t maxMsgsToParse=0);
+        std::shared_ptr<IngesterData> parse(const size_t maxMsgsToParse = 0);
 
-    private:
+     private:
         BufrDescription description_;
         unsigned int fileUnit_;
 
         int openBufrFile(const std::string& filepath);
         void closeBufrFile(const int fileUnit);
     };
-}
+}  // namespace Ingester
