@@ -9,7 +9,11 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-project( iodaconv VERSION 0.0.1 LANGUAGES Fortran )
+set(iodaconv_major 0)
+set(iodaconv_minor 0)
+set(iodaconv_revision 1)
+set(iodaconv_version ${iodaconv_major}.${iodaconv_minor}.${iodaconv_revision})
+project( iodaconv VERSION ${iodaconv_version} LANGUAGES Fortran )
 
 ## Configuration
 include(GNUInstallDirs)
@@ -144,3 +148,22 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-con
                                  VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
         DESTINATION ${CONFIG_INSTALL_DESTINATION})
+
+
+# CPack stuff. Used for jedi-build to make a relocatable package.
+set(CPACK_PACKAGE_NAME "ioda-converters")
+set(CPACK_PACKAGE_VENDOR "Joint Center for Satellite Data Assimilation")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "ioda-converters")
+set(CPACK_PACKAGE_VERSION "${iodaconv_version}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${iodaconv_major}")
+set(CPACK_PACKAGE_VERSION_MINOR "${iodaconv_minor}")
+set(CPACK_PACKAGE_VERSION_PATCH "${iodaconv_revision}")
+
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "ioda-converters")
+set(CPACK_PACKAGE_CONTACT "Stephen Herbener (stephenh@ucar.edu)")
+set(CPACK_STRIP_FILES FALSE)
+set(CPACK_SOURCE_STRIP_FILES FALSE)
+
+# This must always be last!
+include(CPack)
