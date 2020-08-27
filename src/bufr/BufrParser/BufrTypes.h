@@ -12,5 +12,3 @@
 #include "IngesterTypes.h"
 
 typedef std::set<int> Channels;
-
-

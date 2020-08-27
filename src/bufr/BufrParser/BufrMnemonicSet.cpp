@@ -14,7 +14,7 @@
 
 namespace Ingester
 {
-    BufrMnemonicSet::BufrMnemonicSet(const std::string& nmemonicsStr, const Channels &channels) :
+    BufrMnemonicSet::BufrMnemonicSet(const std::string& nmemonicsStr, const Channels& channels) :
         mnemonicsStr_(nmemonicsStr),
         mnemonics_(tokenizeMnemonics(nmemonicsStr)),
         channels_(channels)
