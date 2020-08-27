@@ -7,6 +7,7 @@ from datetime import datetime as dt
 import sys
 import os
 import yaml
+
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -72,16 +73,6 @@ class NcepObsType(ObsType):
         # Put the time and date vars in the subclasses so that their dimensions
         # can vary ( [nlocs], [nlocs,nlevs] ).
         self.misc_spec[0].append(
-            ['ObsTime@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
-        self.misc_spec[0].append(
-            ['ObsDate@MetaData', '', cm.DTYPE_INTEGER, ['nlocs'], [self.nlocs]])
-        self.misc_spec[0].append(
-            ['time@MetaData', '', cm.DTYPE_DOUBLE, ['nlocs'], [self.nlocs]])
-        self.misc_spec[0].append(
-            ['latitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
-        self.misc_spec[0].append(
-            ['longitude@MetaData', '', cm.DTYPE_FLOAT, ['nlocs'], [self.nlocs]])
-        self.misc_spec[0].append(
             ['datetime@MetaData', '', cm.DTYPE_STRING, ['nlocs', 'nstring'], [self.nlocs, self.nstring]])
 
         if (bf_type == cm.BFILE_BUFR):
@@ -106,13 +97,15 @@ class NcepObsType(ObsType):
                         intspecDum = [
                             full_table[i]['name'].replace(
                                 ' ',
-                                '_'),
+                                '_').replace('/', '_'),
                             i,
                             full_table[i]['dtype'],
                             full_table[i]['ddims']]
                         if intspecDum not in intspec:
                             intspec.append([full_table[i]['name'].replace(
-                                ' ', '_'), i, full_table[i]['dtype'], full_table[i]['ddims']])
+                                ' ', '_').replace('/', '_'),
+                                i, full_table[i]['dtype'],
+                                full_table[i]['ddims']])
                     # else:
                     # TODO what to do if the spec is not in the full_table (or
                     # in this case, does not have a unit in the full_table)
@@ -127,7 +120,6 @@ class NcepObsType(ObsType):
                 write_yaml(intspec, Lexicon)
             else:
                 intspec = read_yaml(Lexicon)
-
             self.nvars = 0
             for k in intspec:
                 if '@ObsValue' in (" ".join(map(str, k))):
@@ -139,10 +131,37 @@ class NcepObsType(ObsType):
             # are more Mnemonics with the same problem.
 
             self.int_spec = [intspec[x:x + 1]
-                             for x in range(0, len(intspec) - 1, 1)]
-            # TODO Check not sure what the evn_ and rep_ are
+                             for x in range(0, len(intspec), 1)]
             self.evn_spec = []
-            self.rep_spec = []
+
+            spec_list = get_rep_spec(alt_type, blist)
+            repspec = []
+            repspecDum = []
+
+            for i in spec_list[alt_type]:
+                if i in full_table:
+                    repspecDum = [
+                        full_table[i]['name'].replace(
+                            ' ', '_').replace('/', '_'),i,
+                        full_table[i]['dtype'],
+                        full_table[i]['ddims']]
+                    if repspecDum not in repspec:
+                        repspec.append([full_table[i]['name'].replace(
+                            ' ', '_').replace('/', '_'), i, 
+                            full_table[i]['dtype'], full_table[i]['ddims']])
+            for j, dname in enumerate(repspec):
+                if len(dname[3]) == 1:
+                    repspec[j].append([self.nlocs])
+                elif len(dname[3]) == 2:
+                    repspec[j].append([self.nlocs, self.nstring])
+                else:
+                    print('walked off the edge')
+
+            # write_yaml(repspec, Lexicon)
+            self.rep_spec = [repspec[x:x + 1] \
+                             for x in range(0, len(repspec), 1) if not repspec[x] in intspec]
+
+            #self.rep_spec = []
             # TODO Check the intspec for "SQ" if exist, added at seq_spec
             self.seq_spec = []
 
@@ -287,7 +306,7 @@ def read_table(filename):
 def get_int_spec(mnemonic, part_b):
     # mnemonic is the BUFR msg_type, i.e. 'NC001007'
     # part_b from the read_table, table entries associated with the mnemonic
-    #
+    # Here part_b=blist
     # find the table entries for the bufr msg_type (mnemonic):
     bentries = {}
     for line in part_b:
@@ -296,6 +315,10 @@ def get_int_spec(mnemonic, part_b):
             '').replace(
             '}',
             '').replace(
+            #'(',
+            #'').replace(
+            #')',
+            #'').replace(
             '<',
             '').replace(
                 '>',
@@ -308,48 +331,71 @@ def get_int_spec(mnemonic, part_b):
                 bentries[mnemonic] = ''.join(
                     line.split('|')[2:]).strip().split()
                 # bentries is a dictionary for the mnemonic
+    for i in range(3):
+        for b_monic in bentries[mnemonic]:
+            for line in part_b:
+                line = line.replace(
+                    '{',
+                    '').replace(
+                    '}',
+                    '').replace(
+                    # '(',
+                    # '').replace(
+                    # ')',
+                    # '').replace(
+                    '<',
+                    '').replace(
+                    '>',
+                    '')
+                if line.split('|')[1].find(b_monic) != -1:
+                    bentries[mnemonic] = bentries[mnemonic] + \
+                        ''.join(line.split('|')[2:]).strip().split()
+    return bentries
+
+
+##########################################################################
+# get the rep_spec entries 
+##########################################################################
+
+
+def get_rep_spec(mnemonic, part_b):
+    # mnemonic is the BUFR msg_type, i.e. 'NC001007'
+    # part_b from the read_table, table entries associated with the mnemonic
+    #
+    # find the table entries for the bufr msg_type (mnemonic):
+    bentries = {}
+    for line in part_b:
+        line = line.replace(
+            '{',
+            '').replace(
+            '}',
+            '').replace(
+#            '(',
+#            '').replace(
+#            ')',
+#            '').replace(
+            '<',
+            '').replace(
+                '>',
+            '')
+        if line.find(mnemonic) != -1:
+            if mnemonic in bentries:
+                bentries[mnemonic] = bentries[mnemonic] + \
+                    ''.join(line.split('|')[2:]).strip().split()
+            else:
+                bentries[mnemonic] = ''.join(
+                    line.split('|')[2:]).strip().split()
+                # bentries is a dictionary for the mnemonic
+    bentries[mnemonic] = [x[1:-1] for x in bentries[mnemonic] if '(' in x]
 
     for b_monic in bentries[mnemonic]:
         for line in part_b:
             line = line.replace(
-                '{',
+                '(',
                 '').replace(
-                '}',
-                '').replace(
-                '<',
-                '').replace(
-                '>',
+                ')',
                 '')
             if line.split('|')[1].find(b_monic) != -1:
-                bentries[mnemonic] = bentries[mnemonic] + \
-                    ''.join(line.split('|')[2:]).strip().split()
-    for c_monic in bentries[mnemonic]:
-        for line in part_b:
-            line = line.replace(
-                '{',
-                '').replace(
-                '}',
-                '').replace(
-                '<',
-                '').replace(
-                '>',
-                '')
-            if line.split('|')[1].find(c_monic) != -1:
-                bentries[mnemonic] = bentries[mnemonic] + \
-                    ''.join(line.split('|')[2:]).strip().split()
-
-    for d_monic in bentries[mnemonic]:
-        for line in part_b:
-            line = line.replace(
-                '{',
-                '').replace(
-                '}',
-                '').replace(
-                '<',
-                '').replace(
-                '>',
-                '')
-            if line.split('|')[1].find(d_monic) != -1:
                 bentries[mnemonic] = bentries[mnemonic] + \
                     ''.join(line.split('|')[2:]).strip().split()
     return bentries
@@ -382,8 +428,8 @@ def create_bufrtable(BufrFname, ObsTable):
 if __name__ == '__main__':
 
     desc = ('Read NCEP BUFR data and convert to IODA netCDF4 format'
-            'example: ncep_clases -p /path/to/obs/ -i obs_filename'
-            ' -ot observation type -l yamlfile')
+            'example: ./ncep_classes.py -p /path/to/obs/ -i obs_filename'
+            ' -ot observation type -l yamlfile -m number_of_messages')
 
     parser = ArgumentParser(
         description=desc,
@@ -419,11 +465,11 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-l', '--lexicon', help='yaml file with the dictionary', metavar="name_of_dict",
-        type=str, required=False, default=str(NCEP_CONFIG_PATH/'bufr2ioda.yaml'))
+        type=str, required=True)
 
     parser.add_argument(
         '-Pr', '--bufr', action='store_true', default=1,
-        help='input BUFR file is in prepBUFR format')
+        help='input BUFR file is in prepBUFR or BUFR format')
 
     args = parser.parse_args()
 
@@ -433,10 +479,10 @@ if __name__ == '__main__':
     ObsType = args.obs_type     # Observation type. e.g., NC001007
     BufrFname = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral = dt.strptime(args.date, '%Y%m%d%H')  # DateHH of analysis
-    if Path(args.lexicon).is_absolute():
-        Lexicon = args.lexicon   # User defined Lexicon path
+    if (config_path + args.lexicon):
+        Lexicon = config_path + args.lexicon  # Existing yaml file in config
     else:
-        Lexicon = str((NCEP_CONFIG_PATH/args.lexicon).resolve())  # Default Lexicon path
+        args.lexicon   # User defined Lexicon name
 
     if (args.bufr):
         BfileType = cm.BFILE_BUFR  # BUFR or prepBUFR. TODO: To be removed
@@ -463,7 +509,7 @@ if __name__ == '__main__':
         bufr.close()
         print('Mnemonic name is ', mnemonic)
     else:
-        raise RuntimeError(f'Bufr file: {BufrFname} does not exist.')
+        sys.exit('The ', BufrFname, 'does not exist.')
 
     #  Check if Bufr Observation Table exists, if not created.
     #  The table is defined as base_mnemo.tbl, it is a text file.
@@ -493,11 +539,17 @@ if __name__ == '__main__':
     nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 
     nc.date_time = int(date_time[0:10])
-
-    Obs.create_nc_datasets(nc)
-    Obs.fill_coords(nc)
+    
 
     bufr = ncepbufr.open(BufrFname)
-
-    Obs.convert(bufr, nc)
+    pf_list = ['NC001003', 'NC001103', 'NC031001', 'NC031002', 'NC031003',
+               'NC031004', 'NC031005', 'NC031006', 'NC031007']
+    if ObsType in pf_list:
+        Obs.create_nc_datasets(nc, True) 
+        Obs.fill_coords(nc)
+        Obs.convert(bufr, nc, True)
+    else:
+        Obs.create_nc_datasets(nc, False)
+        Obs.fill_coords(nc)
+        Obs.convert(bufr, nc, False)
     bufr.close()
