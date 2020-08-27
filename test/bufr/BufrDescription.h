@@ -23,8 +23,8 @@
 #include "oops/util/Expect.h"
 #include "oops/util/IntSetParser.h"
 
-#include "bufr/Ingester/BufrParser/BufrDescription.h"
-#include "bufr/Ingester/BufrParser/BufrMnemonicSet.h"
+#include "bufr/BufrParser/BufrDescription.h"
+#include "bufr/BufrParser/BufrMnemonicSet.h"
 
 
 namespace Ingester
