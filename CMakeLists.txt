@@ -70,6 +70,11 @@ if(OOPS_FOUND)
   include_directories(${OOPS_INCLUDE_DIRS})
 endif()
 
+if(bufr_FOUND)
+  find_package(jedi REQUIRED)
+  find_package(ioda_engines REQUIRED)
+endif()
+
 # ODC is optional. Sets: odc_FOUND
 find_package(odc QUIET)
 
