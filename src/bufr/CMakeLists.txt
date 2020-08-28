@@ -32,6 +32,7 @@ list(APPEND INGESTER_LIBS_DEP
   Eigen3::Eigen
   eckit
   oops
+  ioda-engines
   bufr::bufr_4_DA)
 
 ecbuild_add_library( TARGET   ingester
