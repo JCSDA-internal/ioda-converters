@@ -34,7 +34,7 @@ list(APPEND INGESTER_LIBS_DEP
   Eigen3::Eigen
   eckit
   oops
-  ioda-engines
+#  ioda-engines
   bufr::bufr_4_DA)
 
 ecbuild_add_library( TARGET   ingester
@@ -44,6 +44,12 @@ ecbuild_add_library( TARGET   ingester
                      HEADER_DESTINATION ${INSTALL_INCLUDE_DIR}/iodaconv
                      LINKER_LANGUAGE ${IODACONV_LINKER_LANGUAGE}
                     )
+
+set (IODA_ENGINES_PATH ${CMAKE_PREFIX_PATH})
+target_include_directories(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/include)
+target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/lib/libioda-engines.dylib)
+target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/lib/libHH.dylib)
+target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/lib/libjedi.dylib)
 
 add_executable(test_ingester.x test_ingester.cpp)
 target_link_libraries(test_ingester.x PRIVATE ingester)
