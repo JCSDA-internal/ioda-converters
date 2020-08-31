@@ -26,7 +26,6 @@ list( APPEND test_input
   testinput/gnssro_kompsat5_20180415_00Z.bufr
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
-  testinput/CS_OFFL_SIR_GDR_2__20160229T132459_20160229T150412_C001.DBL
   testinput/viirs_jpss1_oc_l2.nc
   testinput/modis_aqua_oc_l2.nc
   testinput/sondes_obs_2018041500_m.nc4
@@ -57,7 +56,6 @@ list( APPEND test_output
   testoutput/gnssro_kompsat5_2018041500.nc4
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
-  testoutput/cryosat2_L2_DBL.nc
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
   testoutput/sondes_obs_2018041500_m.odb
@@ -182,14 +180,6 @@ add_test(NAME test_iodaconv_cryosat2
             -o testrun/cryosat2_L2.nc
             -d 2019092112"
             cryosat2_L2.nc)
-
-add_test(NAME test_iodaconv_cryosat2_DBL
-         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
-            "${CMAKE_BINARY_DIR}/bin/cryosat_ice2ioda_DBL.py
-            -i testinput/CS_OFFL_SIR_GDR_2__20160229T132459_20160229T150412_C001.DBL
-            -o testrun/cryosat2_L2_DBL.nc
-            -d 2016022912"
-            cryosat2_L2_DBL.nc)
 
 
 #===============================================================================
