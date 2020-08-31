@@ -25,7 +25,7 @@ namespace Ingester
         virtual ~BufrCollector() = default;
 
         virtual void collect() = 0;
-        virtual IngesterArrayMap finalize() = 0;
+        virtual BufrDataMap finalize() = 0;
 
      protected:
         const int fileUnit_;

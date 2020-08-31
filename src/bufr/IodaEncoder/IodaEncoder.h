@@ -7,11 +7,25 @@
 
 #pragma once
 
+#include "IodaDescription.h"
+
+#include "ioda/Group.h"
+#include "ioda/Engines/Factory.h"
+#include "ioda/ObsGroup.h"
+
+
 namespace Ingester
 {
+    class ObsGroup;
+    class IngesterData;
+
     class IodaEncoder
     {
      public:
+        explicit IodaEncoder(const IodaDescription&  description);
+        ioda::ObsGroup encode(const IngesterData& data);
+
      private:
+        const IodaDescription description_;
     };
 }  // namespace Ingester

@@ -23,7 +23,18 @@ namespace Ingester
         dataMap_.insert({fieldName, data});
     }
 
-    IngesterArray IngesterData::get(const std::string &fieldName)
+    bool IngesterData::hasKey(const std::string& fieldName) const
+    {
+        bool hasKey = false;
+        if (dataMap_.find(fieldName) != dataMap_.end())
+        {
+            hasKey = true;
+        }
+
+        return hasKey;
+    }
+
+    IngesterArray IngesterData::get(const std::string &fieldName) const
     {
         if (dataMap_.find(fieldName) == dataMap_.end())
         {
@@ -31,7 +42,7 @@ namespace Ingester
             abort();
         }
 
-        return dataMap_[fieldName];
+        return dataMap_.at(fieldName);
     }
 
     size_t IngesterData::size() const

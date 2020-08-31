@@ -41,7 +41,7 @@ namespace Ingester
     }
 
 
-    IngesterArrayMap BufrIntCollector::finalize()
+    BufrDataMap BufrIntCollector::finalize()
     {
         IngesterArrayMap dataMap;
         size_t fieldIdx = 0;

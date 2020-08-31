@@ -40,7 +40,7 @@ namespace Ingester
         accumulator_.addRow(scratchData_);
     }
 
-    IngesterArrayMap BufrRepCollector::finalize()
+    BufrDataMap BufrRepCollector::finalize()
     {
         IngesterArrayMap dataMap;
         size_t fieldIdx = 0;

@@ -22,7 +22,7 @@ namespace Ingester
         ~BufrIntCollector() override;
 
         void collect() final;
-        IngesterArrayMap finalize() final;
+        BufrDataMap finalize() final;
 
      private:
         double *scratchData_;

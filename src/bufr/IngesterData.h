@@ -24,7 +24,8 @@ namespace Ingester
         IngesterData() = default;
 
         void add(const std::string& fieldName, const IngesterArray& data);
-        IngesterArray get(const std::string& fieldName);
+        bool hasKey(const std::string& fieldName) const;
+        IngesterArray get(const std::string& fieldName) const;
         size_t size() const;
 
      private:

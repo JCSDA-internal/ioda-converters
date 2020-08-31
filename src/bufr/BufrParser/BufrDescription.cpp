@@ -21,19 +21,20 @@ static const char* PATH_SEPERATOR =
     "/";
 #endif
 
+static const char* FILENAME = "filename";
+static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
+static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
+static const char* CHANNEL_NAME = "channels";
+static const char* EXPORT_NAME = "exports";
+
+
 namespace Ingester
 {
-    static const char* FILENAME = "filename";
-    static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
-    static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
-    static const char* CHANNEL_NAME = "channels";
-
     BufrDescription::BufrDescription(const eckit::Configuration &conf, const std::string &basePath)
     {
         setFilepath(basePath + std::string(PATH_SEPERATOR) + conf.getString(FILENAME));
-        auto subConf = conf.getSubConfiguration(MNEMONIC_SETS_YAML_SECTION);
 
-        for (const auto &mnemonicSetConf : subConf.getSubConfigurations())
+        for (const auto& mnemonicSetConf : conf.getSubConfigurations(MNEMONIC_SETS_YAML_SECTION))
         {
             Channels channels;
             if (mnemonicSetConf.has(CHANNEL_NAME))
@@ -48,11 +49,21 @@ namespace Ingester
             addMnemonicSet(BufrMnemonicSet(
                 mnemonicSetConf.getString(MNEMONIC_STR_YAML_NAME), channels));
         }
+
+        for (const auto& key : conf.getSubConfiguration(EXPORT_NAME).keys())
+        {
+            addExport(key, conf.getSubConfiguration(EXPORT_NAME).getString(key));
+        }
     }
 
     void BufrDescription::addMnemonicSet(BufrMnemonicSet mnemonicSet)
     {
         mnemonicSets_.push_back(mnemonicSet);
+    }
+
+    void BufrDescription::addExport(std::string key, std::string mnemonic)
+    {
+        exportMap_.insert({key, mnemonic});
     }
 
 }  // namespace Ingester

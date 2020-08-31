@@ -8,6 +8,7 @@
 #include "BufrParser.h"
 
 #include <bufr.interface.h>
+#include <iostream>
 #include <map>
 
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
@@ -23,12 +24,12 @@ namespace Ingester
         description_(description),
         fileUnit_(0)
     {
-        fileUnit_ = openBufrFile(description_.filepath());
+        reset();
     }
 
     BufrParser::~BufrParser()
     {
-        closeBufrFile(fileUnit_);
+        closeBufrFile();
     }
 
     std::shared_ptr <IngesterData> BufrParser::parse(const size_t maxMsgsToParse)
@@ -52,22 +53,59 @@ namespace Ingester
             if (maxMsgsToParse > 0 && ++messageNum >= maxMsgsToParse) break;
         }
 
-        return collectors.finalize();
+        return exportData(collectors.finalize());
     }
 
-    int BufrParser::openBufrFile(const std::string &filepath)
+    std::shared_ptr<IngesterData> BufrParser::exportData(const BufrDataMap& srcData)
     {
-        static const int fileUnit = 11;
+        auto outputData = std::make_shared<IngesterData>();
+        auto exportMap = description_.getExportMap();
 
-        open_f(fileUnit, filepath.c_str());
-        openbf_f(fileUnit, "IN", fileUnit);
+        auto exportIt = exportMap.begin();
+        while (exportIt != exportMap.end())
+        {
+            auto key = exportIt->first;
+            auto mnemonic = exportIt->second;
 
-        return fileUnit;
+            if (srcData.find(mnemonic) != srcData.end())
+            {
+                outputData->add(key, srcData.at(mnemonic));
+            }
+            else
+            {
+                std::cout << "WARNING: BufrParser::exportData: Could not find mnemonic " \
+                          << mnemonic \
+                          << " in src data." \
+                          << std::endl;
+            }
+
+            exportIt++;
+        }
+
+        return outputData;
     }
 
-    void BufrParser::closeBufrFile(const int fileUnit)
+    void BufrParser::openBufrFile(const std::string &filepath)
     {
-        closbf_f(fileUnit);
-        close_f(fileUnit);
+        fileUnit_ = 11;
+        open_f(fileUnit_, filepath.c_str());
+        openbf_f(fileUnit_, "IN", fileUnit_);
+    }
+
+    void BufrParser::closeBufrFile()
+    {
+        closbf_f(fileUnit_);
+        close_f(fileUnit_);
+        fileUnit_ = 0;
+    }
+
+    void BufrParser::reset()
+    {
+        if (fileUnit_ != 0)
+        {
+            closeBufrFile();
+        }
+
+        openBufrFile(description_.filepath());
     }
 }  // namespace Ingester

@@ -3,31 +3,57 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
+#!!!!!!!!!!!!!!!!!
+#These paramters should not be defined in this YAML file
+#they are only here for convenience.
 datapath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
+filename: "gdas.t12z.1bmhs.tm00.bufr_d"
+#!!!!!!!!!!!!!!!!!
 
-bufr:
-  - id: "mhs"
-    filename: "gdas.t12z.1bmhs.tm00.bufr_d"
-    mnemonicSets:
-      - mnemonics: "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS"
-      - mnemonics: "SAZA SOZA BEARAZ SOLAZI"
-      - mnemonics: "TMBR"
-        channels : 1, 3-15
-    fieldMaps:
-      longitude: ["CLON", "CLONH"]
-      latitude: ["CLAT", "CLATH"]
-      timestamp:
-        year: "YEAR"
-        month: "MNTH"
-        day: "DAYS"
-        hour: "HOUR"
-        minute: "MINU"
-        second: "SECO"
-      observations:
+#ssd:
+#  netcdf-parser:
+#    stuff
+
+amsua:
+  - parser:
+      type: "bufr"
+      mnemonicSets:
+        - mnemonics: "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS"
+        - mnemonics: "SAZA SOZA BEARAZ SOLAZI"
+        - mnemonics: "TMBR"
+          channels : 1-15
+
+      exports:
+        longitude: "CLON"
+        latitude: "CLAT" #implicit first valid conditional
         radiance: "TMBR"
 
-
 ioda:
-  - id: "mhs"
-    src: "bufr"
+  scales:
+    - name: "nlocs"
+      size: "{LENGTH}" #implicit info
+    - name: "nchans"
+      size: "15" #implicit info
 
+  variables:
+    - name: "latitude@MetaData"
+      source: "latitude"
+      scales: ["nlocs"]
+      longName: "Latitude"
+      units: "degrees_north"
+      range: [-90, 90]
+
+    - name: "longitude@MetaData"
+      source: "longitude"
+      scales: ["nlocs"]
+      longName: "Longitude"
+      units: "degrees_east"
+      range: [-180, 180]
+
+    - name: "radiance@ObsValue"
+      coordinates: "longitude latitude nchans"
+      source: "radiance"
+      scales: ["nlocs", "nchans"]
+      longName: "Radiance"
+      units: "K"
+      range: [120, 500]

@@ -48,20 +48,16 @@ namespace Ingester
         }
     }
 
-    std::shared_ptr <IngesterData> BufrCollectors::finalize()
+    BufrDataMap BufrCollectors::finalize()
     {
-        auto ingesterData = std::make_shared<IngesterData>();
+        auto dataMap = IngesterArrayMap();
 
         for (const auto &collector : collectors_)
         {
-            IngesterArrayMap dataMap = collector->finalize();
-
-            for (auto const &pair : dataMap)
-            {
-                ingesterData->add(pair.first, pair.second);
-            }
+            IngesterArrayMap collectorDataMap = collector->finalize();
+            dataMap.insert(collectorDataMap.begin(), collectorDataMap.end());
         }
 
-        return ingesterData;
+        return dataMap;
     }
 }  // namespace Ingester

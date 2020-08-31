@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -24,13 +25,16 @@ namespace Ingester
         explicit BufrDescription(const eckit::Configuration& conf, const std::string& basePath);
 
         void addMnemonicSet(BufrMnemonicSet mnemonicSet);
+        void addExport(std::string key, std::string mnemonic);
 
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
         inline std::vector<BufrMnemonicSet>& getMnemonicSets() { return mnemonicSets_; }
         inline std::string filepath() { return filepath_; }
+        inline std::map<std::string, std::string>& getExportMap() { return exportMap_; }
 
      private:
         std::vector<BufrMnemonicSet> mnemonicSets_;
         std::string filepath_;
+        std::map<std::string, std::string> exportMap_;
     };
 }  // namespace Ingester

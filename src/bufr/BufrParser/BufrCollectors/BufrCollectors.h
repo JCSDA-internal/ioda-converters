@@ -31,7 +31,7 @@ namespace Ingester
         void addMnemonicSets(const std::vector<BufrMnemonicSet>& mnemonicSets);
         void addMnemonicSet(const BufrMnemonicSet& mnemonicSet);
         void collect();
-        std::shared_ptr<IngesterData> finalize();
+        BufrDataMap finalize();
 
      private:
         unsigned int fileUnit_;

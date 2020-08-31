@@ -13,6 +13,7 @@
 
 #include "Eigen/Dense"
 
+#include "BufrTypes.h"
 #include "BufrDescription.h"
 
 
@@ -27,12 +28,15 @@ namespace Ingester
         explicit BufrParser(BufrDescription& description);
         ~BufrParser();
         std::shared_ptr<IngesterData> parse(const size_t maxMsgsToParse = 0);
+        void reset();
 
      private:
         BufrDescription description_;
         unsigned int fileUnit_;
 
-        int openBufrFile(const std::string& filepath);
-        void closeBufrFile(const int fileUnit);
+        std::shared_ptr<IngesterData> exportData(const BufrDataMap& sourceData);
+
+        void openBufrFile(const std::string& filepath);
+        void closeBufrFile();
     };
 }  // namespace Ingester
