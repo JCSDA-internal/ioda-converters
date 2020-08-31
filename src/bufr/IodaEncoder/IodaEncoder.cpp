@@ -88,7 +88,7 @@ namespace Ingester
 
             var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
             var.atts.add<std::string>("units", { varDesc.units }, {1});
-            var.atts.add<float>("units", { varDesc.range.start, varDesc.range.end }, {2});
+            var.atts.add<float>("valid_range", { varDesc.range.start, varDesc.range.end }, {2});
 
             var.writeWithEigenRegular(data.get(varDesc.source));
 
