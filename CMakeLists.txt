@@ -54,7 +54,6 @@ endif (HAVE_ODB_API)
 # Dependency packages
 # bufr is optional. Sets: bufr_FOUND
 find_package(bufr QUIET)
-find_package(ioda_engines QUIET)
 find_package(NetCDF COMPONENTS Fortran)
 find_package(Eigen3 NO_MODULE HINTS
              $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
@@ -71,9 +70,10 @@ if(OOPS_FOUND)
   include_directories(${OOPS_INCLUDE_DIRS})
 endif()
 
-#ecbuild_use_package(PROJECT ioda-engines QUIET)
-#if(ioda_engines_FOUND)
-#  include_directories(${ioda-engines_INCLUDE_DIRS})
+# These need to be put in place, otherwise we are driving blind
+#if(bufr_FOUND)
+#  find_package(jedi REQUIRED)
+#  find_package(ioda-engines REQUIRED)
 #endif()
 
 # ODC is optional. Sets: odc_FOUND
@@ -91,10 +91,7 @@ if(ECKIT_FOUND)
   list( APPEND IODACONV_TPLS eckit )
 endif()
 if(bufr_FOUND)
-  list( APPEND IODACONV_TPLS bufr::bufr_4_DA )
-endif()
-if(ioda_engines_FOUND)
-  list( APPEND IODACONV_TPLS ioda_engines )
+  list( APPEND IODACONV_TPLS bufr::bufr_4_DA)
 endif()
 
 set( IODACONV_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src

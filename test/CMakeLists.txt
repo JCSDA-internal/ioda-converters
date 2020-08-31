@@ -334,7 +334,7 @@ if( HAS_NETCDF )
                          testrun/gnssro_kompsat5_2018041500.nc4"
                         gnssro_kompsat5_2018041500.nc4
                     ENVIRONMENT CTEST_LIBRARY_PATH=${CTEST_LIBRARY_PATH} )
-endif()  
+endif()
 #===============================================================================
 # ODB2 converter
 #===============================================================================
@@ -411,26 +411,16 @@ ecbuild_add_test( TARGET test_iodaconv_tropomi_no2
 # Bufr Converter tests
 #####################################################################
 
-#if(bufr_FOUND AND eckit_FOUND)
-#  add_library(bufr_test INTERFACE)
-#  target_include_directories(bufr_test INTERFACE bufr)
-#  target_link_libraries(bufr_test INTERFACE ingester)
-#  target_include_directories(bufr_test INTERFACE ingester)
-#  target_link_libraries(bufr_test INTERFACE oops)
-#
-#  ecbuild_add_test( TARGET  test_bufr_bufrdescription
-#                    SOURCES mains/TestBufrDescription.cpp
-#                    ARGS    "testinput/bufrtest_bufrdescription.yaml"
-#                    LIBS    bufr_test )
-#
-#  ecbuild_add_test( TARGET  test_bufr_bufrparser
-#                    SOURCES mains/TestBufrParser.cpp
-#                    ARGS    "testinput/bufrtest_bufrdescription.yaml"
-#                    LIBS    bufr_test )
-#
-#  # CPP Linter Tests
-#  ecbuild_add_test( TARGET bufr_coding_norms
-#                    TYPE SCRIPT
-#                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_cpplint.py
-#                    ARGS --quiet --recursive ${CMAKE_SOURCE_DIR}/src/bufr )
-#endif()
+add_library(bufr_test INTERFACE)
+target_include_directories(bufr_test INTERFACE bufr)
+target_link_libraries(bufr_test INTERFACE ingester)
+
+ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
+                  SOURCES mains/TestBufrDescription.cpp
+                  ARGS    "testinput/bufrtest_bufrdescription.yaml"
+                  LIBS    bufr_test )
+
+ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrparser
+                  SOURCES mains/TestBufrParser.cpp
+                  ARGS    "testinput/bufrtest_bufrdescription.yaml"
+                  LIBS    bufr_test )

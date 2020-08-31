@@ -34,8 +34,8 @@ list(APPEND INGESTER_LIBS_DEP
   Eigen3::Eigen
   eckit
   oops
-  bufr::bufr_4_DA
-  ioda-engines)
+  ioda-engines
+  bufr::bufr_4_DA)
 
 ecbuild_add_library( TARGET   ingester
                      SOURCES  ${_ingester_srcs}
@@ -45,15 +45,10 @@ ecbuild_add_library( TARGET   ingester
                      LINKER_LANGUAGE ${IODACONV_LINKER_LANGUAGE}
                     )
 
-
 add_executable(test_ingester.x test_ingester.cpp)
 target_link_libraries(test_ingester.x PRIVATE ingester)
 
-
-set (IODA_ENGINES_PATH ${CMAKE_PREFIX_PATH})
-target_include_directories(test_ingester.x PRIVATE $<BUILD_INTERFACE:${IODA_ENGINES_PATH}/ioda-engines/include>)
-#include_directories(${IODA_ENGINES_PATH}/ioda-engines/include)
-#
-#find_library(IODA_ENGINES_LIB libioda-engines ${IODA_ENGINES_PATH}/ioda-engines/lib)
-#message('****** ' ${IODA_ENGINES_PATH}/ioda-engines/lib)
-#target_link_libraries(test_ingester.x PRIVATE ${IODA_ENGINES_LIB})
+ecbuild_add_test( TARGET iodaconv_bufr_coding_norms
+                  TYPE SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_cpplint.py
+                  ARGS --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})
