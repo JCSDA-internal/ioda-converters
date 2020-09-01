@@ -14,19 +14,17 @@
 
 namespace Ingester
 {
-    IodaEncoder::IodaEncoder(const IodaDescription& description,  const std::string& filepath) :
+    IodaEncoder::IodaEncoder(const IodaDescription& description) :
         description_(description),
-        filepath_(filepath),
-        backendType_(filepath.empty() ? ioda::Engines::BackendNames::ObsStore : \
-                                        ioda::Engines::BackendNames::Hdf5File)
+        backendType_(description.getFilepath().empty() ? ioda::Engines::BackendNames::ObsStore : \
+                                                         ioda::Engines::BackendNames::Hdf5File)
     {
-
     }
 
     ioda::ObsGroup IodaEncoder::encode(const std::shared_ptr<IngesterData>& data, bool append)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
-        backendParams.fileName = filepath_;
+        backendParams.fileName = description_.getFilepath();
         backendParams.openMode = ioda::Engines::BackendOpenModes::Read_Write;
         backendParams.createMode = ioda::Engines::BackendCreateModes::Truncate_If_Exists;
         backendParams.action = append ? ioda::Engines::BackendFileActions::Open : \
@@ -74,7 +72,7 @@ namespace Ingester
         for (const auto& varDesc : description_.getVariables())
         {
             auto scales = std::vector<ioda::Variable>();
-            for (auto scaleStr : varDesc.scales)
+            for (const auto& scaleStr : varDesc.scales)
             {
                 scales.push_back(scaleMap.at(scaleStr));
             }

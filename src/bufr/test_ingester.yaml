@@ -3,11 +3,8 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-#!!!!!!!!!!!!!!!!!
-#These paramters should not be defined in this YAML file
-#they are only here for convenience.
-datapath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
-#!!!!!!!!!!!!!!!!!
+inputpath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
+outputpath: "/Users/rmclaren/Temp/"
 
 #ssd:
 #  netcdf-parser:
@@ -28,6 +25,8 @@ bufr:
     radiance: "TMBR"
 
 ioda:
+  filename: "ioda_encoder_result.nc"
+
   scales:
     - name: "nlocs"
       size: "{LENGTH}" #implicit info

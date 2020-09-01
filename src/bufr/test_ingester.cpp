@@ -62,7 +62,7 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("datapath");
+        auto dataPath = yaml->getString("inputpath");
 
         for (const auto &conf : yaml->getSubConfigurations("bufr"))
         {
@@ -80,7 +80,7 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("datapath");
+        auto dataPath = yaml->getString("inputpath");
 
         for (const auto &conf : yaml->getSubConfigurations("bufr"))
         {
@@ -96,7 +96,7 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("datapath");
+        auto dataPath = yaml->getString("inputpath");
 
         for (const auto &conf : yaml->getSubConfigurations("bufr"))
         {
@@ -128,20 +128,22 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("datapath");
+        auto inputPath = yaml->getString("inputpath");
+        auto outputPath = yaml->getString("outputpath");
 
         if (yaml->has("bufr"))
         {
             auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf, dataPath);
+            auto bufrDesc = BufrDescription(conf, inputPath);
             auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<IngesterData> data = bufrParser.parse();
 
             if (yaml->has("ioda"))
             {
-                auto iodaDesc = IodaDescription(yaml->getSubConfiguration("ioda"));
-                auto encoder = IodaEncoder(iodaDesc, OUTPUT_FILE);
+                auto iodaDesc = IodaDescription(yaml->getSubConfiguration("ioda"),
+                                                outputPath);
+                auto encoder = IodaEncoder(iodaDesc);
                 encoder.encode(data);
             }
         }

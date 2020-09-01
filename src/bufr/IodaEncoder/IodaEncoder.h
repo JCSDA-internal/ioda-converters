@@ -24,12 +24,11 @@ namespace Ingester
     class IodaEncoder
     {
      public:
-        explicit IodaEncoder(const IodaDescription&  description, const std::string& filepath="");
+        explicit IodaEncoder(const IodaDescription&  description);
         ioda::ObsGroup encode(const std::shared_ptr<IngesterData>& data, bool append=false);
 
      private:
         const IodaDescription description_;
-        const std::string filepath_;
         const ioda::Engines::BackendNames backendType_;
     };
 }  // namespace Ingester

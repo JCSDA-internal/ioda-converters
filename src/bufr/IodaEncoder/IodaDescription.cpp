@@ -7,6 +7,7 @@
 
 #include "IodaDescription.h"
 
+static const char* FILENAME_SECTION = "filename";
 static const char* SCALES_SECTION = "scales";
 static const char* VARIABLES_SECTION = "variables";
 
@@ -24,9 +25,17 @@ static const char* VARIABLE_COORDS = "coordinates";
 
 namespace Ingester
 {
-    IodaDescription::IodaDescription(const eckit::Configuration& conf, const std::string& basepath):
-        basepath_(basepath)
+    IodaDescription::IodaDescription(const eckit::Configuration& conf, const std::string& basepath)
     {
+        if (conf.has(FILENAME_SECTION) && !basepath.empty())
+        {
+            filepath_ = basepath + "/" + conf.getString(FILENAME_SECTION);
+        }
+        else
+        {
+            filepath_ = "";
+        }
+
         for (const auto& scaleConf : conf.getSubConfigurations(SCALES_SECTION))
         {
             ScaleDescription scale;
