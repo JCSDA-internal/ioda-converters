@@ -176,7 +176,6 @@ class LwRadiance:
                 # For now fabricate the QC marks and error estimates
                 ncVar = ncd.variables['ES_RealLW']
                 lwRad = np.array(ncVar[:, mask])
-                print("[GIIRS2IODA] #Locs: {self.writer._nlocs}")
 
                 TBB = np.full(lwRad.shape, nc.default_fillvals['f4'], dtype=np.float32)
 
