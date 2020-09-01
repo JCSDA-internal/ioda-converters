@@ -28,30 +28,6 @@ set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/p
 
 ## Dependencies
 
-# Optional: odb2 converter dependencies
-find_package(odb_api QUIET)
-if(odb_api_FOUND)
-    set(iodaconv_odb2_ENABLED True)
-    message(STATUS "Found: odb_api")
-    message(STATUS "Enabled Component: odb2")
-else()
-    set(iodaconv_odb2_ENABLED False)
-    message(STATUS "NOT-Found: odb_api")
-    message(STATUS "Disabled Component: odb_api")
-endif()
-
-# Optional: odc converter dependencies
-find_package(odc QUIET)
-if(odc_FOUND)
-    set(iodaconv_odc_ENABLED True)
-    message(STATUS "Found: odc")
-    message(STATUS "Enabled Component: odc")
-else()
-    set(iodaconv_odc_ENABLED False)
-    message(STATUS "NOT-Found: odc")
-    message(STATUS "Disabled Component: odc")
-endif()
-
 # Optional: gnssro converter dependencies
 # Either jedicmake or ecbuild are required for FindNetCDF.cmake
 find_package(jedicmake QUIET)
@@ -102,12 +78,6 @@ add_subdirectory(src/wrfda-ncdiag)
 # Optional components
 if(iodaconv_gnssro_ENABLED)
     add_subdirectory(src/gnssro)
-endif()
-if(iodaconv_odb2_ENABLED)
-    set(odb2_ENABLED True)
-endif()
-if(iodaconv_odc_ENABLED)
-    add_subdirectory(src/odc)
 endif()
 
 # Auxiliaries
