@@ -11,26 +11,27 @@
 
 import math
 
-class meteo_utils():
+class meteo_utils(object):
 
-    # Define some constants used for some variable conversions
+    # Constructor
+    def __init__(self):
+        # Define some constants used for some variable conversions
 
-    PI = math.pi
-    DEG_2_RAD = PI/180.
-    C_2_K = 273.15                      # Zero Centigrade to Kelvin
-    MS_2_KTS = 1.94                     # Meters per second to knots
-    KTS_2_MS = 1./MS_2_KTS              # Knots to meters per second
-    inHg_2_Pa = 3386.39                 # Inches of mercury to Pascals
-    STP_P = 29.92 * inHg_2_Pa           # Standard pressure, convert to Pascals
-    STP_T = 15.0 + C_2_K                # Standard temperature, convert to Kelvin
-    STP_rho_air = STP_P / (287.0*STP_T) # Air density at STP (standard temperature and pressure)
-    FT_2_M = 0.3048                     # Feet to meters
-    R = 287.04                          # Gas constant
-    Cp = 1004.0                         # Specific heat capacity
-    LAPSE = 0.0065                      # Standard lapse rate 6.5C per kilometer
-    g = 9.80665                         # Gravity (m/s^2)
-    RHO_WATER = 1000.                   # Density of water (kg/m^3)
-
+        self.PI = math.pi
+        self.DEG_2_RAD = self.PI/180.
+        self.C_2_K = 273.15                      # Zero Centigrade to Kelvin
+        self.MS_2_KTS = 1.94                     # Meters per second to knots
+        self.KTS_2_MS = 1./self.MS_2_KTS         # Knots to meters per second
+        self.inHg_2_Pa = 3386.39                 # Inches of mercury to Pascals
+        self.STP_P = 29.92 * self.inHg_2_Pa      # Standard pressure, convert to Pascals
+        self.STP_T = 15.0 + self.C_2_K           # Standard temperature, convert to Kelvin
+        self.STP_rho_air = self.STP_P / (287.0*self.STP_T) # Air density at STP (standard temperature and pressure)
+        self.FT_2_M = 0.3048                     # Feet to meters
+        self.R = 287.04                          # Gas constant
+        self.Cp = 1004.0                         # Specific heat capacity
+        self.LAPSE = 0.0065                      # Standard lapse rate 6.5C per kilometer
+        self.g = 9.80665                         # Gravity (m/s^2)
+        self.RHO_WATER = 1000.                   # Density of water (kg/m^3)
 
 #---+---+---+---+
 
