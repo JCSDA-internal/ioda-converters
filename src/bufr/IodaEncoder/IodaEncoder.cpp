@@ -20,7 +20,7 @@ namespace Ingester
 
     }
 
-    ioda::ObsGroup IodaEncoder::encode(const IngesterData& data)
+    ioda::ObsGroup IodaEncoder::encode(const std::shared_ptr<IngesterData>& data)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
         backendParams.fileName = "/Users/rmclaren/Temp/ioda_encoder_result.nc";
@@ -28,7 +28,7 @@ namespace Ingester
         backendParams.createMode = ioda::Engines::BackendCreateModes::Truncate_If_Exists;
         backendParams.action = ioda::Engines::BackendFileActions::Create;
         backendParams.flush = true;
-        backendParams.allocBytes = data.size() * 16;
+        backendParams.allocBytes = data->size() * 16;
 
         auto rootGroup = ioda::Engines::constructBackend(ioda::Engines::BackendNames::Hdf5File,
                                                  backendParams);
@@ -40,7 +40,7 @@ namespace Ingester
             std::size_t size = 0;
             if (scale.size == "{LENGTH}")
             {
-                size = data.size();
+                size = data->size();
             }
             else
             {
@@ -70,7 +70,6 @@ namespace Ingester
 
         for (auto varDesc : description_.getVariables())
         {
-
             auto scales = std::vector<ioda::Variable>();
             for (auto scaleStr : varDesc.scales)
             {
@@ -90,8 +89,7 @@ namespace Ingester
             var.atts.add<std::string>("units", { varDesc.units }, {1});
             var.atts.add<float>("valid_range", { varDesc.range.start, varDesc.range.end }, {2});
 
-            var.writeWithEigenRegular(data.get(varDesc.source));
-
+            var.writeWithEigenRegular(data->get(varDesc.source));
         }
 
         return obsGroup;

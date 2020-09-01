@@ -46,7 +46,8 @@ ecbuild_add_library( TARGET   ingester
                     )
 
 set (IODA_ENGINES_PATH ${CMAKE_PREFIX_PATH})
-target_include_directories(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/include)
+#target_include_directories(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/include)
+include_directories(${IODA_ENGINES_PATH}/ioda-engines/include)
 target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/lib/libioda-engines.dylib)
 target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/lib/libHH.dylib)
 target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/ioda-engines/lib/libjedi.dylib)

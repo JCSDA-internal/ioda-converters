@@ -5,6 +5,8 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
+#include <iostream>
+
 #include <memory>
 
 #include "BufrCollectors.h"
@@ -50,7 +52,7 @@ namespace Ingester
 
     BufrDataMap BufrCollectors::finalize()
     {
-        auto dataMap = IngesterArrayMap();
+        auto dataMap = BufrDataMap ();
 
         for (const auto &collector : collectors_)
         {

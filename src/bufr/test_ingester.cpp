@@ -17,11 +17,13 @@
 #include "BufrParser/BufrDescription.h"
 #include "BufrParser/BufrMnemonicSet.h"
 #include "BufrParser/BufrParser.h"
+#include "IodaEncoder/IodaDescription.h"
+#include "IodaEncoder/IodaEncoder.h"
 #include "IngesterData.h"
 
 
 static const char* CONFIG_FILE =
-    "/Users/rmclaren/Work/bufr-tools/src/test_ingester.yaml";
+    "/Users/rmclaren/Work/ioda-converters/src/bufr/test_ingester.yaml";
 static const char* INPUT_FILE =
     "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12/gdas.t12z.1bmhs.tm00.bufr_d";
 
@@ -116,7 +118,31 @@ namespace Ingester
                 }
             } while (!endReached);
 
-            std::cout << data->get("TMBR") << std::endl;
+            std::cout << data->get("radiance") << std::endl;
+        }
+    }
+
+    void test_parseFileWEncoder()
+    {
+        std::unique_ptr<eckit::YAMLConfiguration>
+            yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
+
+        auto dataPath = yaml->getString("datapath");
+
+        if (yaml->has("bufr"))
+        {
+            auto conf = yaml->getSubConfiguration("bufr");
+            auto bufrDesc = BufrDescription(conf, dataPath);
+            auto bufrParser = BufrParser(bufrDesc);
+
+            std::shared_ptr<IngesterData> data = bufrParser.parse();
+
+            if (yaml->has("ioda"))
+            {
+                auto iodaDesc = IodaDescription(yaml->getSubConfiguration("ioda"));
+                auto encoder = IodaEncoder(iodaDesc);
+                encoder.encode(data);
+            }
         }
     }
 }  // namespace Ingester
@@ -124,7 +150,7 @@ namespace Ingester
 int main(int, const char **)
 {
     clock_t startTime = clock();
-    Ingester::test_createDescriptionManually();
+    Ingester::test_parseFileWEncoder();
 
     std::cout << "Took " \
               << std::setprecision(2) \

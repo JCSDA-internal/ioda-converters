@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "IodaDescription.h"
 
 #include "ioda/Group.h"
@@ -23,7 +25,7 @@ namespace Ingester
     {
      public:
         explicit IodaEncoder(const IodaDescription&  description);
-        ioda::ObsGroup encode(const IngesterData& data);
+        ioda::ObsGroup encode(const std::shared_ptr<IngesterData>& data);
 
      private:
         const IodaDescription description_;

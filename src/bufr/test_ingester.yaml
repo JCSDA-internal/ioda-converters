@@ -7,33 +7,32 @@
 #These paramters should not be defined in this YAML file
 #they are only here for convenience.
 datapath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
-filename: "gdas.t12z.1bmhs.tm00.bufr_d"
 #!!!!!!!!!!!!!!!!!
 
 #ssd:
 #  netcdf-parser:
 #    stuff
 
-amsua:
-  - parser:
-      type: "bufr"
-      mnemonicSets:
-        - mnemonics: "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS"
-        - mnemonics: "SAZA SOZA BEARAZ SOLAZI"
-        - mnemonics: "TMBR"
-          channels : 1-15
+bufr:
+  filename: "gdas.t12z.1bmhs.tm00.bufr_d"
 
-      exports:
-        longitude: "CLON"
-        latitude: "CLAT" #implicit first valid conditional
-        radiance: "TMBR"
+  mnemonicSets:
+    - mnemonics: "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS"
+    - mnemonics: "SAZA SOZA BEARAZ SOLAZI"
+    - mnemonics: "TMBR"
+      channels : 1-15
+
+  exports:
+    longitude: "CLON"
+    latitude: "CLAT" #implicit first valid conditional
+    radiance: "TMBR"
 
 ioda:
   scales:
     - name: "nlocs"
       size: "{LENGTH}" #implicit info
     - name: "nchans"
-      size: "15" #implicit info
+      size: "15" #explicit info
 
   variables:
     - name: "latitude@MetaData"

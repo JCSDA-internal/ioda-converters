@@ -19,6 +19,7 @@ static const char* VARIABLE_SCALES = "scales";
 static const char* VARIABLE_LONGNAME = "longName";
 static const char* VARIABLE_UNITS = "units";
 static const char* VARIABLE_RANGE = "range";
+static const char* VARIABLE_COORDS = "coordinates";
 
 
 namespace Ingester
@@ -30,7 +31,7 @@ namespace Ingester
         {
             ScaleDescription scale;
             scale.name = scaleConf.getString(SCALE_NAME);
-            scale.size = scaleConf.getUnsigned(SCALE_SIZE);
+            scale.size = scaleConf.getString(SCALE_SIZE);
 
             addScale(scale);
         }
@@ -43,6 +44,16 @@ namespace Ingester
             variable.scales = varConf.getStringVector(VARIABLE_SCALES);
             variable.longName = varConf.getString(VARIABLE_LONGNAME);
             variable.units = varConf.getString(VARIABLE_UNITS);
+
+            if (varConf.has(VARIABLE_COORDS))
+            {
+                variable.coordinates =
+                    std::make_shared<std::string> (varConf.getString(VARIABLE_COORDS));
+            }
+            else
+            {
+                variable.coordinates = nullptr;
+            }
 
             Range range;
             range.start = std::stoi(varConf.getStringVector(VARIABLE_RANGE)[0]);
