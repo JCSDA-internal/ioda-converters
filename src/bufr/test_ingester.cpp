@@ -26,6 +26,7 @@ static const char* CONFIG_FILE =
     "/Users/rmclaren/Work/ioda-converters/src/bufr/test_ingester.yaml";
 static const char* INPUT_FILE =
     "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12/gdas.t12z.1bmhs.tm00.bufr_d";
+static const char* OUTPUT_FILE = "/Users/rmclaren/Temp/ioda_encoder_result.nc";
 
 
 namespace Ingester
@@ -140,7 +141,7 @@ namespace Ingester
             if (yaml->has("ioda"))
             {
                 auto iodaDesc = IodaDescription(yaml->getSubConfiguration("ioda"));
-                auto encoder = IodaEncoder(iodaDesc);
+                auto encoder = IodaEncoder(iodaDesc, OUTPUT_FILE);
                 encoder.encode(data);
             }
         }
