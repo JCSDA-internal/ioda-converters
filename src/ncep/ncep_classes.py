@@ -161,7 +161,6 @@ class NcepObsType(ObsType):
             self.rep_spec = [repspec[x:x + 1] \
                              for x in range(0, len(repspec), 1) if not repspec[x] in intspec]
 
-            #self.rep_spec = []
             # TODO Check the intspec for "SQ" if exist, added at seq_spec
             self.seq_spec = []
 
@@ -331,6 +330,7 @@ def get_int_spec(mnemonic, part_b):
                 bentries[mnemonic] = ''.join(
                     line.split('|')[2:]).strip().split()
                 # bentries is a dictionary for the mnemonic
+
     for i in range(3):
         for b_monic in bentries[mnemonic]:
             for line in part_b:
@@ -479,10 +479,11 @@ if __name__ == '__main__':
     ObsType = args.obs_type     # Observation type. e.g., NC001007
     BufrFname = BufrPath + args.input_bufr  # path and name of BUFR name
     DateCentral = dt.strptime(args.date, '%Y%m%d%H')  # DateHH of analysis
-    if (config_path + args.lexicon):
-        Lexicon = config_path + args.lexicon  # Existing yaml file in config
+
+    if Path(args.lexicon).is_absolute():
+        Lexicon = args.lexicon   # User defined Lexicon path
     else:
-        args.lexicon   # User defined Lexicon name
+        Lexicon = str((NCEP_CONFIG_PATH/args.lexicon).resolve())  # Default Lexicon path
 
     if (args.bufr):
         BfileType = cm.BFILE_BUFR  # BUFR or prepBUFR. TODO: To be removed

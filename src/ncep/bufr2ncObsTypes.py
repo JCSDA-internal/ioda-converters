@@ -338,7 +338,7 @@ class ObsType(object):
     ##########################################################################
     # This method will create dimensions and variables in the netcdf file
     # according to the obs type variable specs.
-    def create_nc_datasets(self, nc, isProfile):
+    def create_nc_datasets(self, nc, isProfile=False):
 
         # Create dimensions first so that the variables can reference them.
         nc.createDimension('nrecs', self.nrecs)   # placeholder for now
@@ -663,6 +663,3 @@ class ObsType(object):
         print("")
         print("  Total converted observations: ", ObsNum)
         print("")
-
-
-
