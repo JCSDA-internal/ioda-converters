@@ -22,7 +22,6 @@ list( APPEND test_input
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
-  testinput/odb_sonde_16019.odb
   testinput/gnssro_kompsat5_20180415_00Z.bufr
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
@@ -30,7 +29,6 @@ list( APPEND test_input
   testinput/modis_aqua_oc_l2.nc
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
-  testinput/aod_viirs_obs_2018041500_s.odb
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
@@ -52,14 +50,11 @@ list( APPEND test_output
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
-  testoutput/odb_sonde_16019.nc4
   testoutput/gnssro_kompsat5_2018041500.nc4
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
-  testoutput/sondes_obs_2018041500_m.odb
-  testoutput/gnssro_obs_2018041500_s.odb
   testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
@@ -294,49 +289,6 @@ if( iodaconv_gnssro_ENABLED )
                 testrun/gnssro_kompsat5_2018041500.nc4"
                 gnssro_kompsat5_2018041500.nc4 )
 endif()
-
-
-#===============================================================================
-# ODB2 converter
-#===============================================================================
-
-if(iodaconv_odb2_ENABLED AND ODB_API_HAVE_PYTHON AND PYTHON_VERSION_STRING VERSION_LESS 3)
-  add_test(NAME test_iodaconv_odb2_conv
-           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
-                "${CMAKE_BINARY_DIR}/bin/odbapi2nc.py -c
-                testinput/odb_sonde_16019.odb
-                ${CMAKE_BINARY_DIR}/etc/pyiodaconv/MO_radiosonde_Definition.yaml
-                testrun/odb_sonde_16019.nc4"
-                odb_sonde_16019.nc4)
-endif()
-
-
-#===============================================================================
-# ODC API based ODB converter
-#===============================================================================
-
-if(iodaconv_odc_ENABLED)
-  add_test(NAME test_iodaconv_nc2odb_tool_new_dt
-           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh odb
-                "${CMAKE_BINARY_DIR}/bin/nc2odb.py -c
-                testinput/sondes_obs_2018041500_m.nc4
-                testrun/sondes_obs_2018041500_m.odb"
-                sondes_obs_2018041500_m.odb)
-
-  add_test(NAME test_iodaconv_nc2odb_tool_old_dt
-           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh odb
-                "${CMAKE_BINARY_DIR}/bin/nc2odb.py -c
-                testinput/gnssro_obs_2018041500_s.nc4
-                testrun/gnssro_obs_2018041500_s.odb"
-                gnssro_obs_2018041500_s.odb)
-
-  add_test(NAME test_iodaconv_odb2nc_tool
-           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
-                "${CMAKE_BINARY_DIR}/bin/odb2nc.py -c
-                testinput/aod_viirs_obs_2018041500_s.odb
-                testrun/aod_viirs_obs_2018041500_s.nc4"
-                aod_viirs_obs_2018041500_s.nc4)
-endif(iodaconv_odc_ENABLED)
 
 
 #==============================================================================
