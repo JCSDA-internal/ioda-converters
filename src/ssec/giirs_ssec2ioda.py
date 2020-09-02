@@ -110,6 +110,7 @@ class LwRadiance:
         qcKey = self.VAR_NAME, self.writer.OqcName()
 
         numFiles = 0
+        totalFiles = 0
         self.writer._nlocs = 0
 
         sat_zen_max = 74
@@ -143,11 +144,12 @@ class LwRadiance:
                 sat_zen = ncd.variables['IRLW_SatelliteZenith'][:]
                 mask = sat_zen < sat_zen_max
                 nlocs = np.count_nonzero(mask)
+                totalFiles += 1
                 if nlocs == 0:
-                    print("[GIIRS2IODA] NO VALID OBS. Skipping.")
+                    print(f"[GIIRS2IODA] Processing {totalFiles}/{len(filenames)} NO VALID OBS. Skipping. -- {Path(f).name} ")
                     continue
                 numFiles += 1
-                print(f"[GIIRS2IODA] Processing {numFiles}/{len(filenames)} #locs:{nlocs} -- {Path(f).name}")
+                print(f"[GIIRS2IODA] Processing {totalFiles}/{len(filenames)} #locs:{nlocs} -- {Path(f).name}")
 
                 # Channel metadata associated with longwave radiance
                 if (numFiles == 1):
@@ -210,7 +212,7 @@ class LwRadiance:
             self.data[(varname, 'ObsValue')] = self.writer.FillNcVector(obs_vals[ivar, :nlocs_tot], 'float')
             self.data[(varname, 'PreQC')] = self.writer.FillNcVector(np.full(nlocs_tot, 0, dtype=np.int32), 'integer')
             self.data[(varname, 'ObsError')] = self.writer.FillNcVector(np.full(nlocs_tot, 2., dtype=np.float32), 'float')
-        print(f"[GIIRS2IODA] Processed {nlocs_tot} total locs from {numFiles}/{len(filenames)} valid files.")
+        print(f"[GIIRS2IODA] Processed {nlocs_tot} total locs from {numFiles}/{totalFiles} valid files.")
 
     def writeIODA(self):
         self.writer.BuildNetcdf(self.data, self.LocMdata, self.VarMdata, self.AttrData, self.units_values)
@@ -235,7 +237,7 @@ class LwRadiance:
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            'Read NSMC GIIRS long wave radiance file(s) and convert'
+            'Read SSEC GIIRS long wave radiance file(s) and convert'
             ' to a concatenated IODA formatted output file.')
     )
     required = parser.add_argument_group(title='required arguments')
