@@ -68,12 +68,12 @@
   - 3
   - *id001
   - [-1]
-- - latitude_high_accuracy@MetaData
+- - latitude@MetaData
   - CLATH
   - 3
   - *id001
   - [-1]
-- - longitude_high_accuracy@MetaData
+- - longitude@MetaData
   - CLONH
   - 3
   - *id001
