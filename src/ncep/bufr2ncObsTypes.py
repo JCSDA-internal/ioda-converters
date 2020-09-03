@@ -157,7 +157,7 @@ def WriteNcVar(Fid, ObsNum, Vname, Vdata, isProfile=False):
                         NcVar[(ObsNum+i), 0:N1] = Value[0:N1]
             else:
                 N1 = min(Value.shape[0], NcVar.shape[1])
-                #N1 = Value.shape[0]
+                # N1 = Value.shape[0]
                 NcVar[ObsNum, 0:N1] = Value[0:N1]
     elif (NcNdim == 3):
         if (ValNdim == 1):
@@ -351,7 +351,7 @@ class ObsType(object):
                     else:
                         nc.createDimension(dspec[0], dspec[4][0])
                 else:
-                    nc.createDimension(dspec[0], dspec[4][0])   
+                    nc.createDimension(dspec[0], dspec[4][0])
         # Create variables including the coordinates for the dimensions
         for slist in [self.dim_spec, self.int_spec, self.evn_spec,
                       self.rep_spec, self.seq_spec, self.misc_spec]:
@@ -527,7 +527,7 @@ class ObsType(object):
         if ('SECO' in ActualValues):
             try:
                 Second = int(ActualValues['SECO'].data)
-            except:
+            except Exception:
                 Second = int(0)
         else:
             Second = int(0)
@@ -541,11 +541,11 @@ class ObsType(object):
         DateTime = np.array(ObsDtime.strftime("%Y-%m-%dT%H:%M:%SZ"))
         return [DateTime]
 
-
     ##########################################################################
     # This method will start the message selector. This selector method will
     # apply a few filters for selecting messages. These filters require
     # internal message counters that this method will reset.
+
     def start_msg_selector(self):
         self.num_msg_selected = 0
         self.num_msg_mtype = 0
@@ -639,7 +639,7 @@ class ObsType(object):
                                 try:
                                     Vdata = np.ma.array(maxLength*[Vdata],
                                                         dtype=Vdata.dtype)
-                                except:
+                                except Exception:
                                     pass
                                 Vdata = Vdata.squeeze()
                         # Skip the write if Vdata is empty

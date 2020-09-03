@@ -142,12 +142,12 @@ class NcepObsType(ObsType):
                 if i in full_table:
                     repspecDum = [
                         full_table[i]['name'].replace(
-                            ' ', '_').replace('/', '_'),i,
+                            ' ', '_').replace('/', '_'), i,
                         full_table[i]['dtype'],
                         full_table[i]['ddims']]
                     if repspecDum not in repspec:
                         repspec.append([full_table[i]['name'].replace(
-                            ' ', '_').replace('/', '_'), i, 
+                            ' ', '_').replace('/', '_'), i,
                             full_table[i]['dtype'], full_table[i]['ddims']])
             for j, dname in enumerate(repspec):
                 if len(dname[3]) == 1:
@@ -158,7 +158,7 @@ class NcepObsType(ObsType):
                     print('walked off the edge')
 
             # write_yaml(repspec, Lexicon)
-            self.rep_spec = [repspec[x:x + 1] \
+            self.rep_spec = [repspec[x:x + 1]
                              for x in range(0, len(repspec), 1) if not repspec[x] in intspec]
 
             # TODO Check the intspec for "SQ" if exist, added at seq_spec
@@ -314,10 +314,10 @@ def get_int_spec(mnemonic, part_b):
             '').replace(
             '}',
             '').replace(
-            #'(',
-            #'').replace(
-            #')',
-            #'').replace(
+            # '(',
+            # '').replace(
+            # ')',
+            # '').replace(
             '<',
             '').replace(
                 '>',
@@ -354,7 +354,7 @@ def get_int_spec(mnemonic, part_b):
 
 
 ##########################################################################
-# get the rep_spec entries 
+# get the rep_spec entries
 ##########################################################################
 
 
@@ -370,13 +370,13 @@ def get_rep_spec(mnemonic, part_b):
             '').replace(
             '}',
             '').replace(
-#            '(',
-#            '').replace(
-#            ')',
-#            '').replace(
+            # '(',
+            # '').replace(
+            # ')',
+            # '').replace(
             '<',
             '').replace(
-                '>',
+            '>',
             '')
         if line.find(mnemonic) != -1:
             if mnemonic in bentries:
@@ -540,13 +540,12 @@ if __name__ == '__main__':
     nc = Dataset(NetcdfFname, 'w', format='NETCDF4')
 
     nc.date_time = int(date_time[0:10])
-    
 
     bufr = ncepbufr.open(BufrFname)
     pf_list = ['NC001003', 'NC001103', 'NC031001', 'NC031002', 'NC031003',
                'NC031004', 'NC031005', 'NC031006', 'NC031007']
     if ObsType in pf_list:
-        Obs.create_nc_datasets(nc, True) 
+        Obs.create_nc_datasets(nc, True)
         Obs.fill_coords(nc)
         Obs.convert(bufr, nc, True)
     else:
