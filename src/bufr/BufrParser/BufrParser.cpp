@@ -15,6 +15,10 @@
 #include "BufrMnemonicSet.h"
 #include "IngesterData.h"
 
+#include "Exports/MnemonicExport.h"
+#include "Exports/DatetimeExport.h"
+#include "Exports/Export.h"
+
 
 namespace Ingester
 {
@@ -61,26 +65,35 @@ namespace Ingester
         auto outputData = std::make_shared<IngesterData>();
         auto exportMap = description_.getExportMap();
 
+        unsigned int size = 0;
         auto exportIt = exportMap.begin();
         while (exportIt != exportMap.end())
         {
             auto key = exportIt->first;
-            auto mnemonic = exportIt->second;
+            auto data_exporter = exportIt->second;
 
-            if (srcData.find(mnemonic) != srcData.end())
+            size = (size == 0) ? srcData.begin()->second.rows() : size;
+
+            if (auto ex = std::dynamic_pointer_cast<MnemonicExport>(data_exporter))
             {
-                outputData->add(key, srcData.at(mnemonic));
+                outputData->add<IngesterArray>(key, ex->exportData(srcData));
+            }
+            else if (auto ex = std::dynamic_pointer_cast<DatetimeExport>(data_exporter))
+            {
+                outputData->add<IngesterStrVector>(key, ex->exportData(srcData));
             }
             else
             {
-                std::cout << "WARNING: BufrParser::exportData: Could not find mnemonic " \
-                          << mnemonic \
-                          << " in src data." \
+                std::cout << "WARNING: BufrParser::exportStrs: Could not find mnemonic "
+                          << key
+                          << " in src data."
                           << std::endl;
             }
 
             exportIt++;
         }
+
+        outputData->setSize(size);
 
         return outputData;
     }

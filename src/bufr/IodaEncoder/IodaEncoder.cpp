@@ -69,6 +69,12 @@ namespace Ingester
         float_params.compressWithGZIP();
         float_params.setFillValue<float>(-999);
 
+        // Create Variables
+        ioda::VariableCreationParameters str_params;
+        str_params.chunk = true;
+        str_params.compressWithGZIP();
+        str_params.setFillValue<std::string>("");
+
         for (const auto& varDesc : description_.getVariables())
         {
             auto scales = std::vector<ioda::Variable>();
@@ -77,20 +83,43 @@ namespace Ingester
                 scales.push_back(scaleMap.at(scaleStr));
             }
 
-            ioda::Variable var = obsGroup.vars.createWithScales<float>(varDesc.name,
-                                                                       scales,
-                                                                       float_params);
+            ioda::Variable var;
+            if (data->getTypeName(varDesc.source) == typeid(IngesterStrVector).name())
+            {
+                var = obsGroup.vars.createWithScales<std::string>(varDesc.name,
+                                                                  scales,
+                                                                  str_params);
+            }
+            else if (data->getTypeName(varDesc.source) == typeid(IngesterArray).name())
+            {
+                var = obsGroup.vars.createWithScales<float>(varDesc.name,
+                                                            scales,
+                                                            float_params);
+            }
+
+
+            var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
+            var.atts.add<std::string>("units", { varDesc.units }, {1});
 
             if (varDesc.coordinates)
             {
                 var.atts.add<std::string>("coordinates", { varDesc.coordinates }, {1});
             }
 
-            var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
-            var.atts.add<std::string>("units", { varDesc.units }, {1});
-            var.atts.add<float>("valid_range", { varDesc.range.start, varDesc.range.end }, {2});
+            if (varDesc.range)
+            {
+                var.atts.add<float>("valid_range",
+                                    {varDesc.range->start, varDesc.range->end}, {2});
+            }
 
-            var.writeWithEigenRegular(data->get(varDesc.source));
+            if (data->getTypeName(varDesc.source) == typeid(IngesterStrVector).name())
+            {
+                var.write(data->get<IngesterStrVector>(varDesc.source));
+            }
+            else if (data->getTypeName(varDesc.source) == typeid(IngesterArray).name())
+            {
+                var.writeWithEigenRegular(data->get<IngesterArray>(varDesc.source));
+            }
         }
 
         return obsGroup;

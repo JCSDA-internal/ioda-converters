@@ -20,7 +20,18 @@ bufr:
       channels : 1-15
 
   exports:
-    longitude: "CLON"
+    timestamp:
+      datetime:
+        year: "YEAR"
+        month: "MNTH"
+        day: "DAYS"
+        hour: "HOUR"
+        minute: "MINU"
+        second: "SECO"
+        isUTC: "true"
+    longitude:
+      mnemonic:
+        name: "CLON"
     latitude: "CLAT" #implicit first valid conditional
     radiance: "TMBR"
 
@@ -34,6 +45,12 @@ ioda:
       size: "15" #explicit info
 
   variables:
+    - name: "datetime@MetaData"
+      source: "timestamp"
+      scales: [ "nlocs" ]
+      longName: "Datetime"
+      units: "datetime"
+
     - name: "latitude@MetaData"
       source: "latitude"
       scales: ["nlocs"]

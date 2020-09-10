@@ -24,6 +24,12 @@ list(APPEND _ingester_srcs
   BufrParser/BufrCollectors/BufrRepCollector.h
   BufrParser/BufrCollectors/BufrCollectors.cpp
   BufrParser/BufrCollectors/BufrCollectors.h
+  BufrParser/Exports/Export.h
+  BufrParser/Exports/Export.cpp
+  BufrParser/Exports/DatetimeExport.h
+  BufrParser/Exports/DatetimeExport.cpp
+  BufrParser/Exports/MnemonicExport.h
+  BufrParser/Exports/MnemonicExport.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp

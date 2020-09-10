@@ -32,11 +32,11 @@ namespace Ingester
     {
         std::string name;
         std::string source;
-        std::shared_ptr<std::string> coordinates; //Optional
         std::vector<std::string> scales;
         std::string longName;
         std::string units;
-        Range range;
+        std::shared_ptr<std::string> coordinates; //Optional
+        std::shared_ptr<Range> range; //Optional
     } VariableDescription;
 
     typedef std::vector<ScaleDescription> ScaleDescriptions;

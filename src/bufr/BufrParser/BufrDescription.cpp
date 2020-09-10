@@ -8,10 +8,15 @@
 #include <iostream>
 
 #include "oops/util/IntSetParser.h"
+#include "eckit/exception/Exceptions.h"
 
 #include "BufrDescription.h"
 #include "BufrMnemonicSet.h"
 #include "BufrTypes.h"
+
+#include "Exports/MnemonicExport.h"
+#include "Exports/DatetimeExport.h"
+#include "Exports/Export.h"
 
 
 static const char* PATH_SEPERATOR =
@@ -50,10 +55,33 @@ namespace Ingester
                 mnemonicSetConf.getString(MNEMONIC_STR_YAML_NAME), channels));
         }
 
-        for (const auto& key : conf.getSubConfiguration(EXPORT_NAME).keys())
+        std::cout << "################## IGNORE EXCEPTIONS ##################" << std::endl;
+
+        auto exportConfs = conf.getSubConfiguration(EXPORT_NAME);
+        for (const auto& key : exportConfs.keys())
         {
-            addExport(key, conf.getSubConfiguration(EXPORT_NAME).getString(key));
+            auto subconf = exportConfs.getSubConfiguration(key);
+
+            try
+            {
+                addExport(key,  std::make_shared<MnemonicExport>(exportConfs.getString(key)));
+            }
+            catch (eckit::Exception& e)
+            {
+                if(subconf.has("datetime"))
+                {
+                    auto dtconf = subconf.getSubConfiguration("datetime");
+                    addExport(key, std::make_shared<DatetimeExport>(dtconf));
+                }
+                else if(subconf.has("mnemonic"))
+                {
+                    auto mnconf = subconf.getSubConfiguration("mnemonic");
+                    addExport(key, std::make_shared<MnemonicExport>(mnconf));
+                }
+            }
         }
+
+        std::cout << "#######################################################" << std::endl;
     }
 
     void BufrDescription::addMnemonicSet(BufrMnemonicSet mnemonicSet)
@@ -61,9 +89,9 @@ namespace Ingester
         mnemonicSets_.push_back(mnemonicSet);
     }
 
-    void BufrDescription::addExport(std::string key, std::string mnemonic)
+    void BufrDescription::addExport(std::string key, std::shared_ptr<Export> bufrExport)
     {
-        exportMap_.insert({key, mnemonic});
+        exportMap_.insert({key, bufrExport});
     }
 
 }  // namespace Ingester

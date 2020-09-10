@@ -64,10 +64,17 @@ namespace Ingester
                 variable.coordinates = nullptr;
             }
 
-            Range range;
-            range.start = std::stoi(varConf.getStringVector(VARIABLE_RANGE)[0]);
-            range.end = std::stoi(varConf.getStringVector(VARIABLE_RANGE)[1]);
-            variable.range = range;
+            if (varConf.has(VARIABLE_RANGE))
+            {
+                auto range = std::make_shared<Range>();
+                range->start = std::stoi(varConf.getStringVector(VARIABLE_RANGE)[0]);
+                range->end = std::stoi(varConf.getStringVector(VARIABLE_RANGE)[1]);
+                variable.range = range;
+            }
+            else
+            {
+                variable.range = nullptr;
+            }
 
             addVariable(variable);
         }
