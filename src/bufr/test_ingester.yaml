@@ -6,9 +6,6 @@
 inputpath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
 outputpath: "/Users/rmclaren/Temp/"
 
-#ssd:
-#  netcdf-parser:
-#    stuff
 
 bufr:
   filename: "gdas.t12z.1bmhs.tm00.bufr_d"
@@ -32,13 +29,13 @@ bufr:
     longitude:
       mnemonic:
         name: "CLON"
-    latitude: "CLAT" #implicit first valid conditional
+    latitude: "CLAT"
     radiance: "TMBR"
 
 ioda:
   filename: "ioda_encoder_result.nc"
 
-  scales:
+  dimensions:
     - name: "nlocs"
       size: "{LENGTH}" #implicit info
     - name: "nchans"
@@ -47,20 +44,20 @@ ioda:
   variables:
     - name: "datetime@MetaData"
       source: "timestamp"
-      scales: [ "nlocs" ]
+      dimensions: [ "nlocs" ]
       longName: "Datetime"
       units: "datetime"
 
     - name: "latitude@MetaData"
       source: "latitude"
-      scales: ["nlocs"]
+      dimensions: ["nlocs"]
       longName: "Latitude"
       units: "degrees_north"
       range: [-90, 90]
 
     - name: "longitude@MetaData"
       source: "longitude"
-      scales: ["nlocs"]
+      dimensions: ["nlocs"]
       longName: "Longitude"
       units: "degrees_east"
       range: [-180, 180]
@@ -68,7 +65,7 @@ ioda:
     - name: "radiance@ObsValue"
       coordinates: "longitude latitude nchans"
       source: "radiance"
-      scales: ["nlocs", "nchans"]
+      dimensions: ["nlocs", "nchans"]
       longName: "Radiance"
       units: "K"
       range: [120, 500]

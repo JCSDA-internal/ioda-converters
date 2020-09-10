@@ -32,7 +32,7 @@ namespace Ingester
     {
         std::string name;
         std::string source;
-        std::vector<std::string> scales;
+        std::vector<std::string> dimensions;
         std::string longName;
         std::string units;
         std::shared_ptr<std::string> coordinates; //Optional
@@ -51,13 +51,13 @@ namespace Ingester
         void addScale(ScaleDescription scale);
         void addVariable(VariableDescription variable);
 
-        inline ScaleDescriptions getScales() const { return scales_; };
+        inline ScaleDescriptions getScales() const { return dimensions_; };
         inline VariableDescriptions getVariables() const { return variables_; };
         inline std::string getFilepath() const { return filepath_; }
 
      private:
         std::string filepath_;
-        ScaleDescriptions scales_;
+        ScaleDescriptions dimensions_;
         VariableDescriptions variables_;
 
 

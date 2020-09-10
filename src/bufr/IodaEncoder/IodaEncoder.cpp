@@ -77,26 +77,25 @@ namespace Ingester
 
         for (const auto& varDesc : description_.getVariables())
         {
-            auto scales = std::vector<ioda::Variable>();
-            for (const auto& scaleStr : varDesc.scales)
+            auto dimensions = std::vector<ioda::Variable>();
+            for (const auto& scaleStr : varDesc.dimensions)
             {
-                scales.push_back(scaleMap.at(scaleStr));
+                dimensions.push_back(scaleMap.at(scaleStr));
             }
 
             ioda::Variable var;
             if (data->getTypeName(varDesc.source) == typeid(IngesterStrVector).name())
             {
                 var = obsGroup.vars.createWithScales<std::string>(varDesc.name,
-                                                                  scales,
+                                                                  dimensions,
                                                                   str_params);
             }
             else if (data->getTypeName(varDesc.source) == typeid(IngesterArray).name())
             {
                 var = obsGroup.vars.createWithScales<float>(varDesc.name,
-                                                            scales,
+                                                            dimensions,
                                                             float_params);
             }
-
 
             var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
             var.atts.add<std::string>("units", { varDesc.units }, {1});

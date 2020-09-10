@@ -8,7 +8,7 @@
 #include "IodaDescription.h"
 
 static const char* FILENAME_SECTION = "filename";
-static const char* SCALES_SECTION = "scales";
+static const char* DIMENSIONS_SECTION = "dimensions";
 static const char* VARIABLES_SECTION = "variables";
 
 static const char* SCALE_NAME = "name";
@@ -16,7 +16,7 @@ static const char* SCALE_SIZE = "size";
 
 static const char* VARIABLE_NAME = "name";
 static const char* VARIABLE_SOURCE = "source";
-static const char* VARIABLE_SCALES = "scales";
+static const char* VARIABLE_SCALES = "dimensions";
 static const char* VARIABLE_LONGNAME = "longName";
 static const char* VARIABLE_UNITS = "units";
 static const char* VARIABLE_RANGE = "range";
@@ -36,7 +36,7 @@ namespace Ingester
             filepath_ = "";
         }
 
-        for (const auto& scaleConf : conf.getSubConfigurations(SCALES_SECTION))
+        for (const auto& scaleConf : conf.getSubConfigurations(DIMENSIONS_SECTION))
         {
             ScaleDescription scale;
             scale.name = scaleConf.getString(SCALE_NAME);
@@ -50,7 +50,7 @@ namespace Ingester
             VariableDescription variable;
             variable.name = varConf.getString(VARIABLE_NAME);
             variable.source = varConf.getString(VARIABLE_SOURCE);
-            variable.scales = varConf.getStringVector(VARIABLE_SCALES);
+            variable.dimensions = varConf.getStringVector(VARIABLE_SCALES);
             variable.longName = varConf.getString(VARIABLE_LONGNAME);
             variable.units = varConf.getString(VARIABLE_UNITS);
 
@@ -82,7 +82,7 @@ namespace Ingester
 
     void IodaDescription::addScale(ScaleDescription scale)
     {
-        scales_.push_back(scale);
+        dimensions_.push_back(scale);
     }
 
     void IodaDescription::addVariable(VariableDescription variable)
