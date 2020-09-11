@@ -13,13 +13,13 @@ set(iodaconv_major 0)
 set(iodaconv_minor 0)
 set(iodaconv_revision 1)
 set(iodaconv_version ${iodaconv_major}.${iodaconv_minor}.${iodaconv_revision})
-project( iodaconv VERSION ${iodaconv_version} LANGUAGES Fortran )
+project( iodaconv VERSION ${iodaconv_version} LANGUAGES C CXX Fortran )
 
 ## Configuration
 include(GNUInstallDirs)
 include(CTest)
 
-set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH} )
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 include( iodaconv_extra_macros )
 
 # Location of .pycodestyle for norm checking within IODA-converters
@@ -49,6 +49,9 @@ else()
     list(APPEND CMAKE_MODULE_PATH ${ecbuild_MACROS_DIR})
     include(ecbuild_log) #Required for ecbuild/FindNetCDF.cmake
 endif()
+
+find_package( eckit REQUIRED )
+find_package( oops REQUIRED )
 
 find_package(bufr QUIET)
 find_package(NetCDF QUIET COMPONENTS Fortran)
