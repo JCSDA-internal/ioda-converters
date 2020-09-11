@@ -14,12 +14,6 @@ namespace Ingester
     {
     }
 
-    MnemonicExport::MnemonicExport(const eckit::Configuration& conf) :
-    mnemonic_(conf.getString("name"))
-    {
-
-    }
-
     IngesterArray MnemonicExport::exportData(BufrDataMap map)
     {
         return map.at(mnemonic_);

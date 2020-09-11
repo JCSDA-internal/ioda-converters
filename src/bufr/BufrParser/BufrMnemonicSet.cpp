@@ -5,8 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include <iostream>
-#include <iterator>
+#include <ostream>
 #include <vector>
 
 #include "BufrMnemonicSet.h"
@@ -14,27 +13,44 @@
 
 namespace Ingester
 {
-    BufrMnemonicSet::BufrMnemonicSet(const std::string& nmemonicsStr, const Channels& channels) :
-        mnemonicsStr_(nmemonicsStr),
-        mnemonics_(tokenizeMnemonics(nmemonicsStr)),
-        channels_(channels)
+    BufrMnemonicSet::BufrMnemonicSet(const std::vector<std::string>& mnemonics, const Channels& channels) :
+        mnemonics_(mnemonics),
+        mnemonicsStr_(makeMnemonicsStr(mnemonics)),
+        channels_(channels),
+        maxColumn_(findMaxChannel(channels))
     {
-        maxColumn_ = 0;
-        for (auto col : channels)
-        {
-            if (col > static_cast<int> (maxColumn_))
-            {
-                maxColumn_ = col;
-            }
-        }
     }
 
-    std::vector<std::string> BufrMnemonicSet::tokenizeMnemonics(const std::string& nmemonicsStr)
+    std::string BufrMnemonicSet::makeMnemonicsStr(std::vector<std::string> mnemonics)
     {
-        // Tokenize the string into individual mnemonic strings
-        std::istringstream buf(nmemonicsStr);
-        std::istream_iterator <std::string> beg(buf), end;
-        std::vector <std::string> tokens(beg, end);
-        return tokens;
+        std::ostringstream mnemonicsStrStream;
+        for (auto mnemonicsIt = mnemonics.begin();
+             mnemonicsIt < mnemonics.end();
+             mnemonicsIt++)
+        {
+            mnemonicsStrStream << *mnemonicsIt;
+
+            if (mnemonicsIt != mnemonics.end() - 1)
+            {
+                mnemonicsStrStream << " ";
+            }
+        }
+
+        return mnemonicsStrStream.str();
     }
+
+    size_t BufrMnemonicSet::findMaxChannel(const Channels& channels)
+    {
+        size_t maxChannel = 0;
+        for (auto channel : channels)
+        {
+            if (channel > static_cast<int> (maxChannel))
+            {
+                maxChannel = channel;
+            }
+        }
+
+        return maxChannel;
+    }
+
 }  // namespace Ingester

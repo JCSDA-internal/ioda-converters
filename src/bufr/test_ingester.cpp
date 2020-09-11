@@ -38,13 +38,15 @@ namespace Ingester
 
         description.setFilepath(INPUT_FILE);
 
-        auto set1MnemonicStr = "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS";
-        auto set2MnemonicStr = "SAZA SOZA BEARAZ SOLAZI";
-        auto set3MnemonicStr = "TMBR";
+        std::vector<std::string> set1Mnemonics = {"SAID", "FOVN", "YEAR", "MNTH", "DAYS", "HOUR",
+                                                  "MINU", "SECO", "CLAT", "CLON", "CLATH", "CLONH",
+                                                  "HOLS"};
+        std::vector<std::string> set2Mnemonics = {"SAZA", "SOZA", "BEARAZ", "SOLAZI"};
+        std::vector<std::string> set3Mnemonics = {"TMBR"};
 
-        auto set1 = BufrMnemonicSet(set1MnemonicStr, {1});
-        auto set2 = BufrMnemonicSet(set2MnemonicStr, {1});
-        auto set3 = BufrMnemonicSet(set3MnemonicStr, oops::parseIntSet("1-15"));
+        auto set1 = BufrMnemonicSet(set1Mnemonics, {1});
+        auto set2 = BufrMnemonicSet(set2Mnemonics, {1});
+        auto set3 = BufrMnemonicSet(set3Mnemonics, oops::parseIntSet("1-15"));
 
         description.addMnemonicSet(set1);
         description.addMnemonicSet(set2);
@@ -54,7 +56,7 @@ namespace Ingester
         auto bufrParser = BufrParser(description);
         auto data = bufrParser.parse(4);
 
-        std::cout << data->get("TMBR") << std::endl;
+        std::cout << data->get("radiance") << std::endl;
     }
 
     void test_parsePartialFile()
@@ -62,16 +64,18 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("inputpath");
+        auto inputPath = yaml->getString("inputpath");
+        auto outputPath = yaml->getString("outputpath");
 
-        for (const auto &conf : yaml->getSubConfigurations("bufr"))
+        if (yaml->has("bufr"))
         {
-            auto description = BufrDescription(conf, dataPath);
-            auto bufrParser = BufrParser(description);
+            auto conf = yaml->getSubConfiguration("bufr");
+            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<IngesterData> data = bufrParser.parse(5);
 
-            std::cout << data->get("TMBR") << std::endl;
+            std::cout << data->get<IngesterStrVector>("timestamp") << std::endl;
         }
     }
 
@@ -80,12 +84,14 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("inputpath");
+        auto inputPath = yaml->getString("inputpath");
+        auto outputPath = yaml->getString("outputpath");
 
-        for (const auto &conf : yaml->getSubConfigurations("bufr"))
+        if (yaml->has("bufr"))
         {
-            auto description = BufrDescription(conf, dataPath);
-            auto bufrParser = BufrParser(description);
+            auto conf = yaml->getSubConfiguration("bufr");
+            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<IngesterData> data = bufrParser.parse();
         }
@@ -96,12 +102,14 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto dataPath = yaml->getString("inputpath");
+        auto inputPath = yaml->getString("inputpath");
+        auto outputPath = yaml->getString("outputpath");
 
-        for (const auto &conf : yaml->getSubConfigurations("bufr"))
+        if (yaml->has("bufr"))
         {
-            auto description = BufrDescription(conf, dataPath);
-            auto bufrParser = BufrParser(description);
+            auto conf = yaml->getSubConfiguration("bufr");
+            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrParser = BufrParser(bufrDesc);
 
             bool endReached = false;
             std::shared_ptr<IngesterData> data;

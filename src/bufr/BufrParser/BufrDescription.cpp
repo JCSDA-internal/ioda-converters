@@ -31,6 +31,8 @@ static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
 static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
 static const char* CHANNEL_NAME = "channels";
 static const char* EXPORT_NAME = "exports";
+static const char* DATETIME_NAME = "datetime";
+static const char* MNEMONIC_NAME = "mnemonic";
 
 
 namespace Ingester
@@ -52,36 +54,24 @@ namespace Ingester
             }
 
             addMnemonicSet(BufrMnemonicSet(
-                mnemonicSetConf.getString(MNEMONIC_STR_YAML_NAME), channels));
+                mnemonicSetConf.getStringVector(MNEMONIC_STR_YAML_NAME), channels));
         }
-
-        std::cout << "################## IGNORE EXCEPTIONS ##################" << std::endl;
 
         auto exportConfs = conf.getSubConfiguration(EXPORT_NAME);
         for (const auto& key : exportConfs.keys())
         {
             auto subconf = exportConfs.getSubConfiguration(key);
 
-            try
+            if(subconf.has(DATETIME_NAME))
             {
-                addExport(key,  std::make_shared<MnemonicExport>(exportConfs.getString(key)));
+                auto dtconf = subconf.getSubConfiguration(DATETIME_NAME);
+                addExport(key, std::make_shared<DatetimeExport>(dtconf));
             }
-            catch (eckit::Exception& e)
+            else if(subconf.has(MNEMONIC_NAME))
             {
-                if(subconf.has("datetime"))
-                {
-                    auto dtconf = subconf.getSubConfiguration("datetime");
-                    addExport(key, std::make_shared<DatetimeExport>(dtconf));
-                }
-                else if(subconf.has("mnemonic"))
-                {
-                    auto mnconf = subconf.getSubConfiguration("mnemonic");
-                    addExport(key, std::make_shared<MnemonicExport>(mnconf));
-                }
+                addExport(key, std::make_shared<MnemonicExport>(subconf.getString(MNEMONIC_NAME)));
             }
         }
-
-        std::cout << "#######################################################" << std::endl;
     }
 
     void BufrDescription::addMnemonicSet(BufrMnemonicSet mnemonicSet)

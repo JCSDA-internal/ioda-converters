@@ -11,26 +11,32 @@ bufr:
   filename: "gdas.t12z.1bmhs.tm00.bufr_d"
 
   mnemonicSets:
-    - mnemonics: "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS"
-    - mnemonics: "SAZA SOZA BEARAZ SOLAZI"
-    - mnemonics: "TMBR"
+    - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
+    - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
+    - mnemonics: [TMBR]
       channels : 1-15
 
   exports:
     timestamp:
       datetime:
-        year: "YEAR"
-        month: "MNTH"
-        day: "DAYS"
-        hour: "HOUR"
-        minute: "MINU"
-        second: "SECO"
-        isUTC: "true"
+        year: YEAR
+        month: MNTH
+        day: DAYS
+        hour: HOUR
+        minute: MINU
+        second: SECO
+        isUTC: true
+
     longitude:
-      mnemonic:
-        name: "CLON"
-    latitude: "CLAT"
-    radiance: "TMBR"
+      mnemonic: CLON
+      transforms:
+        - offset: -180
+        - scale: 1.25
+
+    latitude:
+      mnemonic: CLAT
+    radiance:
+      mnemonic: TMBR
 
 ioda:
   filename: "ioda_encoder_result.nc"

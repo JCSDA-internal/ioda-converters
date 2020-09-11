@@ -35,7 +35,7 @@ namespace Ingester
                  mnemonicSet_.getSize(),
                  mnemonicSet_.getMaxColumn(),
                  &result,
-                 mnemonicSet_.getMnemonicStr().c_str());
+                 mnemonicSet_.getMnemonicsStr().c_str());
 
         accumulator_.addRow(scratchData_);
     }

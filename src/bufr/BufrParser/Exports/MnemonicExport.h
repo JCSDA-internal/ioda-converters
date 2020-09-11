@@ -18,7 +18,6 @@ namespace Ingester
     {
      public:
         explicit MnemonicExport(std::string mnemonicStr);
-        explicit MnemonicExport(const eckit::Configuration& conf);
         ~MnemonicExport() override = default;
 
         IngesterArray exportData(BufrDataMap map);
@@ -27,5 +26,3 @@ namespace Ingester
         std::string mnemonic_;
     };
 }   // namespace Ingester
-
-
