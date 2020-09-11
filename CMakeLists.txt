@@ -53,6 +53,9 @@ endif()
 find_package( eckit REQUIRED )
 find_package( oops REQUIRED )
 
+find_package( jedi_base REQUIRED )
+find_package( ioda_engines REQUIRED )
+
 find_package(bufr QUIET)
 find_package(NetCDF QUIET COMPONENTS Fortran)
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
