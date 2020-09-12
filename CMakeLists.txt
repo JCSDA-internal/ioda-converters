@@ -17,6 +17,7 @@ include(CTest)
 
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 include( iodaconv_extra_macros )
+include( iodaconv_compiler_flags )
 
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
@@ -46,6 +47,9 @@ else()
     include(ecbuild_log) #Required for ecbuild/FindNetCDF.cmake
 endif()
 
+find_package( Eigen3 QUIET NO_MODULE HINTS
+    $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
+    $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH})
 find_package(eckit QUIET)
 find_package(oops QUIET)
 find_package(jedi_base QUIET)
@@ -53,6 +57,7 @@ find_package(ioda_engines QUIET)
 find_package(bufr QUIET)
 find_package(NetCDF QUIET COMPONENTS Fortran)
 
+# IMHO, this checking belongs in src/CMakeLists.txt, not here.
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
     set(iodaconv_gnssro_ENABLED True)
     message(STATUS "Found: bufr")
@@ -69,8 +74,10 @@ else()
     message(STATUS "Disabled Component: gnssro")
 endif()
 
-if( eckit_FOUND AND oops_FOUND AND jedi_base_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
+# IMHO, this checking belongs in src/CMakeLists.txt, not here.
+if( Eigen3_FOUND AND eckit_FOUND AND oops_FOUND AND jedi_base_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
     set(iodaconv_bufr_ENABLED True)
+    message(STATUS "Found: Eigen3")
     message(STATUS "Found: eckit")
     message(STATUS "Found: oops")
     message(STATUS "Found: jedi_base")
@@ -79,6 +86,9 @@ if( eckit_FOUND AND oops_FOUND AND jedi_base_FOUND AND ioda_engines_FOUND AND bu
     message(STATUS "Enabled Component: bufr")
 else()
     set(iodaconv_bufr_ENABLED False)
+    if(NOT Eigen3_FOUND)
+        message(STATUS "NOT-Found: Eigen3 - BUFR converter disabled")
+    endif()
     if(NOT eckit_FOUND)
         message(STATUS "NOT-Found: eckit - BUFR converter disabled")
     endif()
@@ -96,10 +106,6 @@ else()
     endif()
     message(STATUS "Disabled Component: bufr")
 endif()
-
-
-include( iodaconv_compiler_flags )
-include_directories( ${IODACONV_INCLUDE_DIRS} ${IODACONV_EXTRA_INCLUDE_DIRS} )
 
 
 ## Sources
