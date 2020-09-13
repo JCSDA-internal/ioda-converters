@@ -7,9 +7,10 @@
 
 #include "BufrParser.h"
 
-#include <bufr.interface.h>
 #include <iostream>
 #include <map>
+
+#include "bufr.interface.h"
 
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
