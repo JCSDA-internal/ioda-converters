@@ -8,7 +8,7 @@ add_subdirectory(wrfda-ncdiag)
 
 # Optional components
 if(iodaconv_gnssro_ENABLED)
-    add_subdirectory(gnssro)
+  add_subdirectory(gnssro)
 endif()
 
 if(iodaconv_bufr_ENABLED)
