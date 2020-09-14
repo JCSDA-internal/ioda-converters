@@ -212,8 +212,7 @@ class Giirs2Ioda:
         self.writer._nlocs = nlocs_tot
         self.LocMdata['datetime'] = self.writer.FillNcVector(meta_datetime, 'datetime')
         self.units_values['datetime'] = 'ISO 8601 format'
-        for k in itertools.chain(self.LOC_MDATA_MAP.keys(), ['scan_position']):
-            self.LocMdata[k] = self.LocMdata[k][:nlocs_tot]
+        self.LocMdata = {k: v[:nlocs_tot] for k, v in self.LocMdata.items()}  # Remove unused extra space in metadata
         for ivar in range(nchans):
             varname = f"brightness_temperature_{ivar+1}"
             self.units_values[varname] = 'K'
