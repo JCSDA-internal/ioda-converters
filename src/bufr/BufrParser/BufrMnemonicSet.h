@@ -17,7 +17,8 @@ namespace Ingester
     class BufrMnemonicSet
     {
      public:
-        explicit BufrMnemonicSet(const std::vector<std::string>& mnemonics, const Channels& channels);
+        explicit BufrMnemonicSet(const std::vector<std::string>& mnemonics,
+                                 const Channels& channels);
 
         // Getters
         inline std::vector<std::string> getMnemonics() const { return mnemonics_; }

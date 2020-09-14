@@ -1,6 +1,9 @@
-//
-// Created by Ronald McLaren on 9/11/20.
-//
+/*
+ * (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
@@ -19,7 +22,7 @@ namespace Ingester
 {
     class DataContainer
     {
-    public:
+     public:
         DataContainer() = default;
 
         void add(const std::string& fieldName, std::shared_ptr<DataObject> data);
@@ -29,7 +32,7 @@ namespace Ingester
         inline unsigned int size() const { return size_; }
         inline void setSize(const unsigned int size) { size_ = size; }
 
-    private:
+     private:
         std::map<std::string, std::shared_ptr<DataObject>> dataMap_;
         unsigned int size_ = 0;
     };

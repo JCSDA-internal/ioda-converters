@@ -30,7 +30,6 @@ list(APPEND _ingester_srcs
   BufrParser/BufrCollectors/BufrCollectors.cpp
   BufrParser/BufrCollectors/BufrCollectors.h
   BufrParser/Exports/Export.h
-  BufrParser/Exports/Export.cpp
   BufrParser/Exports/DatetimeExport.h
   BufrParser/Exports/DatetimeExport.cpp
   BufrParser/Exports/MnemonicExport.h

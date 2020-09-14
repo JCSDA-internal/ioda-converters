@@ -21,7 +21,8 @@ namespace Ingester
     {
     }
 
-    ioda::ObsGroup IodaEncoder::encode(const std::shared_ptr<DataContainer>& dataContainer, bool append)
+    ioda::ObsGroup IodaEncoder::encode(const std::shared_ptr<DataContainer>& dataContainer,
+                                       bool append)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
         backendParams.fileName = description_.getFilepath();
@@ -64,17 +65,6 @@ namespace Ingester
         }
 
         // Create Variables
-        ioda::VariableCreationParameters float_params;
-        float_params.chunk = true;
-        float_params.compressWithGZIP();
-        float_params.setFillValue<float>(-999);
-
-        // Create Variables
-        ioda::VariableCreationParameters str_params;
-        str_params.chunk = true;
-        str_params.compressWithGZIP();
-        str_params.setFillValue<std::string>("");
-
         for (const auto& varDesc : description_.getVariables())
         {
             auto dimensions = std::vector<ioda::Variable>();
@@ -97,10 +87,11 @@ namespace Ingester
             if (varDesc.range)
             {
                 var.atts.add<float>("valid_range",
-                                    {varDesc.range->start, varDesc.range->end}, {2});
+                                    {varDesc.range->start, varDesc.range->end},
+                                    {2});
             }
         }
 
         return obsGroup;
     }
-}
+}  // namespace Ingester

@@ -8,46 +8,44 @@
 
 #include <map>
 #include <string>
-#include <vector>
 #include "Eigen/Dense"
 
-#include "IngesterTypes.h"
 #include "DataContainer.h"
 
 
 namespace Ingester
 {
-        void DataContainer::add(const std::string& fieldName, const std::shared_ptr<DataObject> data)
+    void DataContainer::add(const std::string& fieldName, const std::shared_ptr<DataObject> data)
+    {
+        if (hasKey(fieldName))
         {
-            if (hasKey(fieldName))
-            {
-                std::cout << "ERROR: Field called " << fieldName << " already exists." << std::endl;
-                abort();
-            }
-
-            dataMap_.insert({fieldName, data});
+            std::cout << "ERROR: Field called " << fieldName << " already exists." << std::endl;
+            abort();
         }
 
-        std::shared_ptr<DataObject> DataContainer::get(const std::string& fieldName) const
-        {
-            if (!hasKey(fieldName))
-            {
-                std::cout << "ERROR: Field called " << fieldName << " doesn't exist." << std::endl;
-                abort();
-            }
+        dataMap_.insert({fieldName, data});
+    }
 
-            return dataMap_.at(fieldName);
+    std::shared_ptr<DataObject> DataContainer::get(const std::string& fieldName) const
+    {
+        if (!hasKey(fieldName))
+        {
+            std::cout << "ERROR: Field called " << fieldName << " doesn't exist." << std::endl;
+            abort();
         }
 
-        bool DataContainer::hasKey(const std::string& fieldName) const
-        {
-            bool hasKey = false;
-            if (dataMap_.find(fieldName) != dataMap_.end())
-            {
-                hasKey = true;
-            }
+        return dataMap_.at(fieldName);
+    }
 
-            return hasKey;
+    bool DataContainer::hasKey(const std::string& fieldName) const
+    {
+        bool hasKey = false;
+        if (dataMap_.find(fieldName) != dataMap_.end())
+        {
+            hasKey = true;
         }
+
+        return hasKey;
+    }
 }  // namespace Ingester
 

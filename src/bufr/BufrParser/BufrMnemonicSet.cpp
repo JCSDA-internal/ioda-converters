@@ -13,7 +13,8 @@
 
 namespace Ingester
 {
-    BufrMnemonicSet::BufrMnemonicSet(const std::vector<std::string>& mnemonics, const Channels& channels) :
+    BufrMnemonicSet::BufrMnemonicSet(const std::vector<std::string>& mnemonics,
+                                     const Channels& channels) :
         mnemonics_(mnemonics),
         mnemonicsStr_(makeMnemonicsStr(mnemonics)),
         channels_(channels),

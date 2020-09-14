@@ -35,8 +35,8 @@ namespace Ingester
         std::vector<std::string> dimensions;
         std::string longName;
         std::string units;
-        std::shared_ptr<std::string> coordinates; //Optional
-        std::shared_ptr<Range> range; //Optional
+        std::shared_ptr<std::string> coordinates;  // Optional
+        std::shared_ptr<Range> range;  // Optional
     } VariableDescription;
 
     typedef std::vector<ScaleDescription> ScaleDescriptions;
@@ -46,20 +46,19 @@ namespace Ingester
     {
      public:
         IodaDescription() = default;
-        explicit IodaDescription(const eckit::Configuration& conf, const std::string& basepath="");
+        explicit IodaDescription(const eckit::Configuration& conf,
+                                 const std::string& basepath = "");
 
         void addScale(ScaleDescription scale);
         void addVariable(VariableDescription variable);
 
-        inline ScaleDescriptions getScales() const { return dimensions_; };
-        inline VariableDescriptions getVariables() const { return variables_; };
+        inline ScaleDescriptions getScales() const { return dimensions_; }
+        inline VariableDescriptions getVariables() const { return variables_; }
         inline std::string getFilepath() const { return filepath_; }
 
      private:
         std::string filepath_;
         ScaleDescriptions dimensions_;
         VariableDescriptions variables_;
-
-
     };
 }  // namespace Ingester

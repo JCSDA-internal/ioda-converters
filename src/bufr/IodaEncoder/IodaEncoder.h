@@ -24,7 +24,8 @@ namespace Ingester
     {
      public:
         explicit IodaEncoder(const IodaDescription&  description);
-        ioda::ObsGroup encode(const std::shared_ptr<DataContainer>& data, bool append=false);
+        ioda::ObsGroup encode(const std::shared_ptr<DataContainer>& data,
+                              bool append = false);
 
      private:
         const IodaDescription description_;

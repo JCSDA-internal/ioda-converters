@@ -52,7 +52,7 @@ namespace Ingester
 
     BufrDataMap BufrCollectors::finalize()
     {
-        auto dataMap = BufrDataMap ();
+        auto dataMap = BufrDataMap();
 
         for (const auto &collector : collectors_)
         {

@@ -62,12 +62,12 @@ namespace Ingester
         {
             auto subconf = exportConfs.getSubConfiguration(key);
 
-            if(subconf.has(DATETIME_NAME))
+            if (subconf.has(DATETIME_NAME))
             {
                 auto dtconf = subconf.getSubConfiguration(DATETIME_NAME);
                 addExport(key, std::make_shared<DatetimeExport>(dtconf));
             }
-            else if(subconf.has(MNEMONIC_NAME))
+            else if (subconf.has(MNEMONIC_NAME))
             {
                 addExport(key, std::make_shared<MnemonicExport>(subconf.getString(MNEMONIC_NAME)));
             }
