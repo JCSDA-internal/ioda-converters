@@ -19,7 +19,7 @@
 #include "BufrParser/BufrParser.h"
 #include "IodaEncoder/IodaDescription.h"
 #include "IodaEncoder/IodaEncoder.h"
-#include "IngesterData.h"
+#include "DataContainer.h"
 
 
 static const char* CONFIG_FILE =
@@ -56,7 +56,7 @@ namespace Ingester
         auto bufrParser = BufrParser(description);
         auto data = bufrParser.parse(4);
 
-        std::cout << data->get("radiance") << std::endl;
+        data->get("radiance")->print();
     }
 
     void test_parsePartialFile()
@@ -73,9 +73,9 @@ namespace Ingester
             auto bufrDesc = BufrDescription(conf, inputPath);
             auto bufrParser = BufrParser(bufrDesc);
 
-            std::shared_ptr<IngesterData> data = bufrParser.parse(5);
+            std::shared_ptr<DataContainer> data = bufrParser.parse(5);
 
-            std::cout << data->get<IngesterStrVector>("timestamp") << std::endl;
+            data->get("timestamp")->print();
         }
     }
 
@@ -93,7 +93,7 @@ namespace Ingester
             auto bufrDesc = BufrDescription(conf, inputPath);
             auto bufrParser = BufrParser(bufrDesc);
 
-            std::shared_ptr<IngesterData> data = bufrParser.parse();
+            std::shared_ptr<DataContainer> data = bufrParser.parse();
         }
     }
 
@@ -112,7 +112,7 @@ namespace Ingester
             auto bufrParser = BufrParser(bufrDesc);
 
             bool endReached = false;
-            std::shared_ptr<IngesterData> data;
+            std::shared_ptr<DataContainer> data;
             do
             {
                 auto nextData = bufrParser.parse(10);
@@ -127,7 +127,7 @@ namespace Ingester
                 }
             } while (!endReached);
 
-            std::cout << data->get("radiance") << std::endl;
+            data->get("radiance")->print();
         }
     }
 
@@ -145,7 +145,7 @@ namespace Ingester
             auto bufrDesc = BufrDescription(conf, inputPath);
             auto bufrParser = BufrParser(bufrDesc);
 
-            std::shared_ptr<IngesterData> data = bufrParser.parse();
+            std::shared_ptr<DataContainer> data = bufrParser.parse();
 
             if (yaml->has("ioda"))
             {

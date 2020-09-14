@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "IngesterData.h"
+#include "DataContainer.h"
 
 
 namespace Ingester
@@ -21,7 +21,7 @@ namespace Ingester
     {
     }
 
-    ioda::ObsGroup IodaEncoder::encode(const std::shared_ptr<IngesterData>& data, bool append)
+    ioda::ObsGroup IodaEncoder::encode(const std::shared_ptr<DataContainer>& dataContainer, bool append)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
         backendParams.fileName = description_.getFilepath();
@@ -30,7 +30,7 @@ namespace Ingester
         backendParams.action = append ? ioda::Engines::BackendFileActions::Open : \
                                         ioda::Engines::BackendFileActions::Create;
         backendParams.flush = true;
-        backendParams.allocBytes = data->size() * 8;
+        backendParams.allocBytes = dataContainer->size() * 8;
 
         auto rootGroup = ioda::Engines::constructBackend(backendType_, backendParams);
 
@@ -41,7 +41,7 @@ namespace Ingester
             std::size_t size = 0;
             if (scale.size == "{LENGTH}")
             {
-                size = data->size();
+                size = dataContainer->size();
             }
             else
             {
@@ -83,19 +83,8 @@ namespace Ingester
                 dimensions.push_back(scaleMap.at(scaleStr));
             }
 
-            ioda::Variable var;
-            if (data->getTypeName(varDesc.source) == typeid(IngesterStrVector).name())
-            {
-                var = obsGroup.vars.createWithScales<std::string>(varDesc.name,
-                                                                  dimensions,
-                                                                  str_params);
-            }
-            else if (data->getTypeName(varDesc.source) == typeid(IngesterArray).name())
-            {
-                var = obsGroup.vars.createWithScales<float>(varDesc.name,
-                                                            dimensions,
-                                                            float_params);
-            }
+            auto data = dataContainer->get(varDesc.source);
+            auto var = data->createVariable(obsGroup, varDesc.name, dimensions);
 
             var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
             var.atts.add<std::string>("units", { varDesc.units }, {1});
@@ -109,15 +98,6 @@ namespace Ingester
             {
                 var.atts.add<float>("valid_range",
                                     {varDesc.range->start, varDesc.range->end}, {2});
-            }
-
-            if (data->getTypeName(varDesc.source) == typeid(IngesterStrVector).name())
-            {
-                var.write(data->get<IngesterStrVector>(varDesc.source));
-            }
-            else if (data->getTypeName(varDesc.source) == typeid(IngesterArray).name())
-            {
-                var.writeWithEigenRegular(data->get<IngesterArray>(varDesc.source));
             }
         }
 

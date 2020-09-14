@@ -20,7 +20,6 @@ namespace Ingester
     class BufrMnemonicSet;
     class BufrAccumulator;
     class BufrCollector;
-    class IngesterData;
 
     class BufrCollectors
     {

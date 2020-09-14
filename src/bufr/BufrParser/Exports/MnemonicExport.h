@@ -9,8 +9,9 @@
 #include "eckit/config/LocalConfiguration.h"
 
 #include "Export.h"
-
 #include "IngesterTypes.h"
+#include "DataObject/ArrayDataObject.h"
+
 
 namespace Ingester
 {
@@ -20,7 +21,7 @@ namespace Ingester
         explicit MnemonicExport(std::string mnemonicStr);
         ~MnemonicExport() override = default;
 
-        IngesterArray exportData(BufrDataMap map);
+        std::shared_ptr<DataObject> exportData(BufrDataMap map);
 
      private:
         std::string mnemonic_;

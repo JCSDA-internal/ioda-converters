@@ -13,7 +13,7 @@
 
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
-#include "IngesterData.h"
+#include "DataContainer.h"
 
 #include "Exports/MnemonicExport.h"
 #include "Exports/DatetimeExport.h"
@@ -36,7 +36,7 @@ namespace Ingester
         closeBufrFile();
     }
 
-    std::shared_ptr <IngesterData> BufrParser::parse(const size_t maxMsgsToParse)
+    std::shared_ptr <DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
     {
         assert(fileUnit_ > 0);
 
@@ -60,9 +60,9 @@ namespace Ingester
         return exportData(collectors.finalize());
     }
 
-    std::shared_ptr<IngesterData> BufrParser::exportData(const BufrDataMap& srcData)
+    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
     {
-        auto outputData = std::make_shared<IngesterData>();
+        auto outputData = std::make_shared<DataContainer>();
         auto exportMap = description_.getExportMap();
 
         unsigned int size = 0;
@@ -74,21 +74,7 @@ namespace Ingester
 
             size = (size == 0) ? srcData.begin()->second.rows() : size;
 
-            if (auto ex = std::dynamic_pointer_cast<MnemonicExport>(data_exporter))
-            {
-                outputData->add<IngesterArray>(key, ex->exportData(srcData));
-            }
-            else if (auto ex = std::dynamic_pointer_cast<DatetimeExport>(data_exporter))
-            {
-                outputData->add<IngesterStrVector>(key, ex->exportData(srcData));
-            }
-            else
-            {
-                std::cout << "WARNING: BufrParser::exportStrs: Could not find mnemonic "
-                          << key
-                          << " in src data."
-                          << std::endl;
-            }
+            outputData->add(key, data_exporter->exportData(srcData));
 
             exportIt++;
         }

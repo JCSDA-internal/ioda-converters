@@ -12,7 +12,7 @@
 #include "BufrCollectors.h"
 #include "BufrIntCollector.h"
 #include "BufrRepCollector.h"
-#include "IngesterData.h"
+#include "DataContainer.h"
 
 
 namespace Ingester

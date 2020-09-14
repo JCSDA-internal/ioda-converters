@@ -25,7 +25,7 @@
 #include "bufr/BufrParser/BufrMnemonicSet.h"
 #include "bufr/BufrParser/BufrParser.h"
 #include "bufr/BufrParser/BufrTypes.h"
-#include "bufr/IngesterData.h"
+#include "bufr/DataContainer.h"
 
 
 namespace Ingester
@@ -83,7 +83,7 @@ namespace Ingester
         void test_parseFileIncrementally()
         {
             bool endReached = false;
-            std::shared_ptr<IngesterData> data;
+            std::shared_ptr<DataContainer> data;
             do
             {
                 auto nextData = BufrParserTestFixture::bufrParser()->parse(10);
@@ -103,8 +103,8 @@ namespace Ingester
         class BufrParser : public oops::Test
         {
          public:
-            BufrParser() {}
-            virtual ~BufrParser() {}
+            BufrParser() = default;
+            ~BufrParser() override = default;
          private:
             std::string testid() const override { return "ingester::test::BufrParser"; }
             void register_tests() const override

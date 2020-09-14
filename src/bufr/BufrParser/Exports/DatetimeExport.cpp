@@ -29,7 +29,7 @@ namespace Ingester
     {
     }
 
-    IngesterStrVector DatetimeExport::exportData(BufrDataMap map)
+    std::shared_ptr<DataObject> DatetimeExport::exportData(BufrDataMap map)
     {
         auto datetimes = std::vector<std::string>();
 
@@ -54,6 +54,6 @@ namespace Ingester
             datetimes.push_back(datetimeStr.str());
         }
 
-        return datetimes;
+        return std::make_shared<StrVecDataObject>(datetimes);
     }
 }  // namespace Ingester

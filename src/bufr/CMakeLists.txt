@@ -5,8 +5,13 @@
 
 list(APPEND _ingester_srcs
   IngesterTypes.h
-  IngesterData.h
-  IngesterData.cpp
+  DataContainer.h
+  DataContainer.cpp
+  DataObject/DataObject.h
+  DataObject/StrVecDataObject.h
+  DataObject/StrVecDataObject.cpp
+  DataObject/ArrayDataObject.h
+  DataObject/ArrayDataObject.cpp
   BufrParser/BufrParser.h
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h

@@ -7,9 +7,11 @@
 #include <string>
 #include <vector>
 
-#include "BufrParser/BufrTypes.h"
+
 #include "eckit/config/LocalConfiguration.h"
 
+#include "BufrParser/BufrTypes.h"
+#include "DataObject/StrVecDataObject.h"
 #include "Export.h"
 
 
@@ -21,7 +23,7 @@ namespace Ingester
         explicit DatetimeExport(const eckit::Configuration& conf);
         ~DatetimeExport() override = default;
 
-        IngesterStrVector exportData(BufrDataMap map);
+        std::shared_ptr<DataObject> exportData(BufrDataMap map);
 
      private:
         const std::string yearKey_;

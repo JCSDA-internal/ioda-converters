@@ -18,19 +18,16 @@
 
 namespace Ingester
 {
-    class ObsGroup;
-    class IngesterData;
+    class DataContainer;
 
     class IodaEncoder
     {
      public:
         explicit IodaEncoder(const IodaDescription&  description);
-        ioda::ObsGroup encode(const std::shared_ptr<IngesterData>& data, bool append=false);
+        ioda::ObsGroup encode(const std::shared_ptr<DataContainer>& data, bool append=false);
 
      private:
         const IodaDescription description_;
         const ioda::Engines::BackendNames backendType_;
-
-
     };
 }  // namespace Ingester

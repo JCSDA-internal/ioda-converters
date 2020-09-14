@@ -6,8 +6,10 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "BufrParser/BufrTypes.h"
+#include "DataObject/DataObject.h"
 
 namespace Ingester
 {
@@ -15,6 +17,8 @@ namespace Ingester
     {
      public:
         virtual ~Export() = default;
+
+        virtual std::shared_ptr<DataObject> exportData(BufrDataMap map) = 0;
     };
 }  // namespace Ingester
 

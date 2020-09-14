@@ -1,0 +1,42 @@
+//
+// Created by Ronald McLaren on 9/11/20.
+//
+
+#include <iostream>
+
+#include "ArrayDataObject.h"
+
+namespace Ingester
+{
+    ArrayDataObject::ArrayDataObject(const IngesterArray& eigArray) :
+        eigArray_(eigArray)
+    {
+    }
+
+    ioda::Variable ArrayDataObject::createVariable(ioda::ObsGroup obsGroup,
+                                                   std::string name,
+                                                   std::vector<ioda::Variable> dimensions)
+    {
+        static ioda::VariableCreationParameters params = makeCreationParams();
+
+        auto var = obsGroup.vars.createWithScales<float>(name, dimensions, params);
+        var.writeWithEigenRegular(eigArray_);
+        return var;
+    }
+
+    void ArrayDataObject::print()
+    {
+        std::cout << eigArray_ << std::endl;
+    }
+
+    ioda::VariableCreationParameters ArrayDataObject::makeCreationParams()
+    {
+        ioda::VariableCreationParameters params;
+        params.chunk = true;
+        params.compressWithGZIP();
+        params.setFillValue<float>(-999);
+
+        return params;
+    }
+
+}  // namespace Ingester
