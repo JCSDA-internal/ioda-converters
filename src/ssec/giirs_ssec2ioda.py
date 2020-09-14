@@ -27,7 +27,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_ncio as iconv
 
 
-class LwRadiance:
+class Giirs2Ioda:
     VAR_NAME = "brightness_temperature"
 
     LOCATION_KEYS = [
@@ -46,9 +46,8 @@ class LwRadiance:
                      'sensor_azimuth_angle': 'IRLW_SatelliteAzimuth',
                      'cloud_fraction': 'Cloud_Fraction'}
 
-    # GIIRS wavenumbers
-    WN_LW = np.arange(700, 1130.001, 0.625)
-    WN_MW = np.arange(1650, 2250.001, 0.625)
+    # Filtering parameters
+    SAT_ZEN_MAX = 74  # Maximum allowable IRLW_SatelliteZenith value before filtering
 
     def __init__(self, center_datetime, out_file):
         """
@@ -109,67 +108,75 @@ class LwRadiance:
         errKey = self.VAR_NAME, self.writer.OerrName()
         qcKey = self.VAR_NAME, self.writer.OqcName()
 
-        numFiles = 0
-        totalFiles = 0
-        self.writer._nlocs = 0
-
-        sat_zen_max = 74
-        detector_number = 128
-        detector_array = np.arange(1, detector_number+1, dtype=np.float32)
-
-        # Configure channel variables
-        nchans = 689
+        totalFiles = 0  # Total number of files read in
+        succFiles = 0  # Number of files with at least one valid obs
         nlocs_tot = 0  # Total localization read in
-        nlocs_max = detector_number * len(filenames)  # Maximum possible locs
-        self.writer._nvars = nchans
+        self.writer._nlocs = 0
         self.writer._nrecs = 1
-
-        # Vectorized constants for vectorized rad2bt transform
-        # bt = K1/log(1+K3/rad) in native units
-        K1 = self.WN_LW*100*self._K1
-        K1 = K1.astype(np.float32)[:, np.newaxis]  # column vector
-        K3 = (1e5*self._K2*(self.WN_LW*100)**3.).astype(np.float32)
-        K3 = K3.astype(np.float32)[:, np.newaxis]  # column vector
-
-        # obs_vals (nchans, nlocs) will contain all observed values
-        # values are appended for each dataset
-        obs_vals = np.full((nchans, nlocs_max), nc.default_fillvals['f4'], dtype=np.float32, order='F')
         meta_datetime = []
-
-        for k in itertools.chain(self.LOC_MDATA_MAP.keys(), ['scan_position']):
-            self.LocMdata[k] = np.empty(nlocs_max, dtype=np.float32)
-
         for f in (ff.strip() for ff in filenames):
             with nc.Dataset(f, 'r') as ncd:
-                sat_zen = ncd.variables['IRLW_SatelliteZenith'][:]
-                mask = sat_zen < sat_zen_max
-                nlocs = np.count_nonzero(mask)
                 totalFiles += 1
+                try:
+                    sat_zen = ncd.variables['IRLW_SatelliteZenith'][:]
+                except KeyError as e:
+                    print(f"[GIIRS2IODA] Processing {totalFiles}/{len(filenames)} Missing metadata variables. Skipping. -- {Path(f).name} ")
+                    continue
+                mask = sat_zen < self.SAT_ZEN_MAX
+                nlocs = np.count_nonzero(mask)
                 if nlocs == 0:
                     print(f"[GIIRS2IODA] Processing {totalFiles}/{len(filenames)} NO VALID OBS. Skipping. -- {Path(f).name} ")
                     continue
-                numFiles += 1
+                succFiles += 1
                 print(f"[GIIRS2IODA] Processing {totalFiles}/{len(filenames)} #locs:{nlocs} -- {Path(f).name}")
 
-                # Channel metadata associated with longwave radiance
-                if (numFiles == 1):
-                    self.VarMdata['channel_wavenumber'] = self.writer.FillNcVector(np.asarray(ncd.variables['LW_wnum'][:], np.float32), 'float')
+                # Initialize data structures based on channel and detector layout
+                if (succFiles == 1):
+                    # Get number of channels
+                    nchans = ncd.dimensions["LWchannel"].size
+                    self.writer._nvars = nchans
+
+                    # Vectorized constants for vectorized rad2bt transform
+                    # bt = K1/log(1+K3/rad) in native units
+                    LW_wnum = np.asarray(ncd.variables["LW_wnum"])
+                    K1 = LW_wnum*100*self._K1
+                    K1 = K1.astype(np.float32)[:, np.newaxis]  # column vector
+                    K3 = (1e5*self._K2*(LW_wnum*100)**3.).astype(np.float32)
+                    K3 = K3.astype(np.float32)[:, np.newaxis]  # column vector
+
+                    # Get number of detectors (obs) per-channel
+                    ndetectors = ncd.dimensions["LWdetector"].size
+                    detector_array = np.arange(1, ndetectors+1, dtype=np.int32)
+
+                    # Determine maximum size of output and pre-allocate output arrays
+                    nlocs_max = ndetectors * len(filenames)  # Maximum possible locs
+                    # obs_vals (nchans, nlocs) will contain all observed values
+                    # values are appended for each dataset
+                    obs_vals = np.full((nchans, nlocs_max), nc.default_fillvals['f4'], dtype=np.float32, order='F')
+                    self.LocMdata['scan_position'] = np.full(nlocs_max, nc.default_fillvals['i4'], dtype=np.int32)
+                    self.units_values['scan_position'] = '1'
+
+                    self.VarMdata['channel_wavenumber'] = self.writer.FillNcVector(LW_wnum, 'float')
                     self.VarMdata['channel_number'] = self.writer.FillNcVector(np.arange(1, nchans+1, dtype=np.int32), 'integer')
                     self.units_values['channel_wavenumber'] = ncd.variables['LW_wnum'].getncattr('units')
                     self.units_values['channel_number'] = '1'
-                    self.units_values['scan_position'] = '1'
                     for new_key, old_key in self.LOC_MDATA_MAP.items():
-                        if 'units' in ncd.variables[old_key].ncattrs():
-                            self.units_values[new_key] = ncd.variables[old_key].getncattr('units')
+                        if old_key in ncd.variables:
+                            self.LocMdata[new_key] = np.full(nlocs_max, nc.default_fillvals['f4'], dtype=np.float32)
+                            if 'units' in ncd.variables[old_key].ncattrs():
+                                self.units_values[new_key] = ncd.variables[old_key].getncattr('units')
+                else:
+                    # Check this file uses the same dimensions as the initial file
+                    this_nchans = ncd.dimensions["LWchannel"].size
+                    this_ndetectors = ncd.dimensions["LWdetector"].size
+                    if this_nchans != nchans:
+                        raise RuntimeError(f"Number of channels:{this_nchans} does not match with initial value channels:{nchans}")
+                    if this_ndetectors != ndetectors:
+                        raise RuntimeError(f"Number of detectors:{this_ndetectors} does not match with initial value channels:{ndetectors}")
 
                 # The file contains a single image with a sub-second scan time. We
                 # are currently retaining date-time stamps to the nearest second so
                 # for now just grab the beginning scan time and use that for all locations.
-                # The variables holding the time offset from 1 Jan, 0000 are problematic
-                # since the python datetime package doesn't allow year zero, and it's not
-                # clear how days are coverted over several millinnea. The observation
-                # date and time are also in global attributes and appear to line up with
-                # the file name.
                 obsDate = ncd.getncattr("Observing Beginning Date").split("-")
                 obsTime = ncd.getncattr("Observing Beginning Time").split(":")
                 obsSeconds = timedelta(seconds=int(round(float(obsTime[2]))))
@@ -182,7 +189,8 @@ class LwRadiance:
 
                 # Read metadata
                 for new_key, old_key in self.LOC_MDATA_MAP.items():
-                    self.LocMdata[new_key][nlocs_tot:nlocs_tot+nlocs] = np.asarray(ncd.variables[old_key])[mask]
+                    if old_key in ncd.variables:
+                        self.LocMdata[new_key][nlocs_tot:nlocs_tot+nlocs] = np.asarray(ncd.variables[old_key])[mask]
                 self.LocMdata['scan_position'][nlocs_tot:nlocs_tot+nlocs] = detector_array[mask]  # detector number
 
                 # Read in the long wave radiance
@@ -212,7 +220,7 @@ class LwRadiance:
             self.data[(varname, 'ObsValue')] = self.writer.FillNcVector(obs_vals[ivar, :nlocs_tot], 'float')
             self.data[(varname, 'PreQC')] = self.writer.FillNcVector(np.full(nlocs_tot, 0, dtype=np.int32), 'integer')
             self.data[(varname, 'ObsError')] = self.writer.FillNcVector(np.full(nlocs_tot, 2., dtype=np.float32), 'float')
-        print(f"[GIIRS2IODA] Processed {nlocs_tot} total locs from {numFiles}/{totalFiles} valid files.")
+        print(f"[GIIRS2IODA] Processed {nlocs_tot} total locs from {succFiles}/{totalFiles} valid files.")
 
     def writeIODA(self):
         self.writer.BuildNetcdf(self.data, self.LocMdata, self.VarMdata, self.AttrData, self.units_values)
@@ -238,7 +246,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             'Read SSEC GIIRS long wave radiance file(s) and convert'
-            ' to a concatenated IODA formatted output file.')
+            ' to a concatenated IODA formatted output file converting radiance'
+            ' to brightness-temperature units.')
     )
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
@@ -255,10 +264,9 @@ def main():
         metavar="YYYYMMDDHH", type=str, required=True)
     args = parser.parse_args()
 
-    # Read in the giirs lw radiance
-    lwrad = LwRadiance(args.date, args.output)
-    lwrad.readInFiles(args.input)
-    lwrad.writeIODA()
+    conv = Giirs2Ioda(args.date, args.output)
+    conv.readInFiles(args.input)
+    conv.writeIODA()
 
 
 if __name__ == '__main__':
