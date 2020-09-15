@@ -22,7 +22,6 @@
 #                    )
 
 #target_link_libraries(ingester PRIVATE oops::oops)
-#target_link_libraries(ingester PRIVATE jedi_base::jedi)
 #target_link_libraries(ingester PRIVATE ioda_engines::ioda_engines)
 
 #add_executable(test_ingester.x test_ingester.cpp)
