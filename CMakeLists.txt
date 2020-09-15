@@ -9,13 +9,13 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-project( iodaconv VERSION 0.0.1 LANGUAGES C CXX Fortran )
+project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
 
 ## Configuration
 include(GNUInstallDirs)
 include(CTest)
 
-list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
+list( INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 include( iodaconv_extra_macros )
 
 # Location of .pycodestyle for norm checking within IODA-converters
@@ -99,7 +99,6 @@ endif()
 
 
 include( iodaconv_compiler_flags )
-include_directories( ${IODACONV_INCLUDE_DIRS} ${IODACONV_EXTRA_INCLUDE_DIRS} )
 
 
 ## Sources
