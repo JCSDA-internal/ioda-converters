@@ -53,12 +53,12 @@
   - 2
   - *id001
   - [-1]
-- - latitude_coarse_accuracy@MetaData
+- - latitude@MetaData
   - CLAT
   - 3
   - *id001
   - [-1]
-- - longitude_coarse_accuracy@MetaData
+- - longitude@MetaData
   - CLON
   - 3
   - *id001
