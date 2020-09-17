@@ -316,17 +316,21 @@ add_test(NAME test_iodaconv_tropomi_no2
 # Bufr Ingester tests
 #####################################################################
 
-add_library(bufr_test INTERFACE)
-target_include_directories(bufr_test INTERFACE bufr)
-target_link_libraries(bufr_test INTERFACE ingester)
+#add_executable(test_iodaconv_bufr_bufrdescription.x ${CMAKE_CURRENT_SOURCE_DIR}/bufr/BufrDescription.h)
+#set_target_properties(test_iodaconv_bufr_bufrdescription.x PROPERTIES LINKER_LANGUAGE CXX)
+#target_link_libraries(test_iodaconv_bufr_bufrdescription.x PRIVATE ingester)
+##target_link_libraries(test_iodaconv_bufr_bufrdescription.x INTERFACE bufr)
+#
+#add_test( NAME  test_iodaconv_bufr_bufrdescription
+#          COMMAND --exe test_iodaconv_bufr_bufrdescription.x
+#                        ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufrtest_bufrdescription.yaml)
 
-add_test( NAME  test_iodaconv_bufr_bufrdescription
-          COMMAND test_iodaconv_bufr_bufrdescription
-                  "testinput/bufrtest_bufrdescription.yaml"
-          LIBS bufr_test)
 
-add_test( NAME  test_iodaconv_bufr_bufrparser
-          COMMAND test_iodaconv_bufr_bufrparser
-                  "testinput/bufrtest_bufrdescription.yaml"
-          LIBS bufr_test)
-
+#add_executable(test_iodaconv_bufr_bufrparser.x ${CMAKE_CURRENT_SOURCE_DIR}/bufr/BufrParser.h)
+#set_target_properties(test_iodaconv_bufr_bufrparser.x PROPERTIES LINKER_LANGUAGE CXX)
+#target_link_libraries(test_iodaconv_bufr_bufrparser.x INTERFACE ingester)
+#target_link_libraries(test_iodaconv_bufr_bufrparser.x INTERFACE bufr)
+#
+#add_test( NAME  test_iodaconv_bufr_bufrparser
+#          COMMAND --exe $<TARGET_FILE:test_iodaconv_bufr_bufrparser.x>
+#                        "testinput/bufrtest_bufrdescription.yaml")
