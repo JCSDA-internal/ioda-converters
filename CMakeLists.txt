@@ -75,8 +75,7 @@ else()
 endif()
 
 # IMHO, this checking belongs in src/CMakeLists.txt, not here.
-#if( Eigen3_FOUND AND eckit_FOUND AND oops_FOUND AND jedi_base_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
-if( Eigen3_FOUND AND eckit_FOUND AND oops_FOUND AND jedi_base_FOUND AND bufr_FOUND )
+if( Eigen3_FOUND AND eckit_FOUND AND oops_FOUND AND jedi_base_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
     set(iodaconv_bufr_ENABLED True)
     message(STATUS "Found: Eigen3")
     message(STATUS "Found: eckit")
