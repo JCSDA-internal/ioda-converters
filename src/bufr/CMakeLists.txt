@@ -45,14 +45,8 @@ add_library(ingester SHARED ${_ingester_srcs})
 target_link_libraries( ingester PUBLIC Eigen3::Eigen )
 target_link_libraries( ingester PUBLIC eckit )
 target_link_libraries( ingester PUBLIC ${oops_LIBRARIES} ) #TODO: Change to "oops::oops" once oops adds namespace support
-#target_link_libraries( ingester PUBLIC ioda_engines )
+target_link_libraries( ingester PUBLIC ioda_engines )
 target_link_libraries( ingester PUBLIC bufr::bufr_4_DA )
-
-set (IODA_ENGINES_PATH ${CMAKE_PREFIX_PATH}/ioda-engines)
-include_directories(${IODA_ENGINES_PATH}/include)
-target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/lib/libioda-engines.dylib)
-target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/lib/libHH.dylib)
-target_link_libraries(ingester PRIVATE ${IODA_ENGINES_PATH}/lib/libjedi.dylib)
 
 target_include_directories(ingester PUBLIC
                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
