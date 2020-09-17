@@ -63,26 +63,38 @@ namespace Ingester
             EXPECT(description.getMnemonicSets().size() == 0);
             EXPECT(description.filepath() == dummyFilePath);
 
-            auto set1MnemonicStr = "SAID FOVN YEAR MNTH DAYS HOUR MINU SECO CLAT CLON CLATH CLONH HOLS";
-            auto set2MnemonicStr = "SAZA SOZA BEARAZ SOLAZI";
-            auto set3MnemonicStr = "TMBR";
+            std::vector<std::string> set1Mnemonic = {"SAID",
+                                                     "FOVN",
+                                                     "YEAR",
+                                                     "MNTH",
+                                                     "DAYS",
+                                                     "HOUR",
+                                                     "MINU",
+                                                     "SECO",
+                                                     "CLAT",
+                                                     "CLON",
+                                                     "CLATH",
+                                                     "CLONH",
+                                                     "HOLS"};
+            std::vector<std::string> set2Mnemonic = {"SAZA", "SOZA", "BEARAZ", "SOLAZI"};
+            std::vector<std::string> set3Mnemonic = {"TMBR"};
 
-            auto set1 = BufrMnemonicSet(set1MnemonicStr, {1});
-            auto set2 = BufrMnemonicSet(set2MnemonicStr, {1});
-            auto set3 = BufrMnemonicSet(set3MnemonicStr, oops::parseIntSet("1-15"));
+            auto set1 = Ingester::BufrMnemonicSet(set1Mnemonic, {1});
+            auto set2 = Ingester::BufrMnemonicSet(set2Mnemonic, {1});
+            auto set3 = Ingester::BufrMnemonicSet(set3Mnemonic, oops::parseIntSet("1-15"));
 
             description.addMnemonicSet(set1);
             description.addMnemonicSet(set2);
             description.addMnemonicSet(set3);
 
-            EXPECT(description.getMnemonicSets().front().getMnemonicStr() == set1MnemonicStr);
+            EXPECT(description.getMnemonicSets().front().getMnemonics() == set1Mnemonic);
         }
 
         class BufrDescription : public oops::Test
         {
          public:
-            BufrDescription() {}
-            virtual ~BufrDescription() {}
+            BufrDescription() = default;
+            virtual ~BufrDescription() = default;
          private:
             std::string testid() const override { return "ingester::test::BufrParser"; }
             void register_tests() const override
