@@ -1570,15 +1570,12 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         if(self.sensor != 'ompslp'):
-          ncout.createDimension("nlevs", self.df.dimensions["mass_concentration_of_ozone_in_air_arr_dim"].size)
+            ncout.createDimension("nlevs", self.df.dimensions["mass_concentration_of_ozone_in_air_arr_dim"].size)
         else:
-          ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+            ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
-            if self.sensor == "ompslp":
-              print ("vname=",vname)
-              print("geovals_vars.keys()=",geovals_vars.keys())
             if vname in geovals_metadata_dict.keys():
                 dims = ("nlocs",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
@@ -1591,8 +1588,6 @@ class Ozone(BaseGSI):
                     dims = ("nlocs", "nlevsp1")
                 else:
                     dims = ("nlocs", "nlevs")
-                if self.sensor == "ompslp":
-                  print("vname=",vname)
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
@@ -1629,7 +1624,7 @@ class Ozone(BaseGSI):
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
         if(self.sensor == "ompslp"):
-          vname = "mixing_ratio_ozone_in_air"
+            vname = "mixing_ratio_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
         varDict[vname]['qcKey'] = vname, writer.OqcName()
