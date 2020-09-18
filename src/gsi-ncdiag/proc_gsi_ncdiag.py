@@ -89,8 +89,11 @@ def run_oz_geo(ozfile, outdir):
     print("Processing:"+str(ozfile))
     startt = time.time()
     Diag = gsid.Ozone(ozfile)
+    print("Label A1")
     Diag.read()
+    print("Label A2")
     Diag.toGeovals(outdir)
+    print("Label A3")
     print("Time (GEO) %s: %.3g sec" % (ozfile, time.time() - startt))
     return 0
 
