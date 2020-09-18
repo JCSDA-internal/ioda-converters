@@ -316,21 +316,10 @@ add_test(NAME test_iodaconv_tropomi_no2
 # Bufr Ingester tests
 #####################################################################
 
-include_directories(${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/bufr)
+#if(iodaconv_bufr_ENABLED)
+#    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
+#                      SOURCES bufr/TestBufrDescription.cpp
+#                      ARGS    "testinput/bufrtest_bufrdescription.yaml"
+#                      LIBS    eckit oops iodaconv::ingester )
+#endif()
 
-function (add_bufr_test)
-    cmake_parse_arguments( ARG_PREFIX "" "TARGET;MAIN;CONFIG" "SOURCES" ${ARGN})
-
-    list(TRANSFORM ARG_PREFIX_SOURCES PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/)
-    add_executable(${ARG_PREFIX_TARGET}.x ${ARG_PREFIX_SOURCES})
-    target_link_libraries(${ARG_PREFIX_TARGET}.x PRIVATE ingester)
-
-    add_test( NAME  ${ARG_PREFIX_TARGET}
-            COMMAND --exe ${ARG_PREFIX_TARGET}.x
-            ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_PREFIX_CONFIG})
-endfunction()
-
-add_bufr_test(TARGET test_iodaconv_bufr_bufrdescription
-              CONFIG testinput/bufrtest_bufrdescription.yaml
-              SOURCES bufr/BufrDescription.h
-                      mains/TestBufrDescription.cpp)

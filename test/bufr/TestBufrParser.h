@@ -21,11 +21,11 @@
 #include "oops/util/Expect.h"
 #include "test/TestEnvironment.h"
 
-#include "bufr/BufrParser/BufrDescription.h"
-#include "bufr/BufrParser/BufrMnemonicSet.h"
-#include "bufr/BufrParser/BufrParser.h"
-#include "bufr/BufrParser/BufrTypes.h"
-#include "bufr/DataContainer.h"
+#include "BufrParser/BufrDescription.h"
+#include "BufrParser/BufrMnemonicSet.h"
+#include "BufrParser/BufrParser.h"
+#include "BufrParser/BufrTypes.h"
+#include "DataContainer.h"
 
 
 namespace Ingester

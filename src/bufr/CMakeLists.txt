@@ -40,22 +40,28 @@ list(APPEND _ingester_srcs
   IodaEncoder/IodaDescription.h
 )
 
-add_library(ingester SHARED ${_ingester_srcs})
+list(APPEND _ingester_deps
+  Eigen3::Eigen
+  eckit
+  ${oops_LIBRARIES}cd 
+  ioda_engines
+  bufr::bufr_4_DA
+)
 
-target_link_libraries( ingester PUBLIC Eigen3::Eigen )
-target_link_libraries( ingester PUBLIC eckit )
-target_link_libraries( ingester PUBLIC ${oops_LIBRARIES} ) #TODO: Change to "oops::oops" once oops adds namespace support
-target_link_libraries( ingester PUBLIC ioda_engines )
-target_link_libraries( ingester PUBLIC bufr::bufr_4_DA )
-
-target_include_directories(ingester PUBLIC
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-                           $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+ecbuild_add_library( TARGET   ingester
+                     SOURCES  ${_ingester_srcs}
+                     LIBS     ${_ingester_deps}
+                     INSTALL_HEADERS LISTED
+                     HEADER_DESTINATION ${INSTALL_INCLUDEDIR}/bufr
+                     LINKER_LANGUAGE CXX
+                    )
+add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 
 add_executable(test_ingester.x test_ingester.cpp)
-target_link_libraries(test_ingester.x PRIVATE ingester)
+target_link_libraries(test_ingester.x PRIVATE ${PROJECT_NAME}::ingester)
 
+#add_executable(convertBufrToIoda.x main.cpp)
+#target_link_libraries(convertBufrToIoda.x PRIVATE ${PROJECT_NAME}::ingester)
 
-#Add NORM checking test
-add_test(NAME iodaconv_bufr_coding_norms
-         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.sh ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME ${PROJECT_NAME}_bufr_coding_norms
+COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.sh --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})
