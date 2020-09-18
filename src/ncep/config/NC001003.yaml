@@ -43,12 +43,12 @@
   - 2
   - *id001
   - [-1]
-- - latitude_coarse_accuracy@MetaData
+- - latitude@MetaData
   - CLAT
   - 3
   - *id001
   - [-1]
-- - longitude_coarse_accuracy@MetaData
+- - longitude@MetaData
   - CLON
   - 3
   - *id001
@@ -113,7 +113,7 @@
   - 2
   - *id001
   - [-1]
-- - ind_type_of_station_operation_past/present_weather@MetaData
+- - ind_type_of_station_operation_past_present_weather@MetaData
   - ITSO
   - 2
   - *id001
@@ -123,7 +123,7 @@
   - 2
   - *id001
   - [-1]
-- - indic_inclusion/omission_of_prec@MetaData
+- - indic_inclusion_omission_of_prec@MetaData
   - INPC
   - 2
   - *id001
@@ -138,7 +138,7 @@
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_wind@MetaData
+- - sdmedit_quips_quality_mark_for_wind@MetaData
   - QMWN
   - 2
   - *id001
@@ -153,17 +153,17 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_temperature@MetaData
+- - sdmedit_quips_quality_mark_for_temperature@MetaData
   - QMAT
   - 2
   - *id001
   - [-1]
-- - temperature/dry_bulb_temperature@ObsValue
+- - temperature_dry_bulb_temperature@ObsValue
   - TMDB
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_moisture@MetaData
+- - sdmedit_quips_quality_mark_for_moisture@MetaData
   - QMDD
   - 2
   - *id001
@@ -178,7 +178,7 @@
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_sea_surface_temperature@MetaData
+- - sdmedit_quips_quality_mark_for_sea_surface_temperature@MetaData
   - QMST
   - 2
   - *id001
@@ -188,7 +188,7 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_pressure@MetaData
+- - sdmedit_quips_quality_mark_for_pressure@MetaData
   - QMPR
   - 2
   - *id001
@@ -238,7 +238,7 @@
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_wave_height@MetaData
+- - sdmedit_quips_quality_mark_for_wave_height@MetaData
   - QMWH
   - 2
   - *id001
@@ -293,7 +293,7 @@
   - 3
   - *id001
   - [-1]
-- - continuous_wind_speed_in_m/sec@ObsValue
+- - continuous_wind_speed_in_m_sec@ObsValue
   - WDSC
   - 3
   - *id001
@@ -308,7 +308,7 @@
   - 1
   - *id002
   - [-1, 10]
-- - buoy/platform_identifier@MetaData
+- - buoy_platform_identifier@MetaData
   - BPID
   - 3
   - *id001
@@ -378,7 +378,7 @@
   - 3
   - *id001
   - [-1]
-- - total_precipitation/total_water_equivalent@ObsValue
+- - total_precipitation_total_water_equivalent@ObsValue
   - TOPC
   - 3
   - *id001
