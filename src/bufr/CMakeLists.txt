@@ -43,7 +43,7 @@ list(APPEND _ingester_srcs
 list(APPEND _ingester_deps
   Eigen3::Eigen
   eckit
-  ${oops_LIBRARIES}cd 
+  ${oops_LIBRARIES}
   ioda_engines
   bufr::bufr_4_DA
 )
