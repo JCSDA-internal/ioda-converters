@@ -322,6 +322,11 @@ if(iodaconv_bufr_ENABLED)
                       SOURCES bufr/TestBufrDescription.cpp
                       ARGS    "testinput/bufrtest_bufrdescription.yaml"
                       LIBS    eckit oops iodaconv::ingester )
-    
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrparser
+                      SOURCES bufr/TestBufrParser.cpp
+                      ARGS    "testinput/bufrtest_bufrdescription.yaml"
+                      LIBS    eckit oops iodaconv::ingester )
+
 endif()
 

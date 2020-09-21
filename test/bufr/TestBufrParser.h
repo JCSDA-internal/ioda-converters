@@ -16,7 +16,6 @@
 
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/testing/Test.h"
-#include "oops/parallel/mpi/mpi.h"
 #include "oops/runs/Test.h"
 #include "oops/util/Expect.h"
 #include "test/TestEnvironment.h"
@@ -26,6 +25,9 @@
 #include "BufrParser/BufrParser.h"
 #include "BufrParser/BufrTypes.h"
 #include "DataContainer.h"
+
+#include "DataObject/ArrayDataObject.h"
+#include "DataObject/StrVecDataObject.h"
 
 
 namespace Ingester
@@ -77,7 +79,12 @@ namespace Ingester
         void test_parsePartialFile()
         {
             auto data = BufrParserTestFixture::bufrParser()->parse(5);
-            EXPECT(abs(data->get("TMBR")(0, 0) - 248.17) < .01);
+            auto dataObj = data->get("radiance");
+
+            if (auto arrayDataObject = std::dynamic_pointer_cast<ArrayDataObject>(dataObj))
+            {
+                EXPECT(abs(arrayDataObject->get()(0, 0) - 248.17) < .01);
+            }
         }
 
         void test_parseFileIncrementally()
@@ -123,6 +130,10 @@ namespace Ingester
                 {
                     test_parseFileIncrementally();
                 });
+            }
+
+            void clear() const override
+            {
             }
         };
     }  // namespace test
