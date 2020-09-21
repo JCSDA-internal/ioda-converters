@@ -7,7 +7,7 @@
 
 #include "oops/runs/Run.h"
 
-#include "test/bufr/TestBufrDescription.h"
+#include "TestBufrDescription.h"
 
 int main(int argc,  char ** argv)
 {

@@ -110,6 +110,10 @@ namespace Ingester
                     test_createDescriptionManually();
                 });
             }
+
+            void clear() const override
+            {
+            }
         };
     }  // namespace test
 }  // namespace Ingester

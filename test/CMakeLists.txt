@@ -316,10 +316,12 @@ add_test(NAME test_iodaconv_tropomi_no2
 # Bufr Ingester tests
 #####################################################################
 
-#if(iodaconv_bufr_ENABLED)
-#    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
-#                      SOURCES bufr/TestBufrDescription.cpp
-#                      ARGS    "testinput/bufrtest_bufrdescription.yaml"
-#                      LIBS    eckit oops iodaconv::ingester )
-#endif()
+if(iodaconv_bufr_ENABLED)
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
+                      SOURCES bufr/TestBufrDescription.cpp
+                      ARGS    "testinput/bufrtest_bufrdescription.yaml"
+                      LIBS    eckit oops iodaconv::ingester )
+    
+endif()
 
