@@ -20,60 +20,62 @@
 #include "DataContainer.h"
 
 
-void handleBadYaml(std::string additionalMsg="")
+namespace Ingester
 {
-    std::cout << std::string("Must provide a YAML file that maps BUFR to IODA arguments.") << std::cout;
-
-//    if (!additionalMsg.empty())
-//    {
-//        std::cout << additionalMsg << std::cout;
-//    }
-
-    abort();
-}
-
-void parseFile(std::string yamlPath)
-{
-    std::unique_ptr<eckit::YAMLConfiguration>
-        yaml(new eckit::YAMLConfiguration(eckit::PathName(yamlPath)));
-
-    auto inputPath = yaml->getString("inputpath");
-    auto outputPath = yaml->getString("outputpath");
-
-    if (yaml->has("bufr"))
+    void handleBadYaml(std::string additionalMsg = "")
     {
-        auto conf = yaml->getSubConfiguration("bufr");
-        auto bufrDesc = Ingester::BufrDescription(conf, inputPath);
-        auto bufrParser = Ingester::BufrParser(bufrDesc);
+        std::cout << "Must provide a YAML file that maps BUFR to IODA arguments." << std::endl;
 
-        std::shared_ptr<DataContainer> data = bufrParser.parse();
+    if (!additionalMsg.empty())
+    {
+        std::cout << additionalMsg << std::endl;
+    }
 
-        if (yaml->has("ioda"))
+        abort();
+    }
+
+    void parseFile(std::string yamlPath)
+    {
+        std::unique_ptr<eckit::YAMLConfiguration>
+            yaml(new eckit::YAMLConfiguration(eckit::PathName(yamlPath)));
+
+        auto inputPath = yaml->getString("inputpath");
+        auto outputPath = yaml->getString("outputpath");
+
+        if (yaml->has("bufr"))
         {
-            auto iodaDesc = Ingester::IodaDescription(yaml->getSubConfiguration("ioda"),
-                                                      outputPath);
-            auto encoder = Ingester::IodaEncoder(iodaDesc);
-            encoder.encode(data);
-        }
-        else
+            auto conf = yaml->getSubConfiguration("bufr");
+            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrParser = BufrParser(bufrDesc);
+
+            std::shared_ptr<DataContainer> data = bufrParser.parse();
+
+            if (yaml->has("ioda"))
+            {
+                auto iodaDesc = Ingester::IodaDescription(yaml->getSubConfiguration("ioda"),
+                                                          outputPath);
+
+                auto encoder = IodaEncoder(iodaDesc);
+                encoder.encode(data);
+            } else
+            {
+                handleBadYaml("No section named \"ioda\"");
+            }
+        } else
         {
-            handleBadYaml("No section named \"ioda\"");
+            handleBadYaml("No section named \"bufr\"");
         }
     }
-    else
-    {
-        handleBadYaml("No section named \"bufr\"");
-    }
-}
+}  // namespace Ingester
 
 int main(int argc, char **argv)
 {
     if (argc < 1)
     {
-        handleBadYaml();
+        Ingester::handleBadYaml();
     }
 
-    parseFile(std::string(argv[0]));
+    Ingester::parseFile(std::string(argv[1]));
 
     return 0;
 }
