@@ -153,7 +153,8 @@ class Giirs2Ioda:
                     # obs_vals (nchans, nlocs) will contain all observed values
                     # values are appended for each dataset
                     obs_vals = np.full((nchans, nlocs_max), nc.default_fillvals['f4'], dtype=np.float32, order='F')
-                    self.LocMdata['scan_position'] = np.full(nlocs_max, nc.default_fillvals['i4'], dtype=np.int32)
+                    # Note, scan_position is integer valued, but currently must be a float32 to be recognized by UFO/CRTM operator
+                    self.LocMdata['scan_position'] = np.full(nlocs_max, nc.default_fillvals['f4'], dtype=np.float32)
                     self.units_values['scan_position'] = '1'
 
                     self.VarMdata['channel_wavenumber'] = self.writer.FillNcVector(LW_wnum, 'float')
