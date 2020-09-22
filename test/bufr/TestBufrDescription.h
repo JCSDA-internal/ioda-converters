@@ -25,6 +25,7 @@
 
 #include "BufrParser/BufrDescription.h"
 #include "BufrParser/BufrMnemonicSet.h"
+#include "IodaEncoder/IodaDescription.h"
 
 
 namespace Ingester
@@ -35,33 +36,49 @@ namespace Ingester
         {
             const eckit::LocalConfiguration conf(::test::TestEnvironment::config());
 
-            auto datapath = conf.getString("datapath");
+            auto datapath = conf.getString("inputpath");
+            auto outputpath = conf.getString("outputpath");
 
-            const auto& bufrConfs = conf.getSubConfigurations("bufr");
+            auto bufrConfs = conf.getSubConfiguration("bufr");
 
-            if (bufrConfs.size() > 0)
+            if (conf.has("bufr"))
             {
-                auto description = Ingester::BufrDescription(bufrConfs.front(), datapath);
-                unsigned int numConfSets = bufrConfs.front().getSubConfigurations("mnemonicSets").size();
-                EXPECT(description.getMnemonicSets().size() == numConfSets);
+                auto bufrConf = conf.getSubConfiguration("bufr");
+                auto description = Ingester::BufrDescription(bufrConf, datapath);
+
+                EXPECT(description.getMnemonicSets().size() > 0);
+                EXPECT(description.getExportMap().size() > 0);
             }
             else
             {
                 throw eckit::BadValue("Configuration File is missing the \"bufr\" section.");
+            }
+
+            if (conf.has("ioda"))
+            {
+                auto iodaConf = conf.getSubConfiguration("ioda");
+                auto description = Ingester::IodaDescription(iodaConf, datapath);
+
+                EXPECT(description.getScales().size() > 0);
+                EXPECT(description.getVariables().size() > 0);
+            }
+            else
+            {
+                throw eckit::BadValue("Configuration File is missing the \"ioda\" section.");
             }
         }
 
         void test_createDescriptionManually()
         {
             // Create Description
-            auto description = BufrDescription();
+            auto bufrDesc = BufrDescription();
 
             const std::string dummyFilePath = "/some/file/path";
 
-            description.setFilepath(dummyFilePath);
+            bufrDesc.setFilepath(dummyFilePath);
 
-            EXPECT(description.getMnemonicSets().size() == 0);
-            EXPECT(description.filepath() == dummyFilePath);
+            EXPECT(bufrDesc.getMnemonicSets().size() == 0);
+            EXPECT(bufrDesc.filepath() == dummyFilePath);
 
             std::vector<std::string> set1Mnemonic = {"SAID",
                                                      "FOVN",
@@ -83,11 +100,30 @@ namespace Ingester
             auto set2 = Ingester::BufrMnemonicSet(set2Mnemonic, {1});
             auto set3 = Ingester::BufrMnemonicSet(set3Mnemonic, oops::parseIntSet("1-15"));
 
-            description.addMnemonicSet(set1);
-            description.addMnemonicSet(set2);
-            description.addMnemonicSet(set3);
+            bufrDesc.addMnemonicSet(set1);
+            bufrDesc.addMnemonicSet(set2);
+            bufrDesc.addMnemonicSet(set3);
 
-            EXPECT(description.getMnemonicSets().front().getMnemonics() == set1Mnemonic);
+            EXPECT(bufrDesc.getMnemonicSets().size() > 0);
+
+            auto iodaDesc = IodaDescription();
+
+            ScaleDescription scale;
+            scale.name = "scale_name";
+            scale.size = "1";
+
+            VariableDescription varDesc;
+            varDesc.name = "variable_desc";
+            varDesc.source = "source";
+            varDesc.dimensions = {"1"};
+            varDesc.longName = "long_variable_name";
+            varDesc.units = "units";
+
+            iodaDesc.addScale(scale);
+            iodaDesc.addVariable(varDesc);
+
+            EXPECT(iodaDesc.getScales().size() > 0);
+            EXPECT(iodaDesc.getVariables().size() > 0);
         }
 
         class BufrDescription : public oops::Test
