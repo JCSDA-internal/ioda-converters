@@ -5,7 +5,7 @@
 
 
 bufr:
-  filename: "./Data/gdas.t12z.1bmhs.tm00.bufr_d"
+  obsdatain: "./Data/gdas.t12z.1bmhs.tm00.bufr_d"
 
   mnemonicSets:
     - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
@@ -36,7 +36,7 @@ bufr:
       mnemonic: TMBR
 
 ioda:
-  filename: "./testoutput/ioda_encoder_result.nc"
+  obsdataout: "./testoutput/ioda_encoder_result.nc"
 
   dimensions:
     - name: "nlocs"

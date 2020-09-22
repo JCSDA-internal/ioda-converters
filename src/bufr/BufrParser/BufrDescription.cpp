@@ -19,7 +19,7 @@
 #include "Exports/Export.h"
 
 
-static const char* FILENAME = "filename";
+static const char* FILENAME = "obsdatain";
 static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
 static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
 static const char* CHANNEL_NAME = "channels";

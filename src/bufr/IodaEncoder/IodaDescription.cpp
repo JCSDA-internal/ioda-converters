@@ -7,7 +7,7 @@
 
 #include "IodaDescription.h"
 
-static const char* FILENAME_SECTION = "filename";
+static const char* FILENAME_SECTION = "obsdataout";
 static const char* DIMENSIONS_SECTION = "dimensions";
 static const char* VARIABLES_SECTION = "variables";
 
