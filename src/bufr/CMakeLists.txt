@@ -64,4 +64,4 @@ add_executable(convertBufrToIoda.x main.cpp)
 target_link_libraries(convertBufrToIoda.x PRIVATE ${PROJECT_NAME}::ingester)
 
 add_test(NAME ${PROJECT_NAME}_bufr_coding_norms
-COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.sh --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})
+COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})

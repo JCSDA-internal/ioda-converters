@@ -57,11 +57,13 @@ namespace Ingester
 
                 auto encoder = IodaEncoder(iodaDesc);
                 encoder.encode(data);
-            } else
+            }
+            else
             {
                 handleBadYaml("No section named \"ioda\"");
             }
-        } else
+        }
+        else
         {
             handleBadYaml("No section named \"bufr\"");
         }
