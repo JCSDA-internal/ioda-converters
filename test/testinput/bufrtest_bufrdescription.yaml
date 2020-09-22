@@ -3,12 +3,9 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-inputpath: "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12"
-outputpath: "/Users/rmclaren/Temp/"
-
 
 bufr:
-  filename: "gdas.t12z.1bmhs.tm00.bufr_d"
+  filename: "./Data/gdas.t12z.1bmhs.tm00.bufr_d"
 
   mnemonicSets:
     - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
@@ -39,7 +36,7 @@ bufr:
       mnemonic: TMBR
 
 ioda:
-  filename: "ioda_encoder_result.nc"
+  filename: "./testoutput/ioda_encoder_result.nc"
 
   dimensions:
     - name: "nlocs"

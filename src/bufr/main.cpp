@@ -39,21 +39,17 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(yamlPath)));
 
-        auto inputPath = yaml->getString("inputpath");
-        auto outputPath = yaml->getString("outputpath");
-
         if (yaml->has("bufr"))
         {
             auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrDesc = BufrDescription(conf);
             auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<DataContainer> data = bufrParser.parse();
 
             if (yaml->has("ioda"))
             {
-                auto iodaDesc = Ingester::IodaDescription(yaml->getSubConfiguration("ioda"),
-                                                          outputPath);
+                auto iodaDesc = Ingester::IodaDescription(yaml->getSubConfiguration("ioda"));
 
                 auto encoder = IodaEncoder(iodaDesc);
                 encoder.encode(data);

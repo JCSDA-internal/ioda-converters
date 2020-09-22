@@ -21,18 +21,15 @@
 #include "IodaEncoder/IodaEncoder.h"
 #include "DataContainer.h"
 
-
-static const char* CONFIG_FILE =
-    "/Users/rmclaren/Work/ioda-converters/src/bufr/test_ingester.yaml";
-static const char* INPUT_FILE =
-    "/Users/rmclaren/Work/sample-bufr-data/gdas/gdas.20200704/12/gdas.t12z.1bmhs.tm00.bufr_d";
-static const char* OUTPUT_FILE = "/Users/rmclaren/Temp/ioda_encoder_result.nc";
+static const char* CONFIG_FILE = "./testinput/bufrtest_bufrdescription.yaml";
 
 
 namespace Ingester
 {
     void test_createDescriptionManually()
     {
+        static const char* INPUT_FILE = "./Data/gdas.t12z.1bmhs.tm00.bufr_d";
+
         // Create Description
         auto description = BufrDescription();
 
@@ -64,13 +61,10 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto inputPath = yaml->getString("inputpath");
-        auto outputPath = yaml->getString("outputpath");
-
         if (yaml->has("bufr"))
         {
             auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrDesc = BufrDescription(conf);
             auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<DataContainer> data = bufrParser.parse(5);
@@ -84,13 +78,10 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto inputPath = yaml->getString("inputpath");
-        auto outputPath = yaml->getString("outputpath");
-
         if (yaml->has("bufr"))
         {
             auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrDesc = BufrDescription(conf);
             auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<DataContainer> data = bufrParser.parse();
@@ -102,13 +93,10 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto inputPath = yaml->getString("inputpath");
-        auto outputPath = yaml->getString("outputpath");
-
         if (yaml->has("bufr"))
         {
             auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrDesc = BufrDescription(conf);
             auto bufrParser = BufrParser(bufrDesc);
 
             bool endReached = false;
@@ -136,21 +124,17 @@ namespace Ingester
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(CONFIG_FILE)));
 
-        auto inputPath = yaml->getString("inputpath");
-        auto outputPath = yaml->getString("outputpath");
-
         if (yaml->has("bufr"))
         {
             auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf, inputPath);
+            auto bufrDesc = BufrDescription(conf);
             auto bufrParser = BufrParser(bufrDesc);
 
             std::shared_ptr<DataContainer> data = bufrParser.parse();
 
             if (yaml->has("ioda"))
             {
-                auto iodaDesc = IodaDescription(yaml->getSubConfiguration("ioda"),
-                                                outputPath);
+                auto iodaDesc = IodaDescription(yaml->getSubConfiguration("ioda"));
                 auto encoder = IodaEncoder(iodaDesc);
                 encoder.encode(data);
             }

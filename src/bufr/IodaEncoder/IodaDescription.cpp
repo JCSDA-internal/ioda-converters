@@ -25,11 +25,11 @@ static const char* VARIABLE_COORDS = "coordinates";
 
 namespace Ingester
 {
-    IodaDescription::IodaDescription(const eckit::Configuration& conf, const std::string& basepath)
+    IodaDescription::IodaDescription(const eckit::Configuration& conf)
     {
-        if (conf.has(FILENAME_SECTION) && !basepath.empty())
+        if (conf.has(FILENAME_SECTION))
         {
-            filepath_ = basepath + "/" + conf.getString(FILENAME_SECTION);
+            filepath_ = conf.getString(FILENAME_SECTION);
         }
         else
         {

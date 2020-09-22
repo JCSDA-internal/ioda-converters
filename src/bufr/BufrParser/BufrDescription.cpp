@@ -19,13 +19,6 @@
 #include "Exports/Export.h"
 
 
-static const char* PATH_SEPERATOR =
-#if defined _WIN32 || defined __CYGWIN__
-    "\\";
-#else
-    "/";
-#endif
-
 static const char* FILENAME = "filename";
 static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
 static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
@@ -37,9 +30,9 @@ static const char* MNEMONIC_NAME = "mnemonic";
 
 namespace Ingester
 {
-    BufrDescription::BufrDescription(const eckit::Configuration &conf, const std::string &basePath)
+    BufrDescription::BufrDescription(const eckit::Configuration &conf)
     {
-        setFilepath(basePath + std::string(PATH_SEPERATOR) + conf.getString(FILENAME));
+        setFilepath(conf.getString(FILENAME));
 
         for (const auto& mnemonicSetConf : conf.getSubConfigurations(MNEMONIC_SETS_YAML_SECTION))
         {

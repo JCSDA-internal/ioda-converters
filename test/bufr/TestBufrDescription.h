@@ -44,7 +44,7 @@ namespace Ingester
             if (conf.has("bufr"))
             {
                 auto bufrConf = conf.getSubConfiguration("bufr");
-                auto description = Ingester::BufrDescription(bufrConf, datapath);
+                auto description = Ingester::BufrDescription(bufrConf);
 
                 EXPECT(description.getMnemonicSets().size() > 0);
                 EXPECT(description.getExportMap().size() > 0);
@@ -57,7 +57,7 @@ namespace Ingester
             if (conf.has("ioda"))
             {
                 auto iodaConf = conf.getSubConfiguration("ioda");
-                auto description = Ingester::IodaDescription(iodaConf, datapath);
+                auto description = Ingester::IodaDescription(iodaConf);
 
                 EXPECT(description.getScales().size() > 0);
                 EXPECT(description.getVariables().size() > 0);

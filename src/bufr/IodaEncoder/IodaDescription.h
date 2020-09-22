@@ -46,8 +46,7 @@ namespace Ingester
     {
      public:
         IodaDescription() = default;
-        explicit IodaDescription(const eckit::Configuration& conf,
-                                 const std::string& basepath = "");
+        explicit IodaDescription(const eckit::Configuration& conf);
 
         void addScale(ScaleDescription scale);
         void addVariable(VariableDescription variable);

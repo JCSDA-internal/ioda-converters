@@ -23,7 +23,7 @@ namespace Ingester
     {
      public:
         BufrDescription() = default;
-        explicit BufrDescription(const eckit::Configuration& conf, const std::string& basePath);
+        explicit BufrDescription(const eckit::Configuration& conf);
 
         void addMnemonicSet(BufrMnemonicSet mnemonicSet);
         void addExport(std::string key, std::shared_ptr<Export> bufrExport);
