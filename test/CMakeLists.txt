@@ -11,7 +11,6 @@ list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
-  testinput/giirs_ssec.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
@@ -216,12 +215,12 @@ add_test(NAME test_iodaconv_ncep_bufr
 # SSEC GIIRS converters
 #===============================================================================
 
-add_test( NAME test_iodaconv_giirs_tb
+add_test( NAME test_iodaconv_giirs_ssec2ioda
           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
              "${CMAKE_BINARY_DIR}/bin/giirs_ssec2ioda.py
-             -i testinput/giirs_ssec.nc
+             -i testinput/giirs_fy4a-test.nc
              -o testrun/giirs_ssec_ioda.nc4
-             -d 2020080100"
+             -d 2017030208"
              giirs_ssec_ioda.nc4)
 
 add_test(NAME test_iodaconv_giirs_lw
