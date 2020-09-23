@@ -7,8 +7,10 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-if( OpenMP_Fortran_FOUND )
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} OpenMP::OpenMP_Fortran")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -fbacktrace")
+
+if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
 endif()
 
 ####################################################################
@@ -21,13 +23,13 @@ set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -funroll-all-loops -finline-functions")
 # DEBUG FLAGS
 ####################################################################
 
-set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace")
+set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow")
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
 ####################################################################
 
-set(CMAKE_Fortran_FLAGS_BIT "-O2 -funroll-all-loops -finline-functions")
+set(CMAKE_Fortran_FLAGS_BIT "-O2")
 
 ####################################################################
 # LINK FLAGS

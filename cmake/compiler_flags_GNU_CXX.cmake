@@ -7,7 +7,7 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated-declarations")
 
 ####################################################################
 # RELEASE FLAGS
@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 # DEBUG FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0")
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
