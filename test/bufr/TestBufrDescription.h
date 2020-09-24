@@ -36,9 +36,6 @@ namespace Ingester
         {
             const eckit::LocalConfiguration conf(::test::TestEnvironment::config());
 
-            auto datapath = conf.getString("inputpath");
-            auto outputpath = conf.getString("outputpath");
-
             auto bufrConfs = conf.getSubConfiguration("bufr");
 
             if (conf.has("bufr"))
