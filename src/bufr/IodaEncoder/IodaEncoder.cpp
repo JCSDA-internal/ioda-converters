@@ -16,8 +16,7 @@ namespace Ingester
 {
     IodaEncoder::IodaEncoder(const IodaDescription& description) :
         description_(description),
-        backendType_(description.getFilepath().empty() ? ioda::Engines::BackendNames::ObsStore : \
-                                                         ioda::Engines::BackendNames::Hdf5File)
+        backendType_(description.getBackend())
     {
     }
 
@@ -25,13 +24,18 @@ namespace Ingester
                                        bool append)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
-        backendParams.fileName = description_.getFilepath();
+
+        if (backendType_ == ioda::Engines::BackendNames::Hdf5File)
+        {
+            backendParams.fileName = description_.getFilepath();
+        }
+
         backendParams.openMode = ioda::Engines::BackendOpenModes::Read_Write;
         backendParams.createMode = ioda::Engines::BackendCreateModes::Truncate_If_Exists;
         backendParams.action = append ? ioda::Engines::BackendFileActions::Open : \
                                         ioda::Engines::BackendFileActions::Create;
         backendParams.flush = true;
-        backendParams.allocBytes = dataContainer->size() * 8;
+        backendParams.allocBytes = dataContainer->size() * 17;
 
         auto rootGroup = ioda::Engines::constructBackend(backendType_, backendParams);
 
@@ -74,6 +78,8 @@ namespace Ingester
             }
 
             auto data = dataContainer->get(varDesc.source);
+
+            std::cout << varDesc.name << std::endl;
             auto var = data->createVariable(obsGroup, varDesc.name, dimensions);
 
             var.atts.add<std::string>("long_name", { varDesc.longName }, {1});

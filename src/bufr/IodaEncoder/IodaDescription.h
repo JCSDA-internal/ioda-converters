@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
-
+#include "ioda/Engines/Factory.h"
 
 namespace Ingester
 {
@@ -51,13 +51,20 @@ namespace Ingester
         void addScale(ScaleDescription scale);
         void addVariable(VariableDescription variable);
 
+        inline void setBackend(ioda::Engines::BackendNames backend) { backend_ = backend; }
+        inline void setFilepath(std::string filepath) { filepath_ = filepath; }
+
+        inline ioda::Engines::BackendNames getBackend() const { return backend_; }
+        inline std::string getFilepath() const { return filepath_; }
         inline ScaleDescriptions getScales() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
-        inline std::string getFilepath() const { return filepath_; }
 
      private:
+        ioda::Engines::BackendNames backend_;
         std::string filepath_;
         ScaleDescriptions dimensions_;
         VariableDescriptions variables_;
+
+        void setBackend(std::string backend);
     };
 }  // namespace Ingester

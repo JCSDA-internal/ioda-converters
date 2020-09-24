@@ -7,6 +7,9 @@
 
 #include "IodaDescription.h"
 
+#include <iostream>
+
+static const char* BACKEND_SECTION = "backend";
 static const char* FILENAME_SECTION = "obsdataout";
 static const char* DIMENSIONS_SECTION = "dimensions";
 static const char* VARIABLES_SECTION = "variables";
@@ -27,13 +30,31 @@ namespace Ingester
 {
     IodaDescription::IodaDescription(const eckit::Configuration& conf)
     {
+        if (conf.has(BACKEND_SECTION))
+        {
+            setBackend(conf.getString(BACKEND_SECTION));
+        }
+        else
+        {
+            std::cout << "Forgot to specify the ioda::backend." << std::endl;
+            abort();
+        }
+
         if (conf.has(FILENAME_SECTION))
         {
             filepath_ = conf.getString(FILENAME_SECTION);
         }
         else
         {
-            filepath_ = "";
+            if (backend_ == ioda::Engines::BackendNames::ObsStore)
+            {
+                filepath_ = "";
+            }
+            else
+            {
+                std::cout << "Filename is required with the configured backend." << std::endl;
+                abort();
+            }
         }
 
         for (const auto& scaleConf : conf.getSubConfigurations(DIMENSIONS_SECTION))
@@ -88,5 +109,22 @@ namespace Ingester
     void IodaDescription::addVariable(VariableDescription variable)
     {
         variables_.push_back(variable);
+    }
+
+    void IodaDescription::setBackend(std::string backend)
+    {
+        if (backend == "netcdf")
+        {
+            setBackend(ioda::Engines::BackendNames::Hdf5File);
+        }
+        else if (backend == "inmemory" || backend == "in-memory")
+        {
+            setBackend(ioda::Engines::BackendNames::ObsStore);
+        }
+        else
+        {
+            std::cout << "Unknown ioda::backend specified." << std::endl;
+            abort();
+        }
     }
 }  // namespace Ingester
