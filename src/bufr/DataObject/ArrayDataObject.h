@@ -24,7 +24,7 @@ namespace Ingester
                                       std::vector<ioda::Variable> dimensions) final;
         void print() final;
 
-        IngesterArray get() const { return eigArray_; }
+        inline IngesterArray get() const { return eigArray_; }
 
      private:
         const IngesterArray eigArray_;
