@@ -7,9 +7,11 @@
 
 #include <string>
 #include <iostream>
+#include <ostream>
 #include <iomanip>
 
 #include "eckit/config/YAMLConfiguration.h"
+#include "eckit/exception/Exceptions.h"
 #include "eckit/filesystem/PathName.h"
 
 #include "BufrParser/BufrDescription.h"
@@ -24,14 +26,15 @@ namespace Ingester
 {
     void handleBadYaml(std::string additionalMsg = "")
     {
-        std::cout << "Must provide a YAML file that maps BUFR to IODA arguments." << std::endl;
+        std::ostringstream errorStr;
+        errorStr << "Must provide a YAML file that maps BUFR to IODA arguments." << "\n";
 
-    if (!additionalMsg.empty())
-    {
-        std::cout << additionalMsg << std::endl;
-    }
+        if (!additionalMsg.empty())
+        {
+            errorStr << additionalMsg;
+        }
 
-        abort();
+        throw eckit::BadParameter(errorStr.str());
     }
 
     void parseFile(std::string yamlPath)

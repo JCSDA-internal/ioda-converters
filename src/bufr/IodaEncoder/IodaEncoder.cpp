@@ -78,8 +78,6 @@ namespace Ingester
             }
 
             auto data = dataContainer->get(varDesc.source);
-
-            std::cout << varDesc.name << std::endl;
             auto var = data->createVariable(obsGroup, varDesc.name, dimensions);
 
             var.atts.add<std::string>("long_name", { varDesc.longName }, {1});

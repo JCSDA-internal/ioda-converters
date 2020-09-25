@@ -9,6 +9,9 @@
 
 #include <iostream>
 
+#include "eckit/exception/Exceptions.h"
+
+
 static const char* BACKEND_SECTION = "backend";
 static const char* FILENAME_SECTION = "obsdataout";
 static const char* DIMENSIONS_SECTION = "dimensions";
@@ -36,8 +39,7 @@ namespace Ingester
         }
         else
         {
-            std::cout << "Forgot to specify the ioda::backend." << std::endl;
-            abort();
+            throw eckit::BadParameter("Forgot to specify the ioda::backend.");
         }
 
         if (conf.has(FILENAME_SECTION))
@@ -52,8 +54,7 @@ namespace Ingester
             }
             else
             {
-                std::cout << "Filename is required with the configured backend." << std::endl;
-                abort();
+                throw eckit::BadParameter("Filename is required with the configured backend.");
             }
         }
 
@@ -123,8 +124,7 @@ namespace Ingester
         }
         else
         {
-            std::cout << "Unknown ioda::backend specified." << std::endl;
-            abort();
+            throw eckit::BadParameter("Unknown ioda::backend specified.");
         }
     }
 }  // namespace Ingester

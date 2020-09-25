@@ -27,7 +27,7 @@ bufr:
     longitude:
       mnemonic: CLON
       transforms:
-        - offset: -180
+        - offset: 0
 
     latitude:
       mnemonic: CLAT
