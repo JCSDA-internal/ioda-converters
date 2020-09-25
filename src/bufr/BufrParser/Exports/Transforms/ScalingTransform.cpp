@@ -12,8 +12,8 @@ namespace Ingester
     {
     }
 
-    void ScalingTransform::apply(std::shared_ptr<ArrayDataObject> array)
+    void ScalingTransform::apply(IngesterArray& array)
     {
-        return array * scaling_;
+        array = array * scaling_;
     }
 }  // namespace Ingester

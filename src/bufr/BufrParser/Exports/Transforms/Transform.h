@@ -15,7 +15,7 @@ namespace Ingester
     {
     public:
         ~Transform() = default;
-        virtual void apply(std::shared_ptr <ArrayDataObject> array) = 0;
+        virtual void apply(IngesterArray& array) = 0;
     };
 
     typedef std::vector <std::shared_ptr<Transform>> Transforms;

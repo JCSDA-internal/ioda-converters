@@ -18,6 +18,7 @@
 #include "Exports/DatetimeExport.h"
 #include "Exports/Export.h"
 #include "Exports/Transforms/Transform.h"
+#include "Exports/Transforms/TransformBuilder.h"
 
 
 static const char* FILENAME = "obsdatain";
@@ -27,8 +28,6 @@ static const char* CHANNEL_NAME = "channels";
 static const char* EXPORT_NAME = "exports";
 static const char* DATETIME_NAME = "datetime";
 static const char* MNEMONIC_NAME = "mnemonic";
-static const char* TRANSFORM_NAME = "transform";
-
 
 namespace Ingester
 {
@@ -64,14 +63,9 @@ namespace Ingester
             }
             else if (subconf.has(MNEMONIC_NAME))
             {
-                Transforms transforms;
-//                if (subconf.has(TRANSFORM_NAME))
-//                {
-//                    for
-//                    transforms.push_back()
-//                }
-
-                addExport(key, std::make_shared<MnemonicExport>(subconf.getString(MNEMONIC_NAME), transforms));
+                Transforms transforms = TransformBuilder::makeTransforms(subconf);
+                addExport(key, std::make_shared<MnemonicExport>(subconf.getString(MNEMONIC_NAME),
+                                                                transforms));
             }
         }
     }
@@ -85,5 +79,4 @@ namespace Ingester
     {
         exportMap_.insert({key, bufrExport});
     }
-
 }  // namespace Ingester

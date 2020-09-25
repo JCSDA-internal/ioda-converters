@@ -12,9 +12,9 @@ namespace Ingester
     {
     }
 
-    void OffsetTransform::apply(std::shared_ptr<ArrayDataObject> array)
+    void OffsetTransform::apply(IngesterArray& array)
     {
-        array = array->get().get() + offset_;
+        array = array + offset_;
     }
 
 }  // namespace Ingester

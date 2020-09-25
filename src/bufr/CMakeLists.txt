@@ -34,6 +34,13 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/DatetimeExport.cpp
   BufrParser/Exports/MnemonicExport.h
   BufrParser/Exports/MnemonicExport.cpp
+  BufrParser/Exports/Transforms/Transform.h
+  BufrParser/Exports/Transforms/OffsetTransform.h
+  BufrParser/Exports/Transforms/OffsetTransform.cpp
+  BufrParser/Exports/Transforms/ScalingTransform.h
+  BufrParser/Exports/Transforms/ScalingTransform.cpp
+  BufrParser/Exports/Transforms/TransformBuilder.h
+  BufrParser/Exports/Transforms/TransformBuilder.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp

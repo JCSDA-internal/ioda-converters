@@ -15,7 +15,7 @@ namespace Ingester
         explicit OffsetTransform(double offset);
         ~OffsetTransform() = default;
 
-        void apply(std::shared_ptr<ArrayDataObject> array) override;
+        void apply(IngesterArray& array) override;
 
      private:
         const double offset_;

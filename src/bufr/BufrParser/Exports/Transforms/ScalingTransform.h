@@ -15,7 +15,7 @@ namespace Ingester
         explicit ScalingTransform(double scaling_);
         ~ScalingTransform() = default;
 
-        void apply(std::shared_ptr<ArrayDataObject> array) override;
+        void apply(IngesterArray& array) override;
 
      private:
         const double scaling_;

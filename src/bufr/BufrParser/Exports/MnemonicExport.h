@@ -32,6 +32,6 @@ namespace Ingester
         std::string mnemonic_;
         Transforms transforms_;
 
-        void applyTransforms(std::shared_ptr<ArrayDataObject> data);
+        void applyTransforms(IngesterArray& data);
     };
 }  // namespace Ingester
