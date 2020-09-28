@@ -41,7 +41,6 @@ namespace Ingester
         ioda::VariableCreationParameters params;
         params.chunk = true;
         params.compressWithGZIP();
-        params.setFillValue<std::string>("");
 
         return params;
     }

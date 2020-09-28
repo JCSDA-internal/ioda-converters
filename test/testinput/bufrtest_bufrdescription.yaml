@@ -35,7 +35,7 @@ bufr:
       mnemonic: TMBR
 
 ioda:
-  backend: netcdf
+  backend: inmemory
   obsdataout: "./testoutput/ioda_encoder_result.nc"
 
   dimensions:
@@ -45,11 +45,11 @@ ioda:
       size: "15" #explicit info
 
   variables:
-#    - name: "datetime@MetaData"
-#      source: "timestamp"
-#      dimensions: [ "nlocs" ]
-#      longName: "Datetime"
-#      units: "datetime"
+    - name: "datetime@MetaData"
+      source: "timestamp"
+      dimensions: [ "nlocs" ]
+      longName: "Datetime"
+      units: "datetime"
 
     - name: "latitude@MetaData"
       source: "latitude"
