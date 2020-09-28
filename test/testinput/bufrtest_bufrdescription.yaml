@@ -35,7 +35,7 @@ bufr:
       mnemonic: TMBR
 
 ioda:
-  backend: inmemory
+  backend: netcdf
   obsdataout: "./testoutput/ioda_encoder_result.nc"
 
   dimensions:
