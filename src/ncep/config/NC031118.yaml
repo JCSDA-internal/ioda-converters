@@ -108,8 +108,3 @@
   - 2
   - *id001
   - [-1]
-- - raw_report_string@MetaData
-  - RRSTG
-  - 1
-  - [nlocs, nstring]
-  - [-1, 10]
