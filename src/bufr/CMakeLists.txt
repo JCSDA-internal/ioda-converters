@@ -7,6 +7,8 @@ list(APPEND _ingester_srcs
   IngesterTypes.h
   DataContainer.h
   DataContainer.cpp
+  Parser.h
+  ParserFactory.h
   DataObject/DataObject.h
   DataObject/StrVecDataObject.h
   DataObject/StrVecDataObject.cpp

@@ -13,6 +13,9 @@
 
 #include "Eigen/Dense"
 
+#include "eckit/config/LocalConfiguration.h"
+
+#include "Parser.h"
 #include "BufrTypes.h"
 #include "BufrDescription.h"
 
@@ -22,13 +25,15 @@ namespace Ingester
     class BufrMnemonicSet;
     class DataContainer;
 
-    class BufrParser
+    class BufrParser final : public Parser
     {
      public:
         explicit BufrParser(BufrDescription& description);
+        explicit BufrParser(const eckit::Configuration& conf);
+
         ~BufrParser();
-        std::shared_ptr<DataContainer> parse(const size_t maxMsgsToParse = 0);
-        void reset();
+        std::shared_ptr<DataContainer> parse(const size_t maxMsgsToParse = 0) final;
+        void reset() final;
 
      private:
         BufrDescription description_;

@@ -21,62 +21,56 @@
 #include "IodaEncoder/IodaEncoder.h"
 #include "DataContainer.h"
 
+#include "ParserFactory.h"
+
 
 namespace Ingester
 {
-    void handleBadYaml(std::string additionalMsg = "")
-    {
-        std::ostringstream errorStr;
-        errorStr << "Must provide a YAML file that maps BUFR to IODA arguments." << "\n";
-
-        if (!additionalMsg.empty())
-        {
-            errorStr << additionalMsg;
-        }
-
-        throw eckit::BadParameter(errorStr.str());
-    }
-
-    void parseFile(std::string yamlPath)
+    void parse(std::string yamlPath)
     {
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(yamlPath)));
 
-        if (yaml->has("bufr"))
+        if (yaml->has("observations"))
         {
-            auto conf = yaml->getSubConfiguration("bufr");
-            auto bufrDesc = BufrDescription(conf);
-            auto bufrParser = BufrParser(bufrDesc);
-
-            std::shared_ptr<DataContainer> data = bufrParser.parse();
-
-            if (yaml->has("ioda"))
+            for (const auto& obsConf : yaml->getSubConfigurations("observations"))
             {
-                auto iodaDesc = Ingester::IodaDescription(yaml->getSubConfiguration("ioda"));
+                if (!obsConf.has("obs space") ||
+                    !obsConf.has("ioda"))
+                {
+                    eckit::BadParameter(
+                        "Incomplete obs found. All obs must have a obs space and ioda.");
+                }
 
-                auto encoder = IodaEncoder(iodaDesc);
+                auto parser = ParserFactory::create(obsConf.getSubConfiguration("obs space"));
+                auto data = parser->parse();
+
+                auto encoder = IodaEncoder(IodaDescription(obsConf.getSubConfiguration("ioda")));
                 encoder.encode(data);
-            }
-            else
-            {
-                handleBadYaml("No section named \"ioda\"");
             }
         }
         else
         {
-            handleBadYaml("No section named \"bufr\"");
+            eckit::BadParameter("No section named \"observations\"");
         }
     }
+
+    void registerParsers()
+    {
+        ParserFactory::registerParser<BufrParser>("bufr");
+    }
 }  // namespace Ingester
+
 
 int main(int argc, char **argv)
 {
     if (argc < 1)
     {
-        Ingester::handleBadYaml();
+        eckit::BadParameter("Missing argument. Must include YAML file path.");
     }
 
-    Ingester::parseFile(std::string(argv[1]));
+    Ingester::registerParsers();
+    Ingester::parse(std::string(argv[1]));
 
     return 0;
 }
