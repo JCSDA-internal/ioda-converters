@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <ostream>
 
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
@@ -44,11 +45,13 @@ namespace Ingester
         {
             if (!conf.has(PARSER_NAME))
             {
-                throw eckit::BadParameter("Parser configuration has no Name.");
+                throw eckit::BadParameter("Parser configuration has no \"name\".");
             }
             else if (getMakers().find(conf.getString(PARSER_NAME)) == getMakers().end())
             {
-                throw eckit::BadParameter("Trying to use unregistered parser.");
+                std::ostringstream errStr;
+                errStr << "Trying to use unregistered parser named " << conf.getString(PARSER_NAME);
+                throw eckit::BadParameter(errStr.str());
             }
 
             return getMakers()[conf.getString(PARSER_NAME)]->make(conf);
@@ -57,6 +60,16 @@ namespace Ingester
         template<class T>
         static void registerParser(std::string name)
         {
+            if (getMakers().find(name) != getMakers().end())
+            {
+                std::ostringstream errStr;
+                errStr << "Trying to add parser with a duplicate name ";
+                errStr << conf.getString(PARSER_NAME);
+                errStr << ". Name must be unique.";
+
+                throw eckit::BadParameter(errStr.str());
+            }
+
             getMakers().insert({name, std::make_unique<ParserMaker<T>>()});
         }
 
