@@ -33,7 +33,7 @@ observations:
 
         latitude:
           mnemonic: CLAT
-          
+
         radiance:
           mnemonic: TMBR
 

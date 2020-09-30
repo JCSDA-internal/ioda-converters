@@ -10,6 +10,7 @@
 #define ECKIT_TESTING_SELF_REGISTER_CASES 0
 
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,6 +26,7 @@
 #include "BufrParser/BufrParser.h"
 #include "BufrParser/BufrTypes.h"
 #include "DataContainer.h"
+#include "ParserFactory.h"
 
 #include "DataObject/ArrayDataObject.h"
 #include "DataObject/StrVecDataObject.h"
@@ -37,10 +39,10 @@ namespace Ingester
         class BufrParserTestFixture : private boost::noncopyable
         {
          public:
-            static std::shared_ptr<BufrParser>& bufrParser() { return getInstance().bufrParser_; }
+            static std::shared_ptr<Parser>& bufrParser() { return getInstance().bufrParser_; }
 
          private:
-            std::shared_ptr<BufrParser> bufrParser_;
+            std::shared_ptr<Parser> bufrParser_;
 
             static BufrParserTestFixture& getInstance()
             {
@@ -50,21 +52,37 @@ namespace Ingester
 
             BufrParserTestFixture()
             {
+                registerParser();
+
                 const eckit::LocalConfiguration conf(::test::TestEnvironment::config());
 
-                auto datapath = conf.getString("datapath");
-
-                const auto& bufrConfs = conf.getSubConfigurations("bufr");
-
-                if (bufrConfs.size() > 0)
+                if (conf.has("observations"))
                 {
-                    auto description = Ingester::BufrDescription(bufrConfs.front(), datapath);
-                    bufrParser_ = std::make_shared<Ingester::BufrParser> (description);
+                    auto obsConf = conf.getSubConfigurations("observations").front();
+
+                    if (obsConf.has("obs space") &&
+                        obsConf.getSubConfiguration("obs space").has("name") &&
+                        obsConf.getSubConfiguration("obs space").getString("name") == "bufr")
+                    {
+                        auto bufrConf = obsConf.getSubConfiguration("obs space");
+                        bufrParser_ = ParserFactory::create(bufrConf);
+                    }
+                    else
+                    {
+                        throw eckit::BadValue(
+                            "Configuration File is missing the \"bufr\" section.");
+                    }
                 }
                 else
                 {
-                    throw eckit::BadValue("Configuration File is missing the \"bufr\" section.");
+                    throw eckit::BadValue(
+                        "Configuration File is missing the \"observations\" section.");
                 }
+            }
+
+            void registerParser()
+            {
+                ParserFactory::registerParser<BufrParser>("bufr");
             }
 
             ~BufrParserTestFixture() = default;
