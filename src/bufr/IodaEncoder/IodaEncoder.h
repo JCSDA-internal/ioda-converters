@@ -15,6 +15,8 @@
 #include "ioda/Engines/Factory.h"
 #include "ioda/ObsGroup.h"
 
+#include "eckit/config/LocalConfiguration.h"
+
 
 namespace Ingester
 {
@@ -23,12 +25,13 @@ namespace Ingester
     class IodaEncoder
     {
      public:
+        explicit IodaEncoder(const eckit::Configuration&  conf);
         explicit IodaEncoder(const IodaDescription&  description);
+
         ioda::ObsGroup encode(const std::shared_ptr<DataContainer>& data,
                               bool append = false);
 
      private:
         const IodaDescription description_;
-        const ioda::Engines::BackendNames backendType_;
     };
 }  // namespace Ingester

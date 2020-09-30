@@ -45,7 +45,7 @@ namespace Ingester
                 auto parser = ParserFactory::create(obsConf.getSubConfiguration("obs space"));
                 auto data = parser->parse();
 
-                auto encoder = IodaEncoder(IodaDescription(obsConf.getSubConfiguration("ioda")));
+                auto encoder = IodaEncoder(obsConf.getSubConfiguration("ioda"));
                 encoder.encode(data);
             }
         }

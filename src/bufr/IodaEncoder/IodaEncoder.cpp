@@ -14,9 +14,13 @@
 
 namespace Ingester
 {
+    IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
+        description_(IodaDescription(conf))
+    {
+    }
+
     IodaEncoder::IodaEncoder(const IodaDescription& description) :
-        description_(description),
-        backendType_(description.getBackend())
+        description_(description)
     {
     }
 
@@ -25,7 +29,7 @@ namespace Ingester
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
 
-        if (backendType_ == ioda::Engines::BackendNames::Hdf5File)
+        if (description_.getBackend() == ioda::Engines::BackendNames::Hdf5File)
         {
             backendParams.fileName = description_.getFilepath();
         }
@@ -35,9 +39,9 @@ namespace Ingester
         backendParams.action = append ? ioda::Engines::BackendFileActions::Open : \
                                         ioda::Engines::BackendFileActions::Create;
         backendParams.flush = true;
-        backendParams.allocBytes = dataContainer->size() * 17;
+        backendParams.allocBytes = dataContainer->size();
 
-        auto rootGroup = ioda::Engines::constructBackend(backendType_, backendParams);
+        auto rootGroup = ioda::Engines::constructBackend(description_.getBackend(), backendParams);
 
         // Create Scales
         ioda::NewDimensionScales_t newDims;
