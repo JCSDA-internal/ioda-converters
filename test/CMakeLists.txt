@@ -319,12 +319,12 @@ if(iodaconv_bufr_ENABLED)
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                       SOURCES bufr/TestBufrDescription.cpp
-                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufrtest_bufrdescription.yaml
+                      ARGS ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufr_example.yaml
                       LIBS    eckit oops iodaconv::ingester )
     
 #    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrparser
 #                      SOURCES bufr/TestBufrParser.cpp
-#                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufrtest_bufrdescription.yaml
+#                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufr_example.yaml
 #                      LIBS    eckit oops iodaconv::ingester )
 
 endif()
