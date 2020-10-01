@@ -64,7 +64,7 @@ namespace Ingester
             {
                 std::ostringstream errStr;
                 errStr << "Trying to add parser with a duplicate name ";
-                errStr << conf.getString(PARSER_NAME);
+                errStr << name;
                 errStr << ". Name must be unique.";
 
                 throw eckit::BadParameter(errStr.str());
