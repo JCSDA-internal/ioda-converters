@@ -73,7 +73,7 @@ namespace Ingester
             getMakers().insert({name, std::make_unique<ParserMaker<T>>()});
         }
 
-      private:
+     private:
         static std::map<std::string, std::unique_ptr<ParserMakerBase>>& getMakers()
         {
             static std::map<std::string, std::unique_ptr<ParserMakerBase>> makers;
