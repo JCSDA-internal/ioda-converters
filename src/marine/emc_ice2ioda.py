@@ -30,7 +30,7 @@ class Observation(object):
     def __init__(self, filename, thin, date, writer):
         print('date = ', date)
         global date2
-        date2=int(date.strftime("%Y%m%d"))
+        date2 = int(date.strftime("%Y%m%d"))
         self.filename = filename
         self.thin = thin
         self.date = date
@@ -75,6 +75,7 @@ class Observation(object):
                 self.data[0][locKey][valKey] = vals[i]
                 self.data[0][locKey][errKey] = 0.1
                 self.data[0][locKey][qcKey] = qc[i]
+
 
 vName = "sea_ice_area_fraction"
 
