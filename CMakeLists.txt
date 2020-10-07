@@ -1,4 +1,4 @@
-# (C) Copyright 2018 UCAR.
+# (C) Copyright 2018-2020 UCAR.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -9,17 +9,13 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-set(iodaconv_major 0)
-set(iodaconv_minor 0)
-set(iodaconv_revision 1)
-set(iodaconv_version ${iodaconv_major}.${iodaconv_minor}.${iodaconv_revision})
-project( iodaconv VERSION ${iodaconv_version} LANGUAGES Fortran )
+project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
 
 ## Configuration
 include(GNUInstallDirs)
 include(CTest)
 
-set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH} )
+list( INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 include( iodaconv_extra_macros )
 
 # Location of .pycodestyle for norm checking within IODA-converters
@@ -50,8 +46,12 @@ else()
     include(ecbuild_log) #Required for ecbuild/FindNetCDF.cmake
 endif()
 
+find_package(eckit QUIET)
+find_package(oops QUIET)
+find_package(ioda_engines QUIET)
 find_package(bufr QUIET)
 find_package(NetCDF QUIET COMPONENTS Fortran)
+
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
     set(iodaconv_gnssro_ENABLED True)
     message(STATUS "Found: bufr")
@@ -68,23 +68,37 @@ else()
     message(STATUS "Disabled Component: gnssro")
 endif()
 
-
-## Sources
-# Core components
-add_subdirectory(src/chem)
-add_subdirectory(src/gsi-ncdiag)
-add_subdirectory(src/lib-python)
-add_subdirectory(src/marine)
-add_subdirectory(src/ncep)
-add_subdirectory(src/ssec)
-add_subdirectory(src/wrfda-ncdiag)
-
-# Optional components
-if(iodaconv_gnssro_ENABLED)
-    add_subdirectory(src/gnssro)
+if( eckit_FOUND AND oops_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
+    set(iodaconv_bufr_ENABLED True)
+    message(STATUS "Found: eckit")
+    message(STATUS "Found: oops")
+    message(STATUS "Found: ioda_engines")
+    message(STATUS "Found: bufr")
+    message(STATUS "Enabled Component: bufr")
+else()
+    set(iodaconv_bufr_ENABLED False)
+    if(NOT eckit_FOUND)
+        message(STATUS "NOT-Found: eckit - BUFR converter disabled")
+    endif()
+    if(NOT oops_FOUND)
+        message(STATUS "NOT-Found: oops - BUFR converter disabled")
+    endif()
+    if(NOT ioda_engines_FOUND)
+        message(STATUS "NOT-Found: ioda_engines - BUFR converter disabled")
+    endif()
+    if(NOT bufr_FOUND)
+        message(STATUS "NOT-Found: bufr - BUFR converter disabled")
+    endif()
+    message(STATUS "Disabled Component: bufr")
 endif()
 
-# Auxiliaries
+
+include( iodaconv_compiler_flags )
+
+
+## Sources
+
+add_subdirectory( src )
 add_subdirectory( tools )
 add_subdirectory( test )
 
@@ -124,10 +138,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
 set(CPACK_PACKAGE_NAME "ioda-converters")
 set(CPACK_PACKAGE_VENDOR "Joint Center for Satellite Data Assimilation")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "ioda-converters")
-set(CPACK_PACKAGE_VERSION "${iodaconv_version}")
-set(CPACK_PACKAGE_VERSION_MAJOR "${iodaconv_major}")
-set(CPACK_PACKAGE_VERSION_MINOR "${iodaconv_minor}")
-set(CPACK_PACKAGE_VERSION_PATCH "${iodaconv_revision}")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "ioda-converters")

@@ -324,7 +324,7 @@ geovals_vars = {
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
     'Sfc_Height': 'surface_geopotential_height',
-    'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
+    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -390,6 +390,7 @@ units_values = {
     'air_pressure_levels': 'Pa',
     'humidity_mixing_ratio': '1',
     'mole_fraction_of_carbon_dioxide_in_air': '1',
+    'mole_fraction_of_ozone_in_air': '1',
     'integrated_layer_ozone_in_air': 'DU',
     'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
     'effective_radius_of_cloud_liquid_water_particle': 'm',
@@ -1565,7 +1566,7 @@ class Ozone(BaseGSI):
         nlocs = self.nobs
         ncout.createDimension("nlocs", nlocs)
         # other dims
-        ncout.createDimension("nlevs", self.df.dimensions["mass_concentration_of_ozone_in_air_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
