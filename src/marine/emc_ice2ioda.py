@@ -28,7 +28,9 @@ import ioda_conv_ncio as iconv
 class Observation(object):
 
     def __init__(self, filename, thin, date, writer):
-        print(date)
+        print('date = ', date)
+        global date2
+        date2=int(date.strftime("%Y%m%d"))
         self.filename = filename
         self.thin = thin
         self.date = date
@@ -62,17 +64,17 @@ class Observation(object):
             qc = qc[mask_thin]
 
         for i in range(len(lons)):
-            obs_date = datetime.combine(
-                datetime.strptime(
-                    np.array2string(
-                        datein[i]), "%Y%m%d"), datetime.strptime(
-                    np.array2string(
-                        timein[i]).zfill(4), "%H%M").time())
-            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.1
-            self.data[0][locKey][qcKey] = qc[i]
-
+            if datein[i] == date2:
+                obs_date = datetime.combine(
+                    datetime.strptime(
+                        np.array2string(
+                            datein[i]), "%Y%m%d"), datetime.strptime(
+                        np.array2string(
+                            timein[i]).zfill(4), "%H%M").time())
+                locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                self.data[0][locKey][valKey] = vals[i]
+                self.data[0][locKey][errKey] = 0.1
+                self.data[0][locKey][qcKey] = qc[i]
 
 vName = "sea_ice_area_fraction"
 
