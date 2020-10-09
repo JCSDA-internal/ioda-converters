@@ -316,11 +316,12 @@ add_test(NAME test_iodaconv_tropomi_no2
 #==============================================================================
 # Land product converters
 #==============================================================================
-
-add_test(NAME test_iodaconv_ims_scf
-         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
-            "${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
-            -i testinput/imssnow_24km.grib2
-            -o testrun/imssnow_scf.nc
-            -m maskout"
-            imssnow_scf.nc)
+if ( iodaconv_pygrib_ENABLED )
+  add_test(NAME test_iodaconv_ims_scf
+           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+              "${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
+              -i testinput/imssnow_24km.grib2
+              -o testrun/imssnow_scf.nc
+              -m maskout"
+              imssnow_scf.nc)
+endif()

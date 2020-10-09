@@ -10,6 +10,7 @@
 #  gnssro - Check for gnssro converters enabled
 #  odc - Check for odc converters enabled
 #  odb2 - Check for odb2 converters enabled
+#  pygrib - check if python supports pygrib
 @PACKAGE_INIT@
 
 set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@)
@@ -21,5 +22,6 @@ set(iodaconv_python_FOUND True) #python converters component
 set(iodaconv_odb2_FOUND @iodaconv_odb2_ENABLED@) #odb2 converters component
 set(iodaconv_odc_FOUND @iodaconv_odc_ENABLED@) #odc converters component
 set(iodaconv_gnssro_FOUND @iodaconv_gnssro_ENABLED@) #gnssro converters component
+set(iodaconv_pygrib_FOUND @iodaconv_pygrib_ENABLED@) #gnssro converters component
 
 check_required_components("@PROJECT_NAME@")
