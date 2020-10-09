@@ -45,7 +45,7 @@ else()
     list(APPEND CMAKE_MODULE_PATH ${ecbuild_MACROS_DIR})
     include(ecbuild_log) #Required for ecbuild/FindNetCDF.cmake
 endif()
-# Optional: pygrib for python for GRIB2 input files
+# Optional: pygrib for python for GRIB1/GRIB2 input files
 if ( USE_PYGRIB )
     message(STATUS "Adding python tests that import pygrib")
     set( iodaconv_pygrib_ENABLED True)
