@@ -32,6 +32,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/imssnow_24km.grib2
 )
 
 list( APPEND test_output
@@ -59,6 +60,7 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
+  testoutput/imssnow_scf.nc 
 )
 
 # create test directories and make links to the input files
@@ -310,3 +312,15 @@ add_test(NAME test_iodaconv_tropomi_no2
             -i testinput/tropomi_no2.nc
             -o testrun/tropomi_no2.nc"
             tropomi_no2.nc)
+
+#==============================================================================
+# Land product converters
+#==============================================================================
+
+add_test(NAME test_iodaconv_ims_scf
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
+            -i testinput/imssnow_24km.grib2
+            -o testrun/imssnow_scf.nc
+            -m maskout"
+            imssnow_scf.nc)
