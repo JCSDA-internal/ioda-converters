@@ -1,0 +1,15 @@
+module purge
+module use -a /scratch1/NCEPDEV/jcsda/Ryan.Honeyager/jedi/modules
+module load jedi-stack/intel-impi-18.0.5
+module use -a /scratch2/NCEPDEV/marineda/Jong.Kim/save/modulefiles
+module use -a /contrib/anaconda/modulefiles
+module load anaconda/latest  #Python3
+module load rocoto
+module load grads
+module load cnvgrib
+module load ncl
+module load hpss
+module load imagemagick
+module load wgrib2
+module load wgrib
+module use -a /scratch2/NCEPDEV/nwprod/NCEPLIBS/modulefiles/
