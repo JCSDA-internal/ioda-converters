@@ -694,6 +694,11 @@ class Conv(BaseGSI):
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
+                    if outvars[o] == 'surface_pressure':
+                        try:
+                            tmpps = self.var('surface_air_pressure')[0]
+                        except IndexError:
+                            obsdata = obsdata * 100. # convert to Pa from hPa
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
@@ -746,6 +751,13 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                    # special logic for unit conversions depending on GSI version
+                    elif lvar == 'Pressure'
+                        try:
+                            tmpps = self.var('surface_air_pressure')[0]
+                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
+                        except IndexError:
+                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx] * 100. # convert to Pa from hPa
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
