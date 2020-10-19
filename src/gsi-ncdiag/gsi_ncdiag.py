@@ -1117,7 +1117,10 @@ class Radiances(BaseGSI):
                     varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
                     ibc += 1
         obsdata = self.var('Observation')
-        obserr = self.var('Input_Observation_Error')
+        try:
+            obserr = self.var('Input_Observation_Error')
+        except IndexError:
+            obserr = 1./self.var('Inverse_Observation_Error')
         obsqc = self.var('QC_Flag').astype(int)
         if (ObsBias):
             nametbc = [
@@ -1634,7 +1637,10 @@ class Ozone(BaseGSI):
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.var('Observation')
-        tmp = self.var('Input_Observation_Error')
+        try:
+            tmp = self.var('Input_Observation_Error')
+        except IndexError:
+            tmp = 1./self.var('Inverse_Observation_Error')
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
