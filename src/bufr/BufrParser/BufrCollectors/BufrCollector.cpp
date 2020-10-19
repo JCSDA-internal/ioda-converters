@@ -10,10 +10,29 @@
 
 namespace Ingester
 {
-    BufrCollector::BufrCollector(const int fileUnit, const BufrAccumulator accumulator) :
+    BufrCollector::BufrCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet) :
         fileUnit_(fileUnit),
-        accumulator_(accumulator)
+        accumulator_(BufrAccumulator(mnemonicSet.getSize() * mnemonicSet.getMaxColumn())),
+        mnemonicSet_(mnemonicSet)
     {
+    }
+
+    BufrDataMap BufrCollector::finalize()
+    {
+        IngesterArrayMap dataMap;
+        size_t fieldIdx = 0;
+        for (const auto &fieldName : mnemonicSet_.getMnemonics())
+        {
+            IngesterArray dataArr = accumulator_.getData(fieldIdx * mnemonicSet_.getMaxColumn(),
+                                                         mnemonicSet_.getChannels());
+
+            dataMap.insert({fieldName, dataArr});
+            fieldIdx++;
+        }
+
+        accumulator_.reset();
+
+        return dataMap;
     }
 }  // namespace Ingester
 

@@ -18,14 +18,14 @@ namespace Ingester
     {
     }
 
-    void BufrAccumulator::addRow(double* newRow)
+    void BufrAccumulator::addRow(std::vector<double> newRow)
     {
         if (numDataRows_ + 1 > dataArray_.rows())
         {
             dataArray_.conservativeResize(dataArray_.rows() + blockSize_, numColumns_);
         }
 
-        dataArray_.row(numDataRows_) = Eigen::Map<IngesterArray>(newRow, 1, numColumns_);
+        dataArray_.row(numDataRows_) = Eigen::Map<IngesterArray>(newRow.data(), 1, numColumns_);
         numDataRows_++;
     }
 

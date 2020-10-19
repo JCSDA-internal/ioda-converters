@@ -12,49 +12,24 @@
 
 namespace Ingester
 {
-
     BufrRepCollector::BufrRepCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet) :
-        BufrCollector(fileUnit,
-                      BufrAccumulator(mnemonicSet.getSize() * mnemonicSet.getMaxColumn())),
-        mnemonicSet_(mnemonicSet)
+        BufrCollector(fileUnit, mnemonicSet)
     {
-        scratchData_ = new double[mnemonicSet.getSize() * mnemonicSet.getMaxColumn()];
-    }
-
-    BufrRepCollector::~BufrRepCollector()
-    {
-        delete[] scratchData_;
+        scratchData_.resize(accumulator_.getNumColumns());
     }
 
     void BufrRepCollector::collect()
     {
-        int result;
+        double* scratchDataPtr = scratchData_.data();
 
+        int result;
         ufbrep_f(fileUnit_,
-                 reinterpret_cast<void**>(&scratchData_),
+                 reinterpret_cast<void**>(&scratchDataPtr),
                  mnemonicSet_.getSize(),
                  mnemonicSet_.getMaxColumn(),
                  &result,
                  mnemonicSet_.getMnemonicsStr().c_str());
 
         accumulator_.addRow(scratchData_);
-    }
-
-    BufrDataMap BufrRepCollector::finalize()
-    {
-        IngesterArrayMap dataMap;
-        size_t fieldIdx = 0;
-        for (const auto &fieldName : mnemonicSet_.getMnemonics())
-        {
-            IngesterArray dataArr = accumulator_.getData(fieldIdx * mnemonicSet_.getMaxColumn(),
-                                                         mnemonicSet_.getChannels());
-
-            dataMap.insert({fieldName, dataArr});
-            fieldIdx++;
-        }
-
-        accumulator_.reset();
-
-        return dataMap;
     }
 }  // namespace Ingester

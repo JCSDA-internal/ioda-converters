@@ -13,6 +13,7 @@
 #include "Eigen/Dense"
 
 #include "BufrParser/BufrTypes.h"
+#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrAccumulator.h"
 
 
@@ -21,14 +22,15 @@ namespace Ingester
     class BufrCollector
     {
      public:
-        BufrCollector(const int fileUnit, const BufrAccumulator accumulator);
+        BufrCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet);
         virtual ~BufrCollector() = default;
 
         virtual void collect() = 0;
-        virtual BufrDataMap finalize() = 0;
+        BufrDataMap finalize();
 
      protected:
         const int fileUnit_;
         BufrAccumulator accumulator_;
+        const BufrMnemonicSet mnemonicSet_;
     };
 }  // namespace Ingester

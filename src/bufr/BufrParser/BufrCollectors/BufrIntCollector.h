@@ -18,15 +18,12 @@ namespace Ingester
     {
      public:
         explicit BufrIntCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet);
-
-        ~BufrIntCollector() override;
+        ~BufrIntCollector() = default;
 
         void collect() final;
-        BufrDataMap finalize() final;
 
      private:
-        double *scratchData_;
-        const BufrMnemonicSet mnemonicSet_;
+        std::vector<double> scratchData_;
     };
 }  // namespace Ingester
 
