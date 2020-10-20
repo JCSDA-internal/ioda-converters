@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pickle
 import sys
-sys.path.append("/home/vagrant/jedi/bundle-ioda/build/tools/lib/pyiodaconv")  # dummy before install
+# sys.path.append("/home/vagrant/jedi/bundle-ioda/build/tools/lib/pyiodaconv")  # dummy before install
 sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 
