@@ -22,7 +22,7 @@ namespace Ingester
         explicit BufrAccumulator(Eigen::Index numColumns, Eigen::Index blockSize = 50000);
 
         void addRow(std::vector<double>& newRow);
-        IngesterArray getData(Eigen::Index startCol, const Channels& channels);
+        IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
         void reset();
 
         //Getters

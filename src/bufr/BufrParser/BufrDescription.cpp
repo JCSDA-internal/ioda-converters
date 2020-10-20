@@ -8,7 +8,6 @@
 #include <iostream>
 
 #include "oops/util/IntSetParser.h"
-#include "eckit/exception/Exceptions.h"
 
 #include "BufrDescription.h"
 #include "BufrMnemonicSet.h"
@@ -36,14 +35,10 @@ namespace Ingester
 
         for (const auto& mnemonicSetConf : conf.getSubConfigurations(MNEMONIC_SETS_YAML_SECTION))
         {
-            Channels channels;
+            Channels channels = {1};
             if (mnemonicSetConf.has(CHANNEL_NAME))
             {
                 channels = oops::parseIntSet(mnemonicSetConf.getString(CHANNEL_NAME));
-            }
-            else
-            {
-                channels = {1};
             }
 
             addMnemonicSet(BufrMnemonicSet(

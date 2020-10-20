@@ -8,6 +8,8 @@
 #include <ostream>
 #include <vector>
 
+#include "eckit/exception/Exceptions.h"
+
 #include "BufrMnemonicSet.h"
 #include "BufrTypes.h"
 
@@ -20,6 +22,11 @@ namespace Ingester
         channels_(channels),
         maxColumn_(findMaxChannel(channels))
     {
+        if (std::find_if(channels.begin(), channels.end(), [](const auto x){ return x < 1; }) \
+            != channels.end())
+        {
+            throw eckit::BadParameter("All channel numbers must be >= 1.");
+        }
     }
 
     std::string BufrMnemonicSet::makeMnemonicsStr(std::vector<std::string> mnemonics)

@@ -8,6 +8,9 @@
 #include "BufrAccumulator.h"
 
 
+#include "eckit/exception/Exceptions.h"
+
+
 namespace Ingester
 {
     BufrAccumulator::BufrAccumulator(Eigen::Index numColumns, Eigen::Index blockSize) :
@@ -31,6 +34,12 @@ namespace Ingester
 
     IngesterArray BufrAccumulator::getData(Eigen::Index startCol, const Channels &channels)
     {
+        if (std::find_if(channels.begin(), channels.end(), [](const auto x){ return x < 1; }) \
+            != channels.end())
+        {
+            throw eckit::BadParameter("All channel numbers must be >= 1.");
+        }
+
         IngesterArray resultArr(numDataRows_, channels.size());
         unsigned int colIdx = 0;
         for (auto col : channels)
