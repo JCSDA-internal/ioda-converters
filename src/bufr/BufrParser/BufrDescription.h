@@ -13,6 +13,8 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
+#include "BufrTypes.h"
+
 
 namespace Ingester
 {
@@ -29,13 +31,13 @@ namespace Ingester
         void addExport(std::string key, std::shared_ptr<Export> bufrExport);
 
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
-        inline std::vector<BufrMnemonicSet>& getMnemonicSets() { return mnemonicSets_; }
-        inline std::string filepath() { return filepath_; }
-        inline std::map<std::string, std::shared_ptr<Export>>& getExportMap() { return exportMap_; }
+        inline std::vector<BufrMnemonicSet> getMnemonicSets() const { return mnemonicSets_; }
+        inline std::string filepath() const { return filepath_; }
+        inline ExportMap getExportMap() const { return exportMap_; }
 
      private:
         std::vector<BufrMnemonicSet> mnemonicSets_;
         std::string filepath_;
-        std::map<std::string, std::shared_ptr<Export>> exportMap_;
+        ExportMap exportMap_;
     };
 }  // namespace Ingester

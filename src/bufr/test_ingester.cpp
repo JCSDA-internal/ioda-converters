@@ -43,7 +43,10 @@ namespace Ingester
 
         auto set1 = BufrMnemonicSet(set1Mnemonics, {1});
         auto set2 = BufrMnemonicSet(set2Mnemonics, {1});
-        auto set3 = BufrMnemonicSet(set3Mnemonics, oops::parseIntSet("1-15"));
+
+        auto intChannels = oops::parseIntSet("1-15");
+        auto set3 = BufrMnemonicSet(set3Mnemonics,
+                                    Channels(intChannels.begin(), intChannels.end()));
 
         description.addMnemonicSet(set1);
         description.addMnemonicSet(set2);

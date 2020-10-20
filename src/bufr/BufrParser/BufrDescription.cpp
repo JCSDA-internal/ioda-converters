@@ -38,7 +38,8 @@ namespace Ingester
             Channels channels = {1};
             if (mnemonicSetConf.has(CHANNEL_NAME))
             {
-                channels = oops::parseIntSet(mnemonicSetConf.getString(CHANNEL_NAME));
+                auto intChannels = oops::parseIntSet(mnemonicSetConf.getString(CHANNEL_NAME));
+                channels = Channels(intChannels.begin(), intChannels.end());
             }
 
             addMnemonicSet(BufrMnemonicSet(
