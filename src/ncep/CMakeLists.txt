@@ -8,42 +8,34 @@ list( APPEND programs
   ncep_classes.py
 )
 
-SET_TARGETS_DEPS( "${libs}"
+set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
                    ncep_scripts_deps)
-add_custom_target( ncep_scripts ALL DEPENDS ${ncep_scripts_deps} )
 
-set( SCRIPT_LIB_PATH ${PYIODACONV_BUILD_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file(MAKE_DIRECTORY ${PYIODACONV_BUILD_LIBDIR})
+execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/config ${PYIODACONV_BUILD_LIBDIR}/config)
+
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
                    bin_ncep_scripts_deps)
-add_custom_target( bin_ncep_scripts ALL
-    COMMAND chmod +x ${bin_ncep_scripts_deps}
-    DEPENDS ${bin_ncep_scripts_deps} )
+execute_process(COMMAND chmod +x ${bin_ncep_scripts_deps})
 
 # Configure files for install prefix bin
-set( SCRIPT_LIB_PATH ${PYIODACONV_INSTALL_LIBDIR} )
-CONF_TARGETS_DEPS( "${programs}"
+file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
+conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
                    install_bin_ncep_scripts_deps)
-add_custom_target( install_bin_ncep_scripts ALL
-    COMMAND chmod +x ${install_bin_ncep_scripts_deps}
-    DEPENDS ${install_bin_ncep_scripts_deps} )
 
-install( PROGRAMS
-  ${install_bin_ncep_scripts_deps}
-  DESTINATION bin
-)
+install( PROGRAMS ${install_bin_ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES
-  ${ncep_scripts_deps}
-  DESTINATION lib/pyiodaconv
-)
+install( FILES ${ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-ecbuild_add_test( TARGET iodaconv_ncep_coding_norms
-                  TYPE SCRIPT
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
-                  ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
+
+add_test(NAME iodaconv_ncep_coding_norms
+         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR})

@@ -68,7 +68,7 @@ src/gsi-ncdiag for details.
 
 ## marine
 The marine converters all take the following format, with some converters taking additional optional arguments as noted:
- 
+
 ```
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 ```
@@ -86,6 +86,7 @@ Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
   * `hgodas_sst2ioda.py`  
 * `rads_adt2ioda.py` - absolute dynamic topography observations from NOAA/NESDIS. Observations available from `ftp://ftp.star.nesdis.noaa.gov/pub/sod/lsa/rads/adt`
 * `smap_sss2ioda.py` - SMAP satellite sea surface salinity observations. Observations available from `ftp://podaac-ftp.jpl.nasa.gov/allData/smap/L2/RSS/V3/SCI`
+* `viirs_modis_oc2ioda.py` - L2 satellite ocean color observations from NOAA Coastwatch for VIIRS instruments on board JPSS1/NOAA-20 and SNPP satellites, and from NASA GSFC for MODIS instrument on board Aqua satellite. Observations available from `ftp://ftpcoastwatch.noaa.gov/pub/socd2/mecb/coastwatch/viirs/n20/nrt/L2` (VIIRS-JPSS1/NOAA-20), `ftp://ftpcoastwatch.noaa.gov/pub/socd1/mecb/coastwatch/viirs/nrt/L2` (VIIRS-SNPP), and `https://oceandata.sci.gsfc.nasa.gov/MODIS-Aqua/L2` (MODIS-Aqua).
 
 * `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
 
@@ -112,7 +113,7 @@ Until ODC arrives, we have to use python 2.7 for the ODB test and file conversio
 The ODB file conversion test will be disabled by default so that developers can continue to work in Python 3.
 The ODB coding norms test will always be enabled.
 
-When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7. 
+When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7.
 To enable the ODB file conversion test, add the ENABLE_ODB_API option to ecbuild as follows:
 ~~~~~~~~
 ecbuild -DENABLE_ODB_API=1 <other_ecbuild_options> <path_to_source_directory>
@@ -128,7 +129,6 @@ This script used to work, but is currently not being maintained and no longer do
 Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
 ```
 
-
 ## owp\_snow\_obs
 (OWP = NOAA's Office of Water Prediction)
 Python3 script `owp_snow_obs\_pkl\_2\_ioda.py` converts OWP snow obs pkl files to netcdf IODA files.
@@ -137,3 +137,21 @@ Example usage:
 ```
 ipython3 --pdb -c "%run /jedi/tools/bin/owp_snow_obs_pkl_2_ioda.py -i ../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl -o ../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc -d 2019021502 "
 ```
+## chem
+
+The chem converters include all converter scripts for aerosols and related chemistry variables.
+
+For NO2, TROPOMI netCDF files are supported with `tropomi_no2_nc2ioda.py`.
+```
+Usage: tropomi_no2_nc2ioda.py -i input_tropomi_files.nc -o output_ioda_file.nc
+```
+For -i you can specify a list of files with a shell wildcard and the converter will write them to one output file.
+This converter provides all fields needed for assimilation, including the observation value, error, and averaging kernel information.
+
+
+For AOD, `viirs_aod2ioda.py`, is used to convert the native netCDF format for observations of optical depth from VIIRS AOD550 to IODA netCDF format. Note that it takes only AOD550 explicitly and does not take the 11 AOD channels from VIIRS. The converter uses the following format to execute:
+
+```
+Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -m nesdis -k maskout -t 0.0
+```
+For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to mask all missing values out. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.    

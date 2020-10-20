@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+import datetime as dt
+import math
+import sys
+from collections import OrderedDict
+
 import numpy as np
 import netCDF4
 from netCDF4 import Dataset
-import datetime as dt
-import sys
-from collections import OrderedDict
 
 ###################################################################################
 # SUBROUTINES
@@ -47,10 +48,9 @@ def CharVectorToString(CharVec):
 
 class NcWriter(object):
     # Constructor
-    def __init__(self, NcFname, RecKeyList, LocKeyList, TestKeyList=None):
+    def __init__(self, NcFname, LocKeyList, TestKeyList=None):
 
         # Variable names of items in the record key
-        self._rec_key_list = RecKeyList
 
         # Variable names of items in the location key
         self._loc_key_list = LocKeyList
@@ -63,8 +63,11 @@ class NcWriter(object):
         self._oerr_name = "ObsError"
         self._oqc_name = "PreQC"
 
+        # Names assigned to obs bias terms and predoctirs related to observations
+        self._obiasterm_name = "GsiObsBiasTerm"
+        self._obiaspred_name = "GsitObsBiasPredictor"
+
         # Names assigned to dimensions
-        self._nrecs_dim_name = 'nrecs'
         self._nlocs_dim_name = 'nlocs'
         self._nvars_dim_name = 'nvars'
         self._nstr_dim_name = 'nstring'
@@ -73,7 +76,6 @@ class NcWriter(object):
         # Dimension sizes
         self._nlocs = 0
         self._nvars = 0
-        self._nrecs = 0
         self._nstring = 50
         self._ndatetime = 20
 
@@ -88,7 +90,6 @@ class NcWriter(object):
         self._var_list_name = "variable_names"
 
         # Names for metadata groups
-        self._rec_md_name = "RecMetaData"
         self._loc_md_name = "MetaData"
         self._var_md_name = "VarMetaData"
         self._test_md_name = "TestReference"
@@ -108,6 +109,12 @@ class NcWriter(object):
 
     def OvalName(self):
         return self._oval_name
+
+    def ObiastermName(self):
+        return self._obiasterm_name
+
+    def ObiaspredName(self):
+        return self._obiaspred_name
 
     def OerrName(self):
         return self._oerr_name
@@ -169,21 +176,27 @@ class NcWriter(object):
 
         return IodaDtype
 
-    def ConvertToTimeOffset(self, TimeStrings):
-        ############################################################
-        # This method will convert the absoute time in the string
-        # given by TimeStrings into floating point offsets from
-        # the reference date_time.
+    def ConvertToTimeOffset(self, datestr_vec):
+        """
+        Convert from date strings in ioda reference format "YYYY-mm-ddTHH:MM:SSZ" to decimal hour offsets from reference datetime.
 
-        TimeOffset = np.zeros((self._nlocs), dtype='f4')
-        for i in range(len(TimeStrings)):
-            Tstring = CharVectorToString(TimeStrings[i])
-            ObsDt = dt.datetime.strptime(Tstring, "%Y-%m-%dT%H:%M:%SZ")
-
-            TimeDelta = ObsDt - self._ref_date_time
-            TimeOffset[i] = TimeDelta.total_seconds() / 3600.00
-
-        return TimeOffset
+        Input: datestr_vec is an array of numpy chararrays, representing the raw bytes of the date string
+        Output: numpy dtype:'f4' array of time offsets in decimal hours from the reference date.
+        """
+        offset = np.zeros((self._nlocs), dtype='f4')
+        ref_offset = math.floor(self._ref_date_time.hour*3600. + self._ref_date_time.minute*60. + self._ref_date_time.second)/3600.  # decimal hours
+        date_offset_cache = {}  # Cache a map from bytes[0:10] to the corresponding date's offset from reference date
+        for i in range(len(datestr_vec)):
+            date_bytes = datestr_vec[i].tobytes()
+            date_offset = date_offset_cache.get(date_bytes[0:10])
+            if date_offset is None:
+                # There are at most 2 distinct dates per cycle for any window length < 24hrs
+                delta = dt.date(int(date_bytes[0:4]), int(date_bytes[5:7]), int(date_bytes[8:10])) - self._ref_date_time.date()
+                date_offset = delta.total_seconds()/3600.
+                date_offset_cache[date_bytes[0:10]] = date_offset
+            t_offset = (int(date_bytes[11:13])*3600. + int(date_bytes[14:16])*60. + int(date_bytes[17:19]))/3600.
+            offset[i] = date_offset + (t_offset - ref_offset)
+        return offset
 
     def CreateNcVector(self, Nsize, Dtype):
         ############################################################
@@ -215,7 +228,11 @@ class NcWriter(object):
             Vector = Values
         elif (Dtype == "string"):
             StringType = "S{0:d}".format(self._nstring)
-            Vector = netCDF4.stringtochar(np.array(Values, StringType))
+            s = np.array(Values, StringType)
+            try:
+                Vector = netCDF4.stringtochar(s)
+            except (UnicodeEncodeError, UnicodeDecodeError) as e:
+                Vector = netCDF4.stringtochar(s, encoding='bytes')
         elif (Dtype == "datetime"):
             StringType = "S{0:d}".format(self._ndatetime)
             Vector = netCDF4.stringtochar(np.array(Values, StringType))
@@ -230,7 +247,6 @@ class NcWriter(object):
         # This method will dump out the netcdf global attribute data
         # contained in the dictionary AttrData.
 
-        self._fid.setncattr(self._nrecs_dim_name, np.int32(self._nrecs))
         self._fid.setncattr(self._nvars_dim_name, np.int32(self._nvars))
         self._fid.setncattr(self._nlocs_dim_name, np.int32(self._nlocs))
 
@@ -257,7 +273,6 @@ class NcWriter(object):
         # rearrange the group structure.
         self._fid.createDimension(self._nvars_dim_name, self._nvars)
         self._fid.createDimension(self._nlocs_dim_name, self._nlocs)
-        self._fid.createDimension(self._nrecs_dim_name, self._nrecs)
         self._fid.createDimension(self._nstr_dim_name, self._nstring)
         self._fid.createDimension(self._ndatetime_dim_name, self._ndatetime)
 
@@ -268,7 +283,9 @@ class NcWriter(object):
             self._fid.createVariable(NcVname, self.NumpyToNcDtype(Vvals.dtype), (self._nlocs_dim_name))
             self._fid[NcVname][:] = Vvals
             # add units
-            if Gname in ['ObsValue', 'ObsError', 'GsiHofX', 'GsiHofXBc']:
+            if Gname in ['ObsValue', 'ObsError', 'GsiHofX', 'GsiHofXBc',
+                         'GsiHofXClr', 'GsiFinalObsError', 'GsiBc', 'GsiBcConst',
+                         'GsiBcScanAng', 'GsiAdjustObsError', 'GsiFinalObsError', 'GsiObsBias']:
                 try:
                     self._fid[NcVname].setncattr_string("units", VarUnits[Vname])
                 except KeyError:
@@ -316,7 +333,6 @@ class NcWriter(object):
         # dictionary and reformat it into a more amenable form for
         # writing into the output file.
 
-        self._nrecs = 0
         self._nvars = 0
         self._nlocs = 0
 
@@ -328,8 +344,9 @@ class NcWriter(object):
         ObsVarExamples = []
         VMName = []
         VMData = {}
+        nrecs = 0
         for RecKey, RecDict in ObsData.items():
-            self._nrecs += 1
+            nrecs += 1
             for LocKey, LocDict in RecDict.items():
                 self._nlocs += 1
                 for VarKey, VarVal in LocDict.items():
@@ -338,7 +355,6 @@ class NcWriter(object):
                     if (VarKey not in ObsVarList):
                         ObsVarList.append(VarKey)
                         ObsVarExamples.append(VarVal)
-
         VarList = sorted(list(VarNames))
         self._nvars = len(VarList)
 
@@ -374,12 +390,6 @@ class NcWriter(object):
 
         VarMdata = OrderedDict()
         VarMdata[self._var_list_name] = self.CreateNcVector(self._nvars, "string")
-
-        RecMdata = OrderedDict()
-        for i in range(len(self._rec_key_list)):
-            (RecVname, RecVtype) = self._rec_key_list[i]
-            RecMdata[RecVname] = self.CreateNcVector(self._nrecs, RecVtype)
-
         VarMdata[self._var_list_name] = self.FillNcVector(VarList, "string")
 
         RecNum = 0
@@ -388,10 +398,6 @@ class NcWriter(object):
             RecNum += 1
 
             # Exract record metadata encoded in the keys
-            for i in range(len(self._rec_key_list)):
-                (RecVname, RecVtype) = self._rec_key_list[i]
-                RecMdata[RecVname][RecNum-1] = self.FillNcVector(RecKey[i], RecVtype)
-
             for LocKey, LocDict in RecDict.items():
                 LocNum += 1
 
@@ -412,9 +418,9 @@ class NcWriter(object):
                         VarVal = self._defaultF4
                     ObsVars[VarKey][LocNum-1] = VarVal
 
-        return (ObsVars, RecMdata, LocMdata, VarMdata)
+        return (ObsVars, LocMdata, VarMdata)
 
-    def BuildNetcdf(self, ObsVars, RecMdata, LocMdata, VarMdata, AttrData, VarUnits={}, TestData=None):
+    def BuildNetcdf(self, ObsVars, LocMdata, VarMdata, AttrData, VarUnits={}, TestData=None):
         ############################################################
         # This method will create an output netcdf file, and dump
         # the contents of the ObsData dictionary into that file.
@@ -422,7 +428,6 @@ class NcWriter(object):
         # The structure of the output file is:
         #
         #  global attributes:
-        #     nrecs
         #     nvars
         #     nlocs
         #     contents of AttrData dictionary
@@ -447,10 +452,6 @@ class NcWriter(object):
         #         latitude
         #         longitude
         #         datetime
-        #     /RecMetaData/
-        #         Group holding 1D vectors of various data types, nrecs
-        #         station_id
-        #         analysis_date_time
         #     /VarUnits/
         #         Dictionary holding string of units for each variable/metadata item
         #         Key: variable, Value: unit_string
@@ -465,7 +466,6 @@ class NcWriter(object):
         self.WriteNcAttr(AttrData)
         self.WriteNcObsVars(ObsVars, VarMdata, VarUnits)
 
-        self.WriteNcMetadata(self._rec_md_name, self._nrecs_dim_name, RecMdata, VarUnits)
         self.WriteNcMetadata(self._loc_md_name, self._nlocs_dim_name, LocMdata, VarUnits)
         self.WriteNcMetadata(self._var_md_name, self._nvars_dim_name, VarMdata, VarUnits)
         if TestData is not None:
