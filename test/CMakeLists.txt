@@ -87,15 +87,14 @@ endforeach(FILENAME)
 # owp_snow_data converters
 #===============================================================================
 
-add_test( TARGET test_iodaconv_owp_snow_obs_pkl
-                  TYPE SCRIPT
-                  COMMAND iodaconv_comp.sh
-                  ARGS "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_pkl_2_ioda.py
-                       -i testinput/owp_snow_obs.pkl
-                       -o testrun/owp_snow_obs.nc
-                       -d 2019021502
-                       -t 0.5"
-                      owp_snow_obs.nc)
+add_test(NAME test_iodaconv_owp_snow_obs_pkl
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_pkl_2_ioda.py
+             -i testinput/owp_snow_obs.pkl
+             -o testrun/owp_snow_obs.nc
+             -d 2019021502
+             -t 0.5"
+             owp_snow_obs.nc)
 
 
 #===============================================================================

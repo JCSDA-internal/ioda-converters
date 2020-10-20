@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pickle
 import sys
-# sys.path.append("/jedi/tools/lib/pyiodaconv")  # dummy before install
+sys.path.append("/home/vagrant/jedi/bundle-ioda/build/tools/lib/pyiodaconv")  # dummy before install
 sys.path.append("@SCRIPT_LIB_PATH@")
 import ioda_conv_ncio as iconv
 
@@ -297,7 +297,7 @@ def owp_snow_obs_pkl_2_ioda(args):
     writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
 
     # use the writer class to create the final output file
-    writer.BuildNetcdf(obs_data, {}, loc_data, var_data, attr_data)
+    writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
 
 
 # Make parser separate, testable.
