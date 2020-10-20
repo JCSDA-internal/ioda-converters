@@ -1,5 +1,6 @@
 list(APPEND programs
   ims_scf2ioda.py
+  smos_ssm2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

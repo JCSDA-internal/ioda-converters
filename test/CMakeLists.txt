@@ -33,6 +33,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/imssnow_24km.grib2
+  testinput/SM_OPER_MIR_CLF31A_20200723T000000_20200723T235959_300_001_7.DBL.nc
 )
 
 list( APPEND test_output
@@ -60,7 +61,8 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
-  testoutput/imssnow_scf.nc 
+  testoutput/imssnow_scf.nc
+  testoutput/smos_ssm_2020072323.nc 
 )
 
 # create test directories and make links to the input files
@@ -325,3 +327,11 @@ if ( iodaconv_pygrib_ENABLED )
               -m maskout"
               imssnow_scf.nc)
 endif()
+
+add_test(NAME test_iodaconv_smos_ssm
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/smos_ssm2ioda.py
+            -i testinput/SM_OPER_MIR_CLF31A_20200723T000000_20200723T235959_300_001_7.DBL.nc
+            -o testrun/smos_ssm_2020072323.nc
+            -m maskout"
+            smos_ssm_2020072323.nc)
