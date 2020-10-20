@@ -17,8 +17,8 @@ namespace Ingester
     }
 
     ioda::Variable ArrayDataObject::createVariable(ioda::ObsGroup obsGroup,
-                                                   std::string name,
-                                                   std::vector<ioda::Variable> dimensions)
+                                                   const std::string& name,
+                                                   const std::vector<ioda::Variable>& dimensions)
     {
         static ioda::VariableCreationParameters params = makeCreationParams();
 

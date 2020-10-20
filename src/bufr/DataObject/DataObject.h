@@ -17,8 +17,8 @@ namespace Ingester
     {
      public:
         virtual ioda::Variable createVariable(ioda::ObsGroup obsGroup,
-                                              std::string name,
-                                              std::vector<ioda::Variable> dimensions) = 0;
+                                              const std::string& name,
+                                              const std::vector<ioda::Variable>& dimensions) = 0;
         virtual void print() = 0;
     };
 }  // namespace Ingester

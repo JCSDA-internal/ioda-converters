@@ -22,8 +22,8 @@ namespace Ingester
         ~StrVecDataObject() = default;
 
         ioda::Variable createVariable(ioda::ObsGroup obsGroup,
-                                      std::string name,
-                                      std::vector<ioda::Variable> dimensions) final;
+                                      const std::string& name,
+                                      const std::vector<ioda::Variable>& dimensions) final;
         void print() final;
 
         std::vector<std::string> get() const { return strVector_; }
