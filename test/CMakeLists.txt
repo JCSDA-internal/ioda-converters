@@ -87,7 +87,7 @@ endforeach(FILENAME)
 # owp_snow_data converters
 #===============================================================================
 
-ecbuild_add_test( TARGET test_iodaconv_owp_snow_obs_pkl
+add_test( TARGET test_iodaconv_owp_snow_obs_pkl
                   TYPE SCRIPT
                   COMMAND iodaconv_comp.sh
                   ARGS "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_pkl_2_ioda.py

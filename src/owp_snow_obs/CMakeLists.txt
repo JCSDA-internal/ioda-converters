@@ -26,7 +26,7 @@ install( PROGRAMS
   DESTINATION bin
 )
 
-ecbuild_add_test( TARGET iodaconv_owp_coding_norms
+add_test( TARGET iodaconv_owp_coding_norms
                   TYPE
                   COMMAND ${CMAKE_BINARY_DIR}/bin/lint.sh
                   ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
