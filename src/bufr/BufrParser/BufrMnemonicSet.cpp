@@ -20,7 +20,7 @@ namespace Ingester
         mnemonics_(mnemonics),
         mnemonicsStr_(makeMnemonicsStr(mnemonics)),
         channels_(channels),
-        maxColumn_(findMaxChannel(channels))
+        maxColumn_(*std::max_element(channels.begin(), channels.end()))
     {
         if (std::find_if(channels.begin(), channels.end(), [](const auto x){ return x < 1; }) \
             != channels.end())
@@ -46,19 +46,4 @@ namespace Ingester
 
         return mnemonicsStrStream.str();
     }
-
-    size_t BufrMnemonicSet::findMaxChannel(const Channels& channels)
-    {
-        size_t maxChannel = 0;
-        for (auto channel : channels)
-        {
-            if (channel > static_cast<int> (maxChannel))
-            {
-                maxChannel = channel;
-            }
-        }
-
-        return maxChannel;
-    }
-
 }  // namespace Ingester
