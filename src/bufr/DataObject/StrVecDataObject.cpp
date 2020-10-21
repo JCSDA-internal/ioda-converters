@@ -28,7 +28,7 @@ namespace Ingester
         return var;
     }
 
-    void StrVecDataObject::print()
+    void StrVecDataObject::print() const
     {
         for (const auto& str : strVector_)
         {

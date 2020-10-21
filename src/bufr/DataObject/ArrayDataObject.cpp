@@ -27,7 +27,7 @@ namespace Ingester
         return var;
     }
 
-    void ArrayDataObject::print()
+    void ArrayDataObject::print() const
     {
         std::cout << eigArray_ << std::endl;
     }

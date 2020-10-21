@@ -24,9 +24,9 @@ namespace Ingester
         ioda::Variable createVariable(ioda::ObsGroup obsGroup,
                                       const std::string& name,
                                       const std::vector<ioda::Variable>& dimensions) final;
-        void print() final;
+        void print() const final;
 
-        std::vector<std::string> get() const { return strVector_; }
+        inline std::vector<std::string> get() const { return strVector_; }
 
      private:
         const std::vector<std::string> strVector_;
