@@ -32,7 +32,7 @@ namespace Ingester
 
      private:
         BufrDescription description_;
-        unsigned int fileUnit_;
+        unsigned int fortranFileId_;
 
         std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
 

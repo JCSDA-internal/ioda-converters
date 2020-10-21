@@ -26,7 +26,7 @@ namespace Ingester
 
     BufrParser::BufrParser(BufrDescription &description) :
         description_(description),
-        fileUnit_(0)
+        fortranFileId_(0)
     {
         reset();
     }
@@ -40,18 +40,18 @@ namespace Ingester
     {
         const unsigned int SubsetStringLength = 25;
 
-        assert(fileUnit_ > 0);
+        assert(fortranFileId_ > 0);
 
-        auto collectors = BufrCollectors(fileUnit_);
+        auto collectors = BufrCollectors(fortranFileId_);
         collectors.addMnemonicSets(description_.getMnemonicSets());
 
         char subset[SubsetStringLength];
         int iddate;
 
         unsigned int messageNum = 0;
-        while (ireadmg_f(fileUnit_, subset, &iddate, SubsetStringLength) == 0)
+        while (ireadmg_f(fortranFileId_, subset, &iddate, SubsetStringLength) == 0)
         {
-            while (ireadsb_f(fileUnit_) == 0)
+            while (ireadsb_f(fortranFileId_) == 0)
             {
                 collectors.collect();
             }
@@ -88,23 +88,21 @@ namespace Ingester
 
     void BufrParser::openBufrFile(const std::string &filepath)
     {
-        const unsigned int FortranFileId = 11;
-
-        fileUnit_ = FortranFileId;
-        open_f(fileUnit_, filepath.c_str());
-        openbf_f(fileUnit_, "IN", fileUnit_);
+        fortranFileId_ = 11;  // Fortran file id must be a integer > 10
+        open_f(fortranFileId_, filepath.c_str());
+        openbf_f(fortranFileId_, "IN", fortranFileId_);
     }
 
     void BufrParser::closeBufrFile()
     {
-        closbf_f(fileUnit_);
-        close_f(fileUnit_);
-        fileUnit_ = 0;
+        closbf_f(fortranFileId_);
+        close_f(fortranFileId_);
+        fortranFileId_ = 0;
     }
 
     void BufrParser::reset()
     {
-        if (fileUnit_ != 0)
+        if (fortranFileId_ != 0)
         {
             closeBufrFile();
         }
