@@ -10,12 +10,12 @@
 #include <iostream>
 #include <map>
 
-#include "bufr.interface.h"
+#include "eckit/exception/Exceptions.h"
 
+#include "bufr.interface.h"
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"
-
 #include "Exports/MnemonicExport.h"
 #include "Exports/DatetimeExport.h"
 #include "Exports/Export.h"
@@ -40,7 +40,10 @@ namespace Ingester
     {
         const unsigned int SubsetStringLength = 25;
 
-        assert(fortranFileId_ > 0);
+        if (fortranFileId_ <= 10)
+        {
+            throw eckit::BadValue("Fortran File ID is an invalid number (must be > 10).");
+        }
 
         auto collectors = BufrCollectors(fortranFileId_);
         collectors.addMnemonicSets(description_.getMnemonicSets());
