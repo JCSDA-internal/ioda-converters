@@ -19,7 +19,7 @@ namespace
         {
             const char* Name = "name";
             const char* Size = "size";
-        }
+        }  // Dimension
 
         namespace Variable
         {
@@ -30,8 +30,8 @@ namespace
             const char* Units = "units";
             const char* Range = "range";
             const char* Coords = "coordinates";
-        }
-    }
+        }  // Variable
+    }  // ConfKeys
 }
 
 namespace Ingester
