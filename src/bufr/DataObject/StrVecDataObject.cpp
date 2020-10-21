@@ -17,7 +17,7 @@ namespace Ingester
     {
     }
 
-    ioda::Variable StrVecDataObject::createVariable(ioda::ObsGroup obsGroup,
+    ioda::Variable StrVecDataObject::createVariable(ioda::ObsGroup& obsGroup,
                                                     const std::string& name,
                                                     const std::vector<ioda::Variable>& dimensions)
     {

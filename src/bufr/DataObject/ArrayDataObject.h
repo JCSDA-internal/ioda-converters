@@ -19,7 +19,7 @@ namespace Ingester
         explicit ArrayDataObject(const IngesterArray& eigArray);
         ~ArrayDataObject() = default;
 
-        ioda::Variable createVariable(ioda::ObsGroup obsGroup,
+        ioda::Variable createVariable(ioda::ObsGroup& obsGroup,
                                       const std::string& name,
                                       const std::vector<ioda::Variable>& dimensions) final;
         void print() const final;
