@@ -10,8 +10,8 @@
 
 namespace Ingester
 {
-    BufrCollector::BufrCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet) :
-        fileUnit_(fileUnit),
+    BufrCollector::BufrCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet) :
+        fortranFileId_(fortranFileId),
         accumulator_(BufrAccumulator(mnemonicSet.getSize() * mnemonicSet.getMaxColumn())),
         mnemonicSet_(mnemonicSet)
     {

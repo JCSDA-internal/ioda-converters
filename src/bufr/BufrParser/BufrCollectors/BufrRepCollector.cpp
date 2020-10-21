@@ -12,8 +12,8 @@
 
 namespace Ingester
 {
-    BufrRepCollector::BufrRepCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet) :
-        BufrCollector(fileUnit, mnemonicSet)
+    BufrRepCollector::BufrRepCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet) :
+        BufrCollector(fortranFileId, mnemonicSet)
     {
         scratchData_.resize(accumulator_.getNumColumns());
     }
@@ -23,7 +23,7 @@ namespace Ingester
         double* scratchDataPtr = scratchData_.data();
 
         int result;
-        ufbrep_f(fileUnit_,
+        ufbrep_f(fortranFileId_,
                  reinterpret_cast<void**>(&scratchDataPtr),
                  mnemonicSet_.getSize(),
                  mnemonicSet_.getMaxColumn(),

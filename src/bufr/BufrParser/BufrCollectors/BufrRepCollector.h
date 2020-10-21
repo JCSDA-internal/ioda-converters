@@ -18,7 +18,7 @@ namespace Ingester
     class BufrRepCollector : public BufrCollector
     {
      public:
-        explicit BufrRepCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet);
+        explicit BufrRepCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet);
         ~BufrRepCollector() = default;
 
         void collect() final;

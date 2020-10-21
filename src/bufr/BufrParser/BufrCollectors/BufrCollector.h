@@ -29,7 +29,7 @@ namespace Ingester
         BufrDataMap finalize();
 
      protected:
-        const int fileUnit_;
+        const int fortranFileId_;
         BufrAccumulator accumulator_;
         const BufrMnemonicSet mnemonicSet_;
     };
