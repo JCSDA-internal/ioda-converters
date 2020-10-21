@@ -11,24 +11,32 @@
 
 #include "DatetimeExport.h"
 
-static const char* YEAR_KEY = "year";
-static const char* MONTH_KEY = "month";
-static const char* DAY_KEY = "day";
-static const char* HOUR_KEY = "hour";
-static const char* MINUTE_KEY = "minute";
-static const char* SECOND_KEY = "second";
-static const char* UTC_KEY = "isUTC";
+
+namespace
+{
+    namespace ConfKeys
+    {
+        const char* Year = "year";
+        const char* Month = "month";
+        const char* Day = "day";
+        const char* Hour = "hour";
+        const char* Minute = "minute";
+        const char* Second = "second";
+        const char* Utc = "isUTC";
+    }
+}
+
 
 namespace Ingester
 {
     DatetimeExport::DatetimeExport(const eckit::Configuration& conf) :
-      yearKey_(conf.getString(YEAR_KEY)),
-      monthKey_(conf.getString(MONTH_KEY)),
-      dayKey_(conf.getString(DAY_KEY)),
-      hourKey_(conf.getString(HOUR_KEY)),
-      minuteKey_(conf.getString(MINUTE_KEY)),
-      secondKey_(conf.getString(SECOND_KEY)),
-      isUTC_(conf.getBool(UTC_KEY))
+      yearKey_(conf.getString(ConfKeys::Year)),
+      monthKey_(conf.getString(ConfKeys::Month)),
+      dayKey_(conf.getString(ConfKeys::Day)),
+      hourKey_(conf.getString(ConfKeys::Hour)),
+      minuteKey_(conf.getString(ConfKeys::Minute)),
+      secondKey_(conf.getString(ConfKeys::Second)),
+      isUTC_(conf.getBool(ConfKeys::Utc))
     {
     }
 

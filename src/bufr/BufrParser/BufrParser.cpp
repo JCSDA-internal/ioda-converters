@@ -23,7 +23,6 @@
 
 namespace Ingester
 {
-    static const unsigned int SUBSET_STR_LEN = 25;
 
     BufrParser::BufrParser(BufrDescription &description) :
         description_(description),
@@ -39,16 +38,18 @@ namespace Ingester
 
     std::shared_ptr <DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
     {
+        const unsigned int SubsetStringLength = 25;
+
         assert(fileUnit_ > 0);
 
         auto collectors = BufrCollectors(fileUnit_);
         collectors.addMnemonicSets(description_.getMnemonicSets());
 
-        char subset[SUBSET_STR_LEN];
+        char subset[SubsetStringLength];
         int iddate;
 
         unsigned int messageNum = 0;
-        while (ireadmg_f(fileUnit_, subset, &iddate, SUBSET_STR_LEN) == 0)
+        while (ireadmg_f(fileUnit_, subset, &iddate, SubsetStringLength) == 0)
         {
             while (ireadsb_f(fileUnit_) == 0)
             {
@@ -87,7 +88,9 @@ namespace Ingester
 
     void BufrParser::openBufrFile(const std::string &filepath)
     {
-        fileUnit_ = 11;
+        const unsigned int FortranFileId = 11;
+
+        fileUnit_ = FortranFileId;
         open_f(fileUnit_, filepath.c_str());
         openbf_f(fileUnit_, "IN", fileUnit_);
     }

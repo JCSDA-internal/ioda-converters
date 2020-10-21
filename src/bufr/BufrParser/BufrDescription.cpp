@@ -17,48 +17,53 @@
 #include "Exports/DatetimeExport.h"
 #include "Exports/Export.h"
 
-
-static const char* FILENAME = "obsdatain";
-static const char* MNEMONIC_SETS_YAML_SECTION = "mnemonicSets";
-static const char* MNEMONIC_STR_YAML_NAME = "mnemonics";
-static const char* CHANNEL_NAME = "channels";
-static const char* EXPORT_NAME = "exports";
-static const char* DATETIME_NAME = "datetime";
-static const char* MNEMONIC_NAME = "mnemonic";
-
+namespace
+{
+    namespace ConfKeys
+    {
+        const char* Filename = "obsdatain";
+        const char* MnemonicSets = "mnemonicSets";
+        const char* Mnemonics = "mnemonics";
+        const char* Channels = "channels";
+        const char* Exports = "exports";
+        const char* Datetime = "datetime";
+        const char* Mnemonic = "mnemonic";
+    }  // ConfKeys
+}
 
 namespace Ingester
 {
     BufrDescription::BufrDescription(const eckit::Configuration &conf)
     {
-        setFilepath(conf.getString(FILENAME));
+        setFilepath(conf.getString(ConfKeys::Filename));
 
-        for (const auto& mnemonicSetConf : conf.getSubConfigurations(MNEMONIC_SETS_YAML_SECTION))
+        for (const auto& mnemonicSetConf : conf.getSubConfigurations(ConfKeys::MnemonicSets))
         {
             Channels channels = {1};
-            if (mnemonicSetConf.has(CHANNEL_NAME))
+            if (mnemonicSetConf.has(ConfKeys::Channels))
             {
-                auto intChannels = oops::parseIntSet(mnemonicSetConf.getString(CHANNEL_NAME));
+                auto intChannels = oops::parseIntSet(mnemonicSetConf.getString(ConfKeys::Channels));
                 channels = Channels(intChannels.begin(), intChannels.end());
             }
 
             addMnemonicSet(BufrMnemonicSet(
-                mnemonicSetConf.getStringVector(MNEMONIC_STR_YAML_NAME), channels));
+                mnemonicSetConf.getStringVector(ConfKeys::Mnemonics), channels));
         }
 
-        auto exportConfs = conf.getSubConfiguration(EXPORT_NAME);
+        auto exportConfs = conf.getSubConfiguration(ConfKeys::Exports);
         for (const auto& key : exportConfs.keys())
         {
             auto subconf = exportConfs.getSubConfiguration(key);
 
-            if (subconf.has(DATETIME_NAME))
+            if (subconf.has(ConfKeys::Datetime))
             {
-                auto dtconf = subconf.getSubConfiguration(DATETIME_NAME);
+                auto dtconf = subconf.getSubConfiguration(ConfKeys::Datetime);
                 addExport(key, std::make_shared<DatetimeExport>(dtconf));
             }
-            else if (subconf.has(MNEMONIC_NAME))
+            else if (subconf.has(ConfKeys::Mnemonic))
             {
-                addExport(key, std::make_shared<MnemonicExport>(subconf.getString(MNEMONIC_NAME)));
+                addExport(key, std::make_shared<MnemonicExport>(
+                    subconf.getString(ConfKeys::Mnemonic)));
             }
         }
     }
