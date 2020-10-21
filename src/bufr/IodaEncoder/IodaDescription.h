@@ -16,19 +16,19 @@
 
 namespace Ingester
 {
-    typedef struct
+    struct Range
     {
         float start;
         float end;
-    } Range;
+    };
 
-    typedef struct
+    struct ScaleDescription
     {
         std::string name;
         std::string size;
-    } ScaleDescription;
+    };
 
-    typedef struct
+    struct VariableDescription
     {
         std::string name;
         std::string source;
@@ -37,7 +37,7 @@ namespace Ingester
         std::string units;
         std::shared_ptr<std::string> coordinates;  // Optional
         std::shared_ptr<Range> range;  // Optional
-    } VariableDescription;
+    };
 
     typedef std::vector<ScaleDescription> ScaleDescriptions;
     typedef std::vector<VariableDescription> VariableDescriptions;
