@@ -7,7 +7,6 @@
 
 #include "BufrParser.h"
 
-#include <iostream>
 #include <map>
 
 #include "eckit/exception/Exceptions.h"
@@ -16,14 +15,11 @@
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"
-#include "Exports/MnemonicExport.h"
-#include "Exports/DatetimeExport.h"
 #include "Exports/Export.h"
 
 
 namespace Ingester
 {
-
     BufrParser::BufrParser(BufrDescription &description) :
         description_(description),
         fortranFileId_(0)
