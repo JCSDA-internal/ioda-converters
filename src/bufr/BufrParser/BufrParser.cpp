@@ -74,7 +74,7 @@ namespace Ingester
             auto key = exportIt->first;
             auto data_exporter = exportIt->second;
 
-            size = (size == 0) ? srcData.begin()->second.rows() : size;
+            if (!size) size = srcData.begin()->second.rows();
 
             outputData->add(key, data_exporter->exportData(srcData));
 
