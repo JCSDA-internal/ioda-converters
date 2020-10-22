@@ -43,23 +43,23 @@ class Profile(object):
     def _read(self):
         ncd = nc.Dataset(self.filename)
         dpth = (ncd.variables['ctd_depth'][:])
+        time = ncd.variables['ctd_time'][:]
         lons = np.float32(ncd.variables['longitude'][:])
         lats = np.float32(ncd.variables['latitude'][:])
-        hrs = np.float32(np.linspace(1,23,58))
+#        hrs = np.float32(np.linspace(1,23,58))
         vals = np.float32(ncd.variables['temperature'][:])
         errs = np.float32(np.matlib.repmat(2.258986,len(lons) , 1)) 
         qcs = ncd.variables['temperature_qc'][:]-1 # to unify the QC
         errs = np.squeeze(errs)
         ncd.close()
-
-        base_date = datetime(2018,4,15) #example
-        for i in range(len(hrs)):
+        base_date = datetime(1970, 1, 1)
+        for i in range(len(time)):
             if qcs[i] != 0:
                 continue
             valKey = vName, self.writer.OvalName()
             errKey = vName, self.writer.OerrName()
             qcKey = vName, self.writer.OqcName()
-            dt = base_date + timedelta(hours=float(hrs[i]))
+            dt = base_date +  timedelta(seconds=int(time[i])) 
             locKey = lats[i], lons[i], dpth[i], dt.strftime(
                 "%Y-%m-%dT%H:%M:%SZ")
             self.data[0][locKey][valKey] = vals[i]
@@ -71,14 +71,14 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read insitu T/S profile observation file(s) that have already'
-            ' been QCd and thinned for use in Hybrid-GODAS system.')
+            'Read NOAA AOML Hurricane Glider Temperature profile observation file(s) '
+            )
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="name of HGODAS observation input file(s)",
+        help="name of Glider observation input file(s)",
         type=str, required=True)
     required.add_argument(
         '-o', '--output',
