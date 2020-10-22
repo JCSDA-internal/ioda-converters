@@ -1,4 +1,6 @@
-list(APPEND libs gsi_ncdiag.py)
+list(APPEND libs
+  gsi_ncdiag.py
+  combine_conv.py)
 
 list( APPEND programs
   proc_gsi_ncdiag.py
