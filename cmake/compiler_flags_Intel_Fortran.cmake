@@ -7,9 +7,7 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-if( OpenMP_Fortran_FOUND )
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback")
-endif()
 
 ####################################################################
 # RELEASE FLAGS
