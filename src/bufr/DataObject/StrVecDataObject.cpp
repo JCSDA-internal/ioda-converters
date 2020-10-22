@@ -17,9 +17,9 @@ namespace Ingester
     {
     }
 
-    ioda::Variable StrVecDataObject::createVariable(ioda::ObsGroup obsGroup,
-                                                    std::string name,
-                                                    std::vector<ioda::Variable> dimensions)
+    ioda::Variable StrVecDataObject::createVariable(ioda::ObsGroup& obsGroup,
+                                                    const std::string& name,
+                                                    const std::vector<ioda::Variable>& dimensions)
     {
         static ioda::VariableCreationParameters params = makeCreationParams();
 
@@ -28,7 +28,7 @@ namespace Ingester
         return var;
     }
 
-    void StrVecDataObject::print()
+    void StrVecDataObject::print() const
     {
         for (const auto& str : strVector_)
         {

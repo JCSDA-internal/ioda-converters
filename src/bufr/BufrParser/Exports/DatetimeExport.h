@@ -20,21 +20,37 @@
 
 namespace Ingester
 {
+    /// \brief Exports parsed data as datetimes using speciefied Mnemonics
     class DatetimeExport final : public Export
     {
      public:
         explicit DatetimeExport(const eckit::Configuration& conf);
         ~DatetimeExport() final = default;
 
+        /// \brief Get the configured mnemonics and turn them into datetime strings
+        /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObject> exportData(BufrDataMap map) final;
 
      private:
+        /// \brief Mnemonic for year
         const std::string yearKey_;
+
+        /// \brief Mnemonic for month
         const std::string monthKey_;
+
+        /// \brief Mnemonic for day
         const std::string dayKey_;
+
+        /// \brief Mnemonic for hour
         const std::string hourKey_;
+
+        /// \brief Mnemonic for minute
         const std::string minuteKey_;
+
+        /// \brief Mnemonic for second
         const std::string secondKey_;
+
+        /// \brief Is it UTC time or not
         const bool isUTC_;
     };
 }  // namespace Ingester

@@ -41,7 +41,7 @@ namespace Ingester
 
         // Create Scales
         ioda::NewDimensionScales_t newDims;
-        for (const auto& scale : description_.getScales())
+        for (const auto& scale : description_.getDims())
         {
             std::size_t size = 0;
             if (scale.size == "{LENGTH}")
@@ -63,7 +63,7 @@ namespace Ingester
         auto obsGroup = ioda::ObsGroup::generate(rootGroup, newDims);
 
         auto scaleMap = std::map<std::string, ioda::Variable>();
-        for (const auto& scale : description_.getScales())
+        for (const auto& scale : description_.getDims())
         {
             scaleMap.insert({scale.name, obsGroup.vars[scale.name]});
         }
