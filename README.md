@@ -146,7 +146,7 @@ For AOD, `viirs_aod2ioda.py`, is used to convert the native netCDF format for ob
 ```
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -m nesdis -k maskout -t 0.0
 ```
-For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to mask all missing values out. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.
+For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to not write out missing values. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.
 
 
 ## land
@@ -157,6 +157,5 @@ For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.p
 ```
 Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
 ```
-For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to mask all missing values out.
-
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
     
