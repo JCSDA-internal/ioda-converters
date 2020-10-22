@@ -34,7 +34,7 @@ namespace Ingester
         IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
         void reset();
 
-        //Getters
+        // Getters
         inline Eigen::Index getNumColumns() const { return numColumns_; }
 
      private:
