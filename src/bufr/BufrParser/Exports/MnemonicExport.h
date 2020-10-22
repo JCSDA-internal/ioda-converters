@@ -18,15 +18,19 @@
 
 namespace Ingester
 {
+    /// \brief Exports parsed data associated with a mnemonic (ex: "CLAT")
     class MnemonicExport final : public Export
     {
      public:
-        explicit MnemonicExport(std::string mnemonicStr);
+        explicit MnemonicExport(std::string mnemonic);
         ~MnemonicExport() final = default;
 
+        /// \brief Gets the requested data, applies transforms, and returns the requested data
+        /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObject> exportData(BufrDataMap map) final;
 
      private:
+        /// \brief The BUFR mnemonic of interest
         std::string mnemonic_;
     };
 }  // namespace Ingester

@@ -56,7 +56,7 @@ namespace Ingester
                 auto iodaConf = conf.getSubConfiguration("ioda");
                 auto description = Ingester::IodaDescription(iodaConf);
 
-                EXPECT(description.getScales().size() > 0);
+                EXPECT(description.getDims().size() > 0);
                 EXPECT(description.getVariables().size() > 0);
             }
             else
@@ -105,7 +105,7 @@ namespace Ingester
 
             auto iodaDesc = IodaDescription();
 
-            ScaleDescription scale;
+            DimensionDescription scale;
             scale.name = "scale_name";
             scale.size = "1";
 
@@ -116,10 +116,10 @@ namespace Ingester
             varDesc.longName = "long_variable_name";
             varDesc.units = "units";
 
-            iodaDesc.addScale(scale);
+            iodaDesc.addDimension(scale);
             iodaDesc.addVariable(varDesc);
 
-            EXPECT(iodaDesc.getScales().size() > 0);
+            EXPECT(iodaDesc.getDims().size() > 0);
             EXPECT(iodaDesc.getVariables().size() > 0);
         }
 

@@ -41,5 +41,4 @@ namespace Ingester
 
         return params;
     }
-
 }  // namespace Ingester

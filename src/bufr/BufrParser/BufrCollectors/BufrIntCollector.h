@@ -14,15 +14,18 @@
 
 namespace Ingester
 {
+    /// \brief Collector that uses the BUFR interface ufbint call to grab data (single col data).
     class BufrIntCollector: public BufrCollector
     {
      public:
         explicit BufrIntCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet);
         ~BufrIntCollector() = default;
 
+        /// \brief Grab the next section of data
         void collect() final;
 
      private:
+        /// \brief Pre-allocated buffer to hand to the Fortran interface.
         std::vector<double> scratchData_;
     };
 }  // namespace Ingester

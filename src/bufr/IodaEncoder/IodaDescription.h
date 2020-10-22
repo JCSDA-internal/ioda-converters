@@ -22,7 +22,7 @@ namespace Ingester
         float end;
     };
 
-    struct ScaleDescription
+    struct DimensionDescription
     {
         std::string name;
         std::string size;
@@ -39,25 +39,35 @@ namespace Ingester
         std::shared_ptr<Range> range;  // Optional
     };
 
-    typedef std::vector<ScaleDescription> ScaleDescriptions;
+    typedef std::vector<DimensionDescription> DimDescriptions;
     typedef std::vector<VariableDescription> VariableDescriptions;
 
+    /// \brief Describes how to write data to IODA.
     class IodaDescription
     {
      public:
         IodaDescription() = default;
         explicit IodaDescription(const eckit::Configuration& conf);
 
-        void addScale(ScaleDescription scale);
+        /// \brief Add Dimension defenition
+        void addDimension(DimensionDescription scale);
+
+        /// \brief Add Variable defenition
         void addVariable(VariableDescription variable);
 
-        inline ScaleDescriptions getScales() const { return dimensions_; }
+        // Getters
+        inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
         inline std::string getFilepath() const { return filepath_; }
 
      private:
+        /// \brief The relative path of the output file to create
         std::string filepath_;
-        ScaleDescriptions dimensions_;
+
+        /// \brief Collection of defined dimensions
+        DimDescriptions dimensions_;
+
+        /// \brief Collection of defined variables
         VariableDescriptions variables_;
     };
 }  // namespace Ingester

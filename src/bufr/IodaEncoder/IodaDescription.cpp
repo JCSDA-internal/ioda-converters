@@ -49,11 +49,11 @@ namespace Ingester
 
         for (const auto& scaleConf : conf.getSubConfigurations(ConfKeys::Dimensions))
         {
-            ScaleDescription scale;
+            DimensionDescription scale;
             scale.name = scaleConf.getString(ConfKeys::Dimension::Name);
             scale.size = scaleConf.getString(ConfKeys::Dimension::Size);
 
-            addScale(scale);
+            addDimension(scale);
         }
 
         for (const auto& varConf : conf.getSubConfigurations(ConfKeys::Variables))
@@ -91,7 +91,7 @@ namespace Ingester
         }
     }
 
-    void IodaDescription::addScale(ScaleDescription scale)
+    void IodaDescription::addDimension(DimensionDescription scale)
     {
         dimensions_.push_back(scale);
     }

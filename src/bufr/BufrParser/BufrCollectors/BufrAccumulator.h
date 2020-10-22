@@ -16,12 +16,21 @@
 
 namespace Ingester
 {
+    /// \brief Accumulates provided data into a dynamically expanding Eigen Array
     class BufrAccumulator
     {
      public:
+        /// \param numColumns Width of collected data.
+        /// \param blockSize The amount to allocate when we need to extend the Eigen Array
         explicit BufrAccumulator(Eigen::Index numColumns, Eigen::Index blockSize = 50000);
 
+        /// \brief Add row of data to the internal ddata structure
+        /// \param newRow Collection of values to add (size must match the number of columns)
         void addRow(std::vector<double>& newRow);
+
+        /// \brief Get an Eigen Array that contains a slice of the collected data.
+        /// \param startCol Column offset where to start (should be size(channels) * paramNumber)
+        /// \param channels Channels to collect starting from the start position
         IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
         void reset();
 
@@ -29,9 +38,16 @@ namespace Ingester
         inline Eigen::Index getNumColumns() const { return numColumns_; }
 
      private:
+        /// \brief Eigen Array that holds the accumulated data
         IngesterArray dataArray_;
+
+        /// \brief Total number of columns (width of data structure)
         Eigen::Index numColumns_;
+
+        /// \brief Number of data rows of collected data.
         Eigen::Index numDataRows_;
+
+        /// \brief Amount to allocate when we need to extend the Eigen Array
         Eigen::Index blockSize_;
     };
 }  // namespace Ingester
