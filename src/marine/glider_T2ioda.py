@@ -53,7 +53,9 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        for i in range(len(time)):
+        print('lenth',len(time))
+        for i in range(len(time)-1): ##rule out unhashed values
+
             if qcs[i] != 0:
                 continue
             valKey = vName, self.writer.OvalName()
@@ -62,6 +64,7 @@ class Profile(object):
             dt = base_date +  timedelta(seconds=int(time[i])) 
             locKey = lats[i], lons[i], dpth[i], dt.strftime(
                 "%Y-%m-%dT%H:%M:%SZ")
+#            print('qcs',[i])
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = qcs[i]
