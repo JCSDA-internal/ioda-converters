@@ -15,7 +15,7 @@ namespace Ingester
     class ScalingTransform : public Transform
     {
      public:
-        explicit ScalingTransform(double scaling_);
+        explicit ScalingTransform(const double scaling_);
         ~ScalingTransform() = default;
 
         void apply(IngesterArray& array) override;

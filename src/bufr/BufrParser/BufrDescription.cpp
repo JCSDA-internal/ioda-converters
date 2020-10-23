@@ -73,12 +73,13 @@ namespace Ingester
         }
     }
 
-    void BufrDescription::addMnemonicSet(BufrMnemonicSet mnemonicSet)
+    void BufrDescription::addMnemonicSet(const BufrMnemonicSet& mnemonicSet)
     {
         mnemonicSets_.push_back(mnemonicSet);
     }
 
-    void BufrDescription::addExport(std::string key, std::shared_ptr<Export> bufrExport)
+    void BufrDescription::addExport(const std::string& key,
+                                    const std::shared_ptr<Export>& bufrExport)
     {
         exportMap_.insert({key, bufrExport});
     }

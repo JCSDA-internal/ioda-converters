@@ -50,14 +50,14 @@ namespace Ingester
         explicit IodaDescription(const eckit::Configuration& conf);
 
         /// \brief Add Dimension defenition
-        void addDimension(DimensionDescription scale);
+        void addDimension(const DimensionDescription& scale);
 
         /// \brief Add Variable defenition
-        void addVariable(VariableDescription variable);
+        void addVariable(const VariableDescription& variable);
 
         // Setters
-        inline void setBackend(ioda::Engines::BackendNames backend) { backend_ = backend; }
-        inline void setFilepath(std::string filepath) { filepath_ = filepath; }
+        inline void setBackend(const ioda::Engines::BackendNames& backend) { backend_ = backend; }
+        inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
 
         // Getters
         inline ioda::Engines::BackendNames getBackend() const { return backend_; }
@@ -79,6 +79,6 @@ namespace Ingester
         VariableDescriptions variables_;
 
         /// \brief Collection of defined variables
-        void setBackend(std::string backend);
+        void setBackend(const std::string& backend);
     };
 }  // namespace Ingester

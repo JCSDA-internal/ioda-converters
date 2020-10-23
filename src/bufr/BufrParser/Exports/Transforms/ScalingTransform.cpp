@@ -10,7 +10,7 @@
 
 namespace Ingester
 {
-    ScalingTransform::ScalingTransform(double scaling) :
+    ScalingTransform::ScalingTransform(const double scaling) :
       scaling_(scaling)
     {
     }

@@ -76,7 +76,7 @@ namespace Ingester
         /// \tparam T The Parser class
         /// \param name The name to associate with the parser class.
         template<class T>
-        static void registerParser(std::string name)
+        static void registerParser(const std::string& name)
         {
             if (getMakers().find(name) != getMakers().end())
             {

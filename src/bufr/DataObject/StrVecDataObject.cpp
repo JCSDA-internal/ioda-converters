@@ -12,7 +12,7 @@
 
 namespace Ingester
 {
-    StrVecDataObject::StrVecDataObject(std::vector<std::string>& strVector) :
+    StrVecDataObject::StrVecDataObject(const std::vector<std::string>& strVector) :
         strVector_(strVector)
     {
     }

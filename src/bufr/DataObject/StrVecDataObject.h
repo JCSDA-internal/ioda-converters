@@ -19,7 +19,7 @@ namespace Ingester
     class StrVecDataObject : public DataObject
     {
      public:
-        explicit StrVecDataObject(std::vector<std::string>& strVector);
+        explicit StrVecDataObject(const std::vector<std::string>& strVector);
         ~StrVecDataObject() = default;
 
         /// \brief Makes an ioda::Variable and ads it to the given ioda::ObsGroup

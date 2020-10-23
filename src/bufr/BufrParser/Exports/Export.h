@@ -23,7 +23,7 @@ namespace Ingester
         virtual ~Export() = default;
 
         /// \brief Export data objects for previously parsed data from BufrDataMap.
-        virtual std::shared_ptr<DataObject> exportData(BufrDataMap map) = 0;
+        virtual std::shared_ptr<DataObject> exportData(const BufrDataMap& map) = 0;
     };
 }  // namespace Ingester
 

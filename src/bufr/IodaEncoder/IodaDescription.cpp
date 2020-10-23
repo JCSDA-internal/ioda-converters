@@ -112,17 +112,17 @@ namespace Ingester
         }
     }
 
-    void IodaDescription::addDimension(DimensionDescription scale)
+    void IodaDescription::addDimension(const DimensionDescription& scale)
     {
         dimensions_.push_back(scale);
     }
 
-    void IodaDescription::addVariable(VariableDescription variable)
+    void IodaDescription::addVariable(const VariableDescription& variable)
     {
         variables_.push_back(variable);
     }
 
-    void IodaDescription::setBackend(std::string backend)
+    void IodaDescription::setBackend(const std::string& backend)
     {
         auto backend_lowercase = boost::algorithm::to_lower_copy(backend);
         if (backend_lowercase == "netcdf")

@@ -40,7 +40,7 @@ namespace Ingester
     {
     }
 
-    std::shared_ptr<DataObject> DatetimeExport::exportData(BufrDataMap map)
+    std::shared_ptr<DataObject> DatetimeExport::exportData(const BufrDataMap& map)
     {
         auto datetimes = std::vector<std::string>();
 

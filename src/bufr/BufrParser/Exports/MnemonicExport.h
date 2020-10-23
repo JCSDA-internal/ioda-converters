@@ -29,7 +29,7 @@ namespace Ingester
 
         /// \brief Gets the requested data, applies transforms, and returns the requested data
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
-        std::shared_ptr<DataObject> exportData(BufrDataMap map) final;
+        std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
 
      private:
         /// \brief The BUFR mnemonic of interest

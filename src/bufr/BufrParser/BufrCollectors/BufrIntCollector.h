@@ -18,7 +18,7 @@ namespace Ingester
     class BufrIntCollector: public BufrCollector
     {
      public:
-        explicit BufrIntCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet);
+        explicit BufrIntCollector(const int fortranFileId, const BufrMnemonicSet& mnemonicSet);
         ~BufrIntCollector() = default;
 
         /// \brief Grab the next section of data

@@ -20,7 +20,7 @@
 
 namespace Ingester
 {
-    BufrParser::BufrParser(BufrDescription &description) :
+    BufrParser::BufrParser(const BufrDescription &description) :
         description_(description),
         fortranFileId_(0)
     {

@@ -18,7 +18,7 @@ namespace Ingester
     {
     }
 
-    std::shared_ptr<DataObject> MnemonicExport::exportData(BufrDataMap map)
+    std::shared_ptr<DataObject> MnemonicExport::exportData(const BufrDataMap& map)
     {
         auto data = map.at(mnemonic_);
         applyTransforms(data);

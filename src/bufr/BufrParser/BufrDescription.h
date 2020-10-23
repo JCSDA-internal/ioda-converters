@@ -31,12 +31,12 @@ namespace Ingester
 
         /// \brief Add a BufrMnemonicSet to the description.
         /// \param mnemonicSet BufrMnemonicSet to add
-        void addMnemonicSet(BufrMnemonicSet mnemonicSet);
+        void addMnemonicSet(const BufrMnemonicSet& mnemonicSet);
 
         /// \brief Add an Export description.
         /// \param key string that defines the name of the export
         /// \param bufrExport Export shared ptr to an Export instance
-        void addExport(std::string key, std::shared_ptr<Export> bufrExport);
+        void addExport(const std::string& key, const std::shared_ptr<Export>& bufrExport);
 
         //Setters
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }

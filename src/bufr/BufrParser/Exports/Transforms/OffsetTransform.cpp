@@ -10,7 +10,7 @@
 
 namespace Ingester
 {
-    OffsetTransform::OffsetTransform(double offset) :
+    OffsetTransform::OffsetTransform(const double offset) :
       offset_(offset)
     {
     }

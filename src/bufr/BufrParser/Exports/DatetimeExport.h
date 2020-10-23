@@ -29,7 +29,7 @@ namespace Ingester
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
-        std::shared_ptr<DataObject> exportData(BufrDataMap map) final;
+        std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
 
      private:
         /// \brief Mnemonic for year
