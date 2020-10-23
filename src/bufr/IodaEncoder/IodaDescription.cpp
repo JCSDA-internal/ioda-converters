@@ -7,6 +7,8 @@
 
 #include "IodaDescription.h"
 
+#include <boost/algorithm/string.hpp>
+
 #include "eckit/exception/Exceptions.h"
 
 namespace
@@ -122,11 +124,12 @@ namespace Ingester
 
     void IodaDescription::setBackend(std::string backend)
     {
-        if (backend == "netcdf")
+        auto backend_lowercase = boost::algorithm::to_lower_copy(backend);
+        if (backend_lowercase == "netcdf")
         {
             setBackend(ioda::Engines::BackendNames::Hdf5File);
         }
-        else if (backend == "inmemory" || backend == "in-memory")
+        else if (backend_lowercase == "inmemory" || backend_lowercase == "in-memory")
         {
             setBackend(ioda::Engines::BackendNames::ObsStore);
         }
