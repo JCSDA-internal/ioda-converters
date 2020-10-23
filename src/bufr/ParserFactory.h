@@ -17,8 +17,13 @@
 
 #include "Parser.h"
 
-static const char* PARSER_NAME = "name";
-
+namespace
+{
+    namespace ConfKeys
+    {
+        const char* ParserName = "name";
+    }
+}
 
 namespace Ingester
 {
@@ -43,18 +48,19 @@ namespace Ingester
      public:
         static std::shared_ptr<Parser> create(const eckit::Configuration &conf)
         {
-            if (!conf.has(PARSER_NAME))
+            if (!conf.has(ConfKeys::ParserName))
             {
                 throw eckit::BadParameter("Parser configuration has no \"name\".");
             }
-            else if (getMakers().find(conf.getString(PARSER_NAME)) == getMakers().end())
+            else if (getMakers().find(conf.getString(ConfKeys::ParserName)) == getMakers().end())
             {
                 std::ostringstream errStr;
-                errStr << "Trying to use unregistered parser named " << conf.getString(PARSER_NAME);
+                errStr << "Trying to use unregistered parser named ";
+                errStr << conf.getString(ConfKeys::ParserName);
                 throw eckit::BadParameter(errStr.str());
             }
 
-            return getMakers()[conf.getString(PARSER_NAME)]->make(conf);
+            return getMakers()[conf.getString(ConfKeys::ParserName)]->make(conf);
         }
 
         template<class T>
