@@ -8,54 +8,28 @@
 #include "bufr.interface.h"
 
 #include "BufrIntCollector.h"
-#include "BufrParser/BufrMnemonicSet.h"
 
 
 namespace Ingester
 {
-    BufrIntCollector::BufrIntCollector(const int fileUnit, const BufrMnemonicSet mnemonicSet) :
-        BufrCollector(fileUnit,
-                      BufrAccumulator(mnemonicSet.getSize() * mnemonicSet.getMaxColumn())),
-        mnemonicSet_(mnemonicSet)
+    BufrIntCollector::BufrIntCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet) :
+        BufrCollector(fortranFileId, mnemonicSet)
     {
-        scratchData_ = new double[mnemonicSet.getSize() * mnemonicSet.getMaxColumn()];
-    }
-
-    BufrIntCollector::~BufrIntCollector()
-    {
-        delete[] scratchData_;
+        scratchData_.resize(accumulator_.getNumColumns());
     }
 
     void BufrIntCollector::collect()
     {
-        int result;
+        double* scratchDataPtr = scratchData_.data();
 
-        ufbint_f(fileUnit_,
-                 reinterpret_cast<void**> (&scratchData_),
+        int result;
+        ufbint_f(fortranFileId_,
+                 reinterpret_cast<void**> (&scratchDataPtr),
                  mnemonicSet_.getSize(),
                  mnemonicSet_.getMaxColumn(),
                  &result,
                  mnemonicSet_.getMnemonicsStr().c_str());
 
         accumulator_.addRow(scratchData_);
-    }
-
-
-    BufrDataMap BufrIntCollector::finalize()
-    {
-        IngesterArrayMap dataMap;
-        size_t fieldIdx = 0;
-        for (const auto &fieldName : mnemonicSet_.getMnemonics())
-        {
-            IngesterArray dataArr = accumulator_.getData(fieldIdx * mnemonicSet_.getMaxColumn(),
-                                                         mnemonicSet_.getChannels());
-
-            dataMap.insert({fieldName, dataArr});
-            fieldIdx++;
-        }
-
-        accumulator_.reset();
-
-        return dataMap;
     }
 }  // namespace Ingester

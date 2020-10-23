@@ -16,11 +16,13 @@
 
 namespace Ingester
 {
+    /// \brief Abstract base class for all Exports.
     class Export
     {
      public:
         virtual ~Export() = default;
 
+        /// \brief Export data objects for previously parsed data from BufrDataMap.
         virtual std::shared_ptr<DataObject> exportData(BufrDataMap map) = 0;
     };
 }  // namespace Ingester

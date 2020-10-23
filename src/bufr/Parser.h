@@ -19,6 +19,8 @@ namespace Ingester
         Parser() = default;
         explicit Parser(const eckit::Configuration& conf);
 
+        virtual ~Parser() = default;
+
         virtual std::shared_ptr<DataContainer> parse(const size_t maxMsgsToParse = 0) = 0;
         virtual void reset() = 0;
     };

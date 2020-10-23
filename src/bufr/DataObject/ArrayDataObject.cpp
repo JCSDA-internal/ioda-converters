@@ -16,9 +16,9 @@ namespace Ingester
     {
     }
 
-    ioda::Variable ArrayDataObject::createVariable(ioda::ObsGroup obsGroup,
-                                                   std::string name,
-                                                   std::vector<ioda::Variable> dimensions)
+    ioda::Variable ArrayDataObject::createVariable(ioda::ObsGroup& obsGroup,
+                                                   const std::string& name,
+                                                   const std::vector<ioda::Variable>& dimensions)
     {
         static ioda::VariableCreationParameters params = makeCreationParams();
 
@@ -27,7 +27,7 @@ namespace Ingester
         return var;
     }
 
-    void ArrayDataObject::print()
+    void ArrayDataObject::print() const
     {
         std::cout << eigArray_ << std::endl;
     }
@@ -41,5 +41,4 @@ namespace Ingester
 
         return params;
     }
-
 }  // namespace Ingester

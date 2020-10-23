@@ -64,7 +64,7 @@ namespace Ingester
 
 int main(int argc, char **argv)
 {
-    if (argc < 1)
+    if (argc < 2)
     {
         eckit::BadParameter("Missing argument. Must include YAML file path.");
     }

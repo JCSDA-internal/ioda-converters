@@ -13,22 +13,35 @@
 #include "Eigen/Dense"
 
 #include "BufrParser/BufrTypes.h"
+#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrAccumulator.h"
 
 
 namespace Ingester
 {
+    /// \brief Collectors know how to use the BUFR interface to grab data associated with
+    /// configured mnemonicSets.
     class BufrCollector
     {
      public:
-        BufrCollector(const int fileUnit, const BufrAccumulator accumulator);
+        BufrCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet);
         virtual ~BufrCollector() = default;
 
+        /// \brief Grab the data
         virtual void collect() = 0;
-        virtual BufrDataMap finalize() = 0;
+
+        /// \brief Get the data we want from the accumulator and make our data map. Resets
+        /// the accumulator.
+        BufrDataMap finalize();
 
      protected:
-        const int fileUnit_;
+        /// \brief Fortran file ID for the open BUFR file
+        const int fortranFileId_;
+
+        /// \brief Accumulator to collect the data we are collecting
         BufrAccumulator accumulator_;
+
+        /// \brief Specifies the mnemonics and channels this collector gets from the BUFR file.
+        const BufrMnemonicSet mnemonicSet_;
     };
 }  // namespace Ingester

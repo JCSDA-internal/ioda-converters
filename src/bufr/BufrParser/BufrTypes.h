@@ -8,8 +8,16 @@
 #pragma once
 
 #include <set>
+#include <map>
+#include <memory>
 
 #include "IngesterTypes.h"
 
-typedef std::set<int> Channels;
-typedef IngesterArrayMap BufrDataMap;
+namespace Ingester
+{
+    class Export;
+
+    typedef std::set<size_t> Channels;
+    typedef IngesterArrayMap BufrDataMap;
+    typedef std::map<std::string, std::shared_ptr<Export>> ExportMap;
+}  // namespace Ingester

@@ -16,19 +16,19 @@
 
 namespace Ingester
 {
-    typedef struct
+    struct Range
     {
         float start;
         float end;
-    } Range;
+    };
 
-    typedef struct
+    struct DimensionDescription
     {
         std::string name;
         std::string size;
-    } ScaleDescription;
+    };
 
-    typedef struct
+    struct VariableDescription
     {
         std::string name;
         std::string source;
@@ -37,34 +37,48 @@ namespace Ingester
         std::string units;
         std::shared_ptr<std::string> coordinates;  // Optional
         std::shared_ptr<Range> range;  // Optional
-    } VariableDescription;
+    };
 
-    typedef std::vector<ScaleDescription> ScaleDescriptions;
+    typedef std::vector<DimensionDescription> DimDescriptions;
     typedef std::vector<VariableDescription> VariableDescriptions;
 
+    /// \brief Describes how to write data to IODA.
     class IodaDescription
     {
      public:
         IodaDescription() = default;
         explicit IodaDescription(const eckit::Configuration& conf);
 
-        void addScale(ScaleDescription scale);
+        /// \brief Add Dimension defenition
+        void addDimension(DimensionDescription scale);
+
+        /// \brief Add Variable defenition
         void addVariable(VariableDescription variable);
 
+        // Setters
         inline void setBackend(ioda::Engines::BackendNames backend) { backend_ = backend; }
         inline void setFilepath(std::string filepath) { filepath_ = filepath; }
 
+        // Getters
         inline ioda::Engines::BackendNames getBackend() const { return backend_; }
         inline std::string getFilepath() const { return filepath_; }
-        inline ScaleDescriptions getScales() const { return dimensions_; }
+        inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
 
      private:
+        /// \brief The backend type to use
         ioda::Engines::BackendNames backend_;
+
+        /// \brief The relative path of the output file to create
         std::string filepath_;
-        ScaleDescriptions dimensions_;
+
+        /// \brief Collection of defined dimensions
+        DimDescriptions dimensions_;
+
+        /// \brief Collection of defined variables
         VariableDescriptions variables_;
 
+        /// \brief Collection of defined variables
         void setBackend(std::string backend);
     };
 }  // namespace Ingester

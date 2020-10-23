@@ -22,16 +22,19 @@ namespace Ingester
 {
     class DataContainer;
 
+    /// \brief Uses IodaDescription and parsed data to create IODA data.
     class IodaEncoder
     {
      public:
         explicit IodaEncoder(const eckit::Configuration&  conf);
         explicit IodaEncoder(const IodaDescription&  description);
 
+        /// \brief Encode the data into an ioda::ObsGroup object
         ioda::ObsGroup encode(const std::shared_ptr<DataContainer>& data,
                               bool append = false);
 
      private:
+        /// \brief The description
         const IodaDescription description_;
     };
 }  // namespace Ingester

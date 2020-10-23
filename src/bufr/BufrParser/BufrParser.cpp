@@ -7,34 +7,29 @@
 
 #include "BufrParser.h"
 
-#include <iostream>
 #include <map>
 
-#include "bufr.interface.h"
+#include "eckit/exception/Exceptions.h"
 
+#include "bufr.interface.h"
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"
-
-#include "Exports/MnemonicExport.h"
-#include "Exports/DatetimeExport.h"
 #include "Exports/Export.h"
 
 
 namespace Ingester
 {
-    static const unsigned int SUBSET_STR_LEN = 25;
-
     BufrParser::BufrParser(BufrDescription &description) :
         description_(description),
-        fileUnit_(0)
+        fortranFileId_(0)
     {
         reset();
     }
 
     BufrParser::BufrParser(const eckit::Configuration& conf) :
         description_(BufrDescription(conf)),
-        fileUnit_(0)
+        fortranFileId_(0)
     {
         reset();
     }
@@ -46,18 +41,23 @@ namespace Ingester
 
     std::shared_ptr <DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
     {
-        assert(fileUnit_ > 0);
+        const unsigned int SubsetStringLength = 25;
 
-        auto collectors = BufrCollectors(fileUnit_);
+        if (fortranFileId_ <= 10)
+        {
+            throw eckit::BadValue("Fortran File ID is an invalid number (must be > 10).");
+        }
+
+        auto collectors = BufrCollectors(fortranFileId_);
         collectors.addMnemonicSets(description_.getMnemonicSets());
 
-        char subset[SUBSET_STR_LEN];
+        char subset[SubsetStringLength];
         int iddate;
 
         unsigned int messageNum = 0;
-        while (ireadmg_f(fileUnit_, subset, &iddate, SUBSET_STR_LEN) == 0)
+        while (ireadmg_f(fortranFileId_, subset, &iddate, SubsetStringLength) == 0)
         {
-            while (ireadsb_f(fileUnit_) == 0)
+            while (ireadsb_f(fortranFileId_) == 0)
             {
                 collectors.collect();
             }
@@ -80,7 +80,7 @@ namespace Ingester
             auto key = exportIt->first;
             auto data_exporter = exportIt->second;
 
-            size = (size == 0) ? srcData.begin()->second.rows() : size;
+            if (!size) size = srcData.begin()->second.rows();
 
             outputData->add(key, data_exporter->exportData(srcData));
 
@@ -94,21 +94,21 @@ namespace Ingester
 
     void BufrParser::openBufrFile(const std::string &filepath)
     {
-        fileUnit_ = 11;
-        open_f(fileUnit_, filepath.c_str());
-        openbf_f(fileUnit_, "IN", fileUnit_);
+        fortranFileId_ = 11;  // Fortran file id must be a integer > 10
+        open_f(fortranFileId_, filepath.c_str());
+        openbf_f(fortranFileId_, "IN", fortranFileId_);
     }
 
     void BufrParser::closeBufrFile()
     {
-        closbf_f(fileUnit_);
-        close_f(fileUnit_);
-        fileUnit_ = 0;
+        closbf_f(fortranFileId_);
+        close_f(fortranFileId_);
+        fortranFileId_ = 0;
     }
 
     void BufrParser::reset()
     {
-        if (fileUnit_ != 0)
+        if (fortranFileId_ != 0)
         {
             closeBufrFile();
         }

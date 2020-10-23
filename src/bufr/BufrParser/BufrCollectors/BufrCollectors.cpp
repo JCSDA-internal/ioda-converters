@@ -17,8 +17,8 @@
 
 namespace Ingester
 {
-    BufrCollectors::BufrCollectors(unsigned int fileUnit) :
-        fileUnit_(fileUnit)
+    BufrCollectors::BufrCollectors(unsigned int fortranFileId) :
+        fortranFileId_(fortranFileId)
     {
     }
 
@@ -34,11 +34,11 @@ namespace Ingester
     {
         if (mnemonicSet.getMaxColumn() == 1)
         {
-            collectors_.push_back(std::make_shared<BufrIntCollector>(fileUnit_, mnemonicSet));
+            collectors_.push_back(std::make_shared<BufrIntCollector>(fortranFileId_, mnemonicSet));
         }
         else
         {
-            collectors_.push_back(std::make_shared<BufrRepCollector>(fileUnit_, mnemonicSet));
+            collectors_.push_back(std::make_shared<BufrRepCollector>(fortranFileId_, mnemonicSet));
         }
     }
 
