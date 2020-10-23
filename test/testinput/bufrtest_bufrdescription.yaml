@@ -27,8 +27,7 @@ bufr:
     longitude:
       mnemonic: CLON
       transforms:
-        - offset: -180
-        - scale: 1.25
+        - offset: 0
 
     latitude:
       mnemonic: CLAT
@@ -36,6 +35,7 @@ bufr:
       mnemonic: TMBR
 
 ioda:
+  backend: netcdf
   obsdataout: "./testoutput/ioda_encoder_result.nc"
 
   dimensions:

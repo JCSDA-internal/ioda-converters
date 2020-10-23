@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
-
+#include "ioda/Engines/Factory.h"
 
 namespace Ingester
 {
@@ -55,12 +55,20 @@ namespace Ingester
         /// \brief Add Variable defenition
         void addVariable(VariableDescription variable);
 
+        // Setters
+        inline void setBackend(ioda::Engines::BackendNames backend) { backend_ = backend; }
+        inline void setFilepath(std::string filepath) { filepath_ = filepath; }
+
         // Getters
+        inline ioda::Engines::BackendNames getBackend() const { return backend_; }
+        inline std::string getFilepath() const { return filepath_; }
         inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
-        inline std::string getFilepath() const { return filepath_; }
 
      private:
+        /// \brief The backend type to use
+        ioda::Engines::BackendNames backend_;
+
         /// \brief The relative path of the output file to create
         std::string filepath_;
 
@@ -69,5 +77,8 @@ namespace Ingester
 
         /// \brief Collection of defined variables
         VariableDescriptions variables_;
+
+        /// \brief Collection of defined variables
+        void setBackend(std::string backend);
     };
 }  // namespace Ingester

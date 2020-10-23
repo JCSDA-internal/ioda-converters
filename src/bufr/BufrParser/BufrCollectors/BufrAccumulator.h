@@ -32,6 +32,8 @@ namespace Ingester
         /// \param startCol Column offset where to start (should be size(channels) * paramNumber)
         /// \param channels Channels to collect starting from the start position
         IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
+
+        /// \brief Start over
         void reset();
 
         // Getters

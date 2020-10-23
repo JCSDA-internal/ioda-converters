@@ -12,13 +12,24 @@
 
 namespace Ingester
 {
-    MnemonicExport::MnemonicExport(std::string mnemonic) :
-    mnemonic_(mnemonic)
+    MnemonicExport::MnemonicExport(std::string mnemonic, Transforms transforms) :
+      mnemonic_(mnemonic),
+      transforms_(transforms)
     {
     }
 
     std::shared_ptr<DataObject> MnemonicExport::exportData(BufrDataMap map)
     {
-        return std::make_shared<ArrayDataObject> (map.at(mnemonic_));
+        auto data = map.at(mnemonic_);
+        applyTransforms(data);
+        return std::make_shared<ArrayDataObject>(data);
+    }
+
+    void MnemonicExport::applyTransforms(IngesterArray& data)
+    {
+        for (auto transform : transforms_)
+        {
+            transform->apply(data);
+        }
     }
 }  // namespace Ingester

@@ -22,7 +22,7 @@ namespace Ingester
     {
         static ioda::VariableCreationParameters params = makeCreationParams();
 
-        auto var = obsGroup.vars.createWithScales<float>(name, dimensions, params);
+        auto var = obsGroup.vars.createWithScales<double>(name, dimensions, params);
         var.writeWithEigenRegular(eigArray_);
         return var;
     }
@@ -37,7 +37,7 @@ namespace Ingester
         ioda::VariableCreationParameters params;
         params.chunk = true;
         params.compressWithGZIP();
-        params.setFillValue<float>(-999);
+        params.setFillValue<double>(-999);
 
         return params;
     }

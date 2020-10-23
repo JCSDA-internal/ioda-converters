@@ -34,6 +34,13 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/DatetimeExport.cpp
   BufrParser/Exports/MnemonicExport.h
   BufrParser/Exports/MnemonicExport.cpp
+  BufrParser/Exports/Transforms/Transform.h
+  BufrParser/Exports/Transforms/OffsetTransform.h
+  BufrParser/Exports/Transforms/OffsetTransform.cpp
+  BufrParser/Exports/Transforms/ScalingTransform.h
+  BufrParser/Exports/Transforms/ScalingTransform.cpp
+  BufrParser/Exports/Transforms/TransformBuilder.h
+  BufrParser/Exports/Transforms/TransformBuilder.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp
@@ -60,8 +67,8 @@ add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 add_executable(test_ingester.x test_ingester.cpp)
 target_link_libraries(test_ingester.x PRIVATE ${PROJECT_NAME}::ingester)
 
-add_executable(convertBufrToIoda.x main.cpp)
-target_link_libraries(convertBufrToIoda.x PRIVATE ${PROJECT_NAME}::ingester)
+add_executable(convertToIoda.x main.cpp)
+target_link_libraries(convertToIoda.x PRIVATE ${PROJECT_NAME}::ingester)
 
 add_test(NAME ${PROJECT_NAME}_bufr_coding_norms
 COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})

@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <memory>
 
 #include "oops/util/IntSetParser.h"
 
@@ -16,6 +17,9 @@
 #include "Exports/MnemonicExport.h"
 #include "Exports/DatetimeExport.h"
 #include "Exports/Export.h"
+#include "Exports/Transforms/Transform.h"
+#include "Exports/Transforms/TransformBuilder.h"
+
 
 namespace
 {
@@ -62,8 +66,9 @@ namespace Ingester
             }
             else if (subconf.has(ConfKeys::Mnemonic))
             {
+                Transforms transforms = TransformBuilder::makeTransforms(subconf);
                 addExport(key, std::make_shared<MnemonicExport>(
-                    subconf.getString(ConfKeys::Mnemonic)));
+                    subconf.getString(ConfKeys::Mnemonic), transforms));
             }
         }
     }
@@ -77,5 +82,4 @@ namespace Ingester
     {
         exportMap_.insert({key, bufrExport});
     }
-
 }  // namespace Ingester

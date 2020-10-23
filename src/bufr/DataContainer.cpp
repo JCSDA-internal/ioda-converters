@@ -8,7 +8,10 @@
 
 #include <map>
 #include <string>
+#include <ostream>
+
 #include "Eigen/Dense"
+#include "eckit/exception/Exceptions.h"
 
 #include "DataContainer.h"
 
@@ -19,8 +22,9 @@ namespace Ingester
     {
         if (hasKey(fieldName))
         {
-            std::cout << "ERROR: Field called " << fieldName << " already exists." << std::endl;
-            abort();
+            std::ostringstream errorStr;
+            errorStr << "ERROR: Field called " << fieldName << " already exists.";
+            throw eckit::BadParameter(errorStr.str());
         }
 
         dataMap_.insert({fieldName, data});
@@ -30,8 +34,9 @@ namespace Ingester
     {
         if (!hasKey(fieldName))
         {
-            std::cout << "ERROR: Field called " << fieldName << " doesn't exist." << std::endl;
-            abort();
+            std::ostringstream errorStr;
+            errorStr << "ERROR: Field called " << fieldName << " doesn't exists.";
+            throw eckit::BadParameter(errorStr.str());
         }
 
         return dataMap_.at(fieldName);
