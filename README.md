@@ -163,7 +163,7 @@ For surface soil moisture, SMOS netcdf files are supported with `smos_ssm2ioda.p
 ```
 Usage: smos_ssm2ioda.py -i inputfile.nc -o outputfile.nc -m maskout 
 ```
-For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to mask all missing values out.
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
 
 
     

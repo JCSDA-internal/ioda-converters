@@ -73,17 +73,8 @@ class SMOS(object):
         my_date = datetime.strptime(str_date, "%Y%m%dT%H%M%S")
         start_datetime = my_date.strftime('%Y-%m-%dT%H:%M:%S')
         base_datetime = start_datetime + 'Z'
-        # initialize QC flags
-        qcall = 0*qcall
 
         for i in range(len(lons)):
-
-            # defined QC flag
-            if errs[i] < 0.06:
-                qcall[i] = 1
-            else:
-                qcall[i] = 0
-
             locKey = lats[i], lons[i], base_datetime
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
