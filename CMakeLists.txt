@@ -56,7 +56,6 @@ find_package(ioda_engines QUIET)
 find_package(bufr QUIET)
 find_package(NetCDF QUIET COMPONENTS Fortran)
 
-# IMHO, this checking belongs in src/CMakeLists.txt, not here.
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
     set(iodaconv_gnssro_ENABLED True)
     message(STATUS "Found: bufr")
@@ -73,7 +72,6 @@ else()
     message(STATUS "Disabled Component: gnssro")
 endif()
 
-# IMHO, this checking belongs in src/CMakeLists.txt, not here.
 if( Eigen3_FOUND AND eckit_FOUND AND oops_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
     set(iodaconv_bufr_ENABLED True)
     message(STATUS "Found: Eigen3")
