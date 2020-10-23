@@ -13,6 +13,9 @@
 
 #include "Eigen/Dense"
 
+#include "eckit/config/LocalConfiguration.h"
+
+#include "Parser.h"
 #include "BufrTypes.h"
 #include "BufrDescription.h"
 
@@ -23,18 +26,20 @@ namespace Ingester
     class DataContainer;
 
     /// \brief Uses a BufrDescription and helper classes to parse the contents of a BUFR file.
-    class BufrParser
+    class BufrParser final : public Parser
     {
      public:
         explicit BufrParser(BufrDescription& description);
+        explicit BufrParser(const eckit::Configuration& conf);
+
         ~BufrParser();
 
         /// \brief Uses the provided description to parse the buffer file.
         /// \param maxMsgsToParse Messages to parse (0 for everything)
-        std::shared_ptr<DataContainer> parse(const size_t maxMsgsToParse = 0);
+        std::shared_ptr<DataContainer> parse(const size_t maxMsgsToParse = 0) final;
 
         /// \brief Start over from beginning of the BUFR file
-        void reset();
+        void reset() final;
 
      private:
         /// \brief The description the defines what to parse from the BUFR file

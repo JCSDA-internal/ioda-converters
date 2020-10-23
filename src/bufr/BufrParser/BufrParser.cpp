@@ -27,6 +27,13 @@ namespace Ingester
         reset();
     }
 
+    BufrParser::BufrParser(const eckit::Configuration& conf) :
+        description_(BufrDescription(conf)),
+        fortranFileId_(0)
+    {
+        reset();
+    }
+
     BufrParser::~BufrParser()
     {
         closeBufrFile();

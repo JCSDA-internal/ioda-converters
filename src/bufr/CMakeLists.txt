@@ -7,6 +7,8 @@ list(APPEND _ingester_srcs
   IngesterTypes.h
   DataContainer.h
   DataContainer.cpp
+  Parser.h
+  ParserFactory.h
   DataObject/DataObject.h
   DataObject/StrVecDataObject.h
   DataObject/StrVecDataObject.cpp
@@ -63,9 +65,6 @@ ecbuild_add_library( TARGET   ingester
                      LINKER_LANGUAGE CXX
                     )
 add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
-
-add_executable(test_ingester.x test_ingester.cpp)
-target_link_libraries(test_ingester.x PRIVATE ${PROJECT_NAME}::ingester)
 
 add_executable(convertToIoda.x main.cpp)
 target_link_libraries(convertToIoda.x PRIVATE ${PROJECT_NAME}::ingester)

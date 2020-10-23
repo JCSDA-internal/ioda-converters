@@ -61,11 +61,16 @@ list( APPEND test_output
   testoutput/tropomi_no2.nc
 )
 
+list( APPEND data
+#    Data/gdas.t12z.1bmhs.tm00
+)
+
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun)
-foreach(FILENAME ${test_input} ${test_output})
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
+foreach(FILENAME ${test_input} ${test_output} ${data})
     execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
            ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
@@ -319,12 +324,12 @@ if(iodaconv_bufr_ENABLED)
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                       SOURCES bufr/TestBufrDescription.cpp
-                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufrtest_bufrdescription.yaml
+                      ARGS ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufr_test.yaml
                       LIBS    eckit oops iodaconv::ingester )
     
 #    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrparser
 #                      SOURCES bufr/TestBufrParser.cpp
-#                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufrtest_bufrdescription.yaml
+#                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufr_test.yaml
 #                      LIBS    eckit oops iodaconv::ingester )
 
 endif()

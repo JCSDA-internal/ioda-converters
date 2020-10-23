@@ -36,32 +36,40 @@ namespace Ingester
         {
             const eckit::LocalConfiguration conf(::test::TestEnvironment::config());
 
-            auto bufrConfs = conf.getSubConfiguration("bufr");
-
-            if (conf.has("bufr"))
+            if (conf.has("observations"))
             {
-                auto bufrConf = conf.getSubConfiguration("bufr");
-                auto description = Ingester::BufrDescription(bufrConf);
+                for (const auto &obsConf : conf.getSubConfigurations("observations"))
+                {
+                    if (obsConf.has("obs space") &&
+                        obsConf.getSubConfiguration("obs space").has("name") &&
+                        obsConf.getSubConfiguration("obs space").getString("name") == "bufr")
+                    {
+                        auto bufrConf = obsConf.getSubConfiguration("obs space");
+                        auto description = Ingester::BufrDescription(bufrConf);
 
-                EXPECT(description.getMnemonicSets().size() > 0);
-                EXPECT(description.getExportMap().size() > 0);
-            }
-            else
-            {
-                throw eckit::BadValue("Configuration File is missing the \"bufr\" section.");
-            }
+                        EXPECT(description.getMnemonicSets().size() > 0);
+                        EXPECT(description.getExportMap().size() > 0);
+                    }
+                    else
+                    {
+                        throw eckit::BadValue(
+                            "Configuration File is missing the \"bufr\" section.");
+                    }
 
-            if (conf.has("ioda"))
-            {
-                auto iodaConf = conf.getSubConfiguration("ioda");
-                auto description = Ingester::IodaDescription(iodaConf);
+                    if (obsConf.has("ioda"))
+                    {
+                        auto iodaConf = obsConf.getSubConfiguration("ioda");
+                        auto description = Ingester::IodaDescription(iodaConf);
 
-                EXPECT(description.getDims().size() > 0);
-                EXPECT(description.getVariables().size() > 0);
-            }
-            else
-            {
-                throw eckit::BadValue("Configuration File is missing the \"ioda\" section.");
+                        EXPECT(description.getDims().size() > 0);
+                        EXPECT(description.getVariables().size() > 0);
+                    }
+                    else
+                    {
+                        throw eckit::BadValue(
+                            "Configuration File is missing the \"ioda\" section.");
+                    }
+                }
             }
         }
 
