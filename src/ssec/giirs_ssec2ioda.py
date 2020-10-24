@@ -188,7 +188,7 @@ class Giirs2Ioda:
                 # Read metadata
                 for new_key, old_key in self.LOC_MDATA_MAP.items():
                     if old_key in ncd.variables:
-                        if not new_key in self.LocMdata:
+                        if new_key not in self.LocMdata:
                             # If we haven't seen this key before initialize it now and set to fillvalue for all previous locs
                             self._initialize_metadata_key(new_key, old_key, ncd)
                         self.LocMdata[new_key][nlocs_tot:nlocs_tot+nlocs] = np.asarray(ncd.variables[old_key])[mask]
