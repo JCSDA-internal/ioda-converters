@@ -103,7 +103,7 @@ namespace Ingester
 
             auto set1 = Ingester::BufrMnemonicSet(set1Mnemonic, {1});
             auto set2 = Ingester::BufrMnemonicSet(set2Mnemonic, {1});
-            
+
             auto chanIntSet = oops::parseIntSet("1-15");
             auto set3 = Ingester::BufrMnemonicSet(set3Mnemonic,
                                                   Channels(chanIntSet.begin(), chanIntSet.end()));
