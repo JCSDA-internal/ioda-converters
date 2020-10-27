@@ -88,15 +88,15 @@ namespace Ingester
                 throw eckit::BadParameter(errStr.str());
             }
 
-            getMakers().insert({name, std::unique_ptr<ParserMaker<T>>(new ParserMaker<T>())});
+            getMakers().insert({name, std::make_shared<ParserMaker<T>>()});
         }
 
      private:
         /// \brief Internal method that returns a map of Parser Makers that were registered
         /// with registerParser
-        static std::map<std::string, std::unique_ptr<ParserMakerBase>>& getMakers()
+        static std::map<std::string, std::shared_ptr<ParserMakerBase>>& getMakers()
         {
-            static std::map<std::string, std::unique_ptr<ParserMakerBase>> makers;
+            static std::map<std::string, std::shared_ptr<ParserMakerBase>> makers;
             return makers;
         }
     };
