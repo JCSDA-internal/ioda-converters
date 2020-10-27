@@ -88,8 +88,7 @@ namespace Ingester
                 throw eckit::BadParameter(errStr.str());
             }
 
-            std::unique_ptr<ParserMaker<T>> parserMaker;
-            getMakers().insert({name, parserMaker});
+            getMakers().insert({name, std::unique_ptr<ParserMaker<T>>(new ParserMaker<T>())});
         }
 
      private:
