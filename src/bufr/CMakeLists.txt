@@ -64,12 +64,15 @@ ecbuild_add_library( TARGET   ingester
                      HEADER_DESTINATION ${INSTALL_INCLUDEDIR}/bufr
                      LINKER_LANGUAGE CXX
                     )
+
 add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 
 ecbuild_add_executable( TARGET  convertToIoda.x
                         SOURCES main.cpp
                         LIBS    ingester )
-#target_link_libraries(convertToIoda.x PRIVATE ${PROJECT_NAME}::ingester)
 
-add_test(NAME ${PROJECT_NAME}_bufr_coding_norms
-COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
+                  TYPE SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
+                  ARGS --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
