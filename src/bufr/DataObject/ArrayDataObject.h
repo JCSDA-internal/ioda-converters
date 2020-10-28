@@ -31,7 +31,7 @@ namespace Ingester
         /// \brief Print data to stdout for debug purposes.
         void print() const final;
 
-        //Getters
+        // Getters
         inline IngesterArray get() const { return eigArray_; }
 
      private:

@@ -35,9 +35,9 @@ namespace
             const char* Units = "units";
             const char* Range = "range";
             const char* Coords = "coordinates";
-        }  // Variable
-    }  // ConfKeys
-}
+        }  // namespace Variable
+    }  // namespace ConfKeys
+}  // namespace
 
 namespace Ingester
 {

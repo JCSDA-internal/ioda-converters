@@ -12,7 +12,7 @@
 
 namespace Ingester
 {
-    BufrIntCollector::BufrIntCollector(const int fortranFileId, const BufrMnemonicSet& mnemonicSet) :
+    BufrIntCollector::BufrIntCollector(const int fortranFileId, const BufrMnemonicSet& mnemonicSet):
         BufrCollector(fortranFileId, mnemonicSet)
     {
         scratchData_.resize(accumulator_.getNumColumns());

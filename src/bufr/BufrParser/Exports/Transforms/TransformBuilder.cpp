@@ -52,4 +52,4 @@ namespace Ingester
 
         return transforms;
     }
-}
+}  // namespace Ingester
