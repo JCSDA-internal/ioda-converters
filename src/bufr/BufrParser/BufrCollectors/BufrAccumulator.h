@@ -26,7 +26,7 @@ namespace Ingester
 
         /// \brief Add row of data to the internal ddata structure
         /// \param newRow Collection of values to add (size must match the number of columns)
-        void addRow(std::vector<double>& newRow);
+        void addRow(std::vector<FloatType>& newRow);
 
         /// \brief Get an Eigen Array that contains a slice of the collected data.
         /// \param startCol Column offset where to start (should be size(channels) * paramNumber)

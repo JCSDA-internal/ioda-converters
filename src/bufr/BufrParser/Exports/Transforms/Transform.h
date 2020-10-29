@@ -16,7 +16,7 @@ namespace Ingester
 {
     class Transform
     {
-    public:
+     public:
         ~Transform() = default;
         virtual void apply(IngesterArray& array) = 0;
     };

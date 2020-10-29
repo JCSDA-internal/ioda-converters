@@ -32,6 +32,8 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/bufr_test.yaml
+# testinput/gdas.t12z.1bmhs.tm00.bufr_d
 )
 
 list( APPEND test_output
@@ -61,16 +63,12 @@ list( APPEND test_output
   testoutput/tropomi_no2.nc
 )
 
-list( APPEND data
-#    Data/gdas.t12z.1bmhs.tm00
-)
-
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
-foreach(FILENAME ${test_input} ${test_output} ${data})
+foreach(FILENAME ${test_input} ${test_output})
     execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
            ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )

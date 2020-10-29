@@ -32,8 +32,8 @@ namespace
         const char* Exports = "exports";
         const char* Datetime = "datetime";
         const char* Mnemonic = "mnemonic";
-    }  // ConfKeys
-}
+    }  // namespace ConfKeys
+}  // namespace
 
 namespace Ingester
 {

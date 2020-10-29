@@ -35,9 +35,11 @@ namespace
             const char* Units = "units";
             const char* Range = "range";
             const char* Coords = "coordinates";
-        }  // Variable
-    }  // ConfKeys
-}
+            const char* Chunks = "chunks";
+            const char* CompressionLevel = "compressionLevel";
+        }  // namespace Variable
+    }  // namespace ConfKeys
+}  // namespace
 
 namespace Ingester
 {
@@ -96,6 +98,7 @@ namespace Ingester
                 variable.coordinates = nullptr;
             }
 
+            variable.range = nullptr;
             if (varConf.has(ConfKeys::Variable::Range))
             {
                 auto range = std::make_shared<Range>();
@@ -103,9 +106,30 @@ namespace Ingester
                 range->end = std::stoi(varConf.getStringVector(ConfKeys::Variable::Range)[1]);
                 variable.range = range;
             }
-            else
+
+            variable.chunks = {1000};
+            if (varConf.has(ConfKeys::Variable::Chunks))
             {
-                variable.range = nullptr;
+                auto chunks = std::vector<ioda::Dimensions_t>();
+
+                for (const auto& chunkStr : varConf.getStringVector(ConfKeys::Variable::Chunks))
+                {
+                    chunks.push_back(std::stoi(chunkStr));
+                }
+
+                variable.chunks = chunks;
+            }
+
+            variable.compressionLevel = 6;
+            if (varConf.has(ConfKeys::Variable::CompressionLevel))
+            {
+                int compressionLevel = varConf.getInt(ConfKeys::Variable::CompressionLevel);
+                if (compressionLevel < 1 || compressionLevel > 6)
+                {
+                    throw eckit::BadParameter("GZip compression level must be a number 1-6");
+                }
+
+                variable.compressionLevel = varConf.getInt(ConfKeys::Variable::CompressionLevel);
             }
 
             addVariable(variable);

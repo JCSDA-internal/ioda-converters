@@ -23,8 +23,8 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* Utc = "isUTC";
-    }  // ConfKeys
-}
+    }  // namespace ConfKeys
+}  // namespace
 
 
 namespace Ingester

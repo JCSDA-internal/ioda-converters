@@ -38,10 +38,10 @@ namespace Ingester
         /// \param bufrExport Export shared ptr to an Export instance
         void addExport(const std::string& key, const std::shared_ptr<Export>& bufrExport);
 
-        //Setters
+        // Setters
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
 
-        //Getters
+        // Getters
         inline std::vector<BufrMnemonicSet> getMnemonicSets() const { return mnemonicSets_; }
         inline std::string filepath() const { return filepath_; }
         inline ExportMap getExportMap() const { return exportMap_; }

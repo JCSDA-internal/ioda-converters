@@ -15,7 +15,8 @@
 
 namespace Ingester
 {
-    typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> IngesterArray;
+    typedef float FloatType;
+    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> IngesterArray;
     typedef std::map<std::string, IngesterArray> IngesterArrayMap;
     typedef std::vector<std::string> IngesterStrVector;
     typedef std::map<std::string, IngesterStrVector> IngesterStringMap;

@@ -12,10 +12,11 @@
 
 namespace Ingester
 {
-    BufrRepCollector::BufrRepCollector(const int fortranFileId, const BufrMnemonicSet& mnemonicSet) :
+    BufrRepCollector::BufrRepCollector(const int fortranFileId, const BufrMnemonicSet& mnemonicSet):
         BufrCollector(fortranFileId, mnemonicSet)
     {
         scratchData_.resize(accumulator_.getNumColumns());
+        floatTypeScratchData_.resize(accumulator_.getNumColumns());
     }
 
     void BufrRepCollector::collect()
@@ -30,6 +31,11 @@ namespace Ingester
                  &result,
                  mnemonicSet_.getMnemonicsStr().c_str());
 
-        accumulator_.addRow(scratchData_);
+        for (size_t colIdx = 0; colIdx < accumulator_.getNumColumns(); colIdx++)
+        {
+            floatTypeScratchData_[colIdx] = static_cast<FloatType>(scratchData_[colIdx]);
+        }
+
+        accumulator_.addRow(floatTypeScratchData_);
     }
 }  // namespace Ingester
