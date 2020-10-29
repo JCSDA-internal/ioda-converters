@@ -67,7 +67,7 @@ ecbuild_add_library( TARGET   ingester
 
 add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 
-ecbuild_add_executable( TARGET  bufr2ioda
+ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp
                         LIBS    ingester )
 
