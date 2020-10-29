@@ -73,11 +73,14 @@ if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
     testinput/bufr_test.yaml
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
+    testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/bufr_mhs.yaml
+    testinput/bufr_hrs.yaml
   )
 
   list( APPEND test_output
     testoutput/gdas.t18z.1bmhs.tm00.nc
+    testoutput/gdas.t00z.1bhrs4.tm00.nc
   )
 endif()
 
@@ -349,6 +352,14 @@ if(iodaconv_bufr_ENABLED)
                       ARGS    netcdf
                               "${CMAKE_BINARY_DIR}/bin/bufr2ioda testinput/bufr_mhs.yaml"
                               gdas.t18z.1bmhs.tm00.nc
+                      DEPENDS bufr2ioda )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_hrs2ioda
+                      TYPE    SCRIPT
+                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      ARGS    netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda testinput/bufr_hrs.yaml"
+                              gdas.t00z.1bhrs4.tm00.nc
                       DEPENDS bufr2ioda )
 
 endif()
