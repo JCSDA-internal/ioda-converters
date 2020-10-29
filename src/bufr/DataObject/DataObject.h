@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include <set>
 #include <string>
 
 #include "ioda/ObsGroup.h"
+#include "ioda/defs.h"
 
 namespace Ingester
 {
@@ -22,9 +24,14 @@ namespace Ingester
         /// \param obsGroup Obsgroup were to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
         /// \param dimensions List of Variables to use as the dimensions for this new variable
-        virtual ioda::Variable createVariable(ioda::ObsGroup& obsGroup,
-                                              const std::string& name,
-                                              const std::vector<ioda::Variable>& dimensions) = 0;
+        /// \param chunks List of integers specifying the chunking dimensions
+        /// \param compressionLevel The GZip compression level to use, must be 1-6
+        virtual ioda::Variable createVariable(
+                                      ioda::ObsGroup& obsGroup,
+                                      const std::string& name,
+                                      const std::vector<ioda::Variable>& dimensions,
+                                      const std::vector<ioda::Dimensions_t>& chunks,
+                                      int compressionLevel) = 0;
 
         /// \brief Print data to stdout for debug purposes.
         virtual void print() const = 0;

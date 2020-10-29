@@ -24,9 +24,13 @@ namespace Ingester
         /// \param obsGroup Obsgroup were to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
         /// \param dimensions List of Variables to use as the dimensions for this new variable
+        /// \param chunks List of integers specifying the chunking dimensions
+        /// \param compressionLevel The GZip compression level to use, must be 1-6
         ioda::Variable createVariable(ioda::ObsGroup& obsGroup,
                                       const std::string& name,
-                                      const std::vector<ioda::Variable>& dimensions) final;
+                                      const std::vector<ioda::Variable>& dimensions,
+                                      const std::vector<ioda::Dimensions_t>& chunks,
+                                      int compressionLevel) final;
 
         /// \brief Print data to stdout for debug purposes.
         void print() const final;
@@ -39,7 +43,11 @@ namespace Ingester
         const IngesterArray eigArray_;
 
         /// \brief Create an ioda::VariableCreationParameters for the data.
-        static ioda::VariableCreationParameters makeCreationParams();
+        /// \param chunks List of integers specifying the chunking dimensions
+        /// \param compressionLevel The GZip compression level to use, must be 1-6
+        static ioda::VariableCreationParameters makeCreationParams(
+                                                    const std::vector<ioda::Dimensions_t>& chunks,
+                                                    int compressionLevel);
     };
 }  // namespace Ingester
 

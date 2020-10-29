@@ -18,10 +18,11 @@ namespace Ingester
 
     ioda::Variable ArrayDataObject::createVariable(ioda::ObsGroup& obsGroup,
                                                    const std::string& name,
-                                                   const std::vector<ioda::Variable>& dimensions)
+                                                   const std::vector<ioda::Variable>& dimensions,
+                                                   const std::vector<ioda::Dimensions_t>& chunks,
+                                                   int compressionLevel)
     {
-        static ioda::VariableCreationParameters params = makeCreationParams();
-
+        auto params = makeCreationParams(chunks, compressionLevel);
         auto var = obsGroup.vars.createWithScales<double>(name, dimensions, params);
         var.writeWithEigenRegular(eigArray_);
         return var;
@@ -32,11 +33,14 @@ namespace Ingester
         std::cout << eigArray_ << std::endl;
     }
 
-    ioda::VariableCreationParameters ArrayDataObject::makeCreationParams()
+    ioda::VariableCreationParameters ArrayDataObject::makeCreationParams(
+                                                    const std::vector<ioda::Dimensions_t>& chunks,
+                                                    int compressionLevel)
     {
         ioda::VariableCreationParameters params;
         params.chunk = true;
-        params.compressWithGZIP();
+        params.chunks = chunks;
+        params.compressWithGZIP(compressionLevel);
         params.setFillValue<double>(-999);
 
         return params;

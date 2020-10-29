@@ -19,10 +19,11 @@ namespace Ingester
 
     ioda::Variable StrVecDataObject::createVariable(ioda::ObsGroup& obsGroup,
                                                     const std::string& name,
-                                                    const std::vector<ioda::Variable>& dimensions)
+                                                    const std::vector<ioda::Variable>& dimensions,
+                                                    const std::vector<ioda::Dimensions_t>& chunks,
+                                                    int compressionLevel)
     {
-        static ioda::VariableCreationParameters params = makeCreationParams();
-
+        auto params = makeCreationParams(chunks, compressionLevel);
         auto var = obsGroup.vars.createWithScales<std::string>(name, dimensions, params);
         var.write(strVector_);
         return var;
@@ -36,11 +37,14 @@ namespace Ingester
         }
     }
 
-    ioda::VariableCreationParameters StrVecDataObject::makeCreationParams()
+    ioda::VariableCreationParameters StrVecDataObject::makeCreationParams(
+                                                    const std::vector<ioda::Dimensions_t>& chunks,
+                                                    int compressionLevel)
     {
         ioda::VariableCreationParameters params;
         params.chunk = true;
-        params.compressWithGZIP();
+        params.chunks = chunks;
+        params.compressWithGZIP(compressionLevel);
 
         return params;
     }

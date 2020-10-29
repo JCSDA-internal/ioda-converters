@@ -82,7 +82,11 @@ namespace Ingester
             }
 
             auto data = dataContainer->get(varDesc.source);
-            auto var = data->createVariable(obsGroup, varDesc.name, dimensions);
+            auto var = data->createVariable(obsGroup,
+                                            varDesc.name,
+                                            dimensions,
+                                            varDesc.chunks,
+                                            varDesc.compressionLevel);
 
             var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
             var.atts.add<std::string>("units", { varDesc.units }, {1});
