@@ -21,7 +21,6 @@ list( APPEND test_input
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
-  testinput/gnssro_kompsat5_20180415_00Z.bufr
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
   testinput/viirs_jpss1_oc_l2.nc
@@ -32,8 +31,6 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
-  testinput/bufr_test.yaml
-# testinput/gdas.t12z.1bmhs.tm00.bufr_d
 )
 
 list( APPEND test_output
@@ -51,7 +48,6 @@ list( APPEND test_output
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
-  testoutput/gnssro_kompsat5_2018041500.nc4
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
   testoutput/viirs_jpss1_oc_l2.nc
@@ -62,6 +58,28 @@ list( APPEND test_output
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
 )
+
+if( iodaconv_gnssro_ENABLED )
+  list( APPEND test_input
+    testinput/gnssro_kompsat5_20180415_00Z.bufr
+  )
+
+  list( APPEND test_output
+    testoutput/gnssro_kompsat5_2018041500.nc4
+  )
+endif()
+
+if( iodaconv_bufr_ENABLED )
+  list( APPEND test_input
+    testinput/bufr_test.yaml
+    testinput/gdas.t18z.1bmhs.tm00.bufr_d
+    testinput/bufr_mhs.yaml
+  )
+
+  list( APPEND test_output
+    testoutput/gdas.t18z.1bmhs.tm00.nc
+  )
+endif()
 
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
@@ -322,13 +340,15 @@ if(iodaconv_bufr_ENABLED)
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                       SOURCES bufr/TestBufrDescription.cpp
-                      ARGS ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufr_test.yaml
+                      ARGS    testinput/bufr_test.yaml
                       LIBS    eckit oops iodaconv::ingester )
-    
-#    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrparser
-#                      SOURCES bufr/TestBufrParser.cpp
-#                      ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/testinput/bufr_test.yaml
-#                      LIBS    eckit oops iodaconv::ingester )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_mhs2ioda
+                      TYPE    SCRIPT
+                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      ARGS    netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda testinput/bufr_mhs.yaml"
+                              gdas.t18z.1bmhs.tm00.nc
+                      DEPENDS bufr2ioda )
 
 endif()
-
