@@ -124,9 +124,9 @@ namespace Ingester
             if (varConf.has(ConfKeys::Variable::CompressionLevel))
             {
                 int compressionLevel = varConf.getInt(ConfKeys::Variable::CompressionLevel);
-                if (compressionLevel < 1 || compressionLevel > 6)
+                if (compressionLevel < 0 || compressionLevel > 9)
                 {
-                    throw eckit::BadParameter("GZip compression level must be a number 1-6");
+                    throw eckit::BadParameter("GZip compression level must be a number 0-9");
                 }
 
                 variable.compressionLevel = varConf.getInt(ConfKeys::Variable::CompressionLevel);

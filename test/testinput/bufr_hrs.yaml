@@ -76,4 +76,4 @@ observations:
           units: "K"
           range: [120, 500]
           chunks: [1000, 15]
-          compressionLevel: 4 #Number 1-6
+          compressionLevel: 4
