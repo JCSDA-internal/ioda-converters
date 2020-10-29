@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./Data/gdas.t12z.1bmhs.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
 
       mnemonicSets:
         - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
@@ -39,7 +39,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testoutput/ioda_encoder_result.nc"
+      obsdataout: "./testrun/ioda_encoder_result.nc"
 
       dimensions:
         - name: "nlocs"
