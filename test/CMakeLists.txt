@@ -340,14 +340,14 @@ if(iodaconv_bufr_ENABLED)
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                       SOURCES bufr/TestBufrDescription.cpp
-                      ARGS    testinput/bufr_test.yaml
+                      ARGS    testinput/bufr_mhs.yaml
                       LIBS    eckit oops iodaconv::ingester )
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_mhs2ioda
                       TYPE    SCRIPT
                       COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                       ARGS    netcdf
-                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda testinput/bufr_mhs.yaml"
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mhs.yaml"
                               gdas.t18z.1bmhs.tm00.nc
                       DEPENDS bufr2ioda )
 
