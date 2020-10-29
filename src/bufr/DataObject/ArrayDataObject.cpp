@@ -41,7 +41,7 @@ namespace Ingester
         params.chunk = true;
         params.chunks = chunks;
         params.compressWithGZIP(compressionLevel);
-        params.setFillValue<double>(-999);
+        params.setFillValue<FloatType>(-999);
 
         return params;
     }

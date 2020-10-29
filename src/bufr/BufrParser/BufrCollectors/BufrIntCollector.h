@@ -27,6 +27,7 @@ namespace Ingester
      private:
         /// \brief Pre-allocated buffer to hand to the Fortran interface.
         std::vector<double> scratchData_;
+        std::vector<FloatType> floatTypeScratchData_;
     };
 }  // namespace Ingester
 

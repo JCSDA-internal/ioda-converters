@@ -21,7 +21,7 @@ namespace Ingester
     {
     }
 
-    void BufrAccumulator::addRow(std::vector<double>& newRow)
+    void BufrAccumulator::addRow(std::vector<FloatType>& newRow)
     {
         if (numDataRows_ + 1 > dataArray_.rows())
         {
