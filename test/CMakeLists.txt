@@ -32,6 +32,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/bufr_test.yaml
 # testinput/gdas.t12z.1bmhs.tm00.bufr_d
 )
 
