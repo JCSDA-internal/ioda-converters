@@ -67,8 +67,8 @@ ecbuild_add_library( TARGET   ingester
 
 add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 
-ecbuild_add_executable( TARGET  convertToIoda.x
-                        SOURCES main.cpp
+ecbuild_add_executable( TARGET  bufr2ioda
+                        SOURCES bufr2ioda.cpp
                         LIBS    ingester )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
