@@ -13,7 +13,7 @@ observations:
         - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
         - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
         - mnemonics: [TMBR]
-          channels : 1-15
+          channels : 1-19
 
       exports:
         timestamp:
@@ -45,7 +45,7 @@ observations:
         - name: "nlocs"
           size: "{LENGTH}" #implicit info
         - name: "nchans"
-          size: "15" #explicit info
+          size: "19" #explicit info
 
       variables:
         - name: "datetime@MetaData"
