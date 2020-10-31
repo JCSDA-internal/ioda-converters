@@ -1,9 +1,9 @@
-# The Fortran code links with libbufr.a, which at this point is
-# expected to live in /usr/local/lib
+# The Fortran code links with BUFR library
 
-add_executable (pb_decode pb_decode.f90)
-add_executable (pb_decode_events pb_decode_events.f90)
+ecbuild_add_executable( TARGET  pb_decode
+                        SOURCES pb_decode.f90
+                        LIBS    bufr::bufr_4_DA)
 
-target_link_libraries (pb_decode bufr)
-target_link_libraries (pb_decode_events bufr)
-
+ecbuild_add_executable( TARGET  pb_decode_events
+                        SOURCES pb_decode_events.f90
+                        LIBS    bufr::bufr_4_DA)

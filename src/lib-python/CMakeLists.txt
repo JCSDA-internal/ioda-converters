@@ -35,6 +35,7 @@ install( PROGRAMS ${install_bin_python_scripts_deps} DESTINATION ${CMAKE_INSTALL
 
 install( FILES ${lib_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-add_test(NAME iodaconv_lib-python_coding_norms
-         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
-                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR})
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_lib-python_coding_norms
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
