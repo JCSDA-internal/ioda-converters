@@ -9,7 +9,6 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-#find_package( ecbuild 3.4 REQUIRED HINTS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
 find_package( ecbuild 3 REQUIRED HINTS ${CMAKE_CURENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
 
 project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
@@ -32,7 +31,7 @@ set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/p
 
 ## Dependencies
 
-ecbuild_find_python( REQUIRED VERSION 3.7 )
+ecbuild_find_python( REQUIRED VERSION 3 )
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
     $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
