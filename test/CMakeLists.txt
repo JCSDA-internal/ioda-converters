@@ -32,6 +32,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/2020100106_metars_small.csv
 )
 
 list( APPEND test_output
@@ -59,6 +60,7 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
+  testoutput/2020100106_metars_small.nc
 )
 
 # create test directories and make links to the input files
@@ -175,6 +177,17 @@ add_test(NAME test_iodaconv_cryosat2
             -d 2019092112"
             cryosat2_L2.nc)
 
+#===============================================================================
+# Surface Obs - METAR converter
+#===============================================================================
+
+add_test(NAME test_iodaconv_metar
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
+            -i testinput/2020100106_metars_small.csv
+            -o testrun/2020100106_metars_small.nc
+            -d 2020100106"
+            2020100106_metars_small.nc)
 
 #===============================================================================
 # MISC converters
