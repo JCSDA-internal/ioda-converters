@@ -7,7 +7,6 @@ conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
                    bin_metar_scripts_deps)
-execute_process(COMMAND chmod +x ${bin_metar_scripts_deps})
 
 # Configure files for install prefix bin
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
