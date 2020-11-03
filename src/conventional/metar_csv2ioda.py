@@ -10,8 +10,6 @@
 # This script will work with decoded, CSV files created by gthompsn stored at NCAR
 #   data-access.ucar.edu:/glade/campaign/ral/aap/gthompsn/METARs/2019/20191231/2019123118_metars.csv.gz
 #
-#..Temporarily include the ioda_conv_ncio library path explicitly using this: export PYTHONPATH=../lib-python:$PYTHONPATH
-#
 
 from __future__ import print_function
 import sys
@@ -141,57 +139,7 @@ class reformatMetar(object):
                 data['ob_uwnd'].append(uwnd)
                 data['ob_vwnd'].append(vwnd)
 
-        # Testing some utility functions to ensure they work properly.
-                '''
-                if ( (temp is not netCDF4.default_fillvals['f4']) and (dewp is not netCDF4.default_fillvals['f4']) ):
-                    tlcl = self.meteo_utils.t_lcl(temp, dewp)
-                    print ("DEBUG, Temp, Dewp, T_at_LCL is: " + str(temp) + ", " + str(dewp) + ", " + str(tlcl))
-                else:
-                    tlcl = netCDF4.default_fillvals['f4']
-
-                if ( (psfc is not netCDF4.default_fillvals['f4']) and (spfh is not netCDF4.default_fillvals['f4']) ):
-                    td = self.meteo_utils.t_dew(psfc, spfh)
-                    print ("DEBUG, re-derived dewpoint is: " + str(td))
-
-                if ( (psfc is not netCDF4.default_fillvals['f4']) and (temp is not netCDF4.default_fillvals['f4']) and (spfh is not netCDF4.default_fillvals['f4']) and (tlcl is not netCDF4.default_fillvals['f4']) ):
-                    the = self.meteo_utils.theta_e(psfc, temp, spfh, tlcl)
-                    print ("DEBUG, Theta-E is: " + str(the))
-
-                if ( (psfc is not netCDF4.default_fillvals['f4']) and (temp is not netCDF4.default_fillvals['f4']) and (tlcl is not netCDF4.default_fillvals['f4']) ):
-                    Th = temp * (100000.0/psfc)**(self.meteo_utils.R/self.meteo_utils.Cp)
-                    Plcl = 100000.0 * (tlcl/Th)**(self.meteo_utils.Cp/self.meteo_utils.R)
-                    the_lcl = self.meteo_utils.theta_e(Plcl, tlcl, spfh, tlcl)
-                    T500 = self.meteo_utils.compT_fr_The(the_lcl, 50000.0)
-                    print ("DEBUG, Parel T(500mb) is: " + str(T500) + ", " + str(Plcl) + ", " + str(Th))
-                '''
-
         fh.close()
-
-        '''
-        pvec = [83900, 82700, 81910, 80200, 79110, 78100, 76370, 73720, 70000, 66220, 61550, 59310, 58400, 57140, 55030, 52970, 50960, 50000, 49010, 48700, 47110, 45900, 45270, 40110, 40000, 39300, 38490, 36920, 36300, 35410, 35000, 33950, 32540, 31900, 30000, 29900, 29870, 28600, 26180, 25000, 22840, 20810, 20000, 18940, 17210, 16400, 15000, 14860, 14130, 14000, 13430, 12770, 12700, 12140, 11540, 11300, 10970, 10420, 10100, 10000]
-        tdvec = [6.6, 6.0, 5.5, 4.4, 3.8, 3.2, 2.4, 1.3, -0.4, -2.6, -5.2, -6.5, -7.0, -7.4, -8.1, -8.7, -9.4, -9.7, -10.2, -10.3, -13.0, -15.0, -15.6, -20.5, -20.6, -21.1, -22.6, -25.6, -26.8, -34.5, -38.1, -43.4, -50.7, -53.9, -72.7, -72.9, -72.9, -71.8, -69.9, -68.9, -72.7, -76.3, -77.7, -79.0, -81.0, -82.0, -83.7, -83.9, -84.9, -85.1, -85.0, -84.9, -84.9, -85.6, -86.4, -86.7, -86.3, -85.7, -85.3, -85.5]
-        wvec = [None] * len(pvec)
-
-        n = 0
-        while n < len(pvec):
-            w = self.meteo_utils.r_sub_s(pvec[n]*1.0, tdvec[n]+273.15)
-            print ("DEBUG, w is: " + str(w))
-            wvec[n] = w
-            n = n + 1
-
-        pwat = self.meteo_utils.precipitable_water(pvec, wvec)
-        print ("DEBUG, precip water is: " + str(pwat))
-
-        z_test = self.meteo_utils.std_atmos(70000.0)
-        print ("DEBUG, z_test is: " + str(z_test))
-        p_test = self.meteo_utils.std_atmos_p(3000.0)
-        print ("DEBUG, p_test is: " + str(p_test))
-        x_test = self.meteo_utils.r_sub_s(90000.0, 275.15)
-        print ("DEBUG, x_test is: " + str(x_test))
-        y_test = self.meteo_utils.r_sub_i(90000.0, 270.15)
-        print ("DEBUG, y_test is: " + str(y_test))
-        '''
-
         self.data = data
 
         return
