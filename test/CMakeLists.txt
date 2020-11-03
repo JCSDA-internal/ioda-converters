@@ -178,7 +178,7 @@ add_test(NAME test_iodaconv_cryosat2
             cryosat2_L2.nc)
 
 #===============================================================================
-# Surface Obs - METAR converter
+# Conventional data, surface Obs - METAR converter
 #===============================================================================
 
 add_test(NAME test_iodaconv_metar

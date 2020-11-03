@@ -82,17 +82,8 @@ class reformatMetar(object):
                     icao = str(row['ICAO'])
                 try:
                     utime = int(row['Unix_time'])
-                except:
-                    continue
-                try:
                     lat = float(row['Latitude'])
-                except:
-                    continue
-                try:
                     lon = float(row['Longitude'])
-                except:
-                    continue
-                try:
                     elev = float(row['Elev'])
                 except:
                     continue
@@ -256,7 +247,7 @@ class IODA(object):
                 dtg = obs.data['ob_datetime'][n]
                 locKey = icao, lat, lon, elev, dtg
 
-                print ("obs iterate: " + str(n) + ", " + icao + ", " + str(lat) + ", " + str(lon) + ", " + str(elev) + ", " + dtg)
+                # print ("obs iterate: " + str(n) + ", " + icao + ", " + str(lat) + ", " + str(lon) + ", " + str(elev) + ", " + dtg)
 
                 for key in self.varDict.keys():
 
