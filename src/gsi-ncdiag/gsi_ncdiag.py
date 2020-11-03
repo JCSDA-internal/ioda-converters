@@ -325,7 +325,7 @@ geovals_vars = {
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
     'Sfc_Height': 'surface_geopotential_height',
-    'mass_concentration_of_ozone_in_air': 'mass_concentration_of_ozone_in_air',
+    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -697,6 +697,11 @@ class Conv(BaseGSI):
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
+                    if outvars[o] == 'surface_pressure':
+                        try:
+                            tmpps = self.var('surface_pressure')[0]
+                        except IndexError:
+                            obsdata = obsdata * 100.  # convert to Pa from hPa
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
@@ -749,6 +754,13 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                    # special logic for unit conversions depending on GSI version
+                    elif lvar == 'Pressure':
+                        try:
+                            tmpps = self.var('surface_pressure')[0]
+                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
+                        except IndexError:
+                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx] * 100.  # convert to Pa from hPa
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
@@ -1108,7 +1120,10 @@ class Radiances(BaseGSI):
                     varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
                     ibc += 1
         obsdata = self.var('Observation')
-        obserr = self.var('Input_Observation_Error')
+        try:
+            obserr = self.var('Input_Observation_Error')
+        except IndexError:
+            obserr = 1./self.var('Inverse_Observation_Error')
         obsqc = self.var('QC_Flag').astype(int)
         if (ObsBias):
             nametbc = [
@@ -1630,7 +1645,10 @@ class Ozone(BaseGSI):
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.var('Observation')
-        tmp = self.var('Input_Observation_Error')
+        try:
+            tmp = self.var('Input_Observation_Error')
+        except IndexError:
+            tmp = 1./self.var('Inverse_Observation_Error')
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
