@@ -81,6 +81,14 @@ endforeach(FILENAME)
 #  testoutput/)
 #===============================================================================
 
+# Typically, a converter is simply doing a format change (ie, copying data directly
+# from the input file). For these cases, use a tolerance of zero for the
+# iodaconv_comp.sh test.
+#
+# For a converter that is generating new data, use a non-zero tolerance.
+set(IODA_CONV_COMP_TOL_ZERO "0.0")
+set(IODA_CONV_COMP_TOL "0.5e-4")
+
 #===============================================================================
 # Marine converters
 #===============================================================================
@@ -92,7 +100,7 @@ add_test(NAME test_iodaconv_gds2_sst_l2p
             -o testrun/gds2_sst_l2p.nc
             -d 2018041512
             -t 0.5"
-            gds2_sst_l2p.nc)
+            gds2_sst_l2p.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_gds2_sst_l3u
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -101,7 +109,7 @@ add_test(NAME test_iodaconv_gds2_sst_l3u
             -o testrun/gds2_sst_l3u.nc
             -d 2018041512
             -t 0.5"
-            gds2_sst_l3u.nc)
+            gds2_sst_l3u.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_smap_sss
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -109,7 +117,7 @@ add_test(NAME test_iodaconv_smap_sss
             -i testinput/smap_sss_rss.nc
             -o testrun/smap_sss_rss.nc
             -d 2018041512"
-            smap_sss_rss.nc)
+            smap_sss_rss.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_rads_adt
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -117,7 +125,7 @@ add_test(NAME test_iodaconv_rads_adt
             -i testinput/rads_adt.nc
             -o testrun/rads_adt.nc
             -d 2018041512"
-            rads_adt.nc)
+            rads_adt.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_godae_prof
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -125,7 +133,7 @@ add_test(NAME test_iodaconv_godae_prof
             -i testinput/godae_prof.bin
             -o testrun/godae_prof.nc
             -d 1998092212"
-            godae_prof.nc)
+            godae_prof.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_godae_ship
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -133,7 +141,7 @@ add_test(NAME test_iodaconv_godae_ship
             -i testinput/godae_ship.bin
             -o testrun/godae_ship.nc
             -d 1998090112"
-            godae_ship.nc)
+            godae_ship.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_godae_trak
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -141,7 +149,7 @@ add_test(NAME test_iodaconv_godae_trak
             -i testinput/godae_trak.bin
             -o testrun/godae_trak.nc
             -d 2004070812"
-            godae_trak.nc)
+            godae_trak.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_hgodas_insitu
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -149,7 +157,7 @@ add_test(NAME test_iodaconv_hgodas_insitu
             -i testinput/hgodas_insitu.nc
             -o testrun/hgodas_insitu.nc
             -d 2018041512"
-            hgodas_insitu.nc)
+            hgodas_insitu.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_hgodas_sst
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -157,7 +165,7 @@ add_test(NAME test_iodaconv_hgodas_sst
             -i testinput/hgodas_sst.nc
             -o testrun/hgodas_sst.nc
             -d 2018041512"
-            hgodas_sst.nc)
+            hgodas_sst.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_argoclim
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -165,7 +173,7 @@ add_test(NAME test_iodaconv_argoclim
             -i testinput/argoclim_test.nc
             -o testrun/argoclim.nc
             -d 2019101600"
-            argoclim.nc)
+            argoclim.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_cryosat2
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -173,7 +181,7 @@ add_test(NAME test_iodaconv_cryosat2
             -i testinput/cryosat2_L2_test.nc
             -o testrun/cryosat2_L2.nc
             -d 2019092112"
-            cryosat2_L2.nc)
+            cryosat2_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 
 #===============================================================================
@@ -187,7 +195,7 @@ add_test(NAME test_iodaconv_viirs_jpss1_oc_l2
             -o testrun/viirs_jpss1_oc_l2.nc
             -d 2018041512
             -t 0.5"
-            viirs_jpss1_oc_l2.nc)
+            viirs_jpss1_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_modis_aqua_oc_l2
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -196,7 +204,7 @@ add_test(NAME test_iodaconv_modis_aqua_oc_l2
             -o testrun/modis_aqua_oc_l2.nc
             -d 2018041512
             -t 0.5"
-            modis_aqua_oc_l2.nc)
+            modis_aqua_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_ncep_bufr
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -208,20 +216,21 @@ add_test(NAME test_iodaconv_ncep_bufr
             -m 5
             -l NC001007.yaml
             -ot NC001007"
-            ioda.NC001007.2020031012.nc)
+            ioda.NC001007.2020031012.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 
 #===============================================================================
 # SSEC GIIRS converters
 #===============================================================================
 
+# use the non-zero tolerance for this test since the script is doing a variable change
 add_test( NAME test_iodaconv_giirs_ssec2ioda
           COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
              "${CMAKE_BINARY_DIR}/bin/giirs_ssec2ioda.py
              -i testinput/giirs_fy4a-test.nc
              -o testrun/giirs_ssec_ioda.nc4
              -d 2017030208"
-             giirs_ssec_ioda.nc4)
+             giirs_ssec_ioda.nc4 ${IODA_CONV_COMP_TOL})
 
 add_test(NAME test_iodaconv_giirs_lw
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -229,7 +238,7 @@ add_test(NAME test_iodaconv_giirs_lw
             -i testinput/giirs_fy4a-test.nc
             -o testrun/giirs_fy4a_obs_2017030208.nc4
             -d 2017030208"
-            giirs_fy4a_obs_2017030208.nc4)
+            giirs_fy4a_obs_2017030208.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # GSI ncdiag converters
@@ -242,7 +251,7 @@ add_test(NAME test_iodaconv_gsidiag_conv_uv
             -o testrun/
             -t conv
             -p satwind"
-            satwind_obs_2018041500.nc4)
+            satwind_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_gsidiag_conv
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -251,7 +260,7 @@ add_test(NAME test_iodaconv_gsidiag_conv
             -o testrun/
             -t conv
             -p sfc"
-            sfc_tv_obs_2018041500.nc4)
+            sfc_tv_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_gsidiag_rad
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
@@ -259,7 +268,7 @@ add_test(NAME test_iodaconv_gsidiag_rad
             -i testinput/gsidiag_amsua_aqua_radiance_test.nc
             -o testrun/
             -t rad"
-            amsua_aqua_obs_2018041500.nc4)
+            amsua_aqua_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 
 #===============================================================================
@@ -272,7 +281,7 @@ add_test(NAME test_iodaconv_wrfdadiag_rad
             -i testinput/wrfdadiags_goes-16-abi_2018041500.nc
             -o testrun/
             -t rad"
-            abi_g16_obs_2018041500.nc4)
+            abi_g16_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 
 #===============================================================================
@@ -286,7 +295,7 @@ if( iodaconv_gnssro_ENABLED )
                 2018041500
                 testinput/gnssro_kompsat5_20180415_00Z.bufr
                 testrun/gnssro_kompsat5_2018041500.nc4"
-                gnssro_kompsat5_2018041500.nc4 )
+                gnssro_kompsat5_2018041500.nc4  ${IODA_CONV_COMP_TOL_ZERO})
 endif()
 
 
@@ -302,11 +311,11 @@ add_test(NAME test_iodaconv_viirs_aod
             -m nesdis
             -k maskout
             -t 0.0"
-            viirs_aod.nc)
+            viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 add_test(NAME test_iodaconv_tropomi_no2
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
             "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
             -i testinput/tropomi_no2.nc
             -o testrun/tropomi_no2.nc"
-            tropomi_no2.nc)
+            tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
