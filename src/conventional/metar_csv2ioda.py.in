@@ -11,13 +11,12 @@
 #   data-access.ucar.edu:/glade/campaign/ral/aap/gthompsn/METARs/2019/20191231/2019123118_metars.csv.gz
 #
 
-from __future__ import print_function
 import sys
 import math
 from datetime import datetime
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
-from csv import DictReader
+import csv
 import netCDF4
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -29,6 +28,7 @@ import meteo_utils
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
+
 class reformatMetar(object):
 
     def __init__(self, filename, date):
@@ -36,6 +36,7 @@ class reformatMetar(object):
         self.filename = filename
         self.date = date
         self.meteo_utils = meteo_utils.meteo_utils()
+        self.float_fill = netCDF4.default_fillvals['f4']
 
         # Read in CSV-formatted file of METAR data
         self._rd_metars()
@@ -67,7 +68,7 @@ class reformatMetar(object):
         # open file in read mode
         with open(self.filename, 'r') as fh:
             # pass the file object to reader() to get the reader object
-            csv_dict_reader = DictReader(fh)
+            csv_dict_reader = csv.DictReader(fh)
             column_names = csv_dict_reader.fieldnames
             print(column_names)
             # Iterate over each row in the csv using reader object
@@ -83,49 +84,49 @@ class reformatMetar(object):
                     lat = float(row['Latitude'])
                     lon = float(row['Longitude'])
                     elev = float(row['Elev'])
-                except:
+                except csv.Error:
                     continue
                 try:
                     temp = float(row['Temp']) + self.meteo_utils.C_2_K
-                except:
-                    temp = netCDF4.default_fillvals['f4']
+                except csv.Error:
+                    temp = self.float_fill
                 try:
                     dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
-                except:
-                    dewp = netCDF4.default_fillvals['f4']
+                except csv.Error:
+                    dewp = self.float_fill
                 try:
                     wdir = float(row['Wdir'])
-                except:
-                    wdir = netCDF4.default_fillvals['f4']
+                except csv.Error:
+                    wdir = self.float_fill
                 try:
                     wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
-                except:
-                    wspd = netCDF4.default_fillvals['f4']
+                except csv.Error:
+                    wspd = self.float_fill
 
-                if ( (wdir is not netCDF4.default_fillvals['f4']) and (wspd is not netCDF4.default_fillvals['f4']) ):
-                    if (wdir==0 and wspd==0):
+                if ((wdir is not self.float_fill) and (wspd is not self.float_fill)):
+                    if (wdir == 0 and wspd == 0):
                         uwnd = 0.0
                         vwnd = 0.0
-                    elif (wdir>0 and wdir<=360 and wspd>0):
-                        uwnd,vwnd = self.meteo_utils.dir_speed_2_uv(wdir, wspd)
+                    elif (wdir > 0 and wdir <= 360 and wspd > 0):
+                        uwnd, vwnd = self.meteo_utils.dir_speed_2_uv(wdir, wspd)
                     else:
-                        uwnd = netCDF4.default_fillvals['f4']
-                        vwnd = netCDF4.default_fillvals['f4']
+                        uwnd = self.float_fill
+                        vwnd = self.float_fill
                 else:
-                    uwnd = netCDF4.default_fillvals['f4']
-                    vwnd = netCDF4.default_fillvals['f4']
+                    uwnd = self.float_fill
+                    vwnd = self.float_fill
 
                 try:
                     altim = float(row['Altimeter'])
                     psfc = self.meteo_utils.altim_2_sfcPressure(altim, elev)
-                except:
-                    altim = netCDF4.default_fillvals['f4']
-                    psfc = netCDF4.default_fillvals['f4']
+                except csv.Error:
+                    altim = self.float_fill
+                    psfc = self.float_fill
 
-                if ( (psfc is not netCDF4.default_fillvals['f4']) and (temp is not netCDF4.default_fillvals['f4']) and (dewp is not netCDF4.default_fillvals['f4']) ):
+                if ((psfc is not self.float_fill) and (temp is not self.float_fill) and (dewp is not self.float_fill)):
                     spfh = self.meteo_utils.specific_humidity(dewp, psfc)
                 else:
-                    spfh = netCDF4.default_fillvals['f4']
+                    spfh = self.float_fill
 
                 data['ob_icao'].append(icao)
                 data['ob_time'].append(utime)
@@ -143,6 +144,7 @@ class reformatMetar(object):
         self.data = data
 
         return
+
 
 class IODA(object):
 
