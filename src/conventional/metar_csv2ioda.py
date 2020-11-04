@@ -102,7 +102,8 @@ class reformatMetar(object):
                 else:
                     wspd = netCDF4.default_fillvals['f4']
 
-                if ((wdir is not netCDF4.default_fillvals['f4']) and (wspd is not netCDF4.default_fillvals['f4'])):
+                if ((wdir is not netCDF4.default_fillvals['f4']) and ...
+                   (wspd is not netCDF4.default_fillvals['f4'])):
                     if (wdir == 0 and wspd == 0):
                         uwnd = 0.0
                         vwnd = 0.0
@@ -122,8 +123,9 @@ class reformatMetar(object):
                     altim = netCDF4.default_fillvals['f4']
                     psfc = netCDF4.default_fillvals['f4']
 
-                if ((psfc is not netCDF4.default_fillvals['f4']) and (temp is not netCDF4.default_fillvals['f4'])
-                          and (dewp is not netCDF4.default_fillvals['f4'])):
+                if ((psfc is not netCDF4.default_fillvals['f4']) and ...
+                   (temp is not netCDF4.default_fillvals['f4']) and ...
+                   (dewp is not netCDF4.default_fillvals['f4'])):
                     spfh = self.meteo_utils.specific_humidity(dewp, psfc)
                 else:
                     spfh = netCDF4.default_fillvals['f4']
