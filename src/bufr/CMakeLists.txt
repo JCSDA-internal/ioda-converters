@@ -27,6 +27,7 @@
 #add_executable(test_ingester.x test_ingester.cpp)
 #target_link_libraries(test_ingester.x PRIVATE ingester)
 
-add_test(NAME iodaconv_bufr_coding_norms
-         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
-         --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
+                  ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR})
