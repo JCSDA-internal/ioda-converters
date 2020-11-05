@@ -1,5 +1,6 @@
 *__pycache__/
 build*
+install*
 *DS_Store*
 ._*
 *.swp
