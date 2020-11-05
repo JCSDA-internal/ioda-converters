@@ -311,7 +311,7 @@ add_test(NAME test_iodaconv_tropomi_no2
             "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
             -i testinput/tropomi_no2.nc
             -o testrun/tropomi_no2.nc"
-            tropomi_no2.nc)
+            tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Land product converters
