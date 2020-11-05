@@ -396,7 +396,7 @@ if(iodaconv_bufr_ENABLED)
     ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                       SOURCES bufr/TestBufrDescription.cpp
                       ARGS    testinput/bufr_mhs.yaml
-                      LIBS    eckit oops iodaconv::ingester )
+                      LIBS    eckit oops iodaconv::bufr_parser )
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_mhs2ioda
                       TYPE    SCRIPT
