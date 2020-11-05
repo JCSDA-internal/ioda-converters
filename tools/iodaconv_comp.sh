@@ -11,7 +11,7 @@ set -eu
 file_type=$1
 cmd=$2
 file_name=$3
-tol=$4
+tol=${4:-"0.0"}
 verbose=${5:-${VERBOSE:-"N"}}
 
 [[ $verbose =~ 'yYtT' ]] && set -x
