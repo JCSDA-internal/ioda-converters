@@ -1,11 +1,12 @@
-list(APPEND libs gsi_ncdiag.py)
+list(APPEND libs
+  gsi_ncdiag.py
+  combine_conv.py)
 
 list( APPEND programs
   proc_gsi_ncdiag.py
   test_gsidiag.py
   combine_conv.py
   subset_files.py)
-
 
 set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
@@ -30,6 +31,7 @@ install( PROGRAMS ${gsi_ncdiag_bin_install_deps} DESTINATION ${CMAKE_INSTALL_BIN
 
 install( FILES ${gsi_ncdiag_lib_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-add_test(NAME iodaconv_gsi-ncdiag_coding_norms
-         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
-                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_gsi-ncdiag_coding_norms
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )

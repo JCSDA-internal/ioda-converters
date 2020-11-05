@@ -72,7 +72,7 @@ ecbuild_add_executable( TARGET  bufr2ioda.x
                         LIBS    ingester )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
-                  TYPE SCRIPT
+                  TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
-                  ARGS --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}
+                  ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin )

@@ -11,7 +11,8 @@ set -eu
 file_type=$1
 cmd=$2
 file_name=$3
-verbose=${4:-${VERBOSE:-"N"}}
+tol=$4
+verbose=${5:-${VERBOSE:-"N"}}
 
 [[ $verbose =~ 'yYtT' ]] && set -x
 
@@ -19,7 +20,7 @@ rc="-1"
 case $file_type in
   netcdf)
     $cmd && \
-    nccmp testrun/$file_name testoutput/$file_name -d -m -g -f -S
+    nccmp testrun/$file_name testoutput/$file_name -d -m -g -f -S -T ${tol}
     rc=${?}
     ;;
    odb)
