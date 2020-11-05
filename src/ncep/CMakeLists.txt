@@ -36,6 +36,7 @@ install( FILES ${ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaco
 
 install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-add_test(NAME iodaconv_ncep_coding_norms
-         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
-                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR})
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_ncep_coding_norms
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
