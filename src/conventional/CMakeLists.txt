@@ -17,7 +17,7 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${install_bin_metar_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-ecbuild_add_test( TARGET ${PROJECT_NAME_metar_coding_norms
+ecbuild_add_test( TARGET ${PROJECT_NAME}_metar_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
                   ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
