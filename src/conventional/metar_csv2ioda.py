@@ -12,6 +12,7 @@
 #
 
 import sys
+import os
 import math
 from datetime import datetime
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -27,6 +28,8 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import meteo_utils
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
+
+os.environ["TZ"] = "UTC"
 
 
 class reformatMetar(object):
