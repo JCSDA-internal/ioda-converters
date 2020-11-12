@@ -91,6 +91,18 @@ Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 * `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
 
 
+## metar
+A converter of Surface observation METAR reports in simple CSV format into IODA-ready netCDF4 file.
+Currently, the CSV-formatted file should contain a header line such as the following:
+Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw
+
+At this time, only the output variables of air_temperature, surface_pressure (computed from altimeter setting), specific_humidity (computed from dewpoint temperature and surface_pressure), and eastward/northward_wind (computed from wind speed and direction) are output into the netCDF4 file.  All initial values of PreQC are set to 2 (un-checked) and obserror=0 since UFO software (under development) will be used to flag/discard/QC/etc. these data.  Other variables are expected to be converted as needed such as horizontal visibility in the near future.
+
+```
+Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
+```
+
+
 ## odbapi2nc
 
 Python script, `odbapi2nc.py`, for converting Met Office or ECMWF ODB2 files to netCDF4 files formatted for use by IODA.
