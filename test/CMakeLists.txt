@@ -33,6 +33,7 @@ list( APPEND test_input
   testinput/tropomi_no2.nc
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
+  testinput/singleob.yaml
 )
 
 list( APPEND test_output
@@ -61,6 +62,7 @@ list( APPEND test_output
   testoutput/tropomi_no2.nc
   testoutput/imssnow_scf.nc 
   testoutput/2020100106_metars_small.nc
+  testoutput/singleob.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -266,6 +268,14 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
                           -l NC001007.yaml
                           -ot NC001007"
                           ioda.NC001007.2020031012.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gen_singleob
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/gen_single_ob.py
+                          -y testinput/singleob.yaml"
+                          singleob.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # SSEC GIIRS converters
