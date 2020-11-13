@@ -33,6 +33,7 @@ list( APPEND test_input
   testinput/tropomi_no2.nc
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
+  testinput/afwa_snod_24km.grib
 )
 
 list( APPEND test_output
@@ -61,6 +62,7 @@ list( APPEND test_output
   testoutput/tropomi_no2.nc
   testoutput/imssnow_scf.nc 
   testoutput/2020100106_metars_small.nc
+  testoutput/afwa_snod.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -398,4 +400,15 @@ if( iodaconv_pygrib_ENABLED )
                             -o testrun/imssnow_scf.nc
                             -m maskout"
                             imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_afwa_snod
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/afwa_snod2ioda.py
+                            -i testinput/afwa_snod_24km.grib
+                            -o testrun/afwa_snod.nc
+                            -m maskout"
+                            imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 endif()
