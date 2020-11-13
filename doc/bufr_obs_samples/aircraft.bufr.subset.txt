@@ -1,0 +1,61 @@
+
+ MESSAGE TYPE NC004001  
+
+004001  YEAR                      2018.0  YEAR                          YEAR                                            
+004002  MNTH                         1.0  MONTH                         MONTH                                           
+004003  DAYS                        31.0  DAY                           DAY                                             
+004004  HOUR                        20.0  HOUR                          HOUR                                            
+004005  MINU                        46.0  MINUTE                        MINUTE                                          
+008202  RCTS                         0.0  CODE TABLE                    RECEIPT TIME SIGNIFICANCE                       
+004200  RCYR                      2018.0  YEAR                          YEAR   - TIME OF RECEIPT                        
+004201  RCMO                         1.0  MONTH                         MONTH  - TIME OF RECEIPT                        
+004202  RCDY                        31.0  DAY                           DAY    - TIME OF RECEIPT                        
+004203  RCHR                        20.0  HOUR                          HOUR   - TIME OF RECEIPT                        
+004204  RCMI                        46.0  MINUTE                        MINUTE - TIME OF RECEIPT                        
+035195  SEQNUM                       581  ( 4)CCITT IA5                 CHANNEL SEQUENCE NUMBER                         
+035021  BUHD                      UANT01  ( 6)CCITT IA5                 BULLETIN BEING MONITORED (TTAAii)               
+035023  BORG                        CWAO  ( 4)CCITT IA5                 BULLETIN BEING MONITORED (CCCC)                 
+035022  BULTIM                    312046  ( 6)CCITT IA5                 BULLETIN BEING MONITORED (YYGGgg)               
+035194  BBB                      MISSING  ( 6)CCITT IA5                 BULLETIN BEING MONITORED (BBB)                  
+001198  RPID                      AIC144  ( 8)CCITT IA5                 REPORT IDENTIFIER                               
+033215  CORN                         0.0  CODE TABLE                    CORRECTED REPORT INDICATOR                      
+005002  CLAT                       51.25  DEGREES                       LATITUDE (COARSE ACCURACY)                      
+006002  CLON                      -52.93  DEGREES                       LONGITUDE (COARSE ACCURACY)                     
+007197  FLVL                      9448.8  METERS                        FLIGHT LEVEL                                    
+007196  PSAL                     MISSING  METERS                        PRESSURE ALTITUDE RELATIVE TO MEAN SEA LEVEL    
+           {RAWRPT}    13 REPLICATIONS
+    ++++++  RAWRPT  REPLICATION #     1  ++++++
+058008  RRSTG                   ARP AIC1  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     2  ++++++
+058008  RRSTG                   44 5115N  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     3  ++++++
+058008  RRSTG                   05256W 2  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     4  ++++++
+058008  RRSTG                   046 F310  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     5  ++++++
+058008  RRSTG                    5200N05  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     6  ++++++
+058008  RRSTG                   000W 205  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     7  ++++++
+058008  RRSTG                   8 5600N0  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     8  ++++++
+058008  RRSTG                   4000W MS  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #     9  ++++++
+058008  RRSTG                   42 195/1  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #    10  ++++++
+058008  RRSTG                   57 KT VT  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #    11  ++++++
+058008  RRSTG                    ALP QXS  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #    12  ++++++
+058008  RRSTG                   YAY 3120  ( 8)CCITT IA5                 RAW REPORT STRING                               
+    ++++++  RAWRPT  REPLICATION #    13  ++++++
+058008  RRSTG                    46 F14A  ( 8)CCITT IA5                 RAW REPORT STRING                               
+033193  QMAT                     MISSING  CODE TABLE                    SDMEDIT QUALITY MARK FOR TEMPERATURE            
+012101  TMDB                     MISSING  DEGREES KELVIN                TEMPERATURE/DRY BULB TEMPERATURE                
+033195  QMWN                     MISSING  CODE TABLE                    SDMEDIT QUALITY MARK FOR WIND                   
+011001  WDIR                     MISSING  DEGREES TRUE                  WIND DIRECTION                                  
+011002  WSPD                     MISSING  METERS/SECOND                 WIND SPEED                                      
+001006  ACID                      AIC144  ( 8)CCITT IA5                 AIRCRAFT FLIGHT NUMBER                          
+011031  DGOT                     MISSING  CODE TABLE                    DEGREE OF TURBULENCE                            
+
+ >>> END OF SUBSET <<< 
