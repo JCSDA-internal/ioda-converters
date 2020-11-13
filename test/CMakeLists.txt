@@ -18,6 +18,7 @@ list( APPEND test_input
   testinput/smap_sss_rss.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
+  testinput/SG547_0001_dn_AOML.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
@@ -46,6 +47,7 @@ list( APPEND test_output
   testoutput/smap_sss_rss.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
+  testoutput/test_glider.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
@@ -150,6 +152,15 @@ add_test(NAME test_iodaconv_hgodas_insitu
             -o testrun/hgodas_insitu.nc
             -d 2018041512"
             hgodas_insitu.nc)
+
+add_test(NAME test_iodaconv_glider
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/glider2ioda.py
+            -i testinput/SG547_0001_dn_AOML.nc
+            -o testrun/test_glider.nc
+            -d 2016080412"
+            test_glider.nc)
+
 
 add_test(NAME test_iodaconv_hgodas_sst
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
