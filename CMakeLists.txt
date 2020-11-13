@@ -103,6 +103,7 @@ endif()
 add_subdirectory( src )
 add_subdirectory( tools )
 add_subdirectory( test )
+add_subdirectory( doc )
 
 # Package Config
 
