@@ -170,4 +170,10 @@ For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.p
 Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
 ```
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
-    
+
+
+For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
+```
+Usage: afwa_snod2ioda.py -i input_afwa_file.grib -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. The errors are asummed to be 15% of observed snod and qualiy flag is set to zero.  
