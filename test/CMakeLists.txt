@@ -409,6 +409,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           "${CMAKE_BINARY_DIR}/bin/ghcn_snod2ioda.py
                           -i testinput/ghcn_20200228.csv
                           -o testrun/ghcn_snod_20200228.nc
-                          -f doc/fix/ghcn-stations.txt
+                          -f ${CMAKE_BINARY_DIR}/doc/fix/ghcn-stations.txt
                           -k maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL_ZERO})

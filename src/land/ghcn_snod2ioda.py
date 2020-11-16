@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from dateutil.parser import parse
+from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
