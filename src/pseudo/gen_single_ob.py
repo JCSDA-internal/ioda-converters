@@ -59,9 +59,9 @@ class singleob(object):
         # set up the data
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         locKey = tuple(locKeys)
-        self.data[0][locKey][self.keyDict[key]['valKey']] = yamlconfig['variable']['obsvalue']
-        self.data[0][locKey][self.keyDict[key]['errKey']] = yamlconfig['variable']['obserr']
-        self.data[0][locKey][self.keyDict[key]['qcKey']] = yamlconfig['variable']['preqc']
+        self.data[0][locKey][self.keyDict[key]['valKey']] = float(yamlconfig['variable']['obsvalue'])
+        self.data[0][locKey][self.keyDict[key]['errKey']] = float(yamlconfig['variable']['obserr'])
+        self.data[0][locKey][self.keyDict[key]['qcKey']] = int(yamlconfig['variable']['preqc'])
 
         # call the IODA API and write the file
         (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
