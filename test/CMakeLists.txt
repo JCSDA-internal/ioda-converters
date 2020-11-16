@@ -18,7 +18,7 @@ list( APPEND test_input
   testinput/smap_sss_rss.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
-  testinput/SG547_0001_dn_AOML.nc
+  testinput/marineglider_AOML.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
@@ -156,7 +156,7 @@ add_test(NAME test_iodaconv_hgodas_insitu
 add_test(NAME test_iodaconv_glider
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
             "${CMAKE_BINARY_DIR}/bin/glider2ioda.py
-            -i testinput/SG547_0001_dn_AOML.nc
+            -i testinput/marineglider_AOML.nc
             -o testrun/test_glider.nc
             -d 2016080412"
             test_glider.nc)
