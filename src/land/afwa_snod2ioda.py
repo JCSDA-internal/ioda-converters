@@ -6,11 +6,12 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 import pygrib
-import time,os,sys
+import time, os, sys
 import argparse
 import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
+from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -44,7 +45,7 @@ class AFWA(object):
 
     def _read(self):
         data = pygrib.open(self.filename)
-        lat, lon= data[1].latlons()
+        lat, lon = data[1].latlons()
         lons = lon[:].ravel()
         lats = lat[:].ravel()
         vals = data[1].values[:].ravel()
@@ -60,7 +61,7 @@ class AFWA(object):
         # get global attributes
         start_datetime = data[1].analDate
         base_datetime = start_datetime.isoformat() + "Z"
-        #grbs.close()
+        # grbs.close()
 
         valKey = vName['A'], self.writer.OvalName()
         errKey = vName['A'], self.writer.OerrName()

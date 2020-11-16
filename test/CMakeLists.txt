@@ -405,10 +405,9 @@ if( iodaconv_pygrib_ENABLED )
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
-                            "${CMAKE_BINARY_DIR}/afwa_snod2ioda.py
+                            "${CMAKE_BINARY_DIR}/bin/afwa_snod2ioda.py
                             -i testinput/afwa_snod_24km.grib
                             -o testrun/afwa_snod.nc
                             -m maskout"
-                            imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
-
+                            afwa_snod.nc ${IODA_CONV_COMP_TOL_ZERO})
 endif()
