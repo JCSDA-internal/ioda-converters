@@ -1,5 +1,6 @@
 list(APPEND programs
-  owp_snow_obs_pkl_2_ioda.py           
+  owp_snow_obs_pkl_2_ioda.py
+  owp_snow_obs_csv_2_ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
