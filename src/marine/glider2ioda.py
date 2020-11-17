@@ -5,7 +5,6 @@
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-# 
 
 from __future__ import print_function
 import sys
@@ -34,6 +33,7 @@ AttrData = {
     'odb_version': 1,
 }
 
+
 class Profile(object):
 
     def __init__(self, filename, date, writer):
@@ -50,33 +50,32 @@ class Profile(object):
         lons = np.float32(ncd.variables['longitude'][:])
         lats = np.float32(ncd.variables['latitude'][:])
         with np.errstate(invalid='ignore'):
-             temperature = np.float32(ncd.variables['temperature'][:])
+            temperature = np.float32(ncd.variables['temperature'][:])
         with np.errstate(invalid='ignore'):
-             salinity = np.float32(ncd.variables['salinity'][:])
-        errs = np.float32(np.matlib.repmat(0.2,len(lons) , 1)) 
-        Tqcs = ncd.variables['temperature_qc'][:]-1 # to unify the QC
+            salinity = np.float32(ncd.variables['salinity'][:])
+        errs = np.float32(np.matlib.repmat(0.2, len(lons), 1))
+        Tqcs = ncd.variables['temperature_qc'][:]-1
         Sqcs = ncd.variables['salinity_qc'][:]-1
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        print('lenth',len(time))
-        for i in range(len(time)-1): ##rule out unhashed values
-
-          for j in [0,1]:
-            valKey = vName[j], self.writer.OvalName()
-            errKey = vName[j], self.writer.OerrName()
-            qcKey = vName[j], self.writer.OqcName()
-            dt = base_date +  timedelta(seconds=int(time[i])) 
-            locKey = lats[i], lons[i], dpth[i], dt.strftime(
-                "%Y-%m-%dT%H:%M:%SZ")
-            if j == 0:
-                self.data[0][locKey][valKey] = temperature[i]
-                self.data[0][locKey][errKey] = errs[i]
-                self.data[0][locKey][qcKey] = Tqcs[i]
-            else:
-                self.data[0][locKey][valKey] = salinity[i]
-                self.data[0][locKey][errKey] = errs[i]
-                self.data[0][locKey][qcKey] = Sqcs[i]
+        print('lenth', len(time))
+        for i in range(len(time)-1):
+            for j in [0, 1]:
+                valKey = vName[j], self.writer.OvalName()
+                errKey = vName[j], self.writer.OerrName()
+                qcKey = vName[j], self.writer.OqcName()
+                dt = base_date + timedelta(seconds=int(time[i]))
+                locKey = lats[i], lons[i], dpth[i], dt.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ")
+                if j == 0:
+                    self.data[0][locKey][valKey] = temperature[i]
+                    self.data[0][locKey][errKey] = errs[i]
+                    self.data[0][locKey][qcKey] = Tqcs[i]
+                else:
+                    self.data[0][locKey][valKey] = salinity[i]
+                    self.data[0][locKey][errKey] = errs[i]
+                    self.data[0][locKey][qcKey] = Sqcs[i]
 
 
 def main():
@@ -84,7 +83,7 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) '
-            )
+        )
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -107,7 +106,7 @@ def main():
 
     # Read in the profiles
     prof = Profile(args.input, fdate, writer)
-    print('prof',prof)
+    print('prof', prof)
     # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 #    print('prof.data',prof.data)
