@@ -70,7 +70,6 @@ class ghcn(object):
         # Fix dtypeWarning with mixed types via set low_memory=False 
         df20all = pd.read_csv(self.filename, header=None, names=cols, low_memory=False) 
         df20 = df20all[sub_cols]
-        print(df20.head(5))
         df30_list.append(df20)
 
         df30 = pd.concat(df30_list, ignore_index=True)
@@ -79,10 +78,8 @@ class ghcn(object):
         # select data with Start date
         startdate = self.date 
         df30 = df30[df30["DATETIME"] == parse(startdate).date()]
-        print(df30.head(5))
         # Read station files 
         cols = ["ID","LATITUDE","LONGITUDE","ELEVATION","STATE","NAME","GSN_FLAG","HCNCRN_FLAG","WMO_ID"]
-        print(self.fixfile)
         df10all = pd.read_csv(self.fixfile, header=None, sep='\n')
         df10all = df10all[0].str.split('\s+', expand=True)
         df10 = df10all.iloc[:, 0:3]

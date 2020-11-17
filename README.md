@@ -170,4 +170,10 @@ For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.p
 Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
 ```
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
-    
+
+
+For snow depth (snod), GHCN csv files are supported with `ghcn_snod2ioda.py`.
+```
+Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD -m maskout
+````
+In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.    
