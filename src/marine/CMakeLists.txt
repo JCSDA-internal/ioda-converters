@@ -9,6 +9,7 @@ list(APPEND programs
   hgodas_adt2ioda.py
   hgodas_insitu2ioda.py
   hgodas_sst2ioda.py
+  glider2ioda.py
   rads_adt2ioda.py
   smap_sss2ioda.py
   argoClim2ioda.py
