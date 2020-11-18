@@ -13,7 +13,13 @@ import netCDF4 as nc
 from datetime import datetime, timedelta
 import numpy as np
 import numpy.matlib
-sys.path.append("@SCRIPT_LIB_PATH@")
+from pathlib import Path
+
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
@@ -59,7 +65,6 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        print('lenth', len(time))
         for i in range(len(time)-1):
             for j in [0, 1]:
                 valKey = vName[j], self.writer.OvalName()
@@ -104,12 +109,8 @@ def main():
 
     writer = iconv.NcWriter(args.output, locationKeyList)
 
-    # Read in the profiles
     prof = Profile(args.input, fdate, writer)
-    print('prof', prof)
-    # write them out
     AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-#    print('prof.data',prof.data)
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
     writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
 
