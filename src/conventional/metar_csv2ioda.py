@@ -89,22 +89,34 @@ class reformatMetar(object):
                     elev = float(row['Elev'])
                 except csv.Error:
                     continue
-                try:
-                    temp = float(row['Temp']) + self.meteo_utils.C_2_K
-                except csv.Error:
+                if row['Temp'] is '':
                     temp = self.float_fill
-                try:
-                    dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
-                except csv.Error:
+                else:
+                    try:
+                        temp = float(row['Temp']) + self.meteo_utils.C_2_K
+                    except csv.Error:
+                        temp = self.float_fill
+                if row['Dewp'] is '':
                     dewp = self.float_fill
-                try:
-                    wdir = float(row['Wdir'])
-                except csv.Error:
+                else:
+                    try:
+                        dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
+                    except csv.Error:
+                        dewp = self.float_fill
+                if row['Wdir'] is '':
                     wdir = self.float_fill
-                try:
-                    wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
-                except csv.Error:
+                else:
+                    try:
+                        wdir = float(row['Wdir'])
+                    except csv.Error:
+                        wdir = self.float_fill
+                if row['Wspd'] is '':
                     wspd = self.float_fill
+                else:
+                    try:
+                        wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
+                    except csv.Error:
+                        wspd = self.float_fill
 
                 if ((wdir is not self.float_fill) and (wspd is not self.float_fill)):
                     if (wdir == 0 and wspd == 0):
