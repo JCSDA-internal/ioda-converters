@@ -87,36 +87,24 @@ class reformatMetar(object):
                     lat = float(row['Latitude'])
                     lon = float(row['Longitude'])
                     elev = float(row['Elev'])
-                except csv.Error:
+                except (csv.Error, ValueError):
                     continue
-                if row['Temp'] is '':
+                try:
+                    temp = float(row['Temp']) + self.meteo_utils.C_2_K
+                except (csv.Error, ValueError):
                     temp = self.float_fill
-                else:
-                    try:
-                        temp = float(row['Temp']) + self.meteo_utils.C_2_K
-                    except csv.Error:
-                        temp = self.float_fill
-                if row['Dewp'] is '':
-                    dewp = self.float_fill
-                else:
-                    try:
-                        dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
-                    except csv.Error:
+                try:
+                    dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
+                except (csv.Error, ValueError):
                         dewp = self.float_fill
-                if row['Wdir'] is '':
+                try:
+                    wdir = float(row['Wdir'])
+                except (csv.Error, ValueError):
                     wdir = self.float_fill
-                else:
-                    try:
-                        wdir = float(row['Wdir'])
-                    except csv.Error:
-                        wdir = self.float_fill
-                if row['Wspd'] is '':
+                try:
+                    wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
+                except (csv.Error, ValueError):
                     wspd = self.float_fill
-                else:
-                    try:
-                        wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
-                    except csv.Error:
-                        wspd = self.float_fill
 
                 if ((wdir is not self.float_fill) and (wspd is not self.float_fill)):
                     if (wdir == 0 and wspd == 0):
@@ -134,7 +122,7 @@ class reformatMetar(object):
                 try:
                     altim = float(row['Altimeter'])
                     psfc = self.meteo_utils.altim_2_sfcPressure(altim, elev)
-                except csv.Error:
+                except (csv.Error, ValueError):
                     altim = self.float_fill
                     psfc = self.float_fill
 
