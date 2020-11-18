@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2020 UCAR
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -22,7 +22,7 @@ import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 vName = {
-    'A': "afwa_snow_depth",
+    'A': "afwa_snowDepth",
 }
 
 locationKeyList = [
@@ -32,6 +32,8 @@ locationKeyList = [
 ]
 
 AttrData = {}
+
+os.environ["TZ"] = "UTC"
 
 
 class AFWA(object):
@@ -48,20 +50,17 @@ class AFWA(object):
         lat, lon = data[1].latlons()
         lons = lon[:].ravel()
         lats = lat[:].ravel()
-        vals = data[1].values[:].ravel()
-        # defined errors and qc
-        errs = 0.15*vals
+        vals = 1000.0*data[1].values[:].ravel()
 
         if self.mask == "maskout":
             mask = np.logical_not(vals.mask)
             vals = vals[mask]
             lons = lons[mask]
             lats = lats[mask]
-            errs = errs[mask]
         # get global attributes
         start_datetime = data[1].analDate
         base_datetime = start_datetime.isoformat() + "Z"
-        # grbs.close()
+        data.close()
 
         valKey = vName['A'], self.writer.OvalName()
         errKey = vName['A'], self.writer.OerrName()
@@ -71,16 +70,12 @@ class AFWA(object):
 
             locKey = lats[i], lons[i], base_datetime
             self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
+            self.data[0][locKey][errKey] = 0.0
             self.data[0][locKey][qcKey] = 0
 
-            # write global attributes out
-            self.satellite = "afwa-merged"
-            self.sensor = "afwa.multisensor"
-
-            AttrData["observation_type"] = "SNOD"
-            AttrData["satellite"] = self.satellite
-            AttrData["sensor"] = self.sensor
+            AttrData["observation_type"] = "snowDepth"
+            AttrData["afwa_snowDepth_units"] = "mm"
+            AttrData["agency"] = "AFWA"
             AttrData['date_time_string'] = base_datetime
 
 

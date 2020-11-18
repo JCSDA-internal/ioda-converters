@@ -176,4 +176,4 @@ For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
 ```
 Usage: afwa_snod2ioda.py -i input_afwa_file.grb -o output_ioda_file.nc -m maskout
 ```
-For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. The errors are asummed to be 15% of observed snod and qualiy flag is set to zero.  
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.  
