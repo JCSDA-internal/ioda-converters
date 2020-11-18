@@ -11,5 +11,5 @@ df = ds.to_dataframe().rename(columns={
     "variable_names@VarMetaData": "variable_name"})
 df['datetime'] = df['datetime'].str.decode("utf-8")
 df['variable_name'] = df['variable_name'].str.decode("utf-8")
-df.drop('time')
+df = df.drop('time', axis='columns')
 df.to_csv('../../test/testinput/owp_snow_obs_prelim.csv', index=False)
