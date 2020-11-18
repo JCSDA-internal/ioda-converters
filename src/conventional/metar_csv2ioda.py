@@ -96,7 +96,7 @@ class reformatMetar(object):
                 try:
                     dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
                 except (csv.Error, ValueError):
-                        dewp = self.float_fill
+                    dewp = self.float_fill
                 try:
                     wdir = float(row['Wdir'])
                 except (csv.Error, ValueError):
