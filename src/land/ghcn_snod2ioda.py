@@ -7,7 +7,7 @@
 #
 # This script will work with decoded, CSV files created by NCEI at NOAA/GHCN
 # data acess at ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/
-# 
+#
 
 import sys
 import os
@@ -39,6 +39,7 @@ locationKeyList = [
 
 AttrData = {}
 
+
 class ghcn(object):
 
     def __init__(self, filename, fixfile, date, mask, writer):
@@ -59,41 +60,41 @@ class ghcn(object):
                 ml = df400.loc[df400['ID'] == colrowValue, "DATA_VALUE"]
             # check if the series is empty
             if not(ml.empty):
-                outList = ml.iloc[0] # watersourceSer.append(ml.iloc[0])
+                outList = ml.iloc[0]  # watersourceSer.append(ml.iloc[0])
             else:
-               outList = -999.0
+                outList = -999.0
             return outList
 
-        cols = ["ID", "DATETIME", "ELEMENT","DATA_VALUE", "M_FLAG", "Q_FLAG", "S_FLAG", "OBS_TIME"]
-        sub_cols = ["ID", "DATETIME", "ELEMENT","DATA_VALUE"]
+        cols = ["ID", "DATETIME", "ELEMENT", "DATA_VALUE", "M_FLAG", "Q_FLAG", "S_FLAG", "OBS_TIME"]
+        sub_cols = ["ID", "DATETIME", "ELEMENT", "DATA_VALUE"]
         df30_list = []
-        # Fix dtypeWarning with mixed types via set low_memory=False 
-        df20all = pd.read_csv(self.filename, header=None, names=cols, low_memory=False) 
+        # Fix dtypeWarning with mixed types via set low_memory=False
+        df20all = pd.read_csv(self.filename, header=None, names=cols, low_memory=False)
         df20 = df20all[sub_cols]
         df30_list.append(df20)
 
         df30 = pd.concat(df30_list, ignore_index=True)
-        df30 = df30[df30["ELEMENT"]=="SNWD"]
+        df30 = df30[df30["ELEMENT"] == "SNWD"]
         df30["DATETIME"] = df30.apply(lambda row: parse(str(row["DATETIME"])).date(), axis=1)
         # select data with Start date
-        startdate = self.date 
+        startdate = self.date
         df30 = df30[df30["DATETIME"] == parse(startdate).date()]
-        # Read station files 
-        cols = ["ID","LATITUDE","LONGITUDE","ELEVATION","STATE","NAME","GSN_FLAG","HCNCRN_FLAG","WMO_ID"]
+        # Read station files
+        cols = ["ID", "LATITUDE", "LONGITUDE", "ELEVATION", "STATE", "NAME", "GSN_FLAG", "HCNCRN_FLAG", "WMO_ID"]
         df10all = pd.read_csv(self.fixfile, header=None, sep='\n')
-        df10all = df10all[0].str.split('\s+', expand=True)
+        df10all = df10all[0].str.split('\\s+', expand=True)
         df10 = df10all.iloc[:, 0:3]
-        sub_cols = {0:"ID", 1: "LATITUDE", 2:"LONGITUDE"}
-        df10 = df10.rename(columns = sub_cols)
+        sub_cols = {0: "ID", 1: "LATITUDE", 2: "LONGITUDE"}
+        df10 = df10.rename(columns=sub_cols)
         df10 = df10.drop_duplicates(subset=["ID"])
-        
+
         # use stations list as the number of obs points
         # if no data for a station and a given date, leave -999.0
         num_obs = len(df10.index)
-        new_date = parse(startdate).date()        
+        new_date = parse(startdate).date()
 
         # Initialzed data array
-        vals = np.full((num_obs), -999.0) 
+        vals = np.full((num_obs), -999.0)
         lats = np.full((num_obs), -999.0)
         lons = np.full((num_obs), -999.0)
         site = np.full((num_obs), -9999, dtype=np.int)
@@ -106,24 +107,23 @@ class ghcn(object):
 
         df100 = pd.DataFrame(data=id_array, columns=['ID'])
         df100.assign(DATA_VALUE=-999.0)
- 
         df30Temp = df30.loc[df30["DATETIME"] == new_date]
         df100["DATA_VALUE"] = df100.apply(lambda row: assignValue(row['ID'], df30Temp), axis=1)
 
         vals = df100["DATA_VALUE"].values
         vals = vals.astype('float')
-        errs = vals      
-        
-        # use maskout options 
+        errs = vals
+
+        # use maskout options
         if self.mask == "maskout":
 
-            with np.errstate(invalid='ignore'):  
+            with np.errstate(invalid='ignore'):
                 mask = vals >= 0.0
             vals = vals[mask]
             lons = lons[mask]
             lats = lats[mask]
             errs = errs[mask]
- 
+
         valKey = vName['A'], self.writer.OvalName()
         errKey = vName['A'], self.writer.OerrName()
         qcKey = vName['A'], self.writer.OqcName()
