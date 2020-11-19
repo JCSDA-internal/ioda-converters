@@ -1546,7 +1546,6 @@ class Ozone(BaseGSI):
 
     def read(self):
         # get valid time
-        print("file=",self.filename,self.sensor)
         df = nc.Dataset(self.filename)
         tstr = str(df.getncattr('date_time'))
         self.validtime = dt.datetime.strptime(tstr, "%Y%m%d%H")
@@ -1570,20 +1569,14 @@ class Ozone(BaseGSI):
                 return
         OutVars = []
         InVars = []
-        print("outname=",outname,self.sensor)
-        #print("df.variables=",df.variables)
         for ncv in self.df.variables:
-            print("ncv=",ncv,"----")
-            print("geovals_vars=",geovals_vars)
             if ncv in geovals_vars:
-                print("ncv2=",ncv,geovals_vars(ncv))
                 OutVars.append(geovals_vars[ncv])
                 InVars.append(ncv)
-                print("in-out=",Invars[-1],OutVars[-1],self.sensor)
+                #print("in-out=",Invars[-1],OutVars[-1],self.sensor)
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
-        print("Label 1",self.sensor)
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("satellite", self.satellite)
         ncout.setncattr("sensor", self.sensor)
@@ -1592,10 +1585,9 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_arr_dim"].size)
-        print("Label 2",nclocs)
+        if self.sensor != "ompslp":
+            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_arr_dim"].size)
         for var in self.df.variables.values():
-            print("var=",var)
             vname = var.name
             if vname in geovals_metadata_dict.keys():
                 dims = ("nlocs",)
