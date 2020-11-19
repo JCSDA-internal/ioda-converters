@@ -299,7 +299,7 @@ geovals_vars = {
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
     'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
-    'atmosphere_absorber_03': 'mass_concentration_of_ozone_in_air',
+    'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
     'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
     'atmosphere_mass_content_of_cloud_02': 'mass_content_of_cloud_ice_in_atmosphere_layer',
@@ -393,7 +393,6 @@ units_values = {
     'mole_fraction_of_carbon_dioxide_in_air': '1',
     'mole_fraction_of_ozone_in_air': '1',
     'integrated_layer_ozone_in_air': 'DU',
-    'mixing_ratio_of_ozone_in_air': 'ppmv',
     'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
     'effective_radius_of_cloud_liquid_water_particle': 'm',
     'atmosphere_mass_content_of_cloud_ice': 'kg m-2',
@@ -1573,7 +1572,6 @@ class Ozone(BaseGSI):
             if ncv in geovals_vars:
                 OutVars.append(geovals_vars[ncv])
                 InVars.append(ncv)
-                #print("in-out=",Invars[-1],OutVars[-1],self.sensor)
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
