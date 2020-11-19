@@ -22,7 +22,7 @@ import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 vName = {
-    'A': "afwa_snowDepth",
+    'A': "snowDepth",
 }
 
 locationKeyList = [
@@ -42,6 +42,7 @@ class AFWA(object):
         self.filename = filename
         self.mask = mask
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.units_values = {}
         self.writer = writer
         self._read()
 
@@ -50,7 +51,7 @@ class AFWA(object):
         lat, lon = data[1].latlons()
         lons = lon[:].ravel()
         lats = lat[:].ravel()
-        vals = 1000.0*data[1].values[:].ravel()
+        vals = data[1].values[:].ravel()
 
         if self.mask == "maskout":
             mask = np.logical_not(vals.mask)
@@ -61,6 +62,8 @@ class AFWA(object):
         start_datetime = data[1].analDate
         base_datetime = start_datetime.isoformat() + "Z"
         data.close()
+
+        self.units_values[vName['A']] = 'm'
 
         valKey = vName['A'], self.writer.OvalName()
         errKey = vName['A'], self.writer.OerrName()
@@ -73,9 +76,7 @@ class AFWA(object):
             self.data[0][locKey][errKey] = 0.0
             self.data[0][locKey][qcKey] = 0
 
-            AttrData["observation_type"] = "snowDepth"
-            AttrData["afwa_snowDepth_units"] = "mm"
-            AttrData["agency"] = "AFWA"
+            AttrData["agency"] = "Air Force Weather Agency AFWA"
             AttrData['date_time_string'] = base_datetime
 
 
@@ -107,7 +108,7 @@ def main():
 
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(snod.data)
 
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData, snod.units_values)
 
 
 if __name__ == '__main__':
