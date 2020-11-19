@@ -22,6 +22,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
     nrecsin = len(recnum_uniq)
     nlocsin = len(ncin.dimensions['nlocs'])
     nvars = len(ncin.dimensions['nvars'])
+    print("Label S1")
     if nrecsin > 100.:
         nsamples = int(nlocsout/10.)  # just picked 10 randomly
         nsamples = max(1, nsamples)
@@ -35,6 +36,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         nsamples = npossible
     flag = random.sample(list(np.arange(0, npossible)), nsamples)
     flag = sorted(flag)
+    print("Label S2")
     # get the nlocs where flag is true so consistent for geovals too
     if recs:
         nrecsout = len(flag)
@@ -59,6 +61,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         else:
             d_size = len(dim)
         ncout.createDimension(dim.name, d_size)
+    print("Label S3")
     # copy variables
     for var in ncin.variables.values():
         vname = var.name
@@ -74,20 +77,30 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
             var_out.setncattr_string(aname, avalue)
     ncin.close()
     ncout.close()
+    print("Label S4")
 
     print('wrote obs to:', outfile)
     # now process geoval file if necessary
     if geofile:
+        print("Label S5")
         outfile = geofile[:-4]+suffix
+        print("outfile=",outfile)
+        print("geofile=",geofile)
         ncin = nc.Dataset(geofile)
+        print("ncin=",ncin.ncattrs())
         ncout = nc.Dataset(outfile, 'w')
+        print("ncout=",ncout)
         # attributes
         for aname in ncin.ncattrs():
+            print("aname=",aname)
             avalue = ncin.getncattr(aname)
+            print("avalue=",avalue)
             ncout.setncattr(aname, avalue)
+            print("S5.2")
         # redo nlocs
         ncout.setncattr("nlocs", np.int32(nlocsout))
         # copy dimensions
+        print("dimensions=",ncin.dimensions.values())
         for dim in ncin.dimensions.values():
             if dim.name == 'nlocs':
                 d_size = nlocsout
@@ -95,6 +108,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
                 d_size = len(dim)
             ncout.createDimension(dim.name, d_size)
         # copy variables
+        print("Label S6")
         for var in ncin.variables.values():
             vname = var.name
             vdata = ncin.variables[vname]
@@ -108,6 +122,7 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
 
         print('wrote geovals to:', outfile)
 
+    print("Label S7")
     # now process obsdiag file if necessary
     if diagfile:
         outfile = diagfile[:-4]+suffix
