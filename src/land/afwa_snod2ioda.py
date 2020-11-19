@@ -76,7 +76,6 @@ class AFWA(object):
             self.data[0][locKey][errKey] = 0.0
             self.data[0][locKey][qcKey] = 0
 
-            AttrData["agency"] = "Air Force Weather Agency AFWA"
             AttrData['date_time_string'] = base_datetime
 
 
