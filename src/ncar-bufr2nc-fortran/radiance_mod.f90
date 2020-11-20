@@ -579,7 +579,7 @@ subroutine sort_obs_radiance
          allocate (xdata(i)%xinfo_int  (nlocs(i), nvar_info))
          allocate (xdata(i)%xinfo_char (nlocs(i), nvar_info))
          allocate (xdata(i)%xseninfo_float(nlocs(i), nsen_info))
-         allocate (xdata(i)%xseninfo_int  (nsen_info, nvars(i)))
+         allocate (xdata(i)%xseninfo_int  (nvars(i), nsen_info))
          xdata(i)%xinfo_float   (:,:) = missing_r
          xdata(i)%xinfo_int     (:,:) = missing_i
          xdata(i)%xinfo_char    (:,:) = ''
@@ -663,7 +663,7 @@ subroutine sort_obs_radiance
       end do
 
       iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
-      xdata(ityp)%xseninfo_int(iv,:) = rlink%ch(:)
+      xdata(ityp)%xseninfo_int(:,iv) = rlink%ch(:)
 
       do i = 1, nvars(ityp)
          xdata(ityp)%xfield(iloc(ityp),i)%val = rlink%tb(i)

@@ -19,8 +19,8 @@ integer(i_kind), parameter :: n_ncdim           = 5  ! total numner of nc dimens
 integer(i_kind), parameter :: nvar_met          = 6
 integer(i_kind), parameter :: nvar_info         = 10 ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
-integer(i_kind), parameter :: ninst             = 6
-!integer(i_kind), parameter :: ninst             = 7 ! including airs
+integer(i_kind), parameter :: ninst             = 7
+!integer(i_kind), parameter :: ninst             = 8 ! including airs
 integer(i_kind), parameter :: write_nc_conv     = 1
 integer(i_kind), parameter :: write_nc_radiance = 2
 
@@ -74,6 +74,7 @@ character(len=nstring), dimension(ninst) :: inst_list = &
       'amsua_n19       ', &
       'amsua_metop-a   ', &
       'amsua_metop-b   ', &
+      'amsua_metop-c   ', &
 !      'airs_aqua       ', &
       'amsua_aqua      ' /)
 
