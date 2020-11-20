@@ -324,7 +324,7 @@ geovals_vars = {
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
     'Sfc_Height': 'surface_geopotential_height',
-    'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
+    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -391,6 +391,7 @@ units_values = {
     'humidity_mixing_ratio': '1',
     'mole_fraction_of_carbon_dioxide_in_air': '1',
     'mole_fraction_of_ozone_in_air': '1',
+    'integrated_layer_ozone_in_air': 'DU',
     'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
     'effective_radius_of_cloud_liquid_water_particle': 'm',
     'atmosphere_mass_content_of_cloud_ice': 'kg m-2',
@@ -693,6 +694,11 @@ class Conv(BaseGSI):
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
+                    if outvars[o] == 'surface_pressure':
+                        try:
+                            tmpps = self.var('surface_pressure')[0]
+                        except IndexError:
+                            obsdata = obsdata * 100.  # convert to Pa from hPa
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
@@ -745,6 +751,13 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                    # special logic for unit conversions depending on GSI version
+                    elif lvar == 'Pressure':
+                        try:
+                            tmpps = self.var('surface_pressure')[0]
+                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
+                        except IndexError:
+                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx] * 100.  # convert to Pa from hPa
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
@@ -1104,7 +1117,10 @@ class Radiances(BaseGSI):
                     varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
                     ibc += 1
         obsdata = self.var('Observation')
-        obserr = self.var('Input_Observation_Error')
+        try:
+            obserr = self.var('Input_Observation_Error')
+        except IndexError:
+            obserr = 1./self.var('Inverse_Observation_Error')
         obsqc = self.var('QC_Flag').astype(int)
         if (ObsBias):
             nametbc = [
@@ -1565,7 +1581,7 @@ class Ozone(BaseGSI):
         nlocs = self.nobs
         ncout.createDimension("nlocs", nlocs)
         # other dims
-        ncout.createDimension("nlevs", self.df.dimensions["mass_concentration_of_ozone_in_air_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1615,13 +1631,16 @@ class Ozone(BaseGSI):
         writer = iconv.NcWriter(outname, LocKeyList)
 
         nlocs = self.nobs
-        vname = "mole_fraction_of_ozone_in_air"
+        vname = "integrated_layer_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
         varDict[vname]['qcKey'] = vname, writer.OqcName()
 
         obsdata = self.var('Observation')
-        tmp = self.var('Input_Observation_Error')
+        try:
+            tmp = self.var('Input_Observation_Error')
+        except IndexError:
+            tmp = 1./self.var('Inverse_Observation_Error')
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL

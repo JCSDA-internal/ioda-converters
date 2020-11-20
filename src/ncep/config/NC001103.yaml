@@ -13,27 +13,27 @@
   - 3
   - *id001
   - [-1]
-- - buoy/platform_identifier@MetaData
+- - buoy_platform_identifier@MetaData
   - BPID
   - 3
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_pressure@MetaData
+- - sdmedit_quips_quality_mark_for_pressure@MetaData
   - QMPR
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_temperature@MetaData
+- - sdmedit_quips_quality_mark_for_temperature@MetaData
   - QMAT
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_moisture@MetaData
+- - sdmedit_quips_quality_mark_for_moisture@MetaData
   - QMDD
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_wind@MetaData
+- - sdmedit_quips_quality_mark_for_wind@MetaData
   - QMWN
   - 2
   - *id001
@@ -48,7 +48,7 @@
   - 2
   - *id001
   - [-1]
-- - sdmedit/quips_quality_mark_for_sea_surface_temperature@MetaData
+- - sdmedit_quips_quality_mark_for_sea_surface_temperature@MetaData
   - QMST
   - 2
   - *id001
@@ -93,7 +93,7 @@
   - 3
   - *id001
   - [-1]
-- - temperature/dry_bulb_temperature@ObsValue
+- - temperature_dry_bulb_temperature@ObsValue
   - TMDB
   - 3
   - *id001
@@ -133,7 +133,7 @@
   - 3
   - *id001
   - [-1]
-- - depth_below_sea/water_surface_cm@MetaData
+- - depth_below_sea_water_surface_cm@MetaData
   - DBSSX
   - 3
   - *id001
@@ -148,7 +148,7 @@
   - 2
   - *id001
   - [-1]
-- - method_of_salinity/depth_measurement@MetaData
+- - method_of_salinity_depth_measurement@MetaData
   - MSDM
   - 2
   - *id001
@@ -203,7 +203,7 @@
   - 3
   - *id001
   - [-1]
-- - total_precipitation/total_water_equivalent@ObsValue
+- - total_precipitation_total_water_equivalent@ObsValue
   - TOPC
   - 3
   - *id001
@@ -333,12 +333,12 @@
   - 2
   - *id001
   - [-1]
-- - latitude_high_accuracy@MetaData
+- - latitude@MetaData
   - CLATH
   - 3
   - *id001
   - [-1]
-- - longitude_high_accuracy@MetaData
+- - longitude@MetaData
   - CLONH
   - 3
   - *id001

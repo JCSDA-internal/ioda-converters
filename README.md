@@ -68,7 +68,7 @@ src/gsi-ncdiag for details.
 
 ## marine
 The marine converters all take the following format, with some converters taking additional optional arguments as noted:
- 
+
 ```
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 ```
@@ -89,6 +89,18 @@ Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 * `viirs_modis_oc2ioda.py` - L2 satellite ocean color observations from NOAA Coastwatch for VIIRS instruments on board JPSS1/NOAA-20 and SNPP satellites, and from NASA GSFC for MODIS instrument on board Aqua satellite. Observations available from `ftp://ftpcoastwatch.noaa.gov/pub/socd2/mecb/coastwatch/viirs/n20/nrt/L2` (VIIRS-JPSS1/NOAA-20), `ftp://ftpcoastwatch.noaa.gov/pub/socd1/mecb/coastwatch/viirs/nrt/L2` (VIIRS-SNPP), and `https://oceandata.sci.gsfc.nasa.gov/MODIS-Aqua/L2` (MODIS-Aqua).
 
 * `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
+
+
+## metar
+A converter of Surface observation METAR reports in simple CSV format into IODA-ready netCDF4 file.
+Currently, the CSV-formatted file should contain a header line such as the following:
+Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw
+
+At this time, only the output variables of air_temperature, surface_pressure (computed from altimeter setting), specific_humidity (computed from dewpoint temperature and surface_pressure), and eastward/northward_wind (computed from wind speed and direction) are output into the netCDF4 file.  All initial values of PreQC are set to 2 (un-checked) and obserror=0 since UFO software (under development) will be used to flag/discard/QC/etc. these data.  Other variables are expected to be converted as needed such as horizontal visibility in the near future.
+
+```
+Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
+```
 
 
 ## odbapi2nc
@@ -113,7 +125,7 @@ Until ODC arrives, we have to use python 2.7 for the ODB test and file conversio
 The ODB file conversion test will be disabled by default so that developers can continue to work in Python 3.
 The ODB coding norms test will always be enabled.
 
-When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7. 
+When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7.
 To enable the ODB file conversion test, add the ENABLE_ODB_API option to ecbuild as follows:
 ~~~~~~~~
 ecbuild -DENABLE_ODB_API=1 <other_ecbuild_options> <path_to_source_directory>
@@ -131,9 +143,31 @@ Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
 
 ## chem
 
-The chem converters include all converter scripts for aerosols and related chemistry variables. Currently only one Python script, `viirs_aod2ioda.py`, is used to convert the native netCDF format for observations of optical depth from VIIRS AOD550 to IODA netCDF format. Note that it takes only AOD550 explicitly and does not take the 11 AOD channels from VIIRS. The converter uses the following format to execute:
- 
+The chem converters include all converter scripts for aerosols and related chemistry variables.
+
+For NO2, TROPOMI netCDF files are supported with `tropomi_no2_nc2ioda.py`.
+```
+Usage: tropomi_no2_nc2ioda.py -i input_tropomi_files.nc -o output_ioda_file.nc
+```
+For -i you can specify a list of files with a shell wildcard and the converter will write them to one output file.
+This converter provides all fields needed for assimilation, including the observation value, error, and averaging kernel information.
+
+
+For AOD, `viirs_aod2ioda.py`, is used to convert the native netCDF format for observations of optical depth from VIIRS AOD550 to IODA netCDF format. Note that it takes only AOD550 explicitly and does not take the 11 AOD channels from VIIRS. The converter uses the following format to execute:
+
 ```
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -m nesdis -k maskout -t 0.0
 ```
-For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to mask all missing values out. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.    
+For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to not write out missing values. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.
+
+
+## land
+
+The land converters include all converter scripts for snowpack, soil, vegeation, and the other surface related land variables.
+
+For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.py`.
+```
+Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+    
