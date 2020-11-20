@@ -50,6 +50,7 @@ arg_parse_description = (
 
 output_var_names = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
 output_type_names = {'snow_depth_mm': 'output_depth', 'snow_water_equivalent_mm': 'output_swe'}
+output_var_units = {'snow_depth': 'mm', 'swe': 'mm'}
 
 
 def read_input(input_file, global_config):
@@ -215,8 +216,8 @@ def owp_snow_obs_csv_2_ioda(args):
         attr_data['thinning'] = global_config['thin']
         attr_data['converter'] = os.path.basename(__file__)
 
-        # var_list_name = output_var_names[var_name]
-        var_list_name = var_name
+        var_list_name = output_var_names[var_name]
+        # var_list_name = var_name
         var_data = {
             writer._var_list_name: writer.FillNcVector(var_list_name, "string")}
 
@@ -227,7 +228,7 @@ def owp_snow_obs_csv_2_ioda(args):
         writer._nlocs = obs_data[(output_var_names[var_name], 'ObsValue')].shape[0]
 
         # use the writer class to create the final output file
-        writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
+        writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)
 
 
 # Make parser separate, testable.
