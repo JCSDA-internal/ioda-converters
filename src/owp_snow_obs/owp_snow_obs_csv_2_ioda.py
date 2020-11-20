@@ -50,7 +50,7 @@ arg_parse_description = (
 
 output_var_names = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
 output_type_names = {'snow_depth_mm': 'output_depth', 'snow_water_equivalent_mm': 'output_swe'}
-output_var_units = {'snow_depth': 'mm', 'swe': 'mm'}
+output_var_units = {'snow_depth': 'm', 'swe': 'm'}
 
 
 def read_input(input_file, global_config):
@@ -138,7 +138,7 @@ def read_input(input_file, global_config):
         opqc_name = global_config['opqc_name']
         obs_data = {}
         var_name = output_var_names[vv]  # shorten
-        obs_data[(var_name, oval_name)] = variable_dict[vv]['values']
+        obs_data[(var_name, oval_name)] = variable_dict[vv]['values'] / 1000.  # mm to m
         obs_data[(var_name, oerr_name)] = variable_dict[vv]['err']
         obs_data[(var_name, opqc_name)] = variable_dict[vv]['qc']
 
