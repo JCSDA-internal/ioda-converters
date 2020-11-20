@@ -10,7 +10,7 @@ import os
 
 
 def subset(infile, nlocsout, suffix, geofile, diagfile):
-    print('Processing:', infile, " for subsetting")
+    print('Processing:', infile)
     outfile = infile[:-4]+suffix
     ncin = nc.Dataset(infile)
     ncout = nc.Dataset(outfile, 'w')
@@ -48,14 +48,12 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
     # process observation file
     # copy global attributes
     for aname in ncin.ncattrs():
-        print(",aname=",aname)
         avalue = ncin.getncattr(aname)
         ncout.setncattr(aname, avalue)
     # redo nlocs
     ncout.setncattr("nlocs", np.int32(nlocsout))
     # copy dimensions
     for dim in ncin.dimensions.values():
-        print("dim=",dim.name)
         if dim.name == 'nlocs':
             d_size = nlocsout
         else:
@@ -63,7 +61,6 @@ def subset(infile, nlocsout, suffix, geofile, diagfile):
         ncout.createDimension(dim.name, d_size)
     # copy variables
     for var in ncin.variables.values():
-        print("var.name=",var.name)
         vname = var.name
         vdata = ncin.variables[vname]
         var_out = ncout.createVariable(vname, var.dtype, var.dimensions)
