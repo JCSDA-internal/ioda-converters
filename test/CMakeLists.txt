@@ -22,7 +22,8 @@ list( APPEND test_input
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/owp_snow_obs.pkl
-  testinput/owp_snow_obs_prelim.csv
+  testinput/owp_snow_obs.csv
+  testinput/owp_snow_obs_prelim.csv  
   testinput/gnssro_kompsat5_20180415_00Z.bufr
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
@@ -53,6 +54,8 @@ list( APPEND test_output
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/owp_snow_obs.nc
   testoutput/owp_snow_obs_csv.nc
+  testoutput/owp_snow_obs_swe_csv.nc
+  testoutput/owp_snow_obs_depth_csv.nc	
   testoutput/gnssro_kompsat5_2018041500.nc4
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
@@ -98,14 +101,23 @@ add_test(NAME test_iodaconv_owp_snow_obs_pkl
              -t 0.5"
              owp_snow_obs.nc)
 
-add_test(NAME test_iodaconv_owp_snow_obs_csv
+add_test(NAME test_iodaconv_owp_snow_obs_swe_csv
          COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
             "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_csv_2_ioda.py
-             -i testinput/owp_snow_obs_prelim.csv
-             -o testrun/owp_snow_obs_csv.nc
-             -d 2019021502
-             -t 0.5"
-             owp_snow_obs_csv.nc)
+             -i testinput/owp_snow_obs.csv
+             -o_swe testrun/owp_snow_obs_swe_csv.nc
+             -d 2018100100
+             -t 0.3"
+             owp_snow_obs_swe_csv.nc)
+
+add_test(NAME test_iodaconv_owp_snow_obs_depth_csv
+         COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh netcdf
+            "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_csv_2_ioda.py
+             -i testinput/owp_snow_obs.csv
+             -o_depth testrun/owp_snow_obs_depth_csv.nc
+             -d 2018100100
+             -t 0.3"
+             owp_snow_obs_depth_csv.nc)
 
 #===============================================================================
 # Marine converters

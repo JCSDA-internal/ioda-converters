@@ -4,6 +4,7 @@ from multiprocessing import Pool
 import numpy as np
 import os
 import pandas as pd
+import pathlib
 import sys
 # sys.path.append("/home/vagrant/jedi/bundle-ioda/build/tools/lib/pyiodaconv")  # dummy before install
 sys.path.append("@SCRIPT_LIB_PATH@")
@@ -22,45 +23,11 @@ import ioda_conv_ncio as iconv
 # Purpose: Convert OWP snow observations from CSV format to IODA format.
 
 # Example testing usage:
-# ipython --pdb -c "%run owp_snow_obs_csv_2_ioda.py \
-#    -i ../../test/testinput/owp_snow_obs_prelim.csv  \
-#    -o ../../test/testoutput/owp_snow_obs_csv.nc \
-#    -d 2019021502"
-
-# Input structure:
-# jedi@vagrant[395]:~/jedi/bundle-ioda/ioda-converters/src/owp_snow_obs> cat ../../test/testinput/owp_snow_obs_prelim.csv
-# ObsValue,ObsError,PreQC,time,latitude,longitude,datetime,variable_name
-# 9.96921e+36,9.96921e+36,9.96921e+36,3.0,44.05,-96.6,2019-02-15T05:00:00Z,snow_depth
-# 9.96921e+36,9.96921e+36,9.96921e+36,3.0,43.05,-96.15,2019-02-15T05:00:00Z,snow_depth
-
-# Output structure:
-
-# root@8bba783e233d:/jedi/repos/ioda-converters/test/testoutput# ncdump -h owp_snow_obs.nc
-# netcdf owp_snow_obs {
-# dimensions:
-# 	nvars = 1 ;
-# 	nlocs = 156 ;
-# 	nrecs = 1 ;
-# 	nstring = 50 ;
-# 	ndatetime = 20 ;
-# variables:
-# 	float snow_depth@PreQC(nlocs) ;
-# 	float snow_depth@ObsError(nlocs) ;
-# 	float snow_depth@ObsValue(nlocs) ;
-# 	float time@MetaData(nlocs) ;
-# 	float latitude@MetaData(nlocs) ;
-# 	float longitude@MetaData(nlocs) ;
-# 	char datetime@MetaData(nlocs, ndatetime) ;
-# 	char variable_names@VarMetaData(nvars, nstring) ;
-
-# // global attributes:
-# 		:nrecs = 1 ;
-# 		:nvars = 1 ;
-# 		:nlocs = 156 ;
-# 		:thinning = 0.5 ;
-# 		:date_time = 2019021502 ;
-# 		:converter = "owp_snow_obs_pkl_2_ioda.py" ;
-# }
+# ipython --pdb -c %run owp_snow_obs_csv_2_ioda.py \
+#     -i ../../test/# testinput/owp_snow_obs.csv  \
+#     -o_depth owp_snow_obs_depth_csv.nc \
+#     -o_swe owp_snow_obs_swe_csv.nc \
+#     -d 2018100100 -t .3
 
 # Some todos on potentially desirable information to add in the future:
 # TODO JLM: would be nice if the metadata on time@MetaData would say what the datum is and
@@ -78,32 +45,22 @@ import ioda_conv_ncio as iconv
 # 		:processing_level = "??" ;
 
 arg_parse_description = (
-    """Reads snow OWP observations in python pkl files and converts
-    tio IODA output files. """)
+    """Reads snow OWP observations in CSV files and converts
+    to IODA output files. """)
 
-output_var_names = {'snow_depth': 'snow_depth', 'snow_water_equivalent': 'swe'}
+output_var_names = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
+output_type_names = {'snow_depth_mm': 'output_depth', 'snow_water_equivalent_mm': 'output_swe'}
 
 
-def read_input(input_args: dict):
+def read_input(input_file, global_config):
     """
-    Reads/converts a single input file, performing optional thinning.
-
+    Reads/converts a csv input file, performing optional thinning.
     Arguments:
-        The args are a dict as this is to be called by multiprocessing
-        input_args: A tuple of input (filename, global_config)
-            input_file: The name of file to read
-            global_config: structure for global arguments related to read
-            TODO JLM: what is the structure of global config? Perty opaque.
-
+        input_file: the file to read_csv
+        global_config: the ioda global config
     Returns:
-
         A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
     """
-
-    # -----------------------------------------------------------------------------
-    # The src/input data
-    input_file = input_args['input']
-    global_config = input_args['global_config']
 
     # Get the input data and massage it.
     print("Reading ", input_file)
@@ -111,6 +68,7 @@ def read_input(input_args: dict):
     attr_data = {}
     variable_dict = {}
     variable_names = list(output_var_names.keys())
+    return_dict = {}
 
     for vv in variable_names:
         var_df = obs_df[obs_df['variable_name'] == vv]
@@ -149,8 +107,9 @@ def read_input(input_args: dict):
         np.random.seed(int((
             global_config['ref_date_time'] - datetime(1970, 1, 1)
         ).total_seconds()))
-        thin_mask = np.random.uniform(size=len(lons)) > global_config['thin']
-
+        randoms = np.random.uniform(size=len(lons))
+        thin_quantile = np.quantile(randoms, global_config['thin'])
+        thin_mask = randoms >= thin_quantile
         # final output structure
         loc_data = {
             'latitude': lats[thin_mask],
@@ -168,28 +127,40 @@ def read_input(input_args: dict):
             'err': var_df['ObsError'].ravel()[thin_mask],
             'qc': var_df['PreQC'].ravel()[thin_mask]}
 
-    # calculate output values
-    # Note: the qc flags in GDS2.0 run from 0 to 5, with higher numbers
-    # being better. IODA typically expects 0 to be good, and higher numbers
-    # are bad, so the qc flags flipped here.
-    # Shorten
-    oval_name = global_config['oval_name']
-    oerr_name = global_config['oerr_name']
-    opqc_name = global_config['opqc_name']
-    obs_data = {}
-    for key in output_var_names.keys():
-        if global_config['output_' + key]:
-            var_name = output_var_names[key]  # shorten
-            obs_data[(var_name, oval_name)] = variable_dict[key]['values']
-            obs_data[(var_name, oerr_name)] = variable_dict[key]['err']
-            obs_data[(var_name, opqc_name)] = variable_dict[key]['qc']
+        # calculate output values
+        # Note: the qc flags in GDS2.0 run from 0 to 5, with higher numbers
+        # being better. IODA typically expects 0 to be good, and higher numbers
+        # are bad, so the qc flags flipped here.
+        # Shorten
+        oval_name = global_config['oval_name']
+        oerr_name = global_config['oerr_name']
+        opqc_name = global_config['opqc_name']
+        obs_data = {}
+        var_name = output_var_names[vv]  # shorten
+        obs_data[(var_name, oval_name)] = variable_dict[vv]['values']
+        obs_data[(var_name, oerr_name)] = variable_dict[vv]['err']
+        obs_data[(var_name, opqc_name)] = variable_dict[vv]['qc']
 
-    return (obs_data, loc_data, attr_data)
+        return_dict[vv] = {
+            'obs_data': obs_data,
+            'loc_data': loc_data,
+            'attr_data': attr_data}
+
+    return return_dict
 
 
 def owp_snow_obs_csv_2_ioda(args):
 
-    writer = iconv.NcWriter(args.output, [], [])
+    args_dict = vars(args)
+    if args_dict['output_depth'] is not None:
+        output_dum = args_dict['output_depth']
+    elif args_dict['output_swe'] is not None:
+        output_dum = args_dict['output_swe']
+    else:
+        raise ValueError("Neither SWE nor depth outputfile requested")
+
+    writer_dum = iconv.NcWriter(output_dum, [], [])
+    pathlib.Path(output_dum).unlink()
 
     # TODO JLM: Global config: is what?
     # {
@@ -204,78 +175,59 @@ def owp_snow_obs_csv_2_ioda(args):
     global_config = {}
     global_config['ref_date_time'] = args.ref_date_time
     global_config['thin'] = args.thin
-    global_config['oval_name'] = writer.OvalName()
-    global_config['oerr_name'] = writer.OerrName()
-    global_config['opqc_name'] = writer.OqcName()
-    global_config['output_snow_depth'] = args.only_depth
-    global_config['output_snow_water_equivalent'] = args.only_swe
+    global_config['oval_name'] = writer_dum.OvalName()
+    global_config['oerr_name'] = writer_dum.OerrName()
+    global_config['opqc_name'] = writer_dum.OqcName()
 
     # Create a list of arg dicts
-    pool_inputs = [
-        {'input': i, 'global_config': global_config} for i in args.input]
+    obs = read_input(input_file=args.input[0], global_config=global_config)
 
-    # Serial version for debugging and option to process files in parallel.
-    if args.processes == 1:
-        obs = [read_input(ii) for ii in pool_inputs]
-    else:
-        with Pool(processes=args.processes) as pool:
-            obs = pool.map(read_input, pool_inputs)
+    for var_name, output_type in output_type_names.items():
+        if args_dict[output_type] is None:
+            continue
+        writer = iconv.NcWriter(args_dict[output_type], [], [])
 
-    # TODO JLM: concatenate the data from the files
-    obs_data, loc_data, attr_data = obs[0]
-    loc_data['datetime'] = writer.FillNcVector(
-        loc_data['datetime'], "datetime")
-    for i in range(1, len(obs)):
-        for k in obs_data:
-            axis = len(obs[i][0][k].shape)-1
-            obs_data[k] = np.concatenate(
-                (obs_data[k], obs[i][0][k]), axis=axis)
-        for k in loc_data:
-            d = obs[i][1][k]
-            if k == 'datetime':
-                d = writer.FillNcVector(d, 'datetime')
-            loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
+        obs_data = obs[var_name]['obs_data']
+        loc_data = obs[var_name]['loc_data']
+        attr_data = obs[var_name]['attr_data']
+        loc_data['datetime'] = writer.FillNcVector(
+            loc_data['datetime'], "datetime")
 
-    # prepare global attributes we want to output in the file,
-    # in addition to the ones already loaded in from the input file
-    # TODO JLM: is this format reformatted by the writer.BuildNetcdf? does
-    # not match output
+        # prepare global attributes we want to output in the file,
+        # in addition to the ones already loaded in from the input file
+        # TODO JLM: is this format reformatted by the writer.BuildNetcdf? does
+        # not match output
 
-    # TODO JLM: What is this date_time_string used for?
-    #   Apparently it is the self._ref_date_time in the NcWriter class.
-    # TODO JLM: could 'date' be called ref_date_time? there are at least
-    #   4 names that this value takes:
-    #   args.date
-    #   global_config['date']
-    #   arttr_data['date_time_string']
-    #   self._ref_date_time
-    #   That's super confusing. I like "args.ref_date_time" ->
-    #       global_config['ref_date_time'] ->
-    #       attr_data['ref_date_time'] -> self._ref_date_time
-    #   ref indicates something useful.
-    attr_data['date_time_string'] = global_config[
-        'ref_date_time'].strftime("%Y-%m-%dT%H:%M:%SZ")
-    attr_data['thinning'] = global_config['thin']
-    attr_data['converter'] = os.path.basename(__file__)
+        # TODO JLM: What is this date_time_string used for?
+        #   Apparently it is the self._ref_date_time in the NcWriter class.
+        # TODO JLM: could 'date' be called ref_date_time? there are at least
+        #   4 names that this value takes:
+        #   args.date
+        #   global_config['date']
+        #   arttr_data['date_time_string']
+        #   self._ref_date_time
+        #   That's super confusing. I like "args.ref_date_time" ->
+        #       global_config['ref_date_time'] ->
+        #       attr_data['ref_date_time'] -> self._ref_date_time
+        #   ref indicates something useful.
+        attr_data['date_time_string'] = global_config[
+            'ref_date_time'].strftime("%Y-%m-%dT%H:%M:%SZ")
+        attr_data['thinning'] = global_config['thin']
+        attr_data['converter'] = os.path.basename(__file__)
 
-    # determine which variables we are going to output
-    selected_names = []
-    if global_config['output_snow_depth']:
-        selected_names.append(output_var_names['snow_depth'])
-    if global_config['output_snow_water_equivalent']:
-        selected_names.append(output_var_names['snow_water_equivalent'])
+        # var_list_name = output_var_names[var_name]
+        var_list_name = var_name
+        var_data = {
+            writer._var_list_name: writer.FillNcVector(var_list_name, "string")}
 
-    var_data = {writer._var_list_name: writer.FillNcVector(
-        selected_names, "string")}
+        # pass parameters to the IODA writer
+        # (needed because we are bypassing ExtractObsData within BuildNetcdf)
+        writer._nrecs = 1
+        writer._nvars = 1
+        writer._nlocs = obs_data[(output_var_names[var_name], 'ObsValue')].shape[0]
 
-    # pass parameters to the IODA writer
-    # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    writer._nrecs = 1
-    writer._nvars = len(selected_names)
-    writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
-
-    # use the writer class to create the final output file
-    writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
+        # use the writer class to create the final output file
+        writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
 
 
 # Make parser separate, testable.
@@ -291,9 +243,13 @@ def parse_arguments():
         help="path of OWP snow observation input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
-        '-o', '--output',
-        help="path of IODA output file",
-        type=str, required=True)
+        '-o_depth', '--output_depth',
+        help="path of IODA output snow depth file",
+        type=str, required=False)
+    required.add_argument(
+        '-o_swe', '--output_swe',
+        help="path of IODA output SWE file",
+        type=str, required=False)
     required.add_argument(
         '-d', '--ref_date_time',
         metavar="YYYYMMDDHH",
@@ -314,22 +270,9 @@ def parse_arguments():
         help='multiprocessing.Pool can load input files in parallel.'
              ' (default: %(default)s)',
         type=int, default=1)
-    optional.add_argument(
-        '--only_depth',
-        help='If set, only the snow depth is output.'
-             ' Otherwise, depth and swe are both output.',
-        action='store_true')
-    optional.add_argument(
-        '--only_swe',
-        help='If set, only the swe is output.'
-             ' Otherwise, depth and swe are both output.',
-        action='store_true')
 
     args = parser.parse_args()
     args.ref_date_time = datetime.strptime(args.ref_date_time, '%Y%m%d%H')
-    if not args.only_depth and not args.only_swe:
-        args.only_depth = True
-        args.only_swe = False  # When we have the data....
 
     return args
 
