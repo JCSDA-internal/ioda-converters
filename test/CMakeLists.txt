@@ -432,6 +432,8 @@ if(iodaconv_bufr_ENABLED)
                               gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                       DEPENDS bufr2ioda.x )
 
+endif()
+
 # =============================================================================
 # Land product converters
 #==============================================================================
