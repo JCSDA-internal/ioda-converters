@@ -44,6 +44,14 @@ else()
   ecbuild_find_package( eckit VERSION 1.13.0 QUIET )
   ecbuild_find_package( oops VERSION 1.0.0 QUIET )
 endif()
+# Optional: pygrib for python for GRIB1/GRIB2 input files
+if ( USE_PYGRIB )
+    message(STATUS "Adding python tests that import pygrib")
+    set( iodaconv_pygrib_ENABLED True)
+else()
+    message(STATUS "Skipping python tests that import pygrib")
+    set( iodaconv_pygrib_ENABLED False)
+endif()
 
 find_package( ioda_engines QUIET )
 

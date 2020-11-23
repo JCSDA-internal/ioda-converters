@@ -31,6 +31,8 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/imssnow_24km.grib2
+  testinput/2020100106_metars_small.csv
 )
 
 list( APPEND test_output
@@ -57,6 +59,8 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
+  testoutput/imssnow_scf.nc
+  testoutput/2020100106_metars_small.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -229,6 +233,20 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
                           -o testrun/cryosat2_L2.nc
                           -d 2019092112"
                           cryosat2_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
+# Conventional data, surface Obs - METAR converter
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
+                          -i testinput/2020100106_metars_small.csv
+                          -o testrun/2020100106_metars_small.nc
+                          -d 2020100106"
+                          2020100106_metars_small.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # MISC converters
@@ -414,4 +432,18 @@ if(iodaconv_bufr_ENABLED)
                               gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                       DEPENDS bufr2ioda.x )
 
+# =============================================================================
+# Land product converters
+#==============================================================================
+
+if( iodaconv_pygrib_ENABLED )
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ims_scf
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
+                            -i testinput/imssnow_24km.grib2
+                            -o testrun/imssnow_scf.nc
+                            -m maskout"
+                            imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
 endif()
