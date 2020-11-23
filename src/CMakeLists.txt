@@ -17,3 +17,7 @@ endif()
 if(iodaconv_bufr_ENABLED)
   add_subdirectory(bufr)
 endif()
+
+if(iodaconv_pbfortran_ENABLED)
+    add_subdirectory(ncar-bufr2nc-fortran)
+endif()
