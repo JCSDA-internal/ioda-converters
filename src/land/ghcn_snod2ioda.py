@@ -28,7 +28,7 @@ import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
 vName = {
-    'A': "ghcn_snow_depth",
+    'A': "snowDepth",
 }
 
 locationKeyList = [
@@ -48,6 +48,7 @@ class ghcn(object):
         self.date = date
         self.mask = mask
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.units_values = {}
         self.writer = writer
         self._read()
 
@@ -124,6 +125,8 @@ class ghcn(object):
             lats = lats[mask]
             errs = errs[mask]
 
+        self.units_values[vName['A']] = 'm'
+
         valKey = vName['A'], self.writer.OvalName()
         errKey = vName['A'], self.writer.OerrName()
         qcKey = vName['A'], self.writer.OqcName()
@@ -135,16 +138,14 @@ class ghcn(object):
 
         for i in range(len(vals)):
             if vals[i] >= 0.0:
-                errs[i] = 0.15*vals[i]
+                errs[i] = 0.0
+                vals[i] = 0.001*vals[i]  # coverted to m
 
             locKey = lats[i], lons[i], base_datetime
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = 0
 
-            AttrData["observation_type"] = "Snow Depth"
-            AttrData["network"] = "GCOS-GSN"
-            AttrData["data_source"] = "GHCN-Daily"
             AttrData['date_time_string'] = base_datetime
 
 
@@ -177,11 +178,11 @@ def main():
     writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the profiles
-    snwd = ghcn(args.input, args.fixfile, args.date, args.mask, writer)
+    snod = ghcn(args.input, args.fixfile, args.date, args.mask, writer)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(snwd.data)
+    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(snod.data)
 
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData, snod.units_values)
 
 
 if __name__ == '__main__':
