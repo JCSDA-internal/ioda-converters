@@ -18,6 +18,7 @@ list( APPEND test_input
   testinput/smap_sss_rss.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
+  testinput/marineglider_AOML.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
@@ -31,6 +32,9 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/imssnow_24km.grib2
+  testinput/2020100106_metars_small.csv
+  testinput/singleob.yaml
 )
 
 list( APPEND test_output
@@ -45,6 +49,7 @@ list( APPEND test_output
   testoutput/smap_sss_rss.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
+  testoutput/test_glider.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
@@ -57,6 +62,9 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
+  testoutput/imssnow_scf.nc
+  testoutput/2020100106_metars_small.nc
+  testoutput/singleob.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -210,6 +218,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_sst
                           -d 2018041512"
                           hgodas_sst.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/glider2ioda.py
+                          -i testinput/marineglider_AOML.nc
+                          -o testrun/test_glider.nc
+                          -d 2016080412"
+                          test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -229,6 +247,20 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
                           -o testrun/cryosat2_L2.nc
                           -d 2019092112"
                           cryosat2_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
+# Conventional data, surface Obs - METAR converter
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
+                          -i testinput/2020100106_metars_small.csv
+                          -o testrun/2020100106_metars_small.nc
+                          -d 2020100106"
+                          2020100106_metars_small.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # MISC converters
@@ -269,6 +301,14 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
                           -l NC001007.yaml
                           -ot NC001007"
                           ioda.NC001007.2020031012.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gen_singleob
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/gen_single_ob.py
+                          -y testinput/singleob.yaml"
+                          singleob.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # SSEC GIIRS converters
@@ -414,4 +454,20 @@ if(iodaconv_bufr_ENABLED)
                               gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                       DEPENDS bufr2ioda.x )
 
+endif()
+
+# =============================================================================
+# Land product converters
+#==============================================================================
+
+if( iodaconv_pygrib_ENABLED )
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ims_scf
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
+                            -i testinput/imssnow_24km.grib2
+                            -o testrun/imssnow_scf.nc
+                            -m maskout"
+                            imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
 endif()
