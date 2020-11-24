@@ -19,8 +19,8 @@ integer(i_kind), parameter :: n_ncdim           = 5  ! total numner of nc dimens
 integer(i_kind), parameter :: nvar_met          = 6
 integer(i_kind), parameter :: nvar_info         = 10 ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
-integer(i_kind), parameter :: ninst             = 7
-!integer(i_kind), parameter :: ninst             = 8 ! including airs
+integer(i_kind), parameter :: ninst             = 12
+!integer(i_kind), parameter :: ninst             = 13 ! including airs
 integer(i_kind), parameter :: write_nc_conv     = 1
 integer(i_kind), parameter :: write_nc_radiance = 2
 
@@ -76,7 +76,13 @@ character(len=nstring), dimension(ninst) :: inst_list = &
       'amsua_metop-b   ', &
       'amsua_metop-c   ', &
 !      'airs_aqua       ', &
-      'amsua_aqua      ' /)
+      'amsua_aqua      ', &
+      'mhs_n18         ', &
+      'mhs_n19         ', &
+      'mhs_metop-a     ', &
+      'mhs_metop-b     ', &
+      'mhs_metop-c     '  &
+   /)
 
 ! variables for outputing netcdf files
 character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
@@ -284,7 +290,7 @@ subroutine set_name_sensor(instid, sensor)
    select case ( instid )
       case ( 570 ); sensor = 'amsua'
       case ( 574 ); sensor = 'amsub'
-      case ( 204 ); sensor = 'mhs'
+      case ( 203 ); sensor = 'mhs'
       case ( 617 ); sensor = 'abi'
       case ( 297 ); sensor = 'ahi'
       case ( 207 ); sensor = 'seviri'
@@ -301,7 +307,7 @@ subroutine set_brit_obserr(name_inst, ichan, obserr)
 
 ! set brightness temperature observation errors
 
-! For now it is a temporary subroutine to assign AMSU-A observation errors
+! For now it is a temporary subroutine to assign AMSU-A and MHS observation errors
 
    implicit none
 
@@ -309,29 +315,56 @@ subroutine set_brit_obserr(name_inst, ichan, obserr)
    integer(i_kind),  intent(in)  :: ichan      ! channel index
    real(r_kind),     intent(out) :: obserr     ! obserr of ichan
 
-   integer(i_kind), parameter :: nchan = 15
-   real(r_kind), dimension(nchan) :: obserrors
+   integer(i_kind)                         :: nchan
+   real(r_kind), allocatable, dimension(:) :: obserrors
 
    obserr = missing_r
 
-   select case ( trim(name_inst) )
-      case ( 'amsua_n15' )
-         obserrors = (/ 3.0, 2.2, 2.0, 0.6, 0.3, 0.23, 0.25, 0.275, 0.34, 0.4, 0.6, 1.0, 1.5, 2.0, 3.5 /)
-      case ( 'amsua_n18' )
-         obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
-      case ( 'amsua_n19' )
-         obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
-      case ( 'amsua_metop-b' )
-         obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
-      case ( 'amsua_metop-a' )
-         obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
-      case ( 'amsua_aqua' )
-         obserrors = (/ 2.5, 2.0, 2.0, 0.5, 0.4, 0.4, 0.5, 0.3, 0.35, 0.35, 0.45, 1.0, 1.5, 2.5, 2.5 /)
-      case default
-         return
-   end select
+   if ( name_inst(1:5) == 'amsua' ) then
+      nchan = 15
+      allocate(obserrors(nchan))
+      select case ( trim(name_inst) )
+         case ( 'amsua_n15' )
+            obserrors = (/ 3.0, 2.2, 2.0, 0.6, 0.3, 0.23, 0.25, 0.275, 0.34, 0.4, 0.6, 1.0, 1.5, 2.0, 3.5 /)
+         case ( 'amsua_n18' )
+            obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
+         case ( 'amsua_n19' )
+            obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
+         case ( 'amsua_metop-b' )
+            obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
+         case ( 'amsua_metop-a' )
+            obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
+         case ( 'amsua_metop-c' )
+            obserrors = (/ 2.5, 2.2, 2.0, 0.55, 0.3, 0.23, 0.23, 0.25, 0.25, 0.35, 0.4, 0.55, 0.8, 3.0, 3.5 /)
+         case ( 'amsua_aqua' )
+            obserrors = (/ 2.5, 2.0, 2.0, 0.5, 0.4, 0.4, 0.5, 0.3, 0.35, 0.35, 0.45, 1.0, 1.5, 2.5, 2.5 /)
+         case default
+            return
+      end select
+   else if ( name_inst(1:3) == 'mhs' ) then
+      nchan = 5
+      allocate(obserrors(nchan))
+      select case ( trim(name_inst) )
+         case ( 'mhs_n18' )
+            obserrors = (/ 2.5, 2.5, 2.5, 2.0, 2.0 /)
+         case ( 'mhs_n19' )
+            obserrors = (/ 2.5, 2.5, 2.5, 2.0, 2.0 /)
+         case ( 'mhs_metop-a' )
+            obserrors = (/ 2.5, 2.5, 2.5, 2.0, 2.0 /)
+         case ( 'mhs_metop-b' )
+            obserrors = (/ 2.5, 2.5, 2.5, 2.0, 2.0 /)
+         case ( 'mhs_metop-c' )
+            obserrors = (/ 2.5, 2.5, 2.5, 2.0, 2.0 /)
+         case default
+            return
+      end select
+   else
+      return
+   end if
 
    obserr = obserrors(ichan)
+
+   deallocate(obserrors)
 
 end subroutine set_brit_obserr
 

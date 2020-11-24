@@ -11,11 +11,13 @@ implicit none
 
 integer, parameter      :: StrLen    = 10
 integer, parameter      :: DateLen   = 10
-integer, parameter      :: nfile_all = 4
+integer, parameter      :: nfile_all = 5
 character(len=StrLen)   :: flist_all(nfile_all) = (/ "gnssrobufr", &
                                                      "prepbufr  ", &
                                                      "amsuabufr ", &
-                                                     "airsbufr  " /)
+                                                     "airsbufr  ", &
+                                                     "mhsbufr   "  &
+                                                   /)
 character (len=StrLen), allocatable :: flist(:)
 character (len=StrLen)  :: filename
 character (len=DateLen) :: filedate
@@ -96,6 +98,18 @@ do ifile = 1, nfile
          do_radiance = .true.
          ! read bufr file and store data in sequential linked list for radiances
          call read_airs_colocate_amsua(filename, filedate)
+      end if
+   end if
+
+   filename = 'mhsbufr'
+   if ( trim(flist(ifile)) == trim(filename) ) then
+      inquire(file=filename, exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(filename), ' not found for decoding...'
+      else
+         do_radiance = .true.
+         ! read bufr file and store data in sequential linked list for radiances
+         call read_amsua_amsub_mhs(filename, filedate)
       end if
    end if
 
