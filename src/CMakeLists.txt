@@ -8,6 +8,7 @@ add_subdirectory(conventional)
 add_subdirectory(ncep)
 add_subdirectory(ssec)
 add_subdirectory(wrfda-ncdiag)
+add_subdirectory(single_observation)
 
 # Optional components
 if(iodaconv_gnssro_ENABLED)
