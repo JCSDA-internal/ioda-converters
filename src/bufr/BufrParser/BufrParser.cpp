@@ -12,13 +12,13 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "bufr.interface.h"
-#include "BufrParser/BufrCollectors/BufrCollectors.h"
+#include "BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"
 #include "Exports/Export.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     BufrParser::BufrParser(const BufrDescription &description) :
         description_(description),
@@ -39,7 +39,7 @@ namespace Ingester
         closeBufrFile();
     }
 
-    std::shared_ptr <DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
+    std::shared_ptr<IodaEncoder::DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
     {
         const unsigned int SubsetStringLength = 25;
 
@@ -68,9 +68,9 @@ namespace Ingester
         return exportData(collectors.finalize());
     }
 
-    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
+    std::shared_ptr<IodaEncoder::DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
     {
-        auto outputData = std::make_shared<DataContainer>();
+        auto outputData = std::make_shared<IodaEncoder::DataContainer>();
         auto exportMap = description_.getExportMap();
 
         unsigned int size = 0;
@@ -115,4 +115,4 @@ namespace Ingester
 
         openBufrFile(description_.filepath());
     }
-}  // namespace Ingester
+}  // namespace BufrParser

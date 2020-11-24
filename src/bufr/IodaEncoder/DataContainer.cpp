@@ -16,7 +16,7 @@
 #include "DataContainer.h"
 
 
-namespace Ingester
+namespace IodaEncoder
 {
     void DataContainer::add(const std::string& fieldName, const std::shared_ptr<DataObject> data)
     {
@@ -52,5 +52,5 @@ namespace Ingester
 
         return hasKey;
     }
-}  // namespace Ingester
+}  // namespace IodaEncoder
 

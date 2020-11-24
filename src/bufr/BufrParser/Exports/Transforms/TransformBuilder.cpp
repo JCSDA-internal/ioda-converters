@@ -17,7 +17,7 @@ static const char* TRANSFORMS_SECTION = "transforms";
 static const char* OFFSET_KEY = "offset";
 static const char* SCALE_KEY = "scale";
 
-namespace Ingester
+namespace BufrParser
 {
     std::shared_ptr<Transform> TransformBuilder::makeTransform(const eckit::Configuration& conf)
     {
@@ -52,4 +52,4 @@ namespace Ingester
 
         return transforms;
     }
-}  // namespace Ingester
+}  // namespace BufrParser

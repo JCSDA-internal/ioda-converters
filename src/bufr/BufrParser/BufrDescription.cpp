@@ -35,7 +35,7 @@ namespace
     }  // namespace ConfKeys
 }  // namespace
 
-namespace Ingester
+namespace BufrParser
 {
     BufrDescription::BufrDescription(const eckit::Configuration &conf)
     {
@@ -83,4 +83,4 @@ namespace Ingester
     {
         exportMap_.insert({key, bufrExport});
     }
-}  // namespace Ingester
+}  // namespace BufrParser

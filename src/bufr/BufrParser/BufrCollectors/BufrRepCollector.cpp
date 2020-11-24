@@ -10,7 +10,7 @@
 #include "BufrRepCollector.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     BufrRepCollector::BufrRepCollector(const int fortranFileId, const BufrMnemonicSet& mnemonicSet):
         BufrCollector(fortranFileId, mnemonicSet)
@@ -33,9 +33,10 @@ namespace Ingester
 
         for (size_t colIdx = 0; colIdx < accumulator_.getNumColumns(); colIdx++)
         {
-            floatTypeScratchData_[colIdx] = static_cast<FloatType>(scratchData_[colIdx]);
+            floatTypeScratchData_[colIdx] =
+                static_cast<IodaEncoder::FloatType>(scratchData_[colIdx]);
         }
 
         accumulator_.addRow(floatTypeScratchData_);
     }
-}  // namespace Ingester
+}  // namespace BufrParser

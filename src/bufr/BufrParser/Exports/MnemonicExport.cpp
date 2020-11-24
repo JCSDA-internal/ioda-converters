@@ -7,10 +7,10 @@
 
 #include "MnemonicExport.h"
 
-#include "IngesterTypes.h"
+#include "EncoderTypes.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     MnemonicExport::MnemonicExport(std::string mnemonic, Transforms transforms) :
       mnemonic_(mnemonic),
@@ -18,18 +18,18 @@ namespace Ingester
     {
     }
 
-    std::shared_ptr<DataObject> MnemonicExport::exportData(const BufrDataMap& map)
+    std::shared_ptr<IodaEncoder::DataObject> MnemonicExport::exportData(const BufrDataMap& map)
     {
         auto data = map.at(mnemonic_);
         applyTransforms(data);
-        return std::make_shared<ArrayDataObject>(data);
+        return std::make_shared<IodaEncoder::ArrayDataObject>(data);
     }
 
-    void MnemonicExport::applyTransforms(IngesterArray& data)
+    void MnemonicExport::applyTransforms(IodaEncoder::EncoderArray& data)
     {
         for (auto transform : transforms_)
         {
             transform->apply(data);
         }
     }
-}  // namespace Ingester
+}  // namespace BufrParser

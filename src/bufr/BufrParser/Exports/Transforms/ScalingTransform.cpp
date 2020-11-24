@@ -8,15 +8,15 @@
 #include "ScalingTransform.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     ScalingTransform::ScalingTransform(const double scaling) :
       scaling_(scaling)
     {
     }
 
-    void ScalingTransform::apply(IngesterArray& array)
+    void ScalingTransform::apply(IodaEncoder::EncoderArray& array)
     {
         array = array * scaling_;
     }
-}  // namespace Ingester
+}  // namespace BufrParser

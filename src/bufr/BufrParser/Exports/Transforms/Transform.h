@@ -10,16 +10,16 @@
 #include <memory>
 #include <vector>
 
-#include "IngesterTypes.h"
+#include "EncoderTypes.h"
 
-namespace Ingester
+namespace BufrParser
 {
     class Transform
     {
      public:
         ~Transform() = default;
-        virtual void apply(IngesterArray& array) = 0;
+        virtual void apply(IodaEncoder::EncoderArray& array) = 0;
     };
 
     typedef std::vector <std::shared_ptr<Transform>> Transforms;
-}  // namespace Ingester
+}  // namespace BufrParser

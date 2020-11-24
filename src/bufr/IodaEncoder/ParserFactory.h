@@ -25,7 +25,7 @@ namespace
     }
 }
 
-namespace Ingester
+namespace IodaEncoder
 {
     /// \brief Base class for all ParserMakers. Makes it possible to store all types of parsers
     /// inside a std data structure like a map.
@@ -100,4 +100,4 @@ namespace Ingester
             return makers;
         }
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder

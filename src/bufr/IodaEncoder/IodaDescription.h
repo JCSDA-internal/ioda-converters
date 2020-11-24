@@ -14,7 +14,7 @@
 #include "eckit/config/LocalConfiguration.h"
 #include "ioda/Engines/Factory.h"
 
-namespace Ingester
+namespace IodaEncoder
 {
     struct Range
     {
@@ -83,4 +83,4 @@ namespace Ingester
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder

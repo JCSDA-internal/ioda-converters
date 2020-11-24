@@ -15,7 +15,7 @@
 #include "DataContainer.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     BufrCollectors::BufrCollectors(unsigned int fortranFileId) :
         fortranFileId_(fortranFileId)
@@ -56,10 +56,10 @@ namespace Ingester
 
         for (const auto &collector : collectors_)
         {
-            IngesterArrayMap collectorDataMap = collector->finalize();
+            IodaEncoder::EncoderArrayMap collectorDataMap = collector->finalize();
             dataMap.insert(collectorDataMap.begin(), collectorDataMap.end());
         }
 
         return dataMap;
     }
-}  // namespace Ingester
+}  // namespace BufrParser

@@ -13,11 +13,11 @@
 
 #include "Eigen/Dense"
 
-namespace Ingester
+namespace IodaEncoder
 {
     typedef float FloatType;
-    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> IngesterArray;
-    typedef std::map<std::string, IngesterArray> IngesterArrayMap;
-    typedef std::vector<std::string> IngesterStrVector;
-    typedef std::map<std::string, IngesterStrVector> IngesterStringMap;
+    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EncoderArray;
+    typedef std::map<std::string, EncoderArray> EncoderArrayMap;
+    typedef std::vector<std::string> EncoderStrVector;
+    typedef std::map<std::string, EncoderStrVector> EncoderStringMap;
 }

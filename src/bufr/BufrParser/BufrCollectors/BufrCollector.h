@@ -12,12 +12,12 @@
 
 #include "Eigen/Dense"
 
-#include "BufrParser/BufrTypes.h"
-#include "BufrParser/BufrMnemonicSet.h"
+#include "BufrTypes.h"
+#include "BufrMnemonicSet.h"
 #include "BufrAccumulator.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     /// \brief Collectors know how to use the BUFR interface to grab data associated with
     /// configured mnemonicSets.
@@ -44,4 +44,4 @@ namespace Ingester
         /// \brief Specifies the mnemonics and channels this collector gets from the BUFR file.
         const BufrMnemonicSet mnemonicSet_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

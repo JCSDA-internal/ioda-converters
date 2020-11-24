@@ -15,10 +15,10 @@
 #include "Eigen/Dense"
 
 #include "DataObject/DataObject.h"
-#include "IngesterTypes.h"
+#include "EncoderTypes.h"
 
 
-namespace Ingester
+namespace IodaEncoder
 {
     /// \brief Collection of DataObjects that a Parser collected identified by their exported name
     class DataContainer
@@ -50,6 +50,6 @@ namespace Ingester
         /// \brief Number of rows of data stored in DataObjects
         unsigned int size_ = 0;
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder
 
 

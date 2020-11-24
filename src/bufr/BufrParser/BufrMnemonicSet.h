@@ -12,7 +12,7 @@
 
 #include "BufrTypes.h"
 
-namespace Ingester
+namespace BufrParser
 {
     /// \brief Defenition of BUFR mnemonics and associated channels of interest.
     class BufrMnemonicSet
@@ -44,4 +44,4 @@ namespace Ingester
         /// \brief Concatinates mnemonics into a space seperated string.
         static std::string makeMnemonicsStr(std::vector<std::string> mnemonics);
     };
-}  // namespace Ingester
+}  // namespace BufrParser

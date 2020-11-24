@@ -20,13 +20,13 @@
 #include "BufrDescription.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     class BufrMnemonicSet;
     class DataContainer;
 
     /// \brief Uses a BufrDescription and helper classes to parse the contents of a BUFR file.
-    class BufrParser final : public Parser
+    class BufrParser final: public IodaEncoder::Parser
     {
      public:
         explicit BufrParser(const BufrDescription& description);
@@ -36,7 +36,7 @@ namespace Ingester
 
         /// \brief Uses the provided description to parse the buffer file.
         /// \param maxMsgsToParse Messages to parse (0 for everything)
-        std::shared_ptr<DataContainer> parse(const size_t maxMsgsToParse = 0) final;
+        std::shared_ptr<IodaEncoder::DataContainer> parse(const size_t maxMsgsToParse = 0) final;
 
         /// \brief Start over from beginning of the BUFR file
         void reset() final;
@@ -49,7 +49,7 @@ namespace Ingester
         unsigned int fortranFileId_;
 
         /// \brief Exports collected data into a DataContainer
-        std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
+        std::shared_ptr<IodaEncoder::DataContainer> exportData(const BufrDataMap& sourceData);
 
         /// \brief Opens a BUFR file using the Fortran BUFR interface.
         void openBufrFile(const std::string& filepath);
@@ -57,4 +57,4 @@ namespace Ingester
         /// \brief Closes the open BUFR file.
         void closeBufrFile();
     };
-}  // namespace Ingester
+}  // namespace BufrParser

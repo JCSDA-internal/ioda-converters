@@ -12,9 +12,9 @@
 
 #include "Eigen/Dense"
 
-#include "BufrParser/BufrTypes.h"
+#include "BufrTypes.h"
 
-namespace Ingester
+namespace BufrParser
 {
     /// \brief Accumulates provided data into a dynamically expanding Eigen Array
     class BufrAccumulator
@@ -26,12 +26,12 @@ namespace Ingester
 
         /// \brief Add row of data to the internal ddata structure
         /// \param newRow Collection of values to add (size must match the number of columns)
-        void addRow(std::vector<FloatType>& newRow);
+        void addRow(std::vector<IodaEncoder::FloatType>& newRow);
 
         /// \brief Get an Eigen Array that contains a slice of the collected data.
         /// \param startCol Column offset where to start (should be size(channels) * paramNumber)
         /// \param channels Channels to collect starting from the start position
-        IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
+        IodaEncoder::EncoderArray getData(Eigen::Index startCol, const Channels& channels = {1});
 
         /// \brief Start over
         void reset();
@@ -41,7 +41,7 @@ namespace Ingester
 
      private:
         /// \brief Eigen Array that holds the accumulated data
-        IngesterArray dataArray_;
+        IodaEncoder::EncoderArray dataArray_;
 
         /// \brief Total number of columns (width of data structure)
         Eigen::Index numColumns_;
@@ -52,4 +52,4 @@ namespace Ingester
         /// \brief Amount to allocate when we need to extend the Eigen Array
         Eigen::Index blockSize_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

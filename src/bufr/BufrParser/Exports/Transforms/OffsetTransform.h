@@ -10,7 +10,7 @@
 #include "Transform.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     class OffsetTransform : public Transform
     {
@@ -18,9 +18,9 @@ namespace Ingester
         explicit OffsetTransform(const double offset);
         ~OffsetTransform() = default;
 
-        void apply(IngesterArray& array) override;
+        void apply(IodaEncoder::EncoderArray& array) override;
 
      private:
         const double offset_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

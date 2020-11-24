@@ -13,12 +13,12 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
-#include "BufrParser/BufrTypes.h"
+#include "BufrTypes.h"
 #include "DataObject/StrVecDataObject.h"
 #include "Export.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     /// \brief Exports parsed data as datetimes using speciefied Mnemonics
     class DatetimeExport final : public Export
@@ -29,7 +29,7 @@ namespace Ingester
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
-        std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
+        std::shared_ptr<IodaEncoder::DataObject> exportData(const BufrDataMap& map) final;
 
      private:
         /// \brief Mnemonic for year
@@ -53,4 +53,4 @@ namespace Ingester
         /// \brief Is it UTC time or not
         const bool isUTC_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

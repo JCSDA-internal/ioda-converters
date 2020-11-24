@@ -11,7 +11,7 @@
 
 #include "DataContainer.h"
 
-namespace Ingester
+namespace IodaEncoder
 {
     /// \brief Base class for all input Parsers
     class Parser
@@ -29,4 +29,4 @@ namespace Ingester
         /// \brief Start over from the beginning
         virtual void reset() = 0;
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder

@@ -41,7 +41,7 @@ namespace
     }  // namespace ConfKeys
 }  // namespace
 
-namespace Ingester
+namespace IodaEncoder
 {
     IodaDescription::IodaDescription(const eckit::Configuration& conf)
     {
@@ -162,4 +162,4 @@ namespace Ingester
             throw eckit::BadParameter("Unknown ioda::backend specified.");
         }
     }
-}  // namespace Ingester
+}  // namespace IodaEncoder

@@ -10,7 +10,7 @@
 #include "Transform.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     class ScalingTransform : public Transform
     {
@@ -18,9 +18,9 @@ namespace Ingester
         explicit ScalingTransform(const double scaling_);
         ~ScalingTransform() = default;
 
-        void apply(IngesterArray& array) override;
+        void apply(IodaEncoder::EncoderArray& array) override;
 
      private:
         const double scaling_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

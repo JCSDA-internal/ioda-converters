@@ -27,7 +27,7 @@ namespace
 }  // namespace
 
 
-namespace Ingester
+namespace BufrParser
 {
     DatetimeExport::DatetimeExport(const eckit::Configuration& conf) :
       yearKey_(conf.getString(ConfKeys::Year)),
@@ -40,7 +40,7 @@ namespace Ingester
     {
     }
 
-    std::shared_ptr<DataObject> DatetimeExport::exportData(const BufrDataMap& map)
+    std::shared_ptr<IodaEncoder::DataObject> DatetimeExport::exportData(const BufrDataMap& map)
     {
         auto datetimes = std::vector<std::string>();
 
@@ -65,6 +65,6 @@ namespace Ingester
             datetimes.push_back(datetimeStr.str());
         }
 
-        return std::make_shared<StrVecDataObject>(datetimes);
+        return std::make_shared<IodaEncoder::StrVecDataObject>(datetimes);
     }
-}  // namespace Ingester
+}  // namespace BufrParser

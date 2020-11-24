@@ -14,7 +14,7 @@
 #include "Transform.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     class TransformBuilder
     {
@@ -22,4 +22,4 @@ namespace Ingester
         static std::shared_ptr<Transform> makeTransform(const eckit::Configuration& conf);
         static Transforms makeTransforms(const eckit::Configuration& conf);
     };
-}  // namespace Ingester
+}  // namespace BufrParser

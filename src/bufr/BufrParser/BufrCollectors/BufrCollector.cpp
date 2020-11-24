@@ -8,7 +8,7 @@
 #include "BufrCollector.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     BufrCollector::BufrCollector(const int fortranFileId, const BufrMnemonicSet mnemonicSet) :
         fortranFileId_(fortranFileId),
@@ -19,12 +19,13 @@ namespace Ingester
 
     BufrDataMap BufrCollector::finalize()
     {
-        IngesterArrayMap dataMap;
+        IodaEncoder::EncoderArrayMap dataMap;
         size_t fieldIdx = 0;
         for (const auto &fieldName : mnemonicSet_.getMnemonics())
         {
-            IngesterArray dataArr = accumulator_.getData(fieldIdx * mnemonicSet_.getMaxColumn(),
-                                                         mnemonicSet_.getChannels());
+            IodaEncoder::EncoderArray dataArr =
+                accumulator_.getData(fieldIdx * mnemonicSet_.getMaxColumn(),
+                                     mnemonicSet_.getChannels());
 
             dataMap.insert({fieldName, dataArr});
             fieldIdx++;
@@ -34,5 +35,5 @@ namespace Ingester
 
         return dataMap;
     }
-}  // namespace Ingester
+}  // namespace BufrParser
 

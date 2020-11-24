@@ -11,10 +11,11 @@
 #include <string>
 #include <memory>
 
-#include "BufrParser/BufrTypes.h"
+#include "BufrTypes.h"
 #include "DataObject/DataObject.h"
 
-namespace Ingester
+
+namespace BufrParser
 {
     /// \brief Abstract base class for all Exports.
     class Export
@@ -23,8 +24,8 @@ namespace Ingester
         virtual ~Export() = default;
 
         /// \brief Export data objects for previously parsed data from BufrDataMap.
-        virtual std::shared_ptr<DataObject> exportData(const BufrDataMap& map) = 0;
+        virtual std::shared_ptr<IodaEncoder::DataObject> exportData(const BufrDataMap& map) = 0;
     };
-}  // namespace Ingester
+}  // namespace BufrParser
 
 

@@ -12,10 +12,10 @@
 #include <string>
 #include <vector>
 
-#include "BufrParser/BufrTypes.h"
+#include "BufrTypes.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     class BufrMnemonicSet;
     class BufrAccumulator;
@@ -49,4 +49,4 @@ namespace Ingester
         /// \brief Collection of all the collectors being managed.
         std::vector<std::shared_ptr<BufrCollector>> collectors_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

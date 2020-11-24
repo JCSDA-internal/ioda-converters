@@ -18,7 +18,7 @@
 #include "eckit/config/LocalConfiguration.h"
 
 
-namespace Ingester
+namespace IodaEncoder
 {
     class DataContainer;
 
@@ -37,4 +37,4 @@ namespace Ingester
         /// \brief The description
         const IodaDescription description_;
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder

@@ -9,11 +9,11 @@
 
 #include "BufrAccumulator.h"
 #include "BufrCollector.h"
-#include "BufrParser/BufrMnemonicSet.h"
-#include "BufrParser/BufrTypes.h"
+#include "BufrMnemonicSet.h"
+#include "BufrTypes.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     /// \brief Collector that uses the BUFR interface ufbrep call to grab data (multi col data).
     class BufrRepCollector : public BufrCollector
@@ -28,6 +28,6 @@ namespace Ingester
      private:
         /// \brief Pre-allocated buffer to hand to the Fortran interface.
         std::vector<double> scratchData_;
-        std::vector<FloatType> floatTypeScratchData_;
+        std::vector<IodaEncoder::FloatType> floatTypeScratchData_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

@@ -12,7 +12,7 @@
 #include "DataContainer.h"
 
 
-namespace Ingester
+namespace IodaEncoder
 {
     IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
         description_(IodaDescription(conf))
@@ -106,4 +106,4 @@ namespace Ingester
 
         return obsGroup;
     }
-}  // namespace Ingester
+}  // namespace IodaEncoder

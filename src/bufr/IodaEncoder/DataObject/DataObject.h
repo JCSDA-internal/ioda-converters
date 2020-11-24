@@ -13,7 +13,7 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
-namespace Ingester
+namespace IodaEncoder
 {
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
@@ -36,6 +36,6 @@ namespace Ingester
         /// \brief Print data to stdout for debug purposes.
         virtual void print() const = 0;
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder
 
 

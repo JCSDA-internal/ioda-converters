@@ -8,19 +8,17 @@
 #pragma once
 
 #include "DataObject.h"
-
-#include <string>
-#include <vector>
+#include "EncoderTypes.h"
 
 
-namespace Ingester
+namespace IodaEncoder
 {
-    /// \brief Container for data that can be expressed as lists of strings
-    class StrVecDataObject : public DataObject
+    /// \brief Container for Parser data that is expressed as a Eigen Array of doubles.
+    class ArrayDataObject : public DataObject
     {
      public:
-        explicit StrVecDataObject(const std::vector<std::string>& strVector);
-        ~StrVecDataObject() = default;
+        explicit ArrayDataObject(const EncoderArray& eigArray);
+        ~ArrayDataObject() = default;
 
         /// \brief Makes an ioda::Variable and ads it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
@@ -38,19 +36,19 @@ namespace Ingester
         void print() const final;
 
         // Getters
-        inline std::vector<std::string> get() const { return strVector_; }
+        inline EncoderArray get() const { return eigArray_; }
 
      private:
-        /// \brief The data
-        const std::vector<std::string> strVector_;
+        /// \brief Eigen Array that holds the data
+        const EncoderArray eigArray_;
 
-        /// \brief Create an ioda::VariableCreationParameters for the data
+        /// \brief Create an ioda::VariableCreationParameters for the data.
         /// \param chunks List of integers specifying the chunking dimensions
         /// \param compressionLevel The GZip compression level to use, must be 0-9
         static ioda::VariableCreationParameters makeCreationParams(
                                                     const std::vector<ioda::Dimensions_t>& chunks,
                                                     int compressionLevel);
     };
-}  // namespace Ingester
+}  // namespace IodaEncoder
 
 

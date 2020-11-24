@@ -10,7 +10,7 @@
 #include "StrVecDataObject.h"
 
 
-namespace Ingester
+namespace IodaEncoder
 {
     StrVecDataObject::StrVecDataObject(const std::vector<std::string>& strVector) :
         strVector_(strVector)
@@ -49,4 +49,4 @@ namespace Ingester
         return params;
     }
 
-}  // namespace Ingester
+}  // namespace IodaEncoder

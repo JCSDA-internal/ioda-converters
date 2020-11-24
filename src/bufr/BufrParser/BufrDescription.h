@@ -16,7 +16,7 @@
 #include "BufrTypes.h"
 
 
-namespace Ingester
+namespace BufrParser
 {
     class BufrMnemonicSet;
     class Export;
@@ -56,4 +56,4 @@ namespace Ingester
         /// \brief Map of export strings to Export classes.
         ExportMap exportMap_;
     };
-}  // namespace Ingester
+}  // namespace BufrParser

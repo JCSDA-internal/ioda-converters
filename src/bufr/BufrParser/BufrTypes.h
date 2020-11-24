@@ -11,13 +11,13 @@
 #include <map>
 #include <memory>
 
-#include "IngesterTypes.h"
+#include "EncoderTypes.h"
 
-namespace Ingester
+namespace BufrParser
 {
     class Export;
 
     typedef std::set<size_t> Channels;
-    typedef IngesterArrayMap BufrDataMap;
+    typedef IodaEncoder::EncoderArrayMap BufrDataMap;
     typedef std::map<std::string, std::shared_ptr<Export>> ExportMap;
-}  // namespace Ingester
+}  // namespace BufrParser

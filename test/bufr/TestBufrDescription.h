@@ -23,9 +23,9 @@
 #include "oops/util/Expect.h"
 #include "oops/util/IntSetParser.h"
 
-#include "BufrParser/BufrDescription.h"
-#include "BufrParser/BufrMnemonicSet.h"
-#include "IodaEncoder/IodaDescription.h"
+#include "BufrDescription.h"
+#include "BufrMnemonicSet.h"
+#include "IodaDescription.h"
 
 
 namespace Ingester
@@ -45,7 +45,7 @@ namespace Ingester
                         obsConf.getSubConfiguration("obs space").getString("name") == "bufr")
                     {
                         auto bufrConf = obsConf.getSubConfiguration("obs space");
-                        auto description = Ingester::BufrDescription(bufrConf);
+                        auto description = BufrParser::BufrDescription(bufrConf);
 
                         EXPECT(description.getMnemonicSets().size() > 0);
                         EXPECT(description.getExportMap().size() > 0);
@@ -59,7 +59,7 @@ namespace Ingester
                     if (obsConf.has("ioda"))
                     {
                         auto iodaConf = obsConf.getSubConfiguration("ioda");
-                        auto description = Ingester::IodaDescription(iodaConf);
+                        auto description = IodaEncoder::IodaDescription(iodaConf);
 
                         EXPECT(description.getDims().size() > 0);
                         EXPECT(description.getVariables().size() > 0);
@@ -76,7 +76,7 @@ namespace Ingester
         void test_createDescriptionManually()
         {
             // Create Description
-            auto bufrDesc = BufrDescription();
+            auto bufrDesc = BufrParser::BufrDescription();
 
             const std::string dummyFilePath = "/some/file/path";
 
@@ -101,12 +101,12 @@ namespace Ingester
             std::vector<std::string> set2Mnemonic = {"SAZA", "SOZA", "BEARAZ", "SOLAZI"};
             std::vector<std::string> set3Mnemonic = {"TMBR"};
 
-            auto set1 = Ingester::BufrMnemonicSet(set1Mnemonic, {1});
-            auto set2 = Ingester::BufrMnemonicSet(set2Mnemonic, {1});
+            auto set1 = BufrParser::BufrMnemonicSet(set1Mnemonic, {1});
+            auto set2 = BufrParser::BufrMnemonicSet(set2Mnemonic, {1});
 
             auto chanIntSet = oops::parseIntSet("1-15");
-            auto set3 = Ingester::BufrMnemonicSet(set3Mnemonic,
-                                                  Channels(chanIntSet.begin(), chanIntSet.end()));
+            auto set3 = BufrParser::BufrMnemonicSet(set3Mnemonic,
+                    BufrParser::Channels(chanIntSet.begin(), chanIntSet.end()));
 
             bufrDesc.addMnemonicSet(set1);
             bufrDesc.addMnemonicSet(set2);
@@ -114,13 +114,13 @@ namespace Ingester
 
             EXPECT(bufrDesc.getMnemonicSets().size() > 0);
 
-            auto iodaDesc = IodaDescription();
+            auto iodaDesc = IodaEncoder::IodaDescription();
 
-            DimensionDescription scale;
+            IodaEncoder::DimensionDescription scale;
             scale.name = "scale_name";
             scale.size = "1";
 
-            VariableDescription varDesc;
+            IodaEncoder::VariableDescription varDesc;
             varDesc.name = "variable_desc";
             varDesc.source = "source";
             varDesc.dimensions = {"1"};
