@@ -26,7 +26,7 @@ namespace BufrParser
     class DataContainer;
 
     /// \brief Uses a BufrDescription and helper classes to parse the contents of a BUFR file.
-    class BufrParser final: public IodaEncoder::Parser
+    class BufrParser: public IodaEncoder::Parser
     {
      public:
         explicit BufrParser(const BufrDescription& description);
@@ -36,10 +36,10 @@ namespace BufrParser
 
         /// \brief Uses the provided description to parse the buffer file.
         /// \param maxMsgsToParse Messages to parse (0 for everything)
-        std::shared_ptr<IodaEncoder::DataContainer> parse(const size_t maxMsgsToParse = 0) final;
+        std::shared_ptr<IodaEncoder::DataContainer> parse(const size_t maxMsgsToParse = 0) override;
 
         /// \brief Start over from beginning of the BUFR file
-        void reset() final;
+        void reset() override;
 
      private:
         /// \brief The description the defines what to parse from the BUFR file
