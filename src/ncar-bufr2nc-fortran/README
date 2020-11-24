@@ -1,7 +1,7 @@
 
 The ncar-bufr2nc-fortran code currently runs with single processor, even though it is compiled with mpi.
 
-The code looks for the following file names in the working directory sequentially
+The code looks for the following file names in the working directory
   gnssrobufr
   prepbufr
   amsuabufr
