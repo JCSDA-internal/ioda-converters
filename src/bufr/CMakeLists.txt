@@ -6,6 +6,7 @@
 
 list(APPEND _ioda_encoder_srcs
         IngesterTypes.h
+        EigenExt.h
         DataContainer.h
         DataContainer.cpp
         Parser.h
@@ -57,17 +58,25 @@ list(APPEND _bufr_parser_srcs
   BufrParser/BufrCollectors/BufrCollectors.cpp
   BufrParser/BufrCollectors/BufrCollectors.h
   BufrParser/Exports/Export.h
-  BufrParser/Exports/DatetimeExport.h
-  BufrParser/Exports/DatetimeExport.cpp
-  BufrParser/Exports/MnemonicExport.h
-  BufrParser/Exports/MnemonicExport.cpp
-  BufrParser/Exports/Transforms/Transform.h
-  BufrParser/Exports/Transforms/OffsetTransform.h
-  BufrParser/Exports/Transforms/OffsetTransform.cpp
-  BufrParser/Exports/Transforms/ScalingTransform.h
-  BufrParser/Exports/Transforms/ScalingTransform.cpp
-  BufrParser/Exports/Transforms/TransformBuilder.h
-  BufrParser/Exports/Transforms/TransformBuilder.cpp  
+  BufrParser/Exports/Export.cpp
+  BufrParser/Exports/Filters/Filter.h
+  BufrParser/Exports/Filters/RangeFilter.h
+  BufrParser/Exports/Filters/RangeFilter.cpp
+  BufrParser/Exports/Splits/Split.h
+  BufrParser/Exports/Splits/CategorySplit.h
+  BufrParser/Exports/Splits/CategorySplit.cpp
+  BufrParser/Exports/Variables/Variable.h
+  BufrParser/Exports/Variables/DatetimeVariable.h
+  BufrParser/Exports/Variables/DatetimeVariable.cpp
+  BufrParser/Exports/Variables/MnemonicVariable.h
+  BufrParser/Exports/Variables/MnemonicVariable.cpp
+  BufrParser/Exports/Variables/Transforms/Transform.h
+  BufrParser/Exports/Variables/Transforms/OffsetTransform.h
+  BufrParser/Exports/Variables/Transforms/OffsetTransform.cpp
+  BufrParser/Exports/Variables/Transforms/ScalingTransform.h
+  BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
+  BufrParser/Exports/Variables/Transforms/TransformBuilder.h
+  BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
 )
 
 list(APPEND _bufr_parser_deps

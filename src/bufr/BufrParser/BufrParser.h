@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,6 +43,8 @@ namespace Ingester
         void reset() final;
 
      private:
+        typedef std::map<std::vector<std::string>, BufrDataMap> CatDataMap;
+
         /// \brief The description the defines what to parse from the BUFR file
         BufrDescription description_;
 
@@ -51,10 +54,17 @@ namespace Ingester
         /// \brief Exports collected data into a DataContainer
         std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
 
+
+        CatDataMap splitData(CatDataMap& splitMaps, Split& split);
+
         /// \brief Opens a BUFR file using the Fortran BUFR interface.
         void openBufrFile(const std::string& filepath);
 
         /// \brief Closes the open BUFR file.
         void closeBufrFile();
+
+
+        void printMap(const CatDataMap& map);
+
     };
 }  // namespace Ingester

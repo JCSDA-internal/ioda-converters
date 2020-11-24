@@ -15,17 +15,17 @@
 
 #include "BufrParser/BufrTypes.h"
 #include "DataObject/StrVecDataObject.h"
-#include "Export.h"
+#include "Variable.h"
 
 
 namespace Ingester
 {
     /// \brief Exports parsed data as datetimes using speciefied Mnemonics
-    class DatetimeExport final : public Export
+    class DatetimeVariable final : public Variable
     {
      public:
-        explicit DatetimeExport(const eckit::Configuration& conf);
-        ~DatetimeExport() final = default;
+        explicit DatetimeVariable(const eckit::Configuration& conf);
+        ~DatetimeVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
         /// \param map BufrDataMap that contains the parsed data for each mnemonic

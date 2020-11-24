@@ -12,7 +12,7 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
-#include "Export.h"
+#include "Variable.h"
 #include "IngesterTypes.h"
 #include "DataObject/ArrayDataObject.h"
 #include "Transforms/Transform.h"
@@ -21,11 +21,11 @@
 namespace Ingester
 {
     /// \brief Exports parsed data associated with a mnemonic (ex: "CLAT")
-    class MnemonicExport final : public Export
+    class MnemonicVariable final : public Variable
     {
      public:
-        explicit MnemonicExport(std::string mnemonicStr, Transforms transforms);
-        ~MnemonicExport() final = default;
+        explicit MnemonicVariable(std::string mnemonicStr, Transforms transforms);
+        ~MnemonicVariable() final = default;
 
         /// \brief Gets the requested data, applies transforms, and returns the requested data
         /// \param map BufrDataMap that contains the parsed data for each mnemonic

@@ -5,27 +5,27 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "MnemonicExport.h"
+#include "MnemonicVariable.h"
 
 #include "IngesterTypes.h"
 
 
 namespace Ingester
 {
-    MnemonicExport::MnemonicExport(std::string mnemonic, Transforms transforms) :
+    MnemonicVariable::MnemonicVariable(std::string mnemonic, Transforms transforms) :
       mnemonic_(mnemonic),
       transforms_(transforms)
     {
     }
 
-    std::shared_ptr<DataObject> MnemonicExport::exportData(const BufrDataMap& map)
+    std::shared_ptr<DataObject> MnemonicVariable::exportData(const BufrDataMap& map)
     {
         auto data = map.at(mnemonic_);
         applyTransforms(data);
         return std::make_shared<ArrayDataObject>(data);
     }
 
-    void MnemonicExport::applyTransforms(IngesterArray& data)
+    void MnemonicVariable::applyTransforms(IngesterArray& data)
     {
         for (auto transform : transforms_)
         {

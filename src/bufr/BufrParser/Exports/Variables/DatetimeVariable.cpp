@@ -9,7 +9,7 @@
 #include <ostream>
 #include <iomanip>
 
-#include "DatetimeExport.h"
+#include "DatetimeVariable.h"
 
 
 namespace
@@ -29,7 +29,7 @@ namespace
 
 namespace Ingester
 {
-    DatetimeExport::DatetimeExport(const eckit::Configuration& conf) :
+    DatetimeVariable::DatetimeVariable(const eckit::Configuration& conf) :
       yearKey_(conf.getString(ConfKeys::Year)),
       monthKey_(conf.getString(ConfKeys::Month)),
       dayKey_(conf.getString(ConfKeys::Day)),
@@ -40,7 +40,7 @@ namespace Ingester
     {
     }
 
-    std::shared_ptr<DataObject> DatetimeExport::exportData(const BufrDataMap& map)
+    std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
     {
         auto datetimes = std::vector<std::string>();
 

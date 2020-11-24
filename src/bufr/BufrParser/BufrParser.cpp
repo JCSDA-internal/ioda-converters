@@ -8,6 +8,8 @@
 #include "BufrParser.h"
 
 #include <map>
+#include <ostream>
+#include <iostream>
 
 #include "eckit/exception/Exceptions.h"
 
@@ -16,6 +18,7 @@
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"
 #include "Exports/Export.h"
+#include "Exports/Splits/Split.h"
 
 
 namespace Ingester
@@ -70,26 +73,70 @@ namespace Ingester
 
     std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
     {
-        auto outputData = std::make_shared<DataContainer>();
-        auto exportMap = description_.getExportMap();
 
-        unsigned int size = 0;
-        auto exportIt = exportMap.begin();
-        while (exportIt != exportMap.end())
+        auto exportDescription = description_.getExport();
+
+        auto filters = exportDescription.getFilters();
+        auto splitMap = exportDescription.getSplits();
+        auto varMap = exportDescription.getVariables();
+
+        std::cout << "size: " << srcData.at("TMBR").rows() << std::endl;
+
+        for (const auto& filter : filters)
         {
-            auto key = exportIt->first;
-            auto data_exporter = exportIt->second;
-
-            if (!size) size = srcData.begin()->second.rows();
-
-            outputData->add(key, data_exporter->exportData(srcData));
-
-            exportIt++;
+//TODO:            filter.apply(srcData);
         }
 
-        outputData->setSize(size);
+        CategoryMap catMap;
+        for (const auto& splitPair : splitMap)
+        {
+            catMap.insert({splitPair.first, splitPair.second->subCategories()});
+        }
 
-        return outputData;
+        auto exportData = std::make_shared<DataContainer>(catMap);
+
+        BufrParser::CatDataMap splitDataMaps;
+        splitDataMaps.insert({std::vector<std::string>(), srcData});
+        for (const auto& splitPair : splitMap)
+        {
+            splitDataMaps = splitData(splitDataMaps, *splitPair.second);
+        }
+
+        for (const auto& dataPair : splitDataMaps)
+        {
+            for (const auto& varPair : varMap)
+            {
+                std::ostringstream pathStr;
+                pathStr << "variable/" << varPair.first;
+
+                exportData->add(dataPair.first,
+                                pathStr.str(),
+                                varPair.second->exportData(dataPair.second));
+            }
+        }
+
+//        printMap(splitDataMaps);
+
+        return exportData;
+    }
+
+    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap& splitMaps, Split& split)
+    {
+        CatDataMap splitDataMap;
+
+        for (const auto& splitMapPair : splitMaps)
+        {
+            auto newData = split.split(splitMapPair.second);
+
+            for (const auto& newDataPair : newData)
+            {
+                auto catVect = splitMapPair.first;
+                catVect.push_back(newDataPair.first);
+                splitDataMap.insert({catVect, newDataPair.second});
+            }
+        }
+
+        return splitDataMap;
     }
 
     void BufrParser::openBufrFile(const std::string &filepath)
@@ -114,5 +161,25 @@ namespace Ingester
         }
 
         openBufrFile(description_.filepath());
+    }
+
+    void BufrParser::printMap(const BufrParser::CatDataMap& map)
+    {
+        for (const auto &mp : map)
+        {
+            std::cout << " keys: ";
+            for (const auto &s : mp.first)
+            {
+                std::cout << s;
+            }
+
+            std::cout << " subkeys: ";
+            for (const auto &m2p : mp.second)
+            {
+                std::cout << m2p.first << " " << m2p.second.rows() << " ";
+            }
+
+            std::cout << std::endl;
+        }
     }
 }  // namespace Ingester

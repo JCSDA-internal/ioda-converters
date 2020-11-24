@@ -81,27 +81,27 @@ namespace Ingester
                 dimensions.push_back(scaleMap.at(scaleStr));
             }
 
-            auto data = dataContainer->get(varDesc.source);
-            auto var = data->createVariable(obsGroup,
-                                            varDesc.name,
-                                            dimensions,
-                                            varDesc.chunks,
-                                            varDesc.compressionLevel);
-
-            var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
-            var.atts.add<std::string>("units", { varDesc.units }, {1});
-
-            if (varDesc.coordinates)
-            {
-                var.atts.add<std::string>("coordinates", { varDesc.coordinates }, {1});
-            }
-
-            if (varDesc.range)
-            {
-                var.atts.add<float>("valid_range",
-                                    {varDesc.range->start, varDesc.range->end},
-                                    {2});
-            }
+//            auto data = dataContainer->get(varDesc.source);
+//            auto var = data->createVariable(obsGroup,
+//                                            varDesc.name,
+//                                            dimensions,
+//                                            varDesc.chunks,
+//                                            varDesc.compressionLevel);
+//
+//            var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
+//            var.atts.add<std::string>("units", { varDesc.units }, {1});
+//
+//            if (varDesc.coordinates)
+//            {
+//                var.atts.add<std::string>("coordinates", { varDesc.coordinates }, {1});
+//            }
+//
+//            if (varDesc.range)
+//            {
+//                var.atts.add<float>("valid_range",
+//                                    {varDesc.range->start, varDesc.range->end},
+//                                    {2});
+//            }
         }
 
         return obsGroup;

@@ -45,7 +45,7 @@ else()
   ecbuild_find_package( oops VERSION 1.0.0 QUIET )
 endif()
 
-find_package( ioda_engines 0.0.1 QUIET )
+find_package( ioda_engines QUIET )
 
 find_package( bufr QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )
