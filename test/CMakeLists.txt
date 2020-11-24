@@ -61,19 +61,40 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
-  testoutput/imssnow_scf.nc 
+  testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
-  list( APPEND test_input testinput/gnssro_kompsat5_20180415_00Z.bufr)
-  list( APPEND test_output testoutput/gnssro_kompsat5_2018041500.nc4)
+  list( APPEND test_input
+    testinput/gnssro_kompsat5_20180415_00Z.bufr
+  )
+
+  list( APPEND test_output
+    testoutput/gnssro_kompsat5_2018041500.nc4
+  )
+endif()
+
+if( iodaconv_bufr_ENABLED )
+  list( APPEND test_input
+    testinput/bufr_test.yaml
+    testinput/gdas.t18z.1bmhs.tm00.bufr_d
+    testinput/gdas.t00z.1bhrs4.tm00.bufr_d
+    testinput/bufr_mhs.yaml
+    testinput/bufr_hrs.yaml
+  )
+
+  list( APPEND test_output
+    testoutput/gdas.t18z.1bmhs.tm00.nc
+    testoutput/gdas.t00z.1bhrs4.tm00.nc
+  )
 endif()
 
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
 foreach(FILENAME ${test_input} ${test_output})
     execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
            ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
@@ -395,6 +416,35 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2.nc"
                           tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#==============================================================================
+# Bufr Ingester tests
+#==============================================================================
+
+if(iodaconv_bufr_ENABLED)
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
+                      SOURCES bufr/TestBufrDescription.cpp
+                      ARGS    testinput/bufr_mhs.yaml
+                      LIBS    eckit oops iodaconv::ingester )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_mhs2ioda
+                      TYPE    SCRIPT
+                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      ARGS    netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mhs.yaml"
+                              gdas.t18z.1bmhs.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                      DEPENDS bufr2ioda.x )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_hrs2ioda
+                      TYPE    SCRIPT
+                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      ARGS    netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
+                              gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                      DEPENDS bufr2ioda.x )
+
+endif()
 
 # =============================================================================
 # Land product converters
