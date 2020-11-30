@@ -19,12 +19,13 @@ public :: write_obs
 
 contains
 
-subroutine write_obs (filedate, write_opt)
+subroutine write_obs (filedate, write_opt, outdir)
 
    implicit none
 
    character(len=*), intent(in)          :: filedate
    integer(i_kind),  intent(in)          :: write_opt
+   character(len=*), intent(in)          :: outdir
 
    character(len=nstring)                :: ncfname  ! netcdf file name
    integer(i_kind), dimension(n_ncdim)   :: ncid_ncdim
@@ -57,9 +58,9 @@ subroutine write_obs (filedate, write_opt)
       if ( xdata(ityp)%nlocs == 0 ) cycle obtype_loop
 
       if ( write_opt == write_nc_conv ) then
-         ncfname = trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+         ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
       else if ( write_opt == write_nc_radiance ) then
-         ncfname = trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+         ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          allocate (name_var_tb(xdata(ityp)%nvars))
       end if
       write(*,*) '--- writing ', trim(ncfname)

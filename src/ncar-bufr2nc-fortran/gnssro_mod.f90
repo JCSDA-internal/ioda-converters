@@ -29,7 +29,7 @@ logical :: verbose = .false.
 
 contains
 
-subroutine read_write_gnssro(infile)
+subroutine read_write_gnssro(infile, outdir)
 
 ! output obs data stucture
 integer   :: ncid
@@ -43,6 +43,7 @@ integer   :: nlev_dimid
 integer   :: varid_geo_temp,varid_geo_pres,varid_geo_shum,varid_geo_geop, varid_geo_geop_sfc
 
 character(len=*), intent(in) :: infile
+character(len=*), intent(in) :: outdir
 character(len=256)        :: outfile
 character,dimension(8)    :: subset
 character(len=10)         :: anatime
@@ -136,7 +137,7 @@ iadate5(5) = 0
 call w3fs21(iadate5,mincy)
 anatime_i = idate
 
-write(outfile,'(a,i10.10,a)') 'gnssro_obs_',idate,'.nc4'
+write(outfile,'(a,i10.10,a)') trim(outdir)//'gnssro_obs_',idate,'.nc4'
 
 ! loop over all message to estimate maxobs
 do while(ireadmg(lnbufr,subset,idate)==0)
