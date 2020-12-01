@@ -11,16 +11,16 @@ use gnssro_bufr2ioda, only: read_write_gnssro
 implicit none
 
 integer(i_kind), parameter :: StrLen    = 512
-integer(i_kind), parameter :: NameLen   = 10
+integer(i_kind), parameter :: NameLen   = 15
 integer(i_kind), parameter :: DateLen   = 10
 integer(i_kind), parameter :: nfile_all = 5
 character(len=NameLen)     :: flist_all(nfile_all) = &
-   (/               &
-      "gnssrobufr", &
-      "prepbufr  ", &
-      "amsuabufr ", &
-      "airsbufr  ", &
-      "mhsbufr   "  &
+   (/                    &
+      "gnssro.bufr    ", &
+      "prepbufr.bufr  ", &
+      "amsua.bufr     ", &
+      "airs.bufr      ", &
+      "mhs.bufr       "  &
    /)
 character (len=NameLen) :: flist(nfile_all)  ! file names to be read in from command line arguments
 character (len=NameLen) :: filename
@@ -82,18 +82,18 @@ if ( outdir(itmp:itmp) /= '/' ) outdir = trim(outdir)//'/'
 
 do ifile = 1, nfile
 
-   filename = 'gnssrobufr'
+   filename = 'gnssro.bufr'
    if ( trim(flist(ifile)) == trim(filename) ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
       if ( .not. fexist ) then
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
-         write(*,*) '--- processing gnssrobufr ---'
+         write(*,*) '--- processing gnssro.bufr ---'
          call read_write_gnssro(trim(inpdir)//trim(filename), trim(outdir))
       end if
    end if
 
-   filename = 'prepbufr'
+   filename = 'prepbufr.bufr'
    if ( trim(flist(ifile)) == trim(filename) ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
       if ( .not. fexist ) then
@@ -112,7 +112,7 @@ do ifile = 1, nfile
       end if
    end if
 
-   filename = 'amsuabufr'
+   filename = 'amsua.bufr'
    if ( trim(flist(ifile)) == trim(filename) ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
       if ( .not. fexist ) then
@@ -124,7 +124,7 @@ do ifile = 1, nfile
       end if
    end if
 
-   filename = 'airsbufr'
+   filename = 'airs.bufr'
    if ( trim(flist(ifile)) == trim(filename) ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
       if ( .not. fexist ) then
@@ -136,7 +136,7 @@ do ifile = 1, nfile
       end if
    end if
 
-   filename = 'mhsbufr'
+   filename = 'mhs.bufr'
    if ( trim(flist(ifile)) == trim(filename) ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
       if ( .not. fexist ) then

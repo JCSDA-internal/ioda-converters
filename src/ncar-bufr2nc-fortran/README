@@ -2,15 +2,15 @@
 The ncar-bufr2nc-fortran code currently runs with single processor, even though it is compiled with mpi.
 
 When the executable is run without any arguments, it looks for the following file names in the working directory (if the file exists, do the conversion, otherwise skip it).
-  gnssrobufr
-  prepbufr
-  amsuabufr
-  airsbufr
-  mhsbufr
+  gnssro.bufr
+  prepbufr.bufr
+  amsua.bufr
+  airs.bufr
+  mhs.bufr
 and writes out converted netcdf files in the same working directory.
 
-The executable can be run with any of the following arguments to set the input directory, output directory and what bufr file(s) to convert.
-bufr2nc_fortran.x -i input_dir -o output_dir gnssrobufr prepbufr amsuabufr amsuabufr airsbufr mhsbufr
+The executable can be run with any of the following arguments to optionally set the input directory, output directory and what bufr file(s) to convert.
+bufr2nc_fortran.x -i input_dir -o output_dir gnssro.bufr prepbufr.bufr amsua.bufr mhs.bufr airs.bufr
 
 The output files are
   aircraft_obs_2018041500.nc4

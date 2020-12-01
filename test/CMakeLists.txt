@@ -92,6 +92,20 @@ if( iodaconv_bufr_ENABLED )
   )
 endif()
 
+if( iodaconv_pbfortran_ENABLED )
+  list( APPEND test_input
+    testinput/gnssro.bufr
+    testinput/prepbufr.bufr
+    testinput/amsua.bufr
+  )
+
+  list( APPEND test_output
+    testoutput/gnssro_obs_2020093018.nc4
+    testoutput/sondes_obs_2020093018.nc4
+    testoutput/amsua_metop-b_obs_2020093018.nc4
+  )
+endif()
+
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
@@ -453,6 +467,41 @@ if(iodaconv_bufr_ENABLED)
                               "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
                               gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                       DEPENDS bufr2ioda.x )
+
+endif()
+
+#==============================================================================
+# PrepBUFR and BUFR tests
+#==============================================================================
+
+if( iodaconv_pbfortran_ENABLED )
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gnssro.bufr"
+                            gnssro_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun prepbufr.bufr"
+                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun amsua.bufr"
+                            amsua_metop-b_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
 
 endif()
 
