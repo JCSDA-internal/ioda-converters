@@ -9,19 +9,17 @@
 
 #include <memory>
 
-#include "IodaDescription.h"
-
+#include "eckit/config/LocalConfiguration.h"
 #include "ioda/Group.h"
 #include "ioda/Engines/Factory.h"
 #include "ioda/ObsGroup.h"
 
-#include "eckit/config/LocalConfiguration.h"
+#include "DataContainer.h"
+#include "IodaDescription.h"
 
 
 namespace Ingester
 {
-    class DataContainer;
-
     /// \brief Uses IodaDescription and parsed data to create IODA data.
     class IodaEncoder
     {
@@ -30,11 +28,17 @@ namespace Ingester
         explicit IodaEncoder(const IodaDescription& description);
 
         /// \brief Encode the data into an ioda::ObsGroup object
-        ioda::ObsGroup encode(const std::shared_ptr<DataContainer>& data,
-                              bool append = false);
+        std::map<Categories, ioda::ObsGroup> encode(const std::shared_ptr<DataContainer>& data,
+                                                    bool append = false);
 
      private:
         /// \brief The description
         const IodaDescription description_;
+
+        std::vector<std::pair<std::string, std::pair<int, int>>>
+            findSubIdxs(const std::string& str);
+
+        std::string makeStrWithSubstitions(const std::string& prototype,
+                                           const std::map<std::string, std::string>& subMap);
     };
 }  // namespace Ingester

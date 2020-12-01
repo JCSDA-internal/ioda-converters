@@ -52,13 +52,13 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{split/satId}.{split/coords}.nc"
+      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{satId}.nc"
 
       dimensions:
         - name: "nlocs"
-          size: "variable.nrows" #implicit info
+          size: "variable/radiance.nrows"
         - name: "nchans"
-          size: "variable/radiance.ncols" #explicit info
+          size: "variable/radiance.ncols"
 
       variables:
         - name: "datetime@MetaData"

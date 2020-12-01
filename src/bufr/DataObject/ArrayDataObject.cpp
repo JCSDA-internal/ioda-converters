@@ -33,6 +33,16 @@ namespace Ingester
         std::cout << eigArray_ << std::endl;
     }
 
+    size_t ArrayDataObject::nrows() const
+    {
+        return eigArray_.rows();
+    }
+
+    size_t ArrayDataObject::ncols() const
+    {
+        return eigArray_.cols();
+    }
+
     ioda::VariableCreationParameters ArrayDataObject::makeCreationParams(
                                                     const std::vector<ioda::Dimensions_t>& chunks,
                                                     int compressionLevel)
@@ -45,4 +55,5 @@ namespace Ingester
 
         return params;
     }
+
 }  // namespace Ingester

@@ -57,8 +57,11 @@ namespace Ingester
                     const std::string& fieldName) const;
 
         // Getters
-        inline unsigned int size() const { return size_; }
-        inline void setSize(const unsigned int size) { size_ = size; }
+        inline size_t size(const Categories& categoryId) const
+        {
+            return  dataSets_.at(categoryId).begin()->second->nrows();
+        }
+
         inline std::vector<Categories> getAllCategories()
         {
             std::vector<Categories> allCategories;
@@ -73,13 +76,12 @@ namespace Ingester
 
         inline std::vector<std::vector<size_t>> getCategoryIdxs() { return categoryIdxs_; }
 
+        inline CategoryMap getCategoryMap() { return categoryMap_; }
+
      private:
         const CategoryMap categoryMap_;
         std::vector<std::vector<size_t>> categoryIdxs_;
         DataSets dataSets_;
-
-        /// \brief Number of rows of data stored in DataObjects
-        unsigned int size_ = 0;
 
         void makeDataSets();
     };

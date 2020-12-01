@@ -115,6 +115,17 @@ namespace Ingester
             }
         }
 
+//        for (const auto category : exportData->getAllCategories())
+//        {
+//            for (const auto s : category)
+//            {
+//                std::cout << s << " ";
+//            }
+//
+//            exportData->get(category, "variable/radiance")->;
+//            std::cout << std::endl;
+//        }
+
 //        printMap(splitDataMaps);
 
         return exportData;
