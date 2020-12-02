@@ -1,16 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
 module kinds
 !$$$  module documentation block
 !                .      .    .                                       .

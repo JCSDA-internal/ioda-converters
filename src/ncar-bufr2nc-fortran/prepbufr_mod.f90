@@ -3,7 +3,7 @@ module prepbufr_mod
 ! adapated from WRFDA/var/da/da_obs_io/da_read_obs_bufr.inc
 
 use kinds, only: r_kind, i_kind, r_double
-use define_types_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
+use define_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
    t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, not_use
 use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps

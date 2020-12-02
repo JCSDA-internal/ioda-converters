@@ -5,17 +5,7 @@
 !  Authors: Hailing Zhang
 !           Mark Olah
 
-!!!---------  to run   -----------------------------------------------------------------
-!  ./gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
-!
-! Return codes:
-!  0 - Success.
-!  1 - Unrecoverable system or logical error.
-!  2 - All provided observations are invalid.  Cannot create NetCDF IODA file.
-
-
 module gnssro_bufr2ioda
-!program gnssro_bufr2ioda
 use netcdf
 implicit none
 
@@ -106,18 +96,6 @@ nrec =0
 ndata=0
 nvars=2
 maxobs=0
-
-!call getarg(1,anatime)
-!call getarg(2,infile)
-!call getarg(3,outfile)
-
-!read(anatime,'(i10)') anatime_i
-!read(anatime(1:4),'(i4)')  iadate5(1) 
-!read(anatime(5:6),'(i4)')  iadate5(2)
-!read(anatime(7:8),'(i4)')  iadate5(3)
-!read(anatime(9:10),'(i4)') iadate5(4)
-!iadate5(5) = 0
-!call w3fs21(iadate5,mincy)
 
 open(lnbufr,file=trim(infile),form='unformatted')
 call openbf(lnbufr,'IN',lnbufr)

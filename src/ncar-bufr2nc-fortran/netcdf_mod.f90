@@ -1,9 +1,7 @@
-!ifort  -L${NETCDF}/lib -lnetcdf -lnetcdff -I${NETCDF}/include test.f90 -o a.out
 module netcdf_mod
 
 use netcdf
-use mpisetup, only: stop2
-use define_types_mod, only: missing_r, missing_i, nstring
+use define_mod, only: missing_r, missing_i, nstring
 
 implicit none
 
@@ -37,12 +35,10 @@ subroutine open_netcdf(fname,ncfileid)
    integer, intent(out) :: ncfileid
 
    ncstatus = nf90_open(path=trim(adjustl(fname)),mode=nf90_nowrite,ncid=ncfileid)  ! open file
-   if ( ncstatus .eq. 0 ) then
-!     write(*,fmt='(a)') 'opened '//trim(adjustl(fname))//' for reading'
-!     write(*,fmt='(a,i8)') 'fileid = ',ncfileid
-   else
-      write(*,fmt='(a)') 'error reading '//trim(adjustl(fname))
-      call stop2(31) ! stop
+   if ( ncstatus /= 0 ) then
+      write(0,fmt='(a)') 'error opening netcdf file '//trim(adjustl(fname))
+      write(0,*) 'ncstatus = ', ncstatus
+      stop
    endif
 
    return
@@ -52,9 +48,10 @@ subroutine close_netcdf(fname,ncfileid)
    character(len=*), intent(in) :: fname
    integer, intent(in) :: ncfileid
    ncstatus = nf90_close(ncfileid) ! close file
-   if ( ncstatus .ne. 0 ) then
-      write(*,fmt='(a)') 'error closing '//trim(adjustl(fname))
-      call stop2(31) ! stop
+   if ( ncstatus /= 0 ) then
+      write(0,fmt='(a)') 'error closing netcdf file '//trim(adjustl(fname))
+      write(0,*) 'ncstatus = ', ncstatus
+      stop
    endif
 end subroutine close_netcdf
 
@@ -71,7 +68,7 @@ subroutine get_netcdf_dims(fileid,variable,output)
    if ( ierr /= 0 ) then
       write(0,*) 'Error reading dimension for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 !  write(*,fmt='(a,i8)')variable//' = ', output ! print out dimensions for the variable
 
@@ -94,7 +91,7 @@ subroutine get_netcdf_var_1d_real(fileid,variable,dim1,output)
    if ( ierr /= 0 ) then
       write(0,*) 'Error reading data for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -116,7 +113,7 @@ subroutine get_netcdf_var_1d_integer(fileid,variable,dim1,output)
    if ( ierr /= 0 ) then
       write(0,*) 'Error reading data for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -138,7 +135,7 @@ subroutine get_netcdf_var_1d_char(fileid,variable,dim1,output)
    if ( ierr /= 0 ) then
       write(0,*) 'Error reading data for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -152,12 +149,10 @@ subroutine open_netcdf_for_write(fname,ncfileid)
    ! create nc file
    !ncstatus = nf90_create(path=trim(adjustl(fname)),cmode=nf90_clobber,ncid=ncfileid)
    ncstatus = nf90_create(path=trim(adjustl(fname)),cmode=NF90_NETCDF4,ncid=ncfileid)
-   if ( ncstatus .eq. 0 ) then
-!     write(*,fmt='(a)') 'created '//trim(adjustl(fname))//' for writing'
-!     write(*,fmt='(a,i8)') 'fileid = ',ncfileid
-   else
-      write(*,fmt='(a)') 'error creating '//trim(adjustl(fname))
-      call stop2(31) ! stop
+   if ( ncstatus /= 0 ) then
+      write(0,fmt='(a)') 'error creating netcdf file '//trim(adjustl(fname))
+      write(0,*) 'ierr = ', ncstatus
+      stop
    endif
 
    return
@@ -180,7 +175,7 @@ subroutine def_netcdf_dims(fileid,variable,input,output)
    if ( ierr /= 0 ) then
       write(0,*) 'Error defining dimension for '//trim(adjustl(variable))
       write(0,*) 'ncstatus = ', ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    output = ncdimid
@@ -224,7 +219,7 @@ subroutine def_netcdf_var(fileid,variable,dimids,nctype,attrib_name,attrib)
    if ( ierr /= 0 ) then
       write(0,*) 'Error defining var for '//trim(adjustl(variable))
       write(0,*) 'ierr = ', ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -238,7 +233,7 @@ subroutine def_netcdf_end(fileid)
    if ( ncstatus /= 0 ) then
       write(0,*) 'Error end defining for fileid = ', fileid
       write(0,*) 'ncstatus = ', ncstatus
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -261,7 +256,7 @@ subroutine put_netcdf_var_real(fileid,variable,input)
    if ( ierr /= 0 ) then
       write(0,*) 'Error writing data for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -284,7 +279,7 @@ subroutine put_netcdf_var_integer(fileid,variable,input)
    if ( ierr /= 0 ) then
       write(0,*) 'Error writing data for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return
@@ -307,7 +302,7 @@ subroutine put_netcdf_var_char(fileid,variable,input)
    if ( ierr /= 0 ) then
       write(0,*) 'Error writing data for '//trim(adjustl(variable))
       write(0,*) 'ierr = ',ierr
-      call stop2(31) ! stop
+      stop
    endif
 
    return

@@ -1,7 +1,6 @@
 program bufr2nc
 
-use mpisetup
-use define_types_mod, only: write_nc_conv, write_nc_radiance
+use define_mod, only: write_nc_conv, write_nc_radiance
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance
@@ -32,10 +31,6 @@ integer(i_kind)         :: narg, iarg, iarg_inpdir, iarg_outdir
 integer(i_kind)         :: nfile, ifile
 integer(i_kind)         :: itmp
 
-! initialize MPI ( from mpisetup)
-! sets nproc, numproc (from mpisetup),
-! where nproc is process number, numproc is total number of processes
-call mpi_initialize
 
 do_radiance = .false. ! initialize
 
@@ -158,7 +153,6 @@ if ( do_radiance ) then
    call write_obs(filedate, write_nc_radiance, outdir)
 end if
 
-! finalize MPI
-call mpi_cleanup ! from mpisetup
+write(6,*) 'all done!'
 
 end program bufr2nc

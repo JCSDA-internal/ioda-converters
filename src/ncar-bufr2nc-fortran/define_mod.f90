@@ -1,4 +1,4 @@
-module define_types_mod
+module define_mod
 
 use kinds, only: r_kind, i_kind
 use ufo_vars_mod, only: var_ps, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_tb
@@ -368,4 +368,4 @@ subroutine set_brit_obserr(name_inst, ichan, obserr)
 
 end subroutine set_brit_obserr
 
-end module define_types_mod
+end module define_mod

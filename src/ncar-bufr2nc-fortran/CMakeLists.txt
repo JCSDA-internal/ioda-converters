@@ -4,12 +4,10 @@
 #
 
 list(APPEND bufr2nc_source
-  constants.f90
-  define_types_mod.f90
+  define_mod.f90
   gnssro_mod.f90
   kinds.f90
   main.f90
-  mpisetup.f90
   ncio_mod.f90
   netcdf_mod.f90
   prepbufr_mod.f90

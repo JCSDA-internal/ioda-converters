@@ -1,7 +1,7 @@
 module radiance_mod
 
 use kinds, only: r_kind,i_kind,r_double
-use define_types_mod, only: missing_r, missing_i, nstring, ndatetime, &
+use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr
 use ufo_vars_mod, only: ufo_vars_getindex

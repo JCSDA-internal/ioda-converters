@@ -9,7 +9,6 @@ module ufo_vars_mod
 
 implicit none
 private
-!public :: ufo_vars_read, ufo_vars_getindex
 public :: ufo_vars_getindex
 
 INTEGER, PARAMETER, PUBLIC :: n_aerosols_gocart_default=14,&
@@ -169,27 +168,6 @@ character(len=MAXVARLEN), public, parameter :: var_no3an3 = "mass_fraction_of_ni
 
 ! ------------------------------------------------------------------------------
 contains
-
-!subroutine ufo_vars_read(f_vars, vars)
-!use fckit_configuration_module, only: fckit_configuration
-!implicit none
-!type(fckit_configuration), intent(in)                              :: f_vars
-!character(len=MAXVARLEN), dimension(:), allocatable, intent(inout) :: vars
-!
-!integer :: nvars
-!character(len=:), allocatable :: str
-!
-!if (f_vars%has("nvars")) then
-!  call f_vars%get_or_die("nvars",nvars)
-!  if (allocated(vars)) deallocate(vars)
-!  allocate(vars(nvars))
-!  call f_vars%get_or_die("variables",str)
-!  read(str,*) vars
-!else
-!  allocate(vars(0))
-!endif
-
-!end subroutine ufo_vars_read
 
 ! ------------------------------------------------------------------------------
 

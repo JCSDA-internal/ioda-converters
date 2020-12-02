@@ -2,7 +2,7 @@ module ncio_mod
 
 use netcdf
 use kinds, only: i_kind, r_single, r_kind
-use define_types_mod, only: nobtype, nvar_info, n_ncdim, nstring, ndatetime, &
+use define_mod, only: nobtype, nvar_info, n_ncdim, nstring, ndatetime, &
    obtype_list, name_ncdim, name_var_met, name_var_info, name_sen_info, &
    xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
    var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
