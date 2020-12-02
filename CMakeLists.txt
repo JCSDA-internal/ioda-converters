@@ -1,4 +1,4 @@
-# (C) Copyright 2018 UCAR.
+# (C) Copyright 2018-2020 UCAR.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,119 +7,105 @@
 # IODA-CONVERTERS
 ################################################################################
 
-cmake_minimum_required( VERSION 3.3.2 FATAL_ERROR )
+cmake_minimum_required( VERSION 3.12 )
 
-project( iodaconv C CXX Fortran )
+find_package( ecbuild 3 REQUIRED HINTS ${CMAKE_CURENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
 
-set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH} )
+project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
 
-set( ECBUILD_DEFAULT_BUILD_TYPE Release )
-set( ENABLE_OS_TESTS           OFF CACHE BOOL "Disable OS tests" FORCE )
-set( ENABLE_LARGE_FILE_SUPPORT OFF CACHE BOOL "Disable testing of large file support" FORCE )
-set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
-
-include( ecbuild_system NO_POLICY_SCOPE )
-include( GNUInstallDirs )
-
-ecbuild_requires_macro_version( 2.7 )
-
-################################################################################
-# Project
-################################################################################
-
-ecbuild_declare_project()
-
-ecbuild_enable_fortran( REQUIRED )
-ecbuild_add_cxx11_flags()
-
-set( IODACONV_LINKER_LANGUAGE CXX )
-
-################################################################################
-# Dependencies
-################################################################################
-
-# python
-ecbuild_find_python( REQUIRED )
-
-# odb api
-ecbuild_add_option( FEATURE ODB_API
-                    DEFAULT OFF
-                    DESCRIPTION "Support for ODB API"
-                    REQUIRED_PACKAGES "PROJECT odb_api  VERSION 0.17" )
-
-if (HAVE_ODB_API)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DHAVE_ODB_API")
-endif (HAVE_ODB_API)
-
-# NetCDF and bufrlib are optional. If found, the following variables are set
-# bufrlib_FOUND
-# NETCDF4_FOUND
-find_package(bufrlib)
-find_package(NetCDF COMPONENTS Fortran)
-if( bufrlib_FOUND AND NETCDF4_FOUND )
-  set( HAVE_BUFRLIB_AND_NETCDF "1" )
-  message( STATUS "Fortran components enabled since both bufrlib and NETCDF are found")
-else()
-  set( HAVE_BUFRLIB_AND_NETCDF "0" )
-  message( STATUS "Fortran components disabled since both bufrlib and NETCDF are not found")
+if( ecbuild_VERSION VERSION_LESS 3.4 )
+  include(GNUInstallDirs)
 endif()
 
-# ODC is optional. Sets: odc_FOUND
-find_package(odc QUIET)
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
-################################################################################
-# Export package info
-################################################################################
-
-list( APPEND IODACONV_TPLS ) # NetCDF oops )
-
-set( IODACONV_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src
-                       ${CMAKE_Fortran_MODULE_DIRECTORY} )
-set( IODACONV_LIBRARIES ioda )
-
-get_directory_property( IODACONV_DEFINITIONS COMPILE_DEFINITIONS )
-
-foreach( _tpl ${IODACONV_TPLS} )
-  string( TOUPPER ${_tpl} TPL )
-  list( APPEND IODACONV_EXTRA_DEFINITIONS   ${${TPL}_DEFINITIONS}  ${${TPL}_TPL_DEFINITIONS}  )
-  list( APPEND IODACONV_EXTRA_INCLUDE_DIRS  ${${TPL}_INCLUDE_DIRS} ${${TPL}_TPL_INCLUDE_DIRS} )
-  list( APPEND IODACONV_EXTRA_LIBRARIES     ${${TPL}_LIBRARIES}    ${${TPL}_TPL_LIBRARIES}    )
-endforeach()
-
-if( HAVE_ODB_API )
-  list( APPEND IODACONV_EXTRA_LIBRARIES     Odb    )
-endif()
+include( iodaconv_extra_macros )
+include( iodaconv_compiler_flags )
 
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 
 # Location of installed python iodaconv libraries
-include(GNUInstallDirs)
 set( PYIODACONV_BUILD_LIBDIR   ${CMAKE_BINARY_DIR}/lib/pyiodaconv )
 set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-################################################################################
-# Sources
-################################################################################
+## Dependencies
 
-include( iodaconv_compiler_flags )
-include_directories( ${IODACONV_INCLUDE_DIRS} ${IODACONV_EXTRA_INCLUDE_DIRS} )
-include( iodaconv_extra_macros )
+ecbuild_find_python( REQUIRED VERSION 3 )
+
+find_package( Eigen3 QUIET NO_MODULE HINTS
+    $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
+    $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH} )
+
+if( ecbuild_VERSION VERSION_LESS 3.4 )
+  find_package( eckit QUIET )
+  find_package( oops QUIET )
+else()
+  ecbuild_find_package( eckit VERSION 1.13.0 QUIET )
+  ecbuild_find_package( oops VERSION 1.0.0 QUIET )
+endif()
+# Optional: pygrib for python for GRIB1/GRIB2 input files
+if ( USE_PYGRIB )
+    message(STATUS "Adding python tests that import pygrib")
+    set( iodaconv_pygrib_ENABLED True)
+else()
+    message(STATUS "Skipping python tests that import pygrib")
+    set( iodaconv_pygrib_ENABLED False)
+endif()
+
+find_package( ioda_engines QUIET )
+
+find_package( bufr QUIET )
+find_package( NetCDF QUIET COMPONENTS Fortran )
+
+if( bufr_FOUND AND NetCDF_Fortran_FOUND )
+    set(iodaconv_gnssro_ENABLED True)
+    message(STATUS "Found: bufr")
+    message(STATUS "Found: NetCDF::NetCDF_Fortran")
+    message(STATUS "Enabled Component: gnssro")
+else()
+    set(iodaconv_gnssro_ENABLED False)
+    if(NOT bufr_FOUND)
+        message(STATUS "NOT-Found: bufr - GNSSRO converter disabled")
+    endif()
+    if(NOT NetCDF_Fortran_FOUND)
+        message(STATUS "NOT-Found: NetCDF - GNSSRO converter disabled")
+    endif()
+    message(STATUS "Disabled Component: gnssro")
+endif()
+
+if( eckit_FOUND AND oops_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
+    set(iodaconv_bufr_ENABLED True)
+    message(STATUS "Found: eckit")
+    message(STATUS "Found: oops")
+    message(STATUS "Found: ioda_engines")
+    message(STATUS "Found: bufr")
+    message(STATUS "Enabled Component: bufr")
+else()
+    set(iodaconv_bufr_ENABLED False)
+    if(NOT eckit_FOUND)
+        message(STATUS "NOT-Found: eckit - BUFR converter disabled")
+    endif()
+    if(NOT oops_FOUND)
+        message(STATUS "NOT-Found: oops - BUFR converter disabled")
+    endif()
+    if(NOT ioda_engines_FOUND)
+        message(STATUS "NOT-Found: ioda_engines - BUFR converter disabled")
+    endif()
+    if(NOT bufr_FOUND)
+        message(STATUS "NOT-Found: bufr - BUFR converter disabled")
+    endif()
+    message(STATUS "Disabled Component: bufr")
+endif()
+
+## Sources
+
 add_subdirectory( src )
 add_subdirectory( tools )
 add_subdirectory( test )
 
-if(ECBUILD_INSTALL_FORTRAN_MODULES)
-  install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} DESTINATION ${INSTALL_INCLUDE_DIR} )
-endif()
+# Package Config
 
-################################################################################
-# Finalise configuration
-################################################################################
+ecbuild_install_project( NAME ${PROJECT_NAME} )
 
-# prepares a tar.gz of the sources and/or binaries
-ecbuild_install_project( NAME ioda )
-
-# print the summary of the configuration
 ecbuild_print_summary()
-
