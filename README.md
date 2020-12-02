@@ -176,4 +176,6 @@ For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
 ```
 Usage: afwa_snod2ioda.py -i input_afwa_file.grb -o output_ioda_file.nc -m maskout
 ```
-For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.  
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+It should be noted that both ims_scf2ioda.py and afwa_snod2ioda.py are depending on the python pygrib module. To enable the testing of these two scripts when the user has a pygrib module available, during the ecbuild process, please add -DUSE_PYGRIB=True to the ecbuild command line.  
