@@ -298,6 +298,7 @@ geovals_vars = {
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
+    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
     'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
@@ -324,7 +325,6 @@ geovals_vars = {
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
     'Sfc_Height': 'surface_geopotential_height',
-    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -367,6 +367,7 @@ oz_sensors = [
     'omi',
     'ompsnp',
     'ompstc8',
+    'ompslp',
 ]
 
 # units
@@ -695,9 +696,7 @@ class Conv(BaseGSI):
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
                     if outvars[o] == 'surface_pressure':
-                        try:
-                            tmpps = self.var('surface_pressure')[0]
-                        except IndexError:
+                        if np.max(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
@@ -753,11 +752,11 @@ class Conv(BaseGSI):
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
-                        try:
-                            tmpps = self.var('surface_pressure')[0]
-                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
-                        except IndexError:
-                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx] * 100.  # convert to Pa from hPa
+                        tmpps = self.var(lvar)[idx]
+                        if np.max(tmpps) > 1100.:
+                            loc_mdata[loc_mdata_name] = tmpps
+                        else:
+                            loc_mdata[loc_mdata_name] = tmpps * 100.  # from hPa to Pa
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
@@ -1582,7 +1581,8 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        if self.sensor != "ompslp":
+            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1632,6 +1632,8 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
+        if(self.sensor == "ompslp"):
+            vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
         varDict[vname]['qcKey'] = vname, writer.OqcName()
