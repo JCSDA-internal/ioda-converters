@@ -1,10 +1,14 @@
+
 add_subdirectory(chem)
 add_subdirectory(gsi-ncdiag)
+add_subdirectory(land)
 add_subdirectory(lib-python)
 add_subdirectory(marine)
+add_subdirectory(conventional)
 add_subdirectory(ncep)
 add_subdirectory(ssec)
 add_subdirectory(wrfda-ncdiag)
+add_subdirectory(single_observation)
 
 # Optional components
 if(iodaconv_gnssro_ENABLED)

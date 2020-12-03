@@ -91,6 +91,18 @@ Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 * `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
 
 
+## metar
+A converter of Surface observation METAR reports in simple CSV format into IODA-ready netCDF4 file.
+Currently, the CSV-formatted file should contain a header line such as the following:
+Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw
+
+At this time, only the output variables of air_temperature, surface_pressure (computed from altimeter setting), specific_humidity (computed from dewpoint temperature and surface_pressure), and eastward/northward_wind (computed from wind speed and direction) are output into the netCDF4 file.  All initial values of PreQC are set to 2 (un-checked) and obserror=0 since UFO software (under development) will be used to flag/discard/QC/etc. these data.  Other variables are expected to be converted as needed such as horizontal visibility in the near future.
+
+```
+Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
+```
+
+
 ## odbapi2nc
 
 Python script, `odbapi2nc.py`, for converting Met Office or ECMWF ODB2 files to netCDF4 files formatted for use by IODA.
@@ -146,4 +158,16 @@ For AOD, `viirs_aod2ioda.py`, is used to convert the native netCDF format for ob
 ```
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -m nesdis -k maskout -t 0.0
 ```
-For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to mask all missing values out. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.    
+For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to not write out missing values. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.
+
+
+## land
+
+The land converters include all converter scripts for snowpack, soil, vegeation, and the other surface related land variables.
+
+For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.py`.
+```
+Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+    
