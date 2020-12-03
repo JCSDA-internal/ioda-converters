@@ -16,9 +16,9 @@ and writes out converted netcdf files in the same working directory.
 
 The executable can be run with any of the following arguments to optionally set the input directory, output directory and what bufr file(s) to convert.
 
-> bufr2nc_fortran.x -i input_dir -o output_dir gnssro.bufr prepbufr.bufr amsua.bufr mhs.bufr airs.bufr
+> bufr2nc_fortran.x -i input_dir -o output_dir gnssro_kompsat5_20180415_00Z.bufr gdas.t18z.1bmhs.tm00.bufr_d
 
-> bufr2nc_fortran.x amsua.bufr
+> bufr2nc_fortran.x prepbufr.gdas.20200930.t18z.nr
 
 Example output files (date in the output filename is extracted from the input bufr files):
 ```

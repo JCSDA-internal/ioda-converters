@@ -106,7 +106,7 @@ if (iret/=0) then
    stop
 end if
 
-write(unit=*,fmt='(a,i10)') ' gnssrobufr file date is: ', idate
+write(unit=*,fmt='(a,i10)') trim(infile)//' file date is: ', idate
 iadate5(1) = idate/1000000
 iadate5(2) = (idate-iadate5(1)*1000000)/10000
 iadate5(3) = (idate-iadate5(1)*1000000-iadate5(2)*10000)/100
