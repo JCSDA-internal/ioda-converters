@@ -32,6 +32,7 @@ locationKeyList = [
 
 obsvars = {
     'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
+    'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column',
 }
 
 AttrData = {
@@ -52,10 +53,10 @@ class tropomi(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar = 'nitrogen_dioxide_in_tropospheric_column'
-        self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-        self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-        self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+        for iodavar in ['nitrogen_dioxide_in_tropospheric_column', 'nitrogen_dioxide_in_total_column']:
+            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -81,6 +82,8 @@ class tropomi(object):
             # need additional variable to use the averaging kernel for DA
             kernel_err = ncd.groups['PRODUCT'].\
                 variables['nitrogendioxide_tropospheric_column_precision_kernel'][:].ravel()
+            kernel_err_total = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].\
+                variables['nitrogendioxide_total_column_precision_kernel'][:].ravel()
             trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
             total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
             trop_airmass = ncd.groups['PRODUCT'].\
@@ -98,6 +101,7 @@ class tropomi(object):
                 self.loc_mdata['air_mass_factor_total'] = total_airmass
                 self.loc_mdata['air_mass_factor_troposphere'] = trop_airmass
                 self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
+                self.loc_mdata['averaging_kernel_precision'] = kernel_err_total
                 for k in range(nlevs):
                     varname = 'averaging_kernel_level_'+str(k+1)
                     self.loc_mdata[varname] = avg_kernel[..., k].ravel()
@@ -116,13 +120,19 @@ class tropomi(object):
                     self.loc_mdata['air_mass_factor_troposphere'], trop_airmass))
                 self.loc_mdata['tropospheric_averaging_kernel_precision'] = np.concatenate((
                     self.loc_mdata['tropospheric_averaging_kernel_precision'], kernel_err))
+                self.loc_mdata['averaging_kernel_precision'] = np.concatenate((
+                    self.loc_mdata['averaging_kernel_precision'], kernel_err_total))
                 for k in range(nlevs):
                     varname = 'averaging_kernel_level_'+str(k+1)
                     self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
                                                              avg_kernel[..., k].ravel()))
             for ncvar, iodavar in obsvars.items():
-                data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
-                err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()
+                if ncvar in ['nitrogendioxide_tropospheric_column']:
+                    data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
+                    err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()
+                else:
+                    data = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar][:].ravel()
+                    err = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar+'_precision'][:].ravel()
                 if first:
                     self.outdata[self.varDict[iodavar]['valKey']] = data
                     self.outdata[self.varDict[iodavar]['errKey']] = err
