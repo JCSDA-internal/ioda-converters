@@ -6,7 +6,6 @@
 
 list(APPEND _ioda_encoder_srcs
         IngesterTypes.h
-        EigenExt.h
         DataContainer.h
         DataContainer.cpp
         Parser.h
@@ -59,6 +58,7 @@ list(APPEND _bufr_parser_srcs
   BufrParser/BufrCollectors/BufrCollectors.h
   BufrParser/Exports/Export.h
   BufrParser/Exports/Export.cpp
+  BufrParser/Exports/RowSlice.h
   BufrParser/Exports/Filters/Filter.h
   BufrParser/Exports/Filters/RangeFilter.h
   BufrParser/Exports/Filters/RangeFilter.cpp

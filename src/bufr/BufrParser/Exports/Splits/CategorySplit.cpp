@@ -1,6 +1,9 @@
-//
-// Created by Ronald McLaren on 11/11/20.
-//
+/*
+ * (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "CategorySplit.h"
 
@@ -8,7 +11,7 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "EigenExt.h"
+#include "../RowSlice.h"
 
 
 namespace Ingester
@@ -39,7 +42,7 @@ namespace Ingester
         for (const auto& mapPair : nameMap_)
         {
             //Find matching rows
-            std::vector<int> indexVec;
+            std::vector<size_t> indexVec;
             for (int rowIdx = 0;
                  rowIdx < static_cast<int>(dataMap.at(mnemonic_).rows());
                  rowIdx++)
@@ -54,17 +57,7 @@ namespace Ingester
             BufrDataMap newDataMap;
             for (const auto& dataPair : dataMap)
             {
-                auto columns = Eigen::VectorXi(1);
-
-                for (size_t colIdx = 0;
-                     colIdx < static_cast<size_t>(dataPair.second.cols());
-                     colIdx++)
-                {
-                    columns << colIdx;
-                }
-
-                auto indexArr = VectorXi::Map(indexVec.data(), indexVec.size());
-                const auto newArr = indexing(dataPair.second, indexArr, columns);
+                const auto newArr = rowSlice(dataPair.second, indexVec);
                 newDataMap.insert({dataPair.first, newArr});
             }
 

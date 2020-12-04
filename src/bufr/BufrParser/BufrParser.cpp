@@ -90,7 +90,9 @@ namespace Ingester
         CategoryMap catMap;
         for (const auto& splitPair : splitMap)
         {
-            catMap.insert({splitPair.first, splitPair.second->subCategories()});
+            std::ostringstream catName;
+            catName << "splits/" << splitPair.first;
+            catMap.insert({catName.str(), splitPair.second->subCategories()});
         }
 
         auto exportData = std::make_shared<DataContainer>(catMap);
@@ -114,19 +116,6 @@ namespace Ingester
                                 varPair.second->exportData(dataPair.second));
             }
         }
-
-//        for (const auto category : exportData->getAllCategories())
-//        {
-//            for (const auto s : category)
-//            {
-//                std::cout << s << " ";
-//            }
-//
-//            exportData->get(category, "variable/radiance")->;
-//            std::cout << std::endl;
-//        }
-
-//        printMap(splitDataMaps);
 
         return exportData;
     }

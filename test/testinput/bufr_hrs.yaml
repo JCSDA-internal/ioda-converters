@@ -16,20 +16,16 @@ observations:
           channels : 1-19
 
       exports:
-        timestamp:
-          datetime:
-            year: YEAR
-            month: MNTH
-            day: DAYS
-            hour: HOUR
-            minute: MINU
-            second: SECO
-            isUTC: true
-
         longitude:
           mnemonic: CLON
           transforms:
             - offset: 0
+
+        scanangle:
+          mnemonic: BEARAZ
+          transforms:
+            - scale: 1.13
+            - offset: -48.90
 
         latitude:
           mnemonic: CLAT
@@ -48,12 +44,6 @@ observations:
           size: "19" #explicit info
 
       variables:
-        - name: "datetime@MetaData"
-          source: "timestamp"
-          dimensions: [ "nlocs" ]
-          longName: "Datetime"
-          units: "datetime"
-
         - name: "latitude@MetaData"
           source: "latitude"
           dimensions: ["nlocs"]
@@ -75,5 +65,3 @@ observations:
           longName: "Radiance"
           units: "K"
           range: [120, 500]
-          chunks: [1000, 15]
-          compressionLevel: 4
