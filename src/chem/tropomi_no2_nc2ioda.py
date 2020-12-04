@@ -48,6 +48,7 @@ class tropomi(object):
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.units = {}
         self._read()
 
     # Open input file and read relevant info
@@ -57,6 +58,7 @@ class tropomi(object):
             self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+            self.units[iodavar] = 'mol m-2'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -178,7 +180,7 @@ def main():
     no2 = tropomi(args.input, writer)
 
     # write everything out
-    writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData)
+    writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData, no2.units)
 
 
 if __name__ == '__main__':
