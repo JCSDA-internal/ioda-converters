@@ -35,7 +35,7 @@ ecbuild_find_python( REQUIRED VERSION 3 )
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
     $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
-    $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH})
+    $ENV{Eigen3_PATH} $ENV{EIGEN3_PATH} $ENV{Eigen_PATH} $ENV{EIGEN_PATH} )
 
 if( ecbuild_VERSION VERSION_LESS 3.4 )
   find_package( eckit QUIET )
@@ -53,7 +53,7 @@ else()
     set( iodaconv_pygrib_ENABLED False)
 endif()
 
-find_package( ioda_engines 0.0.1 QUIET )
+find_package( ioda_engines QUIET )
 
 find_package( bufr QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )

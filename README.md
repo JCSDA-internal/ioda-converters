@@ -172,8 +172,17 @@ Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
 
 
+For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
+```
+Usage: afwa_snod2ioda.py -i input_afwa_file.grb -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+It should be noted that both ims_scf2ioda.py and afwa_snod2ioda.py are depending on the python pygrib module. To enable the testing of these two scripts when the user has a pygrib module available, during the ecbuild process, please add -DUSE_PYGRIB=True to the ecbuild command line.  
+
+
 For snow depth (snod), GHCN csv files are supported with `ghcn_snod2ioda.py`.
 ```
 Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD -m maskout
 ````
-In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.    
+In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.

@@ -1,5 +1,6 @@
 list(APPEND programs
   ims_scf2ioda.py
+  afwa_snod2ioda.py
   ghcn_snod2ioda.py
 )
 
