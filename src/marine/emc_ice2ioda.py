@@ -28,17 +28,15 @@ import ioda_conv_ncio as iconv
 class Observation(object):
 
     def __init__(self, filename, thin, date, writer):
-        print('date = ', date)
-        global date2
-        date2 = int(date.strftime("%Y%m%d"))
+        print(date)
         self.filename = filename
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
-        self._read()
+        self._read(date)
 
-    def _read(self):
+    def _read(self, date):
 
         ncd = nc.MFDataset(self.filename)
         datein = ncd.variables['dtg_yyyymmdd'][:]
@@ -63,6 +61,7 @@ class Observation(object):
             vals = vals[mask_thin]
             qc = qc[mask_thin]
 
+        date2 = int(date.strftime("%Y%m%d"))
         for i in range(len(lons)):
             if datein[i] == date2:
                 obs_date = datetime.combine(
