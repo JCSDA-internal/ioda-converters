@@ -490,7 +490,7 @@ if( iodaconv_pbfortran_ENABLED )
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun prepbufr.bufr"
-                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv

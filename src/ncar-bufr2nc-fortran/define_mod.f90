@@ -17,7 +17,7 @@ integer(i_kind), parameter :: ndatetime         = 20
 integer(i_kind), parameter :: nobtype           = 6  ! number of ob types
 integer(i_kind), parameter :: n_ncdim           = 5  ! total numner of nc dimensions
 integer(i_kind), parameter :: nvar_met          = 6
-integer(i_kind), parameter :: nvar_info         = 10 ! number of metadata
+integer(i_kind), parameter :: nvar_info         = 9  ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
 integer(i_kind), parameter :: ninst             = 12
 !integer(i_kind), parameter :: ninst             = 13 ! including airs
@@ -94,7 +94,7 @@ character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
       'ndatetime '  &
    /)
 character(len=nstring), dimension(nvar_info) :: name_var_info = &
-   (/ 'time             ', &
+   (/                      &
       'air_pressure     ', &
       'height           ', &
       'station_elevation', &
@@ -112,7 +112,6 @@ integer(i_kind), dimension(nvar_info) :: type_var_info = &
       nf90_float, &
       nf90_float, &
       nf90_float, &
-      nf90_float, &
       nf90_int,   &
       nf90_char,  &
       nf90_char,  &
@@ -120,7 +119,6 @@ integer(i_kind), dimension(nvar_info) :: type_var_info = &
    /)
 character(len=nstring), dimension(2,nvar_info) :: dim_var_info = reshape ( &
    (/                             &
-      'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &

@@ -35,11 +35,13 @@ character (len=DateLen) :: filedate
 character (len=StrLen)  :: inpdir, outdir
 logical                 :: fexist
 logical                 :: do_radiance
+logical                 :: apply_gsi_qc
 integer(i_kind)         :: nfile, ifile
 integer(i_kind)         :: itmp
 
 
 do_radiance = .false. ! initialize
+apply_gsi_qc = .false.
 
 call parse_files_to_convert
 
@@ -65,7 +67,10 @@ do ifile = 1, nfile
          ! read prepbufr file and store data in sequential linked list for conv obs
          call read_prepbufr(trim(inpdir)//trim(filename), filedate)
 
-         call filter_obs_conv
+         if ( apply_gsi_qc ) then
+            write(*,*) '--- applying some additional QC as in GSI read_prepbufr.f90 for the global model ---'
+            call filter_obs_conv
+         end if
 
          ! transfer info from limked list to arrays grouped by obs/variable types
          call sort_obs_conv
@@ -141,7 +146,9 @@ flist(:) = 'null'
 if ( narg > 0 ) then
    do iarg = 1, narg
       call get_command_argument(number=iarg, value=strtmp)
-      if ( trim(strtmp) == '-i' ) then
+      if ( trim(strtmp) == '-qc' ) then
+         apply_gsi_qc = .true.
+      else if ( trim(strtmp) == '-i' ) then
          iarg_inpdir = iarg + 1
       else if ( trim(strtmp) == '-o' ) then
          iarg_outdir = iarg + 1
