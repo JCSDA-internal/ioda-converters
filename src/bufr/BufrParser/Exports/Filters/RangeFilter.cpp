@@ -36,8 +36,8 @@ namespace Ingester
 
         for (size_t rowIdx = 0; rowIdx < static_cast<size_t>(array.rows()); rowIdx++)
         {
-            if ((array.row(rowIdx) >= extents_[0]).all() &&
-                (array.row(rowIdx) <= extents_[1]).all())
+            if ((array.row(rowIdx) >= std::min(extents_[0], extents_[1])).all() &&
+                (array.row(rowIdx) <= std::max(extents_[0], extents_[1])).all())
             {
                 validRows.push_back(rowIdx);
             }
