@@ -62,6 +62,10 @@ list(APPEND _bufr_parser_srcs
   BufrParser/Exports/Filters/Filter.h
   BufrParser/Exports/Filters/RangeFilter.h
   BufrParser/Exports/Filters/RangeFilter.cpp
+  BufrParser/Exports/Filters/GreaterFilter.h
+  BufrParser/Exports/Filters/GreaterFilter.cpp
+  BufrParser/Exports/Filters/LesserFilter.h
+  BufrParser/Exports/Filters/LesserFilter.cpp
   BufrParser/Exports/Splits/Split.h
   BufrParser/Exports/Splits/CategorySplit.h
   BufrParser/Exports/Splits/CategorySplit.cpp

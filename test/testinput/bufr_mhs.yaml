@@ -24,12 +24,15 @@ observations:
                 _8: sat_3
 
         filters:
-          - range:
+          - lessThan:
               mnemonic: CLAT
-              extents: [20, 45]
+              value: 42.5
+          - greaterThan:
+              mnemonic: CLAT
+              value: 35
           - range:
               mnemonic: CLON
-              extents: [0, 25]
+              extents: [-86.3, -68]
 
         variables:
           timestamp:
@@ -52,7 +55,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{satId}.nc"
+      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{splits/satId}.nc"
 
       dimensions:
         - name: "nlocs"

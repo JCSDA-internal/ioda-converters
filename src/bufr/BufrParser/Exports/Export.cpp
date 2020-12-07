@@ -12,6 +12,8 @@
 
 #include "eckit/exception/Exceptions.h"
 
+#include "Filters/GreaterFilter.h"
+#include "Filters/LesserFilter.h"
 #include "Filters/RangeFilter.h"
 #include "Splits/CategorySplit.h"
 #include "Variables/MnemonicVariable.h"
@@ -44,7 +46,10 @@ namespace
         namespace Filter
         {
             const char* Range = "range";
+            const char* Greater = "greaterThan";
+            const char* Lesser = "lessThan";
             const char* Extents = "extents";
+            const char* Value = "value";
             const char* Mnemonic = "mnemonic";
         }
 
@@ -150,10 +155,24 @@ namespace Ingester
 
             if (subConf.has(ConfKeys::Filter::Range))
             {
-                auto rangeConf = subConf.getSubConfiguration(ConfKeys::Filter::Range);
+                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Range);
                 filter = std::make_shared<RangeFilter>(
-                    rangeConf.getString(ConfKeys::Filter::Mnemonic),
-                    rangeConf.getFloatVector(ConfKeys::Filter::Extents));
+                    filterConf.getString(ConfKeys::Filter::Mnemonic),
+                    filterConf.getFloatVector(ConfKeys::Filter::Extents));
+            }
+            else if (subConf.has(ConfKeys::Filter::Greater))
+            {
+                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Greater);
+                filter = std::make_shared<GreaterFilter>(
+                    filterConf.getString(ConfKeys::Filter::Mnemonic),
+                    filterConf.getFloat(ConfKeys::Filter::Value));
+            }
+            else if (subConf.has(ConfKeys::Filter::Lesser))
+            {
+                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Lesser);
+                filter = std::make_shared<LesserFilter>(
+                    filterConf.getString(ConfKeys::Filter::Mnemonic),
+                    filterConf.getFloat(ConfKeys::Filter::Value));
             }
             else
             {

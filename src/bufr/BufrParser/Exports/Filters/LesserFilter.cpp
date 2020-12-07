@@ -5,7 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "RangeFilter.h"
+#include "LesserFilter.h"
 
 #include <ostream>
 
@@ -13,22 +13,23 @@
 
 #include "../RowSlice.h"
 
+
 namespace Ingester
 {
-    RangeFilter::RangeFilter(const std::string& mnemonic, const std::vector<float>& extents) :
+    LesserFilter::LesserFilter(const std::string& mnemonic, float value) :
       mnemonic_(mnemonic),
-      extents_(extents)
+      value_(value)
     {
     }
 
-    void RangeFilter::apply(BufrDataMap& dataMap)
+    void LesserFilter::apply(BufrDataMap& dataMap)
     {
         std::vector<size_t> validRows;
 
         if (dataMap.find(mnemonic_) == dataMap.end())
         {
             std::ostringstream errStr;
-            errStr << "Unknown mnemonic " << mnemonic_ << " found in range filter.";
+            errStr << "Unknown mnemonic " << mnemonic_ << " found in less than filter.";
             throw eckit::BadParameter(errStr.str());
         }
 
@@ -36,8 +37,7 @@ namespace Ingester
 
         for (size_t rowIdx = 0; rowIdx < static_cast<size_t>(array.rows()); rowIdx++)
         {
-            if ((array.row(rowIdx) >= extents_[0]).all() &&
-                (array.row(rowIdx) <= extents_[1]).all())
+            if ((array.row(rowIdx) <= value_).all())
             {
                 validRows.push_back(rowIdx);
             }

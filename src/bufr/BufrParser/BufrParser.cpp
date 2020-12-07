@@ -71,7 +71,7 @@ namespace Ingester
         return exportData(collectors.finalize());
     }
 
-    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
+    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& dataData)
     {
 
         auto exportDescription = description_.getExport();
@@ -80,11 +80,12 @@ namespace Ingester
         auto splitMap = exportDescription.getSplits();
         auto varMap = exportDescription.getVariables();
 
-        std::cout << "size: " << srcData.at("TMBR").rows() << std::endl;
+        std::cout << "size: " << dataData.at("TMBR").rows() << std::endl;
 
+        auto srcData = dataData; //make mutable copy
         for (const auto& filter : filters)
         {
-//TODO:            filter.apply(srcData);
+            filter->apply(srcData);
         }
 
         CategoryMap catMap;

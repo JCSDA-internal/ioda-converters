@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "BufrParser/BufrTypes.h"
+
 
 namespace Ingester
 {
@@ -20,7 +22,7 @@ namespace Ingester
      public:
         RangeFilter(const std::string& mnemonic, const std::vector<float>& extents);
 
-        void apply(IngesterArray& array) final;
+        void apply(BufrDataMap& dataMap) final;
 
      private:
          const std::string mnemonic_;
