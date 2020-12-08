@@ -27,7 +27,7 @@ subroutine write_obs (filedate, write_opt, outdir)
    integer(i_kind),  intent(in)          :: write_opt
    character(len=*), intent(in)          :: outdir
 
-   character(len=nstring)                :: ncfname  ! netcdf file name
+   character(len=512)                    :: ncfname  ! netcdf file name
    integer(i_kind), dimension(n_ncdim)   :: ncid_ncdim
    integer(i_kind), dimension(n_ncdim)   :: val_ncdim
    character(len=nstring)                :: ncname
