@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # combine_conv.py
-# combine conventional obs from IODA format into
+# combine conventional obs and GOESIR (currently ahi_himawari8) from IODA format into
 # one output file with matching corresponding locations
 # and missing data where applicable
 
@@ -308,7 +308,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
 ######################################################
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Combine conventional obs in IODA format into one output file',
+        description='Combine conventional obs and GOESIR (currently ahi_himawari8) in IODA format into one output file',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='list of the input files to combine',
