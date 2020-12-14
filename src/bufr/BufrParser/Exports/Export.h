@@ -20,6 +20,7 @@
 
 namespace Ingester
 {
+    /// \brief Uses configuration to determine all the things needed to be done on export.
     class Export
     {
      public:
@@ -27,8 +28,11 @@ namespace Ingester
         typedef std::map<std::string, std::shared_ptr<Variable>> Variables;
         typedef std::vector<std::shared_ptr<Filter>> Filters;
 
+        /// \brief Constructor
+        /// \param conf Config data/
         explicit Export(const eckit::Configuration &conf);
 
+        // Getters
         inline Splits getSplits() const { return splits_; }
         inline Variables getVariables() const { return variables_; }
         inline Filters getFilters() const { return filters_; }
@@ -38,8 +42,13 @@ namespace Ingester
         Variables  variables_;
         Filters filters_;
 
+        /// \brief Create Variables exports from config.
         void addVariables(const eckit::Configuration &conf);
+
+        /// \brief Create Splits exports from config.
         void addSplits(const eckit::Configuration &conf);
+
+        /// \brief Create Filters exports from config.
         void addFilters(const eckit::Configuration &conf);
     };
 }  // namespace Ingester
