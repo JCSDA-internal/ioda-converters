@@ -18,17 +18,23 @@
 
 namespace Ingester
 {
+    DataContainer::DataContainer() :
+        categoryMap_({})
+    {
+        makeDataSets();
+    }
+
     DataContainer::DataContainer(const CategoryMap& categoryMap) :
         categoryMap_(categoryMap)
     {
         makeDataSets();
     }
 
-    void DataContainer::add(const Categories& categoryId,
-                            const std::string& fieldName,
-                            const std::shared_ptr<DataObject> data)
+    void DataContainer::add(const std::string& fieldName,
+                            const std::shared_ptr<DataObject> data,
+                            const SubCategory& categoryId)
     {
-        if (hasKey(categoryId, fieldName))
+        if (hasKey(fieldName, categoryId))
         {
             std::ostringstream errorStr;
             errorStr << "ERROR: Field called " << fieldName << " already exists.";
@@ -38,21 +44,24 @@ namespace Ingester
         dataSets_.at(categoryId).insert({fieldName, data});
     }
 
-    std::shared_ptr<DataObject> DataContainer::get(const Categories& categoryId,
-                                                   const std::string& fieldName) const
+    std::shared_ptr<DataObject> DataContainer::get(const std::string& fieldName,
+                                                   const SubCategory& categoryId) const
     {
-        if (!hasKey(categoryId, fieldName))
+        if (!hasKey(fieldName, categoryId))
         {
-            std::ostringstream errorStr;
-            errorStr << "ERROR: Field called " << fieldName << " doesn't exists.";
-            throw eckit::BadParameter(errorStr.str());
+            std::ostringstream errStr;
+            errStr << "ERROR: Either field called " << fieldName;
+            errStr << " or category " << makeSubCategoryStr(categoryId);
+            errStr << " doesn't exists.";
+
+            throw eckit::BadParameter(errStr.str());
         }
 
         return dataSets_.at(categoryId).at(fieldName);
     }
 
-    bool DataContainer::hasKey(const Categories& categoryId,
-                               const std::string& fieldName) const
+    bool DataContainer::hasKey(const std::string& fieldName,
+                               const SubCategory& categoryId) const
     {
         bool hasKey = false;
         if (dataSets_.find(categoryId) != dataSets_.end() &&
@@ -62,6 +71,20 @@ namespace Ingester
         }
 
         return hasKey;
+    }
+
+    size_t DataContainer::size(const SubCategory &categoryId) const
+    {
+        if (dataSets_.find(categoryId) == dataSets_.end())
+        {
+            std::ostringstream errStr;
+            errStr << "ERROR: Category called " << makeSubCategoryStr(categoryId);
+            errStr << " doesn't exists.";
+
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        return  dataSets_.at(categoryId).begin()->second->nrows();
     }
 
     void DataContainer::makeDataSets()
@@ -85,34 +108,45 @@ namespace Ingester
             }
         };
 
-        size_t totalCnt = 1;
+        size_t numCombos = 1;
         std::vector<size_t> indicies;
         std::vector<size_t> lengths;
         for (const auto& category : categoryMap_)
         {
             indicies.push_back(0);
             lengths.push_back(category.second.size());
-            totalCnt = totalCnt * category.second.size();
+            numCombos = numCombos * category.second.size();
         }
 
-        for (size_t idx = 0; idx < totalCnt; idx++)
+        if (!indicies.empty())
         {
-            size_t catIdx = 0;
-            std::vector<std::string> subsets;
-            for (const auto& category : categoryMap_)
-            {
-                subsets.push_back(category.second[indicies[catIdx]]);
-                catIdx++;
+            for (size_t idx = 0; idx < numCombos; idx++) {
+                size_t catIdx = 0;
+                std::vector<std::string> subsets;
+                for (const auto &category : categoryMap_) {
+                    subsets.push_back(category.second[indicies[catIdx]]);
+                    catIdx++;
+                }
+
+                dataSets_.insert({subsets, DataSetMap()});
+                incIdx(indicies, lengths, 0);
             }
-
-            categoryIdxs_.push_back(indicies);
-            dataSets_.insert({subsets, DataSetMap()});
-            incIdx(indicies, lengths, 0);
         }
-
-        for (const auto& s : dataSets_)
+        else
         {
-            std::cout << s.first[0] << std::endl;
+            dataSets_.insert({{}, DataSetMap()});
         }
+    }
+
+    std::string DataContainer::makeSubCategoryStr(const SubCategory &categoryId)
+    {
+        std::ostringstream errorStr;
+
+        for (const auto& subCategory: categoryId)
+        {
+            errorStr << subCategory << "_";
+        }
+
+        return errorStr.str();
     }
 }  // namespace Ingester

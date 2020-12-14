@@ -32,7 +32,7 @@ namespace Ingester
 
         std::map<Categories, ioda::ObsGroup> obsGroups;
 
-        for (const auto& categories : dataContainer->getAllCategories())
+        for (const auto& categories : dataContainer->allSubCategories())
         {
             //Make the filename string
             if (description_.getBackend() == ioda::Engines::BackendNames::Hdf5File)
@@ -79,11 +79,11 @@ namespace Ingester
 
                     if (token == "ncols")
                     {
-                        size = dataContainer->get(categories, varName)->ncols();
+                        size = dataContainer->get(varName, categories)->ncols();
                     }
                     else if (token == "nrows")
                     {
-                        size = dataContainer->get(categories, varName)->nrows();
+                        size = dataContainer->get(varName, categories)->nrows();
                     }
                     else
                     {
@@ -125,7 +125,7 @@ namespace Ingester
                     dimensions.push_back(scaleMap.at(scaleStr));
                 }
 
-                auto data = dataContainer->get(categories, varDesc.source);
+                auto data = dataContainer->get(varDesc.source, categories);
                 auto var = data->createVariable(obsGroup,
                                                 varDesc.name,
                                                 dimensions,

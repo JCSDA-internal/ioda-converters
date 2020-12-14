@@ -112,9 +112,9 @@ namespace Ingester
                 std::ostringstream pathStr;
                 pathStr << "variable/" << varPair.first;
 
-                exportData->add(dataPair.first,
-                                pathStr.str(),
-                                varPair.second->exportData(dataPair.second));
+                exportData->add(pathStr.str(),
+                                varPair.second->exportData(dataPair.second),
+                                dataPair.first);
             }
         }
 

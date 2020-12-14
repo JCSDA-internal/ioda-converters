@@ -20,8 +20,9 @@
 
 namespace Ingester
 {
-    /// List of possible categories
+    /// List of possible categories (for splitting data)
     typedef std::vector<std::string> Categories;
+    typedef std::vector<std::string> SubCategory;
 
     /// Map of data set id's to vector of possible value strings
     typedef std::map<std::string, Categories> CategoryMap;
@@ -37,32 +38,30 @@ namespace Ingester
     class DataContainer
     {
      public:
-        DataContainer(const CategoryMap& categoryMap);
+        DataContainer();
+        explicit DataContainer(const CategoryMap& categoryMap);
 
         /// \brief Add a DataObject to the collection
         /// \param fieldName The unique (export) string that identifies this data
         /// \param data The DataObject to store
-        void add(const Categories& categoryId,
-                 const std::string& fieldName,
-                 std::shared_ptr<DataObject> data);
+        void add(const std::string& fieldName,
+                 std::shared_ptr<DataObject> data,
+                 const SubCategory& categoryId = {});
 
         /// \brief Get a DataObject from the collection
         /// \param fieldName The name of the data object ot get
-        std::shared_ptr<DataObject> get(const Categories& categoryId,
-                                        const std::string& fieldName) const;
+        std::shared_ptr<DataObject> get(const std::string& fieldName,
+                                        const SubCategory& categoryId = {}) const;
 
         /// \brief Check if DataObject with name is available
         /// \param fieldName The name of the object
-        bool hasKey(const Categories& categoryId,
-                    const std::string& fieldName) const;
+        bool hasKey(const std::string& fieldName,
+                    const SubCategory& categoryId = {}) const;
 
         // Getters
-        inline size_t size(const Categories& categoryId) const
-        {
-            return  dataSets_.at(categoryId).begin()->second->nrows();
-        }
+        size_t size(const SubCategory& categoryId = {}) const;
 
-        inline std::vector<Categories> getAllCategories()
+        inline std::vector<SubCategory> allSubCategories()
         {
             std::vector<Categories> allCategories;
 
@@ -74,15 +73,13 @@ namespace Ingester
             return allCategories;
         };
 
-        inline std::vector<std::vector<size_t>> getCategoryIdxs() { return categoryIdxs_; }
-
         inline CategoryMap getCategoryMap() { return categoryMap_; }
 
      private:
         const CategoryMap categoryMap_;
-        std::vector<std::vector<size_t>> categoryIdxs_;
         DataSets dataSets_;
 
         void makeDataSets();
+        static std::string makeSubCategoryStr(const SubCategory& categoryId) ;
     };
 }  // namespace Ingester
