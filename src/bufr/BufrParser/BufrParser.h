@@ -54,7 +54,10 @@ namespace Ingester
         /// \brief Exports collected data into a DataContainer
         std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
 
-
+        /// \brief Function responsible for splitting the data into the categories. This function gets called over and
+        ///        over for each split speciefied, sub-splitting the data given.
+        /// \param splitMaps Pre-split map of data.
+        /// \param split Object that knows how to split data.
         CatDataMap splitData(CatDataMap& splitMaps, Split& split);
 
         /// \brief Opens a BUFR file using the Fortran BUFR interface.
@@ -63,7 +66,7 @@ namespace Ingester
         /// \brief Closes the open BUFR file.
         void closeBufrFile();
 
-
+        /// \brief Convenience method to print the Categorical data map to stdout.
         void printMap(const CatDataMap& map);
 
     };

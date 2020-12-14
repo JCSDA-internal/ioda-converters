@@ -25,12 +25,12 @@ namespace Ingester
     {
     }
 
-    std::map<Categories, ioda::ObsGroup>
+    std::map<SubCategory, ioda::ObsGroup>
         IodaEncoder::encode(const std::shared_ptr<DataContainer>& dataContainer, bool append)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
 
-        std::map<Categories, ioda::ObsGroup> obsGroups;
+        std::map<SubCategory, ioda::ObsGroup> obsGroups;
 
         for (const auto& categories : dataContainer->allSubCategories())
         {
@@ -154,38 +154,6 @@ namespace Ingester
         return obsGroups;
     }
 
-    std::vector<std::pair<std::string, std::pair<int, int>>>
-        IodaEncoder::findSubIdxs(const std::string& str)
-    {
-        std::vector<std::pair<std::string, std::pair<int, int>>>  result;
-
-        auto startPos = 0;
-        auto endPos = 0;
-
-        while (startPos < str.size())
-        {
-            startPos = str.find("{", startPos+1);
-
-            if (startPos < str.size())
-            {
-                endPos = str.find("}", startPos+1);
-
-                if (endPos < str.size())
-                {
-                    result.push_back({str.substr(startPos + 1, endPos - startPos - 1),
-                                      {startPos, endPos}});
-                    startPos = endPos;
-                }
-                else
-                {
-                    throw eckit::BadParameter("Unmatched { found in output filename.");
-                }
-            }
-        }
-
-        return result;
-    }
-
     std::string IodaEncoder::makeStrWithSubstitions(const std::string& prototype,
                                                    const std::map<std::string, std::string>& subMap)
     {
@@ -217,6 +185,38 @@ namespace Ingester
         }
 
         return resultStr;
+    }
+
+    std::vector<std::pair<std::string, std::pair<int, int>>>
+    IodaEncoder::findSubIdxs(const std::string& str)
+    {
+        std::vector<std::pair<std::string, std::pair<int, int>>>  result;
+
+        auto startPos = 0;
+        auto endPos = 0;
+
+        while (startPos < str.size())
+        {
+            startPos = str.find("{", startPos+1);
+
+            if (startPos < str.size())
+            {
+                endPos = str.find("}", startPos+1);
+
+                if (endPos < str.size())
+                {
+                    result.push_back({str.substr(startPos + 1, endPos - startPos - 1),
+                                      {startPos, endPos}});
+                    startPos = endPos;
+                }
+                else
+                {
+                    throw eckit::BadParameter("Unmatched { found in output filename.");
+                }
+            }
+        }
+
+        return result;
     }
 
 }  // namespace Ingester

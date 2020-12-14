@@ -12,6 +12,9 @@
 #include <vector>
 
 
+/// Collection of template methods that are used to slice array and vector data.
+
+/// \brief Slice eigen array using indicies of eigen arrays.
 template<class EigenType, class EigenIdxType>
 EigenType rowSlice(const EigenType& arr, const EigenIdxType& idxVec)
 {
@@ -25,6 +28,7 @@ EigenType rowSlice(const EigenType& arr, const EigenIdxType& idxVec)
     return result;
 }
 
+/// \brief Slice eigen array using std::vector of indicies.
 template<class EigenType, typename IdxType>
 EigenType rowSlice(const EigenType& arr, const std::vector<IdxType>& idxVec)
 {
@@ -38,6 +42,7 @@ EigenType rowSlice(const EigenType& arr, const std::vector<IdxType>& idxVec)
     return result;
 }
 
+/// \brief Slice string vector using indicies of eigen arrays.
 template<class EigenIdxType>
 std::vector<std::string> rowSlice(const std::vector<std::string>& arr,
                                   const EigenIdxType& idxVec)
@@ -53,6 +58,7 @@ std::vector<std::string> rowSlice(const std::vector<std::string>& arr,
     return result;
 }
 
+/// \brief Slice string vector using std::vector of indicies.
 template<typename IdxType>
 std::vector<std::string> rowSlice(const std::vector<std::string>& arr,
                                   const std::vector<IdxType>& idxVec)

@@ -37,7 +37,8 @@ namespace Ingester
         if (hasKey(fieldName, categoryId))
         {
             std::ostringstream errorStr;
-            errorStr << "ERROR: Field called " << fieldName << " already exists.";
+            errorStr << "ERROR: Field called " << fieldName << " already exists ";
+            errorStr << "for subcategory " << makeSubCategoryStr(categoryId) << std::endl;
             throw eckit::BadParameter(errorStr.str());
         }
 
@@ -85,6 +86,18 @@ namespace Ingester
         }
 
         return  dataSets_.at(categoryId).begin()->second->nrows();
+    }
+
+    std::vector<SubCategory> DataContainer::allSubCategories() const
+    {
+        std::vector<SubCategory> allCategories;
+
+        for (const auto &dataSetPair : dataSets_)
+        {
+            allCategories.push_back(dataSetPair.first);
+        }
+
+        return allCategories;
     }
 
     void DataContainer::makeDataSets()
@@ -140,13 +153,20 @@ namespace Ingester
 
     std::string DataContainer::makeSubCategoryStr(const SubCategory &categoryId)
     {
-        std::ostringstream errorStr;
+        std::ostringstream catStr;
 
-        for (const auto& subCategory: categoryId)
+        if (!categoryId.empty())
         {
-            errorStr << subCategory << "_";
+            for (const auto &subCategory: categoryId)
+            {
+                catStr << subCategory << "_";
+            }
+        }
+        else
+        {
+            catStr << "__MAIN__";
         }
 
-        return errorStr.str();
+        return catStr.str();
     }
 }  // namespace Ingester

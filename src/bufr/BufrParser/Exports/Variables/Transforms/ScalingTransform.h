@@ -12,12 +12,17 @@
 
 namespace Ingester
 {
+    /// \brief Transforms data by multiplying it by a scaling factor.
     class ScalingTransform : public Transform
     {
      public:
-        explicit ScalingTransform(const double scaling_);
+        /// \brief Constructor
+        /// \param scaling Value to multiply by.
+        explicit ScalingTransform(const double scaling);
         ~ScalingTransform() = default;
 
+        /// \brief Modify data according to the rules of the transform.
+        /// \param array Array of data to modify.
         void apply(IngesterArray& array) override;
 
      private:
