@@ -60,12 +60,12 @@ namespace Ingester
 {
     Export::Export(const eckit::Configuration &conf)
     {
-        if (conf.has(ConfKeys::Filters)) // Optional
+        if (conf.has(ConfKeys::Filters))  // Optional
         {
             addFilters(conf.getSubConfiguration(ConfKeys::Filters));
         }
 
-        if (conf.has(ConfKeys::Splits)) // Optional
+        if (conf.has(ConfKeys::Splits))  // Optional
         {
             addSplits(conf.getSubConfiguration(ConfKeys::Splits));
         }

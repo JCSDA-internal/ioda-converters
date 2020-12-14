@@ -45,7 +45,7 @@ namespace Ingester
 
         if (validRows.size() != static_cast<size_t>(array.rows()))
         {
-            for (const auto& dataPair: dataMap)
+            for (const auto& dataPair : dataMap)
             {
                 dataMap[dataPair.first] = rowSlice(dataPair.second, validRows);
             }

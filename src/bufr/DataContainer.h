@@ -41,10 +41,11 @@ namespace Ingester
         DataContainer();
 
         /// \brief Construct to create container with subcategories.
-        /// \details constructor that creates a underlying data structure to store data in separate sub categories
-        ///          defined by combining all possible combinations of categories defined in the category map.
-        /// \param categoryMap map of major category types ex: "SatId" to the possible sub types for the category type
-        ///        ex: {"GEOS-15", "GEOS-16", "GEOS-17"}.
+        /// \details constructor that creates a underlying data structure to store data in separate
+        ///          sub categories defined by combining all possible combinations of categories
+        ///          defined in the category map.
+        /// \param categoryMap map of major category types ex: "SatId" to the possible sub types
+        ///        for the category type ex: {"GEOS-15", "GEOS-16", "GEOS-17"}.
         explicit DataContainer(const CategoryMap& categoryMap);
 
         /// \brief Add a DataObject to the collection
@@ -89,6 +90,6 @@ namespace Ingester
 
         /// \brief Convenience function used to make a string out of a subcategory listing.
         /// \param categoryId Subcategory (ie: vector<string>) listing.
-        static std::string makeSubCategoryStr(const SubCategory& categoryId) ;
+        static std::string makeSubCategoryStr(const SubCategory& categoryId);
     };
 }  // namespace Ingester

@@ -73,7 +73,6 @@ namespace Ingester
 
     std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& dataData)
     {
-
         auto exportDescription = description_.getExport();
 
         auto filters = exportDescription.getFilters();
@@ -82,7 +81,7 @@ namespace Ingester
 
         std::cout << "size: " << dataData.at("TMBR").rows() << std::endl;
 
-        auto srcData = dataData; //make mutable copy
+        auto srcData = dataData;  // make mutable copy
         for (const auto& filter : filters)
         {
             filter->apply(srcData);

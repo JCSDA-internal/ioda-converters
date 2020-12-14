@@ -38,8 +38,8 @@ namespace Ingester
         const IodaDescription description_;
 
         /// \brief Create a string from a template string.
-        /// \param prototype A template string ex: "my {dogType} barks". Sections labeled {__key__} are treated
-        ///        as keys into the dictionary that defines their replacment values.
+        /// \param prototype A template string ex: "my {dogType} barks". Sections labeled {__key__}
+        ///        are treated as keys into the dictionary that defines their replacment values.
         std::string makeStrWithSubstitions(const std::string& prototype,
                                            const std::map<std::string, std::string>& subMap);
 

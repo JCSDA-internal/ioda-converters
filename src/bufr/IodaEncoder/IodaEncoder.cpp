@@ -34,7 +34,7 @@ namespace Ingester
 
         for (const auto& categories : dataContainer->allSubCategories())
         {
-            //Make the filename string
+            // Make the filename string
             if (description_.getBackend() == ioda::Engines::BackendNames::Hdf5File)
             {
                 std::string filename = description_.getFilepath();

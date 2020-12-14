@@ -28,6 +28,6 @@ namespace Ingester
         /// \result map of split data where the category is the key
         virtual std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) = 0;
     };
-}  //namespace Ingester
+}  // namespace Ingester
 
 

@@ -19,7 +19,7 @@ namespace Ingester
     /// \brief Class that filters out data that is less than a given value.
     class LesserFilter : public Filter
     {
-    public:
+     public:
         /// \brief Constructor
         /// \param mnemonic BUFR Mnemonic to filter on
         /// \param value to compare against
@@ -29,7 +29,7 @@ namespace Ingester
         /// \param dataMap Map to modify by filtering out relevant data.
         void apply(BufrDataMap& dataMap) final;
 
-    private:
+     private:
         const std::string mnemonic_;
         const float value_;
     };

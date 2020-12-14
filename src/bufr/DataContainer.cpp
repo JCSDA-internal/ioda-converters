@@ -157,7 +157,7 @@ namespace Ingester
 
         if (!categoryId.empty())
         {
-            for (const auto &subCategory: categoryId)
+            for (const auto &subCategory : categoryId)
             {
                 catStr << subCategory << "_";
             }

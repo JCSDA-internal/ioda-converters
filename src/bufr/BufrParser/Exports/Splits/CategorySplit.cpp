@@ -41,7 +41,7 @@ namespace Ingester
 
         for (const auto& mapPair : nameMap_)
         {
-            //Find matching rows
+            // Find matching rows
             std::vector<size_t> indexVec;
             for (int rowIdx = 0;
                  rowIdx < static_cast<int>(dataMap.at(mnemonic_).rows());
@@ -53,7 +53,7 @@ namespace Ingester
                 }
             }
 
-            //Make new data map
+            // Make new data map
             BufrDataMap newDataMap;
             for (const auto& dataPair : dataMap)
             {
@@ -66,4 +66,4 @@ namespace Ingester
 
         return dataMaps;
     }
-}
+}  // namespace Ingester

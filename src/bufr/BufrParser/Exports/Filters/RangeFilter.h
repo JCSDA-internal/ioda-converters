@@ -21,7 +21,6 @@ namespace Ingester
     class RangeFilter : public Filter
     {
      public:
-
         /// \brief Constructor
         /// \param mnemonic BUFR Mnemonic to filter on
         /// \param extents Min and Max values acceptable
