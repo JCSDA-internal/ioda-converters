@@ -733,6 +733,7 @@ class Conv(BaseGSI):
                                 tmp[tmp > 4e4] = self.INT_FILL
                             else:
                                 tmp[tmp > 4e8] = self.FLOAT_FILL
+                                tmp[tmp < -9e9] = self.FLOAT_FILL
                             outdata[gvname] = tmp
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
