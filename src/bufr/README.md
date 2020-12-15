@@ -180,8 +180,8 @@ The `ioda` section defines the ObsGroup objects that will be created.
 * `obsdataout` required for “netcdf” backend. Should be a templated string for example: 
   **./testrun/gdas.t00z.1bhrs4.tm00.{splits/satId}.nc**. Substrings such as **{splits/satId}** are 
   replaced with the relevant split category ID for that file to form a unique name for every file.
-* `dimensions` used by variables
-    * `name` arbitrary name; “size” length of the dimension
+* `dimensions` used to define dimension information in variables
+    * `name` arbitrary name for the dimension
     * `size` can be either a integer or a reference to exported data ex: 
       **variables/radiance.nrows**
 * `variables` List of output variable objects to create.
