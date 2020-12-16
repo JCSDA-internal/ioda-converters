@@ -14,6 +14,34 @@ observations:
           channels : 1-5
 
       exports:
+        splits:
+          satId:
+           category:
+              mnemonic: SAID
+              map: #optional name mapping
+                _3: sat_1 #can't use integers as keys
+                _5: sat_2
+                _8: sat_3
+          minute:
+           category:
+             mnemonic: MINU
+             map: #optional name mapping
+               _5: 5
+               _6: 6
+               _7: 7
+               _8: 8
+
+        filters:
+          - lessThan:
+              mnemonic: CLAT
+              value: 42.5
+          - greaterThan:
+              mnemonic: CLAT
+              value: 35
+          - range:
+              mnemonic: CLON
+              extents: [-86.3, -68]
+
         variables:
           timestamp:
             datetime:
@@ -26,6 +54,8 @@ observations:
               isUTC: true
           longitude:
             mnemonic: CLON
+            transforms:
+              - offset: 0
           latitude:
             mnemonic: CLAT
           radiance:
@@ -33,7 +63,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{splits/satId}.min_{splits/minute}.nc"
 
       dimensions:
         - name: "nlocs"

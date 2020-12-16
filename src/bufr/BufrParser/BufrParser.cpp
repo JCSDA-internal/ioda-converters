@@ -109,7 +109,7 @@ namespace Ingester
             for (const auto& varPair : varMap)
             {
                 std::ostringstream pathStr;
-                pathStr << "variable/" << varPair.first;
+                pathStr << "variables/" << varPair.first;
 
                 exportData->add(pathStr.str(),
                                 varPair.second->exportData(dataPair.second),
