@@ -52,7 +52,7 @@ observations:
         - name: "nlocs"
           size: variables/radiance.nrows
         - name: "nchans"
-          size: variables/radiance.ncols
+          size: 5
 
       variables:
         - name: "datetime@MetaData"

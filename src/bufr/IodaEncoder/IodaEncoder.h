@@ -47,5 +47,7 @@ namespace Ingester
         /// \param str Template string to search.
         std::vector<std::pair<std::string, std::pair<int, int>>>
         findSubIdxs(const std::string& str);
+
+        bool isInteger(const std::string& str) const;
     };
 }  // namespace Ingester

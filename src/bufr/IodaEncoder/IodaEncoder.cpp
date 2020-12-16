@@ -8,7 +8,6 @@
 #include "IodaEncoder.h"
 
 #include <memory>
-#include <regex>
 
 #include "eckit/exception/Exceptions.h"
 
@@ -65,7 +64,7 @@ namespace Ingester
             for (const auto& scale : description_.getDims())
             {
                 std::size_t size = 0;
-                if (std::regex_match(scale.size, std::regex("[0-9]+")))
+                if (isInteger(scale.size))
                 {
                     size = std::stoi(scale.size);
                 }
@@ -187,8 +186,8 @@ namespace Ingester
     {
         std::vector<std::pair<std::string, std::pair<int, int>>>  result;
 
-        auto startPos = 0;
-        auto endPos = 0;
+        size_t startPos = 0;
+        size_t endPos = 0;
 
         while (startPos < str.size())
         {
@@ -213,5 +212,27 @@ namespace Ingester
 
         return result;
     }
+
+  bool IodaEncoder::isInteger(const std::string& str) const
+  {
+      bool isInt = true;
+      if (str.empty())
+      {
+          isInt = false;
+      }
+      else
+      {
+          for (auto it = str.begin(); it != str.end(); it++)
+          {
+              if (!std::isdigit(*it))
+              {
+                isInt = false;
+                break;
+              }
+          }
+      }
+
+      return isInt;
+  }
 
 }  // namespace Ingester
