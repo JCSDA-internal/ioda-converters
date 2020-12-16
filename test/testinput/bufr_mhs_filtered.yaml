@@ -67,26 +67,26 @@ observations:
 
       dimensions:
         - name: "nlocs"
-          size: "variable/radiance.nrows"
+          size: variables/radiance.nrows
         - name: "nchans"
           size: "variable/radiance.ncols"
 
       variables:
         - name: "datetime@MetaData"
-          source: "variable/timestamp"
+          source: variables/timestamp
           dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
-          source: "variable/latitude"
+          source: variables/latitude
           dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
-          source: "variable/longitude"
+          source: variables/longitude
           dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
@@ -94,7 +94,7 @@ observations:
 
         - name: "radiance@ObsValue"
           coordinates: "longitude latitude nchans"
-          source: "variable/radiance"
+          source: variables/radiance
           dimensions: ["nlocs", "nchans"]
           longName: "Radiance"
           units: "K"

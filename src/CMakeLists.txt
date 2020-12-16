@@ -15,7 +15,7 @@ else()
 endif()
 
 if( eckit_FOUND AND oops_FOUND AND ioda_engines_FOUND AND bufr_FOUND )
-    set(iodaconv_bufr_ENABLED True)
+    set(iodaconv_bufr_ENABLED TRUE CACHE INTERNAL "")
     message(STATUS "Found: eckit")
     message(STATUS "Found: oops")
     message(STATUS "Found: ioda_engines")
