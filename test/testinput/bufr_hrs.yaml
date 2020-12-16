@@ -26,21 +26,10 @@ observations:
               minute: MINU
               second: SECO
               isUTC: true
-
           longitude:
             mnemonic: CLON
-            transforms:
-              - offset: 0
-
-          scanangle:
-            mnemonic: BEARAZ
-            transforms:
-              - scale: 1.13
-              - offset: -48.90
-
           latitude:
             mnemonic: CLAT
-
           radiance:
             mnemonic: TMBR
 

@@ -18,14 +18,14 @@ observations:
           satId:
            category:
               mnemonic: SAID
-              map: #optional name mapping
+              map:
                 _3: sat_1 #can't use integers as keys
                 _5: sat_2
                 _8: sat_3
           minute:
            category:
              mnemonic: MINU
-             map: #optional name mapping
+             map:
                _5: 5
                _6: 6
                _7: 7
@@ -63,13 +63,13 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{splits/satId}.min_{splits/minute}.nc"
+      obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.{splits/satId}.min_{splits/minute}.nc"
 
       dimensions:
         - name: "nlocs"
           size: variables/radiance.nrows
         - name: "nchans"
-          size: "variable/radiance.ncols"
+          size: variables/radiance.ncols
 
       variables:
         - name: "datetime@MetaData"

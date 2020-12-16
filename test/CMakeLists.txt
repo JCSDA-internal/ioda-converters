@@ -76,12 +76,17 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
+    testinput/bufr_filtering.yaml
+    testinput/bufr_splitting.yaml
   )
 
   list( APPEND test_output
     testoutput/gdas.t18z.1bmhs.tm00.nc
     testoutput/gdas.t00z.1bhrs4.tm00.nc
+    testoutput/gdas.t18z.1bmhs.tm00.filtering.nc
+    testoutput/gdas.t18z.1bmhs.tm00.sat_1.min_6.nc
   )
+
 endif()
 
 # create test directories and make links to the input files
@@ -391,11 +396,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
 # Bufr Ingester tests
 #==============================================================================
 
-message("***************** Got HERE!" ${iodaconv_bufr_ENABLED})
-
 if(iodaconv_bufr_ENABLED)
-
-  message("!!!!!!!!!!!!!!!!!!!!!! Got HERE!")
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                     SOURCES bufr/TestBufrDescription.cpp
@@ -416,6 +417,22 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
                             gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_filtering
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_filtering.yaml"
+                            gdas.t18z.1bmhs.tm00.filtering.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_splitting
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_splitting.yaml"
+                            gdas.t18z.1bmhs.tm00.sat_1.min_6.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 endif()
