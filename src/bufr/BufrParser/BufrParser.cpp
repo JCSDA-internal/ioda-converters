@@ -79,8 +79,6 @@ namespace Ingester
         auto splitMap = exportDescription.getSplits();
         auto varMap = exportDescription.getVariables();
 
-        std::cout << "size: " << dataData.at("TMBR").rows() << std::endl;
-
         auto srcData = dataData;  // make mutable copy
         for (const auto& filter : filters)
         {

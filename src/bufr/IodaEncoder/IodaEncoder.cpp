@@ -164,11 +164,6 @@ namespace Ingester
 
         for (const auto& subs : subIdxs)
         {
-            for (const auto& m : subMap)
-            {
-                std::cout << m.first << std::endl;
-            }
-
             if (subMap.find(subs.first) != subMap.end())
             {
                 auto repIdxs = subs.second;
