@@ -111,9 +111,9 @@ ioda encoder. It has the following sections:
   * **values** Type of split to apply (currently supports `category`)
     * `category` Splits data based on values assocatied with a BUFR mnemonic. Constists of:
       * `mnemonic` The mnemonic to use.
-      * `map` Associates integer values in BUFR mnemonic data to a string. Please not that integer
-        keys must be prepended with an `_` (ex: `_2`). Rows where where the mnemonic value is not 
-        defined in the map will be rejected (won't appear in output).
+      * _(optional)_ `map` Associates integer values in BUFR mnemonic data to a string. Please not 
+        that integer keys must be prepended with an `_` (ex: `_2`). Rows where where the mnemonic 
+        value is not defined in the map will be rejected (won't appear in output).
   
 
 * _(optional)_ `filters`List of filters to apply to the data before exporting. Filters exclude data
@@ -176,7 +176,7 @@ ioda encoder. It has the following sections:
 
 The `ioda` section defines the ObsGroup objects that will be created. 
 
-* `backend` can be “inmemory” or “netcdf”.
+* `backend` can be `inmemory` or `netcdf`.
 * `obsdataout` required for “netcdf” backend. Should be a templated string for example: 
   **./testrun/gdas.t00z.1bhrs4.tm00.{splits/satId}.nc**. Substrings such as **{splits/satId}** are 
   replaced with the relevant split category ID for that file to form a unique name for every file.

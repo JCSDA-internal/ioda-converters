@@ -22,8 +22,10 @@ namespace Ingester
     {
     }
 
-    std::vector<std::string> CategorySplit::subCategories()
+    std::vector<std::string> CategorySplit::subCategories(const BufrDataMap& dataMap)
     {
+        updateNameMap(dataMap);
+
         std::vector<std::string> categories;
         for (const auto& name : nameMap_)
         {
@@ -35,6 +37,8 @@ namespace Ingester
 
     std::map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
     {
+        updateNameMap(dataMap);
+
         std::map<std::string, BufrDataMap> dataMaps;
 
         const IngesterArray& mnemonicArr = dataMap.at(mnemonic_);
@@ -47,7 +51,7 @@ namespace Ingester
                  rowIdx < static_cast<int>(dataMap.at(mnemonic_).rows());
                  rowIdx++)
             {
-                if (abs(mnemonicArr.row(rowIdx)[0] - static_cast<float>(mapPair.first)) < .0001)
+                if (mnemonicArr.row(rowIdx)[0] == mapPair.first)
                 {
                     indexVec.push_back(rowIdx);
                 }
@@ -65,5 +69,36 @@ namespace Ingester
         }
 
         return dataMaps;
+    }
+
+    void CategorySplit::updateNameMap(const BufrDataMap& dataMap)
+    {
+        if (nameMap_.empty())
+        {
+            auto& array = dataMap.at(mnemonic_);
+            for (auto rowIdx = 0; rowIdx < array.rows(); rowIdx++)
+            {
+                auto itemVal =  array.row(rowIdx)[0];
+                if (trunc(itemVal) == itemVal)
+                {
+                    nameMap_.insert({static_cast<int> (itemVal),
+                                     std::to_string(static_cast<int> (itemVal))});
+                }
+                else
+                {
+                    std::stringstream errStr;
+                    errStr << "Can't turn " << mnemonic_  << " into a category as it contains ";
+                    errStr << "non-integer values.";
+                    throw eckit::BadParameter(errStr.str());
+                }
+            }
+        }
+
+        if (nameMap_.empty())
+        {
+            std::stringstream errStr;
+            errStr << "No categories could be identified for " << mnemonic_ << ".";
+            throw eckit::BadParameter(errStr.str());
+        }
     }
 }  // namespace Ingester

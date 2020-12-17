@@ -22,7 +22,7 @@ namespace Ingester
      public:
         /// \brief Map of integers to strings where the key represents the split mnemonics integer
         ///        value and the value is a human readable name for the key.
-        typedef  std::map<size_t, std::string> NameMap;
+        typedef  std::map<int, std::string> NameMap;
 
         /// \brief constructor
         /// \param mnemonic BUFR mnemonic to base the split on.
@@ -30,7 +30,8 @@ namespace Ingester
         CategorySplit(const std::string& mnemonic, const NameMap& map);
 
         /// \brief Get list of sub categories this split will create
-        std::vector<std::string> subCategories() final;
+        /// \result Set of unique strings.
+        std::vector<std::string> subCategories(const BufrDataMap& dataMap) final;
 
         /// \brief Split the data according to internal rules
         /// \param dataMap Data to be split
@@ -41,8 +42,12 @@ namespace Ingester
         inline std::string getMnemonic() { return mnemonic_; }
 
      private:
-        const NameMap nameMap_;
+        NameMap nameMap_;
         const std::string mnemonic_;
+
+        /// \brief Adds values to nameMap_ using the data if nameMap_ is empty.
+        /// \param dataMap Data to be split
+        void updateNameMap(const BufrDataMap& dataMap);
     };
 }  // namespace Ingester
 

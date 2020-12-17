@@ -20,8 +20,10 @@ namespace Ingester
      public:
         Split() = default;
 
-        /// \brief Get list of sub categories this split will create
-        virtual std::vector<std::string> subCategories() = 0;
+        /// \brief Get set of sub categories this split will create
+        /// \param dataMap The data we will split on.
+        /// \result set of unique strings
+        virtual std::vector<std::string> subCategories(const BufrDataMap& dataMap) = 0;
 
         /// \brief Split the data according to internal rules
         /// \param dataMap Data to be split
