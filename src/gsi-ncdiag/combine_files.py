@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# combine_conv.py
-# combine conventional obs from IODA format into
+# combine_files.py
+# combine conventional obs and GOESIR (currently ahi_himawari8) from IODA format into
 # one output file with matching corresponding locations
 # and missing data where applicable
 
@@ -79,6 +79,16 @@ def concat_ioda(FileList, OutFile, GeoDir):
                 elif vs[1] == 'VarMetaData' and key not in VarMetaVars and vs[0] not in ['variable_names']:
                     VarMetaVars.append(key)
         ncf.close()
+
+    # determine the obstype. If the obstype is a GOESIR type, also get the sensor name and the satellite name
+    # an example is: inob="ahi_himawari8_obs_2018041500.nc4", obstype="ahi_himawari8", sensor="ahi"
+    # satellite="himawari8"
+    inob = f.split('/')[-1]
+    obstype = inob[:inob.rfind("obs")-1]
+    if obstype == "ahi_himawari8":
+        sensor = obstype.split('_')[0]
+        satellite = obstype.split('_')[-1]
+
     # determine which metadata is in all files
     for v in MetaVars:
         MetaInAll[v] = True
@@ -145,7 +155,8 @@ def concat_ioda(FileList, OutFile, GeoDir):
         DataVarUnique[ii, inv[mask]] = DataVarData[ii, mask]
 
     # set up things for the Ncwriter
-    ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
+    if obstype != "ahi_himawari8":
+        ridx = np.argwhere(np.array(MetaVars) == 'record_number@MetaData')[0][0]
     nlocs = MetaVarUnique.shape[-1]
     writer = iconv.NcWriter(OutFile, LocKeyList)
     var_mdata['variable_names'] = writer.FillNcVector(DataVarNames, "string")
@@ -177,6 +188,10 @@ def concat_ioda(FileList, OutFile, GeoDir):
         if DataVType[idx3] == 'int32':
             tmp[tmp < -1e5] = nc.default_fillvals['i4']
         outdata[tuple(vname.split('@'))] = tmp
+    if obstype == "ahi_himawari8":
+        var_mdata['sensor_channel'] = np.asarray(list(range(7, 17)))
+        AttrData["satellite"] = satellite
+        AttrData["sensor"] = sensor
     writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, VarUnits)
 
     # now write out combined GeoVaLs file
@@ -293,7 +308,7 @@ def concat_ioda(FileList, OutFile, GeoDir):
 ######################################################
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Combine conventional obs in IODA format into one output file',
+        description='Combine conventional obs and GOESIR (currently ahi_himawari8) in IODA format into one output file',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='list of the input files to combine',
