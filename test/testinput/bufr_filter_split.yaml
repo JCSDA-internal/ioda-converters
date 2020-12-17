@@ -14,6 +14,17 @@ observations:
           channels : 1-5
 
       exports:
+        filters:
+          - lessThan:
+              mnemonic: CLAT
+              value: 42.5
+          - greaterThan:
+              mnemonic: CLAT
+              value: 35
+          - range:
+              mnemonic: CLON
+              extents: [ -86.3, -68 ]
+
         splits:
           hour:
            category:
@@ -21,10 +32,6 @@ observations:
           minute:
             category:
               mnemonic: MINU
-              map: # Optional
-                _5: five #can't use integers as keys so underscore
-                _6: six
-                _7: seven
 
         variables:
           timestamp:
@@ -47,7 +54,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.{splits/hour}.{splits/minute}.split.nc"
+      obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.{splits/hour}.{splits/minute}.filter_split.nc"
 
       dimensions:
         - name: "nlocs"

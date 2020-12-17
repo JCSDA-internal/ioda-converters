@@ -78,13 +78,15 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
+    testinput/bufr_filter_split.yaml
   )
 
   list( APPEND test_output
     testoutput/gdas.t18z.1bmhs.tm00.nc
     testoutput/gdas.t00z.1bhrs4.tm00.nc
     testoutput/gdas.t18z.1bmhs.tm00.filtering.nc
-    testoutput/gdas.t18z.1bmhs.tm00.sat_1.min_6.nc
+    testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
+    testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
   )
 
 endif()
@@ -432,7 +434,15 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_splitting.yaml"
-                            gdas.t18z.1bmhs.tm00.sat_1.min_6.nc ${IODA_CONV_COMP_TOL_ZERO}
+                            gdas.t18z.1bmhs.tm00.15.seven.split.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_filter_split
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_filter_split.yaml"
+                            gdas.t18z.1bmhs.tm00.15.7.filter_split.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 endif()
