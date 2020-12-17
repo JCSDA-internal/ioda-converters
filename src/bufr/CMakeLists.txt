@@ -3,42 +3,17 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-
-list(APPEND _ioda_encoder_srcs
-        IngesterTypes.h
-        DataContainer.h
-        DataContainer.cpp
-        Parser.h
-        ParserFactory.h
-        DataObject/DataObject.h
-        DataObject/StrVecDataObject.h
-        DataObject/StrVecDataObject.cpp
-        DataObject/ArrayDataObject.h
-        DataObject/ArrayDataObject.cpp
-        IodaEncoder/IodaEncoder.cpp
-        IodaEncoder/IodaEncoder.h
-        IodaEncoder/IodaDescription.cpp
-        IodaEncoder/IodaDescription.h
-        )
-
-list (APPEND _ioda_encoder_deps
-  Eigen3::Eigen
-  eckit
-  ${oops_LIBRARIES}
-  ioda_engines
-)
-
-ecbuild_add_library( TARGET   ioda_encoder
-                     SOURCES  ${_ioda_encoder_srcs}
-                     LIBS     ${_ioda_encoder_deps}
-                     INSTALL_HEADERS LISTED
-                     HEADER_DESTINATION ${INSTALL_INCLUDEDIR}/ioda-encoder
-                     LINKER_LANGUAGE CXX )
-
-add_library( ${PROJECT_NAME}::ioda_encoder ALIAS ioda_encoder )
-
-
-list(APPEND _bufr_parser_srcs
+list(APPEND _ingester_srcs
+  IngesterTypes.h
+  DataContainer.h
+  DataContainer.cpp
+  Parser.h
+  ParserFactory.h
+  DataObject/DataObject.h
+  DataObject/StrVecDataObject.h
+  DataObject/StrVecDataObject.cpp
+  DataObject/ArrayDataObject.h
+  DataObject/ArrayDataObject.cpp
   BufrParser/BufrParser.h
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h
@@ -81,28 +56,33 @@ list(APPEND _bufr_parser_srcs
   BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
   BufrParser/Exports/Variables/Transforms/TransformBuilder.h
   BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
+  IodaEncoder/IodaEncoder.cpp
+  IodaEncoder/IodaEncoder.h
+  IodaEncoder/IodaDescription.cpp
+  IodaEncoder/IodaDescription.h
 )
 
-list(APPEND _bufr_parser_deps
+list(APPEND _ingester_deps
   Eigen3::Eigen
   eckit
   ${oops_LIBRARIES}
+  ioda_engines
   bufr::bufr_4_DA
-  ${PROJECT_NAME}::ioda_encoder
 )
 
-ecbuild_add_library( TARGET   bufr_parser
-                     SOURCES  ${_bufr_parser_srcs}
-                     LIBS     ${_bufr_parser_deps}
+ecbuild_add_library( TARGET   ingester
+                     SOURCES  ${_ingester_srcs}
+                     LIBS     ${_ingester_deps}
                      INSTALL_HEADERS LISTED
                      HEADER_DESTINATION ${INSTALL_INCLUDEDIR}/bufr
-                     LINKER_LANGUAGE CXX )
+                     LINKER_LANGUAGE CXX
+                    )
 
-add_library( ${PROJECT_NAME}::bufr_parser ALIAS bufr_parser )
+add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 
 ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp
-                        LIBS    ${PROJECT_NAME}::bufr_parser )
+                        LIBS    ingester )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                   TYPE    SCRIPT

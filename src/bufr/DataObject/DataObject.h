@@ -36,7 +36,10 @@ namespace Ingester
         /// \brief Print data to stdout for debug purposes.
         virtual void print() const = 0;
 
+        /// \brief Get number of columns represented in the data.
         virtual size_t ncols() const = 0;
+
+        /// \brief Get number of rows represented in the data.
         virtual size_t nrows() const = 0;
     };
 }  // namespace Ingester
