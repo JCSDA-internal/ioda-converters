@@ -31,7 +31,6 @@ list( APPEND fix
   fix/ghcn-stations.txt
 )
 
-
 # create doc directories and make links to the doc fix files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bufr_obs_samples)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bufr_table_samples)
@@ -41,11 +40,3 @@ foreach(FILENAME ${bufr_obs_samples} ${bufr_table_samples} ${fix})
            ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
 endforeach(FILENAME)
-
-list( APPEND all_files
-  ${fix}
-  ${bufr_obs_samples}
-  ${bufr_table_samples}
-)
-
-install( FILES ${all_files} DESTINATION doc )
