@@ -42,10 +42,4 @@ foreach(FILENAME ${bufr_obs_samples} ${bufr_table_samples} ${fix})
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
 endforeach(FILENAME)
 
-list( APPEND all_files
-  ${fix}
-  ${bufr_obs_samples}
-  ${bufr_table_samples}
-)
-
-install( FILES ${all_files} DESTINATION doc )
+install( DIRECTORY fix bufr_obs_samples bufr_table_samples DESTINATION doc )
