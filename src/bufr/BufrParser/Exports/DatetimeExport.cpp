@@ -9,6 +9,8 @@
 #include <ostream>
 #include <iomanip>
 
+#include "eckit/exception/Exceptions.h"
+
 #include "DatetimeExport.h"
 
 
@@ -42,8 +44,9 @@ namespace Ingester
 
     std::shared_ptr<DataObject> DatetimeExport::exportData(const BufrDataMap& map)
     {
-        auto datetimes = std::vector<std::string>();
+        checkKeys(map);
 
+        auto datetimes = std::vector<std::string>();
         datetimes.reserve(map.at(yearKey_).size());
         for (unsigned int idx = 0; idx < map.at(yearKey_).size(); idx++)
         {
@@ -66,5 +69,31 @@ namespace Ingester
         }
 
         return std::make_shared<StrVecDataObject>(datetimes);
+    }
+
+    void DatetimeExport::checkKeys(const BufrDataMap& map)
+    {
+        std::stringstream errStr;
+        errStr << "Mnemonic ";
+
+        auto requiredKeys = {yearKey_, monthKey_, dayKey_, hourKey_, minuteKey_, secondKey_};
+
+        bool isKeyMissing = false;
+        for (auto key : requiredKeys)
+        {
+            if (map.find(key) == map.end())
+            {
+                isKeyMissing = true;
+                errStr << key;
+                break;
+            }
+        }
+
+        errStr << " couldn't be found during export of datetime object.";
+
+        if (isKeyMissing)
+        {
+            throw eckit::BadParameter(errStr.str());
+        }
     }
 }  // namespace Ingester

@@ -52,5 +52,8 @@ namespace Ingester
 
         /// \brief Is it UTC time or not
         const bool isUTC_;
+
+        /// \brief Checks if the input keys are valid. Throws error if not.
+        void checkKeys(const BufrDataMap& map);
     };
 }  // namespace Ingester

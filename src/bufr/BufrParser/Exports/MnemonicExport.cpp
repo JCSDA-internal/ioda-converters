@@ -7,6 +7,10 @@
 
 #include "MnemonicExport.h"
 
+#include <ostream>
+
+#include "eckit/exception/Exceptions.h"
+
 #include "IngesterTypes.h"
 
 
@@ -20,6 +24,15 @@ namespace Ingester
 
     std::shared_ptr<DataObject> MnemonicExport::exportData(const BufrDataMap& map)
     {
+        if (map.find(mnemonic_) == map.end())
+        {
+            std::stringstream errStr;
+            errStr << "Mnemonic " << mnemonic_;
+            errStr << " couldn't be found during export.";
+
+            eckit::BadParameter(errStr.str());
+        }
+
         auto data = map.at(mnemonic_);
         applyTransforms(data);
         return std::make_shared<ArrayDataObject>(data);
