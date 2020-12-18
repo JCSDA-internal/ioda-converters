@@ -1,11 +1,11 @@
 list(APPEND libs
   gsi_ncdiag.py
-  combine_conv.py)
+  combine_files.py)
 
 list( APPEND programs
   proc_gsi_ncdiag.py
   test_gsidiag.py
-  combine_conv.py
+  combine_files.py
   subset_files.py)
 
 set_targets_deps( "${libs}"
