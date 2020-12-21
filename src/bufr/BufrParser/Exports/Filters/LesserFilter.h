@@ -16,7 +16,8 @@
 
 namespace Ingester
 {
-    /// \brief Class that filters out data that is less than a given value.
+    /// \brief Throws away data associated with a mnemonic where the mnemonic value is greater
+    ///        than a given value value. Keeps data that is equal to or less than the given value.
     class LesserFilter : public Filter
     {
      public:

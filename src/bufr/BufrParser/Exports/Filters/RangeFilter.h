@@ -17,7 +17,8 @@
 
 namespace Ingester
 {
-    /// \brief Class that filters data accepting data who's value is between given extents
+    /// \brief Class that filters data accepting data who's value is between (or equal too) given
+    ///        extents.
     class RangeFilter : public Filter
     {
      public:

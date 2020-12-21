@@ -54,9 +54,9 @@ namespace Ingester
         /// \brief Exports collected data into a DataContainer
         std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
 
-        /// \brief Function responsible for splitting the data into the categories. This function
-        ///        gets called over and over for each split speciefied, sub-splitting the data
-        ///        given.
+        /// \brief Function responsible for dividing the data into subcategories.
+        /// \details This function is intended to be called over and over for each specified Split
+        ///          object, sub-splitting the data given into all the possible subcategories.
         /// \param splitMaps Pre-split map of data.
         /// \param split Object that knows how to split data.
         CatDataMap splitData(CatDataMap& splitMaps, Split& split);
