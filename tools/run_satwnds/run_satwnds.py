@@ -22,8 +22,10 @@ NEW_SUBSET_PATTERN = r'NC0050[39]'
 
 # Define template file paths
 EXE_DIR = pathlib.Path(__file__).parent.absolute()
-OLD_SUBSET_TEMPLATE_PATH = os.path.join(EXE_DIR, 'old_subset_template.yaml')
-NEW_SUBSET_TEMPLATE_PATH = os.path.join(EXE_DIR, 'new_subset_template.yaml')
+OLD_SUBSET_TEMPLATE_PATH = os.path.join(EXE_DIR,
+                                        'satwnds_old_subset_template.yaml')
+NEW_SUBSET_TEMPLATE_PATH = os.path.join(EXE_DIR,
+                                        'satwnds_new_subset_template.yaml')
 
 
 def _make_file_from_template(template_path, replacements, output_path):
