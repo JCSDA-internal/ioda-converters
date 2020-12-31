@@ -125,7 +125,7 @@ namespace Ingester
                     auto dimVar = scaleMap.at(varDesc.dimensions[dimIdx]);
                     dimensions.push_back(dimVar);
 
-                    if (varDesc.chunks.size() - 1 > dimIdx)
+                    if (dimIdx < varDesc.chunks.size())
                     {
                         chunks.push_back(std::min(dimVar.getChunkSizes()[0],
                                                   varDesc.chunks[dimIdx]));
