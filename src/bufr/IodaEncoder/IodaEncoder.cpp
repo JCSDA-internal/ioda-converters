@@ -95,7 +95,7 @@ namespace Ingester
 
                 auto newDim = std::make_shared<ioda::NewDimensionScale<int>>(scale.name,
                                                                              size,
-                                                                             ioda::Unlimited,
+                                                                             size,
                                                                              size);
                 newDims.push_back(newDim);
 
@@ -118,17 +118,29 @@ namespace Ingester
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
+                std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
-                for (const auto& scaleStr : varDesc.dimensions)
+                for (size_t dimIdx = 0; dimIdx < varDesc.dimensions.size(); dimIdx++)
                 {
-                    dimensions.push_back(scaleMap.at(scaleStr));
+                    auto dimVar = scaleMap.at(varDesc.dimensions[dimIdx]);
+                    dimensions.push_back(dimVar);
+
+                    if (varDesc.chunks.size() - 1 > dimIdx)
+                    {
+                        chunks.push_back(std::min(dimVar.getChunkSizes()[0],
+                                                  varDesc.chunks[dimIdx]));
+                    }
+                    else
+                    {
+                        chunks.push_back(dimVar.getChunkSizes()[0]);
+                    }
                 }
 
                 auto data = dataContainer->get(varDesc.source, categories);
                 auto var = data->createVariable(obsGroup,
                                                 varDesc.name,
                                                 dimensions,
-                                                varDesc.chunks,
+                                                chunks,
                                                 varDesc.compressionLevel);
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
