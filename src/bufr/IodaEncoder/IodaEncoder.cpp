@@ -141,9 +141,9 @@ namespace Ingester
 
                 if (varDesc.range)
                 {
-                    var.atts.add<float>("valid_range",
-                                        {varDesc.range->start, varDesc.range->end},
-                                        {2});
+                    var.atts.add<FloatType>("valid_range",
+                                            {varDesc.range->start, varDesc.range->end},
+                                            {2});
                 }
             }
 

@@ -23,7 +23,7 @@ namespace Ingester
                                                    int compressionLevel)
     {
         auto params = makeCreationParams(chunks, compressionLevel);
-        auto var = obsGroup.vars.createWithScales<double>(name, dimensions, params);
+        auto var = obsGroup.vars.createWithScales<FloatType>(name, dimensions, params);
         var.writeWithEigenRegular(eigArray_);
         return var;
     }
