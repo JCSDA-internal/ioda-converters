@@ -107,7 +107,7 @@ namespace Ingester
                 variable.range = range;
             }
 
-            variable.chunks = {1000};
+            variable.chunks = {};
             if (varConf.has(ConfKeys::Variable::Chunks))
             {
                 auto chunks = std::vector<ioda::Dimensions_t>();
