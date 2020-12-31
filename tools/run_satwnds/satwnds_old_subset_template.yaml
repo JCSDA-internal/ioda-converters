@@ -122,7 +122,7 @@ observations:
         - name: "height_assignment_method@MetaData"
           source: variables/height_assignment_method
           dimensions: [ "nlocs" ]
-          longName: "Height Assignement Method"
+          longName: "Height Assignment Method"
           units: "id"
 
         - name: "generating_application@MetaData"

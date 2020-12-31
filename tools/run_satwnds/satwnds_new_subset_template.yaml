@@ -124,7 +124,7 @@ observations:
         - name: "extended_height_assignment_method@MetaData"
           source: variables/extended_height_assignment_method
           dimensions: [ "nlocs" ]
-          longName: "Height Assignement Method"
+          longName: "Height Assignment Method"
           units: "id"
 
         - name: "pressure@ObsValue"
