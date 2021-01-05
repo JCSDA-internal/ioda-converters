@@ -17,8 +17,8 @@ import subprocess
 
 
 # Regex patterns that identify subset categories
-OLD_SUBSET_PATTERN = r'NC0050[245678]'
-NEW_SUBSET_PATTERN = r'NC0050[39]'
+OLD_SUBSET_PATTERN = r'NC0050([1245678]\d|90)'
+NEW_SUBSET_PATTERN = r'NC0050(3\d|91)'
 
 # Define template file paths
 EXE_DIR = pathlib.Path(__file__).parent.absolute()

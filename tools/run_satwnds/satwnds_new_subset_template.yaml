@@ -35,15 +35,15 @@ observations:
             mnemonic: CLONH
           latitude:
             mnemonic: CLATH
-          sensor_wind_calculation_method:
+          satellite_wind_calculation_method:
             mnemonic: SWCM
-          sensor_zenith_angle:
+          satellite_zenith_angle:
             mnemonic: SAZA
-          sensor_channel_center_frequency:
+          satellite_channel_center_frequency:
             mnemonic: SCCF
           originating_generating_center:
             mnemonic: OGCE
-          sensor_wind_quality_mark:
+          satellite_wind_quality_mark:
             mnemonic: SWQM
           extended_height_assignment_method:
             mnemonic: EHAM
@@ -97,14 +97,14 @@ observations:
           units: "degrees"
           range: [-90, 90]
 
-        - name: "sensor_wind_calculation_method@MetaData"
-          source: variables/sensor_wind_calculation_method
+        - name: "satellite_wind_calculation_method@MetaData"
+          source: variables/satellite_wind_calculation_method
           dimensions: [ "nlocs" ]
-          longName: "Sensor Wind Calculation Method"
+          longName: "satellite Wind Calculation Method"
           units: "id"
 
-        - name: "sensor_zenith_angle@MetaData"
-          source: variables/sensor_zenith_angle
+        - name: "satellite_zenith_angle@MetaData"
+          source: variables/satellite_zenith_angle
           dimensions: [ "nlocs" ]
           longName: "Satellite Zenith Angle"
           units: "degrees"
@@ -115,8 +115,8 @@ observations:
           longName: "Originating/Generating Center"
           units: "id"
 
-        - name: "sensor_wind_quality_mark@MetaData"
-          source: variables/sensor_wind_quality_mark
+        - name: "satellite_wind_quality_mark@MetaData"
+          source: variables/satellite_wind_quality_mark
           dimensions: [ "nlocs" ]
           longName: "Satellite Wind Quality Mark"
           units: "id"
