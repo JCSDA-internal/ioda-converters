@@ -100,7 +100,7 @@ observations:
         - name: "satellite_wind_calculation_method@MetaData"
           source: variables/satellite_wind_calculation_method
           dimensions: [ "nlocs" ]
-          longName: "satellite Wind Calculation Method"
+          longName: "Satellite Wind Calculation Method"
           units: "id"
 
         - name: "satellite_zenith_angle@MetaData"
