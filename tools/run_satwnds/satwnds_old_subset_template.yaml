@@ -15,10 +15,9 @@ observations:
 
       exports:
         filters:
-          range:
-            mnemonic: CLON
-            extents: [180, -180]
-
+          - range:
+              mnemonic: CLON
+              extents: [-180, 180]
         variables:
           satellite:
             mnemonic: SAID

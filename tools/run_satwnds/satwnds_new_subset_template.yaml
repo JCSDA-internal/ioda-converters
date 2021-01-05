@@ -16,9 +16,9 @@ observations:
 
       exports:
         filters:
-          range:
-            mnemonic: CLONH
-            extents: [180, -180]
+          - range:
+              mnemonic: CLONH
+              extents: [-180, 180]
         variables:
           satellite:
             mnemonic: SAID
