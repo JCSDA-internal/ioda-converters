@@ -5,9 +5,10 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include <iostream>
+#include <ostream>
 #include <memory>
 
+#include "eckit/exception/Exceptions.h"
 #include "oops/util/IntSetParser.h"
 
 #include "BufrDescription.h"
@@ -33,6 +34,13 @@ namespace Ingester
         export_(Export(conf.getSubConfiguration(ConfKeys::Exports)))
     {
         setFilepath(conf.getString(ConfKeys::Filename));
+
+        if (conf.getSubConfigurations(ConfKeys::MnemonicSets).size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "bufr::mnemonicSets must contain a list of objects!";
+            throw eckit::BadParameter(errStr.str());
+        }
 
         for (const auto& mnemonicSetConf : conf.getSubConfigurations(ConfKeys::MnemonicSets))
         {

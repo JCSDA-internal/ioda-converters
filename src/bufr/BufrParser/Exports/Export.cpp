@@ -82,6 +82,13 @@ namespace Ingester
 
     void Export::addVariables(const eckit::Configuration &conf)
     {
+        if (conf.keys().size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "bufr::exports::variables must contain a dictionary of variables!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
         for (const auto& key : conf.keys())
         {
             std::shared_ptr<Variable> variable;
@@ -101,7 +108,7 @@ namespace Ingester
             else
             {
                 std::ostringstream errMsg;
-                errMsg << "Unknown export::variable of type " << key;
+                errMsg << "Unknown bufr::exports::variable of type " << key;
                 throw eckit::BadParameter(errMsg.str());
             }
 
@@ -111,6 +118,13 @@ namespace Ingester
 
     void Export::addSplits(const eckit::Configuration &conf)
     {
+        if (conf.keys().size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "bufr::exports::splits must contain a dictionary of splits!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
         for (const auto& key : conf.keys())
         {
             std::shared_ptr<Split> split;
@@ -139,7 +153,7 @@ namespace Ingester
             else
             {
                 std::ostringstream errMsg;
-                errMsg << "Unknown export::split of type " << key;
+                errMsg << "Unknown bufr::exports::splits of type " << key;
                 throw eckit::BadParameter(errMsg.str());
             }
 
@@ -149,7 +163,15 @@ namespace Ingester
 
     void Export::addFilters(const eckit::Configuration &conf)
     {
-        for (const auto& subConf : conf.getSubConfigurations())
+        auto subConfs = conf.getSubConfigurations();
+        if (subConfs.size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "bufr::exports::filters must contain a list of filters!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        for (const auto& subConf : subConfs)
         {
             std::shared_ptr<Filter> filter;
 
@@ -177,7 +199,7 @@ namespace Ingester
             else
             {
                 std::ostringstream errMsg;
-                errMsg << "Unknown export::filter of type.";
+                errMsg << "Unknown bufr::exports::filters of type.";
                 throw eckit::BadParameter(errMsg.str());
             }
 
