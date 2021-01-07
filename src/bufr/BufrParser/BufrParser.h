@@ -52,7 +52,7 @@ namespace Ingester
         unsigned int fortranFileId_;
 
         /// \brief Exports collected data into a DataContainer
-        std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
+        std::shared_ptr<DataContainer> exportData(const BufrDataMap& origData);
 
         /// \brief Function responsible for dividing the data into subcategories.
         /// \details This function is intended to be called over and over for each specified Split
