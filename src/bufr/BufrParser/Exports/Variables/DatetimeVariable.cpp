@@ -26,7 +26,7 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* Utc = "isUTC"; // deprecated
+        const char* Utc = "isUTC";  // deprecated
     }  // namespace ConfKeys
 }  // namespace
 
@@ -78,7 +78,7 @@ namespace Ingester
                         << std::setw(2) << map.at(monthKey_)(idx) << "-" \
                         << std::setw(2) << map.at(dayKey_)(idx) << "T" \
                         << std::setw(2) << map.at(hourKey_)(idx) - hoursFromUtc_ << ":" \
-                        << std::setw(2) << map.at(minuteKey_)(idx) << ":" ;
+                        << std::setw(2) << map.at(minuteKey_)(idx) << ":";
 
             if (!secondKey_.empty())
             {
@@ -99,7 +99,11 @@ namespace Ingester
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)
     {
-        std::vector<std::string> requiredKeys = {yearKey_, monthKey_, dayKey_, hourKey_, minuteKey_};
+        std::vector<std::string> requiredKeys = {yearKey_,
+                                                 monthKey_,
+                                                 dayKey_,
+                                                 hourKey_,
+                                                 minuteKey_};
 
         if (!secondKey_.empty())
         {
