@@ -17,8 +17,8 @@ observations:
         filters:
           - bounding:
               mnemonic: CLON
-              lowerbound: -180
-              upperbound: 180
+              lowerBound: -180
+              upperBound: 180
         variables:
           satellite:
             mnemonic: SAID

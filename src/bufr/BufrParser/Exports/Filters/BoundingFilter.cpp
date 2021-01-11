@@ -25,7 +25,7 @@ namespace Ingester
         if (!upperBound && !lowerBound)
         {
             std::stringstream errStr;
-            errStr << "BoundingFilter must contain either an upper or lower bound or both.";
+            errStr << "BoundingFilter must contain either upperBound, lowerBound or both.";
             throw eckit::BadParameter(errStr.str());
         }
 
