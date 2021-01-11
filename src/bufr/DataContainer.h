@@ -45,7 +45,7 @@ namespace Ingester
         ///          sub categories defined by combining all possible combinations of categories
         ///          defined in the category map.
         /// \param categoryMap map of major category types ex: "SatId" to the possible sub types
-        ///        for the category type ex: {"GEOS-15", "GEOS-16", "GEOS-17"}.
+        ///        for the category type ex: {"GOES-15", "GOES-16", "GOES-17"}.
         explicit DataContainer(const CategoryMap& categoryMap);
 
         /// \brief Add a DataObject to the collection
