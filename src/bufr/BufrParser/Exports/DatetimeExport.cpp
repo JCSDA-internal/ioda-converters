@@ -89,7 +89,7 @@ namespace Ingester
             }
         }
 
-        errStr << " couldn't be found during export of datetime object.";
+        errStr << " could not be found during export of datetime object.";
 
         if (isKeyMissing)
         {

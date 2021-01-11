@@ -53,7 +53,7 @@ namespace Ingester
             std::ostringstream errStr;
             errStr << "ERROR: Either field called " << fieldName;
             errStr << " or category " << makeSubCategoryStr(categoryId);
-            errStr << " doesn't exists.";
+            errStr << " does not exist.";
 
             throw eckit::BadParameter(errStr.str());
         }
@@ -80,7 +80,7 @@ namespace Ingester
         {
             std::ostringstream errStr;
             errStr << "ERROR: Category called " << makeSubCategoryStr(categoryId);
-            errStr << " doesn't exists.";
+            errStr << " does not exist.";
 
             throw eckit::BadParameter(errStr.str());
         }

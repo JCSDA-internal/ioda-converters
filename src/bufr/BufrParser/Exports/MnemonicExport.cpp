@@ -28,7 +28,7 @@ namespace Ingester
         {
             std::stringstream errStr;
             errStr << "Mnemonic " << mnemonic_;
-            errStr << " couldn't be found during export.";
+            errStr << " could not be found during export.";
 
             eckit::BadParameter(errStr.str());
         }
