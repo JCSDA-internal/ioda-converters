@@ -12,9 +12,7 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "Filters/GreaterFilter.h"
-#include "Filters/LesserFilter.h"
-#include "Filters/RangeFilter.h"
+#include "Filters/BoundingFilter.h"
 #include "Splits/CategorySplit.h"
 #include "Variables/MnemonicVariable.h"
 #include "Variables/DatetimeVariable.h"
@@ -45,12 +43,10 @@ namespace
 
         namespace Filter
         {
-            const char* Range = "range";
-            const char* Greater = "greaterThan";
-            const char* Lesser = "lessThan";
-            const char* Extents = "extents";
-            const char* Value = "value";
             const char* Mnemonic = "mnemonic";
+            const char* Bounding = "bounding";
+            const char* UpperBound = "upperBound";
+            const char* LowerBound = "lowerBound";
         }
 
     }  // namespace ConfKeys
@@ -175,31 +171,34 @@ namespace Ingester
         {
             std::shared_ptr<Filter> filter;
 
-            if (subConf.has(ConfKeys::Filter::Range))
+            if (subConf.has(ConfKeys::Filter::Bounding))
             {
-                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Range);
-                filter = std::make_shared<RangeFilter>(
+                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Bounding);
+
+                std::shared_ptr<float> lowerBound = nullptr;
+                if (filterConf.has(ConfKeys::Filter::LowerBound))
+                {
+                    lowerBound = std::make_shared<float>(
+                        filterConf.getFloat(ConfKeys::Filter::LowerBound));
+                }
+
+                std::shared_ptr<float> upperBound = nullptr;
+                if (filterConf.has(ConfKeys::Filter::UpperBound))
+                {
+                    upperBound = std::make_shared<float>(
+                        filterConf.getFloat(ConfKeys::Filter::UpperBound));
+                }
+
+                filter = std::make_shared<BoundingFilter>(
                     filterConf.getString(ConfKeys::Filter::Mnemonic),
-                    filterConf.getFloatVector(ConfKeys::Filter::Extents));
-            }
-            else if (subConf.has(ConfKeys::Filter::Greater))
-            {
-                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Greater);
-                filter = std::make_shared<GreaterFilter>(
-                    filterConf.getString(ConfKeys::Filter::Mnemonic),
-                    filterConf.getFloat(ConfKeys::Filter::Value));
-            }
-            else if (subConf.has(ConfKeys::Filter::Lesser))
-            {
-                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Lesser);
-                filter = std::make_shared<LesserFilter>(
-                    filterConf.getString(ConfKeys::Filter::Mnemonic),
-                    filterConf.getFloat(ConfKeys::Filter::Value));
+                    lowerBound,
+                    upperBound);
             }
             else
             {
                 std::ostringstream errMsg;
-                errMsg << "Unknown bufr::exports::filters of type.";
+                errMsg << "bufr::exports::filters Unknown filter of type ";
+                errMsg << subConf.keys()[0] << ".";
                 throw eckit::BadParameter(errMsg.str());
             }
 

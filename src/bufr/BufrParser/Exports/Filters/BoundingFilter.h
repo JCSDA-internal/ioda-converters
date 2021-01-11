@@ -9,6 +9,7 @@
 
 #include "Filter.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,15 +18,17 @@
 
 namespace Ingester
 {
-    /// \brief Class that filters data accepting data who's value is between (or equal too) given
-    ///        extents.
-    class RangeFilter : public Filter
+    /// \brief Class that filter data given optional upper and lower bounds.
+    class BoundingFilter : public Filter
     {
      public:
         /// \brief Constructor
         /// \param mnemonic BUFR Mnemonic to filter on
-        /// \param extents Min and Max values acceptable
-        RangeFilter(const std::string& mnemonic, const std::vector<float>& extents);
+        /// \param lowerBound Lowest allowable value
+        /// \param upperBound Highest allowable value
+        BoundingFilter(const std::string& mnemonic,
+                       std::shared_ptr<float> lowerBound,
+                       std::shared_ptr<float> upperBound);
 
         /// \brief Apply the filter to the data
         /// \param dataMap Map to modify by filtering out relevant data.
@@ -33,6 +36,7 @@ namespace Ingester
 
      private:
          const std::string mnemonic_;
-         const std::vector<float> extents_;
+         const std::shared_ptr<float> lowerBound_;
+         const std::shared_ptr<float> upperBound_;
     };
 }  // namespace Ingester

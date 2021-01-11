@@ -15,15 +15,16 @@ observations:
 
       exports:
         filters:
-          - lessThan:
+          - bounding:
               mnemonic: CLAT
-              value: 42.5
-          - greaterThan:
+              upperBound: 42.5
+          - bounding:
               mnemonic: CLAT
-              value: 35
-          - range:
+              lowerBound: 35
+          - bounding:
               mnemonic: CLON
-              extents: [-86.3, -68]
+              upperBound: -68
+              lowerBound: -86.3
 
         variables:
           timestamp:
