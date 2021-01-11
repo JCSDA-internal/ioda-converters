@@ -71,7 +71,7 @@ namespace Ingester
         return exportData(collectors.finalize());
     }
 
-    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& origData)
+    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
     {
         auto exportDescription = description_.getExport();
 
@@ -80,10 +80,10 @@ namespace Ingester
         auto varMap = exportDescription.getVariables();
 
         // Filter
-        BufrDataMap srcData = origData;  // make mutable copy
+        BufrDataMap dataCopy = srcData;  // make mutable copy
         for (const auto& filter : filters)
         {
-            filter->apply(srcData);
+            filter->apply(dataCopy);
         }
 
         // Split
@@ -92,11 +92,11 @@ namespace Ingester
         {
             std::ostringstream catName;
             catName << "splits/" << splitPair.first;
-            catMap.insert({catName.str(), splitPair.second->subCategories(srcData)});
+            catMap.insert({catName.str(), splitPair.second->subCategories(dataCopy)});
         }
 
         BufrParser::CatDataMap splitDataMaps;
-        splitDataMaps.insert({std::vector<std::string>(), srcData});
+        splitDataMaps.insert({std::vector<std::string>(), dataCopy});
         for (const auto& splitPair : splitMap)
         {
             splitDataMaps = splitData(splitDataMaps, *splitPair.second);
