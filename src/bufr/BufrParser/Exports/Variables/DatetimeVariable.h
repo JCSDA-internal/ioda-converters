@@ -47,10 +47,13 @@ namespace Ingester
         /// \brief Mnemonic for minute
         const std::string minuteKey_;
 
-        /// \brief Mnemonic for second
-        const std::string secondKey_;
+        /// \brief Mnemonic for second (optional)
+        std::string secondKey_;
 
-        /// \brief Is it UTC time or not
-        const bool isUTC_;
+        /// \brief Hours to offset from UTC (optional)
+        int hoursFromUtc_;
+
+        /// \brief makes sure the bufr data map has all the required keys.
+        void checkKeys(const BufrDataMap& map);
     };
 }  // namespace Ingester

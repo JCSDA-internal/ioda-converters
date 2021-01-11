@@ -6,8 +6,11 @@
  */
 
 #include <iostream>
-#include <ostream>
 #include <iomanip>
+#include <ostream>
+#include <vector>
+
+#include "eckit/exception/Exceptions.h"
 
 #include "DatetimeVariable.h"
 
@@ -22,7 +25,8 @@ namespace
         const char* Hour = "hour";
         const char* Minute = "minute";
         const char* Second = "second";
-        const char* Utc = "isUTC";
+        const char* HoursFromUtc = "hoursFromUtc";
+        const char* Utc = "isUTC"; // deprecated
     }  // namespace ConfKeys
 }  // namespace
 
@@ -35,13 +39,33 @@ namespace Ingester
       dayKey_(conf.getString(ConfKeys::Day)),
       hourKey_(conf.getString(ConfKeys::Hour)),
       minuteKey_(conf.getString(ConfKeys::Minute)),
-      secondKey_(conf.getString(ConfKeys::Second)),
-      isUTC_(conf.getBool(ConfKeys::Utc))
+      secondKey_(""),
+      hoursFromUtc_(0)
     {
+        if (conf.has(ConfKeys::Second))
+        {
+            secondKey_ = conf.getString(ConfKeys::Second);
+        }
+
+        if (conf.has(ConfKeys::HoursFromUtc))
+        {
+            hoursFromUtc_ = conf.getInt(ConfKeys::HoursFromUtc);
+        }
+
+        if (conf.has(ConfKeys::Utc))
+        {
+            std::cout << "WARNING: usage of " \
+                      << ConfKeys::Utc \
+                      << " in datetime is depricated!" \
+                      << std::endl;
+            std::cout << "Use the optional parameter " << ConfKeys::HoursFromUtc << " instead.";
+        }
     }
 
     std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
     {
+        checkKeys(map);
+
         auto datetimes = std::vector<std::string>();
 
         datetimes.reserve(map.at(yearKey_).size());
@@ -53,18 +77,54 @@ namespace Ingester
                         << std::setw(4) << map.at(yearKey_)(idx) << "-" \
                         << std::setw(2) << map.at(monthKey_)(idx) << "-" \
                         << std::setw(2) << map.at(dayKey_)(idx) << "T" \
-                        << std::setw(2) << map.at(hourKey_)(idx) << ":" \
-                        << std::setw(2) << map.at(minuteKey_)(idx) << ":" \
-                        << std::setw(2) << map.at(secondKey_)(idx);
+                        << std::setw(2) << map.at(hourKey_)(idx) - hoursFromUtc_ << ":" \
+                        << std::setw(2) << map.at(minuteKey_)(idx) << ":" ;
 
-            if (isUTC_)
+            if (!secondKey_.empty())
             {
-                datetimeStr << "Z";
+                datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
             }
+            else
+            {
+                datetimeStr << std::setw(2) << 0;
+            }
+
+            datetimeStr << "Z";
 
             datetimes.push_back(datetimeStr.str());
         }
 
         return std::make_shared<StrVecDataObject>(datetimes);
+    }
+
+    void DatetimeVariable::checkKeys(const BufrDataMap& map)
+    {
+        std::vector<std::string> requiredKeys = {yearKey_, monthKey_, dayKey_, hourKey_, minuteKey_};
+
+        if (!secondKey_.empty())
+        {
+            requiredKeys.push_back(secondKey_);
+        }
+
+        std::stringstream errStr;
+        errStr << "Mnemonic ";
+
+        bool isKeyMissing = false;
+        for (auto key : requiredKeys)
+        {
+            if (map.find(key) == map.end())
+            {
+                isKeyMissing = true;
+                errStr << key;
+                break;
+            }
+        }
+
+        errStr << " couldn't be found during export of datetime object.";
+
+        if (isKeyMissing)
+        {
+            throw eckit::BadParameter(errStr.str());
+        }
     }
 }  // namespace Ingester

@@ -61,15 +61,16 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
            category:
               mnemonic: SAID
               map: 
-                _3: sat_1 #can't use integers as keys
+                _3: sat_1  # can't use integers as keys
                 _5: sat_2
                 _8: sat_3
                 
         filters:
-          - range:
+          - bounding:
               mnemonic: CLON
-              extents: [-86.3, -68]
-              
+              upperBound: -68  # optional
+              lowerBound: -86.3  # optional
+
         variables:
           timestamp:
             datetime:
@@ -79,7 +80,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               hour: HOUR
               minute: MINU
               second: SECO
-              isUTC: true
+              hoursFromUtc: 0  # optional
           longitude:
             mnemonic: CLON
             transforms:
@@ -98,8 +99,9 @@ ioda encoder. It has the following sections:
   * **values** (One of these types):
     * `mnemonic` Associate **key** with data for mnemonic listed in mnemonic set. _(optional)_ Can 
       apply a list of `tranforms` to the data. Possible transforms are `offset` and `scale`.
-    * `datetime` Associate **key** with datetime formatted strings. Must supply mnemonics for 
-      `year`, `month`, `day`, `hour`, `minute`, `second`. `isUTC` must be **true** or **false**.
+    * `datetime` Associate **key** with datetime formatted strings. Supply mnemonics for `year`, 
+      `month`, `day`, `hour`, `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must
+      be an **integer**).
       
 
 * _(optional)_ `splits` List of key value pair (splits) that define how to split the data into 
@@ -118,16 +120,13 @@ ioda encoder. It has the following sections:
 
 * _(optional)_ `filters`List of filters to apply to the data before exporting. Filters exclude data
   which does not meet their requirements. The following filters are supported:
-    * `greaterThan`
+    * `bounding`
       * `mnemonic` The mnemonic to use.
-      * `value` Numeric value
-    * `lessThan`
-      * `mnemonic` The mnemonic to use.
-      * `value` Numeric value
-    * `range`
-      * `mnemonic` The mnemonic to use.
-      * `extents` Pair of integers that defines the allowed range ex: `[2.3, 4.6]`
+      * _(optional)_ `upperBound` The highest possible value to accept
+      * _(optional)_ `lowerBound` The lowest possible value to accept
   
+    _note: either `upperBound`, `lowerBound`, or both must be present._
+        
 
 ### Ioda
 

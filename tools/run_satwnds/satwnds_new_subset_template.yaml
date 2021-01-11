@@ -16,9 +16,10 @@ observations:
 
       exports:
         filters:
-          - range:
-              mnemonic: CLONH
-              extents: [-180, 180]
+          - bounding:
+              mnemonic: CLON
+              lowerbound: -180
+              upperbound: 180
         variables:
           satellite:
             mnemonic: SAID
@@ -30,7 +31,6 @@ observations:
               hour: HOUR
               minute: MINU
               second: SECO
-              isUTC: true
           longitude:
             mnemonic: CLONH
           latitude:
