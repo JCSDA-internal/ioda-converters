@@ -23,7 +23,6 @@ observations:
               hour: HOUR
               minute: MINU
               second: SECO
-              isUTC: true
           longitude:
             mnemonic: CLON
           latitude:
