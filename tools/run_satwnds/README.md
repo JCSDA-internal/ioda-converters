@@ -9,8 +9,8 @@ with the proper configuration for that subset.
 
 The following executables must be available in the shell path.
 
-* **bufr2ioda.x** - From ioda_converters _feature/bufr-enhanced-exports_
-* **split_by_subset.x** - From NCEPLibs-Bufr _feature/split_by_subset_
+* **bufr2ioda.x** - From ioda_converters
+* **split_by_subset.x** - From NCEPLibs-Bufr
 
 ## Usage
 
