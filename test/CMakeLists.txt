@@ -81,7 +81,6 @@ endif()
 
 if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
-    testinput/bufr_test.yaml
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/bufr_mhs.yaml
