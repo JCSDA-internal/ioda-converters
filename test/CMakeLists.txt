@@ -36,6 +36,7 @@ list( APPEND test_input
   testinput/2020100106_metars_small.csv
   testinput/afwa_snod_24km.grib
   testinput/singleob.yaml
+  testinput/ghcn_20200228.csv
 )
 
 list( APPEND test_output
@@ -67,6 +68,7 @@ list( APPEND test_output
   testoutput/2020100106_metars_small.nc
   testoutput/afwa_snod.nc
   testoutput/singleob.nc
+  testoutput/ghcn_snod_20200228.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -512,3 +514,15 @@ if( iodaconv_pygrib_ENABLED )
                             -m maskout"
                             afwa_snod.nc ${IODA_CONV_COMP_TOL_ZERO})
 endif()
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/ghcn_snod2ioda.py
+                          -i testinput/ghcn_20200228.csv
+                          -o testrun/ghcn_snod_20200228.nc
+                          -f ${CMAKE_BINARY_DIR}/doc/fix/ghcn-stations.txt
+                          -d 20200228
+                          -m maskout"
+                          ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL_ZERO})
