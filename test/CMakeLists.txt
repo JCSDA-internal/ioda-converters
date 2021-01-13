@@ -37,6 +37,7 @@ list( APPEND test_input
   testinput/afwa_snod_24km.grib
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
+  testinput/ghcn_stations.txt
 )
 
 list( APPEND test_output
@@ -493,7 +494,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           "${CMAKE_BINARY_DIR}/bin/ghcn_snod2ioda.py
                           -i testinput/ghcn_20200228.csv
                           -o testrun/ghcn_snod_20200228.nc
-                          -f ${CMAKE_BINARY_DIR}/doc/fix/ghcn-stations.txt
+                          -f testinput/ghcn_stations.txt
                           -d 20200228
                           -m maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL_ZERO})
