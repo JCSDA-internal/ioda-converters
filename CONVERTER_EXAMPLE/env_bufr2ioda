@@ -1,0 +1,11 @@
+module use /scratch1/NCEPDEV/jcsda/Ryan.Honeyager/jedi-stack/opt/modulefiles/apps
+module use /scratch1/NCEPDEV/jcsda/Ryan.Honeyager/jedi-stack/opt/modulefiles/core
+setenv JEDI_OPT /scratch1/NCEPDEV/jcsda/Ryan.Honeyager/jedi-stack/opt
+export JEDI_OPT=/scratch1/NCEPDEV/jcsda/Ryan.Honeyager/jedi-stack/opt
+module purge
+module load jedi/intel-20.2-impi-18
+module unload json-schema-validator/2.1.0
+module unload json/3.9.1
+module unload bufrlib
+module load nceplibs-bufr
+module list
