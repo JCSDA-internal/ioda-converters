@@ -83,16 +83,21 @@ endif()
 
 if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
-    testinput/bufr_test.yaml
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
+    testinput/bufr_filtering.yaml
+    testinput/bufr_splitting.yaml
+    testinput/bufr_filter_split.yaml
   )
 
   list( APPEND test_output
     testoutput/gdas.t18z.1bmhs.tm00.nc
     testoutput/gdas.t00z.1bhrs4.tm00.nc
+    testoutput/gdas.t18z.1bmhs.tm00.filtering.nc
+    testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
+    testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
   )
 endif()
 
@@ -437,26 +442,50 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
 
 if(iodaconv_bufr_ENABLED)
 
-    ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
-                      SOURCES bufr/TestBufrDescription.cpp
-                      ARGS    testinput/bufr_mhs.yaml
-                      LIBS    eckit oops iodaconv::ingester )
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
+                    SOURCES bufr/TestBufrDescription.cpp
+                    ARGS    testinput/bufr_mhs.yaml
+                    LIBS    eckit oops iodaconv::ingester)
 
-    ecbuild_add_test( TARGET  test_iodaconv_bufr_mhs2ioda
-                      TYPE    SCRIPT
-                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                      ARGS    netcdf
-                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mhs.yaml"
-                              gdas.t18z.1bmhs.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
-                      DEPENDS bufr2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_mhs2ioda
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mhs.yaml"
+                            gdas.t18z.1bmhs.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 
-    ecbuild_add_test( TARGET  test_iodaconv_bufr_hrs2ioda
-                      TYPE    SCRIPT
-                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                      ARGS    netcdf
-                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
-                              gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
-                      DEPENDS bufr2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_hrs2ioda
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
+                            gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_filtering
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_filtering.yaml"
+                            gdas.t18z.1bmhs.tm00.filtering.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_splitting
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_splitting.yaml"
+                            gdas.t18z.1bmhs.tm00.15.seven.split.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_filter_split
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_filter_split.yaml"
+                            gdas.t18z.1bmhs.tm00.15.7.filter_split.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 
 endif()
 

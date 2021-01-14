@@ -31,7 +31,7 @@ namespace Ingester
                  &result,
                  mnemonicSet_.getMnemonicsStr().c_str());
 
-        for (size_t colIdx = 0; colIdx < accumulator_.getNumColumns(); colIdx++)
+        for (Eigen::Index colIdx = 0; colIdx < accumulator_.getNumColumns(); colIdx++)
         {
             floatTypeScratchData_[colIdx] = static_cast<FloatType>(scratchData_[colIdx]);
         }

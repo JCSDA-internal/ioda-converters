@@ -7,24 +7,48 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <map>
+#include <vector>
 
-#include "BufrParser/BufrTypes.h"
-#include "DataObject/DataObject.h"
+#include "eckit/config/LocalConfiguration.h"
+
+#include "Filters/Filter.h"
+#include "Splits/Split.h"
+#include "Variables/Variable.h"
+
 
 namespace Ingester
 {
-    /// \brief Abstract base class for all Exports.
+    /// \brief Uses configuration to determine all the things needed to be done on export.
     class Export
     {
      public:
-        virtual ~Export() = default;
+        typedef std::map<std::string, std::shared_ptr<Split>> Splits;
+        typedef std::map<std::string, std::shared_ptr<Variable>> Variables;
+        typedef std::vector<std::shared_ptr<Filter>> Filters;
 
-        /// \brief Export data objects for previously parsed data from BufrDataMap.
-        virtual std::shared_ptr<DataObject> exportData(const BufrDataMap& map) = 0;
+        /// \brief Constructor
+        /// \param conf Config data/
+        explicit Export(const eckit::Configuration &conf);
+
+        // Getters
+        inline Splits getSplits() const { return splits_; }
+        inline Variables getVariables() const { return variables_; }
+        inline Filters getFilters() const { return filters_; }
+
+     private:
+        Splits splits_;
+        Variables  variables_;
+        Filters filters_;
+
+        /// \brief Create Variables exports from config.
+        void addVariables(const eckit::Configuration &conf);
+
+        /// \brief Create Splits exports from config.
+        void addSplits(const eckit::Configuration &conf);
+
+        /// \brief Create Filters exports from config.
+        void addFilters(const eckit::Configuration &conf);
     };
 }  // namespace Ingester
-
-
