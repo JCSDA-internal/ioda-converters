@@ -6,7 +6,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 import time, os, sys
-import h5py
 import argparse
 import netCDF4 as nc
 import numpy as np
@@ -47,63 +46,63 @@ class smap(object):
 
     def _read(self):
 
-        with h5py.File(self.filename, mode='r') as f:
-            name = '/Soil_Moisture_Retrieval_Data/soil_moisture'
-            vals = f[name][:].ravel()
-            _FillValue = f[name].attrs['_FillValue']
-            valid_max = f[name].attrs['valid_max']
-            valid_min = f[name].attrs['valid_min']
+        ncd = nc.Dataset(self.filename, 'r')
+        data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
+        vals = data[:].ravel()
+        _FillValue = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('_FillValue')
+        valid_max = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_max')
+        valid_min = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_min')
 
-            lats = f['/Soil_Moisture_Retrieval_Data/latitude'][:].ravel()
-            lons = f['/Soil_Moisture_Retrieval_Data/longitude'][:].ravel()
-            errs = f['/Soil_Moisture_Retrieval_Data/soil_moisture_error'][:].ravel()
-            qflg = f['/Soil_Moisture_Retrieval_Data/retrieval_qual_flag'][:].ravel()
+        lats = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['latitude'][:].ravel()
+        lons = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['longitude'][:].ravel()
+        errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
+        qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
-            if self.mask == "maskout":
-                with np.errstate(invalid='ignore'):
-                    mask = (vals > valid_min) & (vals < valid_max)
-                vals = vals[mask]
-                lats = lats[mask]
-                lons = lons[mask]
-                errs = errs[mask]
-                qflg = qflg[mask]
+        if self.mask == "maskout":
+            with np.errstate(invalid='ignore'):
+                mask = (vals > valid_min) & (vals < valid_max)
+            vals = vals[mask]
+            lats = lats[mask]
+            lons = lons[mask]
+            errs = errs[mask]
+            qflg = qflg[mask]
 
-            # get datetime from filename
-            str_split = self.filename.split("_")
-            str_datetime = str_split[7]
-            my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
-            base_datetime = my_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+        # get datetime from filename
+        str_split = self.filename.split("_")
+        str_datetime = str_split[7]
+        my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
+        base_datetime = my_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-            qflg = qflg.astype(int)
-            self.units_values[vName['A']] = 'm3 m-3'
-            valKey = vName['A'], self.writer.OvalName()
-            errKey = vName['A'], self.writer.OerrName()
-            qcKey = vName['A'], self.writer.OqcName()
+        qflg = qflg.astype(int)
+        self.units_values[vName['A']] = 'm3 m-3'
+        valKey = vName['A'], self.writer.OvalName()
+        errKey = vName['A'], self.writer.OerrName()
+        qcKey = vName['A'], self.writer.OqcName()
 
-            for i in range(len(lons)):
+        for i in range(len(lons)):
 
-                if vals[i] > 0.0:
-                    # assumed 4% SM rathern than -999.0
-                    errs[i] = 0.04*vals[i]
-                    if qflg[i] > 5:
-                        qflg[i] = 0
-                    else:
-                        qflg[i] = 1
+            if vals[i] > 0.0:
+                # assumed 4% SM rathern than -999.0
+                errs[i] = 0.04*vals[i]
+                if qflg[i] > 5:
+                    qflg[i] = 0
                 else:
                     qflg[i] = 1
+            else:
+                qflg[i] = 1
 
-                locKey = lats[i], lons[i], base_datetime
-                self.data[0][locKey][valKey] = vals[i]
-                self.data[0][locKey][errKey] = errs[i]
-                self.data[0][locKey][qcKey] = qflg[i]
+            locKey = lats[i], lons[i], base_datetime
+            self.data[0][locKey][valKey] = vals[i]
+            self.data[0][locKey][errKey] = errs[i]
+            self.data[0][locKey][qcKey] = qflg[i]
 
-            # write global attributes out
-            self.satellite = "SMAP"
-            self.sensor = "radar and radiometer"
+        # write global attributes out
+        self.satellite = "SMAP"
+        self.sensor = "radar and radiometer"
 
-            AttrData["satellite"] = self.satellite
-            AttrData["sensor"] = self.sensor
-            AttrData['date_time_string'] = base_datetime
+        AttrData["satellite"] = self.satellite
+        AttrData["sensor"] = self.sensor
+        AttrData['date_time_string'] = base_datetime
 
 
 def main():
