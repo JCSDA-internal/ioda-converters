@@ -12,12 +12,14 @@
 
 namespace Ingester
 {
+    /// \brief Add a floating point offset to to the data.
     class OffsetTransform : public Transform
     {
      public:
         explicit OffsetTransform(const double offset);
         ~OffsetTransform() = default;
 
+        /// \brief Apply transform to the given data.
         void apply(IngesterArray& array) override;
 
      private:

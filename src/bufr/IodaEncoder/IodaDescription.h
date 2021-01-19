@@ -37,8 +37,8 @@ namespace Ingester
         std::string units;
         std::shared_ptr<std::string> coordinates;  // Optional
         std::shared_ptr<Range> range;  // Optional
-        std::vector<ioda::Dimensions_t> chunks;
-        int compressionLevel;
+        std::vector<ioda::Dimensions_t> chunks;  // Optional
+        int compressionLevel;  // Optional
     };
 
     typedef std::vector<DimensionDescription> DimDescriptions;

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <gsl/gsl>
 #include <set>
 
 #include "Eigen/Dense"

@@ -15,9 +15,8 @@
 
 namespace Ingester
 {
-    class Export;
+    class Variable;
 
     typedef std::set<size_t> Channels;
     typedef IngesterArrayMap BufrDataMap;
-    typedef std::map<std::string, std::shared_ptr<Export>> ExportMap;
 }  // namespace Ingester
