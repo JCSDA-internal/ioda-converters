@@ -37,6 +37,7 @@ list( APPEND test_input
   testinput/afwa_snod_24km.grib
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
+  testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
 )
 
 list( APPEND test_output
@@ -69,6 +70,7 @@ list( APPEND test_output
   testoutput/afwa_snod.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
+  testoutput/smap_ssm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -526,3 +528,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           -d 20200228
                           -m maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
+                            -i testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
+                            -o testrun/smap_ssm.nc
+                            -m maskout"
+                            smap_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
