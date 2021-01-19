@@ -70,7 +70,7 @@ ecbuild_add_library( TARGET   ingester
                      SOURCES  ${_ingester_srcs}
                      LIBS     ${_ingester_deps}
                      INSTALL_HEADERS LISTED
-                     HEADER_DESTINATION ${INSTALL_INCLUDEDIR}/bufr
+                     HEADER_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bufr
                      LINKER_LANGUAGE CXX
                     )
 
