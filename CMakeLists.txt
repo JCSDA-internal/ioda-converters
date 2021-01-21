@@ -101,6 +101,22 @@ else()
     message(STATUS "Disabled Component: bufr")
 endif()
 
+if( bufr_FOUND AND NetCDF_Fortran_FOUND )
+    set(iodaconv_pbfortran_ENABLED True)
+    message(STATUS "Found: bufr")
+    message(STATUS "Found: NetCDF::NetCDF_Fortran")
+    message(STATUS "Enabled Component: pbfortran")
+else()
+    set(iodaconv_pbfortran_ENABLED False)
+    if(NOT bufr_FOUND)
+        message(STATUS "NOT-Found: bufr - PrepBUFR-fortran converter disabled")
+    endif()
+    if(NOT NetCDF_Fortran_FOUND)
+        message(STATUS "NOT-Found: NetCDF - PrepBUFR-fortran converter disabled")
+    endif()
+    message(STATUS "Disabled Component: pbfortran")
+endif()
+
 ## Sources
 
 add_subdirectory( src )

@@ -103,6 +103,20 @@ if( iodaconv_bufr_ENABLED )
   )
 endif()
 
+if( iodaconv_pbfortran_ENABLED )
+  list( APPEND test_input
+    testinput/gnssro_kompsat5_20180415_00Z.bufr
+    testinput/prepbufr.bufr
+    testinput/gdas.t18z.1bmhs.tm00.bufr_d
+  )
+
+  list( APPEND test_output
+    testoutput/gnssro_obs_2018041500.nc4
+    testoutput/sondes_obs_2020093018.nc4
+    testoutput/mhs_metop-b_obs_2020101215.nc4
+  )
+endif()
+
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
@@ -488,6 +502,41 @@ if(iodaconv_bufr_ENABLED)
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_filter_split.yaml"
                             gdas.t18z.1bmhs.tm00.15.7.filter_split.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+endif()
+
+#==============================================================================
+# PrepBUFR and BUFR tests
+#==============================================================================
+
+if( iodaconv_pbfortran_ENABLED )
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gnssro_kompsat5_20180415_00Z.bufr"
+                            gnssro_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun prepbufr.bufr"
+                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
+                            mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
 
 endif()
 
