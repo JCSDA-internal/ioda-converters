@@ -35,6 +35,12 @@ namespace Ingester
         /// \brief Print data to stdout for debug purposes.
         void print() const final;
 
+        /// \brief Get number of rows represented in the data
+        size_t nrows() const final;
+
+        /// \brief Get number of columns represented in the data
+        size_t ncols() const final;
+
         // Getters
         inline IngesterArray get() const { return eigArray_; }
 

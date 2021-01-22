@@ -70,16 +70,32 @@ namespace Ingester
             }
         }
 
-        for (const auto& scaleConf : conf.getSubConfigurations(ConfKeys::Dimensions))
+        auto dimConfs = conf.getSubConfigurations(ConfKeys::Dimensions);
+        if (dimConfs.size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "ioda::dimensions must contain a list of dimensions!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        for (const auto& dimConf : dimConfs)
         {
             DimensionDescription scale;
-            scale.name = scaleConf.getString(ConfKeys::Dimension::Name);
-            scale.size = scaleConf.getString(ConfKeys::Dimension::Size);
+            scale.name = dimConf.getString(ConfKeys::Dimension::Name);
+            scale.size = dimConf.getString(ConfKeys::Dimension::Size);
 
             addDimension(scale);
         }
 
-        for (const auto& varConf : conf.getSubConfigurations(ConfKeys::Variables))
+        auto varConfs = conf.getSubConfigurations(ConfKeys::Variables);
+        if (varConfs.size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "ioda::variables must contain a list of variables!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        for (const auto& varConf : varConfs)
         {
             VariableDescription variable;
             variable.name = varConf.getString(ConfKeys::Variable::Name);
@@ -107,7 +123,7 @@ namespace Ingester
                 variable.range = range;
             }
 
-            variable.chunks = {1000};
+            variable.chunks = {};
             if (varConf.has(ConfKeys::Variable::Chunks))
             {
                 auto chunks = std::vector<ioda::Dimensions_t>();

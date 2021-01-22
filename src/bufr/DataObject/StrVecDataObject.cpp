@@ -37,6 +37,16 @@ namespace Ingester
         }
     }
 
+    size_t StrVecDataObject::nrows() const
+    {
+        return strVector_.size();
+    }
+
+    size_t StrVecDataObject::ncols() const
+    {
+        return 1;
+    }
+
     ioda::VariableCreationParameters StrVecDataObject::makeCreationParams(
                                                     const std::vector<ioda::Dimensions_t>& chunks,
                                                     int compressionLevel)
@@ -48,5 +58,4 @@ namespace Ingester
 
         return params;
     }
-
 }  // namespace Ingester

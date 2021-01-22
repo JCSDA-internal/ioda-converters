@@ -1,0 +1,86 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
+      mnemonicSets:
+        - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
+        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
+        - mnemonics: [TMBR]
+          channels : 1-5
+
+      exports:
+        splits:
+          hour:
+           category:
+             mnemonic: HOUR
+          minute:
+            category:
+              mnemonic: MINU
+              map: # Optional
+                _5: five #can't use integers as keys so underscore
+                _6: six
+                _7: seven
+
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          longitude:
+            mnemonic: CLON
+            transforms:
+              - offset: 0
+          latitude:
+            mnemonic: CLAT
+          radiance:
+            mnemonic: TMBR
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.{splits/hour}.{splits/minute}.split.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/radiance.nrows
+        - name: "nchans"
+          size: variables/radiance.ncols
+
+      variables:
+        - name: "datetime@MetaData"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "latitude@MetaData"
+          source: variables/latitude
+          dimensions: ["nlocs"]
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "longitude@MetaData"
+          source: variables/longitude
+          dimensions: ["nlocs"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "radiance@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/radiance
+          dimensions: ["nlocs", "nchans"]
+          longName: "Radiance"
+          units: "K"
+          range: [120, 500]
+          chunks: [1000, 15]
+          compressionLevel: 4

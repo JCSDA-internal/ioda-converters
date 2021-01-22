@@ -48,7 +48,7 @@ namespace Ingester
                         auto description = Ingester::BufrDescription(bufrConf);
 
                         EXPECT(description.getMnemonicSets().size() > 0);
-                        EXPECT(description.getExportMap().size() > 0);
+                        EXPECT(description.getExport().getVariables().size() > 0);
                     }
                     else
                     {
@@ -73,67 +73,6 @@ namespace Ingester
             }
         }
 
-        void test_createDescriptionManually()
-        {
-            // Create Description
-            auto bufrDesc = BufrDescription();
-
-            const std::string dummyFilePath = "/some/file/path";
-
-            bufrDesc.setFilepath(dummyFilePath);
-
-            EXPECT(bufrDesc.getMnemonicSets().size() == 0);
-            EXPECT(bufrDesc.filepath() == dummyFilePath);
-
-            std::vector<std::string> set1Mnemonic = {"SAID",
-                                                     "FOVN",
-                                                     "YEAR",
-                                                     "MNTH",
-                                                     "DAYS",
-                                                     "HOUR",
-                                                     "MINU",
-                                                     "SECO",
-                                                     "CLAT",
-                                                     "CLON",
-                                                     "CLATH",
-                                                     "CLONH",
-                                                     "HOLS"};
-            std::vector<std::string> set2Mnemonic = {"SAZA", "SOZA", "BEARAZ", "SOLAZI"};
-            std::vector<std::string> set3Mnemonic = {"TMBR"};
-
-            auto set1 = Ingester::BufrMnemonicSet(set1Mnemonic, {1});
-            auto set2 = Ingester::BufrMnemonicSet(set2Mnemonic, {1});
-
-            auto chanIntSet = oops::parseIntSet("1-15");
-            auto set3 = Ingester::BufrMnemonicSet(set3Mnemonic,
-                                                  Channels(chanIntSet.begin(), chanIntSet.end()));
-
-            bufrDesc.addMnemonicSet(set1);
-            bufrDesc.addMnemonicSet(set2);
-            bufrDesc.addMnemonicSet(set3);
-
-            EXPECT(bufrDesc.getMnemonicSets().size() > 0);
-
-            auto iodaDesc = IodaDescription();
-
-            DimensionDescription scale;
-            scale.name = "scale_name";
-            scale.size = "1";
-
-            VariableDescription varDesc;
-            varDesc.name = "variable_desc";
-            varDesc.source = "source";
-            varDesc.dimensions = {"1"};
-            varDesc.longName = "long_variable_name";
-            varDesc.units = "units";
-
-            iodaDesc.addDimension(scale);
-            iodaDesc.addVariable(varDesc);
-
-            EXPECT(iodaDesc.getDims().size() > 0);
-            EXPECT(iodaDesc.getVariables().size() > 0);
-        }
-
         class BufrDescription : public oops::Test
         {
          public:
@@ -148,10 +87,6 @@ namespace Ingester
                 ts.emplace_back(CASE("ingester/BufrParser/testConstructor")
                 {
                     test_constructor();
-                });
-                ts.emplace_back(CASE("ingester/BufrParser/testCreateDescriptionManually")
-                {
-                    test_createDescriptionManually();
                 });
             }
 
