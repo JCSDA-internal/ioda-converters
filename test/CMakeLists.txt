@@ -506,6 +506,14 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t18z.1bmhs.tm00.15.7.filter_split.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpsfc2ioda
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_adpsfc.yaml"
+                            gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
 endif()
 
 #==============================================================================
@@ -541,13 +549,6 @@ if( iodaconv_pbfortran_ENABLED )
                             mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2nc_fortran.x)
 
-    ecbuild_add_test( TARGET  test_iodaconv_bufr_adpsfc2ioda
-                      TYPE    SCRIPT
-                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                      ARGS    netcdf
-                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_adpsfc.yaml"
-                              gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
-                      DEPENDS bufr2ioda.x )
 endif()
 
 # =============================================================================
