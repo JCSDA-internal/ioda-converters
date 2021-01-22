@@ -10,3 +10,4 @@ set_targets_deps( "${programs}"
                    tools_scripts_deps)
 
 add_subdirectory( fortran )
+add_subdirectory( run_satwnds )

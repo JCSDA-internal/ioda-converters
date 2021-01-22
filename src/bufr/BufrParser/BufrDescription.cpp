@@ -5,20 +5,15 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include <iostream>
+#include <ostream>
 #include <memory>
 
+#include "eckit/exception/Exceptions.h"
 #include "oops/util/IntSetParser.h"
 
 #include "BufrDescription.h"
 #include "BufrMnemonicSet.h"
 #include "BufrTypes.h"
-
-#include "Exports/MnemonicExport.h"
-#include "Exports/DatetimeExport.h"
-#include "Exports/Export.h"
-#include "Exports/Transforms/Transform.h"
-#include "Exports/Transforms/TransformBuilder.h"
 
 
 namespace
@@ -30,16 +25,22 @@ namespace
         const char* Mnemonics = "mnemonics";
         const char* Channels = "channels";
         const char* Exports = "exports";
-        const char* Datetime = "datetime";
-        const char* Mnemonic = "mnemonic";
     }  // namespace ConfKeys
 }  // namespace
 
 namespace Ingester
 {
-    BufrDescription::BufrDescription(const eckit::Configuration &conf)
+    BufrDescription::BufrDescription(const eckit::Configuration &conf) :
+        export_(Export(conf.getSubConfiguration(ConfKeys::Exports)))
     {
         setFilepath(conf.getString(ConfKeys::Filename));
+
+        if (conf.getSubConfigurations(ConfKeys::MnemonicSets).size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "bufr::mnemonicSets must contain a list of objects!";
+            throw eckit::BadParameter(errStr.str());
+        }
 
         for (const auto& mnemonicSetConf : conf.getSubConfigurations(ConfKeys::MnemonicSets))
         {
@@ -53,34 +54,10 @@ namespace Ingester
             addMnemonicSet(BufrMnemonicSet(
                 mnemonicSetConf.getStringVector(ConfKeys::Mnemonics), channels));
         }
-
-        auto exportConfs = conf.getSubConfiguration(ConfKeys::Exports);
-        for (const auto& key : exportConfs.keys())
-        {
-            auto subconf = exportConfs.getSubConfiguration(key);
-
-            if (subconf.has(ConfKeys::Datetime))
-            {
-                auto dtconf = subconf.getSubConfiguration(ConfKeys::Datetime);
-                addExport(key, std::make_shared<DatetimeExport>(dtconf));
-            }
-            else if (subconf.has(ConfKeys::Mnemonic))
-            {
-                Transforms transforms = TransformBuilder::makeTransforms(subconf);
-                addExport(key, std::make_shared<MnemonicExport>(
-                    subconf.getString(ConfKeys::Mnemonic), transforms));
-            }
-        }
     }
 
     void BufrDescription::addMnemonicSet(const BufrMnemonicSet& mnemonicSet)
     {
         mnemonicSets_.push_back(mnemonicSet);
-    }
-
-    void BufrDescription::addExport(const std::string& key,
-                                    const std::shared_ptr<Export>& bufrExport)
-    {
-        exportMap_.insert({key, bufrExport});
     }
 }  // namespace Ingester

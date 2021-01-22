@@ -16,26 +16,21 @@ observations:
           channels : 1-19
 
       exports:
-        timestamp:
-          datetime:
-            year: YEAR
-            month: MNTH
-            day: DAYS
-            hour: HOUR
-            minute: MINU
-            second: SECO
-            isUTC: true
-
-        longitude:
-          mnemonic: CLON
-          transforms:
-            - offset: 0
-
-        latitude:
-          mnemonic: CLAT
-
-        radiance:
-          mnemonic: TMBR
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          longitude:
+            mnemonic: CLON
+          latitude:
+            mnemonic: CLAT
+          radiance:
+            mnemonic: TMBR
 
     ioda:
       backend: netcdf
@@ -43,26 +38,26 @@ observations:
 
       dimensions:
         - name: "nlocs"
-          size: "{LENGTH}" #implicit info
+          size: variables/radiance.nrows
         - name: "nchans"
-          size: "19" #explicit info
+          size:  variables/radiance.ncols
 
       variables:
         - name: "datetime@MetaData"
-          source: "timestamp"
+          source: variables/timestamp
           dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
-          source: "latitude"
+          source: variables/latitude
           dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
-          source: "longitude"
+          source: variables/longitude
           dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
@@ -70,10 +65,8 @@ observations:
 
         - name: "radiance@ObsValue"
           coordinates: "longitude latitude nchans"
-          source: "radiance"
+          source: variables/radiance
           dimensions: ["nlocs", "nchans"]
           longName: "Radiance"
           units: "K"
           range: [120, 500]
-          chunks: [1000, 15]
-          compressionLevel: 4

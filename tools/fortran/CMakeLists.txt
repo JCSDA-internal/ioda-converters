@@ -1,5 +1,5 @@
 # The Fortran code links with BUFR library
-if( bufr_FOUND )
+if( iodaconv_bufr_ENABLED )
   ecbuild_add_executable( TARGET  pb_decode
                           SOURCES pb_decode.f90
                           LIBS    bufr::bufr_4_DA)

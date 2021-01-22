@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,6 +43,8 @@ namespace Ingester
         void reset() final;
 
      private:
+        typedef std::map<std::vector<std::string>, BufrDataMap> CatDataMap;
+
         /// \brief The description the defines what to parse from the BUFR file
         BufrDescription description_;
 
@@ -49,12 +52,23 @@ namespace Ingester
         unsigned int fortranFileId_;
 
         /// \brief Exports collected data into a DataContainer
-        std::shared_ptr<DataContainer> exportData(const BufrDataMap& sourceData);
+        /// \param srcData Data to export
+        std::shared_ptr<DataContainer> exportData(const BufrDataMap& srcData);
+
+        /// \brief Function responsible for dividing the data into subcategories.
+        /// \details This function is intended to be called over and over for each specified Split
+        ///          object, sub-splitting the data given into all the possible subcategories.
+        /// \param splitMaps Pre-split map of data.
+        /// \param split Object that knows how to split data.
+        CatDataMap splitData(CatDataMap& splitMaps, Split& split);
 
         /// \brief Opens a BUFR file using the Fortran BUFR interface.
         void openBufrFile(const std::string& filepath);
 
         /// \brief Closes the open BUFR file.
         void closeBufrFile();
+
+        /// \brief Convenience method to print the Categorical data map to stdout.
+        void printMap(const CatDataMap& map);
     };
 }  // namespace Ingester

@@ -12,12 +12,14 @@
 
 namespace Ingester
 {
+    /// \brief Multiply a floating point scaling factor to to the data.
     class ScalingTransform : public Transform
     {
      public:
         explicit ScalingTransform(const double scaling_);
         ~ScalingTransform() = default;
 
+        /// \brief Apply transform to the given data.
         void apply(IngesterArray& array) override;
 
      private:

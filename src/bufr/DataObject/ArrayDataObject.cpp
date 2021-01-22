@@ -23,7 +23,7 @@ namespace Ingester
                                                    int compressionLevel)
     {
         auto params = makeCreationParams(chunks, compressionLevel);
-        auto var = obsGroup.vars.createWithScales<double>(name, dimensions, params);
+        auto var = obsGroup.vars.createWithScales<FloatType>(name, dimensions, params);
         var.writeWithEigenRegular(eigArray_);
         return var;
     }
@@ -31,6 +31,16 @@ namespace Ingester
     void ArrayDataObject::print() const
     {
         std::cout << eigArray_ << std::endl;
+    }
+
+    size_t ArrayDataObject::nrows() const
+    {
+        return eigArray_.rows();
+    }
+
+    size_t ArrayDataObject::ncols() const
+    {
+        return eigArray_.cols();
     }
 
     ioda::VariableCreationParameters ArrayDataObject::makeCreationParams(
@@ -45,4 +55,5 @@ namespace Ingester
 
         return params;
     }
+
 }  // namespace Ingester

@@ -32,17 +32,26 @@ list(APPEND _ingester_srcs
   BufrParser/BufrCollectors/BufrCollectors.cpp
   BufrParser/BufrCollectors/BufrCollectors.h
   BufrParser/Exports/Export.h
-  BufrParser/Exports/DatetimeExport.h
-  BufrParser/Exports/DatetimeExport.cpp
-  BufrParser/Exports/MnemonicExport.h
-  BufrParser/Exports/MnemonicExport.cpp
-  BufrParser/Exports/Transforms/Transform.h
-  BufrParser/Exports/Transforms/OffsetTransform.h
-  BufrParser/Exports/Transforms/OffsetTransform.cpp
-  BufrParser/Exports/Transforms/ScalingTransform.h
-  BufrParser/Exports/Transforms/ScalingTransform.cpp
-  BufrParser/Exports/Transforms/TransformBuilder.h
-  BufrParser/Exports/Transforms/TransformBuilder.cpp
+  BufrParser/Exports/Export.cpp
+  BufrParser/Exports/RowSlice.h
+  BufrParser/Exports/Filters/Filter.h
+  BufrParser/Exports/Filters/BoundingFilter.h
+  BufrParser/Exports/Filters/BoundingFilter.cpp
+  BufrParser/Exports/Splits/Split.h
+  BufrParser/Exports/Splits/CategorySplit.h
+  BufrParser/Exports/Splits/CategorySplit.cpp
+  BufrParser/Exports/Variables/Variable.h
+  BufrParser/Exports/Variables/DatetimeVariable.h
+  BufrParser/Exports/Variables/DatetimeVariable.cpp
+  BufrParser/Exports/Variables/MnemonicVariable.h
+  BufrParser/Exports/Variables/MnemonicVariable.cpp
+  BufrParser/Exports/Variables/Transforms/Transform.h
+  BufrParser/Exports/Variables/Transforms/OffsetTransform.h
+  BufrParser/Exports/Variables/Transforms/OffsetTransform.cpp
+  BufrParser/Exports/Variables/Transforms/ScalingTransform.h
+  BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
+  BufrParser/Exports/Variables/Transforms/TransformBuilder.h
+  BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp
@@ -61,7 +70,7 @@ ecbuild_add_library( TARGET   ingester
                      SOURCES  ${_ingester_srcs}
                      LIBS     ${_ingester_deps}
                      INSTALL_HEADERS LISTED
-                     HEADER_DESTINATION ${INSTALL_INCLUDEDIR}/bufr
+                     HEADER_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bufr
                      LINKER_LANGUAGE CXX
                     )
 
@@ -71,7 +80,7 @@ ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp
                         LIBS    ingester )
 
-ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_bufr_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
                   ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}
