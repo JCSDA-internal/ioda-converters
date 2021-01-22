@@ -70,7 +70,6 @@ list( APPEND test_output
   testoutput/afwa_snod.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
-  testoutput/gdas.t06z.adpsfc.tm00.nc
   testoutput/smap_ssm.nc
 )
 
@@ -88,22 +87,22 @@ if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
+    testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
-    testinput/bufr_adpsfc.yaml
-    testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
     testinput/bufr_filter_split.yaml
+    testinput/bufr_adpsfc.yaml
   )
 
   list( APPEND test_output
     testoutput/gdas.t18z.1bmhs.tm00.nc
     testoutput/gdas.t00z.1bhrs4.tm00.nc
-    testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t18z.1bmhs.tm00.filtering.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
+    testoutput/gdas.t06z.adpsfc.tm00.nc
   )
 endif()
 
@@ -545,9 +544,9 @@ if( iodaconv_pbfortran_ENABLED )
     ecbuild_add_test( TARGET  test_iodaconv_bufr_adpsfc2ioda
                       TYPE    SCRIPT
                       COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                      ARGS    netcdf 
+                      ARGS    netcdf
                               "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_adpsfc.yaml"
-                              gdas.t06z.adpsfc.tm00.bufr_d  ${IODA_CONV_COMP_TOL_ZERO}
+                              gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                       DEPENDS bufr2ioda.x )
 endif()
 

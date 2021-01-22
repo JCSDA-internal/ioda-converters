@@ -12,7 +12,7 @@ observations:
       mnemonicSets:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, WMOB, WMOS]
         - mnemonics: [CLAT, CLON]
-        - mnemonics: [SELV, PRES, PMSL, WDIR, WSPD, TMDB, TMDP] 
+        - mnemonics: [SELV, PRES, PMSL, WDIR, WSPD, TMDB, TMDP]
         - mnemonics: [RCHR, RCMI]
 
       exports:
@@ -33,12 +33,12 @@ observations:
             mnemonic: WMOS
 
           longitude:
-            mnemonic: CLON 
+            mnemonic: CLON
 
           latitude:
-            mnemonic: CLAT        
+            mnemonic: CLAT
 
-          pressureAir: 
+          pressureAir:
             mnemonic: PRES
 
           pressureMeanSeaLevel:
@@ -52,12 +52,12 @@ observations:
 
           temperatureDewpoint:
             mnemonic: TMDP
-        
+
 #        temperatureSeaSurface:
 #          mnemonic: SST1
 
           windDirection:
-            mnemonic: WDIR 
+            mnemonic: WDIR
 
           windSpeed:
             mnemonic: WSPD
@@ -69,23 +69,15 @@ observations:
             mnemonic: RCMI
 
     ioda:
-      backend: netcdf 
-      obsdataout: "./testoutput/gdas.t06z.adpsfc.tm00.nc"
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t06z.adpsfc.tm00.nc"
 
       dimensions:
         - name: "nlocs"
           size: variables/latitude.nrows #implicit info
 
-#        - name: "nme: "datetime@MetaData"
-#        #          source: "timestamp"
-#        #          dimensions: [ "nlocs" ]
-#        #          longName: "Datetime"
-#        #          units: "datetime"chans"
-#          size: "{LENGTH}" #explicit info
-
       variables:
         - name: "datetime@MetaData"
-          coordinates: "longitude latitude"
           source: variables/timestamp
           dimensions: [ "nlocs" ]
           longName: "Datetime"
@@ -96,7 +88,7 @@ observations:
           dimensions: [ "nlocs" ]
           longName: "WMO_BLOCK_NUMBER"
           units: ""
-        
+
         - name: "WMOStation@MetaData"
           source: variables/WMOStation
           dimensions: [ "nlocs" ]
@@ -186,5 +178,5 @@ observations:
 #          source: "temperatureSeaSurface"
 #          dimensions: ["nlocs"]
 #          longName: "SEA TEMPERATURE"
-#          units: "DEGREES KELVIN" 
+#          units: "DEGREES KELVIN"
 
