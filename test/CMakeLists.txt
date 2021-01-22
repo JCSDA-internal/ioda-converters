@@ -37,6 +37,8 @@ list( APPEND test_input
   testinput/afwa_snod_24km.grib
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
+  testinput/gdas.t06z.adpsfc.tm00.bufr_d
+  testinput/bufr_adpsfc.yaml
 )
 
 list( APPEND test_output
@@ -69,6 +71,7 @@ list( APPEND test_output
   testoutput/afwa_snod.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
+  testoutput/gdas.t06z.adpsfc.tm00.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -88,11 +91,14 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
+    testinput/bufr_adpsfc.yaml
+    testinput/gdas.t06z.adpsfc.tm00.bufr_d
   )
 
   list( APPEND test_output
     testoutput/gdas.t18z.1bmhs.tm00.nc
     testoutput/gdas.t00z.1bhrs4.tm00.nc
+    testoutput/gdas.t06z.adpsfc.tm00.nc
   )
 endif()
 
@@ -458,6 +464,13 @@ if(iodaconv_bufr_ENABLED)
                               gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                       DEPENDS bufr2ioda.x )
 
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_adpsfc2ioda
+                      TYPE    SCRIPT
+                      COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      ARGS    netcdf 
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_adpsfc.yaml"
+                              testinput/gdas.t06z.adpsfc.tm00.bufr_d  ${IODA_CONV_COMP_TOL_ZERO}
+                      DEPENDS bufr2ioda.x )
 endif()
 
 # =============================================================================
