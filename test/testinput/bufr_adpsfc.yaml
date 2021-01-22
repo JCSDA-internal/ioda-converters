@@ -24,7 +24,6 @@ observations:
               day: DAYS
               hour: HOUR
               minute: MINU
-#              isUTC: true
 
           WMOBlock:
             mnemonic: WMOB
@@ -74,7 +73,7 @@ observations:
 
       dimensions:
         - name: "nlocs"
-          size: variables/latitude.nrows #implicit info
+          size: variables/latitude.nrows
 
       variables:
         - name: "datetime@MetaData"
@@ -115,7 +114,6 @@ observations:
           dimensions: ["nlocs"]
           longName: "HEIGHT OF STATION"
           units: "Meter"
-#          range: [0, 10000]
 
         - name: "pressureAir@ObsValue"
           coordinates: "longitude latitude"
@@ -143,7 +141,6 @@ observations:
           dimensions: ["nlocs"]
           longName: "DEW POINT TEMPERATURE"
           units: "K"
-#          range: [850, 1100]
 
         - name: "windDirection@ObsValue"
           coordinates: "longitude latitude"
@@ -172,11 +169,3 @@ observations:
           dimensions: ["nlocs"]
           longName: "MINUTE  - TIME OF RECEIPT"
           units: "MINUTE"
-
-#        - name: "temperatureSeaSurface@ObsValue"
-#          coordinates: "longitude latitude"
-#          source: "temperatureSeaSurface"
-#          dimensions: ["nlocs"]
-#          longName: "SEA TEMPERATURE"
-#          units: "DEGREES KELVIN"
-
