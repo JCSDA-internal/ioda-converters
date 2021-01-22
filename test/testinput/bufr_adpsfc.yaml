@@ -52,9 +52,6 @@ observations:
           temperatureDewpoint:
             mnemonic: TMDP
 
-#        temperatureSeaSurface:
-#          mnemonic: SST1
-
           windDirection:
             mnemonic: WDIR
 
