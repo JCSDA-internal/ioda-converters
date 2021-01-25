@@ -30,7 +30,9 @@ namespace Ingester
         /// \brief Get an Eigen Array that contains a slice of the collected data.
         /// \param startCol Column offset where to start (should be size(channels) * paramNumber)
         /// \param channels Channels to collect starting from the start position
-        IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
+        IngesterArray getData(Eigen::Index elementPos,
+                              Eigen::Index numElementsPerSet,
+                              const Channels& indicies = {1});
 
         /// \brief Start over
         void reset();
