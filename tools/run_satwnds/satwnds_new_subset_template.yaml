@@ -12,7 +12,7 @@ observations:
         - mnemonics: [EHAM, PRLC, WDIR, WSPD]
         - mnemonics: [TCOV, CVWD]
         - mnemonics: [PCCF]
-          channels: 1-4
+          channels: 1-12
 
       exports:
         filters:
