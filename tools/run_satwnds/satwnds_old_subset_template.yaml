@@ -100,6 +100,12 @@ observations:
           longName: "Satellite Wind Calculation Method"
           units: "id"
 
+        - name: "satellite_channel_center_frequency@MetaData"
+          source: variables/satellite_channel_center_frequency
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Channel Center Frequency"
+          units: "hz"
+
         - name: "satellite_zenith_angle@MetaData"
           source: variables/satellite_zenith_angle
           dimensions: [ "nlocs" ]

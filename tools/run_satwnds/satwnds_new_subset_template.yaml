@@ -109,6 +109,12 @@ observations:
           longName: "Satellite Zenith Angle"
           units: "degrees"
 
+        - name: "satellite_channel_center_frequency@MetaData"
+          source: variables/satellite_channel_center_frequency
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Channel Center Frequency"
+          units: "hz"
+
         - name: "originating_generating_center@MetaData"
           source: variables/originating_generating_center
           dimensions: [ "nlocs" ]
