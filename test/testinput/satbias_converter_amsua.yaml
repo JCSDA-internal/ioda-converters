@@ -1,0 +1,4 @@
+input file: testinput/satbias_crtm_in
+output:
+- sensor: amsua_n18
+  output file: testrun/satbias_amsua_n18.nc4

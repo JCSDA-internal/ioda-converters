@@ -106,6 +106,20 @@ if( iodaconv_bufr_ENABLED )
   )
 endif()
 
+if (iodaconv_satbias_ENABLED )
+    list( APPEND test_input
+    testinput/satbias_converter_amsua.yaml
+    testinput/satbias_converter_cris.yaml
+    testinput/satbias_crtm_in
+  )
+
+  list( APPEND test_output
+    testoutput/satbias_amsua_n18.nc4
+    testoutput/satbias_cris_npp.nc4
+  )
+endif()
+
+
 if( iodaconv_pbfortran_ENABLED )
   list( APPEND test_input
     testinput/gnssro_kompsat5_20180415_00Z.bufr
@@ -550,6 +564,32 @@ if( iodaconv_pbfortran_ENABLED )
                     DEPENDS bufr2nc_fortran.x)
 
 endif()
+
+
+#==============================================================================
+# SatBias tests
+#==============================================================================
+
+if( iodaconv_satbias_ENABLED )
+
+  ecbuild_add_test( TARGET  test_iodaconv_satbias_amsua
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_amsua.yaml"
+                            satbias_amsua_n18.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS satbias2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_satbias_cris
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_cris.yaml"
+                            satbias_cris_npp.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS satbias2ioda.x )
+
+endif()
+
 
 # =============================================================================
 # Land product converters

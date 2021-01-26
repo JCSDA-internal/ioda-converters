@@ -1,0 +1,4 @@
+input file: testinput/satbias_crtm_in
+output:
+- sensor: cris_npp
+  output file: testrun/satbias_cris_npp.nc4
