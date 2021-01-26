@@ -13,25 +13,8 @@
 
 #include <Eigen/Dense>
 
-/// GSI predictor names
-namespace gsi_predictors {
-  /// Default predictors; some predictors are different for
-  /// goessndr .or. goes_img .or. ahi .or. seviri .or. ssmi .or. ssmis .or. gmi .or. abi
-  const std::vector<std::string> default_predictors = {"constant",
-                                                       "zenith_angle",
-                                                       "cloud_liquid_water",
-                                                       "lapse_rate_order_2",
-                                                       "lapse_rate",
-                                                       "cosine_of_latitude_times_orbit_node",
-                                                       "sine_of_latitude",
-                                                       "emissivity",
-                                                       "scan_angle_order_4",
-                                                       "scan_angle_order_3",
-                                                       "scan_angle_order_2",
-                                                       "scan_angle"
-                                                      };
-  const size_t npredictors = default_predictors.size();
-}  // namespace gsi_predictors
+/// Returns predictor names for this sensor
+const std::vector<std::string> & getGsiPredictors(const std::string & sensor);
 
 /// Finds all sensors in the file (returned in \p sensors) and number of channels
 /// for all the sensors (returned in \p nchannels)

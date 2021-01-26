@@ -28,7 +28,7 @@
 ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object, const std::string & filename,
                                  const std::string & sensor, const size_t nchannels) {
   // Channels & predictors
-  const std::vector<std::string> & predictors = gsi_predictors::default_predictors;
+  const std::vector<std::string> & predictors = getGsiPredictors(sensor);
   std::vector<int> channels(nchannels);
   long numPreds = predictors.size();
   long numChans = channels.size();

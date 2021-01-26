@@ -1,0 +1,4 @@
+input file: testinput/satbias_crtm_in
+output:
+- sensor: ssmis_f16
+  output file: testrun/satbias_ssmis_f16.nc4
