@@ -13,8 +13,6 @@
 
 #include <Eigen/Dense>
 
-constexpr size_t npredictors = 12;
-
 /// Read info for one channel from the GSI text file
 /// Returns sensor (instrument + satellite) name and channel index
 void readOneChannel(std::ifstream & infile, std::string & sensor, size_t & channel) {
@@ -26,7 +24,7 @@ void readOneChannel(std::ifstream & infile, std::string & sensor, size_t & chann
   infile >> tlap;
   infile >> tsum;
   infile >> ntlapupdate;
-  for (size_t ii = 0; ii < npredictors; ++ii) {
+  for (size_t ii = 0; ii < gsi_npredictors; ++ii) {
     infile >> par;
   }
 }
@@ -93,7 +91,7 @@ void readObsBiasCoefficients(const std::string & filename, const std::string & s
       if (nusis == sensor) {
         /// it's the sensor we're interested in; read in coefficients and channel
         /// indices
-        for (size_t jpred = 0; jpred < npredictors; ++jpred) {
+        for (size_t jpred = 0; jpred < gsi_npredictors; ++jpred) {
           infile >> par;
           coeffs(jpred, jchan) = par;
           channels[jchan] = nuchan;
@@ -101,7 +99,7 @@ void readObsBiasCoefficients(const std::string & filename, const std::string & s
         jchan++;
       } else {
         /// not interested in this channel; passing
-        for (size_t jpred = 0; jpred < npredictors; ++jpred) {
+        for (size_t jpred = 0; jpred < gsi_npredictors; ++jpred) {
           infile >> par;
         }
       }

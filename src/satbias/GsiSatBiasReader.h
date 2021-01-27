@@ -13,6 +13,9 @@
 
 #include <Eigen/Dense>
 
+/// Number of predictors in GSI satbias file
+constexpr size_t gsi_npredictors = 12;
+
 /// Finds all sensors in the file (returned in \p sensors) and number of channels
 /// for all the sensors (returned in \p nchannels)
 void findSensorsChannels(const std::string & filename, std::vector<std::string> & sensors,

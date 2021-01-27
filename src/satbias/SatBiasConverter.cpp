@@ -91,6 +91,11 @@ int main(int argc, char** argv) {
     const std::string sensor = configs[jj].getString("sensor");
     const std::string output_filename = configs[jj].getString("output file");
     const std::vector<std::string> predictors = configs[jj].getStringVector("predictors");
+    if (predictors.size() != gsi_npredictors) {
+      const std::string error = "Number of predictors specified in yaml must be " +
+            std::to_string(gsi_npredictors) + " (same as number of predictors in GSI satinfo)";
+      throw eckit::BadValue(error, Here());
+    }
     auto it = find(sensors.begin(), sensors.end(), sensor);
     if (it != sensors.end()) {
       int index = it - sensors.begin();
