@@ -19,7 +19,6 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/Engines/HH.h"
 
-#include "oops/util/Logger.h"
 #include "oops/util/missingValues.h"
 
 #include "GsiSatBiasReader.h"
@@ -98,7 +97,7 @@ int main(int argc, char** argv) {
       makeObsBiasObject(group, input_filename, sensor, nchannels[index]);
     } else {
       const std::string error = "No " + sensor + " sensor in the input file";
-      oops::Log::error() << error << std::endl;
+      throw eckit::BadValue(error, Here());
     }
   }
   return 0;

@@ -14,7 +14,7 @@
 #include <Eigen/Dense>
 
 /// GSI predictor names
-/// Default predictors; some predictors are different, see scanpos_predictors
+/// Default predictors; some sensors use different predictors, see scanpos_predictors
 const std::vector<std::string> default_predictors = {"constant",
                                                      "zenith_angle",
                                                      "cloud_liquid_water",
