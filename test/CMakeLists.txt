@@ -1,4 +1,4 @@
-# (C) Copyright 2019-2020 UCAR.
+# (C) Copyright 2019-2021 UCAR.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -38,6 +38,7 @@ list( APPEND test_input
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
+  testinput/smos_l2nrt_ssm.nc
 )
 
 list( APPEND test_output
@@ -71,6 +72,7 @@ list( APPEND test_output
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
   testoutput/smap_ssm.nc
+  testoutput/smos_ssm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -598,3 +600,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                             -o testrun/smap_ssm.nc
                             -m maskout"
                             smap_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/smos_ssm2ioda.py
+                            -i testinput/smos_l2nrt_ssm.nc
+                            -o testrun/smos_ssm.nc
+                            -m maskout"
+                            smos_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
