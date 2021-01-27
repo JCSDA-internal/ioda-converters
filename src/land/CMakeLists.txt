@@ -3,6 +3,7 @@ list(APPEND programs
   afwa_snod2ioda.py
   ghcn_snod2ioda.py
   smap_ssm2ioda.py
+  smos_ssm2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
