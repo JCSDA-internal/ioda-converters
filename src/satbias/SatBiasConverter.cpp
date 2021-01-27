@@ -25,9 +25,10 @@
 
 // Return ObsGroup with bias coefficients for a given sensor
 ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object, const std::string & filename,
-                                 const std::string & sensor, const size_t nchannels) {
+                                 const std::string & sensor,
+                                 const std::vector<std::string> & predictors,
+                                 const size_t nchannels) {
   // Channels & predictors
-  const std::vector<std::string> & predictors = getGsiPredictors(sensor);
   std::vector<int> channels(nchannels);
   long numPreds = predictors.size();
   long numChans = channels.size();
@@ -89,12 +90,13 @@ int main(int argc, char** argv) {
   for (size_t jj = 0; jj < configs.size(); ++jj) {
     const std::string sensor = configs[jj].getString("sensor");
     const std::string output_filename = configs[jj].getString("output file");
+    const std::vector<std::string> predictors = configs[jj].getStringVector("predictors");
     auto it = find(sensors.begin(), sensors.end(), sensor);
     if (it != sensors.end()) {
       int index = it - sensors.begin();
       ioda::Group group = ioda::Engines::HH::createFile(output_filename,
                           ioda::Engines::BackendCreateModes::Truncate_If_Exists);
-      makeObsBiasObject(group, input_filename, sensor, nchannels[index]);
+      makeObsBiasObject(group, input_filename, sensor, predictors, nchannels[index]);
     } else {
       const std::string error = "No " + sensor + " sensor in the input file";
       throw eckit::BadValue(error, Here());

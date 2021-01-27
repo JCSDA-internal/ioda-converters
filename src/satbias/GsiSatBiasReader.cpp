@@ -13,55 +13,7 @@
 
 #include <Eigen/Dense>
 
-/// GSI predictor names
-/// Default predictors; some sensors use different predictors, see scanpos_predictors
-const std::vector<std::string> default_predictors = {"constant",
-                                                     "zenith_angle",
-                                                     "cloud_liquid_water",
-                                                     "lapse_rate_order_2",
-                                                     "lapse_rate",
-                                                     "cosine_of_latitude_times_orbit_node",
-                                                     "sine_of_latitude",
-                                                     "emissivity",
-                                                     "scan_angle_order_4",
-                                                     "scan_angle_order_3",
-                                                     "scan_angle_order_2",
-                                                     "scan_angle"
-                                                    };
-
-/// Predictors for
-/// goessndr .or. goes_img .or. ahi .or. seviri .or. ssmi .or. ssmis .or. gmi .or. abi
-/// (scan position instead of scan angle)
-const std::vector<std::string> scanpos_predictors = {"constant",
-                                                     "zenith_angle",
-                                                     "cloud_liquid_water",
-                                                     "lapse_rate_order_2",
-                                                     "lapse_rate",
-                                                     "cosine_of_latitude_times_orbit_node",
-                                                     "sine_of_latitude",
-                                                     "emissivity",
-                                                     "scan_position_order_4",
-                                                     "scan_position_order_3",
-                                                     "scan_position_order_2",
-                                                     "scan_position"
-                                                    };
-const size_t npredictors = default_predictors.size();
-
-/// Returns predictors for this sensor (either default_predictors or scanpos_predictors)
-const std::vector<std::string> & getGsiPredictors(const std::string & sensor) {
-  bool is_sndr   = (sensor.find("sndr") != std::string::npos);
-  bool is_imgr   = (sensor.find("imgr") != std::string::npos);
-  bool is_ahi    = (sensor.find("ahi") != std::string::npos);
-  bool is_seviri = (sensor.find("seviri") != std::string::npos);
-  bool is_ssmi   = (sensor.find("ssmi") != std::string::npos);
-  bool is_gmi    = (sensor.find("gmi") != std::string::npos);
-  bool is_abi    = (sensor.find("abi") != std::string::npos);
-  if (is_sndr || is_imgr || is_ahi || is_seviri || is_ssmi || is_gmi || is_abi) {
-    return scanpos_predictors;
-  } else {
-    return default_predictors;
-  }
-}
+constexpr size_t npredictors = 12;
 
 /// Read info for one channel from the GSI text file
 /// Returns sensor (instrument + satellite) name and channel index

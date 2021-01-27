@@ -13,9 +13,6 @@
 
 #include <Eigen/Dense>
 
-/// Returns predictor names for this sensor
-const std::vector<std::string> & getGsiPredictors(const std::string & sensor);
-
 /// Finds all sensors in the file (returned in \p sensors) and number of channels
 /// for all the sensors (returned in \p nchannels)
 void findSensorsChannels(const std::string & filename, std::vector<std::string> & sensors,
@@ -29,4 +26,3 @@ void findSensorsChannels(const std::string & filename, std::vector<std::string> 
 void readObsBiasCoefficients(const std::string & filename, const std::string & sensor,
                              std::vector<int> & channels, Eigen::ArrayXXf & coeffs);
 
-#
