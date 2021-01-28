@@ -1,0 +1,17 @@
+input file: testinput/satbias_crtm_in
+output:
+- sensor: ssmis_f16
+  predictors:
+  - constant
+  - zenith_angle
+  - cloud_liquid_water
+  - lapse_rate_order_2
+  - lapse_rate
+  - cosine_of_latitude_times_orbit_node
+  - sine_of_latitude
+  - emissivity
+  - scan_position_order_4
+  - scan_position_order_3
+  - scan_position_order_2
+  - scan_position
+  output file: testrun/satbias_ssmis_f16.nc4
