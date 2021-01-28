@@ -44,7 +44,7 @@ class SMOS_L2NRT(object):
         self._read()
 
     def _read(self):
-        ncd = nc.Dataset(self.filename)
+        ncd = nc.Dataset(self.filename, 'r')
         lons = ncd.variables['longitude'][:]
         lats = ncd.variables['latitude'][:]
         vals = ncd.variables['soil_moisture'][:]
