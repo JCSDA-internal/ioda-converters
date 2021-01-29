@@ -30,10 +30,10 @@ namespace Ingester
         /// \brief Get an Eigen Array that contains a slice of the collected data.
         /// \param elementPos Position of mnemonic in the list of read mnemonics.
         /// \param numElementsPerSet Number of mnemonics in the list.
-        /// \param indicies Indicies to collect starting from the start position
+        /// \param indices indices to collect starting from the start position
         IngesterArray getData(Eigen::Index elementPos,
                               Eigen::Index numElementsPerSet,
-                              const Channels& indicies = {1});
+                              const Channels& indices = {1});
 
         /// \brief Start over
         void reset();

@@ -34,17 +34,17 @@ namespace Ingester
 
     IngesterArray BufrAccumulator::getData(Eigen::Index elementPos,
                                            Eigen::Index numElementsPerSet,
-                                           const Channels& indicies)
+                                           const Channels& indices)
     {
-        if (std::find_if(indicies.begin(), indicies.end(), [](const auto x){ return x < 1; }) \
-            != indicies.end())
+        if (std::find_if(indices.begin(), indices.end(),
+                         [](const auto x){ return x < 1; }) != indices.end())
         {
             throw eckit::BadParameter("All channel numbers must be >= 1.");
         }
 
-        IngesterArray resultArr(numDataRows_, indicies.size());
+        IngesterArray resultArr(numDataRows_, indices.size());
         unsigned int colIdx = 0;
-        for (auto col : indicies)
+        for (auto col : indices)
         {
             unsigned int offset = elementPos + numElementsPerSet * (col - 1);
             resultArr.block(0, colIdx, numDataRows_, 1) =
