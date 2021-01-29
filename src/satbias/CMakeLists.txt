@@ -4,7 +4,7 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 ecbuild_add_executable( TARGET  satbias2ioda.x
-                        SOURCES SatBiasConverter.cpp GsiSatbiasReader.cpp GsiSatbiasReader.h
+                        SOURCES SatBiasConverter.cpp GsiSatBiasReader.cpp GsiSatBiasReader.h
                         LIBS    Eigen3::Eigen ${oops_LIBRARIES} ioda_engines )
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_coding_norms
