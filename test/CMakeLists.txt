@@ -88,14 +88,14 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
-    testinput/bufr_mxn_repetitions.bufr
+    testinput/bufr_read_2_dim_blocks.bufr
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
-    testinput/bufr_mxn_repetitions.yaml
+    testinput/bufr_read_2_dim_blocks.yaml
   )
 
   list( APPEND test_output
@@ -105,7 +105,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
-    testoutput/bufr_mxn_repetitions.nc
+    testoutput/bufr_read_2_dim_blocks.nc
   )
 endif()
 
@@ -517,12 +517,12 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_m_x_n
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_read_2_dim_blocks
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mxn_repetitions.yaml"
-                            bufr_mxn_repetitions.nc ${IODA_CONV_COMP_TOL_ZERO}
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_read_2_dim_blocks.yaml"
+                            bufr_read_2_dim_blocks.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 endif()
