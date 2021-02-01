@@ -43,7 +43,6 @@ phases:
       - echo Executing pre_build phase
       - mkdir /build_container
       - mkdir -p /jcsda/ioda-bundle
-      - cp CI/CMakeLists.txt /jcsda/ioda-bundle  
       - cd CI
 
       - if [ "$CODEBUILD_GIT_BRANCH" = "develop" ];
@@ -68,6 +67,9 @@ phases:
      # ioda
       - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/ioda-bundle develop
 
+      - cp CMakeLists.txt /jcsda/ioda-bundle
+      - cp -r cmake /jcsda/ioda-bundle/
+      - ls /jcsda/ioda-bundle/
   build:
     commands:
       - cd /build_container

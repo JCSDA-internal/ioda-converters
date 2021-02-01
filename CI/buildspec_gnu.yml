@@ -93,6 +93,8 @@ phases:
       - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/ioda-bundle develop
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
+      - cp -r cmake /jcsda/ioda-bundle/
+      - ls /jcsda/ioda-bundle/
 
   build:
     commands:
