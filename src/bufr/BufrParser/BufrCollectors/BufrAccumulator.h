@@ -23,14 +23,17 @@ namespace Ingester
         /// \param blockSize The amount to allocate when we need to extend the Eigen Array
         explicit BufrAccumulator(Eigen::Index numColumns, Eigen::Index blockSize = 50000);
 
-        /// \brief Add row of data to the internal ddata structure
+        /// \brief Add row of data to the internal data structure
         /// \param newRow Collection of values to add (size must match the number of columns)
         void addRow(std::vector<FloatType>& newRow);
 
         /// \brief Get an Eigen Array that contains a slice of the collected data.
-        /// \param startCol Column offset where to start (should be size(channels) * paramNumber)
-        /// \param channels Channels to collect starting from the start position
-        IngesterArray getData(Eigen::Index startCol, const Channels& channels = {1});
+        /// \param elementPos Position of mnemonic in the list of read mnemonics.
+        /// \param numElementsPerSet Number of mnemonics in the list.
+        /// \param indices indices to collect starting from the start position
+        IngesterArray getData(Eigen::Index elementPos,
+                              Eigen::Index numElementsPerSet,
+                              const Channels& indices = {1});
 
         /// \brief Start over
         void reset();

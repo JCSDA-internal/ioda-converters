@@ -11,7 +11,7 @@ observations:
         - mnemonics: [SAID, CLAT, CLON, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM]
         - mnemonics: [HAMD, PRLC, WDIR, WSPD]
         - mnemonics: [GNAP, PCCF]
-          channels: 1-3
+          channels: 1-12
 
       exports:
         filters:
@@ -99,6 +99,12 @@ observations:
           dimensions: [ "nlocs" ]
           longName: "Satellite Wind Calculation Method"
           units: "id"
+
+        - name: "satellite_channel_center_frequency@MetaData"
+          source: variables/satellite_channel_center_frequency
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Channel Center Frequency"
+          units: "hz"
 
         - name: "satellite_zenith_angle@MetaData"
           source: variables/satellite_zenith_angle

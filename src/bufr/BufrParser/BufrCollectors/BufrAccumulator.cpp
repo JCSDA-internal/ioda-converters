@@ -32,19 +32,21 @@ namespace Ingester
         numDataRows_++;
     }
 
-    IngesterArray BufrAccumulator::getData(Eigen::Index startCol, const Channels &channels)
+    IngesterArray BufrAccumulator::getData(Eigen::Index elementPos,
+                                           Eigen::Index numElementsPerSet,
+                                           const Channels& indices)
     {
-        if (std::find_if(channels.begin(), channels.end(), [](const auto x){ return x < 1; }) \
-            != channels.end())
+        if (std::find_if(indices.begin(), indices.end(),
+                         [](const auto x){ return x < 1; }) != indices.end())
         {
             throw eckit::BadParameter("All channel numbers must be >= 1.");
         }
 
-        IngesterArray resultArr(numDataRows_, channels.size());
+        IngesterArray resultArr(numDataRows_, indices.size());
         unsigned int colIdx = 0;
-        for (auto col : channels)
+        for (auto col : indices)
         {
-            unsigned int offset = startCol + (col - 1);
+            unsigned int offset = elementPos + numElementsPerSet * (col - 1);
             resultArr.block(0, colIdx, numDataRows_, 1) =
                 dataArray_.block(0, offset, numDataRows_, 1);
 

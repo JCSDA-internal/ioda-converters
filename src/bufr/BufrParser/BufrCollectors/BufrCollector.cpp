@@ -23,7 +23,8 @@ namespace Ingester
         size_t fieldIdx = 0;
         for (const auto &fieldName : mnemonicSet_.getMnemonics())
         {
-            IngesterArray dataArr = accumulator_.getData(fieldIdx * mnemonicSet_.getMaxColumn(),
+            IngesterArray dataArr = accumulator_.getData(fieldIdx,
+                                                         mnemonicSet_.getSize(),
                                                          mnemonicSet_.getChannels());
 
             dataMap.insert({fieldName, dataArr});
