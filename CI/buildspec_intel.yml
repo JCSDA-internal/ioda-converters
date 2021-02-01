@@ -23,7 +23,7 @@ phases:
 
 
       - mkdir  /build_container
-      - mkdir  /jcsda
+      - mkdir -p /jcsda/ioda-bundle
       - echo $PATH
       - echo $LD_LIBRARY_PATH
       - echo $PYTHONPATH
@@ -64,8 +64,6 @@ phases:
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
 
-      - mkdir -p /jcsda/ioda-bundle
-      - mkdir /build_container
 
       - cd CI
 

@@ -67,7 +67,6 @@ phases:
       - cp ~/.gitconfig /home/jcsdauser/
 
       - mkdir -p /jcsda/ioda-bundle
-      - mkdir /build_container
 
       - cd CI
 
