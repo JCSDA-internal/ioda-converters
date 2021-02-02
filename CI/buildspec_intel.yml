@@ -75,22 +75,15 @@ phases:
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
-      - chmod 777 -R /jcsda/ioda-bundle
+        #      - chmod 777 -R /jcsda/ioda-bundle
 
   build:
     commands:
      
-      - su - jedi -c "export CC=mpiicc
-        && export FC=mpiifort
-        && export CXX=mpiicpc
-        && export PATH=/usr/local/lib:$PATH
-        && echo $PYTHONPATH
-        && echo $PATH
-        && echo $LD_LIBRARY_PATH
-        && cd /home/jedi
-        && ecbuild -DBUILD_IODA_CONVERTERS=ON /jcsda/ioda-bundle
-        && cd /home/jedi/iodaconv
-        && make -j4"
+      - cd /home/jedi
+      - ecbuild -DBUILD_IODA_CONVERTERS=ON /jcsda/ioda-bundle
+      - cd /home/jedi/iodaconv
+      - make -j4
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
@@ -101,12 +94,8 @@ phases:
         echo "Build passed";
         fi
       - echo $BUILD_STATUS
-      - su - jedi -c "export CC=mpiicc
-        && export FC=mpiifort
-        && export CXX=mpiicpc
-        && export PATH=/usr/local/lib:$PATH
-        && cd /home/jedi/iodaconv
-        && ctest"
+
+      - ctest
 
   post_build:
     commands:
@@ -115,11 +104,6 @@ phases:
       - echo $BUILD_STATUS
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
-        su - jedi -c "export CC=mpiicc
-        && export FC=mpiifort
-        && export CXX=mpiicpc
-        && export PATH=/usr/local/lib:$PATH
-        && cd /home/jedi/iodaconv
-        && ctest -VV --rerun-failed";
+        ctest -VV --rerun-failed";
         else echo "Build failed";
         fi 
