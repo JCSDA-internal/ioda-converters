@@ -104,6 +104,6 @@ phases:
       - echo $BUILD_STATUS
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
-        ctest -VV --rerun-failed";
+        ctest -VV --rerun-failed;
         else echo "Build failed";
         fi 
