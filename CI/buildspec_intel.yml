@@ -1,6 +1,7 @@
 version: 0.2
 
 env:
+  shell: bash
   parameter-store:
     GIT_USER: "/CodeBuild/Git_USER"
     GIT_PASS: "/CodeBuild/Git_PASS"
@@ -22,29 +23,12 @@ phases:
       - echo $CODEBUILD_WEBHOOK_BASE_REF
 
 
-      - mkdir  /build_container
-      - mkdir -p /jcsda/ioda-bundle
+      - ./etc/profile.d/intel.sh
       - echo $PATH
       - echo $LD_LIBRARY_PATH
       - echo $PYTHONPATH
-      ## cannot source /etc/bash.bashrc so copy what's there for root
-      - sed '12s/INTEL_TARGET_ARCH=/INTEL_TARGET_ARCH=intel64/' /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
-      - export COMPILERVARS_ARCHITECTURE=intel64
-      - export COMPILERVARS_PLATFORM=linux
-      - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
-      - export FC=mpiifort
-      - export CC=mpiicc
-      - export CXX=mpiicpc
-      - export PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-      - export LD_LIBRARY_PATH=/usr/local/lib
-      - export LIBRARY_PATH=/usr/local/lib
-      - export PYTHONPATH=/usr/local/lib
-      - . /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh
 
       - pip install xarray
-      - echo $PATH
-      - echo $LD_LIBRARY_PATH
-      - echo $PYTHONPATH
 
   pre_build:
     commands:
@@ -91,16 +75,18 @@ phases:
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
-      - ls /jcsda/ioda-bundle/
+      - chmod 777 -R /jcsda/ioda-bundle
 
   build:
     commands:
-      
-      - cd /build_container
-      - ecbuild -DBUILD_IODA_CONVERTERS=ON /jcsda/ioda-bundle
-      - cd /build_container/iodaconv
-      - make -j4
-      - export PYTHONPATH=/usr/local/lib
+     
+      - su - jedi -c "echo $PYTHONPATH
+        && echo $PATH
+        && echo $LD_LIBRARY_PATH
+        && cd /home/jedi
+        && ecbuild -DBUILD_IODA_CONVERTERS=ON /jcsda/ioda-bundle
+        && cd /home/jedi/iodaconv
+        && make -j4"
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
@@ -111,7 +97,8 @@ phases:
         echo "Build passed";
         fi
       - echo $BUILD_STATUS
-      - ctest
+      - su - jedi -c "cd /home/jedi/iodaconv
+        && ctest"
 
   post_build:
     commands:
@@ -120,6 +107,7 @@ phases:
       - echo $BUILD_STATUS
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
-        ctest -VV --rerun-failed;
+        su - jedi -c "cd /home/jedi/iodaconv
+        && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi 
