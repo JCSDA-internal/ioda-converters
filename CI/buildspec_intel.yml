@@ -26,10 +26,7 @@ phases:
       - echo $PATH
       - echo $LD_LIBRARY_PATH
       - echo $PYTHONPATH
-      - ls /etc
-      - ls /etc/profile.d
       - . /etc/profile.d/intel.sh
-
 
       - pip install xarray
 
@@ -83,7 +80,11 @@ phases:
   build:
     commands:
      
-      - su - jedi -c "echo $PYTHONPATH
+      - su - jedi -c "export CC=mpiicc
+        && export FC=mpiifort
+        && export CXX=mpiicpc
+        && export PATH=/usr/local/lib:$PATH
+        && echo $PYTHONPATH
         && echo $PATH
         && echo $LD_LIBRARY_PATH
         && cd /home/jedi
@@ -100,7 +101,11 @@ phases:
         echo "Build passed";
         fi
       - echo $BUILD_STATUS
-      - su - jedi -c "cd /home/jedi/iodaconv
+      - su - jedi -c "export CC=mpiicc
+        && export FC=mpiifort
+        && export CXX=mpiicpc
+        && export PATH=/usr/local/lib:$PATH
+        && cd /home/jedi/iodaconv
         && ctest"
 
   post_build:
@@ -110,7 +115,11 @@ phases:
       - echo $BUILD_STATUS
       - if [ "$BUILD_STATUS" = "1" ] && [ "$CODEBUILD_BUILD_SUCCEEDING" = "0" ];
         then echo "Build passed, rerun failed tests";
-        su - jedi -c "cd /home/jedi/iodaconv
+        su - jedi -c "export CC=mpiicc
+        && export FC=mpiifort
+        && export CXX=mpiicpc
+        && export PATH=/usr/local/lib:$PATH
+        && cd /home/jedi/iodaconv
         && ctest -VV --rerun-failed";
         else echo "Build failed";
         fi 
