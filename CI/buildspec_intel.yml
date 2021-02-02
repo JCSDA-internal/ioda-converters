@@ -23,10 +23,13 @@ phases:
       - echo $CODEBUILD_WEBHOOK_BASE_REF
 
 
-      - . /etc/profile.d/intel.sh
       - echo $PATH
       - echo $LD_LIBRARY_PATH
       - echo $PYTHONPATH
+      - ls /etc
+      - ls /etc/profile.d
+      - . /etc/profile.d/intel.sh
+
 
       - pip install xarray
 
