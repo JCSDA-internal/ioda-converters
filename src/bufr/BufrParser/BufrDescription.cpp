@@ -21,6 +21,7 @@ namespace
     namespace ConfKeys
     {
         const char* Filename = "obsdatain";
+        const char* TablePath = "tablepath";
         const char* MnemonicSets = "mnemonicSets";
         const char* Mnemonics = "mnemonics";
         const char* Channels = "channels";
@@ -34,6 +35,15 @@ namespace Ingester
         export_(Export(conf.getSubConfiguration(ConfKeys::Exports)))
     {
         setFilepath(conf.getString(ConfKeys::Filename));
+
+        if (conf.has(ConfKeys::TablePath))
+        {
+            setTablepath(conf.getString(ConfKeys::TablePath));
+        }
+        else
+        {
+            setTablepath("");
+        }
 
         if (conf.getSubConfigurations(ConfKeys::MnemonicSets).size() == 0)
         {

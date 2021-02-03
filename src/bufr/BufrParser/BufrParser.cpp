@@ -25,14 +25,18 @@ namespace Ingester
 {
     BufrParser::BufrParser(const BufrDescription &description) :
         description_(description),
-        fortranFileId_(0)
+        fortranFileId_(0),
+        table1FileId_(0),
+        table2FileId_(0)
     {
         reset();
     }
 
     BufrParser::BufrParser(const eckit::Configuration& conf) :
         description_(BufrDescription(conf)),
-        fortranFileId_(0)
+        fortranFileId_(0),
+        table1FileId_(0),
+        table2FileId_(0)
     {
         reset();
     }
@@ -139,18 +143,31 @@ namespace Ingester
         return splitDataMap;
     }
 
-    void BufrParser::openBufrFile(const std::string &filepath)
+    void BufrParser::openBufrFile(const std::string& filepath, const std::string& tablepath)
     {
         fortranFileId_ = 11;  // Fortran file id must be a integer > 10
         open_f(fortranFileId_, filepath.c_str());
-        openbf_f(fortranFileId_, "IN", fortranFileId_);
+
+        if (tablepath.empty())
+        {
+            openbf_f(fortranFileId_, "IN", fortranFileId_);
+        }
+        else
+        {
+            table1FileId_ = fortranFileId_ + 1;
+            table2FileId_ = fortranFileId_ + 2;
+            openbf_f(fortranFileId_, "SEC3", fortranFileId_);
+            mtinfo_f(tablepath.c_str(), table1FileId_, table2FileId_);
+        }
     }
 
     void BufrParser::closeBufrFile()
     {
-        closbf_f(fortranFileId_);
-        close_f(fortranFileId_);
+        exitbufr_f();
+
         fortranFileId_ = 0;
+        table1FileId_ = 0;
+        table2FileId_ = 0;
     }
 
     void BufrParser::reset()
@@ -160,7 +177,7 @@ namespace Ingester
             closeBufrFile();
         }
 
-        openBufrFile(description_.filepath());
+        openBufrFile(description_.filepath(), description_.tablepath());
     }
 
     void BufrParser::printMap(const BufrParser::CatDataMap& map)

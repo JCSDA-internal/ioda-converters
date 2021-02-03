@@ -36,11 +36,13 @@ namespace Ingester
 
         // Setters
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
+        inline void setTablepath(const std::string& tablepath) { filepath_ = tablepath; }
         inline void setExport(const Export& newExport) { export_ = newExport; }
 
         // Getters
         inline std::vector<BufrMnemonicSet> getMnemonicSets() const { return mnemonicSets_; }
         inline std::string filepath() const { return filepath_; }
+        inline std::string tablepath() const { return tablepath_; }
         inline Export getExport() const { return export_; }
 
      private:
@@ -49,6 +51,10 @@ namespace Ingester
 
         /// \brief Specifies the relative path to the BUFR file to read.
         std::string filepath_;
+
+        /// \brief Specifies the relative path to the master tables (required for standard BUFR
+        ///        files)
+        std::string tablepath_;
 
         /// \brief Map of export strings to Variable classes.
         Export export_;
