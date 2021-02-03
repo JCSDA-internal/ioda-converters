@@ -21,6 +21,7 @@ namespace
     namespace ConfKeys
     {
         const char* Filename = "obsdatain";
+        const char* IsStdFormat = "isStdFormat";
         const char* TablePath = "tablepath";
         const char* MnemonicSets = "mnemonicSets";
         const char* Mnemonics = "mnemonics";
@@ -35,6 +36,15 @@ namespace Ingester
         export_(Export(conf.getSubConfiguration(ConfKeys::Exports)))
     {
         setFilepath(conf.getString(ConfKeys::Filename));
+
+        if (conf.has(ConfKeys::IsStdFormat) && conf.getBool(ConfKeys::IsStdFormat))
+        {
+            setIsStdFormat(true);
+        }
+        else
+        {
+            setIsStdFormat(false);
+        }
 
         if (conf.has(ConfKeys::TablePath))
         {

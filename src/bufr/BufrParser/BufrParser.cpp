@@ -143,21 +143,27 @@ namespace Ingester
         return splitDataMap;
     }
 
-    void BufrParser::openBufrFile(const std::string& filepath, const std::string& tablepath)
+    void BufrParser::openBufrFile(const std::string& filepath,
+                                  bool isStdFormat,
+                                  const std::string& tablepath)
     {
         fortranFileId_ = 11;  // Fortran file id must be a integer > 10
         open_f(fortranFileId_, filepath.c_str());
 
-        if (tablepath.empty())
+        if (!isStdFormat)
         {
             openbf_f(fortranFileId_, "IN", fortranFileId_);
         }
         else
         {
-            table1FileId_ = fortranFileId_ + 1;
-            table2FileId_ = fortranFileId_ + 2;
             openbf_f(fortranFileId_, "SEC3", fortranFileId_);
-            mtinfo_f(tablepath.c_str(), table1FileId_, table2FileId_);
+
+            if (!tablepath.empty())  // else use the default tables
+            {
+                table1FileId_ = fortranFileId_ + 1;
+                table2FileId_ = fortranFileId_ + 2;
+                mtinfo_f(tablepath.c_str(), table1FileId_, table2FileId_);
+            }
         }
     }
 
@@ -177,7 +183,9 @@ namespace Ingester
             closeBufrFile();
         }
 
-        openBufrFile(description_.filepath(), description_.tablepath());
+        openBufrFile(description_.filepath(),
+                     description_.isStdFormat(),
+                     description_.tablepath());
     }
 
     void BufrParser::printMap(const BufrParser::CatDataMap& map)

@@ -7,6 +7,7 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/20210203.radiosonde"
+      isStdFormat: true
       tablepath: "./testinput/bufr_tables"
 
       mnemonicSets:

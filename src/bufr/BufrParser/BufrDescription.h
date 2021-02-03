@@ -36,12 +36,14 @@ namespace Ingester
 
         // Setters
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
+        inline void setIsStdFormat(bool isStdFormat) { isStdFormat_ = isStdFormat; }
         inline void setTablepath(const std::string& tablepath) { tablepath_ = tablepath; }
         inline void setExport(const Export& newExport) { export_ = newExport; }
 
         // Getters
         inline std::vector<BufrMnemonicSet> getMnemonicSets() const { return mnemonicSets_; }
         inline std::string filepath() const { return filepath_; }
+        inline bool isStdFormat() const { return isStdFormat_; }
         inline std::string tablepath() const { return tablepath_; }
         inline Export getExport() const { return export_; }
 
@@ -52,8 +54,10 @@ namespace Ingester
         /// \brief Specifies the relative path to the BUFR file to read.
         std::string filepath_;
 
-        /// \brief Specifies the relative path to the master tables (required for standard BUFR
-        ///        files)
+        /// \brief Does the bufr file use the standard BUFR format (no NCEP table data in file).
+        bool isStdFormat_;
+
+        /// \brief Specifies the relative path to the master tables (applies to std BUFR files).
         std::string tablepath_;
 
         /// \brief Map of export strings to Variable classes.
