@@ -87,10 +87,12 @@ endif()
 
 if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
+    testinput/bufr_tables
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
+    testinput/20210203.radiosonde
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
@@ -98,6 +100,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
+    testinput/bufr_read_std_wmo_radiosonde.yaml
   )
 
   list( APPEND test_output
@@ -108,6 +111,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
+    testoutput/bufr_read_std_wmo_radiosonde.nc
   )
 endif()
 
@@ -541,6 +545,14 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_read_2_dim_blocks.yaml"
                             bufr_read_2_dim_blocks.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_read_std_wmo_radiosonde
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_read_std_wmo_radiosonde.yaml"
+                            bufr_read_std_wmo_radiosonde.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 endif()

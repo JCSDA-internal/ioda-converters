@@ -36,7 +36,7 @@ namespace Ingester
 
         // Setters
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
-        inline void setTablepath(const std::string& tablepath) { filepath_ = tablepath; }
+        inline void setTablepath(const std::string& tablepath) { tablepath_ = tablepath; }
         inline void setExport(const Export& newExport) { export_ = newExport; }
 
         // Getters
