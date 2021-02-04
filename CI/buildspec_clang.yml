@@ -73,7 +73,7 @@ phases:
   build:
     commands:
       - cd /build_container
-      - ecbuild -DBUILD_IODA_CONVERTERS=ON /jcsda/ioda-bundle
+      - ecbuild /jcsda/ioda-bundle
       - cd /build_container/iodaconv
       - make -j4 
 

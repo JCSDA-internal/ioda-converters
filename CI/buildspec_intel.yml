@@ -83,7 +83,7 @@ phases:
       - cd /home/jedi
       - echo $PYTHONPATH
       - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
-      - ecbuild -DBUILD_IODA_CONVERTERS=ON /jcsda/ioda-bundle
+      - ecbuild /jcsda/ioda-bundle
       - cd /home/jedi/iodaconv
       - make -j4
 

@@ -39,16 +39,8 @@ ecbuild_bundle( PROJECT oops GIT "https://github.com/JCSDA-internal/oops.git" )
 ecbuild_bundle( PROJECT ioda GIT "https://github.com/JCSDA-internal/ioda.git" )
 
 # Build IODA converters
-option(BUILD_IODA_CONVERTERS "Build IODA Converters" OFF)
-if(BUILD_IODA_CONVERTERS)
-  ecbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
-endif()
+ecbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
 
-# Build Doxygen documentation
-option(BUILD_IODA_BUNDLE_DOC "Build documentation" OFF)
-if(BUILD_IODA_BUNDLE_DOC)
-   add_subdirectory( Documentation )
-endif(BUILD_IODA_BUNDLE_DOC)
 
 ecbuild_bundle_finalize()
 
