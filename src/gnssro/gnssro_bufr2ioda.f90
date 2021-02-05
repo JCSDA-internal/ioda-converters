@@ -192,7 +192,8 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 
 !    profile check:  (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
      if ( ((said >= 740).and.(said <=745)).or.((said >= 750).and.(said <= 755)) &
-            .or.(said == 820).or.(said == 786).or.(said == 825)) then  !CDAAC processing
+            .or.(said == 820).or.(said == 786).or.(said == 825) &
+            .or. ogce == 60) then  !CDAAC processing
        if(pcc == 0.0) then
           write(6,*)'READ_GNSSRO: bad profile 0.0% confidence said=',said,'ptid=',ptid, ' SKIP this report'
           cycle read_loop
