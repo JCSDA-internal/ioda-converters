@@ -26,7 +26,8 @@ integer, parameter :: r_kind   = selected_real_kind(15) !8
 ! output obs data stucture
 integer   :: ncid
 integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid,ndatetime_dimid
-integer   :: varid_lat,varid_lon,varid_time,varid_datetime,varid_said,varid_ptid,varid_sclf,varid_asce
+integer   :: varid_lat,varid_lon,varid_time,varid_datetime
+integer   :: varid_said,varid_siid,varid_ptid,varid_sclf,varid_asce,varid_ogce
 integer   :: varid_recn
 integer   :: varid_geoid, varid_rfict
 integer   :: varid_ref,varid_msl,varid_refoe
@@ -39,7 +40,7 @@ character,dimension(8)    :: subset
 character(len=10)         :: anatime
 integer(i_kind)           :: ndatetime = 20
 character(len=20)         :: datetime
-integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,ptid,sclf,asce
+integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,siid,ptid,sclf,asce,ogce
 integer(i_kind)           :: lnbufr    = 10
 integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
 integer(i_kind)           :: anatime_i
@@ -50,15 +51,17 @@ integer                   :: refflag, bendflag
 integer(i_kind),parameter :: mxib=31
 integer(i_kind)           :: ibit(mxib),nib
 integer(i_kind),parameter :: maxlevs=500
-integer(i_kind),parameter :: n1ahdr=11
+integer(i_kind),parameter :: n1ahdr=13
 integer(i_kind)           :: maxobs
 real(r_kind) :: timeo
 type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: said
+      integer(i_kind), allocatable, dimension(:)    :: siid
       integer(i_kind), allocatable, dimension(:)    :: sclf
       integer(i_kind), allocatable, dimension(:)    :: ptid
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
+      integer(i_kind), allocatable, dimension(:)    :: ogce
       real(r_double), allocatable, dimension(:)     :: time
       character(len=20), allocatable, dimension(:)  :: datetime
       real(r_double), allocatable, dimension(:)     :: lat
@@ -90,7 +93,7 @@ logical,        parameter :: GlobalModel = .true. ! temporary
 character(10) nemo
 character(80) hdr1a
 
-data hdr1a / 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU SCLF' / 
+data hdr1a / 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE' / 
 data nemo /'QFRO'/ 
 nrec =0
 ndata=0
@@ -128,10 +131,12 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 end do
 
 allocate(gpsro_data%said(maxobs))
+allocate(gpsro_data%siid(maxobs))
 allocate(gpsro_data%sclf(maxobs))
 allocate(gpsro_data%ptid(maxobs))
 allocate(gpsro_data%recn(maxobs))
 allocate(gpsro_data%asce(maxobs))
+allocate(gpsro_data%ogce(maxobs))
 allocate(gpsro_data%time(maxobs))
 allocate(gpsro_data%datetime(maxobs))
 allocate(gpsro_data%lat(maxobs))
@@ -165,12 +170,14 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      idate5(4) = bfr1ahdr(4) ! hour
      idate5(5) = bfr1ahdr(5) ! minute
      idate5(6) = 0 ! seconds
-     pcc  = bfr1ahdr(6)         ! profile per cent confidence
-     roc  = bfr1ahdr(7)         ! Earth local radius of curvature
+     pcc  = bfr1ahdr(6)        ! profile per cent confidence
+     roc  = bfr1ahdr(7)        ! Earth local radius of curvature
      said = bfr1ahdr(8)        ! Satellite identifier
-     ptid = bfr1ahdr(9)        ! Platform transmitter ID number
-     geoid= bfr1ahdr(10)      ! Geoid undulation
-     sclf = bfr1ahdr(11) 
+     siid = bfr1ahdr(9)        ! Satellite instrument
+     ptid = bfr1ahdr(10)       ! Platform transmitter ID number
+     geoid= bfr1ahdr(11)       ! Geoid undulation
+     sclf = bfr1ahdr(12)       ! Satellite classification
+     ogce = bfr1ahdr(13)       ! Identification of originating/generating centre
 
      call w3fs21(idate5,minobs)
      write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') &
@@ -185,7 +192,8 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 
 !    profile check:  (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
      if ( ((said >= 740).and.(said <=745)).or.((said >= 750).and.(said <= 755)) &
-            .or.(said == 820).or.(said == 786).or.(said == 825)) then  !CDAAC processing
+            .or.(said == 820).or.(said == 786).or.(said == 825) &
+            .or. ogce == 60) then  !CDAAC processing
        if(pcc == 0.0) then
           write(6,*)'READ_GNSSRO: bad profile 0.0% confidence said=',said,'ptid=',ptid, ' SKIP this report'
           cycle read_loop
@@ -280,9 +288,11 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gpsro_data%time(ndata)     = timeo
        gpsro_data%datetime(ndata) = datetime
        gpsro_data%said(ndata)     = said
+       gpsro_data%siid(ndata)     = siid
        gpsro_data%sclf(ndata)     = sclf
        gpsro_data%asce(ndata)     = asce
        gpsro_data%ptid(ndata)     = ptid
+       gpsro_data%ogce(ndata)     = ogce
        gpsro_data%ref(ndata)      = ref
        gpsro_data%msl_alt(ndata)  = height
        gpsro_data%bend_ang(ndata)     = bend
@@ -335,9 +345,14 @@ call check( nf90_def_var(ncid, "reference_sat_id@MetaData", NF90_INT, nlocs_dimi
 call check( nf90_put_att(ncid, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)" ))
 call check( nf90_def_var(ncid, "occulting_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_said))
 call check( nf90_put_att(ncid, varid_said, "longname", "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755" ))
+call check( nf90_def_var(ncid, "occulting_sat_is@MetaData", NF90_INT, nlocs_dimid, varid_siid))
+call check( nf90_put_att(ncid, varid_siid, "longname", "satellite instrument"))
 call check( nf90_def_var(ncid, "ascending_flag@MetaData",  NF90_INT, nlocs_dimid, varid_asce))
 call check( nf90_put_att(ncid, varid_asce, "longname", "the original occultation ascending/descending flag" ))
 call check( nf90_put_att(ncid, varid_asce, "valid_range", "0/descending or 1/ascending" ))
+call check( nf90_def_var(ncid, "process_center@MetaData",NF90_INT,nlocs_dimid, varid_ogce))
+call check( nf90_put_att(ncid, varid_ogce, "longname", "originally data processing_center,   &
+                                             e.g., 60 for UCAR, 94 for DMI, 78 for GFZ" ))
 call check( nf90_def_var(ncid, "refractivity@ObsValue", NF90_FLOAT, nlocs_dimid, varid_ref) )
 call check( nf90_put_att(ncid, varid_ref, "longname", "Atmospheric refractivity" ))
 call check( nf90_put_att(ncid, varid_ref, "_FillValue", real(missingvalue) ))
@@ -388,9 +403,11 @@ call check( nf90_put_var(ncid, varid_time, gpsro_data%time(1:ndata)) )
 call check( nf90_put_var(ncid, varid_datetime, gpsro_data%datetime(1:ndata)) )
 call check( nf90_put_var(ncid, varid_recn, gpsro_data%recn(1:ndata)) )
 call check( nf90_put_var(ncid, varid_said, gpsro_data%said(1:ndata)) )
+call check( nf90_put_var(ncid, varid_siid, gpsro_data%siid(1:ndata)) )
 call check( nf90_put_var(ncid, varid_ptid, gpsro_data%ptid(1:ndata)) )
 call check( nf90_put_var(ncid, varid_sclf, gpsro_data%sclf(1:ndata)) )
 call check( nf90_put_var(ncid, varid_asce, gpsro_data%asce(1:ndata)) )
+call check( nf90_put_var(ncid, varid_ogce, gpsro_data%ogce(1:ndata)) )
 call check( nf90_put_var(ncid, varid_ref, gpsro_data%ref(1:ndata)) )
 call check( nf90_put_var(ncid, varid_refoe, gpsro_data%refoe_gsi(1:ndata)) )
 call check( nf90_put_var(ncid, varid_msl, gpsro_data%msl_alt(1:ndata)) )
@@ -404,10 +421,12 @@ call check( nf90_put_var(ncid, varid_rfict, gpsro_data%rfict(1:ndata)) )
 call check( nf90_close(ncid) ) 
 
 deallocate(gpsro_data%said)
+deallocate(gpsro_data%siid)
 deallocate(gpsro_data%sclf)
 deallocate(gpsro_data%ptid)
 deallocate(gpsro_data%recn)
 deallocate(gpsro_data%asce)
+deallocate(gpsro_data%ogce)
 deallocate(gpsro_data%time)
 deallocate(gpsro_data%datetime)
 deallocate(gpsro_data%lat)
