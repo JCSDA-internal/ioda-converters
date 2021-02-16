@@ -39,6 +39,7 @@ list( APPEND test_input
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
   testinput/smos_l2nrt_ssm.nc
+  testinput/ascat_ssm.nc
 )
 
 list( APPEND test_output
@@ -73,6 +74,7 @@ list( APPEND test_output
   testoutput/ghcn_snod_20200228.nc
   testoutput/smap_ssm.nc
   testoutput/smos_ssm.nc
+  testoutput/ascat_ssm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -670,3 +672,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
                             -o testrun/smos_ssm.nc
                             -m maskout"
                             smos_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ascat_ssm
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/ascat_ssm2ioda.py
+                            -i testinput/ascat_ssm.nc
+                            -o testrun/ascat_ssm.nc
+                            -m maskout"
+                            ascat_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
