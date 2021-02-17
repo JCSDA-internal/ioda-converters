@@ -54,7 +54,7 @@ class AFWA(object):
         lats = lat[:].ravel()
         vals = data[1].values[:].ravel()
 
-        # use stereographic projection to calculate lat/lon as read of 
+        # use stereographic projection to calculate lat/lon as read of
         # lat/lon is not correct for afwa grib1 file
         lat1 = data[1]['latitudeOfFirstGridPointInDegrees']
         lon1 = data[1]['longitudeOfFirstGridPointInDegrees']
@@ -70,13 +70,13 @@ class AFWA(object):
         myparams = data[1].projparams
         # reset Lat of True Origin(lat_ts)for Soutern Hemisphere grib file
         if myparams['lat_0'] == -90.0:
-            myparams['lat_ts']= -60.0
+            myparams['lat_ts'] = -60.0
 
         pj = pyproj.Proj(myparams)
-        llcrnrx, llcrnry = pj(lon1,lat1) 
+        llcrnrx, llcrnry = pj(lon1, lat1)
         x = llcrnrx - dx*np.arange(nx)
         y = llcrnry + dy*np.arange(ny)
-        x,y = np.meshgrid(x,y)
+        x, y = np.meshgrid(x, y)
         lon, lat = pj(x, y, inverse=True)
         lons = lon[:].ravel()
         lats = lat[:].ravel()
