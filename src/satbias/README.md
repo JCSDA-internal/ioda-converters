@@ -8,7 +8,7 @@ sensor.
 
 The configuration file specifies which sensors need to be processed from the input GSI satbias files,
 the output file names and the names of the predictors for the new file.
-An example of a configuration file can be found in `ioda_converters/test/testinput/satbias_converter.yaml`:
+An example of a configuration file can be found in [`test/testinput/satbias_converter.yaml`](https://github.com/JCSDA-internal/ioda-converters/blob/develop/test/testinput/satbias_converter.yaml)
 
 ```yaml
 input file: satbias_crtm_in     # input file name
@@ -21,7 +21,7 @@ output:
   predictors: *default_preds
 ```
 
-According to [GSI code (as of Feb 19 2021)](https://github.com/NOAA-EMC/GSI/blob/a9447258bb911d73ded0331141d0bf56abdfd74d/src/gsi/setuprad.f90#L992)),
+According to [GSI code (as of Feb 19 2021)](https://github.com/NOAA-EMC/GSI/blob/a9447258bb911d73ded0331141d0bf56abdfd74d/src/gsi/setuprad.f90#L992),
 the following predictors should be used for most sensors:
 
 ```yaml
