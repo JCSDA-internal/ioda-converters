@@ -60,7 +60,7 @@ observations:
       globals: 
         - key: "platformCommonName@MetaData"
           type: string
-          value: "AVHRR"
+          value: "MHS"
             
 
       variables:
