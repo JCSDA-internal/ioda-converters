@@ -147,24 +147,13 @@ namespace Ingester
             {
                 
                 std::cout<<globalDesc.key<<std::endl;
-                ioda::Attribute str1 = rootGroup.atts.create<std::string>(globalDesc.key, {1});
-                str1.write<std::string>({globalDesc.value});
-                // ioda::Attribute str1 = rootGroup.atts.add<std::string>("str-1", globalDesc.key); 
+                ioda::Attribute attr = rootGroup.atts.create<std::string>(globalDesc.key, {1});
+                attr.write<std::string>({globalDesc.value});
             }
       
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
-               
-               
-                // Create global attributes  
-//                if ( varDesc.source.substr(0,3) == "new" ) {
-                
-//                std::cout<<varDesc.name<<std::endl;
-//                ioda::Attribute intatt1 = rootGroup.atts.create<int>("int-att-1", {1});
-                
-                // Write out bufr variables into IODA groups
-//                } else {
                
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
@@ -217,7 +206,6 @@ namespace Ingester
                                             {2});
                 }
                 
-//                }
             }
 
             obsGroups.insert({categories, obsGroup});

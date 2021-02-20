@@ -12,7 +12,6 @@ observations:
         - mnemonics: [LSQL, HOLS, HMSL]
         - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
         - mnemonics: [TMBR]
-#        - mnemonics: [WVNM]
           channels : 1-5
 
       exports:
@@ -47,15 +46,7 @@ observations:
             mnemonic: BEARAZ
           radiance:
             mnemonic: TMBR
-#          wave:
-#            mnemomic: WVNM
     
-    new:
-      attributes: 
-       name: platformCategory@MetaData 
-       value: "Satellite"
- 
-
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
@@ -156,14 +147,5 @@ observations:
           chunks: [1000, 15]
           compressionLevel: 4
 
-        - name: "brightnessTemperature@ObsError"
-          coordinates: "longitude latitude nchans"
-          source: variables/radiance 
-          dimensions: ["nlocs", "nchans"]
-          longName: "Brightness Temperature"
-          units: "K"
-          range: [2.5, 2.5]
-          chunks: [1000, 15]
-          compressionLevel: 4
 
         
