@@ -141,10 +141,31 @@ namespace Ingester
                 varGroupMap.insert(splitVar(varDesc.name));
             }
             // Todo: Delete with USE_OLD_LAYOUT
-
+                  
+            // Create Globals
+            for (const auto& globalDesc : description_.getGlobals())
+            {
+                
+                std::cout<<globalDesc.key<<std::endl;
+                ioda::Attribute str1 = rootGroup.atts.create<std::string>(globalDesc.key, {1});
+                str1.write<std::string>({globalDesc.value});
+                // ioda::Attribute str1 = rootGroup.atts.add<std::string>("str-1", globalDesc.key); 
+            }
+      
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
+               
+               
+                // Create global attributes  
+//                if ( varDesc.source.substr(0,3) == "new" ) {
+                
+//                std::cout<<varDesc.name<<std::endl;
+//                ioda::Attribute intatt1 = rootGroup.atts.create<int>("int-att-1", {1});
+                
+                // Write out bufr variables into IODA groups
+//                } else {
+               
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
                 for (size_t dimIdx = 0; dimIdx < varDesc.dimensions.size(); dimIdx++)
@@ -162,6 +183,8 @@ namespace Ingester
                         chunks.push_back(dimVar.getChunkSizes()[0]);
                     }
                 }
+
+                
 
                 auto data = dataContainer->get(varDesc.source, categories);
                 auto var = data->createVariable(obsGroup,
@@ -193,6 +216,8 @@ namespace Ingester
                                             {varDesc.range->start, varDesc.range->end},
                                             {2});
                 }
+                
+//                }
             }
 
             obsGroups.insert({categories, obsGroup});

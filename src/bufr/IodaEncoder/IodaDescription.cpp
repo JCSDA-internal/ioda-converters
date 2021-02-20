@@ -19,6 +19,7 @@ namespace
         const char* Filename = "obsdataout";
         const char* Dimensions = "dimensions";
         const char* Variables = "variables";
+        const char* Globals = "globals";
 
         namespace Dimension
         {
@@ -38,6 +39,13 @@ namespace
             const char* Chunks = "chunks";
             const char* CompressionLevel = "compressionLevel";
         }  // namespace Variable
+
+        namespace Global
+        {
+            const char* Key = "key";
+            const char* Value = "value";
+            const char* Type = "type";
+        }  // namespace Globals
     }  // namespace ConfKeys
 }  // namespace
 
@@ -150,6 +158,19 @@ namespace Ingester
 
             addVariable(variable);
         }
+
+        auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
+        if (globalConfs.size() > 0)
+        {
+           for (const auto& globalConf : globalConfs)
+           {
+               GlobalDescription global;
+               global.key = globalConf.getString(ConfKeys::Global::Key);
+               global.value = globalConf.getString(ConfKeys::Global::Value);
+               global.type = globalConf.getString(ConfKeys::Global::Type);
+               addGlobal(global);
+           }
+        }
     }
 
     void IodaDescription::addDimension(const DimensionDescription& scale)
@@ -160,6 +181,11 @@ namespace Ingester
     void IodaDescription::addVariable(const VariableDescription& variable)
     {
         variables_.push_back(variable);
+    }
+
+    void IodaDescription::addGlobal(const GlobalDescription& global)
+    {
+        globals_.push_back(global);
     }
 
     void IodaDescription::setBackend(const std::string& backend)

@@ -41,8 +41,16 @@ namespace Ingester
         int compressionLevel;  // Optional
     };
 
+    struct GlobalDescription
+    {
+        std::string key;
+        std::string value;
+        std::string type; 
+    };
+
     typedef std::vector<DimensionDescription> DimDescriptions;
     typedef std::vector<VariableDescription> VariableDescriptions;
+    typedef std::vector<GlobalDescription> GlobalDescriptions;
 
     /// \brief Describes how to write data to IODA.
     class IodaDescription
@@ -57,6 +65,9 @@ namespace Ingester
         /// \brief Add Variable defenition
         void addVariable(const VariableDescription& variable);
 
+        /// \brief Add Globals defenition
+        void addGlobal(const GlobalDescription& global);
+
         // Setters
         inline void setBackend(const ioda::Engines::BackendNames& backend) { backend_ = backend; }
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
@@ -66,6 +77,7 @@ namespace Ingester
         inline std::string getFilepath() const { return filepath_; }
         inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
+        inline GlobalDescriptions getGlobals() const { return globals_; }
 
      private:
         /// \brief The backend type to use
@@ -79,6 +91,9 @@ namespace Ingester
 
         /// \brief Collection of defined variables
         VariableDescriptions variables_;
+
+        /// \brief Collection of defined globals
+        GlobalDescriptions globals_;
 
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);
