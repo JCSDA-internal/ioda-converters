@@ -1,6 +1,6 @@
 # GSI Satbias Converter
 
-GSI Satbias Converter is a tool that converts GSI files with bias correction coefficients (satbias)
+GSI Satbias Converter is a tool that converts GSI files with satellite bias correction coefficients (satbias)
 to the NetCDF files written using IODA ObsGroup capability. One NetCDF file is created for each
 sensor.
 
