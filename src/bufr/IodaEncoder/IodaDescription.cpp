@@ -166,8 +166,9 @@ namespace Ingester
            {
                GlobalDescription global;
                global.key = globalConf.getString(ConfKeys::Global::Key);
-               global.value = globalConf.getString(ConfKeys::Global::Value);
                global.type = globalConf.getString(ConfKeys::Global::Type);
+               global.value = globalConf.getString(ConfKeys::Global::Value);
+                
                addGlobal(global);
            }
         }

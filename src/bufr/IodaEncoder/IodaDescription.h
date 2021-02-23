@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <variant>
 
 #include "eckit/config/LocalConfiguration.h"
 #include "ioda/Engines/Factory.h"

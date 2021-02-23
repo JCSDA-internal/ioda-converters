@@ -146,7 +146,6 @@ namespace Ingester
             for (const auto& globalDesc : description_.getGlobals())
             {
                 
-                std::cout<<globalDesc.key<<std::endl;
                 ioda::Attribute attr = rootGroup.atts.create<std::string>(globalDesc.key, {1});
                 attr.write<std::string>({globalDesc.value});
             }
