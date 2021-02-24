@@ -42,10 +42,10 @@ namespace
 
         namespace Global
         {
-            const char* Key = "key";
+            const char* Name = "name";
             const char* Value = "value";
             const char* Type = "type";
-        }  // namespace Globals
+        }  // namespace Global
     }  // namespace ConfKeys
 }  // namespace
 
@@ -159,18 +159,18 @@ namespace Ingester
             addVariable(variable);
         }
 
-        auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
-        if (globalConfs.size() > 0)
+        if (conf.has(ConfKeys::Globals))
         {
-           for (const auto& globalConf : globalConfs)
-           {
-               GlobalDescription global;
-               global.key = globalConf.getString(ConfKeys::Global::Key);
-               global.type = globalConf.getString(ConfKeys::Global::Type);
-               global.value = globalConf.getString(ConfKeys::Global::Value);
-                
-               addGlobal(global);
-           }
+            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
+            for (const auto& globalConf : globalConfs)
+            {
+                GlobalDescription global;
+                global.name = globalConf.getString(ConfKeys::Global::Name);
+                global.type = globalConf.getString(ConfKeys::Global::Type);
+                global.value = globalConf.getString(ConfKeys::Global::Value);
+
+                addGlobal(global);
+            }
         }
     }
 

@@ -141,19 +141,17 @@ namespace Ingester
                 varGroupMap.insert(splitVar(varDesc.name));
             }
             // Todo: Delete with USE_OLD_LAYOUT
-                  
+
             // Create Globals
             for (const auto& globalDesc : description_.getGlobals())
             {
-                
-                ioda::Attribute attr = rootGroup.atts.create<std::string>(globalDesc.key, {1});
+                ioda::Attribute attr = rootGroup.atts.create<std::string>(globalDesc.name, {1});
                 attr.write<std::string>({globalDesc.value});
             }
-      
+
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
-               
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
                 for (size_t dimIdx = 0; dimIdx < varDesc.dimensions.size(); dimIdx++)
@@ -171,8 +169,6 @@ namespace Ingester
                         chunks.push_back(dimVar.getChunkSizes()[0]);
                     }
                 }
-
-                
 
                 auto data = dataContainer->get(varDesc.source, categories);
                 auto var = data->createVariable(obsGroup,
@@ -204,7 +200,6 @@ namespace Ingester
                                             {varDesc.range->start, varDesc.range->end},
                                             {2});
                 }
-                
             }
 
             obsGroups.insert({categories, obsGroup});

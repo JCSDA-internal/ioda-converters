@@ -10,7 +10,6 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <variant>
 
 #include "eckit/config/LocalConfiguration.h"
 #include "ioda/Engines/Factory.h"
@@ -44,9 +43,9 @@ namespace Ingester
 
     struct GlobalDescription
     {
-        std::string key;
+        std::string name;
         std::string value;
-        std::string type; 
+        std::string type;
     };
 
     typedef std::vector<DimensionDescription> DimDescriptions;
