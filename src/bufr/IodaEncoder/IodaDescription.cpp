@@ -160,17 +160,39 @@ namespace Ingester
         }
 
         if (conf.has(ConfKeys::Globals))
-        {
-            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
-            for (const auto& globalConf : globalConfs)
-            {
-                GlobalDescription global;
-                global.name = globalConf.getString(ConfKeys::Global::Name);
-                global.type = globalConf.getString(ConfKeys::Global::Type);
-                global.value = globalConf.getString(ConfKeys::Global::Value);
+           {
+           auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
+           for (const auto& globalConf : globalConfs)
+           {
+  //              varConf.getString(ConfKeys::Variable::Source);
+              if (globalConf.getString(ConfKeys::Global::Type) == "string")//ConfKeys::Global::StringType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::string>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+               
+               // get the value as the right type from the YAML file getInt, getString,
+               // getFloat or whatever.
+                  global->value = globalConf.getString(ConfKeys::Global::Value);
+                  std::cout<< global->value << std::endl;
+//                  global->type  = conf.getString(ConfKeys::Global::Type);
+                  globals_.push_back(global);
+              }
+           // more if statements for different types
+              else
+              {
+                 throw eckit::BadParameter("Unsupported global attribute type");
+              }
+           } 
+//            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
+//            for (const auto& globalConf : globalConfs)
+//            {
+//                GlobalDescription global;
+//                global.name = globalConf.getString(ConfKeys::Global::Name);
+//                global.type = globalConf.getString(ConfKeys::Global::Type);
+//                global.value = globalConf.getString(ConfKeys::Global::Value);
 
-                addGlobal(global);
-            }
+//                addGlobal(global);
+//            }
         }
     }
 
@@ -184,10 +206,10 @@ namespace Ingester
         variables_.push_back(variable);
     }
 
-    void IodaDescription::addGlobal(const GlobalDescription& global)
-    {
-        globals_.push_back(global);
-    }
+//    void IodaDescription::addGlobal(const GlobalDescription& global)
+//    {
+//        globals_.push_back(global);
+//    }
 
     void IodaDescription::setBackend(const std::string& backend)
     {

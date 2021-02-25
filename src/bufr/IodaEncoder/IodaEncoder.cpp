@@ -8,6 +8,7 @@
 #include "IodaEncoder.h"
 
 #include <memory>
+#include <type_traits>
 
 #include "eckit/exception/Exceptions.h"
 #include "ioda/Layout.h"
@@ -143,12 +144,30 @@ namespace Ingester
             // Todo: Delete with USE_OLD_LAYOUT
 
             // Create Globals
-            for (const auto& globalDesc : description_.getGlobals())
+/*            
+            for (auto& global : description_.globals_)
             {
-                ioda::Attribute attr = rootGroup.atts.create<std::string>(globalDesc.name, {1});
-                attr.write<std::string>({globalDesc.value});
-            }
+//                ioda::Attribute attr = rootGroup.atts.create<std::string>(globalDesc.name, {1});
+//                attr.write<std::string>({globalDesc.value});
+                if (std::is_same<std::string, global->value>)
+                {
+                   ioda::Attribute attr = rootGroup.atts.create<std::string>(global->name, {1});
+                   attr.write<std::string>({global->value});
+                }
+                else if (std::is_same<int, global->value>::value)
+                {
 
+                }
+            }
+*/            
+            
+            for (auto& global : description_.globals_)
+            {
+                std::cout<< global->name<<std::endl;
+                std::cout<< global->value<<std::endl;
+            }
+            
+ 
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
