@@ -51,9 +51,6 @@ namespace Ingester
     template<typename T>
     struct GlobalDescription : GlobalDescriptionBase
     {
-//        std::string name;
-//        std::string value;
-//        std::string type;
         T value;
     };
 
@@ -89,8 +86,6 @@ namespace Ingester
         inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
 //        inline GlobalDescriptions getGlobals() const { return globals_; }
-//        inline GlobalDescription getGlobals() const { return globals_; }
-//        inline GlobalDescriptionBase getGlobals() const { return globals_; }
 
      private:
         /// \brief The backend type to use

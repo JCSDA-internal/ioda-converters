@@ -164,24 +164,39 @@ namespace Ingester
            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
            for (const auto& globalConf : globalConfs)
            {
-  //              varConf.getString(ConfKeys::Variable::Source);
               if (globalConf.getString(ConfKeys::Global::Type) == "string")//ConfKeys::Global::StringType)
               {
                   auto global = std::make_shared<GlobalDescription<std::string>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->type = globalConf.getString(ConfKeys::Global::Type);
                
                // get the value as the right type from the YAML file getInt, getString,
                // getFloat or whatever.
                   global->value = globalConf.getString(ConfKeys::Global::Value);
-                  std::cout<< global->value << std::endl;
-//                  global->type  = conf.getString(ConfKeys::Global::Type);
+                  //std::cout<< global->value << std::endl;
                   globals_.push_back(global);
+//                  global->type  = conf.getString(ConfKeys::Global::Type);
               }
+              else if (globalConf.getString(ConfKeys::Global::Type) == "float")//ConfKeys::Global::StringType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::string>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->type = globalConf.getString(ConfKeys::Global::Type);
+               
+               // get the value as the right type from the YAML file getInt, getString,
+               // getFloat or whatever.
+                  global->value = globalConf.getFloat(ConfKeys::Global::Value);
+                  //std::cout<< global->value << std::endl;
+                  globals_.push_back(global);
+//                  global->type  = conf.getString(ConfKeys::Global::Type);
            // more if statements for different types
+              }
               else
               {
                  throw eckit::BadParameter("Unsupported global attribute type");
               }
+
+              
            } 
 //            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
 //            for (const auto& globalConf : globalConfs)
