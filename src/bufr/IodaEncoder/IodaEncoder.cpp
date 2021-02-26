@@ -146,13 +146,13 @@ namespace Ingester
             // Create Globals            
             for (auto& global : description_.globals_)
             {
-                //if (std::is_same<std::string, global->value>)
+                //if (std::is_same<std::string, global->value>::value)
                 if (global->type == "string")
                 {
                    ioda::Attribute attr = rootGroup.atts.create<std::string>(global->name, {1});
                    attr.write<std::string>({global->value});
                 }
-                //else if (std::is_same<int, global->value>::value)
+               // else if (std::is_same<float, global->value>::value)
                 else if (global->type == "float")
                 {
                    std::cout<< global->name<<std::endl;
@@ -163,14 +163,6 @@ namespace Ingester
                 }
             }
             
-/*            
-            for (auto& global : description_.globals_)
-            {
-                std::cout<< global->name<<std::endl;
-                std::cout<< global->value<<std::endl;
-            }
-*/            
- 
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
