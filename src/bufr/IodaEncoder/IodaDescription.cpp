@@ -45,6 +45,9 @@ namespace
             const char* Name = "name";
             const char* Value = "value";
             const char* Type = "type";
+            const char* StringType = "string";
+            const char* FloatType = "float";
+            const char* IntType = "int";
         }  // namespace Global
     }  // namespace ConfKeys
 }  // namespace
@@ -164,31 +167,22 @@ namespace Ingester
            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
            for (const auto& globalConf : globalConfs)
            {
-              if (globalConf.getString(ConfKeys::Global::Type) == "string")//ConfKeys::Global::StringType)
+              if (globalConf.getString(ConfKeys::Global::Type) == \
+                  ConfKeys::Global::StringType)
               {
                   auto global = std::make_shared<GlobalDescription<std::string>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->type = globalConf.getString(ConfKeys::Global::Type);
-               
-               // get the value as the right type from the YAML file getInt, getString,
-               // getFloat or whatever.
                   global->value = globalConf.getString(ConfKeys::Global::Value);
-                  //std::cout<< global->value << std::endl;
                   globals_.push_back(global);
-//                  global->type  = conf.getString(ConfKeys::Global::Type);
               }
-              else if (globalConf.getString(ConfKeys::Global::Type) == "float")//ConfKeys::Global::StringType)
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::FloatType)
               {
-                  auto global = std::make_shared<GlobalDescription<std::string>>();
+                  auto global = std::make_shared<GlobalDescription<float>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->type = globalConf.getString(ConfKeys::Global::Type);
-               
-               // get the value as the right type from the YAML file getInt, getString,
-               // getFloat or whatever.
                   global->value = globalConf.getFloat(ConfKeys::Global::Value);
-                  //std::cout<< global->value << std::endl;
                   globals_.push_back(global);
-//                  global->type  = conf.getString(ConfKeys::Global::Type);
+
            // more if statements for different types
               }
               else

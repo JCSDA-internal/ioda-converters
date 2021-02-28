@@ -144,23 +144,9 @@ namespace Ingester
             // Todo: Delete with USE_OLD_LAYOUT
 
             // Create Globals            
-            for (auto& global : description_.globals_)
+            for (auto& global : description_.getGlobals())
             {
-                //if (std::is_same<std::string, global->value>::value)
-                if (global->type == "string")
-                {
-                   ioda::Attribute attr = rootGroup.atts.create<std::string>(global->name, {1});
-                   attr.write<std::string>({global->value});
-                }
-               // else if (std::is_same<float, global->value>::value)
-                else if (global->type == "float")
-                {
-                   std::cout<< global->name<<std::endl;
-                   std::cout<< global->value<<std::endl;
-                   std::cout<< typeid(global->value).name()<<std::endl;
-                   ioda::Attribute attr = rootGroup.atts.create<float>(global->name, {1});
-                   //attr.write<float>({global->value});
-                }
+                global->addTo(rootGroup);
             }
             
             // Create Variables

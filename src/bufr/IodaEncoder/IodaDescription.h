@@ -8,12 +8,13 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "eckit/config/LocalConfiguration.h"
 #include "ioda/Engines/Factory.h"
+#include "ioda/Group.h"
 
 namespace Ingester
 {
@@ -45,18 +46,25 @@ namespace Ingester
     struct GlobalDescriptionBase
     {
         std::string name;
-        std::string type;
+
+        virtual void addTo(ioda::Group& group) = 0;
     };
 
     template<typename T>
     struct GlobalDescription : GlobalDescriptionBase
     {
         T value;
+
+        void addTo(ioda::Group& group) final
+        {
+            ioda::Attribute attr = group.atts.create<T>(name, {1});
+            attr.write<T>({value});
+        }
     };
 
     typedef std::vector<DimensionDescription> DimDescriptions;
     typedef std::vector<VariableDescription> VariableDescriptions;
-//    typedef std::vector<GlobalDescription> GlobalDescriptions;
+    typedef std::vector<std::shared_ptr<GlobalDescriptionBase>> GlobalDescriptions;
 
     /// \brief Describes how to write data to IODA.
     class IodaDescription
@@ -72,9 +80,7 @@ namespace Ingester
         void addVariable(const VariableDescription& variable);
 
         /// \brief Add Globals defenition
-//        void addGlobal(const GlobalDescription& global);
-//        std::vector<std::shared_ptr<GlobalDescriptionBase>> globals_;
-        std::vector<std::shared_ptr<GlobalDescription<std::string>>> globals_;
+//       void addGlobal(const GlobalDescription& global);
 
         // Setters
         inline void setBackend(const ioda::Engines::BackendNames& backend) { backend_ = backend; }
@@ -85,7 +91,7 @@ namespace Ingester
         inline std::string getFilepath() const { return filepath_; }
         inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
-//        inline GlobalDescriptions getGlobals() const { return globals_; }
+        inline GlobalDescriptions getGlobals() const { return globals_; }
 
      private:
         /// \brief The backend type to use
@@ -101,8 +107,7 @@ namespace Ingester
         VariableDescriptions variables_;
 
         /// \brief Collection of defined globals
-//        GlobalDescriptions globals_;
-//        std::vector<std::shared_ptr<GlobalDescriptionBase>> globals_;
+        GlobalDescriptions globals_;
 
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);
