@@ -111,6 +111,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
     'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
     'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
+    'LaunchTime': ('LaunchTime', 'float'),
 }
 
 checkuv = {
@@ -457,6 +458,7 @@ units_values = {
     'clw_retrieved_from_observation': 'kg/m/m',
     'clw_retrieved_from_background': 'kg/m/m',
     'scat_retrieved_from_observation': '1',
+    'LaunchTime': 'hours',
 }
 
 # @TestReference
