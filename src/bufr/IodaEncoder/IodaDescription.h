@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
@@ -51,14 +52,38 @@ namespace Ingester
     };
 
     template<typename T>
-    struct GlobalDescription : GlobalDescriptionBase
+    struct is_vector : public std::false_type {};
+
+    template<typename T, typename A>
+    struct is_vector<std::vector<T, A>> : public std::true_type {};
+
+    template<typename T>
+    struct GlobalDescription : public GlobalDescriptionBase
     {
         T value;
 
         void addTo(ioda::Group& group) final
         {
+            _addTo(group);
+        }
+
+     private:
+        // T is something other than a std::vector
+        template<typename U=void>
+        void _addTo(ioda::Group& group,
+                    std::enable_if_t<!is_vector<T>::value, U>* = nullptr)
+        {
             ioda::Attribute attr = group.atts.create<T>(name, {1});
             attr.write<T>({value});
+        }
+
+        // T is a vector
+        template<typename U=void>
+        void _addTo(ioda::Group& group,
+                    std::enable_if_t<is_vector<T>::value, U>* = nullptr)
+        {
+            ioda::Attribute attr = group.atts.create<typename T::value_type>(name, {1});
+            attr.write<typename T::value_type>(value);
         }
     };
 

@@ -47,6 +47,7 @@ namespace
             const char* Type = "type";
             const char* StringType = "string";
             const char* FloatType = "float";
+            const char* FloatVectorType = "floatVector";
             const char* IntType = "int";
         }  // namespace Global
     }  // namespace ConfKeys
@@ -182,15 +183,19 @@ namespace Ingester
                   global->name = globalConf.getString(ConfKeys::Global::Name);
                   global->value = globalConf.getFloat(ConfKeys::Global::Value);
                   globals_.push_back(global);
-
-           // more if statements for different types
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::FloatVectorType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::vector<float>>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getFloatVector(ConfKeys::Global::Value);
+                  globals_.push_back(global);
               }
               else
               {
                  throw eckit::BadParameter("Unsupported global attribute type");
               }
-
-              
            } 
 //            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
 //            for (const auto& globalConf : globalConfs)
