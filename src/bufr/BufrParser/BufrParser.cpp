@@ -13,7 +13,7 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "bufr.interface.h"
+#include "bufr_interface.h"
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"

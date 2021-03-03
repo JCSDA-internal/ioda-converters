@@ -5,7 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "bufr.interface.h"
+#include "bufr_interface.h"
 
 #include "BufrIntCollector.h"
 
