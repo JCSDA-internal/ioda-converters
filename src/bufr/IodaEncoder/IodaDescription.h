@@ -47,7 +47,7 @@ namespace Ingester
     struct GlobalDescriptionBase
     {
         std::string name;
-
+        int vectorSize;
         virtual void addTo(ioda::Group& group) = 0;
     };
 
@@ -69,7 +69,7 @@ namespace Ingester
 
      private:
         // T is something other than a std::vector
-        template<typename U=void>
+        template<typename U = void>
         void _addTo(ioda::Group& group,
                     std::enable_if_t<!is_vector<T>::value, U>* = nullptr)
         {
@@ -78,11 +78,11 @@ namespace Ingester
         }
 
         // T is a vector
-        template<typename U=void>
+        template<typename U = void>
         void _addTo(ioda::Group& group,
                     std::enable_if_t<is_vector<T>::value, U>* = nullptr)
         {
-            ioda::Attribute attr = group.atts.create<typename T::value_type>(name, {1});
+            ioda::Attribute attr = group.atts.create<typename T::value_type>(name, {vectorSize});
             attr.write<typename T::value_type>(value);
         }
     };

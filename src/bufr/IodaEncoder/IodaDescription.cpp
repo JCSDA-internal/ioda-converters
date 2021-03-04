@@ -49,6 +49,7 @@ namespace
             const char* FloatType = "float";
             const char* FloatVectorType = "floatVector";
             const char* IntType = "int";
+            const char* IntVectorType = "intVector";
         }  // namespace Global
     }  // namespace ConfKeys
 }  // namespace
@@ -190,24 +191,32 @@ namespace Ingester
                   auto global = std::make_shared<GlobalDescription<std::vector<float>>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
                   global->value = globalConf.getFloatVector(ConfKeys::Global::Value);
+                  global->vectorSize = global->value.size();
+                  globals_.push_back(global);
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::IntType)
+              {
+                  auto global = std::make_shared<GlobalDescription<int>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getInt(ConfKeys::Global::Value);
+                  globals_.push_back(global);
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::IntVectorType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::vector<int>>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getIntVector(ConfKeys::Global::Value);
+                  global->vectorSize = global->value.size();
                   globals_.push_back(global);
               }
               else
               {
                  throw eckit::BadParameter("Unsupported global attribute type");
               }
-           } 
-//            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
-//            for (const auto& globalConf : globalConfs)
-//            {
-//                GlobalDescription global;
-//                global.name = globalConf.getString(ConfKeys::Global::Name);
-//                global.type = globalConf.getString(ConfKeys::Global::Type);
-//                global.value = globalConf.getString(ConfKeys::Global::Value);
-
-//                addGlobal(global);
-//            }
-        }
+            }
+       }
     }
 
     void IodaDescription::addDimension(const DimensionDescription& scale)
@@ -219,11 +228,6 @@ namespace Ingester
     {
         variables_.push_back(variable);
     }
-
-//    void IodaDescription::addGlobal(const GlobalDescription& global)
-//    {
-//        globals_.push_back(global);
-//    }
 
     void IodaDescription::setBackend(const std::string& backend)
     {

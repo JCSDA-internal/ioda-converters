@@ -143,12 +143,12 @@ namespace Ingester
             }
             // Todo: Delete with USE_OLD_LAYOUT
 
-            // Create Globals            
+            // Create Globals
             for (auto& global : description_.getGlobals())
             {
                 global->addTo(rootGroup);
             }
-            
+
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
