@@ -13,7 +13,12 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "bufr_interface.h"
+#if __has_include("bufr_interface.h")  // TODO: Remove this in future
+    #include "bufr_interface.h"
+#else
+    #include "bufr.interface.h"
+#endif
+
 #include "BufrParser/BufrCollectors/BufrCollectors.h"
 #include "BufrMnemonicSet.h"
 #include "DataContainer.h"

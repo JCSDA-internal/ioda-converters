@@ -5,7 +5,11 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "bufr_interface.h"
+#if __has_include("bufr_interface.h")  // TODO: Remove this in future
+    #include "bufr_interface.h"
+#else
+    #include "bufr.interface.h"
+#endif
 
 #include "BufrRepCollector.h"
 
