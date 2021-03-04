@@ -21,7 +21,7 @@ namespace
     namespace ConfKeys
     {
         const char* Filename = "obsdatain";
-        const char* IsStdFormat = "isStdFormat";
+        const char* IsWmoFormat = "isWmoFormat";
         const char* TablePath = "tablepath";
         const char* MnemonicSets = "mnemonicSets";
         const char* Mnemonics = "mnemonics";
@@ -37,13 +37,13 @@ namespace Ingester
     {
         setFilepath(conf.getString(ConfKeys::Filename));
 
-        if (conf.has(ConfKeys::IsStdFormat) && conf.getBool(ConfKeys::IsStdFormat))
+        if (conf.has(ConfKeys::IsWmoFormat) && conf.getBool(ConfKeys::IsWmoFormat))
         {
-            setIsStdFormat(true);
+            setIsWmoFormat(true);
         }
         else
         {
-            setIsStdFormat(false);
+            setIsWmoFormat(false);
         }
 
         if (conf.has(ConfKeys::TablePath))

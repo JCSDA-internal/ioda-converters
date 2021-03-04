@@ -149,13 +149,13 @@ namespace Ingester
     }
 
     void BufrParser::openBufrFile(const std::string& filepath,
-                                  bool isStdFormat,
+                                  bool isWmoFormat,
                                   const std::string& tablepath)
     {
         fortranFileId_ = 11;  // Fortran file id must be a integer > 10
         open_f(fortranFileId_, filepath.c_str());
 
-        if (!isStdFormat)
+        if (!isWmoFormat)
         {
             openbf_f(fortranFileId_, "IN", fortranFileId_);
         }
@@ -189,7 +189,7 @@ namespace Ingester
         }
 
         openBufrFile(description_.filepath(),
-                     description_.isStdFormat(),
+                     description_.isWmoFormat(),
                      description_.tablepath());
     }
 

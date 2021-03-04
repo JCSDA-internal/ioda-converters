@@ -34,7 +34,7 @@ The obs space describes how to read data from the BUFR file and then how to expo
 ```yaml
       name: bufr
       obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
-      isStdFormat: false  # Optional
+      isWmoFormat: true  # Optional
       tablepath: "./testinput/bufr_tables"  # Optional
         
       mnemonicSets:
@@ -48,12 +48,12 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
 
 * `name` ID of input type
 * `obsdatain` Relative path of the BUFR file to ingest (relative to working directory).
-* `isStdFormat` _(optional)_ Bool value that indicates whether the bufr file is in the standard WMO 
+* `isWmoFormat` _(optional)_ Bool value that indicates whether the bufr file is in the standard WMO 
    format (BUFR table data is not included in the message and must be loaded seperatly). Defaults
    to false if missing.
 * `tablepath` _(optional)_ Path string to the directory that contains the bufr tables when using 
-   standard WMO formated files. Only applies if `isStdFormat` is `true`. If this field is missing 
-   and`isStdFormat` is `true` then NCEPLib-bufr will look for the table data in its default
+   standard WMO formated files. Only applies if `isWmoFormat` is `true`. If this field is missing 
+   and`isWmoFormat` is `true` then NCEPLib-bufr will look for the table data in its default
    directory.
 * `mnemonicSets` Defines the list of mnemonic sets to read from the BUFR file.
   * `mnemonics` Defines a group of mnemonics to parse from a BUFR subset. 

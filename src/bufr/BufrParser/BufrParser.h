@@ -70,10 +70,10 @@ namespace Ingester
 
         /// \brief Opens a BUFR file using the Fortran BUFR interface.
         /// \param filepath Path to bufr file.
-        /// \param isStdFormat _optional_ Bufr file is in the standard format.
+        /// \param isWmoFormat _optional_ Bufr file is in the standard format.
         /// \param tablepath _optional_ Path to WMO master tables (needed for standard bufr files).
         void
-        openBufrFile(const std::string& filepath, bool isStdFormat, const std::string& tablepath);
+        openBufrFile(const std::string& filepath, bool isWmoFormat, const std::string& tablepath);
 
         /// \brief Closes the open BUFR file.
         void closeBufrFile();
