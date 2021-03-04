@@ -48,9 +48,10 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object, const std::stri
   ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
 
   // Save the predictors and the channels values
-  ioda::Variable predsVar = ogrp.vars.create<std::string>("predictors", {numPreds});
+  ioda::Variable predsVar = ogrp.vars.createWithScales<std::string>(
+                            "predictors", {ogrp.vars["npredictors"]});
   predsVar.write(predictors);
-  ioda::Variable chansVar = ogrp.vars.create<int>("channels", {numChans});
+  ioda::Variable chansVar = ogrp.vars.createWithScales<int>("channels", {ogrp.vars["nchannels"]});
   chansVar.write(channels);
 
   // Set up the creation parameters for the bias coefficients variable
