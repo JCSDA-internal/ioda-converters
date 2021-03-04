@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/20210203.radiosonde"
+      obsdatain: "./testinput/bufr_read_wmo_radiosonde.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -32,7 +32,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/bufr_read_std_wmo_radiosonde.nc"
+      obsdataout: "./testrun/bufr_read_wmo_radiosonde.nc"
 
       dimensions:
         - name: "nlocs"
