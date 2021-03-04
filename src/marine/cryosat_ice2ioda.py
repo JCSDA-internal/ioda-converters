@@ -18,7 +18,7 @@ import subprocess
 import os
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
@@ -35,8 +35,7 @@ class Observation(object):
         if os.path.exists("cryosat_nc4classic.nc"):
             os.remove("cryosat_nc4classic.nc")
 
-        subprocess.call('nccopy -k nc7 '+filename[0]+' cryosat_nc4classic.nc', shell=True)
-        self.filename = "cryosat_nc4classic.nc"
+        self.filenames = filename   
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -44,41 +43,45 @@ class Observation(object):
         self._read()
 
     def _read(self):
+        valKey = vName, self.writer.OvalName()   
+        errKey = vName, self.writer.OerrName()   
+        qcKey = vName, self.writer.OqcName()     
 
-        ncd = nc.MFDataset(self.filename, aggdim='time_20_ku')
-        time = ncd.variables['time_20_ku'][:]
-        lons = ncd.variables['lon_poca_20_ku'][:]
-        lats = ncd.variables['lat_poca_20_ku'][:]
-        vals = ncd.variables['freeboard_20_ku'][:]
-        qc = ncd.variables['flag_prod_status_20_ku'][:]
-        # get base date for file
-        s = ' '.join(
-            ncd.variables['time_20_ku'].units.split(' ')[2:3])
-        reftime = dateutil.parser.parse(s)
-        ncd.close()
+        for f in self.filenames:
+           print(f)
+           subprocess.call('nccopy -k nc7 '+f+' cryosat_nc4classic.nc', shell=True)
+           self.filename = "cryosat_nc4classic.nc"
+           ncd = nc.MFDataset(self.filename, aggdim='time_20_ku')
+           time = ncd.variables['time_20_ku'][:]
+           lons = ncd.variables['lon_poca_20_ku'][:]
+           lats = ncd.variables['lat_poca_20_ku'][:]
+           vals = ncd.variables['freeboard_20_ku'][:]
+           qc = ncd.variables['flag_prod_status_20_ku'][:]
+           # get base date for file
+           s = ' '.join(
+           ncd.variables['time_20_ku'].units.split(' ')[2:3])
+           reftime = dateutil.parser.parse(s)
+           ncd.close()
 
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
+           # apply thinning mask
+           if self.thin > 0.0:
+               mask_thin = np.random.uniform(size=len(lons)) > self.thin
+               datein = datein[mask_thin]
+               timein = timein[mask_thin]
+               lons = lons[mask_thin]
+               lats = lats[mask_thin]
+               vals = vals[mask_thin]
+               qc = qc[mask_thin]
 
-        # apply thinning mask
-        if self.thin > 0.0:
-            mask_thin = np.random.uniform(size=len(lons)) > self.thin
-            datein = datein[mask_thin]
-            timein = timein[mask_thin]
-            lons = lons[mask_thin]
-            lats = lats[mask_thin]
-            vals = vals[mask_thin]
-            qc = qc[mask_thin]
+           for i in range(len(lons)):
+               if qc[i] ==   8192. :   #flag indicating seaice surface type
+                 obs_date = reftime + timedelta(seconds=float(time[i]))
+                 locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                 self.data[0][locKey][valKey] = vals[i]
+                 self.data[0][locKey][errKey] = 0.1
+                 self.data[0][locKey][qcKey] = qc[i]
 
-        for i in range(len(lons)):
-            obs_date = reftime + timedelta(seconds=float(time[i]))
-            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.1
-            self.data[0][locKey][qcKey] = qc[i]
-
-        os.remove("cryosat_nc4classic.nc")
+           os.remove("cryosat_nc4classic.nc")
 
 
 vName = "sea_ice_freeboard"
