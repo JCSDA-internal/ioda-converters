@@ -104,7 +104,6 @@ namespace Ingester
         void addVariable(const VariableDescription& variable);
 
         /// \brief Add Globals defenition
-//       void addGlobal(const GlobalDescription& global);
         void addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global);
 
         // Setters
