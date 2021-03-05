@@ -175,15 +175,15 @@ namespace Ingester
                   auto global = std::make_shared<GlobalDescription<std::string>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
                   global->value = globalConf.getString(ConfKeys::Global::Value);
-                  globals_.push_back(global);
+                  addGlobal(global);
               }
               else if (globalConf.getString(ConfKeys::Global::Type) == \
                        ConfKeys::Global::FloatType)
               {
                   auto global = std::make_shared<GlobalDescription<float>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->value = globalConf.getFloat(ConfKeys::Global::Value);
-                  globals_.push_back(global);
+                  global->name = globalConf.getFloat(ConfKeys::Global::Name);
+                  addGlobal(global);
               }
               else if (globalConf.getString(ConfKeys::Global::Type) == \
                        ConfKeys::Global::FloatVectorType)
@@ -191,8 +191,7 @@ namespace Ingester
                   auto global = std::make_shared<GlobalDescription<std::vector<float>>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
                   global->value = globalConf.getFloatVector(ConfKeys::Global::Value);
-                  global->vectorSize = global->value.size();
-                  globals_.push_back(global);
+                  addGlobal(global);
               }
               else if (globalConf.getString(ConfKeys::Global::Type) == \
                        ConfKeys::Global::IntType)
@@ -200,7 +199,7 @@ namespace Ingester
                   auto global = std::make_shared<GlobalDescription<int>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
                   global->value = globalConf.getInt(ConfKeys::Global::Value);
-                  globals_.push_back(global);
+                  addGlobal(global);
               }
               else if (globalConf.getString(ConfKeys::Global::Type) == \
                        ConfKeys::Global::IntVectorType)
@@ -208,8 +207,7 @@ namespace Ingester
                   auto global = std::make_shared<GlobalDescription<std::vector<int>>>();
                   global->name = globalConf.getString(ConfKeys::Global::Name);
                   global->value = globalConf.getIntVector(ConfKeys::Global::Value);
-                  global->vectorSize = global->value.size();
-                  globals_.push_back(global);
+                  addGlobal(global);
               }
               else
               {
@@ -227,6 +225,11 @@ namespace Ingester
     void IodaDescription::addVariable(const VariableDescription& variable)
     {
         variables_.push_back(variable);
+    }
+
+    void IodaDescription::addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global)
+    {
+        globals_.push_back(global);
     }
 
     void IodaDescription::setBackend(const std::string& backend)

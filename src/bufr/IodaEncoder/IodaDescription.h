@@ -10,7 +10,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
@@ -47,7 +46,6 @@ namespace Ingester
     struct GlobalDescriptionBase
     {
         std::string name;
-        int vectorSize;
         virtual void addTo(ioda::Group& group) = 0;
     };
 
@@ -82,7 +80,8 @@ namespace Ingester
         void _addTo(ioda::Group& group,
                     std::enable_if_t<is_vector<T>::value, U>* = nullptr)
         {
-            ioda::Attribute attr = group.atts.create<typename T::value_type>(name, {vectorSize});
+            ioda::Attribute attr = group.atts.create<typename T::value_type>(name, \
+                                   {static_cast<int>(value.size())});
             attr.write<typename T::value_type>(value);
         }
     };
@@ -106,6 +105,7 @@ namespace Ingester
 
         /// \brief Add Globals defenition
 //       void addGlobal(const GlobalDescription& global);
+        void addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global);
 
         // Setters
         inline void setBackend(const ioda::Engines::BackendNames& backend) { backend_ = backend; }
