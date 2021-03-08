@@ -198,3 +198,9 @@ For surface volumetric soil moisture (ssm), SMOS L2 NRT Netcdf files are support
 Usage: smos_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
 ```
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. Here soil moisture with negative values is also not written out.
+
+For surface soil moisture normalized (ssm), ASCAT L2 NRT Netcdf files are supported with `ascat_ssm2ioda.py`.
+```
+Usage: ascat_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
