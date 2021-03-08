@@ -62,8 +62,7 @@ class ascat(object):
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        AttrData["satellite"] = "METOp-A/METOp-B"
-        AttrData['sensor'] = ncd.getncattr('instrument_name')
+        AttrData["satellite"] = ncd.getncattr('source')
         AttrData['platform'] = ncd.getncattr('platform_long_name')
 
         lats = ncd.variables['lat'][:].ravel()
