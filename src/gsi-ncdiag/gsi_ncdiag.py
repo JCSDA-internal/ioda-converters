@@ -111,6 +111,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
     'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
     'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
+    'LaunchTime': ('LaunchTime', 'float'),
 }
 
 checkuv = {
@@ -457,6 +458,7 @@ units_values = {
     'clw_retrieved_from_observation': 'kg/m/m',
     'clw_retrieved_from_background': 'kg/m/m',
     'scat_retrieved_from_observation': '1',
+    'LaunchTime': 'hours',
 }
 
 # @TestReference
@@ -492,6 +494,13 @@ test_fields_with_channels = {
     'Cloudy_Channel': ('cloudy_channel', 'integer'),
     'Transmittance_at_Cloud_Top': ('tao_cldtop', 'float'),
     'NSST_Retrieval_check': ('nsstret_check', 'integer'),
+}
+gmi_chan_dep_loc_vars = {
+    'Sat_Zenith_Angle',
+    'Sat_Azimuth_Angle',
+    'Sol_Zenith_Angle',
+    'Sol_Azimuth_Angle',
+    'Scan_Angle',
 }
 
 
@@ -1170,6 +1179,15 @@ class Radiances(BaseGSI):
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+            elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
+                # Channels 1-9
+                tmp = self.var(lvar)[::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                loc_mdata[loc_mdata_name] = tmp
+                # Channels 10-13
+                tmp = self.var(lvar)[nchans-1::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                loc_mdata[loc_mdata_name+'1'] = tmp
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
