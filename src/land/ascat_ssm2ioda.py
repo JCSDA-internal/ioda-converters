@@ -62,7 +62,7 @@ class ascat(object):
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        AttrData["satellite"] = "METOP"
+        AttrData["satellite"] = "METOp-A"
         AttrData['sensor'] = ncd.getncattr('instrument_name')
         AttrData['platform'] = ncd.getncattr('platform_long_name')
 
@@ -118,7 +118,7 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             'Reads ASCAT L2NRT SM netCDF file(s) provided by EUMETSAT'
-            ' and converts into IODA formatted output file. Multiple.')
+            ' and converts into IODA formatted output file.')
     )
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
