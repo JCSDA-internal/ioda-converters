@@ -11,7 +11,7 @@ observations:
         - mnemonics: [SAID, CLATH, CLONH, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM]
         - mnemonics: [EHAM, PRLC, WDIR, WSPD]
         - mnemonics: [TCOV, CVWD]
-        - mnemonics: [PCCF]
+        - mnemonics: [GNAPS, PCCF]
           channels: 1-12
 
       exports:
@@ -59,6 +59,8 @@ observations:
             mnemonic: CVWD
           percent_confidence:
             mnemonic: PCCF
+          generating_application:
+            mnemonic: GNAPS
 
     ioda:
       backend: netcdf
@@ -167,6 +169,12 @@ observations:
           dimensions: [ "nlocs" ]
           longName: "Coefficient of Variation"
           units: "numeric"
+
+        - name: "generating_application@MetaData"
+          source: variables/generating_application
+          dimensions: [ "nlocs" , "ncols_conf"]
+          longName: "Generating Application"
+          units: "id"
 
         - name: "percent_confidence@ObsValue"
           coordinates: "longitude latitude"
