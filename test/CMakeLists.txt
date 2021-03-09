@@ -93,6 +93,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
+    testinput/bufr_satwnd_new_format.bufr
+    testinput/bufr_satwnd_old_format.bufr
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
@@ -110,6 +112,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
+    testoutput/NC005031.nc
+    testoutput/NC005066.nc
   )
 endif()
 
@@ -545,6 +549,21 @@ if(iodaconv_bufr_ENABLED)
                             bufr_read_2_dim_blocks.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwnd_old_format
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "python ${CMAKE_BINARY_DIR}/bin/run_satwnds.py testinput/bufr_satwnd_old_format.bufr -o testrun"
+                    NC005066.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwnd_new_format
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "python ${CMAKE_BINARY_DIR}/bin/run_satwnds.py testinput/bufr_satwnd_new_format.bufr -o testrun"
+                    NC005031.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 endif()
 
 #==============================================================================

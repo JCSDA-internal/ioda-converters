@@ -13,6 +13,7 @@ import multiprocessing
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 
 
@@ -71,17 +72,26 @@ def _process_bufr_path(path):
     os.remove(yaml_out_path)
 
 
-def run(bufr_path, num_threads):
+def run(bufr_path, num_threads, output_dir):
     """
     Splits a Sat Winds file into its subset components and runs bufr2ioda on
     each one.
     :param bufr_path: Path to the Sat winds Bufr file.
     :param num_threads: Number of concurrent converters.
+    :param output_dir: Directory were to place the result files
     """
 
-    def _set_up_working_dir():
+    def _set_up_working_dir(out_dir):
         timestamp_str = datetime.now().strftime("%Y%m%d%H%M%S")
-        working_dir = f'satwnd_processing_{timestamp_str}'
+
+        if out_dir:
+            working_dir = out_dir
+        else:
+            working_dir = f'satwnd_processing_{timestamp_str}'
+
+        if os.path.exists(working_dir):
+            shutil.rmtree(working_dir)
+
         os.mkdir(working_dir)
         os.chdir(working_dir)
 
@@ -91,7 +101,7 @@ def run(bufr_path, num_threads):
 
     input_path = os.path.realpath(bufr_path)
 
-    _set_up_working_dir()
+    _set_up_working_dir(output_dir)
 
     # Split the input file
     subprocess.call(f'split_by_subset.x {input_path}', shell=True)
@@ -120,8 +130,14 @@ if __name__ == '__main__':
                         type=int,
                         help="Number of concurrent instances of bufr2ioda.")
 
+    parser.add_argument('-o',
+                        '--output_dir',
+                        default="",
+                        type=str,
+                        help="Directory where to put the resulting netcdf files.")
+
     args = parser.parse_args()
 
     start_time = datetime.now()
-    run(args.file, args.threads)
+    run(args.file, args.threads, args.output_dir)
     print((datetime.now() - start_time).total_seconds())
