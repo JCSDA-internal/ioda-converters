@@ -102,6 +102,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
+    testinput/bufr_satwnd_old_format.yaml
+    testinput/bufr_satwnd_new_format.yaml
   )
 
   list( APPEND test_output
@@ -553,7 +555,7 @@ if(iodaconv_bufr_ENABLED)
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
-                    "python ${CMAKE_BINARY_DIR}/bin/run_satwnds.py testinput/bufr_satwnd_old_format.bufr -o testrun"
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_satwnd_old_format.yaml"
                     NC005066.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
@@ -561,7 +563,7 @@ if(iodaconv_bufr_ENABLED)
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
-                    "python ${CMAKE_BINARY_DIR}/bin/run_satwnds.py testinput/bufr_satwnd_new_format.bufr -o testrun"
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_satwnd_new_format.yaml"
                     NC005031.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 endif()

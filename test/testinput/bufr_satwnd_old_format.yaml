@@ -1,0 +1,165 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/bufr_satwnd_old_format.bufr"
+      mnemonicSets:
+        - mnemonics: [SAID, CLAT, CLON, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM]
+        - mnemonics: [HAMD, PRLC, WDIR, WSPD]
+        - mnemonics: [GNAP, PCCF]
+          channels: 1-12
+
+      exports:
+        filters:
+          - bounding:
+              mnemonic: CLON
+              lowerBound: -180
+              upperBound: 180
+        variables:
+          satellite:
+            mnemonic: SAID
+          datetime:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          longitude:
+            mnemonic: CLON
+          latitude:
+            mnemonic: CLAT
+          satellite_wind_calculation_method:
+            mnemonic: SWCM
+          satellite_zenith_angle:
+            mnemonic: SAZA
+          satellite_channel_center_frequency:
+            mnemonic: SCCF
+          originating_generating_center:
+            mnemonic: OGCE
+          satellite_wind_quality_mark:
+            mnemonic: SWQM
+          height_assignment_method:
+            mnemonic: HAMD
+          pressure:
+            mnemonic: PRLC
+          wind_direction:
+            mnemonic: WDIR
+          wind_speed:
+            mnemonic: WSPD
+          generating_application:
+            mnemonic: GNAP
+          percent_confidence:
+            mnemonic: PCCF
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/NC005066.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/wind_speed.nrows
+        - name: "ncols_conf"
+          size: variables/percent_confidence.ncols
+
+      variables:
+        - name: "satellite@MetaData"
+          source: variables/satellite
+          dimensions: [ "nlocs" ]
+          longName: "Satellite ID"
+          units: "id"
+
+        - name: "datetime@MetaData"
+          source: variables/datetime
+          dimensions: [ "nlocs" ]
+          longName: "Date Time"
+          units: "YYYYmmddHHMMSSZ"
+
+        - name: "longitude@MetaData"
+          source: variables/longitude
+          dimensions: ["nlocs"]
+          longName: "Longitude"
+          units: "degrees"
+          range: [-180, 180]
+
+        - name: "latitude@MetaData"
+          source: variables/latitude
+          dimensions: ["nlocs"]
+          longName: "Latitude"
+          units: "degrees"
+          range: [-90, 90]
+
+        - name: "satellite_wind_calculation_method@MetaData"
+          source: variables/satellite_wind_calculation_method
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Wind Calculation Method"
+          units: "id"
+
+        - name: "satellite_channel_center_frequency@MetaData"
+          source: variables/satellite_channel_center_frequency
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Channel Center Frequency"
+          units: "hz"
+
+        - name: "satellite_zenith_angle@MetaData"
+          source: variables/satellite_zenith_angle
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Zenith Angle"
+          units: "degrees"
+
+        - name: "originating_generating_center@MetaData"
+          source: variables/originating_generating_center
+          dimensions: [ "nlocs" ]
+          longName: "Originating/Generating Center"
+          units: "id"
+
+        - name: "satellite_wind_quality_mark@MetaData"
+          source: variables/satellite_wind_quality_mark
+          dimensions: [ "nlocs" ]
+          longName: "Satellite Wind Quality Mark"
+          units: "id"
+
+        - name: "height_assignment_method@MetaData"
+          source: variables/height_assignment_method
+          dimensions: [ "nlocs" ]
+          longName: "Height Assignment Method"
+          units: "id"
+
+        - name: "generating_application@MetaData"
+          source: variables/generating_application
+          dimensions: [ "nlocs" , "ncols_conf"]
+          longName: "Generating Application"
+          units: "id"
+
+        - name: "pressure@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          dimensions: [ "nlocs" ]
+          longName: "Pressure"
+          units: "pascals"
+
+        - name: "wind_direction@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/wind_direction
+          dimensions: [ "nlocs" ]
+          longName: "Wind Direction"
+          units: "degrees true"
+
+        - name: "wind_speed@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/wind_speed
+          dimensions: [ "nlocs" ]
+          longName: "Wind Speed"
+          units: "meters per second"
+
+        - name: "percent_confidence@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/percent_confidence
+          dimensions: [ "nlocs", "ncols_conf"]
+          longName: "Percent Confidence"
+          units: "percent"
