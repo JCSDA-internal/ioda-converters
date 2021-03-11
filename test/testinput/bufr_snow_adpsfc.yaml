@@ -12,7 +12,7 @@ observations:
       mnemonicSets:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, WMOB, WMOS]
         - mnemonics: [CLAT, CLON]
-        - mnemonics: [SELV, PRES, TMDB, TMDP, TOSD] 
+        - mnemonics: [SELV, PRES, TMDB, TMDP, TOSD]
 
       exports:
         variables:
@@ -23,16 +23,14 @@ observations:
               day: DAYS
               hour: HOUR
               minute: MINU
-#              isUTC: true
-
 
           longitude:
-            mnemonic: CLON 
+            mnemonic: CLON
 
           latitude:
-            mnemonic: CLAT        
+            mnemonic: CLAT
 
-          pressureAir: 
+          pressureAir:
             mnemonic: PRES
 
           stationElevation:
@@ -48,12 +46,12 @@ observations:
             mnemonic: TOSD
 
     ioda:
-      backend: netcdf 
+      backend: netcdf
       obsdataout: "../testoutput/gdas.t06z.adpsfc_snow.tm00.nc"
 
       dimensions:
         - name: "nlocs"
-          size: variables/latitude.nrows #implicit info
+          size: variables/latitude.nrows
 
       variables:
         - name: "datetime@MetaData"
@@ -82,7 +80,6 @@ observations:
           dimensions: ["nlocs"]
           longName: "HEIGHT OF STATION"
           units: "Meter"
-#          range: [0, 10000]
 
         - name: "pressureAir@ObsValue"
           coordinates: "longitude latitude"
