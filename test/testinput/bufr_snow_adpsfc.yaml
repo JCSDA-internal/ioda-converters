@@ -42,7 +42,7 @@ observations:
           temperatureDewpoint:
             mnemonic: TMDP
         
-          SnowDepth:
+          snowDepth:
             mnemonic: TOSD
 
     ioda:
@@ -63,14 +63,14 @@ observations:
         - name: "latitude@MetaData"
           source: variables/latitude
           dimensions: ["nlocs"]
-          longName: "LATITUDE (COARSE ACCURACY)"
+          longName: "Latitude)"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
           source: variables/longitude
           dimensions: ["nlocs"]
-          longName: "LONGITUDE (COARSE ACCURACY)"
+          longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
@@ -78,21 +78,21 @@ observations:
           coordinates: "longitude latitude"
           source: variables/stationElevation
           dimensions: ["nlocs"]
-          longName: "HEIGHT OF STATION"
-          units: "Meter"
+          longName: "Height of Station"
+          units: "m"
 
         - name: "pressureAir@ObsValue"
           coordinates: "longitude latitude"
           source: variables/pressureAir
           dimensions: ["nlocs"]
-          longName: "PRESSURE"
+          longName: "Pressure"
           units: "Pa"
           range: [90000, 105000] 
 
         - name: "temperatureAir@ObsValue"
           source: variables/temperatureAir
           dimensions: ["nlocs"]
-          longName: "TEMPERATURE/DRY BULB TEMPERATURE"
+          longName: "Temperature"
           units: "K"
           range: [230, 315]
 
@@ -100,14 +100,14 @@ observations:
           coordinates: "longitude latitude"
           source: variables/temperatureDewpoint
           dimensions: ["nlocs"]
-          longName: "DEW POINT TEMPERATURE"
+          longName: "Dew Point Temperature"
           units: "K"
           range: [200, 315]
       
-        - name: "SnowDepth@ObsValue"
+        - name: "snowDepth@ObsValue"
           coordinates: "longitude latitude"
-          source: variables/SnowDepth
+          source: variables/snowDepth
           dimensions: ["nlocs"]
-          longName: "TOTAL SNOW DEPTH"
-          units: "METERS"
+          longName: "Snow Depth"
+          units: "m"
 
