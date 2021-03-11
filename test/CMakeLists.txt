@@ -39,6 +39,7 @@ list( APPEND test_input
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
   testinput/smos_l2nrt_ssm.nc
+  testinput/ascat_ssm.nc
 )
 
 list( APPEND test_output
@@ -73,6 +74,7 @@ list( APPEND test_output
   testoutput/ghcn_snod_20200228.nc
   testoutput/smap_ssm.nc
   testoutput/smos_ssm.nc
+  testoutput/ascat_ssm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -91,6 +93,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
+    testinput/bufr_satwnd_new_format.bufr
+    testinput/bufr_satwnd_old_format.bufr
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
@@ -98,6 +102,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
+    testinput/bufr_satwnd_old_format.yaml
+    testinput/bufr_satwnd_new_format.yaml
   )
 
   list( APPEND test_output
@@ -108,6 +114,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
+    testoutput/NC005031.nc
+    testoutput/NC005066.nc
   )
 endif()
 
@@ -543,6 +551,21 @@ if(iodaconv_bufr_ENABLED)
                             bufr_read_2_dim_blocks.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwnd_old_format
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_satwnd_old_format.yaml"
+                    NC005066.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwnd_new_format
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_satwnd_new_format.yaml"
+                    NC005031.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 endif()
 
 #==============================================================================
@@ -670,3 +693,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
                             -o testrun/smos_ssm.nc
                             -m maskout"
                             smos_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ascat_ssm
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/ascat_ssm2ioda.py
+                            -i testinput/ascat_ssm.nc
+                            -o testrun/ascat_ssm.nc
+                            -m maskout"
+                            ascat_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
