@@ -59,8 +59,8 @@ observations:
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
-          type: string
-          value: "89.0, 157.0, 183.311 +- 1.00, 183.311 +- 3.00, 190.311"
+          type: floatVector
+          value: [89.0, 157.0, 183.311, 183.311, 190.311]
 
         - name: "platformCommonName@MetaData"
           type: string
