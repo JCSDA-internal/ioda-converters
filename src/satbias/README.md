@@ -23,8 +23,7 @@ output:
   predictors: *default_preds
 ```
 
-According to [GSI code (as of Feb 19 2021)](https://github.com/NOAA-EMC/GSI/blob/a9447258bb911d73ded0331141d0bf56abdfd74d/src/gsi/setuprad.f90#L992),
-the following predictors should be used for most sensors:
+The following predictors should be used for most sensors:
 
 ```yaml
       default predictors: &default_preds
@@ -40,30 +39,6 @@ the following predictors should be used for most sensors:
       - scan_angle_order_3
       - scan_angle_order_2
       - scan_angle
-```
-
-For the following sensors:
-
-```f90
-     goessndr .or. goes_img .or. ahi .or. seviri .or. ssmi .or. ssmis .or. gmi .or. abi
-```
-
-use these predictors:
-
-```yaml
-      scanpos predictors: &scanpos_preds
-      - constant
-      - zenith_angle
-      - cloud_liquid_water
-      - lapse_rate_order_2
-      - lapse_rate
-      - cosine_of_latitude_times_orbit_node
-      - sine_of_latitude
-      - emissivity
-      - scan_position_order_4
-      - scan_position_order_3
-      - scan_position_order_2
-      - scan_position
 ```
 
 ## Running the converter
