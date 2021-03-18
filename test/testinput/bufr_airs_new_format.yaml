@@ -1,0 +1,149 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "/data/users/eliu/bufr_samples/gdas.t00z.airsev.tm00.bufr_d"
+      mnemonicSets:
+        - mnemonics: [SAID, SIID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH] 
+        - mnemonics: [LSQL, HOLS, HMSL]
+        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
+        - mnemonics: [TMBR]
+          channels: 1-10
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          height: 
+            mnemonic: HMSL
+          hols: 
+            mnemonic: HOLS
+          fovn:
+            mnemonic: FOVN 
+          lsql:
+            mnemonic: LSQL
+          longitude:
+            mnemonic: CLON
+          latitude:
+            mnemonic: CLAT
+          sza:
+            mnemonic: SOZA
+          saz:
+            mnemonic: SOLAZI
+          vza:
+            mnemonic: SAZA
+          vaz:
+            mnemonic: BEARAZ
+          radiance:
+            mnemonic: TMBR
+    
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t00z.airsev.tm00.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/radiance.nrows
+        - name: "nchans"
+          size: variables/radiance.ncols
+
+      globals: 
+        - name: "platformCommonName@MetaData"
+          type: string
+          value: "AIRS"
+            
+      variables:
+        - name: "stationElevation@MetaData"
+          source: variables/height
+          dimensions: ["nlocs"]
+          longName: "Station Elevation"
+          units: "meters"
+
+        - name: "heightOfSurface@MetaData"
+          source: variables/hols
+          dimensions: ["nlocs"]
+          longName: "Height of Land Surface"
+          units: "meters"
+
+        - name: "fieldOfViewNumber@MetaData"
+          source: variables/fovn
+          dimensions: ["nlocs"]
+          longName: "Field of View Number"
+          units: "none"
+
+        - name: "landSeaQualifier@MetaData"
+          source: variables/lsql
+          dimensions: ["nlocs"]
+          longName: "Land/Sea Qualifier"
+          units: "none"
+
+        - name: "datetime@MetaData"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "latitude@MetaData"
+          source: variables/latitude
+          dimensions: ["nlocs"]
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "longitude@MetaData"
+          source: variables/longitude
+          dimensions: ["nlocs"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "solarZenithAngle@MetaData"
+          source: variables/sza
+          dimensions: ["nlocs"]
+          longName: "Solar Zenith Angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "solarAzimuthAngle@MetaData"
+          source: variables/saz
+          dimensions: ["nlocs"]
+          longName: "Solar Azimuth Angle"
+          units: "degrees"
+          range: [-180, 180]
+
+        - name: "sensorZenithAngle@MetaData"
+          source: variables/vza
+          dimensions: ["nlocs"]
+          longName: "Sensor Zenith Angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "sensorAzimuthAngle@MetaData"
+          source: variables/vaz
+          dimensions: ["nlocs"]
+          longName: "Sensor Azimuth Angle"
+          units: "degrees"
+          range: [-180, 180]
+
+        - name: "brightnessTemperature@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/radiance
+          dimensions: ["nlocs", "nchans"]
+          longName: "Brightness Temperature"
+          units: "K"
+          range: [120, 500]
+          chunks: [1000, 15]
+          compressionLevel: 4
+
+
+        
