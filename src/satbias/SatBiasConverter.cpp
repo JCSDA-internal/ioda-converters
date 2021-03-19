@@ -24,18 +24,23 @@
 #include "GsiSatBiasReader.h"
 
 // Return ObsGroup with bias coefficients for a given sensor
-ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object, const std::string & filename,
+ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
+                                 const std::string & coeffile, const std::string & errfile,
                                  const std::string & sensor,
                                  const std::vector<std::string> & predictors,
                                  const size_t nchannels) {
   // Channels & predictors
-  std::vector<int> channels(nchannels);
+  std::vector<int> channels(nchannels), channels_in_errorfile(nchannels);
   long numPreds = predictors.size();
   long numChans = channels.size();
 
   // Allocate space for bias coefficients and read them from GSI satbias file
   Eigen::ArrayXXf biascoeffs(numPreds, numChans);
-  readObsBiasCoefficients(filename, sensor, channels, biascoeffs);
+  Eigen::ArrayXXf biascoefferrs(numPreds, numChans);
+  Eigen::ArrayXf  nobs(numChans);
+  readObsBiasCoefficients(coeffile, sensor, channels, biascoeffs);
+  readObsBiasCoeffErrors(errfile, sensor, channels_in_errorfile, biascoefferrs, nobs);
+  ASSERT(channels == channels_in_errorfile);
 
   // Creating dimensions: npredictors & nchannels
   ioda::NewDimensionScales_t newDims;
@@ -48,9 +53,10 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object, const std::stri
   ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
 
   // Save the predictors and the channels values
-  ioda::Variable predsVar = ogrp.vars.create<std::string>("predictors", {numPreds});
+  ioda::Variable predsVar = ogrp.vars.createWithScales<std::string>(
+                            "predictors", {ogrp.vars["npredictors"]});
   predsVar.write(predictors);
-  ioda::Variable chansVar = ogrp.vars.create<int>("channels", {numChans});
+  ioda::Variable chansVar = ogrp.vars.createWithScales<int>("channels", {ogrp.vars["nchannels"]});
   chansVar.write(channels);
 
   // Set up the creation parameters for the bias coefficients variable
@@ -65,6 +71,15 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object, const std::stri
                      {ogrp.vars["npredictors"], ogrp.vars["nchannels"]}, float_params);
   biasVar.writeWithEigenRegular(biascoeffs);
 
+  // Create a variable for bias coefficient error variances
+  ioda::Variable biaserrVar = ogrp.vars.createWithScales<float>("bias_coeff_errors",
+                     {ogrp.vars["npredictors"], ogrp.vars["nchannels"]}, float_params);
+  biaserrVar.writeWithEigenRegular(biascoefferrs);
+
+  // Create a variable for number of obs (used in the bias coeff error covariance)
+  ioda::Variable nobsVar = ogrp.vars.createWithScales<float>("number_obs_assimilated",
+                     {ogrp.vars["nchannels"]}, float_params);
+  nobsVar.writeWithEigenRegular(nobs);
   return ogrp;
 }
 
@@ -73,13 +88,14 @@ int main(int argc, char** argv) {
   ASSERT(argc >= 2);
   eckit::PathName configfile = argv[1];
   eckit::YAMLConfiguration config(configfile);
-  const std::string input_filename = config.getString("input file");
+  const std::string coeffile = config.getString("input coeff file");
+  const std::string errfile  = config.getString("input err file");
 
   std::vector<std::string> sensors;
   std::vector<int> nchannels;
 
   /// Find all sensors and number of channels in the GSI bias coefficients file
-  findSensorsChannels(input_filename, sensors, nchannels);
+  findSensorsChannels(coeffile, sensors, nchannels);
 
   std::cout << "Found " << sensors.size() << " sensors:" << std::endl;
   for (size_t jj = 0; jj < sensors.size(); ++jj) {
@@ -101,7 +117,7 @@ int main(int argc, char** argv) {
       int index = it - sensors.begin();
       ioda::Group group = ioda::Engines::HH::createFile(output_filename,
                           ioda::Engines::BackendCreateModes::Truncate_If_Exists);
-      makeObsBiasObject(group, input_filename, sensor, predictors, nchannels[index]);
+      makeObsBiasObject(group, coeffile, errfile, sensor, predictors, nchannels[index]);
     } else {
       const std::string error = "No " + sensor + " sensor in the input file";
       throw eckit::BadValue(error, Here());

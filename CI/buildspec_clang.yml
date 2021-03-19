@@ -19,12 +19,15 @@ phases:
       - echo $LD_LIBRARY_PATH
       - echo $PYTHONPATH
 
-      - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PULL_REQUEST_MERGED" ];
+      # Codebuild only runs on PUSH events if HEAD_REF
+      # is refs/heads/develop (merge to develop). In this
+      # case CODEBUILD_GIT_BRANCH="develop"  
+     
+      - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PUSH" ];
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";
-        else CODEBUILD_GIT_BRANCH="$(git branch -a --contains $CODEBUILD_RESOLVED_SOURCE_VERSION | sed -n 2p | awk '{ printf $1 }')";
-        export CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH#remotes/origin/};
-        fi
+        else export CODEBUILD_GIT_BRANCH=${CODEBUILD_WEBHOOK_HEAD_REF#refs/heads/};
+        fi 
 
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
@@ -35,17 +38,43 @@ phases:
       - git checkout $CODEBUILD_GIT_BRANCH || echo "No branch named $CODEBUILD_GIT_BRANCH in ioda-converters repo"
       - cd $CODEBUILD_SRC_DIR
 
-
   pre_build:
     commands:
       - echo Executing pre_build phase
       - mkdir /build_container
-      - mkdir /src_repo
-      - mv ioda-converters /src_repo/
+      - mkdir -p /jcsda/ioda-bundle
+      - cd CI
+
+      - if [ "$CODEBUILD_GIT_BRANCH" = "develop" ];
+        then export CODEBUILD_GIT_BRANCH_FORK="release-stable";
+        else export CODEBUILD_GIT_BRANCH_FORK=${CODEBUILD_GIT_BRANCH};
+        echo "CODEBUILD_GIT_BRANCH_FORK=${CODEBUILD_GIT_BRANCH_FORK}";
+        fi
+
+      # ioda-converters (testing repo)
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH iodaconv /jcsda/ioda-bundle develop
+
+      ##  ecmwf repos
+      # atlas
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/atlas $CODEBUILD_GIT_BRANCH_FORK atlas /jcsda/ioda-bundle release-stable
+
+      #fckit
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/fckit $CODEBUILD_GIT_BRANCH_FORK fckit /jcsda/ioda-bundle release-stable
+
+     # oops
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/oops $CODEBUILD_GIT_BRANCH oops /jcsda/ioda-bundle develop
+
+     # ioda
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/ioda-bundle develop
+
+      - cp CMakeLists.txt /jcsda/ioda-bundle
+      - cp -r cmake /jcsda/ioda-bundle/
+      - ls /jcsda/ioda-bundle/
   build:
     commands:
       - cd /build_container
-      - ecbuild /src_repo/ioda-converters
+      - ecbuild /jcsda/ioda-bundle
+      - cd /build_container/iodaconv
       - make -j4 
 
       - export BUILD_STATUS="0"

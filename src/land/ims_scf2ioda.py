@@ -40,6 +40,7 @@ class imsscf(object):
         self.filename = filename
         self.mask = mask
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.units_values = {}
         self.writer = writer
         self._read()
 
@@ -63,6 +64,7 @@ class imsscf(object):
         base_datetime = start_datetime.isoformat() + "Z"
         # grbs.close()
 
+        self.units_values[vName['A']] = '%'
         valKey = vName['A'], self.writer.OvalName()
         errKey = vName['A'], self.writer.OerrName()
         qcKey = vName['A'], self.writer.OqcName()
@@ -112,7 +114,7 @@ def main():
 
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(scf.data)
 
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData, scf.units_values)
 
 
 if __name__ == '__main__':

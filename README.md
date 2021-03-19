@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.com/JCSDA/ioda-converters.svg?branch=develop)](https://travis-ci.com/JCSDA/ioda-converters)
 GNU:[![AWS-gnu](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieHZsZGhxZEo1a0diR0hCMVE5SCtpRlovVFJ3N1EyTi8wUkpneklzNjRiMWZyY01qNmxmRkZHMDZlWHAyNm1DSDdXTGJhaXVNM1IwK3c5b1B0ck5ib2VzPSIsIml2UGFyYW1ldGVyU3BlYyI6InBFd0NyeDdJN3Y5WTl0S0wiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-gnu/history)
 INTEL:[![AWS-intel](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiNmUzcndiY2VIVGtYcC92S2luakNsVGUrdUV5WjhnSGpYWWp2U3JVVERWM0pjSzNHeUg4c1lUTEV6R2VldDdPcmtyZzZHUHYvaFFHek5WV3hxNlJWQ3A4PSIsIml2UGFyYW1ldGVyU3BlYyI6IjZyU21lWUtRTkVEdG9Ld2ciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-intel/history)
 CLANG:[![AWS-clang](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoicE8zR0dRZmo1NUV6TVVVSTJsY0RYejA0SlRIR1dGOXZBTDVQNVh5dy9vb0ViNXFEbENHZTFPN20wa3p6aHV2ZWhQOTRHUDNyYlc3TnJKdVloOGtqVTM0PSIsIml2UGFyYW1ldGVyU3BlYyI6IjBENU9vV00xRDI5L3MwRmYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-clang/history?region=us-east-1)
@@ -199,3 +198,9 @@ For surface volumetric soil moisture (ssm), SMOS L2 NRT Netcdf files are support
 Usage: smos_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
 ```
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. Here soil moisture with negative values is also not written out.
+
+For surface soil moisture normalized (ssm), ASCAT L2 NRT Netcdf files are supported with `ascat_ssm2ioda.py`.
+```
+Usage: ascat_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
