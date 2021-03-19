@@ -13,7 +13,7 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#if __has_include("bufr_interface.h")  // TODO: Remove this in future
+#if __has_include("bufr_interface.h")  // TODO(rmclaren): Remove this in future
     #include "bufr_interface.h"
 #else
     #include "bufr.interface.h"
