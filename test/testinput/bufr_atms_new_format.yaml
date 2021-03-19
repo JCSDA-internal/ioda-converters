@@ -44,7 +44,7 @@ observations:
             mnemonic: SAZA
           sensorAzimuthAngle:
             mnemonic: BEARAZ
-          radiance:
+          brightnessTemperature:
             mnemonic: TMBR
     
     ioda:
@@ -53,9 +53,9 @@ observations:
 
       dimensions:
         - name: "nlocs"
-          size: variables/radiance.nrows
+          size: variables/brightnessTemperature.nrows
         - name: "nchans"
-          size: variables/radiance.ncols
+          size: variables/brightnessTemperature.ncols
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
@@ -69,10 +69,10 @@ observations:
           value: "ATMS"
             
       variables:
-        - name: "stationElevation@MetaData"
+        - name: "sensorHeight@MetaData"
           source: variables/height
           dimensions: ["nlocs"]
-          longName: "Station Elevation"
+          longName: "Sensor Height"
           units: "meters"
 
         - name: "heightOfSurface@MetaData"
@@ -125,25 +125,25 @@ observations:
           dimensions: ["nlocs"]
           longName: "Solar Azimuth Angle"
           units: "degrees"
-          range: [-180, 180]
+          range: [0, 360]
 
         - name: "sensorZenithAngle@MetaData"
           source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
           longName: "Sensor Zenith Angle"
           units: "degrees"
-          range: [0, 180]
+          range: [0, 90]
 
         - name: "sensorAzimuthAngle@MetaData"
           source: variables/sensorAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Sensor Azimuth Angle"
           units: "degrees"
-          range: [-180, 180]
+          range: [0, 360]
 
         - name: "brightnessTemperature@ObsValue"
           coordinates: "longitude latitude nchans"
-          source: variables/radiance
+          source: variables/brightnessTemperature
           dimensions: ["nlocs", "nchans"]
           longName: "Brightness Temperature"
           units: "K"
