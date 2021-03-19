@@ -65,8 +65,7 @@ void findSensorsChannels(const std::string & filename, std::vector<std::string> 
   infile.close();
 }
 
-/// Read bias coefficients for the \p sensor instrument+satellite in \p filename GSI coeff file
-/// Returns coefficients in \p coeffs and channel indices in \p channels
+//---------------------------------------------------------------------------------------
 void readObsBiasCoefficients(const std::string & filename, const std::string & sensor,
                              std::vector<int> & channels, Eigen::ArrayXXf & coeffs ) {
   std::ifstream infile(filename);
@@ -94,6 +93,45 @@ void readObsBiasCoefficients(const std::string & filename, const std::string & s
         for (size_t jpred = 0; jpred < gsi_npredictors; ++jpred) {
           infile >> par;
           coeffs(jpred, jchan) = par;
+          channels[jchan] = nuchan;
+        }
+        jchan++;
+      } else {
+        /// not interested in this channel; passing
+        for (size_t jpred = 0; jpred < gsi_npredictors; ++jpred) {
+          infile >> par;
+        }
+      }
+    }
+  }
+  infile.close();
+}
+
+//---------------------------------------------------------------------------------------
+void readObsBiasCoeffErrors(const std::string & filename, const std::string & sensor,
+                           std::vector<int> & channels, Eigen::ArrayXXf & errs,
+                           Eigen::ArrayXf & nobs) {
+  std::ifstream infile(filename);
+
+  std::size_t ich;     //  sequential number
+  std::string nusis;   //  sensor/instrument/satellite
+  std::size_t nuchan;  //  channel number
+
+  if (infile.is_open())
+  {
+    float par;
+    size_t jchan = 0;
+    while (infile >> ich)
+    {
+      infile >> nusis;
+      infile >> nuchan;
+      infile >> nobs(jchan);
+      if (nusis == sensor) {
+        /// it's the sensor we're interested in; read in coefficients and channel
+        /// indices
+        for (size_t jpred = 0; jpred < gsi_npredictors; ++jpred) {
+          infile >> par;
+          errs(jpred, jchan) = par;
           channels[jchan] = nuchan;
         }
         jchan++;
