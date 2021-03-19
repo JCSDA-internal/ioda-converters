@@ -1,4 +1,4 @@
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -26,11 +26,11 @@ observations:
               second: SECO
           height: 
             mnemonic: HMSL
-          heightOfLandSurface:
+          heightOfSurface:
             mnemonic: HOLS
           fieldOfViewNumber:
             mnemonic: FOVN
-          landSeaQualifier:
+          earthSurfaceType:
             mnemonic: LSQL
           longitude:
             mnemonic: CLON
@@ -67,36 +67,6 @@ observations:
           value: "MHS"
             
       variables:
-        - name: "sensorHeight@MetaData"
-          source: variables/height
-          dimensions: ["nlocs"]
-          longName: "Sensor Height"
-          units: "meters"
-
-        - name: "heightOfSurface@MetaData"
-          source: variables/heightOfLandSurface
-          dimensions: ["nlocs"]
-          longName: "Height of Land Surface"
-          units: "meters"
-
-        - name: "fieldOfViewNumber@MetaData"
-          source: variables/fieldOfViewNumber
-          dimensions: ["nlocs"]
-          longName: "Field of View Number"
-          units: "none"
-
-        - name: "landSeaQualifier@MetaData"
-          source: variables/landSeaQualifier
-          dimensions: ["nlocs"]
-          longName: "Land/Sea Qualifier"
-          units: "none"
-
-        - name: "datetime@MetaData"
-          source: variables/timestamp
-          dimensions: [ "nlocs" ]
-          longName: "Datetime"
-          units: "datetime"
-
         - name: "latitude@MetaData"
           source: variables/latitude
           dimensions: ["nlocs"]
@@ -110,6 +80,36 @@ observations:
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
+
+        - name: "sensorHeight@MetaData"
+          source: variables/height
+          dimensions: ["nlocs"]
+          longName: "Sensor Height"
+          units: "m"
+
+        - name: "datetime@MetaData"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "heightOfSurface@MetaData"
+          source: variables/heightOfSurface
+          dimensions: ["nlocs"]
+          longName: "Height of Surface"
+          units: "m"
+
+        - name: "fieldOfViewNumber@MetaData"
+          source: variables/fieldOfViewNumber
+          dimensions: ["nlocs"]
+          longName: "Field of View Number"
+          units: ""
+
+        - name: "earthSurfaceType@MetaData"
+          source: variables/earthSurfaceType
+          dimensions: ["nlocs"]
+          longName: "Earth Surface Type"
+          units: ""
 
         - name: "solarZenithAngle@MetaData"
           source: variables/solarZenithAngle
@@ -148,6 +148,3 @@ observations:
           range: [120, 500]
           chunks: [1000, 15]
           compressionLevel: 4
-
-
-        
