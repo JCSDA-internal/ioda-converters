@@ -26,23 +26,23 @@ observations:
               second: SECO
           height: 
             mnemonic: HMSL
-          hols: 
+          heightOfLandSurface:
             mnemonic: HOLS
-          fovn:
-            mnemonic: FOVN 
-          lsql:
+          fieldOfViewNumber:
+            mnemonic: FOVN
+          landSeaQualifier:
             mnemonic: LSQL
           longitude:
             mnemonic: CLON
           latitude:
             mnemonic: CLAT
-          sza:
+          solarZenithAngle:
             mnemonic: SOZA
-          saz:
+          solarAzimuthAngle:
             mnemonic: SOLAZI
-          vza:
+          sensorZenithAngle:
             mnemonic: SAZA
-          vaz:
+          sensorAzimuthAngle:
             mnemonic: BEARAZ
           radiance:
             mnemonic: TMBR
@@ -68,7 +68,6 @@ observations:
           value: "AMSUA"
             
       variables:
-
         - name: "stationElevation@MetaData"
           source: variables/height
           dimensions: ["nlocs"]
@@ -76,19 +75,19 @@ observations:
           units: "meters"
 
         - name: "heightOfSurface@MetaData"
-          source: variables/hols
+          source: variables/heightOfLandSurface
           dimensions: ["nlocs"]
           longName: "Height of Land Surface"
           units: "meters"
 
         - name: "fieldOfViewNumber@MetaData"
-          source: variables/fovn
+          source: variables/fieldOfViewNumber
           dimensions: ["nlocs"]
           longName: "Field of View Number"
           units: "none"
 
         - name: "landSeaQualifier@MetaData"
-          source: variables/lsql
+          source: variables/landSeaQualifier
           dimensions: ["nlocs"]
           longName: "Land/Sea Qualifier"
           units: "none"
@@ -114,28 +113,28 @@ observations:
           range: [-180, 180]
 
         - name: "solarZenithAngle@MetaData"
-          source: variables/sza
+          source: variables/solarZenithAngle
           dimensions: ["nlocs"]
           longName: "Solar Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
         - name: "solarAzimuthAngle@MetaData"
-          source: variables/saz
+          source: variables/solarAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Solar Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
 
         - name: "sensorZenithAngle@MetaData"
-          source: variables/vza
+          source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
           longName: "Sensor Zenith Angle"
           units: "degrees"
           range: [0, 180]
-
+       
         - name: "sensorAzimuthAngle@MetaData"
-          source: variables/vaz
+          source: variables/sensorAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Sensor Azimuth Angle"
           units: "degrees"
