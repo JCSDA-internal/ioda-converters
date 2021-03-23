@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ioda-converter for marine HF Radar radial velocity. 
+# ioda-converter for National Data Buoy Center High Frequency Radar radial velocity
 # Script modified by Ling Liu@EMC
 
 from __future__ import print_function
@@ -24,6 +24,7 @@ from orddicts import DefaultOrderedDict
 vName = ["sea_water_meridional_current",
          "sea_water_zonal_current"]
 
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
@@ -33,6 +34,7 @@ locationKeyList = [
 AttrData = {
     'odb_version': 1,
 }
+
 
 class Observation(object):
 
@@ -52,33 +54,33 @@ class Observation(object):
         lats = ncd.variables['lat'][:]
         vals_u = ncd.variables['u'][:]
         vals_v = ncd.variables['v'][:]
-        units = '1970-01-01 00:00:00'       
+        units = '1970-01-01 00:00:00'
         reftime = dateutil.parser.parse(units)
         ncd.close()
-        lons,lats = np.meshgrid(lons,lats)
+        lons, lats = np.meshgrid(lons, lats)
         lons = lons.flatten()
         lats = lats.flatten()
         vals_u = vals_u.flatten()
         vals_v = vals_v.flatten()
-        time = np.matlib.repmat(time,len(lons),1) 
+        time = np.matlib.repmat(time, len(lons), 1)
         count = 0
         for i in range(len(lons)):
-#            print('i,vals',i,vals[i],time[i])
-          for j in [0,1]:
-            valKey = vName[j], self.writer.OvalName()
-            errKey = vName[j], self.writer.OerrName()
-            qcKey = vName[j], self.writer.OqcName()
-            count += 1
-            obs_date = reftime + timedelta(seconds=int(time[i]))
-            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            if j == 0:
-              self.data[0][locKey][valKey] = vals_u[i]
-              self.data[0][locKey][errKey] = 0.1
-              self.data[0][locKey][qcKey] = 0
-            else:
-              self.data[0][locKey][valKey] = vals_v[i]
-              self.data[0][locKey][errKey] = 0.1
-              self.data[0][locKey][qcKey] = 0
+            for j in [0, 1]:
+                valKey = vName[j], self.writer.OvalName()
+                errKey = vName[j], self.writer.OerrName()
+                qcKey = vName[j], self.writer.OqcName()
+                count += 1
+                obs_date = reftime + timedelta(seconds=int(time[i]))
+                locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                if j == 0:
+                    self.data[0][locKey][valKey] = vals_u[i]
+                    self.data[0][locKey][errKey] = 0.1
+                    self.data[0][locKey][qcKey] = 0
+                else:
+                    self.data[0][locKey][valKey] = vals_v[i]
+                    self.data[0][locKey][errKey] = 0.1
+                    self.data[0][locKey][qcKey] = 0
+
 
 def main():
 

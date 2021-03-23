@@ -19,6 +19,7 @@ list( APPEND test_input
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
   testinput/marineglider_AOML.nc
+  testinput/ndbc_hfradar.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
@@ -55,6 +56,7 @@ list( APPEND test_output
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
   testoutput/test_glider.nc
+  testoutput/ndbc_hfradar.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
@@ -284,6 +286,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                           -o testrun/test_glider.nc
                           -d 2016080412"
                           test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/ndbc_hfradar2ioda.py
+                          -i testinput/ndbc_hfradar.nc
+                          -o testrun/ndbc_hfradar.nc
+                          -d 2016080412"
+                          ndbc_hfradar.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
                   TYPE    SCRIPT
