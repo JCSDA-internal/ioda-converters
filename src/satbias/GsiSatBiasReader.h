@@ -29,3 +29,13 @@ void findSensorsChannels(const std::string & filename, std::vector<std::string> 
 void readObsBiasCoefficients(const std::string & filename, const std::string & sensor,
                              std::vector<int> & channels, Eigen::ArrayXXf & coeffs);
 
+/// Read bias coefficients errors from the GSI file (satbias_pc)
+/// \param filename file with bias coefficients (GSI style)
+/// \param sensor instrument+satellite that is to be read from the file
+/// \param(out) channels channels for \p sensor
+/// \param(out) errs bias coefficients error variances
+/// \param(out) nobs number of observations
+void readObsBiasCoeffErrors(const std::string & filename, const std::string & sensor,
+                           std::vector<int> & channels, Eigen::ArrayXXf & errs,
+                           Eigen::ArrayXf & nobs);
+

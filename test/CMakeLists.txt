@@ -127,6 +127,7 @@ if (iodaconv_satbias_ENABLED )
     testinput/satbias_converter_cris.yaml
     testinput/satbias_converter_ssmis.yaml
     testinput/satbias_crtm_in
+    testinput/satbias_crtm_pc
   )
 
   list( APPEND test_output

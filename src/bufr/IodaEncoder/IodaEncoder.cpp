@@ -8,6 +8,7 @@
 #include "IodaEncoder.h"
 
 #include <memory>
+#include <type_traits>
 
 #include "eckit/exception/Exceptions.h"
 #include "ioda/Layout.h"
@@ -141,6 +142,12 @@ namespace Ingester
                 varGroupMap.insert(splitVar(varDesc.name));
             }
             // Todo: Delete with USE_OLD_LAYOUT
+
+            // Create Globals
+            for (auto& global : description_.getGlobals())
+            {
+                global->addTo(rootGroup);
+            }
 
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
