@@ -47,7 +47,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "../testoutput/gdas.t06z.adpsfc_snow.tm00.nc"
+      obsdataout: "./testrun/gdas.t06z.adpsfc_snow.tm00.nc"
 
       dimensions:
         - name: "nlocs"
