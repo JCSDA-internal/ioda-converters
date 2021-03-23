@@ -1,0 +1,113 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t06z.adpsfc.tm00.bufr_d"
+
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, WMOB, WMOS]
+        - mnemonics: [CLAT, CLON]
+        - mnemonics: [SELV, PRES, TMDB, TMDP, TOSD]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+
+          longitude:
+            mnemonic: CLON
+
+          latitude:
+            mnemonic: CLAT
+
+          pressureAir:
+            mnemonic: PRES
+
+          stationElevation:
+            mnemonic: SELV
+
+          temperatureAir:
+            mnemonic: TMDB
+
+          temperatureDewpoint:
+            mnemonic: TMDP
+        
+          snowDepth:
+            mnemonic: TOSD
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t06z.adpsfc_snow.tm00.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "datetime@MetaData"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "latitude@MetaData"
+          source: variables/latitude
+          dimensions: ["nlocs"]
+          longName: "Latitude)"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "longitude@MetaData"
+          source: variables/longitude
+          dimensions: ["nlocs"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "stationElevation@MetaData"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          dimensions: ["nlocs"]
+          longName: "Height of Station"
+          units: "m"
+
+        - name: "pressureAir@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/pressureAir
+          dimensions: ["nlocs"]
+          longName: "Pressure"
+          units: "Pa"
+          range: [90000, 105000] 
+
+        - name: "temperatureAir@ObsValue"
+          source: variables/temperatureAir
+          dimensions: ["nlocs"]
+          longName: "Temperature"
+          units: "K"
+          range: [230, 315]
+
+        - name: "temperatureDewpoint@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/temperatureDewpoint
+          dimensions: ["nlocs"]
+          longName: "Dew Point Temperature"
+          units: "K"
+          range: [200, 315]
+      
+        - name: "snowDepth@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/snowDepth
+          dimensions: ["nlocs"]
+          longName: "Snow Depth"
+          units: "m"
+
