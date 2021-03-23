@@ -4,36 +4,17 @@ CLANG:[![AWS-clang](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbm
 
 # ioda-converters
 
-The intended way to use this repository is to install in `/usr/local` by default, and if you cannot write into `/usr/local` use the `--prefix` option of `ecbuild` to install in your home directory under `tools`.  Run the scripts from the place they are installed, not the source directory. That way the scripts can reference each other without providing a path.
+The converters can be built and tested using ioda-bundle. In ioda-bundle the build of the converters is disabled by default (for now) so you must enable the build using the BUILD_IODA_CONVERTERS directive. Here is an example:
 
-For example,
 ```
-ecbuild --prefix=$HOME/tools  /your/path/to/ioda-converters
-make
-make install
+git clone https://github.com/jcsda-internal/ioda-bundle
+cd ioda-bundle
+mkdir build
+cd build
+ecbuild -DBUILD_IODA_CONVERTERS=ON ..
+make -j4
 ctest
 ```
-## bufr2nc
-
-Python script, `bufr2nc.py`, for converting BUFR to netCDF4. bufr2nc is built upon the py-ncepbufr package.
-
-```
-Usage: bufr2nc.py [-h] [-m <max_num_msgs>] [-c] [-p] obs_type input_bufr output_netcdf
-```
-  * The idea is for bufr2nc.py to create separate netCDF files for different observation types
-
-The short term plan is to handle aircraft, radiance, radiosonde and GPSRO observation types.
-AOD observation type may also be included in the short term plans
-
-Currently supported obs types
-
-| Obs Type           | raw BUFR | prepBUFR |
-|:-------------------|:--------:|:--------:|
-| Aircraft           | Y        | Y        |
-| Radiosonde         | N        | Y        |
-| Radiance (AMSU-A)  | Y        | N/A      |
-| GPSRO              | Y        | N/A      |
-| AOD                | N        | N/A      |
 
 ## gsi-ncdiag
 These scripts use classes defined in the gsincdiag Python library to convert output from GSI netCDF diag files into
