@@ -74,8 +74,6 @@ class Observation(object):
                 qc = qc[mask_thin]
 
             for i in range(len(lons)):
-                #if qc[i] ==   8192. :   #Useful flag to write out data over sea-ice only
-                                        #Commented out just to pass ctest
                 obs_date = reftime + timedelta(seconds=float(time[i]))
                 locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
                 self.data[0][locKey][valKey] = vals[i]
