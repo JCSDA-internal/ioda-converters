@@ -19,7 +19,7 @@ list( APPEND test_input
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
   testinput/marineglider_AOML.nc
-  testinput/ndbc_hfradar.nc
+  testinput/ndbc_hfradar_in.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
@@ -56,7 +56,7 @@ list( APPEND test_output
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
   testoutput/test_glider.nc
-  testoutput/ndbc_hfradar.nc
+  testoutput/ndbc_hfradar_out.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
