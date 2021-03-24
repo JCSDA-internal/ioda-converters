@@ -35,7 +35,7 @@ class Observation(object):
         if os.path.exists("cryosat_nc4classic.nc"):
             os.remove("cryosat_nc4classic.nc")
 
-        self.filenames = filename   
+        self.filenames = filename
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -43,46 +43,46 @@ class Observation(object):
         self._read()
 
     def _read(self):
-        valKey = vName, self.writer.OvalName()   
-        errKey = vName, self.writer.OerrName()   
-        qcKey = vName, self.writer.OqcName()     
+        valKey = vName, self.writer.OvalName()
+        errKey = vName, self.writer.OerrName()
+        qcKey = vName, self.writer.OqcName()
 
         for f in self.filenames:
-           print(f)
-           subprocess.call('nccopy -k nc7 '+f+' cryosat_nc4classic.nc', shell=True)
-           self.filename = "cryosat_nc4classic.nc"
-           ncd = nc.MFDataset(self.filename, aggdim='time_20_ku')
-           time = ncd.variables['time_20_ku'][:]
-           lons = ncd.variables['lon_poca_20_ku'][:]
-           lats = ncd.variables['lat_poca_20_ku'][:]
-           vals = ncd.variables['freeboard_20_ku'][:]
-           qc = ncd.variables['flag_prod_status_20_ku'][:]
-           # get base date for file
-           s = ' '.join(
-           ncd.variables['time_20_ku'].units.split(' ')[2:3])
-           reftime = dateutil.parser.parse(s)
-           ncd.close()
+            print(f)
+            subprocess.call('nccopy -k nc7 '+f+' cryosat_nc4classic.nc', shell=True)
+            self.filename = "cryosat_nc4classic.nc"
+            ncd = nc.MFDataset(self.filename, aggdim='time_20_ku')
+            time = ncd.variables['time_20_ku'][:]
+            lons = ncd.variables['lon_poca_20_ku'][:]
+            lats = ncd.variables['lat_poca_20_ku'][:]
+            vals = ncd.variables['freeboard_20_ku'][:]
+            qc = ncd.variables['flag_prod_status_20_ku'][:]
+            # get base date for file
+            s = ' '.join(
+            ncd.variables['time_20_ku'].units.split(' ')[2:3])
+            reftime = dateutil.parser.parse(s)
+            ncd.close()
 
-           # apply thinning mask
-           if self.thin > 0.0:
-               mask_thin = np.random.uniform(size=len(lons)) > self.thin
-               datein = datein[mask_thin]
-               timein = timein[mask_thin]
-               lons = lons[mask_thin]
-               lats = lats[mask_thin]
-               vals = vals[mask_thin]
-               qc = qc[mask_thin]
+            # apply thinning mask
+            if self.thin > 0.0:
+                mask_thin = np.random.uniform(size=len(lons)) > self.thin
+                datein = datein[mask_thin]
+                timein = timein[mask_thin]
+                lons = lons[mask_thin]
+                lats = lats[mask_thin]
+                vals = vals[mask_thin]
+                qc = qc[mask_thin]
 
-           for i in range(len(lons)):
-#               if qc[i] ==   8192. :   #Useful flag to write out data over sea-ice only
+            for i in range(len(lons)):
+                #if qc[i] ==   8192. :   #Useful flag to write out data over sea-ice only
                                         #Commented out just to pass ctest
-                 obs_date = reftime + timedelta(seconds=float(time[i]))
-                 locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                 self.data[0][locKey][valKey] = vals[i]
-                 self.data[0][locKey][errKey] = 0.1
-                 self.data[0][locKey][qcKey] = qc[i]
+                obs_date = reftime + timedelta(seconds=float(time[i]))
+                locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                self.data[0][locKey][valKey] = vals[i]
+                self.data[0][locKey][errKey] = 0.1
+                self.data[0][locKey][qcKey] = qc[i]
 
-           os.remove("cryosat_nc4classic.nc")
+            os.remove("cryosat_nc4classic.nc")
 
 
 vName = "sea_ice_freeboard"
