@@ -293,10 +293,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/ndbc_hfradar2ioda.py
-                          -i testinput/ndbc_hfradar.nc
-                          -o testrun/ndbc_hfradar.nc
-                          -d 2016080412"
-                          ndbc_hfradar.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          -i testinput/ndbc_hfradar_in.nc
+                          -o testrun/ndbc_hfradar_out.nc
+                          -d 2020072012"
+                          ndbc_hfradar_out.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
                   TYPE    SCRIPT
