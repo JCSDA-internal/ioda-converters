@@ -119,7 +119,7 @@ def main():
     optional.add_argument(
         '-t', '--thin',
         help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
-             " no thinning is performed. (default: %(default)s)",
+            " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
 
     args = parser.parse_args()
