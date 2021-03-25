@@ -260,6 +260,7 @@ rad_sensors = [
     'avhrr',
     'saphir',
     'gmi',
+    'amsr2',
 ]
 
 radar_sensors = [
