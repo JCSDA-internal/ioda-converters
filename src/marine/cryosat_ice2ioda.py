@@ -18,7 +18,7 @@ import subprocess
 import os
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
@@ -58,8 +58,7 @@ class Observation(object):
             vals = ncd.variables['freeboard_20_ku'][:]
             qc = ncd.variables['flag_prod_status_20_ku'][:]
             # get base date for file
-            s = ' '.join(
-            ncd.variables['time_20_ku'].units.split(' ')[2:3])
+            s = ' '.join(ncd.variables['time_20_ku'].units.split(' ')[2:3])
             reftime = dateutil.parser.parse(s)
             ncd.close()
 
