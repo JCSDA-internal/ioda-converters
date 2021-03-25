@@ -58,7 +58,7 @@ conv_platforms = {
 # note in python range, last number is not used so second values are +1
 # bufr codes
 uv_bufrtypes = {
-    "aircraft": range(230, 240),
+    "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
     "sondes": range(220, 223),
     "satwind": range(240, 261),
     "vadwind": [224],
@@ -66,16 +66,18 @@ uv_bufrtypes = {
     "sfcship": [280, 282, 284],
     "sfc": [281, 287],
     "scatwind": [290],
+    # 232 are dropsondes
 }
 
 conv_bufrtypes = {
-    "aircraft": range(130, 140),
+    "aircraft": [130, 131, 133, 135],  # 234 is TAMDAR; always rstprod
     "sondes": range(120, 123),
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
     "gps": [3, 4, 42, 43, 745, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
+    # 132 are dropsondes
 }
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
