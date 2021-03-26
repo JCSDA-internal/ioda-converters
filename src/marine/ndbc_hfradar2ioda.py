@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # ioda-converter for National Data Buoy Center High Frequency Radar radial velocity
-# Script modified by Ling Liu@EMC
+# Script modified by Ling Liu (IMSG@NOAA/NCEP/EMC)
 
 from __future__ import print_function
 import numpy as np
