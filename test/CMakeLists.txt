@@ -26,6 +26,7 @@ list( APPEND test_input
   testinput/cryosat2_L2_test.nc
   testinput/viirs_jpss1_oc_l2.nc
   testinput/modis_aqua_oc_l2.nc
+  testinput/viirs_jpss1_oc_l3.nc
   testinput/sondes_obs_2018041500_m.nc4
   testinput/gnssro_obs_2018041500_s.nc4
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
@@ -61,6 +62,7 @@ list( APPEND test_output
   testoutput/cryosat2_L2.nc
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
+  testoutput/viirs_jpss1_oc_l3.nc
   testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
@@ -319,7 +321,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l2
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/viirs_modis_oc2ioda.py
+                          "${CMAKE_BINARY_DIR}/bin/viirs_modis_l2_oc2ioda.py
                           -i testinput/viirs_jpss1_oc_l2.nc
                           -o testrun/viirs_jpss1_oc_l2.nc
                           -d 2018041512
@@ -330,14 +332,24 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aqua_oc_l2
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/viirs_modis_oc2ioda.py
+                          "${CMAKE_BINARY_DIR}/bin/viirs_modis_l2_oc2ioda.py
                           -i testinput/modis_aqua_oc_l2.nc
                           -o testrun/modis_aqua_oc_l2.nc
                           -d 2018041512
                           -t 0.5"
                           modis_aqua_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l3
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/viirs_modis_l3_oc2ioda.py
+                          -i testinput/viirs_jpss1_oc_l3.nc
+                          -o testrun/viirs_jpss1_oc_l3.nc
+                          -d 2018041512"
+                          viirs_jpss1_oc_l3.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET stest_${PROJECT_NAME}_ncep_bufr
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf

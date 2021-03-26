@@ -37,6 +37,7 @@ locationKeyList = [
 
 AttrData = {}
 
+
 class OCL3(object):
 
     def __init__(self, filename, date, thin, writer):
@@ -52,15 +53,15 @@ class OCL3(object):
         lons = ncd.variables['lon'][:].ravel()
         lats = ncd.variables['lat'][:].ravel()
         vals = ncd.variables['chlor_a'][:].ravel()
-        mask = vals>0.0
-        vals = vals[mask]    
+        mask = vals > 0.0
+        vals = vals[mask]
         len_grid = len(lons)*len(lats)
         lons, lats = np.meshgrid(lons, lats, copy=False)
         lons = lons.ravel()[mask]
         lats = lats.ravel()[mask]
 
         # get global attributes
-        for v in ('platform', 'instrument', 'processing_version', 
+        for v in ('platform', 'instrument', 'processing_version',
                   'time_coverage_start'):
             AttrData[v] = ncd.getncattr(v)
         ncd.close()
