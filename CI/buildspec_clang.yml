@@ -1,6 +1,7 @@
 version: 0.2
 
 env:
+  shell: bash
   parameter-store:
     GIT_USER: "/CodeBuild/Git_USER"
     GIT_PASS: "/CodeBuild/Git_PASS"
@@ -18,6 +19,7 @@ phases:
       - echo $PATH
       - echo $LD_LIBRARY_PATH
       - echo $PYTHONPATH
+      - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages
 
       # Codebuild only runs on PUSH events if HEAD_REF
       # is refs/heads/develop (merge to develop). In this
@@ -73,8 +75,6 @@ phases:
   build:
     commands:
       - cd /build_container
-      - echo $PYTHONPATH
-      - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
       - ecbuild /jcsda/ioda-bundle
       - cd /build_container/iodaconv
       - make -j4 
