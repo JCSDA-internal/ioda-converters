@@ -69,17 +69,18 @@ class Observation(object):
                 valKey = vName[j], self.writer.OvalName()
                 errKey = vName[j], self.writer.OerrName()
                 qcKey = vName[j], self.writer.OqcName()
-                count += 1
-                obs_date = reftime + timedelta(seconds=int(time[i]))
-                locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                if j == 0:
-                    self.data[0][locKey][valKey] = vals_u[i]
-                    self.data[0][locKey][errKey] = 0.1
-                    self.data[0][locKey][qcKey] = 0
-                else:
-                    self.data[0][locKey][valKey] = vals_v[i]
-                    self.data[0][locKey][errKey] = 0.1
-                    self.data[0][locKey][qcKey] = 0
+                if vals_u[i] != '--':
+                    count += 1
+                    obs_date = reftime + timedelta(seconds=int(time[i]))
+                    locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    if j == 0:
+                        self.data[0][locKey][valKey] = vals_u[i]
+                        self.data[0][locKey][errKey] = 0.1
+                        self.data[0][locKey][qcKey] = 0
+                    else:
+                        self.data[0][locKey][valKey] = vals_v[i]
+                        self.data[0][locKey][errKey] = 0.1
+                        self.data[0][locKey][qcKey] = 0
 
 
 def main():
