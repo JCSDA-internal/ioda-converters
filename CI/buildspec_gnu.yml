@@ -118,7 +118,7 @@ phases:
 
       - su - jcsdauser -c "export PATH=/usr/local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         && export LD_LIBRARY_PATH=/usr/local/lib
-        && export PYTHONPATH=/usr/local/lib
+        && export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
         && cd /build_container/iodaconv
         && ctest"
 

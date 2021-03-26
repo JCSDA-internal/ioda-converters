@@ -73,6 +73,8 @@ phases:
   build:
     commands:
       - cd /build_container
+      - echo $PYTHONPATH
+      - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
       - ecbuild /jcsda/ioda-bundle
       - cd /build_container/iodaconv
       - make -j4 
