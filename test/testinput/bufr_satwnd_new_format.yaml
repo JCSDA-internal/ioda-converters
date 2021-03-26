@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "{{obsdatain}}"
+      obsdatain: "./testinput/bufr_satwnd_new_format.bufr"
       mnemonicSets:
         - mnemonics: [SAID, CLATH, CLONH, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM]
         - mnemonics: [EHAM, PRLC, WDIR, WSPD]
@@ -64,7 +64,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "{{obsdataout}}"
+      obsdataout: "./testrun/NC005031.nc"
 
       dimensions:
         - name: "nlocs"

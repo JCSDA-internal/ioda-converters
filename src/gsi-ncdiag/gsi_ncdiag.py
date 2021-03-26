@@ -58,7 +58,7 @@ conv_platforms = {
 # note in python range, last number is not used so second values are +1
 # bufr codes
 uv_bufrtypes = {
-    "aircraft": range(230, 240),
+    "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
     "sondes": range(220, 223),
     "satwind": range(240, 261),
     "vadwind": [224],
@@ -66,16 +66,18 @@ uv_bufrtypes = {
     "sfcship": [280, 282, 284],
     "sfc": [281, 287],
     "scatwind": [290],
+    # 232 are dropsondes
 }
 
 conv_bufrtypes = {
-    "aircraft": range(130, 140),
+    "aircraft": [130, 131, 133, 135],  # 234 is TAMDAR; always rstprod
     "sondes": range(120, 123),
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
     "gps": [3, 4, 42, 43, 745, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
+    # 132 are dropsondes
 }
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
@@ -260,6 +262,7 @@ rad_sensors = [
     'avhrr',
     'saphir',
     'gmi',
+    'amsr2',
 ]
 
 radar_sensors = [
@@ -494,6 +497,13 @@ test_fields_with_channels = {
     'Cloudy_Channel': ('cloudy_channel', 'integer'),
     'Transmittance_at_Cloud_Top': ('tao_cldtop', 'float'),
     'NSST_Retrieval_check': ('nsstret_check', 'integer'),
+}
+gmi_chan_dep_loc_vars = {
+    'Sat_Zenith_Angle',
+    'Sat_Azimuth_Angle',
+    'Sol_Zenith_Angle',
+    'Sol_Azimuth_Angle',
+    'Scan_Angle',
 }
 
 
@@ -1172,6 +1182,15 @@ class Radiances(BaseGSI):
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+            elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
+                # Channels 1-9
+                tmp = self.var(lvar)[::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                loc_mdata[loc_mdata_name] = tmp
+                # Channels 10-13
+                tmp = self.var(lvar)[nchans-1::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                loc_mdata[loc_mdata_name+'1'] = tmp
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL

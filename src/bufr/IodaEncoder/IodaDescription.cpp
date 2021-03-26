@@ -19,6 +19,7 @@ namespace
         const char* Filename = "obsdataout";
         const char* Dimensions = "dimensions";
         const char* Variables = "variables";
+        const char* Globals = "globals";
 
         namespace Dimension
         {
@@ -38,6 +39,18 @@ namespace
             const char* Chunks = "chunks";
             const char* CompressionLevel = "compressionLevel";
         }  // namespace Variable
+
+        namespace Global
+        {
+            const char* Name = "name";
+            const char* Value = "value";
+            const char* Type = "type";
+            const char* StringType = "string";
+            const char* FloatType = "float";
+            const char* FloatVectorType = "floatVector";
+            const char* IntType = "int";
+            const char* IntVectorType = "intVector";
+        }  // namespace Global
     }  // namespace ConfKeys
 }  // namespace
 
@@ -150,6 +163,58 @@ namespace Ingester
 
             addVariable(variable);
         }
+
+        if (conf.has(ConfKeys::Globals))
+           {
+           auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
+           for (const auto& globalConf : globalConfs)
+           {
+              if (globalConf.getString(ConfKeys::Global::Type) == \
+                  ConfKeys::Global::StringType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::string>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getString(ConfKeys::Global::Value);
+                  addGlobal(global);
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::FloatType)
+              {
+                  auto global = std::make_shared<GlobalDescription<float>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->name = globalConf.getFloat(ConfKeys::Global::Name);
+                  addGlobal(global);
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::FloatVectorType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::vector<float>>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getFloatVector(ConfKeys::Global::Value);
+                  addGlobal(global);
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::IntType)
+              {
+                  auto global = std::make_shared<GlobalDescription<int>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getInt(ConfKeys::Global::Value);
+                  addGlobal(global);
+              }
+              else if (globalConf.getString(ConfKeys::Global::Type) == \
+                       ConfKeys::Global::IntVectorType)
+              {
+                  auto global = std::make_shared<GlobalDescription<std::vector<int>>>();
+                  global->name = globalConf.getString(ConfKeys::Global::Name);
+                  global->value = globalConf.getIntVector(ConfKeys::Global::Value);
+                  addGlobal(global);
+              }
+              else
+              {
+                 throw eckit::BadParameter("Unsupported global attribute type");
+              }
+            }
+       }
     }
 
     void IodaDescription::addDimension(const DimensionDescription& scale)
@@ -160,6 +225,11 @@ namespace Ingester
     void IodaDescription::addVariable(const VariableDescription& variable)
     {
         variables_.push_back(variable);
+    }
+
+    void IodaDescription::addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global)
+    {
+        globals_.push_back(global);
     }
 
     void IodaDescription::setBackend(const std::string& backend)

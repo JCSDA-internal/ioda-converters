@@ -1,4 +1,5 @@
-input file: testinput/satbias_crtm_in
+input coeff file: testinput/satbias_crtm_in
+input err file: testinput/satbias_crtm_pc
 output:
 - sensor: ssmis_f16
   predictors:
@@ -10,8 +11,8 @@ output:
   - cosine_of_latitude_times_orbit_node
   - sine_of_latitude
   - emissivity
-  - scan_position_order_4
-  - scan_position_order_3
-  - scan_position_order_2
-  - scan_position
+  - scan_angle_order_4
+  - scan_angle_order_3
+  - scan_angle_order_2
+  - scan_angle
   output file: testrun/satbias_ssmis_f16.nc4

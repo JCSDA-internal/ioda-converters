@@ -8,11 +8,13 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
 #include "ioda/Engines/Factory.h"
+#include "ioda/Group.h"
 
 namespace Ingester
 {
@@ -41,8 +43,52 @@ namespace Ingester
         int compressionLevel;  // Optional
     };
 
+    struct GlobalDescriptionBase
+    {
+        std::string name;
+        virtual void addTo(ioda::Group& group) = 0;
+    };
+
+    template<typename T>
+    struct is_vector : public std::false_type {};
+
+    template<typename T, typename A>
+    struct is_vector<std::vector<T, A>> : public std::true_type {};
+
+    template<typename T>
+    struct GlobalDescription : public GlobalDescriptionBase
+    {
+        T value;
+
+        void addTo(ioda::Group& group) final
+        {
+            _addTo(group);
+        }
+
+     private:
+        // T is something other than a std::vector
+        template<typename U = void>
+        void _addTo(ioda::Group& group,
+                    std::enable_if_t<!is_vector<T>::value, U>* = nullptr)
+        {
+            ioda::Attribute attr = group.atts.create<T>(name, {1});
+            attr.write<T>({value});
+        }
+
+        // T is a vector
+        template<typename U = void>
+        void _addTo(ioda::Group& group,
+                    std::enable_if_t<is_vector<T>::value, U>* = nullptr)
+        {
+            ioda::Attribute attr = group.atts.create<typename T::value_type>(name, \
+                                   {static_cast<int>(value.size())});
+            attr.write<typename T::value_type>(value);
+        }
+    };
+
     typedef std::vector<DimensionDescription> DimDescriptions;
     typedef std::vector<VariableDescription> VariableDescriptions;
+    typedef std::vector<std::shared_ptr<GlobalDescriptionBase>> GlobalDescriptions;
 
     /// \brief Describes how to write data to IODA.
     class IodaDescription
@@ -57,6 +103,9 @@ namespace Ingester
         /// \brief Add Variable defenition
         void addVariable(const VariableDescription& variable);
 
+        /// \brief Add Globals defenition
+        void addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global);
+
         // Setters
         inline void setBackend(const ioda::Engines::BackendNames& backend) { backend_ = backend; }
         inline void setFilepath(const std::string& filepath) { filepath_ = filepath; }
@@ -66,6 +115,7 @@ namespace Ingester
         inline std::string getFilepath() const { return filepath_; }
         inline DimDescriptions getDims() const { return dimensions_; }
         inline VariableDescriptions getVariables() const { return variables_; }
+        inline GlobalDescriptions getGlobals() const { return globals_; }
 
      private:
         /// \brief The backend type to use
@@ -79,6 +129,9 @@ namespace Ingester
 
         /// \brief Collection of defined variables
         VariableDescriptions variables_;
+
+        /// \brief Collection of defined globals
+        GlobalDescriptions globals_;
 
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);

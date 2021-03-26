@@ -1,4 +1,5 @@
-input file: testinput/satbias_crtm_in
+input coeff file: testinput/satbias_crtm_in
+input err file: testinput/satbias_crtm_pc
 default predictors: &default_preds
 - constant
 - zenith_angle
@@ -12,19 +13,6 @@ default predictors: &default_preds
 - scan_angle_order_3
 - scan_angle_order_2
 - scan_angle
-scanpos predictors: &scanpos_preds
-- constant
-- zenith_angle
-- cloud_liquid_water
-- lapse_rate_order_2
-- lapse_rate
-- cosine_of_latitude_times_orbit_node
-- sine_of_latitude
-- emissivity
-- scan_position_order_4
-- scan_position_order_3
-- scan_position_order_2
-- scan_position
 output:
 - sensor: amsua_n15
   output file: satbias_amsua_n15.nc4
@@ -70,58 +58,58 @@ output:
   predictors: *default_preds
 - sensor: ssmi_f15
   output file: satbias_ssmi_f15.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: ssmis_f16
   output file: satbias_ssmis_f16.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: amsre_aqua
   output file: satbias_amsre_aqua.nc4
   predictors: *default_preds
 - sensor: imgr_g11
   output file: satbias_imgr_g11.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: imgr_g12
   output file: satbias_imgr_g12.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: imgr_g13
   output file: satbias_imgr_g13.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD1_g11
   output file: satbias_sndrD1_g11.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD2_g11
   output file: satbias_sndrD2_g11.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD3_g11
   output file: satbias_sndrD3_g11.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD4_g11
   output file: satbias_sndrD4_g11.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD1_g12
   output file: satbias_sndrD1_g12.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD2_g12
   output file: satbias_sndrD2_g12.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD3_g12
   output file: satbias_sndrD3_g12.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD4_g12
   output file: satbias_sndrD4_g12.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD1_g13
   output file: satbias_sndrD1_g13.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD2_g13
   output file: satbias_sndrD2_g13.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD3_g13
   output file: satbias_sndrD3_g13.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD4_g13
   output file: satbias_sndrD4_g13.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: hirs4_n19
   output file: satbias_hirs4_n19.nc4
   predictors: *default_preds
@@ -133,55 +121,55 @@ output:
   predictors: *default_preds
 - sensor: ssmis_f17
   output file: satbias_ssmis_f17.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: ssmis_f18
   output file: satbias_ssmis_f18.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: ssmis_f19
   output file: satbias_ssmis_f19.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: ssmis_f20
   output file: satbias_ssmis_f20.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: imgr_g14
   output file: satbias_imgr_g14.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: imgr_g15
   output file: satbias_imgr_g15.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD1_g14
   output file: satbias_sndrD1_g14.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD2_g14
   output file: satbias_sndrD2_g14.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD3_g14
   output file: satbias_sndrD3_g14.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD4_g14
   output file: satbias_sndrD4_g14.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD1_g15
   output file: satbias_sndrD1_g15.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD2_g15
   output file: satbias_sndrD2_g15.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD3_g15
   output file: satbias_sndrD3_g15.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: sndrD4_g15
   output file: satbias_sndrD4_g15.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: seviri_m08
   output file: satbias_seviri_m08.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: seviri_m09
   output file: satbias_seviri_m09.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: seviri_m10
   output file: satbias_seviri_m10.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: atms_npp
   output file: satbias_atms_npp.nc4
   predictors: *default_preds
@@ -214,13 +202,13 @@ output:
   predictors: *default_preds
 - sensor: gmi_gpm
   output file: satbias_gmi_gpm.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: saphir_meghat
   output file: satbias_saphir_meghat.nc4
   predictors: *default_preds
 - sensor: ahi_himawari8
   output file: satbias_ahi_himawari8.nc4
-  predictors: *scanpos_preds
+  predictors: *default_preds
 - sensor: cris-fsr_npp
   output file: satbias_cris-fsr_npp.nc4
   predictors: *default_preds
