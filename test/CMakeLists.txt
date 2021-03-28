@@ -360,7 +360,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l3
                           -d 2018041512"
                           viirs_jpss1_oc_l3.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET stest_${PROJECT_NAME}_ncep_bufr
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
