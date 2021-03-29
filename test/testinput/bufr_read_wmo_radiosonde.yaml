@@ -1,0 +1,82 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/bufr_read_wmo_radiosonde.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [TMDB, TMDP, WDIR, WSPD]
+          channels: 1-5880
+
+      exports:
+        variables:
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          air_temperature:
+            mnemonic: TMDB
+          dewpoint_temperature:
+            mnemonic: TMDP
+          wind_direction:
+            mnemonic: WDIR
+          wind_speed:
+            mnemonic: WSPD
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/bufr_read_wmo_radiosonde.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/air_temperature.nrows
+        - name: "temp_ncols"
+          size: variables/air_temperature.ncols
+
+      variables:
+        - name: "latitude@MetaData"
+          source: variables/latitude
+          dimensions: [ "nlocs" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "longitude@MetaData"
+          source: variables/longitude
+          dimensions: [ "nlocs" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "air_temperature@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/air_temperature
+          dimensions: [ "nlocs", "temp_ncols"]
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "dewpoint_temperature@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/dewpoint_temperature
+          dimensions: [ "nlocs",  "temp_ncols"]
+          longName: "Dewpoint Temperature"
+          units: "K"
+
+        - name: "wind_direction@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/wind_direction
+          dimensions: [ "nlocs",  "temp_ncols"]
+          longName: "Wind Direction"
+          units: "degrees true"
+
+        - name: "wind_speed@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/wind_speed
+          dimensions: [ "nlocs",  "temp_ncols"]
+          longName: "Wind Speed"
+          units: "m/s"
