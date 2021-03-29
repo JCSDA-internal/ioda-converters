@@ -6,12 +6,11 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "/data/users/eliu/bufr_samples/gdas.t00z.atms.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.atms.tm00.bufr_d"
       mnemonicSets:
-        - mnemonics: [SAID, SIID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH] 
-        - mnemonics: [LSQL, HOLS, HMSL]
-        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
+        - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI]
+        - mnemonics: [TMBR, CHNM]
           channels: 1-22
 
       exports:
@@ -23,19 +22,18 @@ observations:
               day: DAYS
               hour: HOUR
               minute: MINU
-              second: SECO
-          height: 
-            mnemonic: HMSL
-          heightOfSurface:
-            mnemonic: HOLS
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          satelliteId:
+            mnemonic: SAID
+          sensorID:
+            mnemonic: SIID
+          channelNumber:
+            mnemonic: CHNM
           fieldOfViewNumber:
             mnemonic: FOVN
-          earthSurfaceType:
-            mnemonic: LSQL
-          longitude:
-            mnemonic: CLON
-          latitude:
-            mnemonic: CLAT
           solarZenithAngle:
             mnemonic: SOZA
           solarAzimuthAngle:
@@ -46,7 +44,7 @@ observations:
             mnemonic: BEARAZ
           brightnessTemperature:
             mnemonic: TMBR
-    
+
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t00z.atms.tm00.nc"
@@ -57,18 +55,34 @@ observations:
         - name: "nchans"
           size: variables/brightnessTemperature.ncols
 
-      globals: 
-        - name: "sensorCentralFrequency@MetaData"
-          type: floatVector
-          value: [23.8, 31.4, 50.3, 51.76, 52.8, 53.596, 54.40, 54.94, 55.50, 
-                  57.2903, 57.2903, 57.2903, 57.2903, 57.2903, 57.2903, 
-                  88.20, 165.5, 183.31, 183.31, 183.31, 183.31, 183.31]
-
+      globals:
         - name: "platformCommonName@MetaData"
           type: string
           value: "ATMS"
-            
+
+        - name: "platformLongDescription@MetaData"
+          type: string
+          value: "MTYP 021-203 ATMS BRIGHTNESS TEMPERATURE DATA"
+
+        - name: "sensorCentralFrequency@MetaData"
+          type: floatVector
+          value: [23.8, 31.4, 50.3, 51.76, 52.8, 53.596, 54.40, 54.94, 55.50,
+                  57.2903, 57.2903, 57.2903, 57.2903, 57.2903, 57.2903,
+                  88.20, 165.5, 183.31, 183.31, 183.31, 183.31, 183.31]
+
       variables:
+        - name: "satelliteId@MetaData"
+          source: variables/satelliteId
+          dimensions: ["nlocs"]
+          longName: "Satellite identification"
+          units: ""
+
+        - name: "channelNumber@MetaData"
+          source: variables/channelNumber
+          dimensions: ["nchans"]
+          longName: "Channel number"
+          units: ""
+
         - name: "latitude@MetaData"
           source: variables/latitude
           dimensions: ["nlocs"]
@@ -83,61 +97,43 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "sensorHeight@MetaData"
-          source: variables/height
-          dimensions: ["nlocs"]
-          longName: "Sensor Height"
-          units: "m"
-
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
-
-        - name: "heightOfSurface@MetaData"
-          source: variables/heightOfSurface
-          dimensions: ["nlocs"]
-          longName: "Height of Land Surface"
-          units: "m"
 
         - name: "fieldOfViewNumber@MetaData"
           source: variables/fieldOfViewNumber
           dimensions: ["nlocs"]
-          longName: "Field of View Number"
-          units: ""
-
-        - name: "earthSurfaceType@MetaData"
-          source: variables/earthSurfaceType
-          dimensions: ["nlocs"]
-          longName: "Land/Sea Qualifier"
+          longName: "Field of view number"
           units: ""
 
         - name: "solarZenithAngle@MetaData"
           source: variables/solarZenithAngle
           dimensions: ["nlocs"]
-          longName: "Solar Zenith Angle"
+          longName: "Solar zenith angle"
           units: "degrees"
           range: [0, 180]
 
         - name: "solarAzimuthAngle@MetaData"
           source: variables/solarAzimuthAngle
           dimensions: ["nlocs"]
-          longName: "Solar Azimuth Angle"
+          longName: "Solar azimuth angle"
           units: "degrees"
           range: [0, 360]
 
         - name: "sensorZenithAngle@MetaData"
           source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
-          longName: "Sensor Zenith Angle"
+          longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
 
         - name: "sensorAzimuthAngle@MetaData"
           source: variables/sensorAzimuthAngle
           dimensions: ["nlocs"]
-          longName: "Sensor Azimuth Angle"
+          longName: "Sensor azimuth angle"
           units: "degrees"
           range: [0, 360]
 
@@ -145,8 +141,7 @@ observations:
           coordinates: "longitude latitude nchans"
           source: variables/brightnessTemperature
           dimensions: ["nlocs", "nchans"]
-          longName: "Brightness Temperature"
+          longName: "Brightness temperature"
           units: "K"
           range: [120, 500]
           chunks: [1000, 15]
-        
