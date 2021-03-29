@@ -28,16 +28,16 @@ observations:
             mnemonic: CLATH
           longitude:
             mnemonic: CLONH
-          satelliteId: 
+          satelliteId:
             mnemonic: SAID
-          sensorID: 
+          sensorID:
             mnemonic: SIID
-          channelNumber: 
+          channelNumber:
             mnemonic: CHNM
-          centralWavenumber: 
+          centralWavenumber:
             mnemonic: LOGRCW
           fieldOfViewNumber:
-            mnemonic: FOVN 
+            mnemonic: FOVN
           solarZenithAngle:
             mnemonic: SOZA
           solarAzimuthAngle:
@@ -52,7 +52,7 @@ observations:
             mnemonic: ALBD
           brightnessTemperature:
             mnemonic: TMBR
-    
+
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t00z.airsev.tm00.nc"
@@ -65,18 +65,11 @@ observations:
         - name: "nchans_albedo"
           size: variables/albedo.ncols
 
-      globals: 
+      globals:
         - name: "platformCommonName@MetaData"
           type: string
           value: "AIRS"
 
-        - name: "sensorCentralFrequency@MetaData"
-          type: floatVector
-          value: [649.35, 666.67, 684.93, 704.22, 724.64,
-                  746.27, 769.23, 793.65, 819.67, 847.46,
-                  870.00, 877.19, 909.09, 943.40, 980.00,
-                  980.39, 1020.4, 1063.8, 1090.0, 1111.1]    # cm-1
-            
       variables:
         - name: "satelliteId@MetaData"
           source: variables/satelliteId
@@ -112,7 +105,7 @@ observations:
 
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
 
