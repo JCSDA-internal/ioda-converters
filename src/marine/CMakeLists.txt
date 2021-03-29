@@ -14,7 +14,8 @@ list(APPEND programs
   rads_adt2ioda.py
   smap_sss2ioda.py
   argoClim2ioda.py
-  viirs_modis_oc2ioda.py
+  viirs_modis_l2_oc2ioda.py
+  viirs_modis_l3_oc2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
