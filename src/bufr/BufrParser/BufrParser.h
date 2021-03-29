@@ -51,6 +51,12 @@ namespace Ingester
         /// \brief The Fortran file ID to an open BUFR file (0 when no file open)
         unsigned int fortranFileId_;
 
+        /// \brief The Fortran file ID to an open BUFR file (0 when no file open)
+        unsigned int table1FileId_;
+
+        /// \brief The Fortran file ID to an open BUFR file (0 when no file open)
+        unsigned int table2FileId_;
+
         /// \brief Exports collected data into a DataContainer
         /// \param srcData Data to export
         std::shared_ptr<DataContainer> exportData(const BufrDataMap& srcData);
@@ -63,7 +69,11 @@ namespace Ingester
         CatDataMap splitData(CatDataMap& splitMaps, Split& split);
 
         /// \brief Opens a BUFR file using the Fortran BUFR interface.
-        void openBufrFile(const std::string& filepath);
+        /// \param filepath Path to bufr file.
+        /// \param isWmoFormat _optional_ Bufr file is in the standard format.
+        /// \param tablepath _optional_ Path to WMO master tables (needed for standard bufr files).
+        void
+        openBufrFile(const std::string& filepath, bool isWmoFormat, const std::string& tablepath);
 
         /// \brief Closes the open BUFR file.
         void closeBufrFile();

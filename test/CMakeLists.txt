@@ -19,6 +19,7 @@ list( APPEND test_input
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
   testinput/marineglider_AOML.nc
+  testinput/ndbc_hfradar_in.nc
   testinput/gsidiag_conv_t_sfc_test.nc
   testinput/gsidiag_conv_uv_testinput.nc
   testinput/gsidiag_amsua_aqua_radiance_test.nc
@@ -55,6 +56,7 @@ list( APPEND test_output
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
   testoutput/test_glider.nc
+  testoutput/ndbc_hfradar_out.nc
   testoutput/sfc_tv_obs_2018041500.nc4
   testoutput/satwind_obs_2018041500.nc4
   testoutput/amsua_aqua_obs_2018041500.nc4
@@ -89,10 +91,12 @@ endif()
 
 if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
+    testinput/bufr_tables
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
+    testinput/bufr_read_wmo_radiosonde.bufr
     testinput/bufr_satwnd_new_format.bufr
     testinput/bufr_satwnd_old_format.bufr
     testinput/bufr_mhs.yaml
@@ -101,7 +105,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_splitting.yaml
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
+    testinput/bufr_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
+    testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
   )
@@ -113,7 +119,9 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
+    testoutput/gdas.t06z.adpsfc_snow.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
+    testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
     testoutput/NC005066.nc
   )
@@ -285,6 +293,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                           -o testrun/test_glider.nc
                           -d 2016080412"
                           test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/ndbc_hfradar2ioda.py
+                          -i testinput/ndbc_hfradar_in.nc
+                          -o testrun/ndbc_hfradar_out.nc
+                          -d 2020072012"
+                          ndbc_hfradar_out.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
                   TYPE    SCRIPT
@@ -544,12 +562,29 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_snowadpsfc2ioda
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_snow_adpsfc.yaml"
+                            gdas.t06z.adpsfc_snow.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+
   ecbuild_add_test( TARGET  test_iodaconv_bufr_read_2_dim_blocks
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_read_2_dim_blocks.yaml"
                             bufr_read_2_dim_blocks.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_read_wmo_radiosonde
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_read_wmo_radiosonde.yaml"
+                            bufr_read_wmo_radiosonde.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_satwnd_old_format
