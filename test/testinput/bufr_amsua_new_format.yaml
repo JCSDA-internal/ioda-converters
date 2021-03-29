@@ -8,9 +8,9 @@ observations:
       name: bufr
       obsdatain: "./testinput/gdas.t00z.1bamua.tm00.bufr_d"
       mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLAT, CLON] 
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLAT, CLON]
         - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
+        - mnemonics: [TMBR, CHNM]
           channels: 1-15
 
       exports:
@@ -26,6 +26,12 @@ observations:
             mnemonic: CLAT
           longitude:
             mnemonic: CLON
+          satelliteId:
+            mnemonic: SAID
+          sensorID:
+            mnemonic: SIID
+          channelNumber:
+            mnemonic: CHNM
           fieldOfViewNumber:
             mnemonic: FOVN
           solarZenithAngle:
@@ -38,7 +44,7 @@ observations:
             mnemonic: BEARAZ
           brightnessTemperature:
             mnemonic: TMBR
-    
+
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t00z.1bamsua.tm00.nc"
@@ -49,17 +55,33 @@ observations:
         - name: "nchans"
           size: variables/brightnessTemperature.ncols
 
-      globals: 
-        - name: "sensorCentralFrequency@MetaData"
-          type: floatVector
-          value: [23.8, 31.4, 50.3, 52.8, 53.596, 54.4, 54.94, 55.5, 57.290, 
-                  57.290, 57.290, 57.290, 57.290, 57.290, 89.0]
-
+      globals:
         - name: "platformCommonName@MetaData"
           type: string
           value: "AMSUA"
-            
+
+        - name: "platformLongDescription@MetaData"
+          type: string
+          value: "MTYP 021-023 PROC AMSU-A 1B Tb (NOAA-15-19, METOP-1,2)"
+
+        - name: "sensorCentralFrequency@MetaData"
+          type: floatVector
+          value: [23.8, 31.4, 50.3, 52.8, 53.596, 54.4, 54.94, 55.5, 57.290,
+                  57.290, 57.290, 57.290, 57.290, 57.290, 89.0]
+
       variables:
+        - name: "satelliteId@MetaData"
+          source: variables/satelliteId
+          dimensions: ["nlocs"]
+          longName: "Satellite identification"
+          units: ""
+
+        - name: "channelNumber@MetaData"
+          source: variables/channelNumber
+          dimensions: ["nchans"]
+          longName: "Channel number"
+          units: ""
+
         - name: "latitude@MetaData"
           source: variables/latitude
           dimensions: ["nlocs"]
@@ -76,7 +98,7 @@ observations:
 
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
 
@@ -106,7 +128,7 @@ observations:
           longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
-       
+
         - name: "sensorAzimuthAngle@MetaData"
           source: variables/sensorAzimuthAngle
           dimensions: ["nlocs"]

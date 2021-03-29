@@ -70,6 +70,10 @@ observations:
           type: string
           value: "AIRS"
 
+        - name: "platformLongDescription@MetaData"
+          type: string
+          value: "MTYP 021-249 EVERY FOV AIRS/AMSU-A/HSB 1B BTEMPS(AQUA)"
+
       variables:
         - name: "satelliteId@MetaData"
           source: variables/satelliteId
