@@ -6,11 +6,11 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.avcsam.tm00.bufr_d"
       mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLAT, CLON]
-        - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [CHNM, TMBR]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
+        - mnemonics: [SAID, FOVN, SAZA, SOZA]
+        - mnemonics: [INCN, ALBD, TMBR]
           channels : 1-5
 
       exports:
@@ -23,31 +23,27 @@ observations:
               hour: HOUR
               minute: MINU
           latitude:
-            mnemonic: CLAT
+            mnemonic: CLATH
           longitude:
-            mnemonic: CLON
+            mnemonic: CLONH
           satelliteId:
             mnemonic: SAID
-          sensorID:
-            mnemonic: SIID
           channelNumber:
-            mnemonic: CHNM
+            mnemonic: INCN
           fieldOfViewNumber:
             mnemonic: FOVN
           solarZenithAngle:
             mnemonic: SOZA
-          solarAzimuthAngle:
-            mnemonic: SOLAZI
           sensorZenithAngle:
             mnemonic: SAZA
-          sensorAzimuthAngle:
-            mnemonic: BEARAZ
+          albedo:
+            mnemonic: ALBD
           brightnessTemperature:
             mnemonic: TMBR
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
+      obsdataout: "./testrun/gdas.t12z.avcsam.tm00.nc"
 
       dimensions:
         - name: "nlocs"
@@ -58,15 +54,15 @@ observations:
       globals: 
         - name: "platformCommonName@MetaData"
           type: string
-          value: "MHS"
+          value: "AVHRR"
 
         - name: "platformLongDescription@MetaData"
           type: string
-          value: "MTYP 021-027 PROCESSED MHS Tb (NOAA-18-19, METOP-1,2)"
+          value: "MTYP 021-051 PROC AVHRR(GAC) 1B Tb-CLR & SEA (N-17,N-18,M-2)"
             
-        - name: "sensorCentralFrequency@MetaData"
+        - name: "sensorCentralWavelength@MetaData"
           type: floatVector
-          value: [89.0, 157.0, 183.311, 183.311, 190.311]
+          value: [0.630, 0.865, 3.74, 10.8, 12.0]    # μm
 
       variables:
         - name: "satelliteId@MetaData"
@@ -114,13 +110,6 @@ observations:
           units: "degrees"
           range: [0, 180]
 
-        - name: "solarAzimuthAngle@MetaData"
-          source: variables/solarAzimuthAngle
-          dimensions: ["nlocs"]
-          longName: "Solar azimuth angle"
-          units: "degrees"
-          range: [0, 360]
-
         - name: "sensorZenithAngle@MetaData"
           source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
@@ -128,12 +117,15 @@ observations:
           units: "degrees"
           range: [0, 90]
 
-        - name: "sensorAzimuthAngle@MetaData"
-          source: variables/sensorAzimuthAngle
-          dimensions: ["nlocs"]
-          longName: "Sensor azimuth angle"
-          units: "degrees"
-          range: [0, 360]
+        - name: "abledo@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/brightnessTemperature
+          dimensions: ["nlocs", "nchans"]
+          longName: "Albedo"
+          units: ""
+          range: [120, 500]
+          chunks: [1000, 15]
+          compressionLevel: 4
 
         - name: "brightnessTemperature@ObsValue"
           coordinates: "longitude latitude nchans"

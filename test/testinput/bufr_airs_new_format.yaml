@@ -12,7 +12,7 @@ observations:
         - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI, TOCC]
         - mnemonics: [ALBD]
           channels: 1-4
-        - mnemonics: [TMBR, CHNM, LOGRCW]
+        - mnemonics: [CHNM, LOGRCW, TMBR]
           channels: 1-10
 
       exports:

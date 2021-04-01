@@ -10,7 +10,7 @@ observations:
       mnemonicSets:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
         - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR, CHNM]
+        - mnemonics: [CHNM, TMBR]
           channels: 1-22
 
       exports:
