@@ -6,14 +6,18 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t12z.airsev.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.crisf4.tm00.bufr_d"
       mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
-        - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI, TOCC]
-#       - mnemonics: [ALBD]
-#         channels: 1-4
-        - mnemonics: [CHNM, LOGRCW, TMBR]
-          channels: 1-10
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLAT, CLON]
+        - mnemonics: [SAID, SIID, MYPE, SLNM, FORN, FOVN, SAZA, SOZA, BEARAZ, SOLAZI]
+        - mnemonics: [TOCC, HOCT, SAZA, SOZA, BEARAZ, SOLAZI]
+        - mnemonics: [NSQF, QMRKH]
+        - mnemonics: [NCQF, NFQF]
+          channels : 1-3
+        - mnemonics: [CHNM, SRAD]
+          channels : 1-616
+        - mnemonics: [CHNM, SCHRAD]
+          channels : 1-16
 
       exports:
         variables:
@@ -25,17 +29,21 @@ observations:
               hour: HOUR
               minute: MINU
           latitude:
-            mnemonic: CLATH
+            mnemonic: CLAT
           longitude:
-            mnemonic: CLONH
+            mnemonic: CLON
           satelliteId:
             mnemonic: SAID
           sensorID:
             mnemonic: SIID
+          measurementType:
+            mnemonic: MTYP
           channelNumber:
             mnemonic: CHNM
-          centralWavenumber:
-            mnemonic: LOGRCW
+          sensorScanLineNumber:
+            mnemonic: SLNM
+          fieldOfRegardNumber:
+            mnemonic: FORN
           fieldOfViewNumber:
             mnemonic: FOVN
           solarZenithAngle:
@@ -48,31 +56,43 @@ observations:
             mnemonic: BEARAZ
           cloudAmount:
             mnemonic: TOCC
-#         albedo:
-#           mnemonic: ALBD
-          brightnessTemperature:
-            mnemonic: TMBR
+          cloudTopHeight:
+            mnemonic: HOCT
+          qualityInfo:
+            mnemonic: QMRKH
+          qualityFlagsScan:
+            mnemonic: NSQF
+          qualityFlagsCalibration:
+            mnemonic: NCQF
+          qualityFlagsFieldOfView:
+            mnemonic: NFQF
+          radiance:
+            mnemonic: SRAD
+          radianceVIIRS:
+            mnemonic: SCHRAD
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.airsev.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.crisf4.tm00.nc"
 
       dimensions:
         - name: "nlocs"
-          size: variables/brightnessTemperature.nrows
+          size: variables/radiance.nrows
         - name: "nchans"
-          size: variables/brightnessTemperature.ncols
-#       - name: "nchans_albedo"
-#         size: variables/albedo.ncols
+          size: variables/radiance.ncols
+        - name: "nchans2"
+          size: variables/radianceVIIRS.ncols
+        - name: "nqualityFlags"
+          size: variables/qualityFlagsCalibration.ncols
 
-      globals:
+      globals: 
         - name: "platformCommonName@MetaData"
           type: string
-          value: "AIRS"
+          value: "SNPP"
 
         - name: "platformLongDescription@MetaData"
           type: string
-          value: "MTYP 021-249 EVERY FOV AIRS/AMSU-A/HSB 1B BTEMPS(AQUA)"
+          value: "MTYP 021-206 CrIS FULL SPCTRL RADIANCE (431 CHN SUBSET)"
 
       variables:
         - name: "satelliteId@MetaData"
@@ -87,10 +107,10 @@ observations:
           longName: "Channel number"
           units: ""
 
-        - name: "centralWavenumber@MetaData"
-          source: variables/centralWavenumber
+        - name: "measurementType@MetaData"
+          source: variables/measurementType
           dimensions: ["nchans"]
-          longName: "Central wavenumber (log10)"
+          longName: "Measurement type"
           units: ""
 
         - name: "latitude@MetaData"
@@ -112,6 +132,12 @@ observations:
           dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
+
+        - name: "fieldOfRegardNumber@MetaData"
+          source: variables/fieldOfRegardNumber
+          dimensions: ["nlocs"]
+          longName: "Field of regard number"
+          units: ""
 
         - name: "fieldOfViewNumber@MetaData"
           source: variables/fieldOfViewNumber
@@ -147,30 +173,62 @@ observations:
           units: "degrees"
           range: [0, 360]
 
+        - name: "sensorScanLineNumber@MetaData"
+          source: variables/sensorScanLineNumber
+          dimensions: ["nlocs"]
+          longName: "Sensor scan line number"
+          units: ""
+
         - name: "cloudAmount@MetaData"
-          coordinates: "longitude latitude"
           source: variables/cloudAmount
           dimensions: ["nlocs"]
           longName: "Cloud fraction"
           units: "percent"
-          range: [0, 100]
 
-#       - name: "albedo@ObsValue"
-#         coordinates: "longitude latitude nchans_albedo"
-#         source: variables/albedo
-#         dimensions: ["nlocs", "nchans_albedo"]
-#         longName: "albedo"
-#         units: "percent"
-#         range: [0, 100]
-#         chunks: [1000, 15]
-#         compressionLevel: 4
+        - name: "cloudTopHeight@MetaData"
+          source: variables/cloudTopHeight
+          dimensions: ["nlocs"]
+          longName: "Cloud top height"
+          units: "m"
 
-        - name: "brightnessTemperature@ObsValue"
+        - name: "qualityInfo@MetaData"
+          source: variables/qualityInfo
+          dimensions: ["nlocs"]
+          longName: "Quality information"
+          units: ""
+
+        - name: "qualityFlagsScan@MetaData"
+          source: variables/qualityFlagsScan
+          dimensions: ["nlocs"]
+          longName: "Scan level quality flags"
+          units: ""
+
+        - name: "qualityFlagsCalibration@MetaData"
+          source: variables/qualityFlagsCalibration
+          dimensions: ["nlocs", "nqualityFlags"]
+          longName: "Calibration quality flags"
+          units: ""
+
+        - name: "qualityFlagsFieldOfView@MetaData"
+          source: variables/qualityFlagsFieldOfView
+          dimensions: ["nlocs", "nqualityFlags"]
+          longName: "Field of view quality flags"
+          units: ""
+
+        - name: "radiance@ObsValue"
           coordinates: "longitude latitude nchans"
-          source: variables/brightnessTemperature
+          source: variables/radiance
           dimensions: ["nlocs", "nchans"]
-          longName: "Brightness temperature"
-          units: "K"
-          range: [120, 500]
+          longName: "radiance"
+          units: "W m-2 sr-1 cm"
+          chunks: [1000, 15]
+          compressionLevel: 4
+
+        - name: "radianceVIIRS@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/radianceVIIRS
+          dimensions: ["nlocs", "nchans2"]
+          longName: "radiance"
+          units: "W m-2 sr-1 um-1"
           chunks: [1000, 15]
           compressionLevel: 4
