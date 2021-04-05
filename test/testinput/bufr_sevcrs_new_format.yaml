@@ -1,0 +1,134 @@
+# (C) Copyright 2021 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t00z.sevcrs.tm00.bufr_d"
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
+        - mnemonics: [SAID, SAZA, SOZA]
+        - mnemonics: [SCCF, CLDMNT, TMBRST, SDTB]
+          channels: 1-7
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          satelliteId:
+            mnemonic: SAID
+          sensorCentralFrequency:
+            mnemonic: SCCF
+          solarZenithAngle:
+            mnemonic: SOZA
+          sensorZenithAngle:
+            mnemonic: SAZA
+          cloudAmount:
+            mnemonic: CLDMNT
+          brightnessTemperature:
+            mnemonic: TMBRST
+          brightnessTemperatureStdDev:
+            mnemonic: SDTB
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t00z.sevcrs.tm00.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/brightnessTemperature.nrows
+        - name: "nchans"
+          size: variables/brightnessTemperature.ncols
+
+      globals:
+        - name: "platformCommonName@MetaData"
+          type: string
+          value: "MSG-SEVIRI"
+
+        - name: "platformLongDescription@MetaData"
+          type: string
+          value: "MTYP 021-043 PROC. MSG SEVIRI CLEAR SKY RADIANCES (CSR)"
+
+      variables:
+        - name: "satelliteId@MetaData"
+          source: variables/satelliteId
+          dimensions: ["nlocs"]
+          longName: "Satellite identification"
+          units: ""
+
+        - name: "sensorCentralFrequency@MetaData"
+          source: variables/channelNumber
+          dimensions: ["nchans"]
+          longName: "Channel number"
+          units: ""
+
+        - name: "latitude@MetaData"
+          source: variables/latitude
+          dimensions: ["nlocs"]
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "longitude@MetaData"
+          source: variables/longitude
+          dimensions: ["nlocs"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "datetime@MetaData"
+          source: variables/timestamp
+          dimensions: ["nlocs"]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "solarZenithAngle@MetaData"
+          source: variables/solarZenithAngle
+          dimensions: ["nlocs"]
+          longName: "Solar zenith angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "sensorZenithAngle@MetaData"
+          source: variables/sensorZenithAngle
+          dimensions: ["nlocs"]
+          longName: "Sensor zenith angle"
+          units: "degrees"
+          range: [0, 90]
+
+        - name: "cloudAmount@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/cloudAmount
+          dimensions: ["nlocs", "nchans"]
+          longName: "cloud fraction"
+          units: "%"
+          range: [0, 100]
+          chunks: [1000, 15]
+
+        - name: "brightnessTemperature@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/brightnessTemperature
+          dimensions: ["nlocs", "nchans"]
+          longName: "Brightness temperature"
+          units: "K"
+          range: [120, 500]
+          chunks: [1000, 15]
+
+        - name: "brightnessTemperatureStdDev@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/brightnessTemperatureStdDev
+          dimensions: ["nlocs", "nchans"]
+          longName: "Brightness temperature standard deviation"
+          units: "K"
+          chunks: [1000, 15]
