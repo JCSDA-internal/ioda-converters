@@ -6,11 +6,11 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t00z.sevcrs.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.sevcsr.tm00.bufr_d"
       mnemonicSets:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
         - mnemonics: [SAID, SAZA, SOZA]
-        - mnemonics: [SCCF, CLDMNT, TMBRST, SDTB]
+        - mnemonics: [CLDMNT, TMBRST, SDTB]
           channels: 1-7
 
       exports:
@@ -28,8 +28,6 @@ observations:
             mnemonic: CLONH
           satelliteId:
             mnemonic: SAID
-          sensorCentralFrequency:
-            mnemonic: SCCF
           solarZenithAngle:
             mnemonic: SOZA
           sensorZenithAngle:
@@ -43,7 +41,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.sevcrs.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.sevcsr.tm00.nc"
 
       dimensions:
         - name: "nlocs"
@@ -65,12 +63,6 @@ observations:
           source: variables/satelliteId
           dimensions: ["nlocs"]
           longName: "Satellite identification"
-          units: ""
-
-        - name: "sensorCentralFrequency@MetaData"
-          source: variables/channelNumber
-          dimensions: ["nchans"]
-          longName: "Channel number"
           units: ""
 
         - name: "latitude@MetaData"
@@ -122,7 +114,7 @@ observations:
           dimensions: ["nlocs", "nchans"]
           longName: "Brightness temperature"
           units: "K"
-          range: [120, 500]
+          range: [150, 350]
           chunks: [1000, 15]
 
         - name: "brightnessTemperatureStdDev@ObsValue"
