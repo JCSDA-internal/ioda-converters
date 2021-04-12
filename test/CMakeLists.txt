@@ -42,6 +42,7 @@ list( APPEND test_input
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
   testinput/smos_l2nrt_ssm.nc
   testinput/ascat_ssm.nc
+  testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
 )
 
 list( APPEND test_output
@@ -79,6 +80,7 @@ list( APPEND test_output
   testoutput/smap_ssm.nc
   testoutput/smos_ssm.nc
   testoutput/ascat_ssm.nc
+  testoutput/smos_sss_l2.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -325,6 +327,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
                           -o testrun/cryosat2_L2.nc
                           -d 2019092112"
                           cryosat2_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_sss
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/smos_sss2ioda.py
+                          -i testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
+                          -o testrun/smos_sss_l2.nc
+                          -d 2010060100"
+                          smos_sss_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, surface Obs - METAR converter
