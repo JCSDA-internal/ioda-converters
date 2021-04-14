@@ -52,8 +52,8 @@ class Salinity(object):
         
         for f in self.filenames:
             print(" Reading file: ",f)
-	    ncd = nc.Dataset(f, 'r')
-            
+            ncd = nc.Dataset(f, 'r')
+
             source_var_name = {
                  'lat': 'Latitude',
 		 'lon': 'Longitude',
@@ -68,7 +68,7 @@ class Salinity(object):
             sss_qc = ncd.variables['Dg_quality_SSS_corr'][:]
             sss_qc = sss_qc.astype(int)
 
-	    mask = np.logical_not(sss.mask)
+            mask = np.logical_not(sss.mask)
             lon = lon[mask]
             lat = lat[mask]
             sss = sss[mask]
