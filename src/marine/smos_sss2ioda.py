@@ -7,14 +7,11 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-from __future__ import print_function
 import sys
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
-import re
-import dateutil.parser
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
@@ -55,23 +52,23 @@ class Salinity(object):
         
         for f in self.filenames:
             print(" Reading file: ",f)
-            ncd = nc.Dataset(f, 'r')
+	    ncd = nc.Dataset(f, 'r')
             
             source_var_name = {
                  'lat': 'Latitude',
-                 'lon': 'Longitude',
+		 'lon': 'Longitude',
                  'sss': 'SSS_corr',
-                 'sss_err':'Sigma_SSS_corr',
+		 'sss_err':'Sigma_SSS_corr',
                  'sss_qc': 'Dg_quality_SSS_corr',
                 }
-            lon     = ncd.variables['Longitude'][:]
-            lat     = ncd.variables['Latitude'][:]
-            sss     = ncd.variables['SSS_corr'][:]
+            lon = ncd.variables['Longitude'][:]
+            lat = ncd.variables['Latitude'][:]
+            sss = ncd.variables['SSS_corr'][:]
             sss_err = ncd.variables['Sigma_SSS_corr'][:]
-            sss_qc  = ncd.variables['Dg_quality_SSS_corr'][:]
+            sss_qc = ncd.variables['Dg_quality_SSS_corr'][:]
             sss_qc = sss_qc.astype(int)
 
-            mask = np.logical_not(sss.mask)
+	    mask = np.logical_not(sss.mask)
             lon = lon[mask]
             lat = lat[mask]
             sss = sss[mask]
@@ -83,23 +80,22 @@ class Salinity(object):
                    sss_qc[i] = 0
                 else:
                    sss_qc[i] = 1
-                I=f.find("SM_")
-                date1=f[I+19:I+19+8]
-                HH1=f[I+19+9:I+19+11]
-                MM1=f[I+19+11:I+19+13]
-                SS1=f[I+19+13:I+19+15]
-                seconds=( datetime.strptime(date1+HH1+MM1+SS1,'%Y%m%d%H%M%S') - 
+                # get date from filename
+                I = f.find("SM_")
+                date1 = f[I+19:I+19+8]
+                HH1 = f[I+19+9:I+19+11]
+                MM1 = f[I+19+11:I+19+13]
+                SS1 = f[I+19+13:I+19+15]
+                seconds = ( datetime.strptime(date1+HH1+MM1+SS1,'%Y%m%d%H%M%S') - 
                           datetime.strptime(date1,'%Y%m%d') ).total_seconds()
-                basetime=datetime.strptime(date1,'%Y%m%d')
+                basetime = datetime.strptime(date1,'%Y%m%d')
                 obs_date = basetime + timedelta(seconds=int(seconds))
                 locKey = lat[i], lon[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
                 self.data[0][locKey][valKey] = sss[i]
                 self.data[0][locKey][errKey] = sss_err[i]
                 self.data[0][locKey][qcKey] = sss_qc[i]
-                               
 
             ncd.close()
-
 
 def main():
 
@@ -123,7 +119,6 @@ def main():
         metavar="YYYYMMDDHH", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-        
 #
     writer = iconv.NcWriter(args.output, locationKeyList)
 #
