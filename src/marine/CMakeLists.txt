@@ -13,6 +13,7 @@ list(APPEND programs
   ndbc_hfradar2ioda.py
   rads_adt2ioda.py
   smap_sss2ioda.py
+  smos_sss2ioda.py
   argoClim2ioda.py
   viirs_modis_l2_oc2ioda.py
   viirs_modis_l3_oc2ioda.py
