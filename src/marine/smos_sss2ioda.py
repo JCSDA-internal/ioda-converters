@@ -81,11 +81,12 @@ class Salinity(object):
                 else:
                    sss_qc[i] = 1
                 # get date from filename
-                I = f.find("SM_")
-                date1 = f[I+19:I+19+8]
-                HH1 = f[I+19+9:I+19+11]
-                MM1 = f[I+19+11:I+19+13]
-                SS1 = f[I+19+13:I+19+15]
+                n = f.find("SM_")
+                date1 = f[n+19:n+19+8]
+                HH1 = f[n+19+9:n+19+11]
+                MM1 = f[n+19+11:n+19+13]
+                SS1 = f[n+19+13:n+19+15
+		# 
                 seconds = ( datetime.strptime(date1+HH1+MM1+SS1,'%Y%m%d%H%M%S') - 
                           datetime.strptime(date1,'%Y%m%d') ).total_seconds()
                 basetime = datetime.strptime(date1,'%Y%m%d')
