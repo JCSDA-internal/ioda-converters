@@ -49,18 +49,18 @@ class Salinity(object):
         valKey = vName, self.writer.OvalName()
         errKey = vName, self.writer.OerrName()
         qcKey = vName, self.writer.OqcName()
-        
+
         for f in self.filenames:
-            print(" Reading file: ",f)
+            print(" Reading file: ", f)
             ncd = nc.Dataset(f, 'r')
 
             source_var_name = {
-                 'lat': 'Latitude',
-		 'lon': 'Longitude',
-		 'sss': 'SSS_corr',
-		 'sss_err':'Sigma_SSS_corr',
-		 'sss_qc': 'Dg_quality_SSS_corr',
-                }
+                'lat': 'Latitude',
+                'lon': 'Longitude',
+                'sss': 'SSS_corr',
+                'sss_err': 'Sigma_SSS_corr',
+                'sss_qc': 'Dg_quality_SSS_corr'
+            }
             lon = ncd.variables['Longitude'][:]
             lat = ncd.variables['Latitude'][:]
             sss = ncd.variables['SSS_corr'][:]
@@ -77,9 +77,9 @@ class Salinity(object):
 
             for i in range(len(lon)):
                 if sss_qc[i] <= 150:
-                   sss_qc[i] = 0
+                    sss_qc[i] = 0
                 else:
-                   sss_qc[i] = 1
+                    sss_qc[i] = 1
                 # get date from filename
                 n = f.find("SM_")
                 date1 = f[n+19:n+19+8]
@@ -87,16 +87,16 @@ class Salinity(object):
                 MM1 = f[n+19+11:n+19+13]
                 SS1 = f[n+19+13:n+19+15]
                 #
-                seconds = ( datetime.strptime(date1+HH1+MM1+SS1,'%Y%m%d%H%M%S') - 
-                          datetime.strptime(date1,'%Y%m%d') ).total_seconds()
-                basetime = datetime.strptime(date1,'%Y%m%d')
+                seconds = (datetime.strptime(date1+HH1+MM1+SS1, '%Y%m%d%H%M%S') - datetime.strptime(
+                           date1, '%Y%m%d')).total_seconds()
+                basetime = datetime.strptime(date1, '%Y%m%d')
                 obs_date = basetime + timedelta(seconds=int(seconds))
                 locKey = lat[i], lon[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
                 self.data[0][locKey][valKey] = sss[i]
                 self.data[0][locKey][errKey] = sss_err[i]
                 self.data[0][locKey][qcKey] = sss_qc[i]
-
             ncd.close()
+
 
 def main():
 
@@ -131,6 +131,7 @@ def main():
 #
     (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(sal.data)
     writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+
 
 if __name__ == '__main__':
     main()
