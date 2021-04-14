@@ -85,13 +85,8 @@ class Salinity(object):
                 date1 = f[n+19:n+19+8]
                 HH1 = f[n+19+9:n+19+11]
                 MM1 = f[n+19+11:n+19+13]
-<<<<<<< HEAD
                 SS1 = f[n+19+13:n+19+15]
                 #
-=======
-                SS1 = f[n+19+13:n+19+15
-		# 
->>>>>>> 76a5690e92d3a6d199d6e22f92d5b43b19b51945
                 seconds = ( datetime.strptime(date1+HH1+MM1+SS1,'%Y%m%d%H%M%S') - 
                           datetime.strptime(date1,'%Y%m%d') ).total_seconds()
                 basetime = datetime.strptime(date1,'%Y%m%d')
