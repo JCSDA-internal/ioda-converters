@@ -25,6 +25,11 @@ class IodaWriter(object):
         # create obs group
         self._og = ioda.ObsGroup.generate(self._fid, self._dim_list)
 
+        # store dims as a dictionary
+        self._dims = {}
+        for key, value in self._dim_dict.items():
+            self._dims[key] = self._og.vars.open(key)
+
         # defining default var parameters
         self._p1 = ioda.VariableCreationParameters()
         self._p1.compressWithGZIP()
@@ -55,7 +60,25 @@ class IodaWriter(object):
 
         return IodaDtype
 
-    def BuildIoda(self, ObsVars, LocMdata, VarMdata, AttrData, VarUnits={}, TestData=None):
+    def WriteObsVars(self, ObsVars, VarDims, VarMdata, VarUnits):
+        # this method will create variables in the ouput obs group and
+        # fill them with the provided data and metadata
+        for VarKey, Vvals in ObsVars.items():
+            # get dimensions of variable as a list
+            dims = VarDims[VarKey]
+            # now get a list of the actual dimension vars
+            dimsVar = [self._dims[d] for d in dims]
+            # get type of variable
+            typeVar = self.NumpyToIodaDtype(Vvals.dtype)
+            # create variable in obs group
+            Var = self._fid.vars.create(VarKey, typeVar,
+                                        scales=dimsVar, params=self._p1)
+            # need to write depending on type, how to best do this?
+            Var.writeNPArray.double(Vvals)
+
+    def BuildIoda(self, ObsVars, VarDims, LocMdata,
+                  VarMdata, AttrData, VarUnits={}, TestData=None):
+        self.WriteObsVars(ObsVars, VarDims, VarMdata, VarUnits)
 
 
 
