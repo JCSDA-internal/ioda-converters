@@ -60,6 +60,33 @@ class IodaWriter(object):
 
         return IodaDtype
 
+    def WriteVar(self, vObj, data):
+        # helper function to call the right IODA function depending
+        # on datatype and shape
+        datatype = self.NumpyToIodaDtype(data.dtype)
+        if datatype == ioda.Types.float:
+            vObj.writeNPArray.float(data)
+        elif datatype == ioda.Types.double:
+            vObj.writeNPArray.double(data)
+        # add other elif here TODO
+
+    def WriteAttr(self, vObj, attrName, attrVal):
+        # get type of variable
+        try:
+            attrType = self.NumpyToIodaDtype(attrVal.dtype)
+            if attrType == ioda.Types.float:
+                vObj.atts.create(attrName, attrType,
+                                 len(attrVal)).writeDatum.float(attrVal)
+            elif attrType == ioda.Types.double:
+                vObj.atts.create(attrName, attrType,
+                                 len(attrVal)).writeDatum.double(attrVal)
+            # add other elif here TODO
+        except AttributeError: # if string
+            if (type(attrVal) == str):
+                attrType = ioda.Types.str
+                vObj.atts.create(attrName, attrType,
+                                [1]).writeDatum.str(attrVal)
+
     def WriteObsVars(self, ObsVars, VarDims, VarMdata, VarUnits):
         # this method will create variables in the ouput obs group and
         # fill them with the provided data and metadata
@@ -76,13 +103,14 @@ class IodaWriter(object):
             # create variable in obs group
             Var = self._fid.vars.create(VarName, typeVar,
                                         scales=dimsVar, params=self._p1)
-            # need to write depending on type, how to best do this?
-            Var.writeNPArray.double(Vvals)
+            # need to write depending on type
+            self.WriteVar(Var, Vvals)
             # add var metadata
-            for MetaVar, MetaVal in VarMdata[Vname].items():
-                # get type of variable
-                typeMeta = self.NumpyToIodaDtype(MetaVal.dtype)
-
+            try:
+                for MetaVar, MetaVal in VarMdata[Vname].items():
+                    self.WriteAttr(Var, MetaVar, MetaVal)
+            except KeyError:
+                pass # no metadata for this variable
             # add var units if exists
             try:
                 UnitStr = VarUnits[Vname]
