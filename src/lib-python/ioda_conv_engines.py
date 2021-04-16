@@ -64,17 +64,33 @@ class IodaWriter(object):
         # this method will create variables in the ouput obs group and
         # fill them with the provided data and metadata
         for VarKey, Vvals in ObsVars.items():
+            # get variable and group names
+            (Vname, Gname) = VarKey
+            VarName = "{0:s}/{1:s}".format(Gname, Vname)
             # get dimensions of variable as a list
-            dims = VarDims[VarKey]
+            dims = VarDims[Vname]
             # now get a list of the actual dimension vars
             dimsVar = [self._dims[d] for d in dims]
             # get type of variable
             typeVar = self.NumpyToIodaDtype(Vvals.dtype)
             # create variable in obs group
-            Var = self._fid.vars.create(VarKey, typeVar,
+            Var = self._fid.vars.create(VarName, typeVar,
                                         scales=dimsVar, params=self._p1)
             # need to write depending on type, how to best do this?
             Var.writeNPArray.double(Vvals)
+            # add var metadata
+            for MetaVar, MetaVal in VarMdata[Vname].items():
+                # get type of variable
+                typeMeta = self.NumpyToIodaDtype(MetaVal.dtype)
+
+            # add var units if exists
+            try:
+                UnitStr = VarUnits[Vname]
+                Var.atts.create("units", ioda.Types.str,
+                                [1]).writeDatum.str(UnitStr)
+            except KeyError:
+                # add error message here later, eventually all need units!
+                pass
 
     def BuildIoda(self, ObsVars, VarDims, LocMdata,
                   VarMdata, AttrData, VarUnits={}, TestData=None):
