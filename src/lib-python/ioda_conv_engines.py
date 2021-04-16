@@ -75,11 +75,19 @@ class IodaWriter(object):
         try:
             attrType = self.NumpyToIodaDtype(attrVal.dtype)
             if attrType == ioda.Types.float:
-                vObj.atts.create(attrName, attrType,
-                                 len(attrVal)).writeDatum.float(attrVal)
+                if len(attrVal) == 1:
+                    vObj.atts.create(attrName, attrType,
+                                     [1]).writeDatum.float(attrVal)
+                else:
+                    vObj.atts.create(attrName, attrType,
+                                     len(attrVal)).writeVector.float(attrVal)
             elif attrType == ioda.Types.double:
-                vObj.atts.create(attrName, attrType,
-                                 len(attrVal)).writeDatum.double(attrVal)
+                if len(attrVal) == 1:
+                    vObj.atts.create(attrName, attrType,
+                                     [1]).writeDatum.double(attrVal)
+                else:
+                    vObj.atts.create(attrName, attrType,
+                                     len(attrVal)).writeVector.double(attrVal)
             # add other elif here TODO
         except AttributeError: # if string
             if (type(attrVal) == str):
