@@ -20,7 +20,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
@@ -39,11 +39,19 @@ AttrData = {
     'converter': os.path.basename(__file__),
 }
 
+DimDict = {
+           "nlevs": 34,
+          }
+
+VarDims = {
+          'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
+          'nitrogen_dioxide_in_total_column': ['nlocs'],
+          'averaging_kernel': ['nlocs', 'nlevs'],
+          }
 
 class tropomi(object):
-    def __init__(self, filenames, writer):
+    def __init__(self, filenames):
         self.filenames = filenames
-        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -55,9 +63,9 @@ class tropomi(object):
     def _read(self):
         # set up variable names for IODA
         for iodavar in ['nitrogen_dioxide_in_tropospheric_column', 'nitrogen_dioxide_in_total_column']:
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+            self.varDict[iodavar]['valKey'] = iodavar, 'ObsValue'
+            self.varDict[iodavar]['errKey'] = iodavar, 'ObsError'
+            self.varDict[iodavar]['qcKey'] = iodavar, 'PreQC'
             self.units[iodavar] = 'mol m-2'
         # loop through input filenames
         first = True
@@ -94,8 +102,10 @@ class tropomi(object):
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
+            akvar = ('averaging_kernel','MetaData')
             if first:
-                self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
+                self.loc_mdata['datetime'] = times
+                #self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
                 self.loc_mdata['latitude'] = lats
                 self.loc_mdata['longitude'] = lons
                 self.loc_mdata['quality_assurance_value'] = qa_value
@@ -104,12 +114,11 @@ class tropomi(object):
                 self.loc_mdata['air_mass_factor_troposphere'] = trop_airmass
                 self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
                 self.loc_mdata['averaging_kernel_precision'] = kernel_err_total
-                for k in range(nlevs):
-                    varname = 'averaging_kernel_level_'+str(k+1)
-                    self.loc_mdata[varname] = avg_kernel[..., k].ravel()
+                akshp = (avg_kernel[...,0].size, 34)
+                self.outdata[akvar] = np.reshape(avg_kernel[...], akshp)
             else:
-                self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
-                                                            self.writer.FillNcVector(times, "datetime")))
+                self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'], times))
+                                                            #self.writer.FillNcVector(times, "datetime")))
                 self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
                 self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
                 self.loc_mdata['quality_assurance_value'] = np.concatenate((
@@ -124,10 +133,9 @@ class tropomi(object):
                     self.loc_mdata['tropospheric_averaging_kernel_precision'], kernel_err))
                 self.loc_mdata['averaging_kernel_precision'] = np.concatenate((
                     self.loc_mdata['averaging_kernel_precision'], kernel_err_total))
-                for k in range(nlevs):
-                    varname = 'averaging_kernel_level_'+str(k+1)
-                    self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
-                                                             avg_kernel[..., k].ravel()))
+                akshp = (avg_kernel[...,0].size, 34)
+                self.outdata[akvar] = np.concatenate((self.outdata[akvar],
+                                                      np.reshape(avg_kernel[...], akshp)))
             for ncvar, iodavar in obsvars.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
@@ -147,8 +155,7 @@ class tropomi(object):
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['datetime'])
+            DimDict['nlocs'] = len(self.loc_mdata['datetime'])
 
 
 def main():
@@ -173,14 +180,15 @@ def main():
 
     args = parser.parse_args()
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, locationKeyList)
-
     # Read in the NO2 data
-    no2 = tropomi(args.input, writer)
+    no2 = tropomi(args.input)
+
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData, no2.units)
+    writer.BuildIoda(no2.outdata, VarDims, no2.loc_mdata,
+                       no2.var_mdata, AttrData, no2.units)
 
 
 if __name__ == '__main__':
