@@ -11,18 +11,18 @@ class IodaWriter(object):
         self._test_key_list = TestKeyList
         # open IODA obs backend
         self._fid = ioda.Engines.HH.createFile(
-                    name = Fname,
-                    mode = ioda.Engines.BackendCreateModes.Truncate_If_Exists)
+            name=Fname,
+            mode=ioda.Engines.BackendCreateModes.Truncate_If_Exists)
         # create list of dims in obs group
         self._dim_list = []
         for key, value in self._dim_dict.items():
             if key == 'nlocs':
-                self._nlocs_var = ioda.NewDimensionScale.int32('nlocs',
-                                      value, ioda.Unlimited, value)
+                self._nlocs_var = ioda.NewDimensionScale.int32(
+                    'nlocs', value, ioda.Unlimited, value)
                 self._dim_list.append(self._nlocs_var)
             else:
-                self._dim_list.append(ioda.NewDimensionScale.int32(key,
-                                      value, value, value))
+                self._dim_list.append(ioda.NewDimensionScale.int32(
+                    key, value, value, value))
         # create obs group
         self._og = ioda.ObsGroup.generate(self._fid, self._dim_list)
 
@@ -83,7 +83,7 @@ class IodaWriter(object):
             IodaDtype = ioda.Types.str
         else:
             try:
-                a = str(NumpyArr[0,...])
+                a = str(NumpyArr[0, ...])
                 IodaDtype = ioda.Types.str
             except TypeError:
                 print("ERROR: Unrecognized numpy data type: ", NumpyDtype)
@@ -126,11 +126,11 @@ class IodaWriter(object):
                     vObj.atts.create(attrName, attrType,
                                      len(attrVal)).writeVector.double(attrVal)
             # add other elif here TODO
-        except AttributeError: # if string
+        except AttributeError:  # if string
             if (type(attrVal) == str):
                 attrType = ioda.Types.str
-                vObj.atts.create(attrName, attrType,
-                                [1]).writeDatum.str(attrVal)
+                vObj.atts.create(
+                    attrName, attrType, [1]).writeDatum.str(attrVal)
 
     def WriteLocVars(self, LocVars, LocMdata, LocUnits):
         # this method will create location variable in the output obs group
@@ -151,7 +151,7 @@ class IodaWriter(object):
                 for MetaVar, MetaVal in LocMdata[Vname].items():
                     self.WriteAttr(Var, MetaVar, MetaVal)
             except KeyError:
-                pass # no metadata for this variable
+                pass  # no metadata for this variable
             # add var units if exists
             try:
                 UnitStr = LocUnits[Vname]
@@ -184,7 +184,7 @@ class IodaWriter(object):
                 for MetaVar, MetaVal in VarMdata[Vname].items():
                     self.WriteAttr(Var, MetaVar, MetaVal)
             except KeyError:
-                pass # no metadata for this variable
+                pass  # no metadata for this variable
             # add var units if exists
             try:
                 UnitStr = VarUnits[Vname]
@@ -194,10 +194,13 @@ class IodaWriter(object):
                 # add error message here later, eventually all need units!
                 pass
 
+    def WriteGlobalAttrs(self, AttrData):
+        # this method will create global attributes from AttrData dictionary
+        for AttrKey, AttrVal in AttrData.items():
+            self.WriteAttr(self._og, AttrKey, AttrVal)
+
     def BuildIoda(self, ObsVars, VarDims, LocVars,
                   VarMdata, AttrData, VarUnits={}, TestData=None):
         self.WriteObsVars(ObsVars, VarDims, VarMdata, VarUnits)
         self.WriteLocVars(LocVars, VarMdata, VarUnits)
-
-
-
+        self.WriteGlobalAttrs(AttrData)
