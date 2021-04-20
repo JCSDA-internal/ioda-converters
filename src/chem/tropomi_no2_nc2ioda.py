@@ -40,14 +40,15 @@ AttrData = {
 }
 
 DimDict = {
-           "nlevs": 34,
-          }
+    "nlevs": 34,
+}
 
 VarDims = {
-          'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
-          'nitrogen_dioxide_in_total_column': ['nlocs'],
-          'averaging_kernel': ['nlocs', 'nlevs'],
-          }
+    'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
+    'nitrogen_dioxide_in_total_column': ['nlocs'],
+    'averaging_kernel': ['nlocs', 'nlevs'],
+}
+
 
 class tropomi(object):
     def __init__(self, filenames):
@@ -67,6 +68,7 @@ class tropomi(object):
             self.varDict[iodavar]['errKey'] = iodavar, 'ObsError'
             self.varDict[iodavar]['qcKey'] = iodavar, 'PreQC'
             self.units[iodavar] = 'mol m-2'
+            self.var_mdata[iodavar]['coordinates'] = 'longitude latitude'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -102,10 +104,9 @@ class tropomi(object):
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
-            akvar = ('averaging_kernel','MetaData')
+            akvar = ('averaging_kernel', 'MetaData')
             if first:
                 self.loc_mdata['datetime'] = times
-                #self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
                 self.loc_mdata['latitude'] = lats
                 self.loc_mdata['longitude'] = lons
                 self.loc_mdata['quality_assurance_value'] = qa_value
@@ -114,11 +115,10 @@ class tropomi(object):
                 self.loc_mdata['air_mass_factor_troposphere'] = trop_airmass
                 self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
                 self.loc_mdata['averaging_kernel_precision'] = kernel_err_total
-                akshp = (avg_kernel[...,0].size, 34)
+                akshp = (avg_kernel[..., 0].size, 34)
                 self.outdata[akvar] = np.reshape(avg_kernel[...], akshp)
             else:
                 self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'], times))
-                                                            #self.writer.FillNcVector(times, "datetime")))
                 self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
                 self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
                 self.loc_mdata['quality_assurance_value'] = np.concatenate((
@@ -133,7 +133,7 @@ class tropomi(object):
                     self.loc_mdata['tropospheric_averaging_kernel_precision'], kernel_err))
                 self.loc_mdata['averaging_kernel_precision'] = np.concatenate((
                     self.loc_mdata['averaging_kernel_precision'], kernel_err_total))
-                akshp = (avg_kernel[...,0].size, 34)
+                akshp = (avg_kernel[..., 0].size, 34)
                 self.outdata[akvar] = np.concatenate((self.outdata[akvar],
                                                       np.reshape(avg_kernel[...], akshp)))
             for ncvar, iodavar in obsvars.items():
@@ -156,6 +156,7 @@ class tropomi(object):
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
             DimDict['nlocs'] = len(self.loc_mdata['datetime'])
+            self.var_mdata['averaging_kernel']['coordinates'] = 'longitude latitude nlevs'
 
 
 def main():
@@ -188,7 +189,7 @@ def main():
 
     # write everything out
     writer.BuildIoda(no2.outdata, VarDims, no2.loc_mdata,
-                       no2.var_mdata, AttrData, no2.units)
+                     no2.var_mdata, AttrData, no2.units)
 
 
 if __name__ == '__main__':
