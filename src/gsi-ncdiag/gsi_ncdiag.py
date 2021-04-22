@@ -153,6 +153,9 @@ gsi_add_vars_allsky = {
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
+    'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'Obs_Minus_Forecast_unadjusted_clear': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
@@ -176,6 +179,8 @@ gsi_add_vars = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
@@ -211,6 +216,10 @@ gsi_add_vars_uv = {
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
     'v_Forecast_unadjusted': 'GsiHofX',
+    'u_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'u_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'v_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'v_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
 }
 
 radar_qc = {
@@ -740,6 +749,19 @@ class Conv(BaseGSI):
                                 mask = tmp < self.EPSILON
                                 tmp[~mask] = 1.0 / tmp[~mask]
                                 tmp[mask] = self.FLOAT_FILL
+                            elif "Obs_Minus_" in key:
+                                if 'u_Forecast_adjusted' in self.df.variables:
+                                    continue
+                                elif 'Forecast_adjusted' in self.df.variables:
+                                    continue
+                                if v == 'uv':
+                                    if (checkuv[outvars[o]] != key[0]):
+                                        continue
+                                    else:
+                                        key1 = key[0]+'_Observation'
+                                else:
+                                    key1 = 'Observation'
+                                tmp = self.var(key1)[idx] - df_key[idx]
                             else:
                                 tmp = df_key[idx]
                             if value in gsiint:
@@ -1235,6 +1257,11 @@ class Radiances(BaseGSI):
                     mask = tmp < self.EPSILON
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
+                elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
+                    key1 = 'Observation'
+                    tmp = self.var(key1) - self.var(gsivar)
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
@@ -1692,6 +1719,11 @@ class Ozone(BaseGSI):
                     mask = tmp < self.EPSILON
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
+                elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
+                    key1 = 'Observation'
+                    tmp = self.var(key1) - self.var(gsivar)
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
