@@ -750,6 +750,10 @@ class Conv(BaseGSI):
                                 tmp[~mask] = 1.0 / tmp[~mask]
                                 tmp[mask] = self.FLOAT_FILL
                             elif "Obs_Minus_" in key:
+                                if 'u_Forecast_adjusted' in self.df.variables:
+                                    continue
+                                elif 'Forecast_adjusted' in self.df.variables:
+                                    continue
                                 if v == 'uv':
                                     if (checkuv[outvars[o]] != key[0]):
                                         continue
@@ -1254,6 +1258,8 @@ class Radiances(BaseGSI):
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
                 elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
                 else:
@@ -1714,6 +1720,8 @@ class Ozone(BaseGSI):
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
                 elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
                 else:
