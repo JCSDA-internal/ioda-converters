@@ -46,7 +46,6 @@ DimDict = {
 VarDims = {
     'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
     'nitrogen_dioxide_in_total_column': ['nlocs'],
-    'averaging_kernel': ['nlocs', 'nlevs'],
 }
 
 
@@ -115,8 +114,9 @@ class tropomi(object):
                 self.loc_mdata['air_mass_factor_troposphere'] = trop_airmass
                 self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
                 self.loc_mdata['averaging_kernel_precision'] = kernel_err_total
-                akshp = (avg_kernel[..., 0].size, 34)
-                self.outdata[akvar] = np.reshape(avg_kernel[...], akshp)
+                for k in range(nlevs):
+                    varname = 'averaging_kernel_level_'+str(k+1)
+                    self.loc_mdata[varname] = avg_kernel[..., k].ravel()
             else:
                 self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'], times))
                 self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
@@ -133,9 +133,10 @@ class tropomi(object):
                     self.loc_mdata['tropospheric_averaging_kernel_precision'], kernel_err))
                 self.loc_mdata['averaging_kernel_precision'] = np.concatenate((
                     self.loc_mdata['averaging_kernel_precision'], kernel_err_total))
-                akshp = (avg_kernel[..., 0].size, 34)
-                self.outdata[akvar] = np.concatenate((self.outdata[akvar],
-                                                      np.reshape(avg_kernel[...], akshp)))
+                for k in range(nlevs):
+                    varname = 'averaging_kernel_level_'+str(k+1)
+                    self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
+                                                              avg_kernel[..., k].ravel()))
             for ncvar, iodavar in obsvars.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
