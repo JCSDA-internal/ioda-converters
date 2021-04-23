@@ -7,7 +7,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-from __future__ import print_function
 import sys
 import argparse
 import numpy as np
@@ -54,6 +53,7 @@ class Salinity(object):
         qcKey = vName, self.writer.OqcName()
 
         for f in self.filenames:
+            print(" Reading file: ", f)
             ncd = nc.Dataset(f, 'r')
 
             # determine if this is JPL or RSS file.
@@ -97,14 +97,17 @@ class Salinity(object):
             # read in the fields
             data = {}
             for v in source_var_name:
-                data[v] = ncd.variables[source_var_name[v]][:].flatten()
+                if v == 'sss_qc':
+                    data[v] = ncd.variables[source_var_name[v]][:].flatten().astype(int)
+                else:
+                    data[v] = ncd.variables[source_var_name[v]][:].flatten()
 
             # JPL files have a time for each row,
             # RSS has time for each cell, account for this
             if source == 'JPL':
                 col = len(data['lon']) / len(data['time'])
                 data['time'] = np.tile(
-                    np.array(data['time']), (col, 1)).T.flatten()
+                    np.array(data['time']), (int(col), 1)).T.flatten()
 
             # remove masked gridpoints
             mask = np.logical_not(data['sss'].mask)
@@ -117,6 +120,11 @@ class Salinity(object):
                 locKey = data['lat'][i], data['lon'][i], obs_date.strftime(
                     "%Y-%m-%dT%H:%M:%SZ")
                 self.data[0][locKey][valKey] = data['sss'][i]
+                # if source == 'JPL':          #RTOFS-DA
+                #   if data['sss_qc'][i] <= 4:
+                #      data['sss_qc'][i] = 0
+                #   else:
+                #      data['sss_qc'][i] = 1
                 self.data[0][locKey][qcKey] = data['sss_qc'][i]
                 if 'sss_err' in data:
                     self.data[0][locKey][errKey] = data['sss_err'][i]
