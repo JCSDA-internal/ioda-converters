@@ -1,7 +1,7 @@
 # obs2ioda.x
 
 ```
-Compile: cd ioda-v1/src; make
+Compile: cd obs2ioda-v1/src; make
 ```
 
 ```

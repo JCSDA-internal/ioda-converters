@@ -9,4 +9,4 @@ File types that obs2ioda can handle:
 * gdas.airsev.t18z.20200930.bufr  
 * HS_H08_20200815_0000_B14_FLDK_R20_S0210.DAT  
 
-## See ioda-v1/README.md for compilation and usage.
+## See obs2ioda-v1/README.md for compilation and usage.
