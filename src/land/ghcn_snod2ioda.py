@@ -34,6 +34,7 @@ vName = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
+    ("altitude", "float"),
     ("datetime", "string")
 ]
 
@@ -84,8 +85,8 @@ class ghcn(object):
         cols = ["ID", "LATITUDE", "LONGITUDE", "ELEVATION", "STATE", "NAME", "GSN_FLAG", "HCNCRN_FLAG", "WMO_ID"]
         df10all = pd.read_csv(self.fixfile, header=None, sep='\n')
         df10all = df10all[0].str.split('\\s+', expand=True)
-        df10 = df10all.iloc[:, 0:3]
-        sub_cols = {0: "ID", 1: "LATITUDE", 2: "LONGITUDE"}
+        df10 = df10all.iloc[:, 0:4]
+        sub_cols = {0: "ID", 1: "LATITUDE", 2: "LONGITUDE", 3: "ELEVATION"}
         df10 = df10.rename(columns=sub_cols)
         df10 = df10.drop_duplicates(subset=["ID"])
 
@@ -98,12 +99,14 @@ class ghcn(object):
         vals = np.full((num_obs), -999.0)
         lats = np.full((num_obs), -999.0)
         lons = np.full((num_obs), -999.0)
+        alts = np.full((num_obs), -999.0)
         site = np.full((num_obs), -9999, dtype=np.int)
         id_array = np.chararray((num_obs))
         id_array[:] = "UNKNOWN"
 
         lats = df10["LATITUDE"].values
         lons = df10["LONGITUDE"].values
+        alts = df10["ELEVATION"].values
         id_array = df10["ID"].values
 
         df100 = pd.DataFrame(data=id_array, columns=['ID'])
@@ -123,6 +126,7 @@ class ghcn(object):
             vals = vals[mask]
             lons = lons[mask]
             lats = lats[mask]
+            alts = alts[mask]
             errs = errs[mask]
 
         self.units_values[vName['A']] = 'm'
@@ -141,7 +145,7 @@ class ghcn(object):
                 errs[i] = 0.0
                 vals[i] = 0.001*vals[i]  # coverted to m
 
-            locKey = lats[i], lons[i], base_datetime
+            locKey = lats[i], lons[i], alts[i], base_datetime
             self.data[0][locKey][valKey] = vals[i]
             self.data[0][locKey][errKey] = errs[i]
             self.data[0][locKey][qcKey] = 0
