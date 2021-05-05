@@ -1633,7 +1633,7 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        if (self.sensor not in ["ompslp","mls55"]):
+        if (self.sensor not in ["ompslp", "mls55"]):
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1684,7 +1684,7 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
-        if (self.sensor in ["ompslp","mls55"]):
+        if (self.sensor in ["ompslp", "mls55"]):
             vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
