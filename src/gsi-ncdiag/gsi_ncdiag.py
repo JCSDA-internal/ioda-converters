@@ -58,7 +58,7 @@ conv_platforms = {
 # note in python range, last number is not used so second values are +1
 # bufr codes
 uv_bufrtypes = {
-    "aircraft": range(230, 240),
+    "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
     "sondes": range(220, 223),
     "satwind": range(240, 261),
     "vadwind": [224],
@@ -66,16 +66,18 @@ uv_bufrtypes = {
     "sfcship": [280, 282, 284],
     "sfc": [281, 287],
     "scatwind": [290],
+    # 232 are dropsondes
 }
 
 conv_bufrtypes = {
-    "aircraft": range(130, 140),
+    "aircraft": [130, 131, 133, 135],  # 234 is TAMDAR; always rstprod
     "sondes": range(120, 123),
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
     "gps": [3, 4, 42, 43, 745, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
+    # 132 are dropsondes
 }
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
@@ -151,6 +153,9 @@ gsi_add_vars_allsky = {
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
+    'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'Obs_Minus_Forecast_unadjusted_clear': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
@@ -174,6 +179,8 @@ gsi_add_vars = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
@@ -209,6 +216,10 @@ gsi_add_vars_uv = {
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
     'v_Forecast_unadjusted': 'GsiHofX',
+    'u_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'u_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'v_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'v_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
 }
 
 radar_qc = {
@@ -260,6 +271,7 @@ rad_sensors = [
     'avhrr',
     'saphir',
     'gmi',
+    'amsr2',
 ]
 
 radar_sensors = [
@@ -739,6 +751,19 @@ class Conv(BaseGSI):
                                 mask = tmp < self.EPSILON
                                 tmp[~mask] = 1.0 / tmp[~mask]
                                 tmp[mask] = self.FLOAT_FILL
+                            elif "Obs_Minus_" in key:
+                                if 'u_Forecast_adjusted' in self.df.variables:
+                                    continue
+                                elif 'Forecast_adjusted' in self.df.variables:
+                                    continue
+                                if v == 'uv':
+                                    if (checkuv[outvars[o]] != key[0]):
+                                        continue
+                                    else:
+                                        key1 = key[0]+'_Observation'
+                                else:
+                                    key1 = 'Observation'
+                                tmp = self.var(key1)[idx] - df_key[idx]
                             else:
                                 tmp = df_key[idx]
                             if value in gsiint:
@@ -1234,6 +1259,11 @@ class Radiances(BaseGSI):
                     mask = tmp < self.EPSILON
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
+                elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
+                    key1 = 'Observation'
+                    tmp = self.var(key1) - self.var(gsivar)
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
@@ -1691,6 +1721,11 @@ class Ozone(BaseGSI):
                     mask = tmp < self.EPSILON
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
+                elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
+                    key1 = 'Observation'
+                    tmp = self.var(key1) - self.var(gsivar)
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:

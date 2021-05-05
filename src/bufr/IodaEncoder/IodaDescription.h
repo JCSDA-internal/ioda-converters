@@ -69,7 +69,7 @@ namespace Ingester
         // T is something other than a std::vector
         template<typename U = void>
         void _addTo(ioda::Group& group,
-                    std::enable_if_t<!is_vector<T>::value, U>* = nullptr)
+                    typename std::enable_if<!is_vector<T>::value, U>::type* = nullptr)
         {
             ioda::Attribute attr = group.atts.create<T>(name, {1});
             attr.write<T>({value});
@@ -78,7 +78,7 @@ namespace Ingester
         // T is a vector
         template<typename U = void>
         void _addTo(ioda::Group& group,
-                    std::enable_if_t<is_vector<T>::value, U>* = nullptr)
+                    typename std::enable_if<is_vector<T>::value, U>::type* = nullptr)
         {
             ioda::Attribute attr = group.atts.create<typename T::value_type>(name, \
                                    {static_cast<int>(value.size())});

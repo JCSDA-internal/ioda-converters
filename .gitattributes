@@ -9,3 +9,5 @@ src/ncep/xx120 filter=lfs diff=lfs merge=lfs -text
 *.bufr_d filter=lfs diff=lfs merge=lfs -text
 *.grib filter=lfs diff=lfs merge=lfs -text
 *.grib2 filter=lfs diff=lfs merge=lfs -text
+test/testinput/bufr_tables/** filter=lfs diff=lfs merge=lfs -text
+*.radiosonde filter=lfs diff=lfs merge=lfs -text

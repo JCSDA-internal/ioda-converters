@@ -61,8 +61,8 @@ void findSensorsChannels(const std::string & filename, std::vector<std::string> 
         nchannels.push_back(1);
       }
     }
+    infile.close();
   }
-  infile.close();
 }
 
 //---------------------------------------------------------------------------------------
@@ -103,8 +103,8 @@ void readObsBiasCoefficients(const std::string & filename, const std::string & s
         }
       }
     }
+    infile.close();
   }
-  infile.close();
 }
 
 //---------------------------------------------------------------------------------------
@@ -125,8 +125,9 @@ void readObsBiasCoeffErrors(const std::string & filename, const std::string & se
     {
       infile >> nusis;
       infile >> nuchan;
-      infile >> nobs(jchan);
+      infile >> par;
       if (nusis == sensor) {
+        nobs(jchan) = par;
         /// it's the sensor we're interested in; read in coefficients and channel
         /// indices
         for (size_t jpred = 0; jpred < gsi_npredictors; ++jpred) {
@@ -142,6 +143,6 @@ void readObsBiasCoeffErrors(const std::string & filename, const std::string & se
         }
       }
     }
+    infile.close();
   }
-  infile.close();
 }
