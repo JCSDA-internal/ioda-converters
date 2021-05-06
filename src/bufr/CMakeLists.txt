@@ -74,6 +74,12 @@ ecbuild_add_library( TARGET   ingester
                      LINKER_LANGUAGE CXX
                     )
 
+target_include_directories(ingester PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BufrParser>
+  $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
+)
+
 add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
 
 ecbuild_add_executable( TARGET  bufr2ioda.x
