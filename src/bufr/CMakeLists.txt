@@ -68,11 +68,12 @@ list(APPEND _ingester_deps
 
 ecbuild_add_library( TARGET   ingester
                      SOURCES  ${_ingester_srcs}
-                     LIBS     ${_ingester_deps}
                      INSTALL_HEADERS LISTED
                      HEADER_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bufr
                      LINKER_LANGUAGE CXX
                     )
+
+target_link_libraries(ingester PUBLIC ${_ingester_deps})
 
 target_include_directories(ingester PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
