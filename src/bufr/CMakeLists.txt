@@ -76,7 +76,6 @@ ecbuild_add_library( TARGET   ingester
 
 target_include_directories(ingester PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BufrParser>
   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
 )
 
