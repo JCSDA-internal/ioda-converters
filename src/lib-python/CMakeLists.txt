@@ -1,6 +1,7 @@
 list( APPEND libs
   ioda_conv_ncio.py
   ioda_conv_util.py
+  ioda_conv_engines.py
   collect_sources.py
   meteo_utils.py
   orddicts.py
