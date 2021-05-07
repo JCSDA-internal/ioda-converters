@@ -21,8 +21,8 @@ ecbuild_bundle_initialize()
 
 ecbuild_requires_macro_version( 2.7 )
 
-# jedi-cmake is not needed for CI
-#ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
+ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" BRANCH develop UPDATE )
+include( jedicmake/cmake/Functions/git_functions.cmake )
 
 # ECMWF libs
 # ----------
