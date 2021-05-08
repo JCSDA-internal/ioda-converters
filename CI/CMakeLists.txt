@@ -36,33 +36,12 @@ ecbuild_bundle( PROJECT atlas GIT "https://github.com/jcsda-internal/atlas.git" 
 ecbuild_bundle( PROJECT oops GIT "https://github.com/JCSDA-internal/oops.git" )
 ecbuild_bundle( PROJECT ioda GIT "https://github.com/JCSDA-internal/ioda.git" )
 
-
-# If IODA branch is being built set GIT_BRANCH_FUNC to IODA's current branch.
-# If a tagged version of IODA is being built set GIT_TAG_FUNC to ioda's current tag. In this case,
-# IODA test files will be download from UCAR DASH and ioda-data repo will not be cloned.
-find_branch_name(REPO_DIR_NAME ioda)
-
-# When LOCAL_PATH_JEDI_TESTFILES is set to the directory of IODA test files stored
-# in a local directory, ioda-data repo will not be cloned
-if( NOT DEFINED ENV{LOCAL_PATH_JEDI_TESTFILES} AND NOT DEFINED ${GIT_TAG_FUNC} )
-  ecbuild_bundle( PROJECT ioda-data GIT "https://github.com/JCSDA-internal/ioda-data.git" )
-endif()
-
-# If IODA's current branch is available in ioda-data repo, that branch will be checked out
-branch_checkout (REPO_DIR_NAME ioda-data
-                 BRANCH ${GIT_BRANCH_FUNC} )
+# Test Data
+ecbuild_bundle( PROJECT ioda-data GIT "https://github.com/JCSDA-internal/ioda-data.git" )
 
 # Build IODA converters
-option(BUILD_IODA_CONVERTERS "Build IODA Converters" OFF)
-if(BUILD_IODA_CONVERTERS)
-  ecbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
-endif()
+ecbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
 
-# Build Doxygen documentation
-option(BUILD_IODA_BUNDLE_DOC "Build documentation" OFF)
-if(BUILD_IODA_BUNDLE_DOC)
-   add_subdirectory( Documentation )
-endif(BUILD_IODA_BUNDLE_DOC)
 
 ecbuild_bundle_finalize()
 
