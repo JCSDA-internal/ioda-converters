@@ -7,9 +7,9 @@
 # IODA bundle
 #
 
-project( ioda-bundle C CXX Fortran )
+cmake_minimum_required( VERSION 3.12 FATAL_ERROR )
 
-cmake_minimum_required( VERSION 3.3.2 FATAL_ERROR )
+project( ioda-bundle VERSION 1.0.0 LANGUAGES C CXX Fortran )
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -19,10 +19,8 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 
 ecbuild_bundle_initialize()
 
-ecbuild_requires_macro_version( 2.7 )
-
-# jedi-cmake is not needed for CI
-#ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
+ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
+include( jedicmake/cmake/Functions/git_functions.cmake )
 
 # ECMWF libs
 # ----------
@@ -37,6 +35,9 @@ ecbuild_bundle( PROJECT atlas GIT "https://github.com/jcsda-internal/atlas.git" 
 # Core JEDI repositories
 ecbuild_bundle( PROJECT oops GIT "https://github.com/JCSDA-internal/oops.git" )
 ecbuild_bundle( PROJECT ioda GIT "https://github.com/JCSDA-internal/ioda.git" )
+
+# Test Data
+ecbuild_bundle( PROJECT ioda-data GIT "https://github.com/JCSDA-internal/ioda-data.git" )
 
 # Build IODA converters
 ecbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
