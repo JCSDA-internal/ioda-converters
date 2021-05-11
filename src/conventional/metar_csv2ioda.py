@@ -57,6 +57,7 @@ class reformatMetar(object):
         data['ob_time'] = []
         data['ob_datetime'] = []
         data['ob_elev'] = []
+        data['ob_hght'] = []
         data['ob_psfc'] = []
         data['ob_temp'] = []
         data['ob_spfh'] = []
@@ -65,7 +66,7 @@ class reformatMetar(object):
 
         '''
         Read in the METARs data
-        Header contains: ICAO, Unix_time, Latitude, Longitude, Elev, MSLP, Altimeter, Temp, Dewp, Wdir, Wspd
+        Header contains: Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw
         '''
 
         # open file in read mode
@@ -87,6 +88,11 @@ class reformatMetar(object):
                     lat = float(row['Latitude'])
                     lon = float(row['Longitude'])
                     elev = float(row['Elev'])
+                    if (elev < -999 or elev > 8450):
+                        elev = self.float_fill
+                        hght = self.float_fill
+                    else:
+                        hght = elev + 2.0           # Height of observation assumed 2 meters above station elevation
                 except (csv.Error, ValueError):
                     continue
                 try:
@@ -137,6 +143,7 @@ class reformatMetar(object):
                 data['ob_lat'].append(lat)
                 data['ob_lon'].append(lon)
                 data['ob_elev'].append(elev)
+                data['ob_hght'].append(hght)
                 data['ob_psfc'].append(psfc)
                 data['ob_temp'].append(temp)
                 data['ob_spfh'].append(spfh)
@@ -167,6 +174,7 @@ class IODA(object):
             ("latitude", "float"),
             ("longitude", "float"),
             ("station_elevation", "float"),
+            ("height", "float"),
             ("datetime", "string")
         ]
 
@@ -197,8 +205,9 @@ class IODA(object):
                 lat = obs.data['ob_lat'][n]
                 lon = obs.data['ob_lon'][n]
                 elev = obs.data['ob_elev'][n]
+                hght = obs.data['ob_hght'][n]
                 dtg = obs.data['ob_datetime'][n]
-                locKey = icao, lat, lon, elev, dtg
+                locKey = icao, lat, lon, elev, hght, dtg
 
                 # print ("obs iterate: " + str(n) + ", " + icao + ", " + str(lat) + ", " + str(lon) + ", " + str(elev) + ", " + dtg)
 
