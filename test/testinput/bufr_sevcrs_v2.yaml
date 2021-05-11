@@ -50,56 +50,56 @@ observations:
           size: variables/brightnessTemperature.ncols
 
       globals:
-        - name: "platformCommonName@MetaData"
+        - name: "MetaData/platformCommonName"
           type: string
           value: "MSG-SEVIRI"
 
-        - name: "platformLongDescription@MetaData"
+        - name: "MetaData/platformLongDescription"
           type: string
           value: "MTYP 021-043 PROC. MSG SEVIRI CLEAR SKY RADIANCES (CSR)"
 
       variables:
-        - name: "satelliteId@MetaData"
+        - name: "MetaData/satelliteId"
           source: variables/satelliteId
           dimensions: ["nlocs"]
           longName: "Satellite identification"
           units: ""
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
           dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
           dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "datetime@MetaData"
+        - name: "MetaData/datetime"
           source: variables/timestamp
           dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
 
-        - name: "solarZenithAngle@MetaData"
+        - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
           dimensions: ["nlocs"]
           longName: "Solar zenith angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "sensorZenithAngle@MetaData"
+        - name: "MetaData/sensorZenithAngle"
           source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
           longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
 
-        - name: "cloudAmount@ObsValue"
+        - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude nchans"
           source: variables/cloudAmount
           dimensions: ["nlocs", "nchans"]
@@ -108,7 +108,7 @@ observations:
           range: [0, 100]
           chunks: [1000, 15]
 
-        - name: "brightnessTemperature@ObsValue"
+        - name: "ObsValue/brightnessTemperature"
           coordinates: "longitude latitude nchans"
           source: variables/brightnessTemperature
           dimensions: ["nlocs", "nchans"]
@@ -117,7 +117,7 @@ observations:
           range: [150, 350]
           chunks: [1000, 15]
 
-        - name: "brightnessTemperatureStdDev@ObsValue"
+        - name: "ObsValue/brightnessTemperatureStdDev"
           coordinates: "longitude latitude nchans"
           source: variables/brightnessTemperatureStdDev
           dimensions: ["nlocs", "nchans"]

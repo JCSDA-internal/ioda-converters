@@ -66,88 +66,88 @@ observations:
 #         size: variables/albedo.ncols
 
       globals:
-        - name: "platformCommonName@MetaData"
+        - name: "MetaData/platformCommonName"
           type: string
           value: "AIRS"
 
-        - name: "platformLongDescription@MetaData"
+        - name: "MetaData/platformLongDescription"
           type: string
           value: "MTYP 021-249 EVERY FOV AIRS/AMSU-A/HSB 1B BTEMPS(AQUA)"
 
       variables:
-        - name: "satelliteId@MetaData"
+        - name: "MetaData/satelliteId"
           source: variables/satelliteId
           dimensions: ["nlocs"]
           longName: "Satellite identification"
           units: ""
 
-        - name: "channelNumber@MetaData"
+        - name: "MetaData/channelNumber"
           source: variables/channelNumber
           dimensions: ["nchans"]
           longName: "Channel number"
           units: ""
 
-        - name: "centralWavenumber@MetaData"
+        - name: "MetaData/centralWavenumber"
           source: variables/centralWavenumber
           dimensions: ["nchans"]
           longName: "Central wavenumber (log10)"
           units: ""
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
           dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
           dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "datetime@MetaData"
+        - name: "MetaData/datetime"
           source: variables/timestamp
           dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
 
-        - name: "fieldOfViewNumber@MetaData"
+        - name: "MetaData/fieldOfViewNumber"
           source: variables/fieldOfViewNumber
           dimensions: ["nlocs"]
           longName: "Field of view number"
           units: ""
 
-        - name: "solarZenithAngle@MetaData"
+        - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
           dimensions: ["nlocs"]
           longName: "Solar zenith angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "solarAzimuthAngle@MetaData"
+        - name: "MetaData/solarAzimuthAngle"
           source: variables/solarAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Solar azimuth angle"
           units: "degrees"
           range: [0, 360]
 
-        - name: "sensorZenithAngle@MetaData"
+        - name: "MetaData/sensorZenithAngle"
           source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
           longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
 
-        - name: "sensorAzimuthAngle@MetaData"
+        - name: "MetaData/sensorAzimuthAngle"
           source: variables/sensorAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Sensor azimuth angle"
           units: "degrees"
           range: [0, 360]
 
-        - name: "cloudAmount@MetaData"
+        - name: "MetaData/cloudAmount"
           coordinates: "longitude latitude"
           source: variables/cloudAmount
           dimensions: ["nlocs"]
@@ -155,7 +155,7 @@ observations:
           units: "percent"
           range: [0, 100]
 
-#       - name: "albedo@ObsValue"
+#       - name: "ObsValue/albedo"
 #         coordinates: "longitude latitude nchans_albedo"
 #         source: variables/albedo
 #         dimensions: ["nlocs", "nchans_albedo"]
@@ -165,7 +165,7 @@ observations:
 #         chunks: [1000, 15]
 #         compressionLevel: 4
 
-        - name: "brightnessTemperature@ObsValue"
+        - name: "ObsValue/brightnessTemperature"
           coordinates: "longitude latitude nchans"
           source: variables/brightnessTemperature
           dimensions: ["nlocs", "nchans"]

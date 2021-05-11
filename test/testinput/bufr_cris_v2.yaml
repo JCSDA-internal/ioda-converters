@@ -86,136 +86,136 @@ observations:
           size: variables/qualityFlagsCalibration.ncols
 
       globals: 
-        - name: "platformCommonName@MetaData"
+        - name: "MetaData/platformCommonName"
           type: string
           value: "SNPP"
 
-        - name: "platformLongDescription@MetaData"
+        - name: "MetaData/platformLongDescription"
           type: string
           value: "MTYP 021-206 CrIS FULL SPCTRL RADIANCE (431 CHN SUBSET)"
 
       variables:
-        - name: "satelliteId@MetaData"
+        - name: "MetaData/satelliteId"
           source: variables/satelliteId
           dimensions: ["nlocs"]
           longName: "Satellite identification"
           units: ""
 
-        - name: "channelNumber@MetaData"
+        - name: "MetaData/channelNumber"
           source: variables/channelNumber
           dimensions: ["nchans"]
           longName: "Channel number"
           units: ""
 
-        - name: "measurementType@MetaData"
+        - name: "MetaData/measurementType"
           source: variables/measurementType
           dimensions: ["nchans"]
           longName: "Measurement type"
           units: ""
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
           dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
           dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "datetime@MetaData"
+        - name: "MetaData/datetime"
           source: variables/timestamp
           dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
 
-        - name: "fieldOfRegardNumber@MetaData"
+        - name: "MetaData/fieldOfRegardNumber"
           source: variables/fieldOfRegardNumber
           dimensions: ["nlocs"]
           longName: "Field of regard number"
           units: ""
 
-        - name: "fieldOfViewNumber@MetaData"
+        - name: "MetaData/fieldOfViewNumber"
           source: variables/fieldOfViewNumber
           dimensions: ["nlocs"]
           longName: "Field of view number"
           units: ""
 
-        - name: "solarZenithAngle@MetaData"
+        - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
           dimensions: ["nlocs"]
           longName: "Solar zenith angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "solarAzimuthAngle@MetaData"
+        - name: "MetaData/solarAzimuthAngle"
           source: variables/solarAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Solar azimuth angle"
           units: "degrees"
           range: [0, 360]
 
-        - name: "sensorZenithAngle@MetaData"
+        - name: "MetaData/sensorZenithAngle"
           source: variables/sensorZenithAngle
           dimensions: ["nlocs"]
           longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
 
-        - name: "sensorAzimuthAngle@MetaData"
+        - name: "MetaData/sensorAzimuthAngle"
           source: variables/sensorAzimuthAngle
           dimensions: ["nlocs"]
           longName: "Sensor azimuth angle"
           units: "degrees"
           range: [0, 360]
 
-        - name: "sensorScanLineNumber@MetaData"
+        - name: "MetaData/sensorScanLineNumber"
           source: variables/sensorScanLineNumber
           dimensions: ["nlocs"]
           longName: "Sensor scan line number"
           units: ""
 
-        - name: "cloudAmount@MetaData"
+        - name: "MetaData/cloudAmount"
           source: variables/cloudAmount
           dimensions: ["nlocs"]
           longName: "Cloud fraction"
           units: "percent"
 
-        - name: "cloudTopHeight@MetaData"
+        - name: "MetaData/cloudTopHeight"
           source: variables/cloudTopHeight
           dimensions: ["nlocs"]
           longName: "Cloud top height"
           units: "m"
 
-        - name: "qualityInfo@MetaData"
+        - name: "MetaData/qualityInfo"
           source: variables/qualityInfo
           dimensions: ["nlocs"]
           longName: "Quality information"
           units: ""
 
-        - name: "qualityFlagsScan@MetaData"
+        - name: "MetaData/qualityFlagsScan"
           source: variables/qualityFlagsScan
           dimensions: ["nlocs"]
           longName: "Scan level quality flags"
           units: ""
 
-        - name: "qualityFlagsCalibration@MetaData"
+        - name: "MetaData/qualityFlagsCalibration"
           source: variables/qualityFlagsCalibration
           dimensions: ["nlocs", "nqualityFlags"]
           longName: "Calibration quality flags"
           units: ""
 
-        - name: "qualityFlagsFieldOfView@MetaData"
+        - name: "MetaData/qualityFlagsFieldOfView"
           source: variables/qualityFlagsFieldOfView
           dimensions: ["nlocs", "nqualityFlags"]
           longName: "Field of view quality flags"
           units: ""
 
-        - name: "radiance@ObsValue"
+        - name: "ObsValue/radiance"
           coordinates: "longitude latitude nchans"
           source: variables/radiance
           dimensions: ["nlocs", "nchans"]
@@ -224,7 +224,7 @@ observations:
           chunks: [1000, 15]
           compressionLevel: 4
 
-        - name: "radianceVIIRS@ObsValue"
+        - name: "ObsValue/radianceVIIRS"
           coordinates: "longitude latitude nchans"
           source: variables/radianceVIIRS
           dimensions: ["nlocs", "nchans2"]
