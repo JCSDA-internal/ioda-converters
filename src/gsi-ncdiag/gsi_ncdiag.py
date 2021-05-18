@@ -269,6 +269,7 @@ rad_sensors = [
     'abi',
     'ahi',
     'avhrr',
+    'avhrr3',
     'saphir',
     'gmi',
     'amsr2',
