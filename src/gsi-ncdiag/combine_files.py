@@ -202,6 +202,8 @@ def concat_ioda(FileList, OutFile, GeoDir):
         GeoVarTypes2 = []
         GeoVarNames3 = []
         GeoVarTypes3 = []
+        GeoVarNames31 = []
+        GeoVarTypes31 = []
         for f in FileList:
             inob = f.split('/')[-1]
             ingeo = inob.replace('obs', 'geoval')
@@ -211,18 +213,25 @@ def concat_ioda(FileList, OutFile, GeoDir):
         for f in GeoFileList:
             ncf = nc.Dataset(f, mode='r')
             for key, value in ncf.variables.items():
-                if key not in GeoVarNames2 and key not in GeoVarNames3:
+                if key not in GeoVarNames2 and key not in GeoVarNames3 and key not in GeoVarNames31:
                     if value.ndim == 1:
                         GeoVarNames2.append(key)
                         GeoVarTypes2.append(ncf.variables[key].dtype)
                     else:
-                        GeoVarNames3.append(key)
-                        GeoVarTypes3.append(ncf.variables[key].dtype)
+                        if 'nlevs' in value.dimensions:
+                            GeoVarNames3.append(key)
+                            GeoVarTypes3.append(ncf.variables[key].dtype)
+                        else:
+                            GeoVarNames31.append(key)
+                            GeoVarTypes31.append(ncf.variables[key].dtype)
+
             ncf.close()
         GeoVarData2 = []
         GeoVarIdx2 = []
         GeoVarData3 = []
         GeoVarIdx3 = []
+        GeoVarData31 = []
+        GeoVarIdx31 = []
         for idx2, v in enumerate(GeoVarNames2):
             tmpgeodata = []
             tmpgeoidx = []
@@ -277,6 +286,33 @@ def concat_ioda(FileList, OutFile, GeoDir):
         GeoVarData3 = np.dstack(GeoVarData3)
         GeoVarIdx3 = np.dstack(GeoVarIdx3)
         GeoVarUnique3 = np.ones((len(idx), len(GeoVarData3[0]), len(GeoVarData3[0, 0, :])))*np.abs(nc.default_fillvals['f4'])
+        for idx2, v in enumerate(GeoVarNames31):
+            tmpgeodata = []
+            tmpgeoidx = []
+            for f in GeoFileList:
+                ncf = nc.Dataset(f, mode='r')
+                try:
+                    tmpdata = np.array(ncf.variables[v])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                except KeyError:
+                    try:
+                        tmpdata = np.ones_like(np.array(ncf.variables['air_pressure_levels'])).astype(GeoVarTypes31[idx2])
+                    except KeyError:
+                        tmpdata = np.ones_like(np.array(ncf.variables['atmosphere_ln_pressure_interface_coordinate'])).astype(GeoVarTypes31[idx2])
+                    if GeoVarTypes31[idx2] == np.int32:
+                        tmpdata = tmpdata * nc.default_fillvals['i4']
+                    else:
+                        tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+            tmpgeodata = np.vstack(tmpgeodata)
+            tmpgeoidx = np.vstack(tmpgeoidx)
+            GeoVarData31.append(tmpgeodata)
+            GeoVarIdx31.append(tmpgeoidx)
+        GeoVarData31 = np.dstack(GeoVarData31)
+        GeoVarIdx31 = np.dstack(GeoVarIdx31)
+        GeoVarUnique31 = np.ones((len(idx), len(GeoVarData31[0]), len(GeoVarData31[0, 0, :])))*np.abs(nc.default_fillvals['f4'])
         for ii, jj in np.ndindex(GeoVarData2.shape):
             j = GeoVarIdx2[ii, jj]
             i = inv[ii]
@@ -287,13 +323,20 @@ def concat_ioda(FileList, OutFile, GeoDir):
             i = inv[ii]
             if GeoVarData3[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData3[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
                 GeoVarUnique3[i, kk, j] = GeoVarData3[ii, kk, jj]
+        for ii, kk, jj in np.ndindex(GeoVarData31.shape):
+            j = GeoVarIdx31[ii, kk, jj]
+            i = inv[ii]
+            if GeoVarData31[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData31[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
+                GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
         OutGeoFile = OutFile.replace('obs', 'geoval')
         of = nc.Dataset(OutGeoFile, 'w', format='NETCDF4')
         of.setncattr("date_time", ncf.getncattr("date_time"))
         nlocs = len(GeoVarUnique3)
         nlevs = len(GeoVarUnique3[0])
+        ninterfaces = len(GeoVarUnique31[0])
         of.createDimension("nlocs", nlocs)
         of.createDimension("nlevs", nlevs)
+        of.createDimension("ninterfaces", ninterfaces)
         for ivar, var in enumerate(GeoVarNames2):
             dims = ("nlocs", )
             var_out = of.createVariable(var, GeoVarTypes2[ivar], dims)
@@ -302,6 +345,10 @@ def concat_ioda(FileList, OutFile, GeoDir):
             dims = ("nlocs", "nlevs")
             var_out = of.createVariable(var, GeoVarTypes3[ivar], dims)
             var_out[...] = GeoVarUnique3[..., ivar]
+        for ivar, var in enumerate(GeoVarNames31):
+            dims = ("nlocs", "ninterfaces")
+            var_out = of.createVariable(var, GeoVarTypes31[ivar], dims)
+            var_out[...] = GeoVarUnique31[..., ivar]
 
 
 ######################################################

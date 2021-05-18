@@ -627,6 +627,8 @@ class Conv(BaseGSI):
                 if (v != "sst"):
                     ncout.createDimension(
                         "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+                    ncout.createDimension(
+                        "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -644,10 +646,14 @@ class Conv(BaseGSI):
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
+                            print(vname)
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
-                                dims = ("nlocs", "nlevs")
+                                if vname == "atmosphere_pressure_coordinate_interface":
+                                    dims = ("nlocs", "ninterfaces")
+                                else:
+                                    dims = ("nlocs", "nlevs")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                 ncout.close()
