@@ -646,7 +646,6 @@ class Conv(BaseGSI):
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
-                            print(vname)
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
