@@ -101,10 +101,10 @@ namespace Ingester
                     }
                 }
 
-                auto newDim = std::make_shared<ioda::NewDimensionScale<int>>(scale.name,
-                                                                             size,
-                                                                             size,
-                                                                             size);
+                auto newDim = ioda::NewDimensionScale<int>(scale.name,
+                                                           size,
+                                                           size,
+                                                           size);
                 newDims.push_back(newDim);
 
                 if (size <= 0) { foundInvalidDim = true; }

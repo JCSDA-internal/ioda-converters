@@ -44,9 +44,9 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
 
   // Creating dimensions: npredictors & nchannels
   ioda::NewDimensionScales_t newDims;
-  newDims.push_back(std::make_shared<ioda::NewDimensionScale<int>>("npredictors",
+  newDims.push_back(ioda::NewDimensionScale<int>("npredictors",
                     numPreds, numPreds, numPreds));
-  newDims.push_back(std::make_shared<ioda::NewDimensionScale<int>>("nchannels",
+  newDims.push_back(ioda::NewDimensionScale<int>("nchannels",
                     numChans, numChans, numChans));
 
   // Construct an ObsGroup object, with 2 dimensions npred, nchans
