@@ -178,7 +178,7 @@ endwhere
 gpsro_data%bnd_obserr   = gpsro_data%bnd_obserr_adjust
 
 if ( geovalwrite == "1" )  then
-   geoname_out='./gnssro_geovals_'//trim(anatime)//'.nc4'
+   geoname_out='./gnssro_geoval_'//trim(anatime)//'.nc4'
    allocate(gpsro_data%air_temperature(nlevs,nobs))
    allocate(gpsro_data%virtual_temperature(nlevs,nobs))
    allocate(gpsro_data%specific_humidity(nlevs,nobs))
