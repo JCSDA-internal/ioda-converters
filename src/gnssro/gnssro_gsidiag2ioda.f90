@@ -4,7 +4,7 @@
 !    it 1) reorders the randomly distributed observations
 !          and output observations in profile record numbers,
 !       2) adds variable descriptions, and
-!       3)output observation and geoval(optional) files seperately.
+!       3) output observation and geoval(optional) files seperately.
 !-----------------------------------------------------------------
 !-- TO COMPILE standalone executable
 !ifort -o  gnssro_gsidiag2ioda.exe
