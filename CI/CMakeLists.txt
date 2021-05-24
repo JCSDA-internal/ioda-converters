@@ -54,7 +54,7 @@ branch_checkout (REPO_DIR_NAME ioda-data
 
 # Build IODA converters
 
-cbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
+ecbuild_bundle( PROJECT iodaconv GIT "https://github.com/JCSDA-internal/ioda-converters.git" )
 
 # Build Doxygen documentation
 option(BUILD_IODA_BUNDLE_DOC "Build documentation" OFF)
