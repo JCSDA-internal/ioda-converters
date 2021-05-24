@@ -7,9 +7,8 @@
 # IODA bundle
 #
 
-project( ioda-bundle C CXX Fortran )
-
-cmake_minimum_required( VERSION 3.3.2 FATAL_ERROR )
+project( ioda-bundle VERSION 1.0.0 LANGUAGES C CXX Fortran )
+cmake_minimum_required( VERSION 3.12 FATAL_ERROR )
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -19,20 +18,18 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 
 ecbuild_bundle_initialize()
 
-ecbuild_requires_macro_version( 2.7 )
-
 # jedi-cmake is not needed for CI
 #ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
 
 # ECMWF libs
 # ----------
 option("BUNDLE_SKIP_ECKIT" "Don't build eckit" "ON" ) # Skip eckit build unless user passes -DBUNDLE_SKIP_ECKIT=OFF
-option("BUNDLE_SKIP_FCKIT" "Don't build fckit" "OFF") # Build fckit unless user passes -DBUNDLE_SKIP_FCKIT=ON
-option("BUNDLE_SKIP_ATLAS" "Don't build atlas" "OFF") # Build atlas unless user passes -DBUNDLE_SKIP_ATLAS=ON
+option("BUNDLE_SKIP_FCKIT" "Don't build fckit" "ON") # Skip eckit build unless user passes -DBUNDLE_SKIP_FCKIT=OFF
+option("BUNDLE_SKIP_ATLAS" "Don't build atlas" "ON") # Skip eckit build unless user passes -DBUNDLE_SKIP_ATLAS=OFF
 
-ecbuild_bundle( PROJECT eckit GIT "https://github.com/jcsda-internal/eckit.git" )
-ecbuild_bundle( PROJECT fckit GIT "https://github.com/jcsda-internal/fckit.git" )
-ecbuild_bundle( PROJECT atlas GIT "https://github.com/jcsda-internal/atlas.git" )
+#ecbuild_bundle( PROJECT eckit GIT "https://github.com/jcsda-internal/eckit.git" )
+#ecbuild_bundle( PROJECT fckit GIT "https://github.com/jcsda-internal/fckit.git" )
+#ecbuild_bundle( PROJECT atlas GIT "https://github.com/jcsda-internal/atlas.git" )
 
 # Core JEDI repositories
 ecbuild_bundle( PROJECT oops GIT "https://github.com/JCSDA-internal/oops.git" )
