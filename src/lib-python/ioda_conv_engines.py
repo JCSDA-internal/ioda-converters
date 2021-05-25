@@ -12,20 +12,26 @@ _oqc_name = "PreQC"
 _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
 
+
 def OvalName(self):
     return self._oval_name
+
 
 def ObiastermName(self):
     return self._obiasterm_name
 
+
 def ObiaspredName(self):
     return self._obiaspred_name
+
 
 def OerrName(self):
     return self._oerr_name
 
+
 def OqcName(self):
     return self._oqc_name
+
 
 class IodaWriter(object):
     # Constructor
