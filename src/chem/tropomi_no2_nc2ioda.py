@@ -63,9 +63,9 @@ class tropomi(object):
     def _read(self):
         # set up variable names for IODA
         for iodavar in ['nitrogen_dioxide_in_tropospheric_column', 'nitrogen_dioxide_in_total_column']:
-            self.varDict[iodavar]['valKey'] = iodavar, 'ObsValue'
-            self.varDict[iodavar]['errKey'] = iodavar, 'ObsError'
-            self.varDict[iodavar]['qcKey'] = iodavar, 'PreQC'
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
             self.units[iodavar] = 'mol m-2'
             self.var_mdata[iodavar]['coordinates'] = 'longitude latitude'
         # loop through input filenames

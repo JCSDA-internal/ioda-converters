@@ -2,6 +2,30 @@
 import ioda
 import numpy as np
 
+# define vars
+_metagroup = 'MetaData'
+# Names assigned to obs values, error estimates and qc marks
+_oval_name = "ObsValue"
+_oerr_name = "ObsError"
+_oqc_name = "PreQC"
+# Names assigned to obs bias terms and predoctirs related to observations
+_obiasterm_name = "GsiObsBiasTerm"
+_obiaspred_name = "GsitObsBiasPredictor"
+
+def OvalName(self):
+    return self._oval_name
+
+def ObiastermName(self):
+    return self._obiasterm_name
+
+def ObiaspredName(self):
+    return self._obiaspred_name
+
+def OerrName(self):
+    return self._oerr_name
+
+def OqcName(self):
+    return self._oqc_name
 
 class IodaWriter(object):
     # Constructor
@@ -34,31 +58,6 @@ class IodaWriter(object):
         # defining default var parameters
         self._p1 = ioda.VariableCreationParameters()
         self._p1.compressWithGZIP()
-
-        # define vars
-        self._metagroup = 'MetaData'
-        # Names assigned to obs values, error estimates and qc marks
-        self._oval_name = "ObsValue"
-        self._oerr_name = "ObsError"
-        self._oqc_name = "PreQC"
-        # Names assigned to obs bias terms and predoctirs related to observations
-        self._obiasterm_name = "GsiObsBiasTerm"
-        self._obiaspred_name = "GsitObsBiasPredictor"
-
-    def OvalName(self):
-        return self._oval_name
-
-    def ObiastermName(self):
-        return self._obiasterm_name
-
-    def ObiaspredName(self):
-        return self._obiaspred_name
-
-    def OerrName(self):
-        return self._oerr_name
-
-    def OqcName(self):
-        return self._oqc_name
 
     def NumpyToIodaDtype(self, NumpyArr):
         ############################################################
@@ -136,7 +135,7 @@ class IodaWriter(object):
         # this method will create location variable in the output obs group
         # and fill them with the provided data and metadata
         for Vname, Vvals in LocVars.items():
-            VarName = "{0:s}/{1:s}".format(self._metagroup, Vname)
+            VarName = "{0:s}/{1:s}".format(_metagroup, Vname)
             # dimension here should only be nlocs
             dimsVar = [self._dims['nlocs']]
             # get type of variable
