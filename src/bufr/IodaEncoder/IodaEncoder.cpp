@@ -15,10 +15,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-namespace
-{
-    const bool USE_OLD_LAYOUT = true;
-}  // namespace
 
 namespace Ingester
 {
@@ -112,18 +108,8 @@ namespace Ingester
                 continue;
             }
 
-            ioda::detail::DataLayoutPolicy::Policies policy;
-            if (USE_OLD_LAYOUT)
-            {
-                policy = ioda::detail::DataLayoutPolicy::Policies::None;
-            }
-            else
-            {
-                policy = ioda::detail::DataLayoutPolicy::Policies::ObsGroup;
-            }
-
+            auto policy = ioda::detail::DataLayoutPolicy::Policies::ObsGroup;
             auto layoutPolicy = ioda::detail::DataLayoutPolicy::generate(policy);
-
             auto obsGroup = ioda::ObsGroup::generate(rootGroup, newDims, layoutPolicy);
 
             auto scaleMap = std::map<std::string, ioda::Variable>();
@@ -131,14 +117,6 @@ namespace Ingester
             {
                 scaleMap.insert({scale.name, obsGroup.vars[scale.name]});
             }
-
-            // Todo: Delete with USE_OLD_LAYOUT
-            std::map<std::string, std::string> varGroupMap;
-            for (const auto& varDesc : description_.getVariables())
-            {
-                varGroupMap.insert(splitVar(varDesc.name));
-            }
-            // Todo: Delete with USE_OLD_LAYOUT
 
             // Create Globals
             for (auto& global : description_.getGlobals())
@@ -181,14 +159,7 @@ namespace Ingester
 
                 if (varDesc.coordinates)
                 {
-                    auto coordStr = *varDesc.coordinates;
-
-                    if (USE_OLD_LAYOUT)
-                    {
-                        coordStr = fixCoordinatesStr(coordStr, varGroupMap);
-                    }
-
-                    var.atts.add<std::string>("coordinates", { coordStr }, {1});
+                    var.atts.add<std::string>("coordinates", { *varDesc.coordinates }, {1});
                 }
 
                 if (varDesc.range)
@@ -286,37 +257,4 @@ namespace Ingester
 
       return isInt;
   }
-
-  // Todo: Delete with USE_OLD_LAYOUT
-  std::string IodaEncoder::fixCoordinatesStr(const std::string& coordStr,
-                                             std::map<std::string, std::string> varMap)
-  {
-      std::vector<std::string> strs;
-      boost::split(strs, coordStr, boost::is_any_of(" "));
-
-      std::stringstream newCoordStr;
-      for (auto str : strs)
-      {
-          if (varMap.find(str) != varMap.end())
-          {
-              newCoordStr << str << "@" << varMap.at(str) << " ";
-          }
-          else
-          {
-              newCoordStr << str << " ";
-          }
-      }
-
-      return newCoordStr.str();
-  }
-  // Todo: Delete with USE_OLD_LAYOUT
-
-  // Todo: Delete with USE_OLD_LAYOUT
-  std::pair<std::string, std::string> IodaEncoder::splitVar(const std::string& varNameStr)
-  {
-      std::vector<std::string> parts;
-      boost::split(parts, varNameStr, boost::is_any_of("@"));
-      return std::pair<std::string, std::string>(parts[0], parts[1]);
-  }
-  // Todo: Delete with USE_OLD_LAYOUT
 }  // namespace Ingester
