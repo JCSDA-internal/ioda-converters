@@ -20,11 +20,8 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_ncio as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
-
-vName = {
-    'A': "snowDepth",
-}
 
 locationKeyList = [
     ("latitude", "float"),
@@ -32,7 +29,13 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {}
+obsvars = {
+    'snow_depth': 'snowDepth',
+}
+
+AttrData = {
+    'converter': os.path.basename(__file__),
+}
 
 os.environ["TZ"] = "UTC"
 
@@ -42,12 +45,21 @@ class AFWA(object):
     def __init__(self, filename, mask, writer):
         self.filename = filename
         self.mask = mask
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.units_values = {}
         self.writer = writer
+        self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.units = {}
         self._read()
 
     def _read(self):
+        # set up variable names for IODA
+        for iodavar in ['snowDepth']:
+            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+            self.units[iodavar] = 'm'
         data = pygrib.open(self.filename)
         lat, lon = data[1].latlons()
         lons = lon[:].ravel()
@@ -80,31 +92,36 @@ class AFWA(object):
         lon, lat = pj(x, y, inverse=True)
         lons = lon[:].ravel()
         lats = lat[:].ravel()
+        # setup snowCover and mask_flag
+        errs = 0.0*vals.astype('float32')
+        qflg = 0*vals.astype('int32')
+        times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":
             mask = np.logical_not(vals.mask)
             vals = vals[mask]
+            errs = errs[mask]
+            qflg = qflg[mask]
             lons = lons[mask]
             lats = lats[mask]
+            times = times[mask]
         # get global attributes
         start_datetime = data[1].analDate
         base_datetime = start_datetime.isoformat() + "Z"
         data.close()
-
-        self.units_values[vName['A']] = 'm'
-
-        valKey = vName['A'], self.writer.OvalName()
-        errKey = vName['A'], self.writer.OerrName()
-        qcKey = vName['A'], self.writer.OqcName()
+        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(lons)):
-
-            locKey = lats[i], lons[i], base_datetime
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.0
-            self.data[0][locKey][qcKey] = 0
-
-            AttrData['date_time_string'] = base_datetime
+            times[i] = base_datetime
+        self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
+        self.loc_mdata['latitude'] = lats
+        self.loc_mdata['longitude'] = lons
+        for iodavar in ['snowDepth']:
+            self.outdata[self.varDict[iodavar]['valKey']] = vals
+            self.outdata[self.varDict[iodavar]['errKey']] = errs
+            self.outdata[self.varDict[iodavar]['qcKey']] = qflg
+        self.writer._nvars = len(obsvars)
+        self.writer._nlocs = len(self.loc_mdata['datetime'])
 
 
 def main():
@@ -133,9 +150,7 @@ def main():
     # Read in the profiles
     snod = AFWA(args.input, args.mask, writer)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(snod.data)
-
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData, snod.units_values)
+    writer.BuildNetcdf(snod.outdata, snod.loc_mdata, snod.var_mdata, AttrData, snod.units)
 
 
 if __name__ == '__main__':
