@@ -19,11 +19,8 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_ncio as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
-
-vName = {
-    'A': "soilMoistureVolumetric",
-}
 
 locationKeyList = [
     ("latitude", "float"),
@@ -31,22 +28,43 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {}
+obsvars = {
+    'soil_moisture': 'soilMoistureVolumetric',
+}
+
+AttrData = {
+    'converter': os.path.basename(__file__),
+}
 
 
 class smap(object):
-
     def __init__(self, filename, mask, writer):
         self.filename = filename
         self.mask = mask
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.units_values = {}
         self.writer = writer
+        self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.units = {}
         self._read()
 
+    # Open input file and read relevant info
     def _read(self):
-
+        # set up variable names for IODA
+        for iodavar in ['soilMoistureVolumetric']:
+            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+            self.units[iodavar] = 'm3m-3'
+        # open input file name
         ncd = nc.Dataset(self.filename, 'r')
+        # set and get global attributes
+        self.satellite = "SMAP"
+        self.sensor = "radar and radiometer"
+        AttrData["satellite"] = self.satellite
+        AttrData["sensor"] = self.sensor
+
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
         _FillValue = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('_FillValue')
@@ -57,6 +75,7 @@ class smap(object):
         lons = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['longitude'][:].ravel()
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
+        times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":
             with np.errstate(invalid='ignore'):
@@ -66,6 +85,7 @@ class smap(object):
             lons = lons[mask]
             errs = errs[mask]
             qflg = qflg[mask]
+            times = times[mask]
 
         # get datetime from filename
         str_split = self.filename.split("_")
@@ -73,11 +93,8 @@ class smap(object):
         my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
         base_datetime = my_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        qflg = qflg.astype(int)
-        self.units_values[vName['A']] = 'm3 m-3'
-        valKey = vName['A'], self.writer.OvalName()
-        errKey = vName['A'], self.writer.OerrName()
-        qcKey = vName['A'], self.writer.OqcName()
+        qflg = qflg.astype('int32')
+        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(lons)):
 
@@ -91,18 +108,16 @@ class smap(object):
             else:
                 qflg[i] = 1
 
-            locKey = lats[i], lons[i], base_datetime
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
-            self.data[0][locKey][qcKey] = qflg[i]
-
-        # write global attributes out
-        self.satellite = "SMAP"
-        self.sensor = "radar and radiometer"
-
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
-        AttrData['date_time_string'] = base_datetime
+            times[i] = base_datetime
+        self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
+        self.loc_mdata['latitude'] = lats
+        self.loc_mdata['longitude'] = lons
+        for iodavar in ['soilMoistureVolumetric']:
+            self.outdata[self.varDict[iodavar]['valKey']] = vals
+            self.outdata[self.varDict[iodavar]['errKey']] = errs
+            self.outdata[self.varDict[iodavar]['qcKey']] = qflg
+        self.writer._nvars = len(obsvars)
+        self.writer._nlocs = len(self.loc_mdata['datetime'])
 
 
 def main():
@@ -131,9 +146,7 @@ def main():
     # Read in the profiles
     ssm = smap(args.input, args.mask, writer)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(ssm.data)
-
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData, ssm.units_values)
+    writer.BuildNetcdf(ssm.outdata, ssm.loc_mdata, ssm.var_mdata, AttrData, ssm.units)
 
 
 if __name__ == '__main__':
