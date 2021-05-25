@@ -104,6 +104,8 @@ all_LocKeyList = {
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
+    'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
+    'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -384,6 +386,8 @@ oz_sensors = [
     'ompsnp',
     'ompstc8',
     'ompslp',
+    'mls55',
+    'ompsnm',
 ]
 
 # units
@@ -460,6 +464,8 @@ units_values = {
     'solar_azimuth_angle': 'degree',
     'modis_deep_blue_flag': '1',
     'row_anomaly_index': '1',
+    'total_ozone_error_flag': '1',
+    'profile_ozone_error_flag': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
     'tropopause_pressure': 'Pa',
@@ -628,6 +634,8 @@ class Conv(BaseGSI):
                 if (v != "sst"):
                     ncout.createDimension(
                         "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+                    ncout.createDimension(
+                        "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -648,7 +656,10 @@ class Conv(BaseGSI):
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
-                                dims = ("nlocs", "nlevs")
+                                if vname == "atmosphere_pressure_coordinate_interface":
+                                    dims = ("nlocs", "ninterfaces")
+                                else:
+                                    dims = ("nlocs", "nlevs")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                 ncout.close()
@@ -1632,7 +1643,7 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        if self.sensor != "ompslp":
+        if (self.sensor not in ["ompslp", "mls55"]):
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1683,7 +1694,7 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
-        if(self.sensor == "ompslp"):
+        if (self.sensor in ["ompslp", "mls55"]):
             vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
