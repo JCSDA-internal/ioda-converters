@@ -13,24 +13,24 @@ _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
 
 
-def OvalName(self):
-    return self._oval_name
+def OvalName():
+    return _oval_name
 
 
-def ObiastermName(self):
-    return self._obiasterm_name
+def ObiastermName():
+    return _obiasterm_name
 
 
-def ObiaspredName(self):
-    return self._obiaspred_name
+def ObiaspredName():
+    return _obiaspred_name
 
 
-def OerrName(self):
-    return self._oerr_name
+def OerrName():
+    return _oerr_name
 
 
-def OqcName(self):
-    return self._oqc_name
+def OqcName():
+    return _oqc_name
 
 
 class IodaWriter(object):
