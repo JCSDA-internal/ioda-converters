@@ -74,7 +74,7 @@ phases:
   build:
     commands:
       - cd /build_container
-      - ecbuild /jcsda/ioda-bundle
+      - ecbuild -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle
       - cd /build_container/iodaconv
       - make -j4 
 

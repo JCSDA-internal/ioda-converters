@@ -101,7 +101,7 @@ phases:
         && echo $CC
         && echo $CXX
         && echo $FC
-        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild /jcsda/ioda-bundle
+        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle
         && cd /build_container/iodaconv
         && make -j4"
 
