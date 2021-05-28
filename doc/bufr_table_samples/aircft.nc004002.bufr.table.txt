@@ -1,0 +1,145 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC004002 | A63232 | MTYP 004-002  Manual PIREP (PIREP)                       |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| BID      | 352001 | BULLETIN ID DATA                                         |
+| RAWRPT   | 352002 | RAW REPORT                                               |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| AFRID    | 362030 | AIRCRAFT REPORT ID DATA                                  |
+| AFTMP    | 362032 | AIRCRAFT TEMPERATURE DATA                                |
+| AFWND    | 362033 | AIRCRAFT WIND DATA                                       |
+| AFICG    | 362035 | AIRCRAFT ICING DATA                                      |
+| AFCLD    | 362036 | AIRCRAFT CLOUD DATA                                      |
+| APTRB    | 362037 | PIREP TURBULENCE DATA                                    |
+| APPWX    | 362038 | PIREP PRESENT WEATHER DATA                               |
+|          |        |                                                          |
+| ACTP     | 001009 | TYPE OF COMMERCIAL AIRCRAFT                              |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLAT     | 005002 | LATITUDE (COARSE ACCURACY)                               |
+| CLON     | 006002 | LONGITUDE (COARSE ACCURACY)                              |
+| PSAL     | 007196 | PRESSURE ALTITUDE RELATIVE TO MEAN SEA LEVEL             |
+| FLVL     | 007197 | FLIGHT LEVEL                                             |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| TRBX10   | 011236 | TURBULENCE INDEX FOR PERIOD (TOB-1 MIN) -> TOB           |
+| TRBX21   | 011237 | TURBULENCE INDEX FOR PERIOD (TOB-2 MIN) -> (TOB-1 MIN)   |
+| TRBX32   | 011238 | TURBULENCE INDEX FOR PERIOD (TOB-3 MIN) -> (TOB-2 MIN)   |
+| TRBX43   | 011239 | TURBULENCE INDEX FOR PERIOD (TOB-4 MIN) -> (TOB-3 MIN)   |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| HOVI     | 020001 | HORIZONTAL VISIBILITY                                    |
+| PRWE     | 020003 | PRESENT WEATHER                                          |
+| CLAM     | 020011 | CLOUD AMOUNT                                             |
+| CLTP     | 020012 | CLOUD TYPE                                               |
+| HOCB     | 020013 | HEIGHT OF BASE OF CLOUD                                  |
+| HOCT     | 020014 | HEIGHT OF TOP OF CLOUD                                   |
+| AFIC     | 020041 | AIRFRAME ICING                                           |
+| HBOI     | 020194 | HEIGHT OF BASE OF ICING                                  |
+| HTOI     | 020195 | HEIGHT OF TOP OF ICING                                   |
+| HBWX     | 020196 | HEIGHT OF BASE OF PRESENT WEATHER                        |
+| HTWX     | 020197 | HEIGHT OF TOP OF PRESENT WEATHER                         |
+| QMAT     | 033193 | SDMEDIT QUALITY MARK FOR TEMPERATURE                     |
+| QMWN     | 033195 | SDMEDIT QUALITY MARK FOR WIND                            |
+| CORN     | 033215 | CORRECTED REPORT INDICATOR                               |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+| RRSTG    | 058008 | RAW REPORT STRING                                        |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC004002 | YYMMDD  HHMM  RCPTIM  BID  AFRID  {RAWRPT}  AFTMP  AFWND  {AFCLD} |
+| NC004002 | {AFICG}  {APTRB}  {APPWX}  ACTP  HOVI                             |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RAWRPT   | RRSTG                                                             |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| AFRID    | RPID  CORN  CLAT  CLON  FLVL  PSAL                                |
+|          |                                                                   |
+| AFTMP    | QMAT  TMDB                                                        |
+|          |                                                                   |
+| AFWND    | QMWN  WDIR  WSPD                                                  |
+|          |                                                                   |
+| AFICG    | AFIC  HBOI  HTOI                                                  |
+|          |                                                                   |
+| AFCLD    | CLAM  CLTP  HOCB  HOCT                                            |
+|          |                                                                   |
+| APTRB    | DGOT  HBOT  HTOT                                                  |
+|          |                                                                   |
+| APPWX    | PRWE  HBWX  HTWX                                                  |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| ACTP     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLAT     |    2 |       -9000 |  15 | DEGREES                  |-------------|
+| CLON     |    2 |      -18000 |  16 | DEGREES                  |-------------|
+| PSAL     |    1 |       -4000 |  20 | METERS                   |-------------|
+| FLVL     |    1 |       -4000 |  20 | METERS                   |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| TRBX10   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| TRBX21   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| TRBX32   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| TRBX43   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| HOVI     |   -1 |           0 |  13 | METERS                   |-------------|
+| PRWE     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| CLAM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CLTP     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| HOCB     |   -1 |         -40 |  11 | METERS                   |-------------|
+| HOCT     |   -1 |         -40 |  11 | METERS                   |-------------|
+| AFIC     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HBOI     |   -1 |         -40 |  16 | METERS                   |-------------|
+| HTOI     |   -1 |         -40 |  16 | METERS                   |-------------|
+| HBWX     |   -1 |         -40 |  16 | METERS                   |-------------|
+| HTWX     |   -1 |         -40 |  16 | METERS                   |-------------|
+| QMAT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMWN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CORN     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+| RRSTG    |    0 |           0 |  64 | CCITT IA5                |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
