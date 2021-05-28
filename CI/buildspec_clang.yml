@@ -56,13 +56,6 @@ phases:
       # ioda-converters (testing repo)
       - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH iodaconv /jcsda/ioda-bundle develop
 
-      ##  ecmwf repos
-      # atlas
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/atlas $CODEBUILD_GIT_BRANCH_FORK atlas /jcsda/ioda-bundle release-stable
-
-      #fckit
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/fckit $CODEBUILD_GIT_BRANCH_FORK fckit /jcsda/ioda-bundle release-stable
-
       # jedi-cmake
       - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH jedicmake /jcsda/ioda-bundle develop
 
@@ -81,7 +74,7 @@ phases:
   build:
     commands:
       - cd /build_container
-      - ecbuild /jcsda/ioda-bundle
+      - ecbuild -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle
       - cd /build_container/iodaconv
       - make -j4 
 
