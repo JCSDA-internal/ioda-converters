@@ -1,0 +1,176 @@
+# (C) Copyright 2021 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t12z.airsev.tm00.bufr_d"
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
+        - mnemonics: [SAID, SIID, FOVN, SAZA, SOZA, BEARAZ, SOLAZI, TOCC]
+#       - mnemonics: [ALBD]
+#         channels: 1-4
+        - mnemonics: [CHNM, LOGRCW, TMBR]
+          channels: 1-10
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          satelliteId:
+            mnemonic: SAID
+          sensorID:
+            mnemonic: SIID
+          channelNumber:
+            mnemonic: CHNM
+          centralWavenumber:
+            mnemonic: LOGRCW
+          fieldOfViewNumber:
+            mnemonic: FOVN
+          solarZenithAngle:
+            mnemonic: SOZA
+          solarAzimuthAngle:
+            mnemonic: SOLAZI
+          sensorZenithAngle:
+            mnemonic: SAZA
+          sensorAzimuthAngle:
+            mnemonic: BEARAZ
+          cloudAmount:
+            mnemonic: TOCC
+#         albedo:
+#           mnemonic: ALBD
+          brightnessTemperature:
+            mnemonic: TMBR
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t12z.airsev.tm00.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/brightnessTemperature.nrows
+        - name: "nchans"
+          size: variables/brightnessTemperature.ncols
+#       - name: "nchans_albedo"
+#         size: variables/albedo.ncols
+
+      globals:
+        - name: "MetaData/platformCommonName"
+          type: string
+          value: "AIRS"
+
+        - name: "MetaData/platformLongDescription"
+          type: string
+          value: "MTYP 021-249 EVERY FOV AIRS/AMSU-A/HSB 1B BTEMPS(AQUA)"
+
+      variables:
+        - name: "MetaData/satelliteId"
+          source: variables/satelliteId
+          dimensions: ["nlocs"]
+          longName: "Satellite identification"
+          units: ""
+
+        - name: "MetaData/channelNumber"
+          source: variables/channelNumber
+          dimensions: ["nchans"]
+          longName: "Channel number"
+          units: ""
+
+        - name: "MetaData/centralWavenumber"
+          source: variables/centralWavenumber
+          dimensions: ["nchans"]
+          longName: "Central wavenumber (log10)"
+          units: ""
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: ["nlocs"]
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: ["nlocs"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          dimensions: ["nlocs"]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "MetaData/fieldOfViewNumber"
+          source: variables/fieldOfViewNumber
+          dimensions: ["nlocs"]
+          longName: "Field of view number"
+          units: ""
+
+        - name: "MetaData/solarZenithAngle"
+          source: variables/solarZenithAngle
+          dimensions: ["nlocs"]
+          longName: "Solar zenith angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "MetaData/solarAzimuthAngle"
+          source: variables/solarAzimuthAngle
+          dimensions: ["nlocs"]
+          longName: "Solar azimuth angle"
+          units: "degrees"
+          range: [0, 360]
+
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/sensorZenithAngle
+          dimensions: ["nlocs"]
+          longName: "Sensor zenith angle"
+          units: "degrees"
+          range: [0, 90]
+
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/sensorAzimuthAngle
+          dimensions: ["nlocs"]
+          longName: "Sensor azimuth angle"
+          units: "degrees"
+          range: [0, 360]
+
+        - name: "MetaData/cloudAmount"
+          coordinates: "longitude latitude"
+          source: variables/cloudAmount
+          dimensions: ["nlocs"]
+          longName: "Cloud fraction"
+          units: "percent"
+          range: [0, 100]
+
+#       - name: "ObsValue/albedo"
+#         coordinates: "longitude latitude nchans_albedo"
+#         source: variables/albedo
+#         dimensions: ["nlocs", "nchans_albedo"]
+#         longName: "albedo"
+#         units: "percent"
+#         range: [0, 100]
+#         chunks: [1000, 15]
+#         compressionLevel: 4
+
+        - name: "ObsValue/brightnessTemperature"
+          coordinates: "longitude latitude nchans"
+          source: variables/brightnessTemperature
+          dimensions: ["nlocs", "nchans"]
+          longName: "Brightness temperature"
+          units: "K"
+          range: [120, 500]
+          chunks: [1000, 15]
+          compressionLevel: 4

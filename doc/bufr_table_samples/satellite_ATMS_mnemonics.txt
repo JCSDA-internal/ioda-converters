@@ -1,0 +1,81 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC021203 | A10061 | MTYP 021-203 ATMS BRIGHTNESS TEMPERATURE DATA            |
+|          |                                                                   |
+| NC021203 | SAID  OGCE  GSES  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000  |
+| NC021203 | ORBN  SLNM  FOVN  ATMSGQ  ATMSSQ  NGQI  LTLONH  201129  HMSL      |
+| NC021203 | 201000  SAZA  BEARAZ  SOZA  SOLAZI  SACV  (ATMSCH)                |
+|          |                                                                   |
+| ATMSCH   | 350206 | NPP ATMS CHANNEL DATA                                    |
+| ATMSCH   | CHNM  202131  SCCF  SCBW  202000  ANPO  TMANT  TMBR  NEDTCO       |
+| ATMSCH   | NEDTWA  ATMSCHQ                                                   |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| SECO     | 004006 | SECOND                                                   |
+| SAID     | 001007 | SATELLITE IDENTIFIER                                     |
+| SIID     | 002019 | SATELLITE INSTRUMENTS                                    |
+| OGCE     | 001033 | IDENTIFICATION OF ORIGINATING/GENERATING CENTER          |
+| GSES     | 001034 | IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTER      |
+| SCLF     | 002020 | SATELLITE CLASSIFICATION                                 |
+| ORBN     | 005040 | ORBIT NUMBER                                             |
+| SLNM     | 005041 | SCAN LINE NUMBER                                         |
+| FOVN     | 005043 | FIELD OF VIEW NUMBER                                     |
+| ATMSGQ   | 033079 | GRANULE LEVEL QUALITY FLAGS                              |
+| ATMSSQ   | 033080 | SCAN LEVEL QUALITY FLAGS                                 |
+| NGQI     | 033078 | GEOLOCATION QUALITY                                      |
+| SAZA     | 007024 | SATELLITE ZENITH ANGLE                                   |
+| SOZA     | 007025 | SOLAR ZENITH ANGLE                                       |
+| BEARAZ   | 005021 | BEARING OR AZIMUTH                                       |
+| SOLAZI   | 005022 | SOLAR AZIMUTH                                            |
+| SACV     | 025075 | SATELLITE ANTENNA CORRECTIONS VERSION NUMBER             |
+| LTLONH   | 301021 | HIGH ACCURACY LATITUDE/LONGITUDE POSITION                |
+| LTLONH   | CLATH  CLONH                                                      |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| HMSL     | 007002 | HEIGHT OR ALTITUDE                                       |
+| CHNM     | 005042 | CHANNEL NUMBER                                           |
+| SCCF     | 002153 | SATELLITE CHANNEL CENTER FREQUENCY                       |
+| SCBW     | 002154 | SATELLITE CHANNEL BAND WIDTH                             |
+| ANPO     | 002104 | ANTENNA POLARIZATION                                     |
+| TMANT    | 012066 | ANTENNA TEMPERATURE                                      |
+| TMBR     | 012163 | BRIGHTNESS TEMPERATURE (HIGH ACCURACY)                   |
+| NEDTCO   | 012158 | NOISE-EQUIVALENT DELTA TEMPERATURE VIEWING COLD TARGET   |
+| NEDTWA   | 012159 | NOISE-EQUIVALENT DELTA TEMPERATURE VIEWING WARM TARGET   |
+| ATMSCHQ  | 033081 | CHANNEL DATA QUALITY FLAGS                               |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| SIID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| OGCE     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| GSES     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| ORBN     |    0 |           0 |  24 | NUMERIC                  |-------------|
+| SLNM     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| FOVN     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| ATMSGQ   |    0 |           0 |  16 | FLAG TABLE               |-------------|
+| ATMSSQ   |    0 |           0 |  20 | FLAG TABLE               |-------------|
+| NGQI     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HMSL     |   -1 |         -40 |  16 | M                        |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| SOLAZI   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| SAZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| SOZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| SACV     |    0 |           0 |   5 | NUMERIC                  |-------------|
+| CHNM     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| SCCF     |   -8 |           0 |  26 | HZ                       |-------------|
+| SCBW     |   -8 |           0 |  26 | HZ                       |-------------|
+| ANPO     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| TMANT    |    2 |           0 |  16 | K                        |-------------|
+| NEDTCO   |    2 |           0 |  12 | K                        |-------------|
+| NEDTWA   |    2 |           0 |  12 | K                        |-------------|
+| ATMSCHQ  |    0 |           0 |  12 | FLAG TABLE               |-------------|
+| TMBR     |    2 |           0 |  16 | KELVIN                   |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
