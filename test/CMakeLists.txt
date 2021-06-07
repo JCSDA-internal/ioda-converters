@@ -43,6 +43,8 @@ list( APPEND test_input
   testinput/smos_l2nrt_ssm.nc
   testinput/ascat_ssm.nc
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
+  testinput/airnow_sites.dat
+  testinput/airnow_2020081306.dat
 )
 
 list( APPEND test_output
@@ -81,6 +83,7 @@ list( APPEND test_output
   testoutput/smos_ssm.nc
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
+  testoutput/airnow_2020081306.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -526,6 +529,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2.nc"
                           tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/airnow2ioda-v2.py
+                          -i testinput/airnow_2020081306.dat
+                          -s testinput/airnow_sites.dat
+                          -o testrun/airnow_2020081306.nc"
+                          airnow_2020081306.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
