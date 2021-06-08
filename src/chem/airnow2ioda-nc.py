@@ -5,14 +5,16 @@ import numpy as np
 import inspect, os, sys, argparse
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 
-# IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-# if not IODA_CONV_PATH.is_dir():
-#    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-# sys.path.append(str(IODA_CONV_PATH.resolve()))
-# import meteo_utils
-# import ioda_conv_ncio as iconv
-# from orddicts import DefaultOrderedDict
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+import meteo_utils
+import ioda_conv_ncio as iconv
+from collections import defaultdict, OrderedDict
+from orddicts import DefaultOrderedDict
 
 def read_monitor_file(sitefile=None):
 
@@ -112,77 +114,50 @@ if __name__ == '__main__':
  print('infile=',args.input,args.sitefile)
  f=add_data(args.input,args.sitefile)
 
- f3=f.dropna(subset=['OZONE','PM2.5'],how='all') 
-# f3=f.dropna(subset=['PM2.5'])
+ f3=f.dropna(subset=['OZONE','PM2.5'],how='all')
  nlocs,columns=f3.shape
+ 
+ obsvars = {  'pm25_tot': 'pm25_tot',
+    'o3': 'o3',}
+ AttrData = { 'converter': os.path.basename(__file__), }
+ 
+ locationKeyList = [ ("latitude", "float"), ("longitude", "float"),
+   ("station_elevation","float"), ("height","float"), ("station_id","string"),
+   ("datetime", "string")]
 
- a=nc.Dataset(args.output,'w')
- nvars_dim=a.createDimension('nvars',2)
- nlocs_dim=a.createDimension('nlocs',nlocs)
- nstring_dim=a.createDimension('nstring',50)
- ndatetime_dim=a.createDimension('ndatetime',20)
-
- x1nvars=a.createVariable('nvars','f4',('nvars',))
- x1nvars[:]=0.
- x1nlocs=a.createVariable('nlocs','f4',('nlocs',))
- x1nlocs[:]=0.
- x1nstring=a.createVariable('nstring','f4',('nstring',))
- x1nstring[:]=0.
- x1ndatetime=a.createVariable('ndatetime','f4',('ndatetime',))
- x1ndatetime[:]=0.
-
- meta_group=a.createGroup('MetaData')
- x2=meta_group.createVariable('record_number','i4',('nlocs',))
- x2[:]=2
- x3=meta_group.createVariable('latitude','f4',('nlocs',))
- x3[:]=np.array(f3['latitude'])
- x4=meta_group.createVariable('longitude','f4',('nlocs',))
- x4[:]=np.array(f3['longitude'])
- x5=meta_group.createVariable('station_elevation','f4',('nlocs',))
- x5[:]=10.
- x5a=meta_group.createVariable('height','f4',('nlocs',))
- x5a.units='m'
- x5a[:]=10. 
- x6=meta_group.createVariable('station_id',str,('nlocs',))
- c=np.empty([nlocs],'S20')
- c[:]=np.array(f3.siteid)
- x6[:]=c
- x7=meta_group.createVariable('datetime',str,('nlocs',))
+ writer = iconv.NcWriter(args.output, locationKeyList)
+ 
+ varDict = defaultdict(lambda: defaultdict(dict))
+ outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+ loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+ var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+ units = {}
+ units['pm25_tot']='microgram/m3'
+ units['o3']='ppmV'
+ 
+ for i in ['pm25_tot','o3']:
+  varDict[i]['valKey']=i,writer.OvalName()
+  varDict[i]['errKey']=i,writer.OerrName()
+  varDict[i]['qcKey']=i,writer.OqcName()
+ 
  d=np.empty([nlocs],'S20')
- d[:]=f3.time[1].strftime('%Y-%m-%dT%H:%M:%SZ')*nlocs
- x7[:]=d
-# time difference
- x8=meta_group.createVariable('time','f4',('nlocs',))
- x8[:]='0.0'
-
- value_group=a.createGroup('ObsValue')
- x9=value_group.createVariable('pm25_tot','f4',('nlocs',))
- x9[:]=np.array(f3['PM2.5'].fillna(nc.default_fillvals['f4']))
- x12=value_group.createVariable('o3','f4',('nlocs',))
- x12[:]=np.array((f3['OZONE']/1000).fillna(nc.default_fillvals['f4']))
-
- err_group=a.createGroup('ObsError')
- x10=err_group.createVariable('pm25_tot','f4',('nlocs',))
- x10[:]=0.1
- x13=err_group.createVariable('o3','f4',('nlocs',))
- x13[:]=0.1
+ d[:]=f3.time[1].strftime('%Y-%m-%dT%H:%M:%SZ')
+ loc_mdata['datetime']=writer.FillNcVector(d,'datetime')
+ loc_mdata['latitude']=np.array(f3['latitude'])
+ loc_mdata['longitude']=np.array(f3['longitude'])
+ loc_mdata['height']=np.full((nlocs),10.)
+ loc_mdata['station_elevation']=np.full((nlocs),10.)
  
- qc_group=a.createGroup('PreQC')
- x11=qc_group.createVariable('pm25_tot','i4',('nlocs',))
- x11[:]=0
- x14=qc_group.createVariable('o3','i4',('nlocs',))
- x14[:]=0
-
- var_group=a.createGroup('VarMetaData')  
- x1=var_group.createVariable('variable_names',str,('nvars',))
- varstring=np.empty(2,'S50')
- varstring[:]=['pm25_tot','o3']
- x1[:]=varstring
-
- a.nvars=np.int32(2)
- a.nlocs=np.int32(nlocs)
- ctime=f3.time[1].strftime('%Y%m%d%H')
+ c=np.empty([nlocs],dtype=str)
+ c[:]=np.array(f3.siteid)
+ loc_mdata['station_id']=writer.FillNcVector(c,'string')
  
- print('ctime=',ctime)
- a.date_time=np.int32(ctime)
- a.close()
+ outdata[varDict['pm25_tot']['valKey']]=np.array(f3['PM2.5'].fillna(nc.default_fillvals['f4']))
+ outdata[varDict['o3']['valKey']]=np.array((f3['OZONE']/1000).fillna(nc.default_fillvals['f4']))
+ for i in ['pm25_tot','o3']:
+  outdata[varDict[i]['errKey']]=np.full((nlocs),0.1)
+  outdata[varDict[i]['qcKey']]=np.full((nlocs),0)
+ 
+ writer._nvars=2
+ writer._nlocs=nlocs  
+ writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units)
