@@ -87,7 +87,19 @@ class Goes16ToIodav2:
         self._output_dataset['/MetaData/Elevation_Angle'][:] = elevation_angle_data_array
         self._output_dataset['/MetaData/Scan_Angle'][:] = scan_angle_data_array
 
+    def _get_metadata_from_input_file_path(self):
+        metadata = os.path.basename(self._input_file_path).split('_')
+        self._system_environment = metadata[0]
+        self._data_short_name = metadata[1]
+        self._platform_identifier = metadata[2]
+        self._start_date = metadata[3]
+        self._end_date = metadata[4]
+        self._creation_date = metadata[5]
+
     def convert_goes16_to_iodav2(self):
+
+        self._get_metadata_from_input_file_path()
+
         self._create_groups()
         self._import_latlon_data()
         self._input_dataset.set_auto_scale(True)
