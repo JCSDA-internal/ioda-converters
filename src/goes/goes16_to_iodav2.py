@@ -3,10 +3,13 @@
 import argparse
 import os
 import sys
+from enum import Enum
+
 import numpy
 import datetime
 import pytz
 from netCDF4 import Dataset
+from solo.date import Date
 
 
 class Goes16ToIodav2:
@@ -17,8 +20,12 @@ class Goes16ToIodav2:
         self._output_file_path = args.output_file_path
         self._overwrite = args.overwrite
         self._check_arguments()
-        self._create_datasets()
-        self._create_groups()
+
+        # Set known variables
+        self._instrument = 'ABI'
+        self._processing_level = 'L1b'
+        self._product_acronym = 'Rad'
+        self._platform_identifier = 'G16'
 
     def _check_arguments(self):
         good_args = True
@@ -88,18 +95,21 @@ class Goes16ToIodav2:
         self._output_dataset['/MetaData/Scan_Angle'][:] = scan_angle_data_array
 
     def _get_metadata_from_input_file_path(self):
-        metadata = os.path.basename(self._input_file_path).split('_')
-        self._system_environment = metadata[0]
-        self._data_short_name = metadata[1]
-        self._platform_identifier = metadata[2]
-        self._start_date = metadata[3]
-        self._end_date = metadata[4]
-        self._creation_date = metadata[5]
+        metadata_array = os.path.splitext(os.path.basename(self._input_file_path))[0].split('_')
+        self._system_environment = metadata_array[0]
+        self._data_short_name = metadata_array[1]
+        self._abi_sector_type = Goes16ToIodav2._string_to_abisectortype(self._data_short_name)
+        self._abi_mode = Goes16ToIodav2._string_to_abimode(self._data_short_name)
+        self._abi_channel = int(self._data_short_name[-2:])
+        self._start_date = Date(metadata_array[3][1:-1])
+        self._end_date = Date(metadata_array[4][1:-1])
+        self._creation_date = Date(metadata_array[5][1:-1])
 
     def convert_goes16_to_iodav2(self):
-
         self._get_metadata_from_input_file_path()
+        exit()
 
+        self._create_datasets()
         self._create_groups()
         self._import_latlon_data()
         self._input_dataset.set_auto_scale(True)
@@ -156,6 +166,36 @@ class Goes16ToIodav2:
                                  numpy.dtype('S1'): 'c',
                                  numpy.dtype('object'): 'str'}
         return numpy_to_netcdf_dtype[numpy_dtype]
+
+    @staticmethod
+    def _string_to_abimode(string):
+        if 'M4' in string:
+            return ABIMode.ABI_SCAN_MODE_4
+        if 'M6' in string:
+            return ABIMode.ABI_SCAN_MODE_6
+
+    @staticmethod
+    def _string_to_abisectortype(string):
+        if 'F' in string:
+            return ABISectorType.FULL_DISK
+        if 'C' in string:
+            return ABISectorType.CONUS
+        if 'M1' in string:
+            return ABISectorType.MESOSCALE_REGION_1
+        if 'M2' in string:
+            return ABISectorType.MESOSCALE_REGION_2
+
+
+class ABIMode(Enum):
+    ABI_SCAN_MODE_4 = 1
+    ABI_SCAN_MODE_6 = 2
+
+
+class ABISectorType(Enum):
+    FULL_DISK = 1
+    CONUS = 2
+    MESOSCALE_REGION_1 = 3
+    MESOSCALE_REGION_2 = 4
 
 
 def parse_arguments():
