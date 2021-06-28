@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import math
 import os
 import sys
 import numpy
@@ -81,11 +82,15 @@ class Goes16ToIodav2LatLonCreator:
         self._create_netcdf_variable("/MetaData/latitude", 'nlocs', lat)
         self._create_netcdf_variable("/MetaData/longitude", 'nlocs', lon)
 
+        variables = self._input_dataset.variables['geospatial_lat_lon_extent']
+        nadir_lon = variables.geospatial_lon_nadir
+
+        #Add nadir_lon attribute and others later on here
+
         self._close_datasets()
 
     def _calc_lat_lon(self, selected_x, selected_y):
 
-        deg_to_rad = numpy.pi / 180.0
         rad_to_deg = 180.0 / numpy.pi
 
         variables = self._input_dataset.variables['goes_imager_projection']
@@ -93,7 +98,7 @@ class Goes16ToIodav2LatLonCreator:
         r_eq = variables.semi_major_axis
         r_pol = variables.semi_minor_axis
         h = variables.perspective_point_height + variables.semi_major_axis
-        lon_0 = variables.longitude_of_projection_origin * deg_to_rad
+        lon_0 = variables.longitude_of_projection_origin
 
         h_sqr = numpy.power(h, 2.0)
         r_eq_sqr = numpy.power(r_eq, 2.0)
@@ -124,6 +129,13 @@ class Goes16ToIodav2LatLonCreator:
         lat = (numpy.arctan2((r_eq_sqr * s_z),
                              (r_pol_sqr * numpy.sqrt(h_minus_s_x * h_minus_s_x + s_y * s_y)))) * rad_to_deg
         lon = (lon_0 - numpy.arctan2(s_y, h_minus_s_x)) * rad_to_deg
+
+        lat = numpy.nan_to_num(lat, nan=91.0)
+        lon = numpy.nan_to_num(lon, nan=361.0)
+
+        yaw_flip_flag = self._input_dataset.variables['yaw_flip_flag'][0]
+        if not yaw_flip_flag:
+            lat = lat[::-1]
 
         return lat, lon
 
