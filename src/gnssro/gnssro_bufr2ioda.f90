@@ -327,8 +327,6 @@ endif
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
 call check( nf90_def_dim(ncid, 'nlocs', ndata,   nlocs_dimid) )
 call check( nf90_def_dim(ncid, 'nrecs', nrec,    nrecs_dimid) )
-call check( nf90_def_dim(ncid, 'nobs',  ndata*nvars,   nobs_dimid) )
-call check( nf90_def_dim(ncid, 'nvars', nvars,   nvars_dimid) )
 call check( nf90_def_dim(ncid, 'ndatetime', ndatetime,   ndatetime_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_var(ncid, "latitude@MetaData",      NF90_FLOAT, nlocs_dimid, varid_lat) )
