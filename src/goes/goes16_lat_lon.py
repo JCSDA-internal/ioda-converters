@@ -8,7 +8,7 @@ import numpy
 from netCDF4 import Dataset
 
 
-class Goes16ToIodav2LatLonCreator:
+class Goes16LatLon:
 
     def __init__(self, args):
         self._input_file_path = args.input_file_path
@@ -48,11 +48,11 @@ class Goes16ToIodav2LatLonCreator:
         self._create_group('MetaData')
 
     def _create_netcdf_variable(self, name, dims, values):
-        dtype = Goes16ToIodav2LatLonCreator._numpy_to_netcdf_dtype(values.dtype)
+        dtype = Goes16LatLon._numpy_to_netcdf_dtype(values.dtype)
         self._output_dataset.createVariable(name, dtype, dims)
         self._output_dataset[name][:] = values
 
-    def convert_goes16_to_iodav2_lat_lon(self):
+    def create_goes16_lat_lon(self):
         self._create_groups()
         self._input_dataset.set_auto_scale(True)
 
@@ -74,18 +74,19 @@ class Goes16ToIodav2LatLonCreator:
         self._output_dataset.variables['nlocs'].setncattr('suggested_chunk_dim', n_locs_size)
         self._output_dataset.variables['nlocs'][:] = numpy.arange(1, n_locs_size + 1, 1, dtype='int32')
 
-        scan_angle = selected_x * 180.0 / numpy.pi
-        elev_angle = selected_y * 180.0 / numpy.pi
+        #scan_angle = selected_x * 180.0 / numpy.pi
+        #elev_angle = selected_y * 180.0 / numpy.pi
 
-        self._create_netcdf_variable("/MetaData/Scan_Angle", 'nlocs', scan_angle)
-        self._create_netcdf_variable("/MetaData/Elevation_Angle", 'nlocs', elev_angle)
+        #self._create_netcdf_variable("/MetaData/Scan_Angle", 'nlocs', scan_angle)
+        #self._create_netcdf_variable("/MetaData/Elevation_Angle", 'nlocs', elev_angle)
         self._create_netcdf_variable("/MetaData/latitude", 'nlocs', lat)
         self._create_netcdf_variable("/MetaData/longitude", 'nlocs', lon)
 
         variables = self._input_dataset.variables['geospatial_lat_lon_extent']
         nadir_lon = variables.geospatial_lon_nadir
 
-        #Add nadir_lon attribute and others later on here
+        # Add nadir_lon attribute and others later on here
+        # Add fill values for lat and lon
 
         self._close_datasets()
 
@@ -136,6 +137,7 @@ class Goes16ToIodav2LatLonCreator:
         yaw_flip_flag = self._input_dataset.variables['yaw_flip_flag'][0]
         if not yaw_flip_flag:
             lat = lat[::-1]
+            lon = lon[::-1]
 
         return lat, lon
 
@@ -160,5 +162,5 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    goes16ToIodav2LatLonCreator = Goes16ToIodav2LatLonCreator(args)
-    goes16ToIodav2LatLonCreator.convert_goes16_to_iodav2_lat_lon()
+    goes16LatLon = Goes16LatLon(args)
+    goes16LatLon.create_goes16_lat_lon()
