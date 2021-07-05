@@ -157,8 +157,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             'Reads TROPOMI NO2 netCDF files provided by NESDIS'
-            ' and converts into IODA formatted output files. Multiple'
-            ' files are able to be concatenated.')
+            'and converts into IODA formatted output files. Multiple'
+            'files are able to be concatenated.')
     )
 
     required = parser.add_argument_group(title='required arguments')
