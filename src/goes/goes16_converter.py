@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import argparse
 import datetime
 import os
 import sys
@@ -8,7 +7,6 @@ import numpy
 import pytz
 from netCDF4 import Dataset
 from numpy import ma
-from solo.basic_files import tree
 from solo.date import JediDate, CoreDate
 from goes16 import Goes16
 from goes16_latlon import Goes16LatLon
@@ -16,11 +14,11 @@ from goes16_latlon import Goes16LatLon
 
 class Goes16Converter:
 
-    def __init__(self, args):
-        self._input_files_path = args.input_files_path
-        self._latlon_file_path = args.latlon_file_path
-        self._output_file_path_bt = args.output_file_path_bt
-        self._output_file_path_rf = args.output_file_path_rf
+    def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt):
+        self._input_files_paths = input_file_paths
+        self._latlon_file_path = latlon_file_path
+        self._output_file_path_rf = output_file_path_rf
+        self._output_file_path_bt = output_file_path_bt
         self._latlon_dataset = None
         self._output_dataset_bt = None
         self._output_dataset_rf = None
@@ -35,14 +33,10 @@ class Goes16Converter:
             sys.exit(2)
 
     def _create_input_data_file_dicts(self):
-        input_file_paths = []
-        for path, root, input_file_name in tree(self._input_files_path):
-            input_file_path = os.path.join(path, root, input_file_name)
-            input_file_paths.append(input_file_path)
-        input_file_paths.sort()
+        self._input_file_paths.sort()
         self._goes16_dict_rf = {}
         self._goes16_dict_bt = {}
-        for input_file_path in input_file_paths:
+        for input_file_path in self._input_file_paths:
             goes16 = Goes16(input_file_path)
             abi_channel = int(goes16.get_abi_channel())
             if abi_channel < 7:
@@ -234,18 +228,3 @@ class Goes16Converter:
         self._create_metadata_time_variable_rf()
         self._create_metadata_time_variable_bt()
         self._close_output_datasets()
-
-
-def parse_arguments():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("input_files_path", type=str, help="Path to Input GOES16 Files")
-    ap.add_argument("latlon_file_path", type=str, help="Path to Input GOES16 Lat/Lon File")
-    ap.add_argument("output_file_path_bt", type=str, help="Path to Output IODAv2 Brightness Temperature File")
-    ap.add_argument("output_file_path_rf", type=str, help="Path to Output IODAv2 Reflectance Factor File")
-    return ap.parse_args()
-
-
-if __name__ == '__main__':
-    args = parse_arguments()
-    goes16Converter = Goes16Converter(args)
-    goes16Converter.convert()
