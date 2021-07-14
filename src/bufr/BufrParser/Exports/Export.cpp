@@ -14,7 +14,7 @@
 
 #include "Filters/BoundingFilter.h"
 #include "Splits/CategorySplit.h"
-#include "Variables/MnemonicVariable.h"
+#include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
 #include "Variables/Transforms/Transform.h"
 #include "Variables/Transforms/TransformBuilder.h"
@@ -32,12 +32,14 @@ namespace
         {
             const char* Datetime = "datetime";
             const char* Mnemonic = "mnemonic";
+            const char* Query = "query";
         }  // namespace Variable
 
         namespace Split
         {
             const char* Category = "category";
             const char* Mnemonic = "mnemonic";
+            const char* Query = "query";
             const char* NameMap = "map";
         }  // namespace Split
 
@@ -93,13 +95,21 @@ namespace Ingester
             if (subConf.has(ConfKeys::Variable::Datetime))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
-                variable = std::make_shared<DatetimeVariable>(dtconf);
+                variable = std::make_shared<DatetimeVariable>(key, dtconf);
             }
             else if (subConf.has(ConfKeys::Variable::Mnemonic))
             {
+                std::ostringstream errMsg;
+                errMsg << "Obsolete format::exports::variable of type " << key << std::endl;
+                errMsg << "Use \"query:\" instead.";
+                throw eckit::BadParameter(errMsg.str());
+            }
+            else if (subConf.has(ConfKeys::Variable::Query))
+            {
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
-                variable = std::make_shared<MnemonicVariable>(
-                    subConf.getString(ConfKeys::Variable::Mnemonic), transforms);
+                variable = std::make_shared<QueryVariable>(key,
+                                                           subConf.getString(ConfKeys::Variable::Query),
+                                                           transforms);
             }
             else
             {

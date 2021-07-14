@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "BufrParser/BufrTypes.h"
+#include "IngesterTypes.h"
 
 namespace Ingester
 {
@@ -31,5 +31,3 @@ namespace Ingester
         virtual std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) = 0;
     };
 }  // namespace Ingester
-
-

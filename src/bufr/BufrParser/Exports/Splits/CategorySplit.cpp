@@ -17,8 +17,8 @@
 namespace Ingester
 {
     CategorySplit::CategorySplit(const std::string& mnemonic, const NameMap& nameMap) :
-      nameMap_(nameMap),
-      mnemonic_(mnemonic)
+            nameMap_(nameMap),
+            query_(mnemonic)
     {
     }
 
@@ -41,14 +41,14 @@ namespace Ingester
 
         std::map<std::string, BufrDataMap> dataMaps;
 
-        const IngesterArray& mnemonicArr = dataMap.at(mnemonic_);
+        const IngesterArray& mnemonicArr = dataMap.at(query_);
 
         for (const auto& mapPair : nameMap_)
         {
             // Find matching rows
             std::vector<size_t> indexVec;
             for (int rowIdx = 0;
-                 rowIdx < static_cast<int>(dataMap.at(mnemonic_).rows());
+                 rowIdx < static_cast<int>(dataMap.at(query_).rows());
                  rowIdx++)
             {
                 if (mnemonicArr.row(rowIdx)[0] == mapPair.first)
@@ -75,7 +75,7 @@ namespace Ingester
     {
         if (nameMap_.empty())
         {
-            auto& array = dataMap.at(mnemonic_);
+            auto& array = dataMap.at(query_);
             for (auto rowIdx = 0; rowIdx < array.rows(); rowIdx++)
             {
                 auto itemVal =  array.row(rowIdx)[0];
@@ -87,7 +87,7 @@ namespace Ingester
                 else
                 {
                     std::stringstream errStr;
-                    errStr << "Can't turn " << mnemonic_  << " into a category as it contains ";
+                    errStr << "Can't turn " << query_ << " into a category as it contains ";
                     errStr << "non-integer values.";
                     throw eckit::BadParameter(errStr.str());
                 }
@@ -97,7 +97,7 @@ namespace Ingester
         if (nameMap_.empty())
         {
             std::stringstream errStr;
-            errStr << "No categories could be identified for " << mnemonic_ << ".";
+            errStr << "No categories could be identified for " << query_ << ".";
             throw eckit::BadParameter(errStr.str());
         }
     }

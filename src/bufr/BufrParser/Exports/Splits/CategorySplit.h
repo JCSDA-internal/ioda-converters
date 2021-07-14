@@ -56,11 +56,11 @@ namespace Ingester
         std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) final;
 
         // Getters
-        inline std::string getMnemonic() { return mnemonic_; }
+        inline std::string getQuery() { return query_; }
 
      private:
         NameMap nameMap_;
-        const std::string mnemonic_;
+        const std::string query_;
 
         /// \brief Adds values to nameMap_ using the data if nameMap_ is empty.
         /// \param dataMap Data to be split

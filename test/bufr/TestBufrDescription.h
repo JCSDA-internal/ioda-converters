@@ -24,7 +24,6 @@
 #include "oops/util/IntSetParser.h"
 
 #include "BufrParser/BufrDescription.h"
-#include "BufrParser/BufrMnemonicSet.h"
 #include "IodaEncoder/IodaDescription.h"
 
 

@@ -22,9 +22,7 @@
 #include "test/TestEnvironment.h"
 
 #include "BufrParser/BufrDescription.h"
-#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrParser/BufrParser.h"
-#include "BufrParser/BufrTypes.h"
 #include "DataContainer.h"
 #include "ParserFactory.h"
 

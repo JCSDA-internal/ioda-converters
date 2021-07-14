@@ -33,13 +33,13 @@ namespace
 
 namespace Ingester
 {
-    DatetimeVariable::DatetimeVariable(const eckit::Configuration& conf) :
+    DatetimeVariable::DatetimeVariable(const std::string& exportName, const eckit::Configuration &conf) :
+      Variable(exportName),
       yearKey_(conf.getString(ConfKeys::Year)),
       monthKey_(conf.getString(ConfKeys::Month)),
       dayKey_(conf.getString(ConfKeys::Day)),
       hourKey_(conf.getString(ConfKeys::Hour)),
       minuteKey_(conf.getString(ConfKeys::Minute)),
-      secondKey_(""),
       hoursFromUtc_(0)
     {
         if (conf.has(ConfKeys::Second))
@@ -60,6 +60,8 @@ namespace Ingester
                       << std::endl;
             std::cout << "Use the optional parameter " << ConfKeys::HoursFromUtc << " instead.";
         }
+
+        initQueryMap();
     }
 
     std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
@@ -111,10 +113,10 @@ namespace Ingester
         }
 
         std::stringstream errStr;
-        errStr << "Mnemonic ";
+        errStr << "Query ";
 
         bool isKeyMissing = false;
-        for (auto key : requiredKeys)
+        for (const auto& key : requiredKeys)
         {
             if (map.find(key) == map.end())
             {
@@ -130,5 +132,18 @@ namespace Ingester
         {
             throw eckit::BadParameter(errStr.str());
         }
+    }
+
+    QueryMap DatetimeVariable::makeQueryMap() const
+    {
+        auto queries = QueryMap();
+        queries[getExportName() + "_" + ConfKeys::Year] = yearKey_;
+        queries[getExportName() + "_" + ConfKeys::Month] = monthKey_;
+        queries[getExportName() + "_" + ConfKeys::Day] = dayKey_;
+        queries[getExportName() + "_" + ConfKeys::Hour] = hourKey_;
+        queries[getExportName() + "_" + ConfKeys::Minute] = minuteKey_;
+        if (!secondKey_.empty()) queries[getExportName() + "_" + ConfKeys::Second] = secondKey_;
+
+        return queries;
     }
 }  // namespace Ingester

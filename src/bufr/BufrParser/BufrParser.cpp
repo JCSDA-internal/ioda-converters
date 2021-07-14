@@ -13,71 +13,71 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#if __has_include("bufr_interface.h")  // TODO(rmclaren): Remove this in future
-    #include "bufr_interface.h"
-#else
-    #include "bufr.interface.h"
-#endif
-
-#include "BufrParser/BufrCollectors/BufrCollectors.h"
-#include "BufrMnemonicSet.h"
 #include "DataContainer.h"
 #include "Exports/Export.h"
 #include "Exports/Splits/Split.h"
 
+#include "File.h"
+#include "ResultSet.h"
+#include "QuerySet.h"
 
 namespace Ingester
 {
     BufrParser::BufrParser(const BufrDescription &description) :
         description_(description),
-        fortranFileId_(0),
-        table1FileId_(0),
-        table2FileId_(0)
+        file_(bufr::File(description_.filepath(),
+                         description_.isWmoFormat(),
+                         description_.tablepath()))
     {
-        reset();
     }
 
     BufrParser::BufrParser(const eckit::Configuration& conf) :
         description_(BufrDescription(conf)),
-        fortranFileId_(0),
-        table1FileId_(0),
-        table2FileId_(0)
+        file_(bufr::File(description_.filepath(),
+                         description_.isWmoFormat(),
+                         description_.tablepath()))
     {
-        reset();
     }
 
     BufrParser::~BufrParser()
     {
-        closeBufrFile();
+        file_.close();
     }
 
-    std::shared_ptr <DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
+    std::shared_ptr <DataContainer> BufrParser::parse(const std::size_t maxMsgsToParse)
     {
-        const unsigned int SubsetStringLength = 25;
+        std::cout << "Start" << std::endl;
 
-        if (fortranFileId_ <= 10)
+        auto querySet = bufr::QuerySet();
+
+        for (const auto& varPair : description_.getExport().getVariables())
         {
-            throw eckit::BadValue("Fortran File ID is an invalid number (must be > 10).");
-        }
-
-        auto collectors = BufrCollectors(fortranFileId_);
-        collectors.addMnemonicSets(description_.getMnemonicSets());
-
-        char subset[SubsetStringLength];
-        int iddate;
-
-        unsigned int messageNum = 0;
-        while (ireadmg_f(fortranFileId_, subset, &iddate, SubsetStringLength) == 0)
-        {
-            while (ireadsb_f(fortranFileId_) == 0)
+            for (const auto& queryPair : varPair.second->getQueryMap())
             {
-                collectors.collect();
+                querySet.add(queryPair.second, queryPair.first);
             }
-
-            if (maxMsgsToParse > 0 && ++messageNum >= maxMsgsToParse) break;
         }
 
-        return exportData(collectors.finalize());
+        std::cout << "Built Query Parser" << std::endl;
+
+        auto result_set = file_.execute(querySet, maxMsgsToParse);
+
+        std::cout << "Executed Queries" << std::endl;
+
+        auto srcData = BufrDataMap();
+
+        for (const auto& varPair : description_.getExport().getVariables())
+        {
+            for (const auto& queryPair : varPair.second->getQueryMap())
+            {
+                auto dataVec = result_set.get(queryPair.first);
+                srcData[queryPair.first] = Eigen::Map<IngesterArray>(dataVec.data(), dataVec.size(), 1);
+            }
+        }
+
+        std::cout << "Built Bufr Data" << std::endl;
+
+        return exportData(srcData);
     }
 
     std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
@@ -148,49 +148,9 @@ namespace Ingester
         return splitDataMap;
     }
 
-    void BufrParser::openBufrFile(const std::string& filepath,
-                                  bool isWmoFormat,
-                                  const std::string& tablepath)
-    {
-        fortranFileId_ = 11;  // Fortran file id must be a integer > 10
-        open_f(fortranFileId_, filepath.c_str());
-
-        if (!isWmoFormat)
-        {
-            openbf_f(fortranFileId_, "IN", fortranFileId_);
-        }
-        else
-        {
-            openbf_f(fortranFileId_, "SEC3", fortranFileId_);
-
-            if (!tablepath.empty())  // else use the default tables
-            {
-                table1FileId_ = fortranFileId_ + 1;
-                table2FileId_ = fortranFileId_ + 2;
-                mtinfo_f(tablepath.c_str(), table1FileId_, table2FileId_);
-            }
-        }
-    }
-
-    void BufrParser::closeBufrFile()
-    {
-        exitbufr_f();
-
-        fortranFileId_ = 0;
-        table1FileId_ = 0;
-        table2FileId_ = 0;
-    }
-
     void BufrParser::reset()
     {
-        if (fortranFileId_ != 0)
-        {
-            closeBufrFile();
-        }
-
-        openBufrFile(description_.filepath(),
-                     description_.isWmoFormat(),
-                     description_.tablepath());
+        file_.rewind();
     }
 
     void BufrParser::printMap(const BufrParser::CatDataMap& map)

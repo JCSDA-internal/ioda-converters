@@ -15,7 +15,6 @@
 #include "eckit/filesystem/PathName.h"
 
 #include "BufrParser/BufrDescription.h"
-#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrParser/BufrParser.h"
 #include "IodaEncoder/IodaDescription.h"
 #include "IodaEncoder/IodaEncoder.h"
@@ -43,7 +42,7 @@ namespace Ingester
                 }
 
                 auto parser = ParserFactory::create(obsConf.getSubConfiguration("obs space"));
-                auto data = parser->parse();
+                auto data = parser->parse(4);
 
                 auto encoder = IodaEncoder(obsConf.getSubConfiguration("ioda"));
                 encoder.encode(data);

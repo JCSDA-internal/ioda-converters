@@ -7,45 +7,37 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
-      mnemonicSets:
-        - mnemonics: [SAID, SIID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH] 
-        - mnemonics: [LSQL, HOLS, HMSL]
-        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
-          channels : 1-5
 
       exports:
         variables:
-          timestamp:
-            datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-              second: SECO
+#          timestamp:
+#            datetime:
+#              year: "*/YEAR"
+#              month: "*/MNTH"
+#              day: "*/DAYS"
+#              hour: "*/HOUR"
+#              minute: "*/MINU"
+#              second: "*/SECO"
           height: 
-            mnemonic: HMSL
-          hols: 
-            mnemonic: HOLS
+            query: "*/HOLS"
           fovn:
-            mnemonic: FOVN 
+            query: "*/FOVN"
           lsql:
-            mnemonic: LSQL
+            query: "*/LSQL"
           longitude:
-            mnemonic: CLON
+            query: "*/CLON"
           latitude:
-            mnemonic: CLAT
+            query: "*/CLAT"
           sza:
-            mnemonic: SOZA
+            query: "*/SOZA"
           saz:
-            mnemonic: SOLAZI
+            query: "*/SOLAZI"
           vza:
-            mnemonic: SAZA
+            query: "*/SAZA"
           vaz:
-            mnemonic: BEARAZ
-          radiance:
-            mnemonic: TMBR
+            query: "*/BEARAZ"
+#          radiance:
+#            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
     
     ioda:
       backend: netcdf
@@ -53,9 +45,7 @@ observations:
 
       dimensions:
         - name: "nlocs"
-          size: variables/radiance.nrows
-        - name: "nchans"
-          size: variables/radiance.ncols
+          size: variables/latitude.nrows
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
@@ -74,11 +64,11 @@ observations:
           longName: "Station Elevation"
           units: "meters"
 
-        - name: "heightOfSurface@MetaData"
-          source: variables/hols
-          dimensions: ["nlocs"]
-          longName: "Height of Land Surface"
-          units: "meters"
+#        - name: "heightOfSurface@MetaData"
+#          source: variables/hols
+#          dimensions: ["nlocs"]
+#          longName: "Height of Land Surface"
+#          units: "meters"
 
         - name: "fieldOfViewNumber@MetaData"
           source: variables/fovn
@@ -92,11 +82,11 @@ observations:
           longName: "Land/Sea Qualifier"
           units: "none"
 
-        - name: "datetime@MetaData"
-          source: variables/timestamp
-          dimensions: [ "nlocs" ]
-          longName: "Datetime"
-          units: "datetime"
+#        - name: "datetime@MetaData"
+#          source: variables/timestamp
+#          dimensions: [ "nlocs" ]
+#          longName: "Datetime"
+#          units: "datetime"
 
         - name: "latitude@MetaData"
           source: variables/latitude
@@ -140,15 +130,15 @@ observations:
           units: "degrees"
           range: [-180, 180]
 
-        - name: "brightnessTemperature@ObsValue"
-          coordinates: "longitude latitude nchans"
-          source: variables/radiance
-          dimensions: ["nlocs", "nchans"]
-          longName: "Brightness Temperature"
-          units: "K"
-          range: [120, 500]
-          chunks: [1000, 15]
-          compressionLevel: 4
+#        - name: "brightnessTemperature@ObsValue"
+#          coordinates: "longitude latitude nchans"
+#          source: variables/radiance
+#          dimensions: ["nlocs", "nchans"]
+#          longName: "Brightness Temperature"
+#          units: "K"
+#          range: [120, 500]
+#          chunks: [1000, 15]
+#          compressionLevel: 4
 
 
         

@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-#include "BufrParser/BufrTypes.h"
-
 
 namespace Ingester
 {

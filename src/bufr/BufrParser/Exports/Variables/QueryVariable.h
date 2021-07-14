@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
 
@@ -21,19 +22,25 @@
 namespace Ingester
 {
     /// \brief Exports parsed data associated with a mnemonic (ex: "CLAT")
-    class MnemonicVariable final : public Variable
+    class QueryVariable final : public Variable
     {
      public:
-        explicit MnemonicVariable(const std::string& mnemonicStr, const Transforms& transforms);
-        ~MnemonicVariable() final = default;
+        explicit QueryVariable(const std::string& exportName,
+                               const std::string& query,
+                               const Transforms& transforms);
+
+        ~QueryVariable() final = default;
 
         /// \brief Gets the requested data, applies transforms, and returns the requested data
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
 
+        /// \brief Get a list of queries for this variable
+        std::map<std::string, std::string> makeQueryMap() const final;
+
      private:
         /// \brief The BUFR mnemonic of interest
-        std::string mnemonic_;
+        std::string query_;
 
         /// \brief Collection of transforms to apply to the data during export
         Transforms transforms_;
