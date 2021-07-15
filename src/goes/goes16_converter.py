@@ -8,14 +8,22 @@
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
 #
+# / -> date_time
+# / -> _ioda_layout
+# / -> _ioda_layout_version
 # /MetaData/datetime
 # /MetaData/elevation_angle
 # /MetaData/latitude
 # /MetaData/longitude
 # /MetaData/scan_angle
+# /MetaData/time
 # /ObsError/reflectance_factor or /ObsError/brightness_temperature
 # /ObsValue/reflectance_factor or /ObsValue/brightness_temperature
+# /ObsError/brightness_temperature -> units
+# /ObsValue/brightness_temperature -> units
 # /PreQC/reflectance_factor or /PreQC/brightness_temperature
+# /PreQC/reflectance_factor -> flag_values or /PreQC/brightness_temperature -> flag_values
+# /PreQC/reflectance_factor -> flag_meanings or /PreQC/brightness_temperature -> flag_meanings
 # /VarMetaData/sensor_channel
 # /VarMetaData/variable_names
 # /nchans
@@ -266,7 +274,8 @@ class Goes16Converter:
 
     def _create_preqc_reflectance_factor_variable(self):
         """
-        Creates the /PreQC/reflectance_factor variable in the reflectance factor netCDF4 Dataset.
+        Creates the /PreQC/reflectance_factor variable variable and associated attributes in the reflectance factor
+        netCDF4 Dataset.
         """
         temp_dict = {}
         counter = 0
@@ -279,10 +288,16 @@ class Goes16Converter:
             data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_rf.createVariable('/PreQC/reflectance_factor', 'f4', ('nlocs', 'nchans'), fill_value=-999)
         self._output_dataset_rf['/PreQC/reflectance_factor'][:] = data_array
+        self._output_dataset_rf['/PreQC/reflectance_factor'].setncattr('flag_values', '0,1,2,3')
+        self._output_dataset_rf['/PreQC/reflectance_factor'].setncattr('flag_meanings',
+                                                                       'good_pixel_qf '
+                                                                       'conditionally_usable_pixel_qf '
+                                                                       'out_of_range_pixel_qf no_value_pixel_qf')
 
     def _create_preqc_brightness_temperature_variable(self):
         """
-        Creates the /PreQC/brightness_temperature variable in the brightness temperature netCDF4 Dataset.
+        Creates the /PreQC/brightness_temperature variable and associated attributes in the brightness temperature
+        netCDF4 Dataset.
         """
         temp_dict = {}
         counter = 0
@@ -296,6 +311,11 @@ class Goes16Converter:
         self._output_dataset_bt.createVariable('/PreQC/brightness_temperature', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_bt['/PreQC/brightness_temperature'][:] = data_array
+        self._output_dataset_bt['/PreQC/brightness_temperature'].setncattr('flag_values', '0,1,2,3')
+        self._output_dataset_bt['/PreQC/brightness_temperature'].setncattr('flag_meanings',
+                                                                           'good_pixel_qf '
+                                                                           'conditionally_usable_pixel_qf '
+                                                                           'out_of_range_pixel_qf no_value_pixel_qf')
 
     def _create_obsvalue_reflectance_factor_variable(self):
         """
@@ -330,6 +350,7 @@ class Goes16Converter:
         self._output_dataset_bt.createVariable('/ObsValue/brightness_temperature', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_bt['/ObsValue/brightness_temperature'][:] = data_array
+        self._output_dataset_bt['/ObsValue/brightness_temperature'].setncattr('units', 'K')
 
     def _create_obserror_reflectance_factor_variable(self):
         """
@@ -364,11 +385,12 @@ class Goes16Converter:
         self._output_dataset_bt.createVariable('/ObsError/brightness_temperature', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_bt['/ObsError/brightness_temperature'][:] = data_array
+        self._output_dataset_bt['/ObsError/brightness_temperature'].setncattr('units', 'K')
 
     def _create_metadata_time_variables(self):
         """
-        Creates the /MetaData/datetime variable and date_time attribute in the reflectance factor and brightness
-        temperature netCDF4 Datasets.
+        Creates the /MetaData/datetime and MetaData/time variables and /date_time attribute in the reflectance factor
+        and brightness temperature netCDF4 Datasets.
         """
         dataset = Dataset(self._template_input_file_path, 'r')
         t_epoch = datetime.datetime(2000, 1, 1, 12, 0, 0, 0, pytz.UTC)
@@ -378,10 +400,15 @@ class Goes16Converter:
             t_refdate = t_refdate + datetime.timedelta(hours=1)
         datetime_str = str(JediDate(t_refdate))
         datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), datetime_str)
+        time_array = np.full(self._get_nlocs(self._output_dataset_rf), 0.0)
         self._output_dataset_rf.createVariable('/MetaData/datetime', 'str', 'nlocs')
         self._output_dataset_rf['/MetaData/datetime'][:] = datetime_array
         self._output_dataset_bt.createVariable('/MetaData/datetime', 'str', 'nlocs')
         self._output_dataset_bt['/MetaData/datetime'][:] = datetime_array
+        self._output_dataset_rf.createVariable('/MetaData/datetime', 'f4', 'nlocs')
+        self._output_dataset_rf['/MetaData/time'][:] = time_array
+        self._output_dataset_bt.createVariable('/MetaData/datetime', 'f4', 'nlocs')
+        self._output_dataset_bt['/MetaData/time'][:] = time_array
         date_time = f'{CoreDate(t_refdate).year()}{CoreDate(t_refdate).month()}{CoreDate(t_refdate).day()}{CoreDate(t_refdate).hour()}'
         self._output_dataset_rf.setncattr("date_time", date_time)
         self._output_dataset_bt.setncattr("date_time", date_time)
@@ -412,6 +439,15 @@ class Goes16Converter:
                            'brightness_temperature_13', 'brightness_temperature_14', 'brightness_temperature_15',
                            'brightness_temperature_16']
         self._output_dataset_bt['/VarMetaData/variable_names'][:] = np.array(temp_data_array)
+
+    def _create_root_group_attributes(self):
+        """
+        Creates several root group attributes in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
+        self._output_dataset_rf.setncattr('_ioda_layout', 'ObsGroup')
+        self._output_dataset_bt.setncattr('_ioda_layout', 'ObsGroup')
+        self._output_dataset_rf.setncattr('_ioda_layout_version', '0')
+        self._output_dataset_bt.setncattr('_ioda_layout_version', '0')
 
     def convert(self):
         """
@@ -446,4 +482,5 @@ class Goes16Converter:
         self._create_metadata_time_variables()
         self._create_varmetadata_sensor_channel_variables()
         self._create_varmetadata_variable_names_variables()
+        self._create_root_group_attributes()
         self._close_datasets()
