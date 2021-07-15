@@ -26,6 +26,8 @@
 #
 import datetime
 import os
+import sys
+
 import numpy as np
 import pytz
 from netCDF4 import Dataset
@@ -40,7 +42,10 @@ class Goes16Converter:
     def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt):
         """
         Constructor
-        input_file_path - GOES-16 raw data file for a single ABI channel
+        input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
+        latlon_file_path - The path to an existing Goes16 LatLon file or if it does not exist the path to write the file
+        output_file_path_rf - The path to write the IODAv2 reflectance factor data file
+        output_file_path_bt - The path to write the IODAv2 brightness temperature data file
         """
         self._input_file_paths = input_file_paths
         self._latlon_file_path = latlon_file_path
@@ -52,12 +57,18 @@ class Goes16Converter:
         self._check_arguments()
 
     def _check_arguments(self):
+        """
+        Checks the input arguments.
+        """
         good_args = True
-        # if not os.path.exists(self._input_file_paths):
-        #    print("ERROR: Input GOES16 files do not exist: " + self._input_files_path)
-        #    good_args = False
-        # if not good_args:
-        #    sys.exit(2)
+        if len(self._input_file_paths) != 16:
+            print("ERROR: input_file_paths must contain 16 Goes-16 data files. One for each ABI channel.")
+            good_args = False
+        if not os.path.exists(self._input_file_paths):
+            print("ERROR: Input GOES16 files do not exist: " + self._input_files_path)
+            good_args = False
+        if not good_args:
+            sys.exit(2)
 
     def _create_input_data_file_dicts(self):
         """
