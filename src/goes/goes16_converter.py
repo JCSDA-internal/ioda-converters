@@ -64,9 +64,6 @@ class Goes16Converter:
         if len(self._input_file_paths) != 16:
             print("ERROR: input_file_paths must contain 16 Goes-16 data files. One for each ABI channel.")
             good_args = False
-        if not os.path.exists(self._input_file_paths):
-            print("ERROR: Input GOES16 files do not exist: " + self._input_files_path)
-            good_args = False
         if not good_args:
             sys.exit(2)
 
