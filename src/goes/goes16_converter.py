@@ -26,7 +26,7 @@
 #
 import datetime
 import os
-import numpy
+import numpy as np
 import pytz
 from netCDF4 import Dataset
 from numpy import ma
@@ -38,6 +38,10 @@ from goes16_latlon import Goes16LatLon
 class Goes16Converter:
 
     def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt):
+        """
+        Constructor
+        input_file_path - GOES-16 raw data file for a single ABI channel
+        """
         self._input_file_paths = input_file_paths
         self._latlon_file_path = latlon_file_path
         self._output_file_path_rf = output_file_path_rf
@@ -56,6 +60,11 @@ class Goes16Converter:
         #    sys.exit(2)
 
     def _create_input_data_file_dicts(self):
+        """
+        Create two local dictionaries contained the Goes16 class instances for brightness temperature (ABI channels 1-6)
+        and reflectance factor (ABI channels 7-16). Each Goes16 instance calls the load method. This function also
+        assigns the file path for a template GOES-16 file from ABI channel 7.
+        """
         self._input_file_paths.sort()
         self._goes16_dict_rf = {}
         self._goes16_dict_bt = {}
@@ -70,11 +79,18 @@ class Goes16Converter:
         self._template_input_file_path = self._goes16_dict_bt[7].get_input_file_path()
 
     def _check_nadir(self):
+        """
+        Returns a boolean variable indicating whether the nadir has changed by comparing the lat_nadir and lon_nadir
+        attributes extracted from the Goes16LatLon data file and the Goes16 template data file.
+        """
         lat_nadir_latlon, lon_nadir_latlon = self._get_nadir_attribute_latlon()
         lat_nadir_template, lon_nadir_template = self._get_nadir_attribute_template()
         return lat_nadir_latlon == lat_nadir_template and lon_nadir_latlon == lon_nadir_template
 
     def _get_nadir_attribute_latlon(self):
+        """
+        Returns the lat and lon nadir attribute from the Goes16 LatLon data file.
+        """
         dataset = Dataset(self._latlon_file_path, 'r')
         lat_nadir_latlon = dataset['MetaData'].variables['latitude'].getncattr('lat_nadir')
         lon_nadir_latlon = dataset['MetaData'].variables['longitude'].getncattr('lon_nadir')
@@ -82,6 +98,9 @@ class Goes16Converter:
         return lat_nadir_latlon, lon_nadir_latlon
 
     def _get_nadir_attribute_template(self):
+        """
+        Returns the lat and lon nadir attribute from the Goes16 template data file.
+        """
         dataset = Dataset(self._template_input_file_path, 'r')
         lat_nadir_template = dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lat_nadir')
         lon_nadir_template = dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lon_nadir')
@@ -89,18 +108,30 @@ class Goes16Converter:
         return lat_nadir_template, lon_nadir_template
 
     def _check_latlon_file_path(self):
+        """
+        Returns a boolean variable indicating whether the Goes16 LatLon file exists.
+        """
         return os.path.exists(self._latlon_file_path)
 
     def _create_latlon_dataset(self):
+        """
+        Creates a new Goes16 LatLon data file using the Goes16LatLon class.
+        """
         self._goes16_lat_lon = Goes16LatLon(self._template_input_file_path, self._latlon_file_path)
         self._goes16_lat_lon.create()
 
     def _close_datasets(self):
+        """
+        Closes the Goes16 latlon, reflectance factor, and brightness temperature netCDF4 Datasets.
+        """
         self._output_dataset_bt.close()
         self._output_dataset_rf.close()
         self._latlon_dataset.close()
 
     def _create_metadata_latitude_variables(self):
+        """
+        Creates the /MetaData/latitude variable in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         latitude_data_array = self._latlon_dataset['MetaData'].variables['latitude'][:].real
         self._output_dataset_rf.createVariable('/MetaData/latitude', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/latitude'][:] = latitude_data_array
@@ -108,6 +139,9 @@ class Goes16Converter:
         self._output_dataset_bt['/MetaData/latitude'][:] = latitude_data_array
 
     def _create_metadata_longitude_variables(self):
+        """
+        Creates the /MetaData/longitude variable in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         longitude_data_array = self._latlon_dataset['MetaData'].variables['longitude'][:].real
         self._output_dataset_rf.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/longitude'][:] = longitude_data_array
@@ -115,6 +149,9 @@ class Goes16Converter:
         self._output_dataset_bt['/MetaData/longitude'][:] = longitude_data_array
 
     def _create_metadata_scan_angle_variables(self):
+        """
+        Creates the /MetaData/scan_angle variable in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         scan_angle_data_array = self._latlon_dataset['MetaData'].variables['scan_angle'][:].real
         self._output_dataset_rf.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/scan_angle'][:] = scan_angle_data_array
@@ -122,6 +159,10 @@ class Goes16Converter:
         self._output_dataset_bt['/MetaData/scan_angle'][:] = scan_angle_data_array
 
     def _create_metadata_elevation_angle_variables(self):
+        """
+        Creates the /MetaData/elevation_angle variable in the reflectance factor and brightness temperature netCDF4
+        Datasets.
+        """
         elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['elevation_angle'][:].real
         self._output_dataset_rf.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/elevation_angle'][:] = elevation_angle_data_array
@@ -129,6 +170,9 @@ class Goes16Converter:
         self._output_dataset_bt['/MetaData/elevation_angle'][:] = elevation_angle_data_array
 
     def _create_groups(self):
+        """
+        Creates the required groups in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         self._output_dataset_rf.createGroup('MetaData')
         self._output_dataset_rf.createGroup('ObsError')
         self._output_dataset_rf.createGroup('ObsValue')
@@ -141,17 +185,23 @@ class Goes16Converter:
         self._output_dataset_bt.createGroup('VarMetaData')
 
     def _create_nlocs_dimensions(self):
+        """
+        Creates the nlocs dimension in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         nlocs = self._latlon_dataset.dimensions['nlocs'].size
         self._output_dataset_rf.createDimension('nlocs', nlocs)
         self._output_dataset_rf.createVariable('nlocs', 'i4', 'nlocs')
         self._output_dataset_rf.variables['nlocs'].setncattr('suggested_chunk_dim', nlocs)
-        self._output_dataset_rf.variables['nlocs'][:] = numpy.arange(1, nlocs + 1, 1, dtype='int32')
+        self._output_dataset_rf.variables['nlocs'][:] = np.arange(1, nlocs + 1, 1, dtype='int32')
         self._output_dataset_bt.createDimension('nlocs', nlocs)
         self._output_dataset_bt.createVariable('nlocs', 'i4', 'nlocs')
         self._output_dataset_bt.variables['nlocs'].setncattr('suggested_chunk_dim', nlocs)
-        self._output_dataset_bt.variables['nlocs'][:] = numpy.arange(1, nlocs + 1, 1, dtype='int32')
+        self._output_dataset_bt.variables['nlocs'][:] = np.arange(1, nlocs + 1, 1, dtype='int32')
 
     def _create_nchans_dimensions(self):
+        """
+        Creates the nchans dimension in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         nchans_rf = 6
         nchans_bt = 10
         self._output_dataset_rf.createDimension('nchans', nchans_rf)
@@ -162,38 +212,54 @@ class Goes16Converter:
         self._output_dataset_bt.variables['nchans'][:] = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
     def _create_nvars_dimensions(self):
+        """
+        Creates the nvars dimension in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         nvars_rf = 6
         nvars_bt = 10
         self._output_dataset_rf.createDimension('nvars', nvars_rf)
         self._output_dataset_rf.createVariable('nvars', 'i4', 'nvars')
-        self._output_dataset_rf.variables['nvars'][:] = numpy.arange(1, nvars_rf + 1, 1, dtype='int32')
+        self._output_dataset_rf.variables['nvars'][:] = np.arange(1, nvars_rf + 1, 1, dtype='int32')
         self._output_dataset_bt.createDimension('nvars', nvars_bt)
         self._output_dataset_bt.createVariable('nvars', 'i4', 'nvars')
-        self._output_dataset_bt.variables['nvars'][:] = numpy.arange(1, nvars_bt + 1, 1, dtype='int32')
+        self._output_dataset_bt.variables['nvars'][:] = np.arange(1, nvars_bt + 1, 1, dtype='int32')
 
     def _create_ndatetime_dimensions(self):
+        """
+        Creates the ndatetime dimension in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         ndatetime = 20
         self._output_dataset_rf.createDimension('ndatetime', ndatetime)
         self._output_dataset_rf.createVariable('ndatetime', 'i4', 'ndatetime')
-        self._output_dataset_rf.variables['ndatetime'][:] = numpy.arange(1, ndatetime + 1, 1, dtype='int32')
+        self._output_dataset_rf.variables['ndatetime'][:] = np.arange(1, ndatetime + 1, 1, dtype='int32')
         self._output_dataset_bt.createDimension('ndatetime', ndatetime)
         self._output_dataset_bt.createVariable('ndatetime', 'i4', 'ndatetime')
-        self._output_dataset_bt.variables['ndatetime'][:] = numpy.arange(1, ndatetime + 1, 1, dtype='int32')
+        self._output_dataset_bt.variables['ndatetime'][:] = np.arange(1, ndatetime + 1, 1, dtype='int32')
 
     def _create_nstring_dimensions(self):
+        """
+        Creates the nstring dimension in the reflectance factor and brightness temperature netCDF4 Datasets.
+        """
         nstring = 50
         self._output_dataset_rf.createDimension('nstring', nstring)
         self._output_dataset_rf.createVariable('nstring', 'i4', 'nstring')
-        self._output_dataset_rf.variables['nstring'][:] = numpy.arange(1, nstring + 1, 1, dtype='int32')
+        self._output_dataset_rf.variables['nstring'][:] = np.arange(1, nstring + 1, 1, dtype='int32')
         self._output_dataset_bt.createDimension('nstring', nstring)
         self._output_dataset_bt.createVariable('nstring', 'i4', 'nstring')
-        self._output_dataset_bt.variables['nstring'][:] = numpy.arange(1, nstring + 1, 1, dtype='int32')
+        self._output_dataset_bt.variables['nstring'][:] = np.arange(1, nstring + 1, 1, dtype='int32')
 
     @staticmethod
     def _get_nlocs(dataset):
+        """
+        Returns the nlocs dimension size for the provided netCDF4 Dataset.
+        dataset - the dataset to extract the nlocs size
+        """
         return dataset.dimensions['nlocs'].size
 
     def _create_preqc_reflectance_factor_variable(self):
+        """
+        Creates the /PreQC/reflectance_factor variable in the reflectance factor netCDF4 Dataset.
+        """
         temp_dict = {}
         counter = 0
         for key in self._goes16_dict_rf.keys():
@@ -202,11 +268,14 @@ class Goes16Converter:
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
-            data_array = numpy.column_stack((data_array, temp_dict[i]))
+            data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_rf.createVariable('/PreQC/reflectance_factor', 'f4', ('nlocs', 'nchans'), fill_value=-999)
         self._output_dataset_rf['/PreQC/reflectance_factor'][:] = data_array
 
     def _create_preqc_brightness_temperature_variable(self):
+        """
+        Creates the /PreQC/brightness_temperature variable in the brightness temperature netCDF4 Dataset.
+        """
         temp_dict = {}
         counter = 0
         for key in self._goes16_dict_bt.keys():
@@ -215,12 +284,15 @@ class Goes16Converter:
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
-            data_array = numpy.column_stack((data_array, temp_dict[i]))
+            data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_bt.createVariable('/PreQC/brightness_temperature', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_bt['/PreQC/brightness_temperature'][:] = data_array
 
     def _create_obsvalue_reflectance_factor_variable(self):
+        """
+        Creates the /ObsValue/reflectance_factor variable in the reflectance factor netCDF4 Dataset.
+        """
         temp_dict = {}
         counter = 0
         for key in self._goes16_dict_rf.keys():
@@ -229,12 +301,15 @@ class Goes16Converter:
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
-            data_array = numpy.column_stack((data_array, temp_dict[i]))
+            data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_rf.createVariable('/ObsValue/reflectance_factor', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_rf['/ObsValue/reflectance_factor'][:] = data_array
 
     def _create_obsvalue_brightness_temperature_variable(self):
+        """
+        Creates the /ObsValue/brightness_temperature variable in the brightness temperature netCDF4 Dataset.
+        """
         temp_dict = {}
         counter = 0
         for key in self._goes16_dict_bt.keys():
@@ -243,12 +318,15 @@ class Goes16Converter:
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
-            data_array = numpy.column_stack((data_array, temp_dict[i]))
+            data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_bt.createVariable('/ObsValue/brightness_temperature', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_bt['/ObsValue/brightness_temperature'][:] = data_array
 
     def _create_obserror_reflectance_factor_variable(self):
+        """
+        Creates the /ObsError/reflectance_factor variable in the reflectance factor netCDF4 Dataset.
+        """
         temp_dict = {}
         counter = 0
         for key in self._goes16_dict_rf.keys():
@@ -257,12 +335,15 @@ class Goes16Converter:
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
-            data_array = numpy.column_stack((data_array, temp_dict[i]))
+            data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_rf.createVariable('/ObsError/reflectance_factor', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_rf['/ObsError/reflectance_factor'][:] = data_array
 
     def _create_obserror_brightness_temperature_variable(self):
+        """
+        Creates the /ObsError/brightness_temperature variable in the brightness temperature netCDF4 Dataset.
+        """
         temp_dict = {}
         counter = 0
         for key in self._goes16_dict_bt.keys():
@@ -271,12 +352,16 @@ class Goes16Converter:
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
-            data_array = numpy.column_stack((data_array, temp_dict[i]))
+            data_array = np.column_stack((data_array, temp_dict[i]))
         self._output_dataset_bt.createVariable('/ObsError/brightness_temperature', 'f4', ('nlocs', 'nchans'),
                                                fill_value=-999)
         self._output_dataset_bt['/ObsError/brightness_temperature'][:] = data_array
 
     def _create_metadata_time_variables(self):
+        """
+        Creates the /MetaData/datetime variable and date_time attribute in the reflectance factor and brightness
+        temperature netCDF4 Datasets.
+        """
         dataset = Dataset(self._template_input_file_path, 'r')
         t_epoch = datetime.datetime(2000, 1, 1, 12, 0, 0, 0, pytz.UTC)
         t_mid = t_epoch + datetime.timedelta(seconds=int(round(float(dataset.variables['t'][0]))))
@@ -284,7 +369,7 @@ class Goes16Converter:
         if t_mid.minute >= 30:
             t_refdate = t_refdate + datetime.timedelta(hours=1)
         datetime_str = str(JediDate(t_refdate))
-        datetime_array = numpy.full(self._get_nlocs(self._output_dataset_rf), datetime_str)
+        datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), datetime_str)
         self._output_dataset_rf.createVariable('/MetaData/datetime', 'str', 'nlocs')
         self._output_dataset_rf['/MetaData/datetime'][:] = datetime_array
         self._output_dataset_bt.createVariable('/MetaData/datetime', 'str', 'nlocs')
@@ -295,24 +380,36 @@ class Goes16Converter:
         dataset.close()
 
     def _create_varmetadata_sensor_channel_variables(self):
+        """
+        Creates the /VarMetaData/sensor_channel variable in the reflectance factor and brightness temperature netCDF4
+        Datasets.
+        """
         self._output_dataset_rf.createVariable('/VarMetaData/sensor_channel', 'i4', 'nchans')
         self._output_dataset_rf['/VarMetaData/sensor_channel'][:] = self._output_dataset_rf['nchans'][:]
         self._output_dataset_bt.createVariable('/VarMetaData/sensor_channel', 'i4', 'nchans')
         self._output_dataset_bt['/VarMetaData/sensor_channel'][:] = self._output_dataset_bt['nchans'][:]
 
     def _create_varmetadata_variable_names_variables(self):
+        """
+        Creates the /VarMetaData/variable_names variable in the reflectance factor and brightness temperature netCDF4
+        Datasets.
+        """
         self._output_dataset_rf.createVariable('/VarMetaData/variable_names', 'str', 'nchans')
         temp_data_array = ['reflectance_factor_1', 'reflectance_factor_2', 'reflectance_factor_3',
                            'reflectance_factor_4', 'reflectance_factor_5', 'reflectance_factor_6']
-        self._output_dataset_rf['/VarMetaData/variable_names'][:] = numpy.array(temp_data_array)
+        self._output_dataset_rf['/VarMetaData/variable_names'][:] = np.array(temp_data_array)
         self._output_dataset_bt.createVariable('/VarMetaData/variable_names', 'str', 'nchans')
         temp_data_array = ['brightness_temperature_7', 'brightness_temperature_8', 'brightness_temperature_9',
                            'brightness_temperature_10', 'brightness_temperature_11', 'brightness_temperature_12',
                            'brightness_temperature_13', 'brightness_temperature_14', 'brightness_temperature_15',
                            'brightness_temperature_16']
-        self._output_dataset_bt['/VarMetaData/variable_names'][:] = numpy.array(temp_data_array)
+        self._output_dataset_bt['/VarMetaData/variable_names'][:] = np.array(temp_data_array)
 
     def convert(self):
+        """
+        Creates the reflectance factor and brightness temperature IODAv2 data files. This functions also checks for
+        the existence and nadir change of the Goes16 LatLon data file.
+        """
         self._create_input_data_file_dicts()
         if self._check_latlon_file_path():
             if not self._check_nadir():
