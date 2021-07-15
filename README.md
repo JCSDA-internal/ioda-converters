@@ -185,3 +185,17 @@ For surface soil moisture normalized (ssm), ASCAT L2 NRT Netcdf files are suppor
 Usage: ascat_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
 ```
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+## GOES-16
+
+The GOES-16 converter classes generate two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 LB1 products.
+The final result of this class is two IODAv2 formatted data files - one for Reflectance Factor (RF, ABI channels 1-6) 
+and one for Brightness Temperature (BT, ABI channels 7-16). Since GOES-16 is in a geostationary orbit, an auxiliary file 
+containing relevant variables and attributes for latitude, longitude, scan angle, and elevation angle is accessed (or created if
+it does not exist) through the latlon_file_path input argument. This converter checks to see if the nadir for the satellite
+has changed and creates a new latlon file if a nadir change has occurred.
+
+```
+Usage goes16_converter = Goes16Converter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt)
+      goes16_converter.convert()
+```
