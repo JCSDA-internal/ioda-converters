@@ -1,3 +1,23 @@
+#
+# goes16_latlon.py
+#
+# This class generates a single IODAv2 data file with the following groups, variables, attributes and
+# dimensions. This program is designed to be executed from the Goes16Converter class is the event that the
+# nadir for GOES-16 has changed. Once created, the Goes16Converter class will consume this file for each conversion.
+# The argument source_file_path must be a GOES-16 file with 2km resolution. Calculations within this program utilize
+# section 5.1.2.8.1 of the GOES R SERIES PRODUCT DEFINITION AND USERS' GUIDE Dec 17, 2019 REVISION 2.2
+# 416-R-PUG-L1B-0347 Vol 3
+#
+# /GROUP/VARIABLE -> ATTRIBUTE
+#
+# /MetaData/elevation_angle
+# /MetaData/scan_angle
+# /MetaData/latitude
+# /MetaData/latitude -> lat_nadir
+# /MetaData/longitude
+# /MetaData/longitude -> lon_nadir
+# /nlocs
+#
 import numpy
 from netCDF4 import Dataset
 from numpy import ma

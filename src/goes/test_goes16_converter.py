@@ -1,3 +1,9 @@
+#
+# test_goes16_converter.py
+#
+# This script is a driver for the Goes16Converter class.
+#
+#
 import os
 from solo.basic_files import tree
 from goes16_converter import Goes16Converter

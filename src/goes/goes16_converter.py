@@ -1,5 +1,29 @@
-#!/usr/bin/env python
-
+#
+# goes16_converter.py
+#
+# This class generates two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 LB1 products.
+# This class works with the Goes16 and Goes16LatLon classes. The final result of this class is two IODAv2 formatted
+# data files - one for Brightness Temperature and one for Reflectance Factor. The following groups, variables,
+# dimensions, and attributes are created using this class.
+#
+# /GROUP/VARIABLE -> ATTRIBUTE
+#
+# /MetaData/datetime
+# /MetaData/elevation_angle
+# /MetaData/latitude
+# /MetaData/longitude
+# /MetaData/scan_angle
+# /ObsError/reflectance_factor or /ObsError/brightness_temperature
+# /ObsValue/reflectance_factor or /ObsValue/brightness_temperature
+# /PreQC/reflectance_factor or /PreQC/brightness_temperature
+# /VarMetaData/sensor_channel
+# /VarMetaData/variable_names
+# /nchans
+# /ndatetime
+# /nlocs
+# /nstring
+# /nvars
+#
 import datetime
 import os
 import numpy
