@@ -405,9 +405,9 @@ class Goes16Converter:
         self._output_dataset_rf['/MetaData/datetime'][:] = datetime_array
         self._output_dataset_bt.createVariable('/MetaData/datetime', 'str', 'nlocs')
         self._output_dataset_bt['/MetaData/datetime'][:] = datetime_array
-        self._output_dataset_rf.createVariable('/MetaData/datetime', 'f4', 'nlocs')
+        self._output_dataset_rf.createVariable('/MetaData/time', 'f4', 'nlocs')
         self._output_dataset_rf['/MetaData/time'][:] = time_array
-        self._output_dataset_bt.createVariable('/MetaData/datetime', 'f4', 'nlocs')
+        self._output_dataset_bt.createVariable('/MetaData/time', 'f4', 'nlocs')
         self._output_dataset_bt['/MetaData/time'][:] = time_array
         date_time = f'{CoreDate(t_refdate).year()}{CoreDate(t_refdate).month()}{CoreDate(t_refdate).day()}{CoreDate(t_refdate).hour()}'
         self._output_dataset_rf.setncattr("date_time", date_time)

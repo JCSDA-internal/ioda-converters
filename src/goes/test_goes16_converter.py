@@ -5,6 +5,8 @@
 #
 #
 import os
+import time
+
 from solo.basic_files import tree
 from goes16_converter import Goes16Converter
 
@@ -25,4 +27,7 @@ def test_goes16_converter():
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     test_goes16_converter()
+    elapsed_time = time.time() - start_time
+    print(f'elapsed time:{elapsed_time:.3g}s')
