@@ -14,6 +14,10 @@ class Goes16:
         self._get_metadata_from_input_file_path()
         self._rad_data_array = None
         self._dqf_data_array = None
+        self._obsvalue_rf_data_array = None
+        self._obsvalue_bt_data_array = None
+        self._obserror_rf_data_array = None
+        self._obserror_bt_data_array = None
 
     def _get_metadata_from_input_file_path(self):
         self._metadata_dict = {'instrument': 'ABI',
@@ -32,10 +36,29 @@ class Goes16:
     def _open(self):
         self._input_dataset = Dataset(self._input_file_path, 'r')
 
-    def _load_dqf(self):
+    def _load_yaw_flip_flag_variable(self):
+        self._yaw_flip_flag = self._input_dataset.variables['yaw_flip_flag'][0]
+
+    def _load_kappa0_variable(self):
+        self._kappa0 = ma.getdata(self._input_dataset.variables['kappa0'][0])
+
+    def _load_planck_variables(self):
+        self._planck_bc1 = self._input_dataset.variables['planck_bc1'][0]
+        self._planck_bc2 = self._input_dataset.variables['planck_bc2'][0]
+        self._planck_fk1 = self._input_dataset.variables['planck_fk1'][0]
+        self._planck_fk2 = self._input_dataset.variables['planck_fk2'][0]
+
+    def _load_std_dev_radiance_value_of_valid_pixels_variable(self):
+        self._std_dev_radiance_value_of_valid_pixels = \
+            self._input_dataset.variables['std_dev_radiance_value_of_valid_pixels'][0]
+
+    def _load_valid_pixel_count_variable(self):
+        self._valid_pixel_count = self._input_dataset.variables['valid_pixel_count'][0]
+
+    def _load_dqf_data_array(self):
         self._dqf_data_array = ma.getdata(self._input_dataset.variables['DQF'][:].real)
 
-    def _load_rad(self):
+    def _load_rad_data_array(self):
         self._rad_data_array = ma.getdata(self._input_dataset.variables['Rad'][:].real)
 
     @staticmethod
@@ -148,26 +171,71 @@ class Goes16:
         if 'M2' in string:
             return ABISectorType.MESOSCALE_REGION_2
 
+    def _filter_data_array_by_yaw_flip_flag(self, data_array):
+        if not self._yaw_flip_flag:
+            return data_array[::-1]
+        else:
+            return data_array
+
+    def _create_obsvalue_rf_data_array(self):
+        temp_data_array = self._rad_data_array * self._kappa0
+        self._obsvalue_rf_data_array = numpy.where(self._dqf_data_array == -999, -999, temp_data_array)
+
+    def _create_obsvalue_bt_data_array(self):
+        log_comp = numpy.log((self._planck_fk1 / self._rad_data_array) + 1)
+        temp_data_array = ((self._planck_fk2 / log_comp) - self._planck_bc1) / self._planck_bc2
+        self._obsvalue_bt_data_array = numpy.where(self._dqf_data_array == -999, -999, temp_data_array)
+
+    def _create_obserror_rf_data_array(self):
+        sqrt_comp = numpy.power(self._kappa0, 2) * numpy.power(self._std_dev_radiance_value_of_valid_pixels, 2)
+        temp_data_array = numpy.sqrt(sqrt_comp) / numpy.sqrt(self._valid_pixel_count)
+        self._obserror_rf_data_array = numpy.where(self._dqf_data_array == -999, -999, temp_data_array)
+
+    def _create_obserror_bt_data_array(self):
+        sqrt_comp_1 = (-1.0 * self._planck_fk2) / \
+                      (self._planck_bc2 * numpy.power(numpy.log((self._planck_fk1 / self._rad_data_array) + 1), 2))
+        sqrt_comp_2 = 1 / (self._planck_fk1 + self._rad_data_array) - 1 / self._rad_data_array
+        sqrt_comp = numpy.power(sqrt_comp_1 * sqrt_comp_2, 2) * \
+                    numpy.power(self._std_dev_radiance_value_of_valid_pixels, 2)
+        temp_data_array = numpy.sqrt(sqrt_comp) / numpy.sqrt(self._valid_pixel_count)
+        self._obserror_bt_data_array = numpy.where(self._dqf_data_array == -999, -999, temp_data_array)
+
     def get_abi_channel(self):
         return self._metadata_dict['abi_channel']
 
     def get_input_file_path(self):
         return self._input_file_path
 
-    def get_rad_data_array(self):
-        return self._rad_data_array
+    def get_obsvalue_rf_data_array(self):
+        return self._obsvalue_rf_data_array
 
-    def get_dqf_data_array(self):
+    def get_obsvalue_bt_data_array(self):
+        return self._obsvalue_bt_data_array
+
+    def get_obserror_rf_data_array(self):
+        return self._obserror_rf_data_array
+
+    def get_obserror_bt_data_array(self):
+        return self._obserror_bt_data_array
+
+    def get_preqc_data_array(self):
         return self._dqf_data_array
 
     def close(self):
         self._input_dataset.close()
 
     def load(self):
+
         self._open()
         self._input_dataset.set_auto_scale(True)
-        self._load_dqf()
-        self._load_rad()
+        self._load_yaw_flip_flag_variable()
+        self._load_kappa0_variable()
+        self._load_planck_variables()
+        self._load_std_dev_radiance_value_of_valid_pixels_variable()
+        self._load_valid_pixel_count_variable()
+        self._load_dqf_data_array()
+        self._load_rad_data_array()
+
         if self._metadata_dict['abi_channel'] == 1 or \
                 self._metadata_dict['abi_channel'] == 3 or \
                 self._metadata_dict['abi_channel'] == 5:
@@ -176,11 +244,26 @@ class Goes16:
         if self._metadata_dict['abi_channel'] == 2:
             self._rad_data_array, self._dqf_data_array = Goes16._subsample(self._rad_data_array,
                                                                            self._dqf_data_array, 4)
+
         shape = len(self._rad_data_array) * len(self._rad_data_array)
-        self._rad_data_array = numpy.array(self._rad_data_array)
-        self._rad_data_array = self._rad_data_array.reshape(shape)
+
         self._dqf_data_array = numpy.array(self._dqf_data_array)
         self._dqf_data_array = self._dqf_data_array.reshape(shape)
+        self._dqf_data_array = self._filter_data_array_by_yaw_flip_flag(self._dqf_data_array)
+        self._dqf_data_array = numpy.where(self._dqf_data_array == 255, -999, self._dqf_data_array)
+
+        self._rad_data_array = numpy.array(self._rad_data_array)
+        self._rad_data_array = self._rad_data_array.reshape(shape)
+        self._rad_data_array = self._filter_data_array_by_yaw_flip_flag(self._rad_data_array)
+        self._rad_data_array = numpy.where(self._dqf_data_array == -999, -999, self._rad_data_array)
+
+        if self._metadata_dict['abi_channel'] < 7:
+            self._create_obsvalue_rf_data_array()
+            self._create_obserror_rf_data_array()
+        else:
+            self._create_obsvalue_bt_data_array()
+            self._create_obserror_bt_data_array()
+
         self.close()
 
 

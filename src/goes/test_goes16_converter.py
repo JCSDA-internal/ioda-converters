@@ -14,8 +14,8 @@ def test_goes16_converter():
         if not filename.startswith("."):
             filepath = os.path.join(path, root, filename)
             input_file_paths.append(filepath)
-    goes16_converter = Goes16Converter
-    goes16_converter.convert(input_files_path, latlon_file_path, output_file_path_rf, output_file_path_bt)
+    goes16_converter = Goes16Converter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt)
+    goes16_converter.convert()
 
 
 if __name__ == '__main__':
