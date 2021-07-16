@@ -1,9 +1,9 @@
 #
-# goes16_converter.py
+# goes_converter.py
 #
-# This class generates two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 LB1 products.
-# This class works with the Goes16 and Goes16LatLon classes. The final result of this class is two IODAv2 formatted
-# data files - one for Brightness Temperature and one for Reflectance Factor. The following groups, variables,
+# This class generates two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 or GOES-17
+# LB1 products. This class works with the Goes and GoesLatLon classes. The final result of this class is two IODAv2
+# formatted data files - one for Brightness Temperature and one for Reflectance Factor. The following groups, variables,
 # dimensions, and attributes are created using this class.
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
@@ -41,17 +41,17 @@ import pytz
 from netCDF4 import Dataset
 from numpy import ma
 from solo.date import JediDate, CoreDate
-from goes16 import Goes16
-from goes16_latlon import Goes16LatLon
+from goes import Goes
+from goes_latlon import GoesLatLon
 
 
-class Goes16Converter:
+class GoesConverter:
 
     def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt):
         """
         Constructor
         input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
-        latlon_file_path - The path to an existing Goes16 LatLon file or if it does not exist the path to write the file
+        latlon_file_path - The path to an existing Goes LatLon file or if it does not exist the path to write the file
         output_file_path_rf - The path to write the IODAv2 reflectance factor data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
         """
@@ -70,34 +70,34 @@ class Goes16Converter:
         """
         good_args = True
         if len(self._input_file_paths) != 16:
-            print("ERROR: input_file_paths must contain 16 Goes-16 data files. One for each ABI channel.")
+            print("ERROR: input_file_paths must contain 16 GOES-16 or GOES-17 data files. One for each ABI channel.")
             good_args = False
         if not good_args:
             sys.exit(2)
 
     def _create_input_data_file_dicts(self):
         """
-        Create two local dictionaries contained the Goes16 class instances for brightness temperature (ABI channels 1-6)
-        and reflectance factor (ABI channels 7-16). Each Goes16 instance calls the load method. This function also
-        assigns the file path for a template GOES-16 file from ABI channel 7.
+        Create two local dictionaries contained the Goes class instances for brightness temperature (ABI channels 1-6)
+        and reflectance factor (ABI channels 7-16). Each Goes instance calls the load method. This function also
+        assigns the file path for a template GOES file from ABI channel 7.
         """
         self._input_file_paths.sort()
-        self._goes16_dict_rf = {}
-        self._goes16_dict_bt = {}
+        self._goes_dict_rf = {}
+        self._goes_dict_bt = {}
         for input_file_path in self._input_file_paths:
-            goes16 = Goes16(input_file_path)
-            goes16.load()
-            abi_channel = int(goes16.get_abi_channel())
+            goes = Goes(input_file_path)
+            goes.load()
+            abi_channel = int(goes.get_abi_channel())
             if abi_channel < 7:
-                self._goes16_dict_rf[abi_channel] = goes16
+                self._goes_dict_rf[abi_channel] = goes
             else:
-                self._goes16_dict_bt[abi_channel] = goes16
-        self._template_input_file_path = self._goes16_dict_bt[7].get_input_file_path()
+                self._goes_dict_bt[abi_channel] = goes
+        self._template_input_file_path = self._goes_dict_bt[7].get_input_file_path()
 
     def _check_nadir(self):
         """
         Returns a boolean variable indicating whether the nadir has changed by comparing the lat_nadir and lon_nadir
-        attributes extracted from the Goes16LatLon data file and the Goes16 template data file.
+        attributes extracted from the GoesLatLon data file and the Goes template data file.
         """
         lat_nadir_latlon, lon_nadir_latlon = self._get_nadir_attribute_latlon()
         lat_nadir_template, lon_nadir_template = self._get_nadir_attribute_template()
@@ -105,7 +105,7 @@ class Goes16Converter:
 
     def _get_nadir_attribute_latlon(self):
         """
-        Returns the lat and lon nadir attribute from the Goes16 LatLon data file.
+        Returns the lat and lon nadir attribute from the Goes LatLon data file.
         """
         dataset = Dataset(self._latlon_file_path, 'r')
         lat_nadir_latlon = dataset['MetaData'].variables['latitude'].getncattr('lat_nadir')
@@ -115,7 +115,7 @@ class Goes16Converter:
 
     def _get_nadir_attribute_template(self):
         """
-        Returns the lat and lon nadir attribute from the Goes16 template data file.
+        Returns the lat and lon nadir attribute from the Goes template data file.
         """
         dataset = Dataset(self._template_input_file_path, 'r')
         lat_nadir_template = dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lat_nadir')
@@ -125,20 +125,20 @@ class Goes16Converter:
 
     def _check_latlon_file_path(self):
         """
-        Returns a boolean variable indicating whether the Goes16 LatLon file exists.
+        Returns a boolean variable indicating whether the Goes LatLon file exists.
         """
         return os.path.exists(self._latlon_file_path)
 
     def _create_latlon_dataset(self):
         """
-        Creates a new Goes16 LatLon data file using the Goes16LatLon class.
+        Creates a new Goes LatLon data file using the GoesLatLon class.
         """
-        self._goes16_lat_lon = Goes16LatLon(self._template_input_file_path, self._latlon_file_path)
-        self._goes16_lat_lon.create()
+        self._goes_lat_lon = GoesLatLon(self._template_input_file_path, self._latlon_file_path)
+        self._goes_lat_lon.create()
 
     def _close_datasets(self):
         """
-        Closes the Goes16 latlon, reflectance factor, and brightness temperature netCDF4 Datasets.
+        Closes the Goes latlon, reflectance factor, and brightness temperature netCDF4 Datasets.
         """
         self._output_dataset_bt.close()
         self._output_dataset_rf.close()
@@ -279,9 +279,9 @@ class Goes16Converter:
         """
         temp_dict = {}
         counter = 0
-        for key in self._goes16_dict_rf.keys():
-            goes16 = self._goes16_dict_rf[key]
-            temp_dict[counter] = ma.getdata(goes16.get_preqc_data_array())
+        for key in self._goes_dict_rf.keys():
+            goes = self._goes_dict_rf[key]
+            temp_dict[counter] = ma.getdata(goes.get_preqc_data_array())
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
@@ -301,9 +301,9 @@ class Goes16Converter:
         """
         temp_dict = {}
         counter = 0
-        for key in self._goes16_dict_bt.keys():
-            goes16 = self._goes16_dict_bt[key]
-            temp_dict[counter] = ma.getdata(goes16.get_preqc_data_array())
+        for key in self._goes_dict_bt.keys():
+            goes = self._goes_dict_bt[key]
+            temp_dict[counter] = ma.getdata(goes.get_preqc_data_array())
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
@@ -323,9 +323,9 @@ class Goes16Converter:
         """
         temp_dict = {}
         counter = 0
-        for key in self._goes16_dict_rf.keys():
-            goes16 = self._goes16_dict_rf[key]
-            temp_dict[counter] = ma.getdata(goes16.get_obsvalue_rf_data_array())
+        for key in self._goes_dict_rf.keys():
+            goes = self._goes_dict_rf[key]
+            temp_dict[counter] = ma.getdata(goes.get_obsvalue_rf_data_array())
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
@@ -340,9 +340,9 @@ class Goes16Converter:
         """
         temp_dict = {}
         counter = 0
-        for key in self._goes16_dict_bt.keys():
-            goes16 = self._goes16_dict_bt[key]
-            temp_dict[counter] = ma.getdata(goes16.get_obsvalue_bt_data_array())
+        for key in self._goes_dict_bt.keys():
+            goes = self._goes_dict_bt[key]
+            temp_dict[counter] = ma.getdata(goes.get_obsvalue_bt_data_array())
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
@@ -358,9 +358,9 @@ class Goes16Converter:
         """
         temp_dict = {}
         counter = 0
-        for key in self._goes16_dict_rf.keys():
-            goes16 = self._goes16_dict_rf[key]
-            temp_dict[counter] = ma.getdata(goes16.get_obserror_rf_data_array())
+        for key in self._goes_dict_rf.keys():
+            goes = self._goes_dict_rf[key]
+            temp_dict[counter] = ma.getdata(goes.get_obserror_rf_data_array())
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
@@ -375,9 +375,9 @@ class Goes16Converter:
         """
         temp_dict = {}
         counter = 0
-        for key in self._goes16_dict_bt.keys():
-            goes16 = self._goes16_dict_bt[key]
-            temp_dict[counter] = ma.getdata(goes16.get_obserror_bt_data_array())
+        for key in self._goes_dict_bt.keys():
+            goes = self._goes_dict_bt[key]
+            temp_dict[counter] = ma.getdata(goes.get_obserror_bt_data_array())
             counter += 1
         data_array = temp_dict[0]
         for i in range(1, counter):
@@ -452,7 +452,7 @@ class Goes16Converter:
     def convert(self):
         """
         Creates the reflectance factor and brightness temperature IODAv2 data files. This functions also checks for
-        the existence and nadir change of the Goes16 LatLon data file.
+        the existence and nadir change of the Goes LatLon data file.
         """
         self._create_input_data_file_dicts()
         if self._check_latlon_file_path():

@@ -1,13 +1,13 @@
 #
-# goes16.py
+# goes.py
 #
 # This class loads, calculates, filters, and makes accessible the variables and attributes required by the
-# Goes16Converter class for a single GOES-16 LB1 ABI channel (1-16). The brightness temperature and reflectance factor
-# calculations and down-sampling / subsampling techniques used in this class are derived from sections 3.4.1.2,
+# GoesConverter class for a single GOES-16 or GOES-17 LB1 ABI channel (1-16). The brightness temperature and reflectance
+# factor calculations and down-sampling / subsampling techniques used in this class are derived from sections 3.4.1.2,
 # 3.4.1.3, and 3.4.3 in the GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud
 # and Moisture Imagery Product (CMIP) Version 3.0 July 30, 2012. The calculations for the propagation of standard error
 # are from section 2.5.5 of the NIST/SEMATECH e-Handbook of Statistical Methods available at
-# https://www.itl.nist.gov/div898/handbook/mpc/section5/mpc55.htm. GOES-16 ABI channels 1, 3, and 5 are subsampled from
+# https://www.itl.nist.gov/div898/handbook/mpc/section5/mpc55.htm. GOES ABI channels 1, 3, and 5 are subsampled from
 # 1km to 2km resolution and ABI channel 2 is subsampled from 0.5km to 2km resolution using methods in this class. This
 # class includes two subsampling and two down-sampling functions. The down-sampling functions are not currently used
 # due to the long computation time required. The preferred subsampling method which is used by this class is called
@@ -21,12 +21,12 @@ from numpy import ma
 from solo.date import Date
 
 
-class Goes16:
+class Goes:
 
     def __init__(self, input_file_path):
         """
         Constructor
-        input_file_path - GOES-16 raw data file for a single ABI channel
+        input_file_path - a GOES-16 or GOES-17 raw data file for a single ABI channel
         """
         self._input_file_path = input_file_path
         self._get_metadata_from_input_file_path()
@@ -43,16 +43,18 @@ class Goes16:
         """
         self._metadata_dict = {'instrument': 'ABI',
                                'processing_level': 'L1b',
-                               'product_acronym': 'Rad',
-                               'platform_identifier': 'G16'}
+                               'product_acronym': 'Rad'}
         metadata_array = os.path.splitext(os.path.basename(self._input_file_path))[0].split('_')
         self._metadata_dict['system_environment'] = metadata_array[0]
-        self._metadata_dict['abi_sector_type'] = Goes16._string_to_abisectortype(metadata_array[1])
-        self._metadata_dict['abi_mode'] = Goes16._string_to_abimode(metadata_array[1])
+        self._metadata_dict['abi_sector_type'] = Goes._string_to_abisectortype(metadata_array[1])
+        self._metadata_dict['abi_mode'] = Goes._string_to_abimode(metadata_array[1])
         self._metadata_dict['abi_channel'] = int(metadata_array[1][-2:])
+        self._metadata_dict['platform_identifier'] = metadata_array[2]
         self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
         self._metadata_dict['end_date'] = Date(metadata_array[4][1:-1])
         self._metadata_dict['creation_date'] = Date(metadata_array[5][1:-1])
+        print(self._metadata_dict)
+        exit()
 
     def _open(self):
         """
@@ -295,6 +297,12 @@ class Goes16:
         """
         return self._metadata_dict['abi_channel']
 
+    def get_platform_identifier(self):
+        """
+        Returns the platform identifier.
+        """
+        return self._metadata_dict['platform_identifier']
+
     def get_input_file_path(self):
         """
         Returns the input_file_path.
@@ -339,7 +347,7 @@ class Goes16:
 
     def load(self):
         """
-        Loads, calculates, subsamples, reshapes, and filters all data arrays required by the Goes16Converter class.
+        Loads, calculates, subsamples, reshapes, and filters all data arrays required by the GoesConverter class.
         """
         self._open()
         self._input_dataset.set_auto_scale(True)
@@ -354,11 +362,11 @@ class Goes16:
         if self._metadata_dict['abi_channel'] == 1 or \
                 self._metadata_dict['abi_channel'] == 3 or \
                 self._metadata_dict['abi_channel'] == 5:
-            self._rad_data_array, self._dqf_data_array = Goes16._subsample(self._rad_data_array,
-                                                                           self._dqf_data_array, 2)
+            self._rad_data_array, self._dqf_data_array = Goes._subsample(self._rad_data_array,
+                                                                         self._dqf_data_array, 2)
         if self._metadata_dict['abi_channel'] == 2:
-            self._rad_data_array, self._dqf_data_array = Goes16._subsample(self._rad_data_array,
-                                                                           self._dqf_data_array, 4)
+            self._rad_data_array, self._dqf_data_array = Goes._subsample(self._rad_data_array,
+                                                                         self._dqf_data_array, 4)
 
         shape = len(self._rad_data_array) * len(self._rad_data_array)
 
