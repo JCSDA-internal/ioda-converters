@@ -12,10 +12,10 @@ from goes16_converter import Goes16Converter
 
 
 def test_goes16_converter():
-    input_files_path = "/Users/eric2/PROJECTS/GOES16_TEST_FILES/input/12_15_2020/00"
-    latlon_file_path = "/Users/eric2/PROJECTS/GOES16_TEST_FILES/latlon/goes16_latlon_2km.nc"
-    output_file_path_rf = "/Users/eric2/PROJECTS/GOES16_TEST_FILES/output/12_15_2020/00/goes16_rf.nc"
-    output_file_path_bt = "/Users/eric2/PROJECTS/GOES16_TEST_FILES/output/12_15_2020/00/goes16_bt.nc"
+    input_files_path = "/work/noaa/da/eric/GOES16/ABI-L1b-RadF/2021/132/00"
+    latlon_file_path = "/work/noaa/da/eric/GOES16/IODAv2/LATLON/goes16_latlon_2km.nc"
+    output_file_path_rf = "/work/noaa/da/eric/GOES16/IODAv2/OUTPUT/goes16_rf.nc"
+    output_file_path_bt = "/work/noaa/da/eric/GOES16/IODAv2/OUTPUT/goes16_bt.nc"
 
     input_file_paths = []
     for path, root, filename in tree(input_files_path):

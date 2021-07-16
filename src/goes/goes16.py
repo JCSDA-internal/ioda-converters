@@ -15,7 +15,6 @@
 #
 import os
 from enum import Enum
-from statistics import fmean
 import numpy as np
 from netCDF4 import Dataset
 from numpy import ma
@@ -166,7 +165,7 @@ class Goes16:
                     if dqf == 0 or dqf == 1:
                         mean_array.append(rad_data_array[point[0]][point[1]])
                 if len(mean_array) != 0:
-                    new_rad_data_array[k][l] = fmean(mean_array)
+                    new_rad_data_array[k][l] = np.mean(mean_array)
                     new_dqf_data_array[k][l] = 0
                 else:
                     new_rad_data_array[k][l] = -999
@@ -203,7 +202,7 @@ class Goes16:
                     if dqf == 0 or dqf == 1:
                         mean_array.append(rad_data_array[point[0]][point[1]])
                 if len(mean_array) != 0:
-                    new_rad_data_array[k][l] = fmean(mean_array)
+                    new_rad_data_array[k][l] = np.mean(mean_array)
                     new_dqf_data_array[k][l] = 0
                 else:
                     new_rad_data_array[k][l] = -999
