@@ -36,27 +36,30 @@ namespace Ingester
 
      private:
         /// \brief Query for year
-        const std::string yearKey_;
+        const std::string yearQuery_;
 
         /// \brief Query for month
-        const std::string monthKey_;
+        const std::string monthQuery_;
 
         /// \brief Query for day
-        const std::string dayKey_;
+        const std::string dayQuery_;
 
         /// \brief Query for hour
-        const std::string hourKey_;
+        const std::string hourQuery_;
 
         /// \brief Query for minute
-        const std::string minuteKey_;
+        const std::string minuteQuery_;
 
         /// \brief Query for second (optional)
-        std::string secondKey_;
+        std::string secondQuery_;
 
         /// \brief Hours to offset from UTC (optional)
         int hoursFromUtc_;
 
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
+
+        /// \brief get the export key string
+        std::string getExportKey(const char* name) const;
     };
 }  // namespace Ingester

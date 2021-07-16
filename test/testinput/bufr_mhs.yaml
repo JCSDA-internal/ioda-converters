@@ -10,14 +10,14 @@ observations:
 
       exports:
         variables:
-#          timestamp:
-#            datetime:
-#              year: "*/YEAR"
-#              month: "*/MNTH"
-#              day: "*/DAYS"
-#              hour: "*/HOUR"
-#              minute: "*/MINU"
-#              second: "*/SECO"
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
           height: 
             query: "*/HOLS"
           fovn:
@@ -36,8 +36,8 @@ observations:
             query: "*/SAZA"
           vaz:
             query: "*/BEARAZ"
-#          radiance:
-#            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
+          radiance:
+            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
     
     ioda:
       backend: netcdf
@@ -45,7 +45,9 @@ observations:
 
       dimensions:
         - name: "nlocs"
-          size: variables/latitude.nrows
+          size: variables/radiance.nrows
+        - name: "nchans"
+          size: variables/radiance.ncols
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
@@ -64,11 +66,11 @@ observations:
           longName: "Station Elevation"
           units: "meters"
 
-#        - name: "heightOfSurface@MetaData"
-#          source: variables/hols
-#          dimensions: ["nlocs"]
-#          longName: "Height of Land Surface"
-#          units: "meters"
+        - name: "heightOfSurface@MetaData"
+          source: variables/height
+          dimensions: ["nlocs"]
+          longName: "Height of Land Surface"
+          units: "meters"
 
         - name: "fieldOfViewNumber@MetaData"
           source: variables/fovn
@@ -82,11 +84,11 @@ observations:
           longName: "Land/Sea Qualifier"
           units: "none"
 
-#        - name: "datetime@MetaData"
-#          source: variables/timestamp
-#          dimensions: [ "nlocs" ]
-#          longName: "Datetime"
-#          units: "datetime"
+        - name: "datetime@MetaData"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "Datetime"
+          units: "datetime"
 
         - name: "latitude@MetaData"
           source: variables/latitude
@@ -130,15 +132,15 @@ observations:
           units: "degrees"
           range: [-180, 180]
 
-#        - name: "brightnessTemperature@ObsValue"
-#          coordinates: "longitude latitude nchans"
-#          source: variables/radiance
-#          dimensions: ["nlocs", "nchans"]
-#          longName: "Brightness Temperature"
-#          units: "K"
-#          range: [120, 500]
-#          chunks: [1000, 15]
-#          compressionLevel: 4
+        - name: "brightnessTemperature@ObsValue"
+          coordinates: "longitude latitude nchans"
+          source: variables/radiance
+          dimensions: ["nlocs", "nchans"]
+          longName: "Brightness Temperature"
+          units: "K"
+          range: [120, 500]
+          chunks: [1000, 15]
+          compressionLevel: 4
 
 
         

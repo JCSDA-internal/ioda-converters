@@ -71,7 +71,9 @@ namespace Ingester
             for (const auto& queryPair : varPair.second->getQueryMap())
             {
                 auto dataVec = result_set.get(queryPair.first);
-                srcData[queryPair.first] = Eigen::Map<IngesterArray>(dataVec.data(), dataVec.size(), 1);
+                srcData[queryPair.first] = Eigen::Map<IngesterArray>(dataVec.data.data(),
+                                                                     dataVec.dimRows,
+                                                                     dataVec.dimCols);
             }
         }
 
