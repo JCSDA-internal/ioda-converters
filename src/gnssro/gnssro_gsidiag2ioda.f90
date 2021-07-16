@@ -285,8 +285,6 @@ end do
 call check( nf90_create(trim(obsname_out), nf90_clobber, ncid_out))
 call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_dim(ncid_out, 'nlocs', nsub,  nlocs_dimid) )
-call check( nf90_def_dim(ncid_out, 'nvars', 1,     nvars_dimid) )
-call check( nf90_def_dim(ncid_out, 'nrecs', nrecs, nrecs_dimid) )
 call check( nf90_def_var(ncid_out, "latitude@MetaData",        NF90_FLOAT, nlocs_dimid, varid_lat) )
 call check( nf90_def_var(ncid_out, "longitude@MetaData",       NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_def_var(ncid_out, "time@MetaData",            NF90_FLOAT, nlocs_dimid, varid_time) )
