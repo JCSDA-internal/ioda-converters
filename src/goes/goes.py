@@ -53,7 +53,6 @@ class Goes:
         self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
         self._metadata_dict['end_date'] = Date(metadata_array[4][1:-1])
         self._metadata_dict['creation_date'] = Date(metadata_array[5][1:-1])
-        print(self._metadata_dict)
         exit()
 
     def _open(self):
