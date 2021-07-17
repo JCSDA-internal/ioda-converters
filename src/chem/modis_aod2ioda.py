@@ -32,7 +32,7 @@ locationKeyList = [
 
 
 obsvars = {
-    'A': "Aerosol_optical_depth",
+    'A': "aerosol_optical_depth",
 }
 
 AttrData = {
@@ -41,8 +41,9 @@ AttrData = {
 
 
 class AOD(object):
-    def __init__(self, filenames, writer):
+    def __init__(self, filenames, obs_time, writer):
         self.filenames = filenames
+        self.obs_time = obs_time
         self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -53,11 +54,10 @@ class AOD(object):
 
     def _read(self):
         # set up variable names for IODA
-        for iodavar in ['Aerosol_optical_depth']:
+        for ncvar, iodavar in obsvars.items():
             self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
-
 
         # loop through input filenames
         first = True
@@ -69,7 +69,11 @@ class AOD(object):
             elif 'Aqua' in ncd_str:
                 AttrData['platform'] = 'Aqua'
             if 'MODIS' in ncd_str:
-                AttrData['sensor'] = 'MODIS'
+                AttrData['sensor'] = 'v.modis_terra'
+
+            obstime = self.obs_time
+            AttrData['date_time'] = self.obs_time
+            AttrData['observation_type'] = 'Aod'
 
             #  Get variables
             modis_time = ncd.variables['Scan_Start_Time'][:].ravel()
@@ -87,9 +91,19 @@ class AOD(object):
             sen_zen = ncd.variables['Sensor_Zenith'][:].ravel()
             unc_land = ncd.variables['Deep_Blue_Aerosol_Optical_Depth_550_Land_Estimated_Uncertainty'][:].ravel()
 
-            
-            modis_time_nan=np.ma.filled(modis_time.astype(float), 0.0)
-            obs_time = [datetime.fromisoformat('1993-01-01') + timedelta(seconds = x) for x in modis_time_nan]
+            # Remove undefined values
+            pos_index = np.where(aod > 0)
+            lats = lats[pos_index]
+            lons = lons[pos_index]
+            aod = aod[pos_index]
+            land_sea_flag = land_sea_flag[pos_index]
+            QC_flag = QC_flag[pos_index]
+            sol_zen = sol_zen[pos_index]
+            sen_zen = sen_zen[pos_index]
+            unc_land = unc_land[pos_index]
+            modis_time = modis_time[pos_index]
+            obs_time_2 = [datetime.fromisoformat('1993-01-01') + timedelta(seconds=x) for x in modis_time]
+            obs_time = [t.strftime('%Y-%m-%dT%H:%M:%SZ') for t in obs_time_2]
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
@@ -112,7 +126,7 @@ class AOD(object):
                 data = aod.astype('float32')
                 err = UNC
                 if first:
-                    self.outdata[self.varDict[iodavar]['valKey']] = data 
+                    self.outdata[self.varDict[iodavar]['valKey']] = data
                     self.outdata[self.varDict[iodavar]['errKey']] = err
                     self.outdata[self.varDict[iodavar]['qcKey']] = QC_flag
 
@@ -132,9 +146,10 @@ class AOD(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... /path/to/obs/2021060823.nc
-    # -o /path/to/ioda/20210608.nc 
-    # where the input obs could be for any desired interval to concatenated together.
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -t Analysis_time /path/to/obs/2021060823.nc
+    # -o /path/to/ioda/20210608.nc
+    # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
+    # analysis window.
     parser = argparse.ArgumentParser(
         description=(
             'Reads MODIS AOD hdf4 files provided by NASA'
@@ -148,6 +163,10 @@ def main():
         help="path of MODIS AOD hdf4 input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
+        '-t', '--time',
+        help="Observation time in global attributes (YYYYMMDDHH)",
+        type=int, required=True)
+    required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
         type=str, required=True)
@@ -157,8 +176,11 @@ def main():
     # setup the IODA writer
     writer = iconv.NcWriter(args.output, locationKeyList)
 
+    # get the obs time
+    obs_time = args.time
+
     # Read in the AOD data
-    aod_class = AOD(args.input, writer)
+    aod_class = AOD(args.input, args.time, writer)
     # write everything out
     original_stdout = sys.stdout
     writer.BuildNetcdf(aod_class.outdata, aod_class.loc_mdata, aod_class.var_mdata, AttrData)

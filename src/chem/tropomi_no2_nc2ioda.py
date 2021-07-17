@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("datetime", "string"),
 ]
 
 obsvars = {

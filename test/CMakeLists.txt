@@ -538,6 +538,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
                           -i testinput/modis_aod.hdf 
+                          -t 2016060100 
                           -o testrun/modis_aod.nc"
                           modis_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
