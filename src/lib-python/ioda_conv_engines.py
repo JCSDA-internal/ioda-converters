@@ -49,7 +49,7 @@ class IodaWriter(object):
             VarName = "{0:s}/{1:s}".format(_metagroup, Vname)
             # create variable
             self.obsspace.create_var(VarName,
-                                     dtype=self.obsspace.NumpyToIodaDtype(Vvals),
+                                     dtype=Vvals.dtype,
                                      dim_list=['nlocs'],
                                      )
             # write the data to the file
@@ -65,7 +65,7 @@ class IodaWriter(object):
             try:
                 UnitStr = LocUnits[Vname]
                 tmpVar.write_attr("units", UnitStr)
-            except KeyError:
+            except (KeyError, NameError):
                 # add error message here later, eventually all need units!
                 pass
 
@@ -78,14 +78,12 @@ class IodaWriter(object):
             VarName = "{0:s}/{1:s}".format(Gname, Vname)
             # create variable
             self.obsspace.create_var(VarName,
-                                     dtype=self.obsspace.NumpyToIodaDtype(Vvals),
+                                     dtype=Vvals.dtype,
                                      dim_list=VarDims[Vname],
                                      )
             # write the data to the file
             tmpVar = self.obsspace.Variable(VarName)
             tmpVar.write_data(Vvals)
-            # need to write depending on type
-            self.WriteVar(Var, Vvals)
             # add var metadata
             try:
                 for MetaVar, MetaVal in VarMdata[Vname].items():
@@ -96,7 +94,7 @@ class IodaWriter(object):
             try:
                 UnitStr = LocUnits[Vname]
                 tmpVar.write_attr("units", UnitStr)
-            except KeyError:
+            except (KeyError, NameError):
                 # add error message here later, eventually all need units!
                 pass
 
