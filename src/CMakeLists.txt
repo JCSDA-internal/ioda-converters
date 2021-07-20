@@ -1,6 +1,7 @@
 
 add_subdirectory(chem)
 add_subdirectory(gsi-ncdiag)
+add_subdirectory(goes)
 add_subdirectory(land)
 add_subdirectory(lib-python)
 add_subdirectory(marine)
