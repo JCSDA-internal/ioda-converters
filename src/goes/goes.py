@@ -131,14 +131,14 @@ class Goes:
         new_rad_data_array = [[0] * new_dim] * new_dim
         new_dqf_data_array = [[0] * new_dim] * new_dim
 
-        k, l = 0, 0
+        k, n = 0, 0
         for i in range(0, current_dim, increment):
             for j in range(0, current_dim, increment):
-                new_rad_data_array[k][l] = rad_data_array[i][j]
-                new_dqf_data_array[k][l] = dqf_data_array[i][j]
-                l += 1
-                if l == new_dim:
-                    l = 0
+                new_rad_data_array[k][n] = rad_data_array[i][j]
+                new_dqf_data_array[k][n] = dqf_data_array[i][j]
+                n += 1
+                if n == new_dim:
+                    n = 0
                     k += 1
 
         return new_rad_data_array, new_dqf_data_array
@@ -155,7 +155,7 @@ class Goes:
         new_rad_data_array = [[0] * new_dim] * new_dim
         new_dqf_data_array = [[0] * new_dim] * new_dim
 
-        k, l = 0, 0
+        k, n = 0, 0
         for i in range(0, current_dim, increment):
             for j in range(0, current_dim, increment):
                 point_array = [(i, j), (i + 1, j),
@@ -166,14 +166,14 @@ class Goes:
                     if dqf == 0 or dqf == 1:
                         mean_array.append(rad_data_array[point[0]][point[1]])
                 if len(mean_array) != 0:
-                    new_rad_data_array[k][l] = np.mean(mean_array)
-                    new_dqf_data_array[k][l] = 0
+                    new_rad_data_array[k][n] = np.mean(mean_array)
+                    new_dqf_data_array[k][n] = 0
                 else:
-                    new_rad_data_array[k][l] = -999
-                    new_dqf_data_array[k][l] = -1
-                l += 1
-                if l == new_dim:
-                    l = 0
+                    new_rad_data_array[k][n] = -999
+                    new_dqf_data_array[k][n] = -1
+                n += 1
+                if n == new_dim:
+                    n = 0
                     k += 1
 
         return new_rad_data_array, new_dqf_data_array
@@ -190,7 +190,7 @@ class Goes:
         new_rad_data_array = [[0] * new_dim] * new_dim
         new_dqf_data_array = [[0] * new_dim] * new_dim
 
-        k, l = 0, 0
+        k, n = 0, 0
         for i in range(0, current_dim, increment):
             for j in range(0, current_dim, increment):
                 point_array = [(i, j), (i + 1, j), (i + 2, j), (i + 3, j),
@@ -203,14 +203,14 @@ class Goes:
                     if dqf == 0 or dqf == 1:
                         mean_array.append(rad_data_array[point[0]][point[1]])
                 if len(mean_array) != 0:
-                    new_rad_data_array[k][l] = np.mean(mean_array)
-                    new_dqf_data_array[k][l] = 0
+                    new_rad_data_array[k][n] = np.mean(mean_array)
+                    new_dqf_data_array[k][n] = 0
                 else:
-                    new_rad_data_array[k][l] = -999
-                    new_dqf_data_array[k][l] = -1
-                l += 1
-                if l == new_dim:
-                    l = 0
+                    new_rad_data_array[k][n] = -999
+                    new_dqf_data_array[k][n] = -1
+                n += 1
+                if n == new_dim:
+                    n = 0
                     k += 1
 
         return new_rad_data_array, new_dqf_data_array
@@ -285,8 +285,7 @@ class Goes:
         sqrt_comp_1 = (-1.0 * self._planck_fk2) / \
                       (self._planck_bc2 * np.power(np.log((self._planck_fk1 / self._rad_data_array) + 1), 2))
         sqrt_comp_2 = 1 / (self._planck_fk1 + self._rad_data_array) - 1 / self._rad_data_array
-        sqrt_comp = np.power(sqrt_comp_1 * sqrt_comp_2, 2) * \
-                    np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
+        sqrt_comp = np.power(sqrt_comp_1 * sqrt_comp_2, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
         temp_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
         self._obserror_bt_data_array = np.where(self._dqf_data_array == -999, -999, temp_data_array)
 
