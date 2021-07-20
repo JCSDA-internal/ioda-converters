@@ -392,14 +392,10 @@ class GoesConverter:
         Creates the /MetaData/datetime and MetaData/time variables and /date_time attribute in the reflectance factor
         and brightness temperature netCDF4 Datasets.
         """
-        dataset = Dataset(self._template_input_file_path, 'r')
-        t_epoch = datetime.datetime(2000, 1, 1, 12, 0, 0, 0, pytz.UTC)
-        t_mid = t_epoch + datetime.timedelta(seconds=int(round(float(dataset.variables['t'][0]))))
-        t_refdate = t_mid.replace(minute=0, second=0, microsecond=0)
-        if t_mid.minute >= 30:
-            t_refdate = t_refdate + datetime.timedelta(hours=1)
-        datetime_str = str(JediDate(t_refdate))
-        datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), datetime_str)
+        dataset = Goes(self._template_input_file_path)
+        dataset.load()
+        start_date = str(JediDate(dataset.get_start_date()))
+        datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), start_date)
         time_array = np.full(self._get_nlocs(self._output_dataset_rf), 0.0)
         self._output_dataset_rf.createVariable('/MetaData/datetime', 'str', 'nlocs')
         self._output_dataset_rf['/MetaData/datetime'][:] = datetime_array
@@ -409,10 +405,8 @@ class GoesConverter:
         self._output_dataset_rf['/MetaData/time'][:] = time_array
         self._output_dataset_bt.createVariable('/MetaData/time', 'f4', 'nlocs')
         self._output_dataset_bt['/MetaData/time'][:] = time_array
-        date_time = f'{CoreDate(t_refdate).year()}{CoreDate(t_refdate).month()}{CoreDate(t_refdate).day()}{CoreDate(t_refdate).hour()}'
-        self._output_dataset_rf.setncattr("date_time", date_time)
-        self._output_dataset_bt.setncattr("date_time", date_time)
-        dataset.close()
+        self._output_dataset_rf.setncattr("date_time", start_date)
+        self._output_dataset_bt.setncattr("date_time", start_date)
 
     def _create_varmetadata_sensor_channel_variables(self):
         """

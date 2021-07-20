@@ -25,7 +25,7 @@ def test_goes_converter(input_file_paths, latlon_file_path, output_file_path_rf,
 if __name__ == '__main__':
     start_time = time.time()
     # input_file_paths should be a comma separated list containing 16 absolute paths corresponding to
-    # the output files for each channel of a single GOERS_16 or GOES-17 scan
+    # the output files for each channel of a single GOES_16 or GOES-17 scan
     input_file_paths = sys.argv[1].split(',')
     latlon_file_path = sys.argv[2]
     output_file_path_rf = sys.argv[3]

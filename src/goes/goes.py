@@ -53,7 +53,6 @@ class Goes:
         self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
         self._metadata_dict['end_date'] = Date(metadata_array[4][1:-1])
         self._metadata_dict['creation_date'] = Date(metadata_array[5][1:-1])
-        exit()
 
     def _open(self):
         """
@@ -300,6 +299,12 @@ class Goes:
         Returns the platform identifier.
         """
         return self._metadata_dict['platform_identifier']
+
+    def get_start_date(self):
+        """
+        Returns the scan's start date.
+        """
+        return self._metadata_dict['start_date']
 
     def get_input_file_path(self):
         """
