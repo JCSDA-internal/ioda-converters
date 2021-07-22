@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # combine_files.py
 # combine conventional obs and GOESIR (currently ahi_himawari8) from IODA format into
 # one output file with matching corresponding locations
