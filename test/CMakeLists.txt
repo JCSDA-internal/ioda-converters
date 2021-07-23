@@ -34,7 +34,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
-  testinput/modis_aod.hdf
+  testinput/modis_aod.nc
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
   testinput/afwa_snod_24km.grib
