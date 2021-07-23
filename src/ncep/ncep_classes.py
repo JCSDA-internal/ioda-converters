@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import ncepbufr
 from netCDF4 import Dataset

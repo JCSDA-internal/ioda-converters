@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # read airnow data and convert to netcdf
 import netCDF4 as nc
 import numpy as np
