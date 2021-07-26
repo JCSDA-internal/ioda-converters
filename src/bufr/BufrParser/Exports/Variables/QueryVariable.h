@@ -27,6 +27,7 @@ namespace Ingester
      public:
         explicit QueryVariable(const std::string& exportName,
                                const std::string& query,
+                               const std::string& forField,
                                const Transforms& transforms);
 
         ~QueryVariable() final = default;
@@ -36,11 +37,14 @@ namespace Ingester
         std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
 
         /// \brief Get a list of queries for this variable
-        std::map<std::string, std::string> makeQueryMap() const final;
+        QueryList makeQueryList() const final;
 
      private:
-        /// \brief The BUFR mnemonic of interest
+        /// \brief The query of interest
         std::string query_;
+
+        /// \brief The for field of interest
+        std::string forField_;
 
         /// \brief Collection of transforms to apply to the data during export
         Transforms transforms_;

@@ -53,11 +53,11 @@ namespace Ingester
 
         auto querySet = bufr::QuerySet();
 
-        for (const auto& varPair : description_.getExport().getVariables())
+        for (const auto& var : description_.getExport().getVariables())
         {
-            for (const auto& queryPair : varPair.second->getQueryMap())
+            for (const auto& queryPair : var->getQueryList())
             {
-                querySet.add(queryPair.second, queryPair.first);
+                querySet.add(queryPair.query, queryPair.name);
             }
         }
 
@@ -69,11 +69,11 @@ namespace Ingester
 
         auto srcData = BufrDataMap();
 
-        for (const auto& varPair : description_.getExport().getVariables())
+        for (const auto& var : description_.getExport().getVariables())
         {
-            for (const auto& queryPair : varPair.second->getQueryMap())
+            for (const auto& queryInfo : var->getQueryList())
             {
-                auto result = result_set.get(queryPair.first);
+                auto result = result_set.get(queryInfo.name, queryInfo.forField);
 
                 if (auto floatRes = std::dynamic_pointer_cast<bufr::Result<float>>(result))
                 {
@@ -81,11 +81,11 @@ namespace Ingester
                                                              floatRes->dims[0],
                                                              floatRes->dims[1]);
 
-                    srcData[queryPair.first] = std::make_shared<ArrayDataObject>(dataArr);
+                    srcData[queryInfo.name] = std::make_shared<ArrayDataObject>(dataArr);
                 }
                 else if (auto strRes = std::dynamic_pointer_cast<bufr::Result<std::string>>(result))
                 {
-                    srcData[queryPair.first] = std::make_shared<StrVecDataObject>(strRes->data);
+                    srcData[queryInfo.name] = std::make_shared<StrVecDataObject>(strRes->data);
                 }
             }
         }
@@ -101,7 +101,7 @@ namespace Ingester
 
         auto filters = exportDescription.getFilters();
         auto splitMap = exportDescription.getSplits();
-        auto varMap = exportDescription.getVariables();
+        auto vars = exportDescription.getVariables();
 
         // Filter
         BufrDataMap dataCopy = srcData;  // make mutable copy
@@ -130,13 +130,13 @@ namespace Ingester
         auto exportData = std::make_shared<DataContainer>(catMap);
         for (const auto& dataPair : splitDataMaps)
         {
-            for (const auto& varPair : varMap)
+            for (const auto& var : vars)
             {
                 std::ostringstream pathStr;
-                pathStr << "variables/" << varPair.first;
+                pathStr << "variables/" << var->getExportName();
 
                 exportData->add(pathStr.str(),
-                                varPair.second->exportData(dataPair.second),
+                                var->exportData(dataPair.second),
                                 dataPair.first);
             }
         }

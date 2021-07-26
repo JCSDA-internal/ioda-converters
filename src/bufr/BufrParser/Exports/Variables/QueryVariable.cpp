@@ -18,9 +18,11 @@ namespace Ingester
 {
     QueryVariable::QueryVariable(const std::string& exportName,
                                  const std::string& query,
+                                 const std::string& forField,
                                  const Transforms& transforms) :
         Variable(exportName),
         query_(query),
+        forField_(forField),
         transforms_(transforms)
     {
         initQueryMap();
@@ -56,10 +58,16 @@ namespace Ingester
         }
     }
 
-    std::map<std::string, std::string> QueryVariable::makeQueryMap() const
+    QueryList QueryVariable::makeQueryList() const
     {
-        auto queries = QueryMap();
-        queries[getExportName()] = query_;
+        auto queries = QueryList();
+
+        QueryInfo info;
+        info.name = getExportName();
+        info.query = query_;
+        info.forField = forField_;
+        queries.push_back(info);
+
         return queries;
     }
 }  // namespace Ingester

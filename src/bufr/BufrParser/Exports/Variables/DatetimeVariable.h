@@ -31,7 +31,7 @@ namespace Ingester
         std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
 
         /// \brief Get a list of queries for this variable
-        std::map<std::string, std::string> makeQueryMap() const final;
+        QueryList makeQueryList() const final;
 
      private:
         /// \brief Query for year
@@ -51,6 +51,9 @@ namespace Ingester
 
         /// \brief Query for second (optional)
         std::string secondQuery_;
+
+        /// \brief For field (optional)
+        std::string forField_;
 
         /// \brief Hours to offset from UTC (optional)
         int hoursFromUtc_;

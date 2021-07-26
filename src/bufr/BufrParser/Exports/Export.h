@@ -24,8 +24,9 @@ namespace Ingester
     class Export
     {
      public:
+
         typedef std::map<std::string, std::shared_ptr<Split>> Splits;
-        typedef std::map<std::string, std::shared_ptr<Variable>> Variables;
+        typedef std::vector<std::shared_ptr<Variable>> Variables;
         typedef std::vector<std::shared_ptr<Filter>> Filters;
 
         /// \brief Constructor

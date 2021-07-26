@@ -33,6 +33,7 @@ namespace
             const char* Datetime = "datetime";
             const char* Mnemonic = "mnemonic";
             const char* Query = "query";
+            const char* ForField = "for";
         }  // namespace Variable
 
         namespace Split
@@ -106,8 +107,17 @@ namespace Ingester
             else if (subConf.has(ConfKeys::Variable::Query))
             {
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
+                const auto& query = subConf.getString(ConfKeys::Variable::Query);
+
+                std::string forField = "";
+                if (subConf.has(ConfKeys::Variable::ForField))
+                {
+                    forField = subConf.getString(ConfKeys::Variable::ForField);
+                }
+
                 variable = std::make_shared<QueryVariable>(key,
-                                                           subConf.getString(ConfKeys::Variable::Query),
+                                                           query,
+                                                           forField,
                                                            transforms);
             }
             else
@@ -117,7 +127,7 @@ namespace Ingester
                 throw eckit::BadParameter(errMsg.str());
             }
 
-            variables_.insert({key, variable});
+            variables_.push_back(variable);
         }
     }
 

@@ -30,7 +30,7 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* Utc = "isUTC";  // deprecated
+        const char* ForField = "for";
     }  // namespace ConfKeys
 }  // namespace
 
@@ -44,6 +44,7 @@ namespace Ingester
       dayQuery_(conf.getString(ConfKeys::Day)),
       hourQuery_(conf.getString(ConfKeys::Hour)),
       minuteQuery_(conf.getString(ConfKeys::Minute)),
+      forField_(""),
       hoursFromUtc_(0)
     {
         if (conf.has(ConfKeys::Second))
@@ -56,13 +57,9 @@ namespace Ingester
             hoursFromUtc_ = conf.getInt(ConfKeys::HoursFromUtc);
         }
 
-        if (conf.has(ConfKeys::Utc))
+        if (conf.has(ConfKeys::ForField))
         {
-            std::cout << "WARNING: usage of " \
-                      << ConfKeys::Utc \
-                      << " in datetime is depricated!" \
-                      << std::endl;
-            std::cout << "Use the optional parameter " << ConfKeys::HoursFromUtc << " instead.";
+            forField_ = conf.getString(ConfKeys::ForField);
         }
 
         initQueryMap();
@@ -145,15 +142,58 @@ namespace Ingester
         }
     }
 
-    QueryMap DatetimeVariable::makeQueryMap() const
+    QueryList DatetimeVariable::makeQueryList() const
     {
-        auto queries = QueryMap();
-        queries[getExportKey(ConfKeys::Year)] = yearQuery_;
-        queries[getExportKey(ConfKeys::Month)] = monthQuery_;
-        queries[getExportKey(ConfKeys::Day)] = dayQuery_;
-        queries[getExportKey(ConfKeys::Hour)] = hourQuery_;
-        queries[getExportKey(ConfKeys::Minute)] = minuteQuery_;
-        if (!secondQuery_.empty()) queries[getExportKey(ConfKeys::Second)] = secondQuery_;
+        auto queries = QueryList();
+
+        {  // Year
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Year);
+            info.query = yearQuery_;
+            info.forField = forField_;
+            queries.push_back(info);
+        }
+
+        {  // Month
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Month);
+            info.query = monthQuery_;
+            info.forField = forField_;
+            queries.push_back(info);
+        }
+
+        {  // Day
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Day);
+            info.query = dayQuery_;
+            info.forField = forField_;
+            queries.push_back(info);
+        }
+
+        {  // Hour
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Hour);
+            info.query = hourQuery_;
+            info.forField = forField_;
+            queries.push_back(info);
+        }
+
+        {  // Minute
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Minute);
+            info.query = minuteQuery_;
+            info.forField = forField_;
+            queries.push_back(info);
+        }
+
+        if (!secondQuery_.empty()) // Second
+        {
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Second);
+            info.query = secondQuery_;
+            info.forField = forField_;
+            queries.push_back(info);
+        }
 
         return queries;
     }
