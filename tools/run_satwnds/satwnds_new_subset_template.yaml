@@ -73,9 +73,9 @@ observations:
           size: variables/percent_confidence.ncols
 
       globals:
-        - name: "bufr_version@MetaData"
+        - name: "bufr_seq_version"
           type: string
-          value: "310077"    
+          value: "3-10-077"    
 
       variables:
         - name: "satellite@MetaData"
