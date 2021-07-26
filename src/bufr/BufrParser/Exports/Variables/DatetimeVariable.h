@@ -13,7 +13,6 @@
 #include "eckit/config/LocalConfiguration.h"
 #include "ResultSet.h"
 
-#include "DataObject/StrVecDataObject.h"
 #include "Variable.h"
 
 

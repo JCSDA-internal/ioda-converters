@@ -38,14 +38,13 @@ namespace
         namespace Split
         {
             const char* Category = "category";
-            const char* Mnemonic = "mnemonic";
-            const char* Query = "query";
+            const char* Variable = "variable";
             const char* NameMap = "map";
         }  // namespace Split
 
         namespace Filter
         {
-            const char* Mnemonic = "mnemonic";
+            const char* Variable = "variable";
             const char* Bounding = "bounding";
             const char* UpperBound = "upperBound";
             const char* LowerBound = "lowerBound";
@@ -153,7 +152,7 @@ namespace Ingester
                 }
 
                 split = std::make_shared<CategorySplit>(
-                    catConf.getString(ConfKeys::Split::Mnemonic),
+                    catConf.getString(ConfKeys::Split::Variable),
                     nameMap);
             }
             else
@@ -200,7 +199,7 @@ namespace Ingester
                 }
 
                 filter = std::make_shared<BoundingFilter>(
-                    filterConf.getString(ConfKeys::Filter::Mnemonic),
+                    filterConf.getString(ConfKeys::Filter::Variable),
                     lowerBound,
                     upperBound);
             }

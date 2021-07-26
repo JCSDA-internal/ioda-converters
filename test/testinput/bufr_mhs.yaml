@@ -19,6 +19,8 @@ observations:
               minute: "*/MINU"
               second: "*/SECO"
           height: 
+            query: "*/HMSL"
+          hols:
             query: "*/HOLS"
           fovn:
             query: "*/FOVN"
@@ -67,8 +69,8 @@ observations:
           units: "meters"
 
         - name: "heightOfSurface@MetaData"
-          source: variables/height
-          dimensions: ["nlocs"]
+          source: variables/hols
+          dimensions: [ "nlocs" ]
           longName: "Height of Land Surface"
           units: "meters"
 

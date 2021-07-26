@@ -18,17 +18,17 @@ namespace Ingester
 {
     /// \brief Data splitter class that splits data according to a predefined categories.
     /// \details This class sub-divides data into sub-categories depending on the value of a
-    ///          mnemonic. It is assumed that the mnemonic values are integers which represent
-    ///          separate categories of data. An example is Satellite ID (mnemonic: SAID) where each
+    ///          variable. It is assumed that the variable values are integers which represent
+    ///          separate categories of data. An example is Satellite ID (variable: SAID) where each
     ///          possible satellite has its own unique integer ID.
     ///          The subcategories this Split divides into can either be manually specified by a
     ///          NameMap (map<integer, string>) or be automatically determined (if the given NameMap
     ///          is found to be empty). An example NameMap might look like this:
     ///            { 257 : GEOS-13,
     ///              259 : GEOS-15 }
-    ///          This NameMap tells the splitter to divide by the values of the given mnemonic
+    ///          This NameMap tells the splitter to divide by the values of the given variable
     ///          (SAID for this example) into two named groups (GEOS-13 and GEOS-15). Data
-    ///          associated with mnemonic values not specified in the map are discarded. If the
+    ///          associated with variable values not specified in the map are discarded. If the
     ///          NameMap were empty (unspecified) then this splitter will use the data to to
     ///          determine all all the possible values to split on automatically. Each split would
     ///          then be named according to its integer value (ex: 257, 259, 270, 271, ....).
@@ -40,11 +40,11 @@ namespace Ingester
         typedef  std::map<int, std::string> NameMap;
 
         /// \brief constructor
-        /// \param mnemonic BUFR mnemonic to base the split on.
+        /// \param variable Variable to base the split on.
         /// \param map Name of the created categories from the integer BUFR values. May be an
         ///        empty map in which case subcategories are automatically determined from the
         ///        data.
-        CategorySplit(const std::string& mnemonic, const NameMap& map);
+        CategorySplit(const std::string& variable, const NameMap& map);
 
         /// \brief Get list of sub categories this split will create
         /// \result Set of unique strings.
@@ -56,11 +56,11 @@ namespace Ingester
         std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) final;
 
         // Getters
-        inline std::string getQuery() { return query_; }
+        inline std::string getQuery() { return variable_; }
 
      private:
         NameMap nameMap_;
-        const std::string query_;
+        const std::string variable_;
 
         /// \brief Adds values to nameMap_ using the data if nameMap_ is empty.
         /// \param dataMap Data to be split

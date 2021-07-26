@@ -11,14 +11,16 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "../RowSlice.h"
+#include "DataObject/ArrayDataObject.h"
+#include "DataObject/DataObject.h"
+
 
 namespace Ingester
 {
-    BoundingFilter::BoundingFilter(const std::string& mnemonic,
+    BoundingFilter::BoundingFilter(const std::string& variable,
                    std::shared_ptr<float> lowerBound,
                    std::shared_ptr<float> upperBound) :
-      mnemonic_(mnemonic),
+      variable_(variable),
       lowerBound_(lowerBound),
       upperBound_(upperBound)
     {
@@ -40,40 +42,49 @@ namespace Ingester
     void BoundingFilter::apply(BufrDataMap& dataMap)
     {
         std::vector<size_t> validRows;
-        if (dataMap.find(mnemonic_) == dataMap.end())
+        if (dataMap.find(variable_) == dataMap.end())
         {
             std::ostringstream errStr;
-            errStr << "Unknown mnemonic " << mnemonic_ << " found in bounding filter.";
+            errStr << "Unknown variable " << variable_ << " found in bounding filter.";
             throw eckit::BadParameter(errStr.str());
         }
 
-        const auto& array = dataMap.at(mnemonic_);
-        for (size_t rowIdx = 0; rowIdx < static_cast<size_t>(array.rows()); rowIdx++)
+        if (const auto& var = std::dynamic_pointer_cast<ArrayDataObject>(dataMap.at(variable_)))
         {
-            if (lowerBound_ && upperBound_)
+            const IngesterArray& array = var->get();
+            for (size_t rowIdx = 0; rowIdx < static_cast<size_t>(array.rows()); rowIdx++)
             {
-                if ((array.row(rowIdx) >= *lowerBound_).all() &&
-                    (array.row(rowIdx) <= *upperBound_).all())
+                if (lowerBound_ && upperBound_)
                 {
-                    validRows.push_back(rowIdx);
+                    if ((array.row(rowIdx) >= *lowerBound_).all() &&
+                        (array.row(rowIdx) <= *upperBound_).all())
+                    {
+                        validRows.push_back(rowIdx);
+                    }
+                }
+                else
+                {
+                    if ((lowerBound_ && (array.row(rowIdx) >= *lowerBound_).all()) ||
+                        (upperBound_ && (array.row(rowIdx) <= *upperBound_).all()))
+                    {
+                        validRows.push_back(rowIdx);
+                    }
                 }
             }
-            else
+
+            if (validRows.size() != static_cast<size_t>(array.rows()))
             {
-                if ((lowerBound_ && (array.row(rowIdx) >= *lowerBound_).all()) ||
-                    (upperBound_ && (array.row(rowIdx) <= *upperBound_).all()))
+                for (const auto& dataPair : dataMap)
                 {
-                    validRows.push_back(rowIdx);
+                    dataMap[dataPair.first] = dataPair.second->slice(validRows);
                 }
             }
         }
-
-        if (validRows.size() != static_cast<size_t>(array.rows()))
+        else
         {
-            for (const auto& dataPair : dataMap)
-            {
-                dataMap[dataPair.first] = rowSlice(dataPair.second, validRows);
-            }
+            std::stringstream errStr;
+            errStr << "BoundingFilter variable must be a array of numbers (found list of strings).";
+            throw eckit::BadParameter(errStr.str());
         }
     }
 }  // namespace Ingester

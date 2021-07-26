@@ -38,8 +38,14 @@ namespace Ingester
         }
 
         auto data = map.at(getExportName());
-        applyTransforms(data);
-        return std::make_shared<ArrayDataObject>(data);
+
+        if (auto arr = std::dynamic_pointer_cast<ArrayDataObject>(data))
+        {
+            auto a = arr->get();
+            applyTransforms(a);
+        }
+
+        return data;
     }
 
     void QueryVariable::applyTransforms(IngesterArray& data)

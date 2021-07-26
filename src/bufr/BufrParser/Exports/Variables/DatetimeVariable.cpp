@@ -14,6 +14,10 @@
 
 #include "DatetimeVariable.h"
 
+#include "DataObject/ArrayDataObject.h"
+#include "DataObject/DataObject.h"
+#include "DataObject/StrVecDataObject.h"
+
 
 namespace
 {
@@ -70,21 +74,29 @@ namespace Ingester
 
         auto datetimes = std::vector<std::string>();
 
-        datetimes.reserve(map.at(getExportKey(ConfKeys::Year)).size());
-        for (unsigned int idx = 0; idx < map.at(getExportKey(ConfKeys::Year)).size(); idx++)
+        auto years = map.at(getExportKey(ConfKeys::Year))->getFloats();
+        auto months = map.at(getExportKey(ConfKeys::Month))->getFloats();
+        auto days = map.at(getExportKey(ConfKeys::Day))->getFloats();
+        auto hours = map.at(getExportKey(ConfKeys::Hour))->getFloats();
+        auto minutes = map.at(getExportKey(ConfKeys::Minute))->getFloats();
+
+        datetimes.resize(years.size());
+        for (unsigned int idx = 0; idx < years.size(); idx++)
         {
             // YYYY-MM-DDThh:mm:ssZ
             std::ostringstream datetimeStr;
             datetimeStr << std::setfill('0')
-                        << std::setw(4) << map.at(getExportKey(ConfKeys::Year))(idx) << "-" \
-                        << std::setw(2) << map.at(getExportKey(ConfKeys::Month))(idx) << "-" \
-                        << std::setw(2) << map.at(getExportKey(ConfKeys::Day))(idx) << "T" \
-                        << std::setw(2) << map.at(getExportKey(ConfKeys::Hour))(idx) - hoursFromUtc_ << ":" \
-                        << std::setw(2) << map.at(getExportKey(ConfKeys::Minute))(idx) << ":";
+                        << std::setw(4) << years[idx] << "-" \
+                        << std::setw(2) << months[idx] << "-" \
+                        << std::setw(2) << days[idx] << "T" \
+                        << std::setw(2) << hours[idx] - hoursFromUtc_ << ":" \
+                        << std::setw(2) << minutes[idx] << ":";
 
             if (!secondQuery_.empty())
             {
-                datetimeStr << std::setw(2) << map.at(getExportKey(ConfKeys::Second))(idx);
+                datetimeStr << std::setw(2)
+                            << map.at(getExportKey(ConfKeys::Second))->getFloat(idx, 0)
+                            << ":";
             }
             else
             {
@@ -92,8 +104,7 @@ namespace Ingester
             }
 
             datetimeStr << "Z";
-
-            datetimes.push_back(datetimeStr.str());
+            datetimes[idx] = datetimeStr.str();
         }
 
         return std::make_shared<StrVecDataObject>(datetimes);

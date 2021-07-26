@@ -11,14 +11,12 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "../RowSlice.h"
-
 
 namespace Ingester
 {
-    CategorySplit::CategorySplit(const std::string& mnemonic, const NameMap& nameMap) :
-            nameMap_(nameMap),
-            query_(mnemonic)
+    CategorySplit::CategorySplit(const std::string& variable, const NameMap& nameMap) :
+      nameMap_(nameMap),
+      variable_(variable)
     {
     }
 
@@ -41,17 +39,15 @@ namespace Ingester
 
         std::map<std::string, BufrDataMap> dataMaps;
 
-        const IngesterArray& mnemonicArr = dataMap.at(query_);
+        const auto& dataObject = dataMap.at(variable_);
 
         for (const auto& mapPair : nameMap_)
         {
             // Find matching rows
             std::vector<size_t> indexVec;
-            for (int rowIdx = 0;
-                 rowIdx < static_cast<int>(dataMap.at(query_).rows());
-                 rowIdx++)
+            for (size_t rowIdx = 0; rowIdx < dataObject->nrows(); rowIdx++)
             {
-                if (mnemonicArr.row(rowIdx)[0] == mapPair.first)
+                if (dataObject->getInt(rowIdx, 0) == mapPair.first)
                 {
                     indexVec.push_back(rowIdx);
                 }
@@ -61,7 +57,7 @@ namespace Ingester
             BufrDataMap newDataMap;
             for (const auto& dataPair : dataMap)
             {
-                const auto newArr = rowSlice(dataPair.second, indexVec);
+                const auto newArr = dataPair.second->slice(indexVec);
                 newDataMap.insert({dataPair.first, newArr});
             }
 
@@ -75,10 +71,10 @@ namespace Ingester
     {
         if (nameMap_.empty())
         {
-            auto& array = dataMap.at(query_);
-            for (auto rowIdx = 0; rowIdx < array.rows(); rowIdx++)
+            const auto& dataObject = dataMap.at(variable_);
+            for (auto rowIdx = 0; rowIdx < dataObject->nrows(); rowIdx++)
             {
-                auto itemVal =  array.row(rowIdx)[0];
+                auto itemVal =  dataObject->getFloat(rowIdx, 0);
                 if (trunc(itemVal) == itemVal)
                 {
                     nameMap_.insert({static_cast<int> (itemVal),
@@ -87,7 +83,7 @@ namespace Ingester
                 else
                 {
                     std::stringstream errStr;
-                    errStr << "Can't turn " << query_ << " into a category as it contains ";
+                    errStr << "Can't turn " << variable_ << " into a category as it contains ";
                     errStr << "non-integer values.";
                     throw eckit::BadParameter(errStr.str());
                 }
@@ -97,7 +93,7 @@ namespace Ingester
         if (nameMap_.empty())
         {
             std::stringstream errStr;
-            errStr << "No categories could be identified for " << query_ << ".";
+            errStr << "No categories could be identified for " << variable_ << ".";
             throw eckit::BadParameter(errStr.str());
         }
     }

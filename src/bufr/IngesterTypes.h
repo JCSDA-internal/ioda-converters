@@ -10,14 +10,15 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "Eigen/Dense"
+
+#include "DataObject/DataObject.h"
 
 namespace Ingester
 {
     typedef float FloatType;
     typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> IngesterArray;
-    typedef std::map<std::string, IngesterArray> IngesterArrayMap;
-    typedef IngesterArrayMap BufrDataMap;
-    typedef std::vector<std::string> IngesterStrVector;
+    typedef std::map<std::string, std::shared_ptr<DataObject>> BufrDataMap;
 }

@@ -20,7 +20,6 @@ list(APPEND _ingester_srcs
   BufrParser/BufrDescription.cpp
   BufrParser/Exports/Export.h
   BufrParser/Exports/Export.cpp
-  BufrParser/Exports/RowSlice.h
   BufrParser/Exports/Filters/Filter.h
   BufrParser/Exports/Filters/BoundingFilter.h
   BufrParser/Exports/Filters/BoundingFilter.cpp
