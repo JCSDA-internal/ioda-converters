@@ -34,6 +34,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/modis_aod.nc
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
   testinput/afwa_snod_24km.grib
@@ -74,6 +75,7 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
+  testoutput/modis_aod.nc 
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
   testoutput/afwa_snod.nc
@@ -529,6 +531,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2.nc"
                           tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
+                          -i testinput/modis_aod.nc 
+                          -t 2016060100 
+                          -o testrun/modis_aod.nc"
+                          modis_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
