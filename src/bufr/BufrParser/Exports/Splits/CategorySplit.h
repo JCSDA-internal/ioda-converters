@@ -44,7 +44,7 @@ namespace Ingester
         /// \param map Name of the created categories from the integer BUFR values. May be an
         ///        empty map in which case subcategories are automatically determined from the
         ///        data.
-        CategorySplit(const std::string& variable, const NameMap& map);
+        CategorySplit(const std::string& name, const std::string& variable, const NameMap& map);
 
         /// \brief Get list of sub categories this split will create
         /// \result Set of unique strings.
@@ -54,9 +54,6 @@ namespace Ingester
         /// \param dataMap Data to be split
         /// \result map of split data where the category is the key
         std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) final;
-
-        // Getters
-        inline std::string getQuery() { return variable_; }
 
      private:
         NameMap nameMap_;

@@ -18,7 +18,7 @@ namespace Ingester
     class Split
     {
      public:
-        Split() = default;
+        explicit Split(const std::string& name);
 
         /// \brief Get set of sub categories this split will create
         /// \param dataMap The data we will split on.
@@ -29,5 +29,12 @@ namespace Ingester
         /// \param dataMap Data to be split
         /// \result map of split data where the category is the key
         virtual std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) = 0;
+
+        /// \brief Get the split name
+        inline std::string getName() const { return name_; }
+
+    private:
+        /// \brief The name of the split as defined by the key in the YAML file.
+        const std::string name_;
     };
 }  // namespace Ingester

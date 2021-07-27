@@ -100,7 +100,7 @@ namespace Ingester
         auto exportDescription = description_.getExport();
 
         auto filters = exportDescription.getFilters();
-        auto splitMap = exportDescription.getSplits();
+        auto splits = exportDescription.getSplits();
         auto vars = exportDescription.getVariables();
 
         // Filter
@@ -112,18 +112,18 @@ namespace Ingester
 
         // Split
         CategoryMap catMap;
-        for (const auto& splitPair : splitMap)
+        for (const auto& split : splits)
         {
             std::ostringstream catName;
-            catName << "splits/" << splitPair.first;
-            catMap.insert({catName.str(), splitPair.second->subCategories(dataCopy)});
+            catName << "splits/" << split->getName();
+            catMap.insert({catName.str(), split->subCategories(dataCopy)});
         }
 
         BufrParser::CatDataMap splitDataMaps;
         splitDataMaps.insert({std::vector<std::string>(), dataCopy});
-        for (const auto& splitPair : splitMap)
+        for (const auto& split : splits)
         {
-            splitDataMaps = splitData(splitDataMaps, *splitPair.second);
+            splitDataMaps = splitData(splitDataMaps, *split);
         }
 
         // Export

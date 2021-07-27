@@ -161,9 +161,9 @@ namespace Ingester
                     }
                 }
 
-                split = std::make_shared<CategorySplit>(
-                    catConf.getString(ConfKeys::Split::Variable),
-                    nameMap);
+                split = std::make_shared<CategorySplit>(key,
+                                                catConf.getString(ConfKeys::Split::Variable),
+                                                        nameMap);
             }
             else
             {
@@ -172,7 +172,7 @@ namespace Ingester
                 throw eckit::BadParameter(errMsg.str());
             }
 
-            splits_.insert({key, split});
+            splits_.push_back(split);
         }
     }
 

@@ -24,6 +24,7 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Filters/BoundingFilter.h
   BufrParser/Exports/Filters/BoundingFilter.cpp
   BufrParser/Exports/Splits/Split.h
+  BufrParser/Exports/Splits/Split.cpp
   BufrParser/Exports/Splits/CategorySplit.h
   BufrParser/Exports/Splits/CategorySplit.cpp
   BufrParser/Exports/Variables/Variable.h
@@ -66,7 +67,7 @@ target_include_directories(ingester PUBLIC
   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
 )
 
-add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
+add_library( ${PROJECT_NAME}::ingester ALIAS ingester)
 
 ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp

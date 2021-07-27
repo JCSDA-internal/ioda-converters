@@ -14,9 +14,10 @@
 
 namespace Ingester
 {
-    CategorySplit::CategorySplit(const std::string& variable, const NameMap& nameMap) :
-      nameMap_(nameMap),
-      variable_(variable)
+    CategorySplit::CategorySplit(const std::string& name, const std::string& variable, const NameMap& nameMap) :
+        Split(name),
+        variable_(variable),
+        nameMap_(nameMap)
     {
     }
 
