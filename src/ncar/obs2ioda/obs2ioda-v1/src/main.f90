@@ -7,24 +7,27 @@ use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs
 use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
 use ahi_hsd_mod, only: read_hsd, subsample
+use satwnd_mod, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
 
 implicit none
 
 integer(i_kind), parameter :: NameLen   = 64
 integer(i_kind), parameter :: DateLen   = 10
-integer(i_kind), parameter :: nfile_all = 5
+integer(i_kind), parameter :: nfile_all = 6
 integer(i_kind), parameter :: ftype_unknown  = -1
 integer(i_kind), parameter :: ftype_prepbufr =  1
 integer(i_kind), parameter :: ftype_gnssro   =  2
 integer(i_kind), parameter :: ftype_amsua    =  3
 integer(i_kind), parameter :: ftype_mhs      =  4
 integer(i_kind), parameter :: ftype_airs     =  5
+integer(i_kind), parameter :: ftype_satwnd   =  6
 
 integer(i_kind)            :: ftype(nfile_all)
 character(len=NameLen)     :: flist_all(nfile_all) = &
    (/                    &
       "gnssro.bufr    ", &
       "prepbufr.bufr  ", &
+      "satwnd.bufr    ", &
       "amsua.bufr     ", &
       "airs.bufr      ", &
       "mhs.bufr       "  &
@@ -59,6 +62,27 @@ do ifile = 1, nfile
       else
          write(*,*) '--- processing gnssro.bufr ---'
          call read_write_gnssro(trim(inpdir)//trim(filename), trim(outdir))
+      end if
+   end if
+
+   if ( ftype(ifile) == ftype_satwnd ) then
+      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
+      else
+         ! read satwnd file and store data in sequential linked list for conv obs
+         call read_satwnd(trim(inpdir)//trim(filename), filedate)
+
+         if ( apply_gsi_qc ) then
+            write(*,*) '--- applying some additional QC as in GSI read_satwnd.f90 for the global model ---'
+            call filter_obs_satwnd
+         end if
+
+         ! transfer info from limked list to arrays grouped by obs/variable types
+         call sort_obs_satwnd
+
+         ! write out netcdf files
+         call write_obs(filedate, write_nc_conv, outdir)
       end if
    end if
 
@@ -199,7 +223,7 @@ if ( narg > 0 ) then
    if ( ifile == 0 ) then
       nfile = nfile_all
       flist(:) = flist_all(:)
-      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_amsua, ftype_airs, ftype_mhs /)
+      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd, ftype_amsua, ftype_airs, ftype_mhs /)
    else
       nfile = ifile
    end if
@@ -208,7 +232,7 @@ else
    outdir = '.'
    nfile = nfile_all
    flist(:) = flist_all(:)
-   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_amsua, ftype_airs, ftype_mhs /)
+   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd, ftype_amsua, ftype_airs, ftype_mhs /)
 end if
 
 itmp = len_trim(inpdir)
@@ -228,6 +252,10 @@ fileloop: do ifile = 1, nfile
    open(unit=iunit, file=trim(inpdir)//trim(flist(ifile)), form='unformatted', iostat=iost, status='old')
    call openbf(iunit, 'IN', iunit)
    call readmg(iunit,subset,idate,iret)
+print*,subset
+   if ( subset(1:5) == 'NC005' ) then
+      ftype(ifile) = ftype_satwnd
+   else
    select case ( trim(subset) )
    case (  'ADPUPA', 'ADPSFC' )
       ftype(ifile) = ftype_prepbufr
@@ -239,10 +267,13 @@ fileloop: do ifile = 1, nfile
       ftype(ifile) = ftype_mhs
    case ( 'NC021249' )
       ftype(ifile) = ftype_airs
+   !case ( 'NC005030', 'NC005031', 'NC005032', 'NC005034', 'NC005039' )
    case default
       ftype(ifile) = ftype_unknown
    end select
+   end if
    call closbf(iunit)
+   close(iunit)
 end do fileloop
 
 end subroutine parse_files_to_convert

@@ -15,10 +15,10 @@ integer(i_kind), parameter :: itrue             = 1
 integer(i_kind), parameter :: ifalse            = 0
 integer(i_kind), parameter :: nstring           = 50
 integer(i_kind), parameter :: ndatetime         = 20
-integer(i_kind), parameter :: nobtype           = 6  ! number of ob types
+integer(i_kind), parameter :: nobtype           = 7  ! number of ob types
 integer(i_kind), parameter :: n_ncdim           = 4 !5  ! total numner of nc dimensions
 integer(i_kind), parameter :: nvar_met          = 6
-integer(i_kind), parameter :: nvar_info         = 4 !9  ! number of metadata
+integer(i_kind), parameter :: nvar_info         = 8 !9  ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
 integer(i_kind), parameter :: ninst_geo         = 1
 integer(i_kind), parameter :: ninst             = 12
@@ -33,7 +33,8 @@ character(len=nstring), dimension(nobtype) :: obtype_list = &
       'sondes      ', &
       'aircraft    ', &
       'sfc         ', &
-      'satwind     ', &
+      'satwind     ', &  !AMV winds from prepbufr file
+      'satwnd      ', &  !AMV winds from bufr file
       'profiler    ', &
       'ascat       '  &
    /)
@@ -54,6 +55,7 @@ integer(i_kind), dimension(nvar_met,nobtype) :: vflag = reshape ( &
       itrue, itrue, itrue,  itrue,  itrue,  ifalse, & ! sonde
       itrue, itrue, itrue,  itrue,  itrue,  ifalse, & ! aircraft
       itrue, itrue, itrue,  itrue,  itrue,  itrue,  & ! sfc
+      itrue, itrue, ifalse, ifalse, ifalse, ifalse, & ! satwind
       itrue, itrue, ifalse, ifalse, ifalse, ifalse, & ! satwnd
       itrue, itrue, ifalse, ifalse, ifalse, ifalse, & ! profiler
       itrue, itrue, ifalse, ifalse, ifalse, ifalse  & ! ascat
@@ -102,38 +104,38 @@ character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
    /)
 character(len=nstring), dimension(nvar_info) :: name_var_info = &
    (/                      &
-!      'air_pressure     ', &
-!      'height           ', &
-!      'station_elevation', &
+      'air_pressure     ', &
+      'height           ', &
+      'station_elevation', &
       'latitude         ', &
       'longitude        ', &
 !      'record_number    ', &
       'datetime         ', &
-!      'station_id       ', &
+      'station_id       ', &
       'variable_names   '  &
    /)
 integer(i_kind), dimension(nvar_info) :: type_var_info = &
    (/             &
-!      nf90_float, &
-!      nf90_float, &
-!      nf90_float, &
+      nf90_float, &
+      nf90_float, &
+      nf90_float, &
       nf90_float, &
       nf90_float, &
 !      nf90_int,   &
       nf90_char,  &
-!      nf90_char,  &
+      nf90_char,  &
       nf90_char   &
    /)
 character(len=nstring), dimension(2,nvar_info) :: dim_var_info = reshape ( &
    (/                             &
-!      'nlocs     ', 'null      ', &
-!      'nlocs     ', 'null      ', &
-!      'nlocs     ', 'null      ', &
+      'nlocs     ', 'null      ', &
+      'nlocs     ', 'null      ', &
+      'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
 !      'nlocs     ', 'null      ', &
       'ndatetime ', 'nlocs     ', &
-!      'nstring   ', 'nlocs     ', &
+      'nstring   ', 'nlocs     ', &
       'nstring   ', 'nvars     '  &
    /), (/2, nvar_info/) )
 character(len=nstring), dimension(nsen_info) :: name_sen_info = &
