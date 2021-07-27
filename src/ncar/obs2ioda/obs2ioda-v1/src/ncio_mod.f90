@@ -7,7 +7,7 @@ use define_mod, only: nobtype, nvar_info, n_ncdim, nstring, ndatetime, &
    xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
    write_nc_radiance_geo, ninst_geo, geoinst_list, &
    var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
-   unit_var_met
+   unit_var_met, iflag_conv, iflag_radiance
 use netcdf_mod, only: open_netcdf_for_write, close_netcdf, &
    def_netcdf_dims, def_netcdf_var, def_netcdf_end, &
    put_netcdf_var, get_netcdf_dims
@@ -41,6 +41,7 @@ subroutine write_obs (filedate, write_opt, outdir)
    character(len=nstring),   allocatable :: name_var_tb(:)
    character(len=nstring)                :: str_tmp
    character(len=4)                      :: c4
+   integer(i_kind)                       :: iflag
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
@@ -108,7 +109,13 @@ subroutine write_obs (filedate, write_opt, outdir)
          end if
       end do
 
-      do i = 1, nvar_info
+      var_info_def_loop: do i = 1, nvar_info
+         if ( write_opt == write_nc_conv ) then
+            iflag = iflag_conv(i,ityp)
+         else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
+            iflag = iflag_radiance(i)
+         end if
+         if ( iflag /= itrue ) cycle var_info_def_loop
          ncname = trim(name_var_info(i))//'@MetaData'
          if ( trim(name_var_info(i)) == 'variable_names' ) then
             ncname = trim(name_var_info(i))//'@VarMetaData'
@@ -122,7 +129,7 @@ subroutine write_obs (filedate, write_opt, outdir)
          else
             call def_netcdf_var(ncfileid,ncname,(/dim1/),type_var_info(i))
          end if
-      end do ! nvar_info
+      end do var_info_def_loop ! nvar_info
 
       if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
          do i = 1, nsen_info
@@ -168,7 +175,13 @@ subroutine write_obs (filedate, write_opt, outdir)
          end if
       end do var_loop
 
-      do i = 1, nvar_info
+      var_info_loop: do i = 1, nvar_info
+         if ( write_opt == write_nc_conv ) then
+            iflag = iflag_conv(i,ityp)
+         else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
+            iflag = iflag_radiance(i)
+         end if
+         if ( iflag /= itrue ) cycle var_info_loop
          ncname = trim(name_var_info(i))//'@MetaData'
          if ( trim(name_var_info(i)) == 'variable_names' ) then
             ncname = trim(name_var_info(i))//'@VarMetaData'
@@ -199,7 +212,7 @@ subroutine write_obs (filedate, write_opt, outdir)
                deallocate(str_ndatetime)
             end if
          end if
-      end do
+      end do var_info_loop
 
       if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
          do i = 1, nsen_info

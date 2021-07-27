@@ -114,6 +114,27 @@ character(len=nstring), dimension(nvar_info) :: name_var_info = &
       'station_id       ', &
       'variable_names   '  &
    /)
+
+! conv info flags for name_var_info
+! air_pressure, height, station_elevation, latitude, longitude, datetime, station_id, variable_names
+integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
+   (/ &
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sonde
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! aircraft
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sfc
+      itrue, itrue,  ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwind
+      itrue, ifalse, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwnd
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! profiler
+      itrue, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue   & ! ascat
+   /), (/nvar_info,nobtype/) )
+
+! radiance info flags for name_var_info
+! air_pressure, height, station_elevation, latitude, longitude, datetime, station_id, variable_names
+integer(i_kind), dimension(nvar_info) :: iflag_radiance = &
+   (/ &
+      ifalse, ifalse, ifalse, itrue, itrue, itrue, ifalse, itrue &
+   /)
+
 integer(i_kind), dimension(nvar_info) :: type_var_info = &
    (/             &
       nf90_float, &
