@@ -35,16 +35,23 @@ namespace Ingester
             std::stringstream errStr;
             errStr << "Export named " << getExportName();
             errStr << " could not be found during export.";
-
-            eckit::BadParameter(errStr.str());
+            throw eckit::BadParameter(errStr.str());
         }
 
         auto data = map.at(getExportName());
 
-        if (auto arr = std::dynamic_pointer_cast<ArrayDataObject>(data))
+        if (auto arrDataObj = std::dynamic_pointer_cast<ArrayDataObject>(data))
         {
-            auto a = arr->get();
-            applyTransforms(a);
+            auto arr = arrDataObj->get();
+            applyTransforms( arr);
+            data = std::make_shared<ArrayDataObject>(arr);
+        }
+        else
+        {
+            std::stringstream errStr;
+            errStr << "Tried to apply transform to a string field in ";
+            errStr << getExportName() << ".";
+            throw eckit::BadParameter(errStr.str());
         }
 
         return data;

@@ -24,8 +24,6 @@ observations:
             query: "*/CLON"
           latitude:
             query: "*/CLAT"
-          borg:
-            query: "*/BORG"
           satellite_wind_calculation_method:
             query: "*/SWCM"
           satellite_zenith_angle:
@@ -45,9 +43,9 @@ observations:
           wind_speed:
             query: "*/WSPD"
           generating_application:
-            query: "[*/GQCPRMS/GNAP, */QCPRMS/GNAP]"
+            query: "[*/GQCPRMS/GNAP[1], */QCPRMS/GNAP[1]]"
           percent_confidence:
-            query: "[*/GQCPRMS/PCCF, */QCPRMS/PCCF]"
+            query: "[*/GQCPRMS/PCCF[1], */QCPRMS/PCCF[1]]"
 
         filters:
           - bounding:
@@ -91,12 +89,6 @@ observations:
           longName: "Latitude"
           units: "degrees"
           range: [-90, 90]
-
-        - name: "borg@MetaData"
-          source: variables/borg
-          dimensions: [ "nlocs" ]
-          longName: "Resistance id Futile"
-          units: "str"
 
         - name: "satellite_wind_calculation_method@MetaData"
           source: variables/satellite_wind_calculation_method

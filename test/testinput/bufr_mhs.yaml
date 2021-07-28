@@ -18,7 +18,7 @@ observations:
               hour: "*/HOUR"
               minute: "*/MINU"
               second: "*/SECO"
-          height: 
+          height:
             query: "*/HMSL"
           hols:
             query: "*/HOLS"
@@ -28,6 +28,8 @@ observations:
             query: "*/LSQL"
           longitude:
             query: "*/CLON"
+            transforms:
+              - offset: 50
           latitude:
             query: "*/CLAT"
           sza:
