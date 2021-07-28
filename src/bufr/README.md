@@ -36,12 +36,6 @@ The obs space describes how to read data from the BUFR file and then how to expo
       obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
       isWmoFormat: true  # Optional
       tablepath: "./testinput/bufr_tables"  # Optional
-        
-      mnemonicSets:
-        - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
-        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
-          channels : 1-5
 ```
 
 Defines how to read data from the input BUFR file. Its sections are as follows:
@@ -55,50 +49,46 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
    standard WMO formated files. Only applies if `isWmoFormat` is `true`. If this field is missing 
    and`isWmoFormat` is `true` then NCEPLib-bufr will look for the table data in its default
    directory.
-* `mnemonicSets` Defines the list of mnemonic sets to read from the BUFR file.
-  * `mnemonics` Defines a group of mnemonics to parse from a BUFR subset. 
-    * _(optional)_ `channels` specifies channels to capture. This could be a disjoint set such as 
-      “1, 3, 8-15” or just "1-5" as in the example.
-    * Internally _NCEPLib BUFR_ **ufbint** used for single value mnemonics, and **ufbrep** used for 
-      multi channels mnemonics.
 
 #### Exports
 
 ```yaml
       exports:
-        splits:
-          satId:
-           category:
-              mnemonic: SAID
-              map: 
-                _3: sat_1  # can't use integers as keys
-                _5: sat_2
-                _8: sat_3
-                
-        filters:
-          - bounding:
-              mnemonic: CLON
-              upperBound: -68  # optional
-              lowerBound: -86.3  # optional
-
         variables:
           timestamp:
             datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-              second: SECO
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
               hoursFromUtc: 0  # optional
+          satellite_id:
+            query: "*/SAID"
           longitude:
-            mnemonic: CLON
+            query: "*/CLON"
             transforms:
               - offset: -180
           latitude:
-            mnemonic: CLAT
+            query: "*/CLAT"
           radiance:
-            mnemonic: TMBR
+            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
+
+        splits:
+          satId:
+            category:
+              variable: satellite_id
+              map:
+                _3: sat_1  # can't use integers as keys
+                _5: sat_2
+                _8: sat_3
+
+        filters:
+          - bounding:
+              variable: longitude
+              upperBound: -68  # optional
+              lowerBound: -86.3  # optional
 ```
 Exports is a dictionary of key value pairs which define a name to the data element to expose the 
 ioda encoder. It has the following sections:
@@ -107,9 +97,10 @@ ioda encoder. It has the following sections:
 * `variables`
   * **keys** are arbitrary strings (anything you want). They can be referenced in the ioda section.
   * **values** (One of these types):
-    * `mnemonic` Associate **key** with data for mnemonic listed in mnemonic set. _(optional)_ Can 
-      apply a list of `tranforms` to the data. Possible transforms are `offset` and `scale`.
-    * `datetime` Associate **key** with datetime formatted strings. Supply mnemonics for `year`, 
+    * `query` Query string which is used to get the data from the BUFR file. _(optional)_ Can 
+      apply a list of `tranforms` to the numeric (not string) data. Possible transforms are 
+      `offset` and `scale`.
+    * `datetime` Associate **key** with datetime formatted strings. Supply queries for `year`, 
       `month`, `day`, `hour`, `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must
       be an **integer**).
       
@@ -122,7 +113,7 @@ ioda encoder. It has the following sections:
   * **keys** are arbitrary strings (anything you want). They can be referenced in the ioda section.
   * **values** Type of split to apply (currently supports `category`)
     * `category` Splits data based on values assocatied with a BUFR mnemonic. Constists of:
-      * `mnemonic` The mnemonic to use.
+      * `variable` The variable from the `variables` section to split on.
       * _(optional)_ `map` Associates integer values in BUFR mnemonic data to a string. Please not 
         that integer keys must be prepended with an `_` (ex: `_2`). Rows where where the mnemonic 
         value is not defined in the map will be rejected (won't appear in output).
@@ -131,7 +122,7 @@ ioda encoder. It has the following sections:
 * _(optional)_ `filters`List of filters to apply to the data before exporting. Filters exclude data
   which does not meet their requirements. The following filters are supported:
     * `bounding`
-      * `mnemonic` The mnemonic to use.
+      * `variable` The variable from the `variables` section to filter on.
       * _(optional)_ `upperBound` The highest possible value to accept
       * _(optional)_ `lowerBound` The lowest possible value to accept
   
