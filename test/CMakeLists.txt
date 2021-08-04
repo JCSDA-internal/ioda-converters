@@ -46,6 +46,7 @@ list( APPEND test_input
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
+  testinput/aeronet_aod.dat
 )
 
 list( APPEND test_output
@@ -86,6 +87,7 @@ list( APPEND test_output
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
+  testoutput/aeronet_aod_2018041500.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -542,6 +544,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                           -o testrun/modis_aod.nc"
                           modis_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
+                  TYPE    SCRIPT
+		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+		  ARGS    netcdf
+		          "${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
+			  -d 2018041500
+			  -o testrun/aeronet_aod.nc"
+			  aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -551,6 +562,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -s testinput/airnow_sites.dat
                           -o testrun/airnow_2020081306.nc"
                           airnow_2020081306.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 
 #==============================================================================
 # Bufr Ingester tests

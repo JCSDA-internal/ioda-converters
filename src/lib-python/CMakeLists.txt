@@ -4,6 +4,8 @@ list( APPEND libs
   collect_sources.py
   meteo_utils.py
   orddicts.py
+  pytspack.py 
+  tspack.cpython-37m-x86_64-linux-gnu.so
 )
 
 list( APPEND programs
