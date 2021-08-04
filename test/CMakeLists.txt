@@ -46,7 +46,6 @@ list( APPEND test_input
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
-  testinput/aeronet_aod.dat
 )
 
 list( APPEND test_output
@@ -87,7 +86,7 @@ list( APPEND test_output
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
-  testoutput/aeronet_aod_2018041500.nc
+  testoutput/aeronet_aod.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
