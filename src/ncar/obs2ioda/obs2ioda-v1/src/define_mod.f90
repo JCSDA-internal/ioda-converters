@@ -26,6 +26,8 @@ integer(i_kind), parameter :: ninst             = 12
 integer(i_kind), parameter :: write_nc_conv     = 1
 integer(i_kind), parameter :: write_nc_radiance = 2
 integer(i_kind), parameter :: write_nc_radiance_geo = 3
+character(len=3), parameter :: dtime_min = '-3h'
+character(len=3), parameter :: dtime_max = '+3h'
 
 ! variables for defining observation types and met variables each type has
 character(len=nstring), dimension(nobtype) :: obtype_list = &
@@ -212,7 +214,8 @@ type xdata_type
    character(len=nstring), allocatable, dimension(:,:) :: xseninfo_char
 end type xdata_type
 
-type(xdata_type), allocatable, dimension(:) :: xdata  ! dim: number of ob types
+type(xdata_type), allocatable, dimension(:,:) :: xdata  ! dim 1: number of ob types
+                                                        ! dim 2: number of time slots
 
 contains
 

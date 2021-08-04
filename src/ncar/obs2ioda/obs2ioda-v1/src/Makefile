@@ -37,7 +37,7 @@ main.o : main.f90 define_mod.f90 prepbufr_mod.o ncio_mod.o radiance_mod.o gnssro
 ncio_mod.o : ncio_mod.f90 kinds.o prepbufr_mod.o netcdf_mod.o ufo_variables_mod.o define_mod.o
 netcdf_mod.o : netcdf_mod.f90
 prepbufr_mod.o : prepbufr_mod.f90 kinds.o ufo_variables_mod.o utils_mod.o define_mod.o
-radiance_mod.o : radiance_mod.f90 kinds.o define_mod.o ufo_variables_mod.o
+radiance_mod.o : radiance_mod.f90 kinds.o define_mod.o ufo_variables_mod.o utils_mod.o
 satwnd_mod.o : satwnd_mod.f90 kinds.o define_mod.o ufo_variables_mod.o
 ufo_variables_mod.o : ufo_variables_mod.F90
 utils_mod.o : utils_mod.f90

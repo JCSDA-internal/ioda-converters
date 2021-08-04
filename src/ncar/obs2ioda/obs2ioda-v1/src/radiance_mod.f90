@@ -3,9 +3,11 @@ module radiance_mod
 use kinds, only: r_kind,i_kind,r_double
 use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
-   nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr
+   nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, &
+   dtime_min, dtime_max
 use ufo_vars_mod, only: ufo_vars_getindex
 use netcdf, only: nf90_float, nf90_int, nf90_char
+use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
 
 implicit none
 private
@@ -26,6 +28,8 @@ type datalink_radiance
    real(r_kind)              :: lon        ! longitude in degree
    real(r_kind)              :: elv        ! elevation in m
    real(r_kind)              :: dhr        ! obs time minus analysis time in hour
+   real(r_double)            :: gstime
+   integer(i_kind)           :: ifgat
    integer(i_kind)           :: inst_idx   ! index of inst in inst_list
    integer(i_kind)           :: landsea
    integer(i_kind)           :: scanpos
@@ -184,6 +188,7 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
             call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
             rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
+            rlink%gstime = obs_time
          else
             cycle subset_loop
          end if
@@ -458,6 +463,7 @@ subroutine read_airs_colocate_amsua (filename, filedate)
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
               call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
               rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
+              rlink%gstime = obs_time
            else
               cycle subset_loop
            end if
@@ -514,21 +520,30 @@ end subroutine read_airs_colocate_amsua
 
 !--------------------------------------------------------------
 
-subroutine sort_obs_radiance
+subroutine sort_obs_radiance(filedate, nfgat)
 
    implicit none
 
-   integer(i_kind)                   :: i, iv, k
-   integer(i_kind)                   :: ityp, irec
-   integer(i_kind), dimension(ninst) :: nrecs
-   integer(i_kind), dimension(ninst) :: nlocs
+   character(len=*), intent(in) :: filedate
+   integer(i_kind),  intent(in) :: nfgat
+
+   integer(i_kind)                   :: i, iv, k, ii
+   integer(i_kind)                   :: ityp, irec, itim
+   integer(i_kind), dimension(ninst,nfgat) :: nrecs
+   integer(i_kind), dimension(ninst,nfgat) :: nlocs
+   integer(i_kind), dimension(ninst,nfgat) :: iloc
    integer(i_kind), dimension(ninst) :: nvars
-   integer(i_kind), dimension(ninst) :: iloc
    character(len=nstring)            :: satellite
    character(len=nstring)            :: sensor
+   character(len=14) :: cdate_min, cdate_max
+   real(r_double) :: time_slots(0:nfgat)
 
-   nrecs(:) = 0
-   nlocs(:) = 0
+   call da_advance_time(filedate, dtime_min, cdate_min)
+   call da_advance_time(filedate, dtime_max, cdate_max)
+   call da_get_time_slots(nfgat, cdate_min, cdate_max, time_slots)
+
+   nrecs(:,:) = 0
+   nlocs(:,:) = 0
    nvars(:) = 0
 
    write(*,*) '--- sorting radiance obs...'
@@ -543,6 +558,15 @@ subroutine sort_obs_radiance
          cycle set_inst_loop
       end if
 
+      ! determine time_slot index
+      do i = 1, nfgat
+         if ( rlink%gstime >= time_slots(i-1) .and.  &
+              rlink%gstime <= time_slots(i) ) then
+             exit
+         end if
+      end do
+      rlink%ifgat = i
+
       call set_name_satellite(rlink%satid,  satellite)
       call set_name_sensor   (rlink%instid, sensor)
       rlink % inst = trim(sensor)//'_'//trim(satellite)
@@ -552,61 +576,71 @@ subroutine sort_obs_radiance
       rlink%inst_idx = ufo_vars_getindex(inst_list, rlink%inst)
       if ( rlink % inst_idx > 0 ) then
          ! obtype assigned, advance ob counts
-         nrecs(rlink%inst_idx) = nrecs(rlink%inst_idx) + 1
-         nlocs(rlink%inst_idx) = nlocs(rlink%inst_idx) + 1
+         nrecs(rlink%inst_idx,rlink%ifgat) = nrecs(rlink%inst_idx,rlink%ifgat) + 1
+         nlocs(rlink%inst_idx,rlink%ifgat) = nlocs(rlink%inst_idx,rlink%ifgat) + 1
          nvars(rlink%inst_idx) = rlink % nchan
       end if
 
       rlink => rlink%next
    end do set_inst_loop
 
-   !write(*,*) 'num_report_decoded = ', sum(nrecs(:))
-   write(*,'(1x,20x,a10)') 'nlocs'
-   do i = 1, ninst
-      !write(*,'(1x,a20,2i10)') inst_list(i), nrecs(i), nlocs(i)
-      write(*,'(1x,a20,i10)') inst_list(i), nlocs(i)
+   do ii = 1, nfgat
+      if ( nfgat > 1 ) then
+         write(*,'(a)') '-----------'
+         write(*,'(1x,a,i3)') 'time', ii
+         write(*,'(a)') '-----------'
+      end if
+      !write(*,*) 'num_report_decoded = ', sum(nrecs(:,ii))
+      write(*,'(1x,20x,a10)') 'nlocs'
+      do i = 1, ninst
+         !write(*,'(1x,a20,2i10)') inst_list(i), nrecs(i,ii), nlocs(i,ii)
+         write(*,'(1x,a20,i10)') inst_list(i), nlocs(i,ii)
+      end do
    end do
 
    ! allocate data arrays with the just counted numbers
-   allocate (xdata(ninst))
+   allocate (xdata(ninst,nfgat))
+   do ii = 1, nfgat
    do i = 1, ninst
-      xdata(i) % nrecs = nrecs(i)
-      xdata(i) % nlocs = nlocs(i)
-      xdata(i) % nvars = nvars(i)
+      xdata(i,ii) % nrecs = nrecs(i,ii)
+      xdata(i,ii) % nlocs = nlocs(i,ii)
+      xdata(i,ii) % nvars = nvars(i)
 
-      if ( nlocs(i) > 0 ) then
-         allocate (xdata(i)%xinfo_float(nlocs(i), nvar_info))
-         allocate (xdata(i)%xinfo_int  (nlocs(i), nvar_info))
-         allocate (xdata(i)%xinfo_char (nlocs(i), nvar_info))
-         allocate (xdata(i)%xseninfo_float(nlocs(i), nsen_info))
-         allocate (xdata(i)%xseninfo_int  (nvars(i), nsen_info))
-         xdata(i)%xinfo_float   (:,:) = missing_r
-         xdata(i)%xinfo_int     (:,:) = missing_i
-         xdata(i)%xinfo_char    (:,:) = ''
-         xdata(i)%xseninfo_float(:,:) = missing_r
-         xdata(i)%xseninfo_int  (:,:) = missing_i
+      if ( nlocs(i,ii) > 0 ) then
+         allocate (xdata(i,ii)%xinfo_float(nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_int  (nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_char (nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xseninfo_float(nlocs(i,ii), nsen_info))
+         allocate (xdata(i,ii)%xseninfo_int  (nvars(i), nsen_info))
+         xdata(i,ii)%xinfo_float   (:,:) = missing_r
+         xdata(i,ii)%xinfo_int     (:,:) = missing_i
+         xdata(i,ii)%xinfo_char    (:,:) = ''
+         xdata(i,ii)%xseninfo_float(:,:) = missing_r
+         xdata(i,ii)%xseninfo_int  (:,:) = missing_i
          if ( nvars(i) > 0 ) then
-            allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
-            xdata(i)%xfield(:,:)%val = missing_r
-            xdata(i)%xfield(:,:)%qm  = missing_i
-            xdata(i)%xfield(:,:)%err = missing_r
-            allocate (xdata(i)%var_idx(nvars(i)))
+            allocate (xdata(i,ii)%xfield(nlocs(i,ii), nvars(i)))
+            xdata(i,ii)%xfield(:,:)%val = missing_r
+            xdata(i,ii)%xfield(:,:)%qm  = missing_i
+            xdata(i,ii)%xfield(:,:)%err = missing_r
+            allocate (xdata(i,ii)%var_idx(nvars(i)))
             do iv = 1, nvars(i)
-               xdata(i)%var_idx(iv) = iv
+               xdata(i,ii)%var_idx(iv) = iv
             end do
          end if
       end if
-   end do
+   end do ! ninst
+   end do ! nfgat
 
    ! transfer data from rlink to xdata
 
-   iloc(:) = 0
-   irec    = 0
+   iloc(:,:) = 0
+   irec = 0
 
    rlink => rhead
    reports: do while ( associated(rlink) )
       irec = irec + 1
       ityp = rlink%inst_idx
+      itim = rlink%ifgat
       if ( ityp < 0 ) then
          rlink => rlink%next
          cycle reports
@@ -616,28 +650,28 @@ subroutine sort_obs_radiance
          cycle reports
       end if
 
-      iloc(ityp) = iloc(ityp) + 1
+      iloc(ityp,itim) = iloc(ityp,itim) + 1
 
       do i = 1, nvar_info
          if ( type_var_info(i) == nf90_int ) then
             if ( trim(name_var_info(i)) == 'record_number' ) then
-               xdata(ityp)%xinfo_int(iloc(ityp),i) = irec
+               xdata(ityp,itim)%xinfo_int(iloc(ityp,itim),i) = irec
             end if
          else if ( type_var_info(i) == nf90_float ) then
             if ( name_var_info(i) == 'time' ) then
-               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%dhr
+               xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%dhr
             else if ( trim(name_var_info(i)) == 'station_elevation' ) then
-               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%elv
+               xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%elv
             else if ( trim(name_var_info(i)) == 'latitude' ) then
-               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%lat
+               xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%lat
             else if ( trim(name_var_info(i)) == 'longitude' ) then
-               xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%lon
+               xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%lon
             end if
          else if ( type_var_info(i) == nf90_char ) then
             if ( trim(name_var_info(i)) == 'datetime' ) then
-               xdata(ityp)%xinfo_char(iloc(ityp),i) = rlink%datetime
+               xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%datetime
             else if ( trim(name_var_info(i)) == 'station_id' ) then
-               xdata(ityp)%xinfo_char(iloc(ityp),i) = rlink%inst
+               xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%inst
             end if
          end if
       end do
@@ -645,17 +679,17 @@ subroutine sort_obs_radiance
       do i = 1, nsen_info
          if ( type_sen_info(i) == nf90_float ) then
             if ( trim(name_sen_info(i)) == 'scan_position' ) then
-               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%scanpos
+               xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%scanpos
             else if ( trim(name_sen_info(i)) == 'sensor_zenith_angle' ) then
-               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%satzen
+               xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%satzen
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
-               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%satazi
+               xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%satazi
             else if ( trim(name_sen_info(i)) == 'solar_azimuth_angle' ) then
-               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%solzen
+               xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%solzen
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
-               xdata(ityp)%xseninfo_float(iloc(ityp),i) = rlink%solazi
+               xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%solazi
             else if ( trim(name_sen_info(i)) == 'sensor_view_angle' ) then
-               call calc_sensor_view_angle(trim(rlink%inst), rlink%scanpos, xdata(ityp)%xseninfo_float(iloc(ityp),i))
+               call calc_sensor_view_angle(trim(rlink%inst), rlink%scanpos, xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i))
             end if
 !         else if ( type_sen_info(i) == nf90_int ) then
 !         else if ( type_sen_info(i) == nf90_char ) then
@@ -663,13 +697,13 @@ subroutine sort_obs_radiance
       end do
 
       iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
-      xdata(ityp)%xseninfo_int(:,iv) = rlink%ch(:)
+      xdata(ityp,itim)%xseninfo_int(:,iv) = rlink%ch(:)
 
       do i = 1, nvars(ityp)
-         xdata(ityp)%xfield(iloc(ityp),i)%val = rlink%tb(i)
-         !xdata(ityp)%xfield(iloc(ityp),i)%err = 1.0
-         call set_brit_obserr(trim(rlink%inst), i, xdata(ityp)%xfield(iloc(ityp),i)%err)
-         xdata(ityp)%xfield(iloc(ityp),i)%qm  = 0
+         xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = rlink%tb(i)
+         !xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = 1.0
+         call set_brit_obserr(trim(rlink%inst), i, xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err)
+         xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = 0
       end do
       rlink => rlink%next
    end do reports
@@ -757,31 +791,5 @@ subroutine calc_sensor_view_angle(name_inst, ifov, view_angle)
    view_angle = start + float(ifov-1) * step
 
 end subroutine calc_sensor_view_angle
-
-subroutine get_julian_time(year,month,day,hour,minute,gstime)
-
-! taken from WRFDA/var/da/da_tools/da_get_julian_time.inc
-
-   implicit none
-
-   integer(i_kind), intent(in)  :: year
-   integer(i_kind), intent(in)  :: month
-   integer(i_kind), intent(in)  :: day
-   integer(i_kind), intent(in)  :: hour
-   integer(i_kind), intent(in)  :: minute
-   real(r_double),  intent(out) :: gstime
-
-   integer(i_kind) :: iw3jdn, ndays, nmind
-
-   iw3jdn  =    day - 32075 &
-              + 1461 * (year + 4800 + (month - 14) / 12) / 4 &
-              + 367 * (month - 2 - (month - 14) / 12 * 12) / 12 &
-              - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
-   ndays = iw3jdn - 2443510
-
-   nmind = ndays*1440 + hour * 60 + minute
-   gstime = float(nmind)
-
-end subroutine get_julian_time
 
 end module radiance_mod

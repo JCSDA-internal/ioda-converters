@@ -1,6 +1,6 @@
 program obs2ioda
 
-use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen
+use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance
@@ -8,11 +8,13 @@ use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
 use ahi_hsd_mod, only: read_hsd, subsample
 use satwnd_mod, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
+use utils_mod, only: da_advance_time
 
 implicit none
 
 integer(i_kind), parameter :: NameLen   = 64
 integer(i_kind), parameter :: DateLen   = 10
+integer(i_kind), parameter :: DateLen14 = 14
 integer(i_kind), parameter :: nfile_all = 6
 integer(i_kind), parameter :: ftype_unknown  = -1
 integer(i_kind), parameter :: ftype_prepbufr =  1
@@ -34,22 +36,34 @@ character(len=NameLen)     :: flist_all(nfile_all) = &
    /)
 character (len=NameLen) :: flist(nfile_all)  ! file names to be read in from command line arguments
 character (len=NameLen) :: filename
-character (len=DateLen) :: filedate
+character (len=DateLen) :: filedate, filedate_out
 character (len=StrLen)  :: inpdir, outdir, cdatetime
 logical                 :: fexist
 logical                 :: do_radiance
 logical                 :: do_ahi
 logical                 :: apply_gsi_qc
+logical                 :: time_split
+integer(i_kind)         :: nfgat
 integer(i_kind)         :: nfile, ifile
 integer(i_kind)         :: itmp
+integer(i_kind)         :: itime
+character (len=DateLen14) :: dtime, datetmp
 
 
 do_tv_to_ts = .true.
 do_radiance = .false. ! initialize
 do_ahi = .false.
 apply_gsi_qc = .true. !.false.
+time_split = .false.
 
 call parse_files_to_convert
+
+if ( time_split ) then
+   ! corresponding to dtime_min='-3h' and dtime_max='+3h'
+   nfgat = 7
+else
+   nfgat = 1
+end if
 
 do ifile = 1, nfile
 
@@ -79,10 +93,21 @@ do ifile = 1, nfile
          end if
 
          ! transfer info from limked list to arrays grouped by obs/variable types
-         call sort_obs_satwnd
+         call sort_obs_satwnd(filedate, nfgat)
 
          ! write out netcdf files
-         call write_obs(filedate, write_nc_conv, outdir)
+         if ( nfgat > 1 ) then
+            do itime = 1, nfgat
+               ! corresponding to dtime_min='-3h' and dtime_max='+3h'
+               write(dtime,'(i2,a)')  itime-4, 'h'
+               call da_advance_time(filedate, trim(dtime), datetmp)
+               filedate_out = datetmp(1:10)
+               call write_obs(filedate_out, write_nc_conv, outdir, itime)
+            end do
+         else
+            call write_obs(filedate, write_nc_conv, outdir, 1)
+         end if
+         if ( allocated(xdata) ) deallocate(xdata)
       end if
    end if
 
@@ -100,10 +125,21 @@ do ifile = 1, nfile
          end if
 
          ! transfer info from limked list to arrays grouped by obs/variable types
-         call sort_obs_conv
+         call sort_obs_conv(filedate, nfgat)
 
          ! write out netcdf files
-         call write_obs(filedate, write_nc_conv, outdir)
+         if ( nfgat > 1 ) then
+            do itime = 1, nfgat
+               ! corresponding to dtime_min='-3h' and dtime_max='+3h'
+               write(dtime,'(i2,a)')  itime-4, 'h'
+               call da_advance_time(filedate, trim(dtime), datetmp)
+               filedate_out = datetmp(1:10)
+               call write_obs(filedate_out, write_nc_conv, outdir, itime)
+            end do
+         else
+            call write_obs(filedate, write_nc_conv, outdir, 1)
+         end if
+         if ( allocated(xdata) ) deallocate(xdata)
       end if
    end if
 
@@ -144,10 +180,21 @@ end do ! nfile list
 
 if ( do_radiance ) then
    ! transfer info linked list to arrays grouped by satellite instrument types
-   call sort_obs_radiance
+   call sort_obs_radiance(filedate, nfgat)
 
    ! write out netcdf files
-   call write_obs(filedate, write_nc_radiance, outdir)
+   if ( nfgat > 1 ) then
+      do itime = 1, nfgat
+         ! corresponding to dtime_min='-3h' and dtime_max='+3h'
+         write(dtime,'(i2,a)')  itime-4, 'h'
+         call da_advance_time(filedate, trim(dtime), datetmp)
+         filedate_out = datetmp(1:10)
+         call write_obs(filedate_out, write_nc_radiance, outdir, itime)
+      end do
+   else
+      call write_obs(filedate, write_nc_radiance, outdir, 1)
+   end if
+   if ( allocated(xdata) ) deallocate(xdata)
 end if
 
 if ( do_ahi ) then
@@ -157,7 +204,8 @@ if ( do_ahi ) then
    end if
    call read_HSD(cdatetime, inpdir)
    filedate = cdatetime(1:10)
-   call write_obs(filedate, write_nc_radiance_geo, outdir)
+   call write_obs(filedate, write_nc_radiance_geo, outdir, 1)
+   if ( allocated(xdata) ) deallocate(xdata)
 end if
 
 write(6,*) 'all done!'
@@ -192,6 +240,8 @@ if ( narg > 0 ) then
          do_tv_to_ts = .false.
       else if ( trim(strtmp) == '-ahi' ) then
          do_ahi = .true.
+      else if ( trim(strtmp) == '-split' ) then
+         time_split = .true.
       else if ( trim(strtmp) == '-i' ) then
          iarg_inpdir = iarg + 1
       else if ( trim(strtmp) == '-o' ) then
@@ -252,7 +302,7 @@ fileloop: do ifile = 1, nfile
    open(unit=iunit, file=trim(inpdir)//trim(flist(ifile)), form='unformatted', iostat=iost, status='old')
    call openbf(iunit, 'IN', iunit)
    call readmg(iunit,subset,idate,iret)
-print*,subset
+!print*,subset
    if ( subset(1:5) == 'NC005' ) then
       ftype(ifile) = ftype_satwnd
    else

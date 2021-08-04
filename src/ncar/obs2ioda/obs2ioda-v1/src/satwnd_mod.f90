@@ -3,9 +3,10 @@ module satwnd_mod
 use kinds, only: r_kind, i_kind, r_double
 use define_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
-   t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, not_use
-use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps
-use utils_mod, only: da_advance_time
+   missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime,  &
+   dtime_min, dtime_max
+use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v
+use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
 use netcdf, only: nf90_int, nf90_float, nf90_char
 
 implicit none
@@ -22,7 +23,9 @@ type datalink_satwnd
    integer(i_kind)           :: satid      ! satellite identifier
    integer(i_kind)           :: rptype     ! prepbufr report type
    integer(i_kind)           :: obtype_idx ! index of obtype in obtype_list
+   integer(i_kind)           :: ifgat
    integer(i_kind)           :: qm         ! quality marker
+   real(r_double)            :: gstime
    real(r_kind)              :: err        ! ob error
    real(r_kind)              :: lat        ! latitude in degree
    real(r_kind)              :: lon        ! longitude in degree
@@ -74,6 +77,7 @@ subroutine read_satwnd(filename, filedate)
 
    character(len=8)  :: subset
    character(len=10) :: cdate
+   character(len=14) :: cdate_min, cdate_max
 
    integer(i_kind) :: iunit, iost, iret, i
    integer(i_kind) :: nchan
@@ -202,6 +206,7 @@ subroutine read_satwnd(filename, filedate)
               isec   >=   0 .and. isec   <   60 ) then
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+            call get_julian_time(iyear, imonth, iday, ihour, imin, rlink%gstime)
          else
             cycle subset_loop
          end if
@@ -326,19 +331,28 @@ end subroutine filter_obs_satwnd
 
 !--------------------------------------------------------------
 
-subroutine sort_obs_satwnd
+subroutine sort_obs_satwnd(filedate, nfgat)
 
    implicit none
 
+   character(len=*), intent(in) :: filedate
+   integer(i_kind),  intent(in) :: nfgat
+
    integer(i_kind)                       :: i, iv, k, ii
-   integer(i_kind)                       :: ityp, irec, ivar
-   integer(i_kind), dimension(nobtype)   :: nlocs
+   integer(i_kind)                       :: ityp, irec, ivar, itim
+   integer(i_kind), dimension(nobtype,nfgat) :: nlocs
+   integer(i_kind), dimension(nobtype,nfgat) :: iloc
    integer(i_kind), dimension(nobtype)   :: nvars
-   integer(i_kind), dimension(nobtype)   :: iloc
    character(len=12)                     :: obtype
    logical,         dimension(nvar_met)  :: vmask ! for counting available variables for one obtype
+   character(len=14) :: cdate_min, cdate_max
+   real(r_double) :: time_slots(0:nfgat)
 
-   nlocs(:) = 0
+   call da_advance_time(filedate, dtime_min, cdate_min)
+   call da_advance_time(filedate, dtime_max, cdate_max)
+   call da_get_time_slots(nfgat, cdate_min, cdate_max, time_slots)
+
+   nlocs(:,:) = 0
    nvars(:) = 0
 
    write(*,*) '--- sorting satwnd obs...'
@@ -347,103 +361,122 @@ subroutine sort_obs_satwnd
    rlink => rhead
    set_obtype_loop: do while ( associated(rlink) )
 
+      ! determine time_slot index
+      do i = 1, nfgat
+         if ( rlink%gstime >= time_slots(i-1) .and.  &
+              rlink%gstime <= time_slots(i) ) then
+             exit
+         end if
+      end do
+      rlink%ifgat = i
+
       ! find index of obtype in obtype_list
       rlink%obtype_idx = ufo_vars_getindex(obtype_list, rlink%obtype)
       if ( rlink % obtype_idx > 0 ) then
          ! obtype assigned, advance ob counts
-         nlocs(rlink%obtype_idx) = nlocs(rlink%obtype_idx) + 1
+         nlocs(rlink%obtype_idx,rlink%ifgat) = nlocs(rlink%obtype_idx,rlink%ifgat) + 1
       end if
 
       rlink => rlink%next
    end do set_obtype_loop
 
-   write(*,'(1x,20x,a10)') 'nlocs'
-   do i = 1, nobtype
-      write(*,'(1x,a20,i10)') obtype_list(i), nlocs(i)
+   do ii = 1, nfgat
+      if ( nfgat > 1 ) then
+         write(*,'(a)') '-----------'
+         write(*,'(1x,a,i3)') 'time', ii
+         write(*,'(a)') '-----------'
+      end if
+      write(*,'(1x,20x,a10)') 'nlocs'
+      do i = 1, nobtype
+         write(*,'(1x,a20,i10)') obtype_list(i), nlocs(i,ii)
+      end do
    end do
 
    ! allocate data arrays with the just counted numbers
-   allocate (xdata(nobtype))
+   allocate (xdata(nobtype,nfgat))
+   do ii = 1, nfgat
    do i = 1, nobtype
-      xdata(i) % nlocs = nlocs(i)
+      xdata(i,ii) % nlocs = nlocs(i,ii)
       vmask = vflag(:,i) == itrue
       nvars(i) = count(vmask)
-      xdata(i) % nvars = nvars(i)
+      xdata(i,ii) % nvars = nvars(i)
 
-      if ( nlocs(i) > 0 ) then
+      if ( nlocs(i,ii) > 0 ) then
 
-         allocate (xdata(i)%xinfo_int  (nlocs(i), nvar_info))
-         allocate (xdata(i)%xinfo_float(nlocs(i), nvar_info))
-         allocate (xdata(i)%xinfo_char (nlocs(i), nvar_info))
-         xdata(i)%xinfo_int  (:,:) = missing_i
-         xdata(i)%xinfo_float(:,:) = missing_r
-         xdata(i)%xinfo_char (:,:) = ''
+         allocate (xdata(i,ii)%xinfo_int  (nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_float(nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_char (nlocs(i,ii), nvar_info))
+         xdata(i,ii)%xinfo_int  (:,:) = missing_i
+         xdata(i,ii)%xinfo_float(:,:) = missing_r
+         xdata(i,ii)%xinfo_char (:,:) = ''
 
          if ( nvars(i) > 0 ) then
-            allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
-            allocate (xdata(i)%var_idx(nvars(i)))
-            xdata(i)%xfield(:,:)%val = missing_r ! initialize
-            xdata(i)%xfield(:,:)%qm  = missing_i ! initialize
-            xdata(i)%xfield(:,:)%err = missing_r ! initialize
+            allocate (xdata(i,ii)%xfield(nlocs(i,ii), nvars(i)))
+            allocate (xdata(i,ii)%var_idx(nvars(i)))
+            xdata(i,ii)%xfield(:,:)%val = missing_r ! initialize
+            xdata(i,ii)%xfield(:,:)%qm  = missing_i ! initialize
+            xdata(i,ii)%xfield(:,:)%err = missing_r ! initialize
             ivar = 0
             do iv = 1, nvar_met
                if ( vflag(iv,i) == ifalse ) cycle
                ivar = ivar + 1
-               xdata(i)%var_idx(ivar) = iv
+               xdata(i,ii)%var_idx(ivar) = iv
             end do
          end if
       end if
-   end do
+   end do ! nobtype
+   end do ! nfgat
 
    ! transfer data from rlink to xdata
 
-   iloc(:) = 0
-   irec    = 0
+   iloc(:,:) = 0
+   irec = 0
 
    rlink => rhead
    reports: do while ( associated(rlink) )
       irec = irec + 1
       ityp = rlink%obtype_idx
+      itim = rlink%ifgat
       if ( ityp < 0 ) then
          rlink => rlink%next
          cycle reports
       end if
-         iloc(ityp) = iloc(ityp) + 1
+         iloc(ityp,itim) = iloc(ityp,itim) + 1
 
          do i = 1, nvar_info
             if ( type_var_info(i) == nf90_int ) then
                if ( name_var_info(i) == 'record_number' ) then
-                  xdata(ityp)%xinfo_int(iloc(ityp),i) = irec
+                  xdata(ityp,itim)%xinfo_int(iloc(ityp,itim),i) = irec
                end if
             else if ( type_var_info(i) == nf90_float ) then
                if ( trim(name_var_info(i)) == 'latitude' ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%lat
+                  xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%lat
                else if ( trim(name_var_info(i)) == 'longitude' ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%lon
+                  xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%lon
                else if ( trim(name_var_info(i)) == trim(var_prs) ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = rlink%prs
+                  xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = rlink%prs
                end if
             else if ( type_var_info(i) == nf90_char ) then
                if ( trim(name_var_info(i)) == 'datetime' ) then
-                  xdata(ityp)%xinfo_char(iloc(ityp),i) = rlink%datetime
+                  xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%datetime
                else if ( trim(name_var_info(i)) == 'station_id' ) then
-                  xdata(ityp)%xinfo_char(iloc(ityp),i) = rlink%stid
+                  xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%stid
                end if
             end if ! type_var_info
          end do
 
          do i = 1, nvars(ityp)
-            ivar = xdata(ityp)%var_idx(i)
+            ivar = xdata(ityp,itim)%var_idx(i)
             if ( name_var_met(ivar) == trim(var_u) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = rlink%uwind
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = rlink%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = rlink%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = rlink%uwind
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = rlink%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = rlink%err
             else if ( name_var_met(ivar) == trim(var_v) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = rlink%vwind
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = rlink%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = rlink%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = rlink%vwind
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = rlink%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = rlink%err
             end if
-            xdata(ityp)%xfield(iloc(ityp),i)%rptype = rlink%rptype
+            xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%rptype = rlink%rptype
          end do
       rlink => rlink%next
    end do reports

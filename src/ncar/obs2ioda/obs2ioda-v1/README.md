@@ -5,10 +5,11 @@ Compile: cd obs2ioda-v1/src; make
 ```
 
 ```
-Usage: obs2ioda.x [-i input_dir] [-o output_dir] [bufr_filename(s)_to_convert]
+Usage: obs2ioda.x [-i input_dir] [-o output_dir] [bufr_filename(s)_to_convert] [-split]
 ```
 If [-i input_dir] [-o output_dir] are not specified in the command line, the default is the current working directory.  
-If [bufr_filename(s)_to_convert] is not specified in the command line, the code looks for file name, **prepbufr.bufr** (also **satwnd.bufr**, **gnssro.bufr**, **amsua.bufr**, **airs.bufr**, **mhs.bufr**), in the input/working directory. If the file exists, do the conversion, otherwise skip it.
+If [bufr_filename(s)_to_convert] is not specified in the command line, the code looks for file name, **prepbufr.bufr** (also **satwnd.bufr**, **gnssro.bufr**, **amsua.bufr**, **airs.bufr**, **mhs.bufr**), in the input/working directory. If the file exists, do the conversion, otherwise skip it.  
+If specify -split, the converted file will contain hourly data.
 
 > obs2ioda.x -i input_dir -o output_dir prepbufr.gdas.YYYYMMDD.tHHz.nr
 

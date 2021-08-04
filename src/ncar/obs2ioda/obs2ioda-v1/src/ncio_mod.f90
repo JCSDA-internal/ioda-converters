@@ -20,13 +20,14 @@ public :: write_obs
 
 contains
 
-subroutine write_obs (filedate, write_opt, outdir)
+subroutine write_obs (filedate, write_opt, outdir, itim)
 
    implicit none
 
    character(len=*), intent(in)          :: filedate
    integer(i_kind),  intent(in)          :: write_opt
    character(len=*), intent(in)          :: outdir
+   integer(i_kind),  intent(in)          :: itim
 
    character(len=512)                    :: ncfname  ! netcdf file name
    integer(i_kind), dimension(n_ncdim)   :: ncid_ncdim
@@ -59,22 +60,22 @@ subroutine write_obs (filedate, write_opt, outdir)
 
    obtype_loop: do ityp = 1, ntype
 
-      if ( xdata(ityp)%nlocs == 0 ) cycle obtype_loop
+      if ( xdata(ityp,itim)%nlocs == 0 ) cycle obtype_loop
 
       if ( write_opt == write_nc_conv ) then
          ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
       else if ( write_opt == write_nc_radiance ) then
          ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
-         allocate (name_var_tb(xdata(ityp)%nvars))
+         allocate (name_var_tb(xdata(ityp,itim)%nvars))
       else if ( write_opt == write_nc_radiance_geo ) then
          ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
-         allocate (name_var_tb(xdata(ityp)%nvars))
+         allocate (name_var_tb(xdata(ityp,itim)%nvars))
       end if
       write(*,*) '--- writing ', trim(ncfname)
       call open_netcdf_for_write(trim(ncfname),ncfileid)
 
-      val_ncdim(1) = xdata(ityp)%nvars
-      val_ncdim(2) = xdata(ityp)%nlocs
+      val_ncdim(1) = xdata(ityp,itim)%nvars
+      val_ncdim(2) = xdata(ityp,itim)%nlocs
 
       ! define netcdf dimensions
       do i = 1, n_ncdim
@@ -82,9 +83,9 @@ subroutine write_obs (filedate, write_opt, outdir)
       end do
 
       ! define netcdf variables
-      do i = 1, xdata(ityp) % nvars
+      do i = 1, xdata(ityp,itim) % nvars
          if ( write_opt == write_nc_conv ) then
-            ivar = xdata(ityp) % var_idx(i)
+            ivar = xdata(ityp,itim) % var_idx(i)
             ncname = trim(name_var_met(ivar))//'@ObsValue'
             call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units',unit_var_met(ivar))
             ncname = trim(name_var_met(ivar))//'@ObsError'
@@ -152,26 +153,26 @@ subroutine write_obs (filedate, write_opt, outdir)
       call def_netcdf_end(ncfileid)
 
       ! writing netcdf variables
-      var_loop: do i = 1, xdata(ityp) % nvars
+      var_loop: do i = 1, xdata(ityp,itim) % nvars
          if ( write_opt == write_nc_conv ) then
-            ivar = xdata(ityp) % var_idx(i)
+            ivar = xdata(ityp,itim) % var_idx(i)
             if ( vflag(ivar,ityp) == itrue ) then
                ncname = trim(name_var_met(ivar))//'@ObsValue'
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%val)
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%val)
                ncname = trim(name_var_met(ivar))//'@ObsError'
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%err)
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%err)
                ncname = trim(name_var_met(ivar))//'@PreQC'
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%qm)
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%qm)
                ncname = trim(name_var_met(ivar))//'@ObsType'
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%rptype)
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%rptype)
             end if
          else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
             ncname = trim(name_var_tb(i))//'@ObsValue'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%val)
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%val)
             ncname = trim(name_var_tb(i))//'@ObsError'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%err)
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%err)
             ncname = trim(name_var_tb(i))//'@PreQC'
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xfield(:,i)%qm)
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%qm)
          end if
       end do var_loop
 
@@ -187,25 +188,25 @@ subroutine write_obs (filedate, write_opt, outdir)
             ncname = trim(name_var_info(i))//'@VarMetaData'
          end if
          if ( type_var_info(i) == nf90_int ) then
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xinfo_int(:,i))
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xinfo_int(:,i))
          else if ( type_var_info(i) == nf90_float ) then
-            call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xinfo_float(:,i))
+            call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xinfo_float(:,i))
          else if ( type_var_info(i) == nf90_char ) then
             if ( trim(name_var_info(i)) == 'variable_names' ) then
                if ( write_opt == write_nc_conv ) then
-                  call put_netcdf_var(ncfileid,ncname,name_var_met(xdata(ityp)%var_idx(:)))
+                  call put_netcdf_var(ncfileid,ncname,name_var_met(xdata(ityp,itim)%var_idx(:)))
                else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
                   call put_netcdf_var(ncfileid,ncname,name_var_tb(:))
                end if
             else if ( trim(name_var_info(i)) == 'station_id' ) then
                allocate(str_nstring(val_ncdim(2))) ! nlocs
-               str_nstring(:) = xdata(ityp)%xinfo_char(:,i)
+               str_nstring(:) = xdata(ityp,itim)%xinfo_char(:,i)
                call put_netcdf_var(ncfileid,ncname,str_nstring)
                deallocate(str_nstring)
             else if ( trim(name_var_info(i)) == 'datetime' ) then
                allocate(str_ndatetime(val_ncdim(2)))
                do ii = 1, val_ncdim(2)
-                  str_tmp = xdata(ityp)%xinfo_char(ii,i)
+                  str_tmp = xdata(ityp,itim)%xinfo_char(ii,i)
                   str_ndatetime(ii) = str_tmp(1:ndatetime)
                end do
                call put_netcdf_var(ncfileid,ncname,str_ndatetime)
@@ -220,13 +221,13 @@ subroutine write_obs (filedate, write_opt, outdir)
             if ( type_sen_info(i) == nf90_int ) then
                if ( trim(name_sen_info(i)) == 'sensor_channel' ) then
                   ncname = trim(name_sen_info(i))//'@VarMetaData'
-                  call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xseninfo_int(:,i))
+                  call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xseninfo_int(:,i))
                end if
-               !call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xseninfo_int(:,i))
+               !call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xseninfo_int(:,i))
             else if ( type_sen_info(i) == nf90_float ) then
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xseninfo_float(:,i))
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xseninfo_float(:,i))
             else if ( type_sen_info(i) == nf90_char ) then
-               call put_netcdf_var(ncfileid,ncname,xdata(ityp)%xseninfo_char(:,i))
+               call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xseninfo_char(:,i))
             end if
          end do
          deallocate (name_var_tb)
@@ -238,16 +239,16 @@ subroutine write_obs (filedate, write_opt, outdir)
 
    ! deallocate xdata
    do i = 1, ntype
-      if ( allocated(xdata(i)%var_idx) )        deallocate(xdata(i)%var_idx)
-      if ( allocated(xdata(i)%xfield) )         deallocate(xdata(i)%xfield)
-      if ( allocated(xdata(i)%xinfo_int) )      deallocate(xdata(i)%xinfo_int)
-      if ( allocated(xdata(i)%xinfo_float) )    deallocate(xdata(i)%xinfo_float)
-      if ( allocated(xdata(i)%xinfo_char) )     deallocate(xdata(i)%xinfo_char)
-      if ( allocated(xdata(i)%xseninfo_int) )   deallocate(xdata(i)%xseninfo_int)
-      if ( allocated(xdata(i)%xseninfo_float) ) deallocate(xdata(i)%xseninfo_float)
-      if ( allocated(xdata(i)%xseninfo_char) )  deallocate(xdata(i)%xseninfo_char)
+      if ( allocated(xdata(i,itim)%var_idx) )        deallocate(xdata(i,itim)%var_idx)
+      if ( allocated(xdata(i,itim)%xfield) )         deallocate(xdata(i,itim)%xfield)
+      if ( allocated(xdata(i,itim)%xinfo_int) )      deallocate(xdata(i,itim)%xinfo_int)
+      if ( allocated(xdata(i,itim)%xinfo_float) )    deallocate(xdata(i,itim)%xinfo_float)
+      if ( allocated(xdata(i,itim)%xinfo_char) )     deallocate(xdata(i,itim)%xinfo_char)
+      if ( allocated(xdata(i,itim)%xseninfo_int) )   deallocate(xdata(i,itim)%xseninfo_int)
+      if ( allocated(xdata(i,itim)%xseninfo_float) ) deallocate(xdata(i,itim)%xseninfo_float)
+      if ( allocated(xdata(i,itim)%xseninfo_char) )  deallocate(xdata(i,itim)%xseninfo_char)
    end do
-   deallocate(xdata)
+!   deallocate(xdata) ! moved to main.f90
 
 end subroutine write_obs
 

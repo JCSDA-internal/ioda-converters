@@ -473,30 +473,30 @@ do jj = 1, nline , subsample
    end do
 end do
 
-allocate(xdata(1))
+allocate(xdata(1,1))
 nvars = nband
-xdata(1) % nlocs = nlocs
-xdata(1) % nrecs = nlocs
-xdata(1) % nvars = nvars
+xdata(1,1) % nlocs = nlocs
+xdata(1,1) % nrecs = nlocs
+xdata(1,1) % nvars = nvars
 ! allocate and initialize
-allocate (xdata(1)%xinfo_float(nlocs, nvar_info))
-allocate (xdata(1)%xinfo_int  (nlocs, nvar_info))
-allocate (xdata(1)%xinfo_char (nlocs, nvar_info))
-allocate (xdata(1)%xseninfo_float(nlocs, nsen_info))
-allocate (xdata(1)%xseninfo_int  (nvars, nsen_info))
-xdata(1)%xinfo_float   (:,:) = missing_r
-xdata(1)%xinfo_int     (:,:) = missing_i
-xdata(1)%xinfo_char    (:,:) = ''
-xdata(1)%xseninfo_float(:,:) = missing_r
-xdata(1)%xseninfo_int  (:,:) = missing_i
+allocate (xdata(1,1)%xinfo_float(nlocs, nvar_info))
+allocate (xdata(1,1)%xinfo_int  (nlocs, nvar_info))
+allocate (xdata(1,1)%xinfo_char (nlocs, nvar_info))
+allocate (xdata(1,1)%xseninfo_float(nlocs, nsen_info))
+allocate (xdata(1,1)%xseninfo_int  (nvars, nsen_info))
+xdata(1,1)%xinfo_float   (:,:) = missing_r
+xdata(1,1)%xinfo_int     (:,:) = missing_i
+xdata(1,1)%xinfo_char    (:,:) = ''
+xdata(1,1)%xseninfo_float(:,:) = missing_r
+xdata(1,1)%xseninfo_int  (:,:) = missing_i
 if ( nvars > 0 ) then
-   allocate (xdata(1)%xfield(nlocs, nvars))
-   xdata(1)%xfield(:,:)%val = missing_r
-   xdata(1)%xfield(:,:)%qm  = missing_i
-   xdata(1)%xfield(:,:)%err = missing_r
-   allocate (xdata(1)%var_idx(nvars))
+   allocate (xdata(1,1)%xfield(nlocs, nvars))
+   xdata(1,1)%xfield(:,:)%val = missing_r
+   xdata(1,1)%xfield(:,:)%qm  = missing_i
+   xdata(1,1)%xfield(:,:)%err = missing_r
+   allocate (xdata(1,1)%var_idx(nvars))
    do iv = 1, nvars
-      xdata(1)%var_idx(iv) = iv
+      xdata(1,1)%var_idx(iv) = iv
    end do
 end if
 
@@ -514,17 +514,17 @@ do jj = 1, nline, subsample
          if ( type_var_info(i) == nf90_int ) then
          else if ( type_var_info(i) == nf90_float ) then
             if ( trim(name_var_info(i)) == 'station_elevation' ) then
-               xdata(1)%xinfo_float(iloc,i) = missing_r
+               xdata(1,1)%xinfo_float(iloc,i) = missing_r
             else if ( trim(name_var_info(i)) == 'latitude' ) then
-               xdata(1)%xinfo_float(iloc,i) = latitude(ii,jj)
+               xdata(1,1)%xinfo_float(iloc,i) = latitude(ii,jj)
             else if ( trim(name_var_info(i)) == 'longitude' ) then
-               xdata(1)%xinfo_float(iloc,i) = longitude(ii,jj)
+               xdata(1,1)%xinfo_float(iloc,i) = longitude(ii,jj)
             end if
          else if ( type_var_info(i) == nf90_char ) then
             if ( trim(name_var_info(i)) == 'datetime' ) then
-               xdata(1)%xinfo_char(iloc,i) = datetime
+               xdata(1,1)%xinfo_char(iloc,i) = datetime
             else if ( trim(name_var_info(i)) == 'station_id' ) then
-               xdata(1)%xinfo_char(iloc,i) = 'ahi_himawari8'
+               xdata(1,1)%xinfo_char(iloc,i) = 'ahi_himawari8'
             end if
          end if
       end do
@@ -532,18 +532,18 @@ do jj = 1, nline, subsample
       do i = 1, nsen_info
          if ( type_sen_info(i) == nf90_float ) then
             if ( trim(name_sen_info(i)) == 'scan_position' ) then
-               xdata(1)%xseninfo_float(iloc,i) = ii
+               xdata(1,1)%xseninfo_float(iloc,i) = ii
             else if ( trim(name_sen_info(i)) == 'sensor_zenith_angle' ) then
-               xdata(1)%xseninfo_float(iloc,i) = satzen(ii,jj)
+               xdata(1,1)%xseninfo_float(iloc,i) = satzen(ii,jj)
             else if ( trim(name_sen_info(i)) == 'solar_zenith_angle' ) then
-               xdata(1)%xseninfo_float(iloc,i) = solzen(ii,jj)
+               xdata(1,1)%xseninfo_float(iloc,i) = solzen(ii,jj)
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
-               xdata(1)%xseninfo_float(iloc,i) = missing_r
+               xdata(1,1)%xseninfo_float(iloc,i) = missing_r
             else if ( trim(name_sen_info(i)) == 'solar_azimuth_angle' ) then
-               xdata(1)%xseninfo_float(iloc,i) = missing_r
+               xdata(1,1)%xseninfo_float(iloc,i) = missing_r
             else if ( trim(name_sen_info(i)) == 'sensor_view_angle' ) then
-               !call calc_sensor_view_angle(trim(rlink%inst), rlink%scanpos, xdata(1)%xseninfo_float(iloc,i))
-               xdata(1)%xseninfo_float(iloc,i) = satzen(ii,jj)
+               !call calc_sensor_view_angle(trim(rlink%inst), rlink%scanpos, xdata(1,1)%xseninfo_float(iloc,i))
+               xdata(1,1)%xseninfo_float(iloc,i) = satzen(ii,jj)
             end if
 !         else if ( type_sen_info(i) == nf90_int ) then
 !         else if ( type_sen_info(i) == nf90_char ) then
@@ -551,13 +551,13 @@ do jj = 1, nline, subsample
       end do
 
       iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
-      xdata(1)%xseninfo_int(:,iv) = (/ 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 /)
+      xdata(1,1)%xseninfo_int(:,iv) = (/ 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 /)
 
       do i = 1, nvars
-         xdata(1)%xfield(iloc,i)%val = brit(ii,jj,i)
-         xdata(1)%xfield(iloc,i)%err = 1.0
-         !call set_brit_obserr(trim(rlink%inst), i, xdata(1)%xfield(iloc,i)%err)
-         xdata(1)%xfield(iloc,i)%qm  = 0
+         xdata(1,1)%xfield(iloc,i)%val = brit(ii,jj,i)
+         xdata(1,1)%xfield(iloc,i)%err = 1.0
+         !call set_brit_obserr(trim(rlink%inst), i, xdata(1,1)%xfield(iloc,i)%err)
+         xdata(1,1)%xfield(iloc,i)%qm  = 0
       end do
    end do
 end do

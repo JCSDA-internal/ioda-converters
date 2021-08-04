@@ -5,9 +5,10 @@ module prepbufr_mod
 use kinds, only: r_kind, i_kind, r_double
 use define_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
-   t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, not_use
+   t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, not_use, &
+   dtime_min, dtime_max
 use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps
-use utils_mod, only: da_advance_time
+use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
 use netcdf, only: nf90_int, nf90_float, nf90_char
 
 implicit none
@@ -53,6 +54,7 @@ type report_conv
    character(len=nstring)    :: stid        ! station identifier
    character(len=ndatetime)  :: datetime    ! ccyy-mm-ddThh:mm:ssZ
    integer(i_kind)           :: nlevels     ! number of levels
+   real(r_double)            :: gstime
    real(r_kind)              :: lat         ! latitude in degree
    real(r_kind)              :: lon         ! longitude in degree
    real(r_kind)              :: elv         ! elevation in m
@@ -64,6 +66,7 @@ type report_conv
    ! derived info
    character(len=nstring)    :: obtype      ! ob type, eg sonde, satwnd
    integer(i_kind)           :: obtype_idx  ! index of obtype in obtype_list
+   integer(i_kind)           :: ifgat       ! index of time slot
    type(each_level_type), pointer :: first => null()
    type(report_conv),     pointer :: next => null()
    contains
@@ -103,7 +106,7 @@ subroutine read_prepbufr(filename, filedate)
    real(r_double)    :: satqc(1), satid(1)
    equivalence (r8sid, csid), (r8sid2, csid2)
 
-   character(len=14) :: cdate, dsec, obs_date
+   character(len=14) :: cdate, dsec, obs_date, cdate_min, cdate_max
    integer(i_kind)   :: idate, idate2
    integer(i_kind)   :: nlevels, nlevels2, lv1, lv2
    integer(i_kind)   :: iyear, imonth, iday, ihour, imin, isec
@@ -461,6 +464,8 @@ subroutine read_prepbufr(filename, filedate)
       write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
          iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
 
+      call get_julian_time(iyear, imonth, iday, ihour, imin, plink%gstime)
+
       if ( satid(1) < r8bfms )  then
          plink % satid = nint(satid(1))
       end if
@@ -648,28 +653,33 @@ end subroutine read_prepbufr
 
 !--------------------------------------------------------------
 
-subroutine sort_obs_conv
+subroutine sort_obs_conv(filedate, nfgat)
 
    implicit none
 
+   character(len=*), intent(in) :: filedate
+   integer(i_kind),  intent(in) :: nfgat
+
    integer(i_kind)                       :: i, iv, k, ii
-   integer(i_kind)                       :: ityp, irec, ivar
-   integer(i_kind), dimension(nobtype)   :: nrecs
-   integer(i_kind), dimension(nobtype)   :: nlocs
+   integer(i_kind)                       :: ityp, irec, ivar, itim
+   integer(i_kind), dimension(nobtype,nfgat) :: nrecs
+   integer(i_kind), dimension(nobtype,nfgat) :: nlocs
+   integer(i_kind), dimension(nobtype,nfgat) :: iloc
    integer(i_kind), dimension(nobtype)   :: nvars
-   integer(i_kind), dimension(nobtype)   :: iloc
    character(len=12)                     :: obtype
    logical,         dimension(nvar_met)  :: vmask ! for counting available variables for one obtype
-!   logical,         dimension(nvar_info) :: imask ! for counting dimension of one var type
-!   integer(i_kind)                       :: ninfo_int
-!   integer(i_kind)                       :: ninfo_float
-!   integer(i_kind)                       :: ninfo_char
-
-   nrecs(:) = 0
-   nlocs(:) = 0
-   nvars(:) = 0
+   character(len=14) :: cdate_min, cdate_max
+   real(r_double) :: time_slots(0:nfgat)
 
    write(*,*) '--- sorting conv obs...'
+
+   call da_advance_time(filedate, dtime_min, cdate_min)
+   call da_advance_time(filedate, dtime_max, cdate_max)
+   call da_get_time_slots(nfgat, cdate_min, cdate_max, time_slots)
+
+   nrecs(:,:) = 0
+   nlocs(:,:) = 0
+   nvars(:) = 0
 
    ! set obtype from dump data type t29 and
    ! and count the numbers
@@ -680,12 +690,21 @@ subroutine sort_obs_conv
       !because plink%obtype is needed in subroutine filter_obs_conv which is called before this sort_obs_conv
       !call set_obtype_conv(plink%t29, plink%obtype)
 
+      ! determine time_slot index
+      do i = 1, nfgat
+         if ( plink%gstime >= time_slots(i-1) .and.  &
+              plink%gstime <= time_slots(i) ) then
+             exit
+         end if
+      end do
+      plink%ifgat = i
+
       ! find index of obtype in obtype_list
       plink%obtype_idx = ufo_vars_getindex(obtype_list, plink%obtype)
       if ( plink % obtype_idx > 0 ) then
          ! obtype assigned, advance ob counts
-         nrecs(plink%obtype_idx) = nrecs(plink%obtype_idx) + 1
-         nlocs(plink%obtype_idx) = nlocs(plink%obtype_idx) + plink%nlevels
+         nrecs(plink%obtype_idx,plink%ifgat) = nrecs(plink%obtype_idx,plink%ifgat) + 1
+         nlocs(plink%obtype_idx,plink%ifgat) = nlocs(plink%obtype_idx,plink%ifgat) + plink%nlevels
       !else
          !found undefined t29=534/kx=180,280 in file
          !write(*,*) 't29 = ', plink%t29
@@ -695,50 +714,59 @@ subroutine sort_obs_conv
       plink => plink%next
    end do set_obtype_loop
 
-   !write(*,*) 'num_report_decoded = ', sum(nrecs(:))
-   write(*,'(1x,20x,2a10)') 'nrecs', 'nlocs'
-   do i = 1, nobtype
-      write(*,'(1x,a20,2i10)') obtype_list(i), nrecs(i), nlocs(i)
+   do ii = 1, nfgat
+      if ( nfgat > 1 ) then
+         write(*,'(a)') '-----------'
+         write(*,'(1x,a,i3)') 'time', ii
+         write(*,'(a)') '-----------'
+      end if
+      !write(*,*) 'num_report_decoded = ', sum(nrecs(:,ii))
+      write(*,'(1x,20x,2a10)') 'nrecs', 'nlocs'
+      do i = 1, nobtype
+         write(*,'(1x,a20,2i10)') obtype_list(i), nrecs(i,ii), nlocs(i,ii)
+      end do
    end do
 
    ! allocate data arrays with the just counted numbers
-   allocate (xdata(nobtype))
+   allocate (xdata(nobtype,nfgat))
+   do ii = 1, nfgat
    do i = 1, nobtype
-      xdata(i) % nrecs = nrecs(i)
-      xdata(i) % nlocs = nlocs(i)
+      xdata(i,ii) % nrecs = nrecs(i,ii)
+      xdata(i,ii) % nlocs = nlocs(i,ii)
       vmask = vflag(:,i) == itrue
       nvars(i) = count(vmask)
-      xdata(i) % nvars = nvars(i)
+      xdata(i,ii) % nvars = nvars(i)
 
-      if ( nlocs(i) > 0 ) then
+      if ( nlocs(i,ii) > 0 ) then
 
-         allocate (xdata(i)%xinfo_int  (nlocs(i), nvar_info))
-         allocate (xdata(i)%xinfo_float(nlocs(i), nvar_info))
-         allocate (xdata(i)%xinfo_char (nlocs(i), nvar_info))
-         xdata(i)%xinfo_int  (:,:) = missing_i
-         xdata(i)%xinfo_float(:,:) = missing_r
-         xdata(i)%xinfo_char (:,:) = ''
+         allocate (xdata(i,ii)%xinfo_int  (nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_float(nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_char (nlocs(i,ii), nvar_info))
+         xdata(i,ii)%xinfo_int  (:,:) = missing_i
+         xdata(i,ii)%xinfo_float(:,:) = missing_r
+         xdata(i,ii)%xinfo_char (:,:) = ''
 
          if ( nvars(i) > 0 ) then
-            allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
-            allocate (xdata(i)%var_idx(nvars(i)))
-            xdata(i)%xfield(:,:)%val = missing_r ! initialize
-            xdata(i)%xfield(:,:)%qm  = missing_i ! initialize
-            xdata(i)%xfield(:,:)%err = missing_r ! initialize
+            allocate (xdata(i,ii)%xfield(nlocs(i,ii), nvars(i)))
+            allocate (xdata(i,ii)%var_idx(nvars(i)))
+            xdata(i,ii)%xfield(:,:)%val = missing_r ! initialize
+            xdata(i,ii)%xfield(:,:)%qm  = missing_i ! initialize
+            xdata(i,ii)%xfield(:,:)%err = missing_r ! initialize
             ivar = 0
             do iv = 1, nvar_met
                if ( vflag(iv,i) == ifalse ) cycle
                ivar = ivar + 1
-               xdata(i)%var_idx(ivar) = iv
+               xdata(i,ii)%var_idx(ivar) = iv
             end do
          end if
       end if
-   end do
+   end do ! nobtype
+   end do ! nfgat
 
    ! transfer data from plink to xdata
 
-   iloc(:) = 0
-   irec    = 0
+   iloc(:,:) = 0
+   irec = 0
 
    plink => phead
    reports: do while ( associated(plink) )
@@ -748,86 +776,87 @@ subroutine sort_obs_conv
          plink => plink%next
          cycle reports
       end if
+      itim = plink%ifgat
       plink % each => plink % first
       levels: do while ( associated(plink % each) )
-         iloc(ityp) = iloc(ityp) + 1
+         iloc(ityp,itim) = iloc(ityp,itim) + 1
 
          do i = 1, nvar_info
             if ( type_var_info(i) == nf90_int ) then
                if ( name_var_info(i) == 'record_number' ) then
-                  xdata(ityp)%xinfo_int(iloc(ityp),i) = irec
+                  xdata(ityp,itim)%xinfo_int(iloc(ityp,itim),i) = irec
                end if
             else if ( type_var_info(i) == nf90_float ) then
                if ( name_var_info(i) == 'time' ) then
                   if ( plink%each%dhr > missing_r ) then  ! time drift
-                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%dhr
+                     xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%each%dhr
                   else
-                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%dhr
+                     xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%dhr
                   end if
                else if ( trim(name_var_info(i)) == 'station_elevation' ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%elv
+                  xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%elv
                else if ( trim(name_var_info(i)) == 'latitude' ) then
                   if ( plink%each%lat > missing_r ) then  ! drift
-                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%lat
+                     xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%each%lat
                   else
-                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%lat
+                     xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%lat
                   end if
                else if ( trim(name_var_info(i)) == 'longitude' ) then
                   if ( plink%each%lon > missing_r ) then  ! drift
-                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%lon
+                     xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%each%lon
                   else
-                     xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%lon
+                     xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%lon
                   end if
                else if ( trim(name_var_info(i)) == 'height' ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%h%val
+                  xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%each%h%val
                else if ( trim(name_var_info(i)) == trim(var_prs) ) then
-                  xdata(ityp)%xinfo_float(iloc(ityp),i) = plink%each%p%val
+                  xdata(ityp,itim)%xinfo_float(iloc(ityp,itim),i) = plink%each%p%val
                end if
             else if ( type_var_info(i) == nf90_char ) then
                if ( trim(name_var_info(i)) == 'datetime' ) then
                   if ( plink%each%dhr > missing_r ) then  ! time drift
-                     xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%each%datetime
+                     xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = plink%each%datetime
                   else
-                     xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%datetime
+                     xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = plink%datetime
                   end if
                else if ( trim(name_var_info(i)) == 'station_id' ) then
-                  xdata(ityp)%xinfo_char(iloc(ityp),i) = plink%stid
+                  xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = plink%stid
                end if
             end if ! type_var_info
          end do
 
          do i = 1, nvars(ityp)
-            ivar = xdata(ityp)%var_idx(i)
+            ivar = xdata(ityp,itim)%var_idx(i)
             if ( name_var_met(ivar) == trim(var_prs) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each%p%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%each%p%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each%p%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%each%p%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%each%p%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%each%p%err
             else if ( name_var_met(ivar) == trim(var_u) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each%u%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%each%u%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each%u%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%each%u%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%each%u%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%each%u%err
             else if ( name_var_met(ivar) == trim(var_v) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each%v%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%each%v%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each%v%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%each%v%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%each%v%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%each%v%err
             else if ( name_var_met(ivar) == trim(var_ts) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each%t%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%each%t%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each%t%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%each%t%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%each%t%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%each%t%err
             else if ( name_var_met(ivar) == trim(var_tv) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each%tv%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%each%tv%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each%tv%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%each%tv%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%each%tv%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%each%tv%err
             else if ( name_var_met(ivar) == trim(var_q) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%each%q%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%each%q%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%each%q%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%each%q%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%each%q%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%each%q%err
             else if ( name_var_met(ivar) == trim(var_ps) ) then
-               xdata(ityp)%xfield(iloc(ityp),i)%val = plink%ps%val
-               xdata(ityp)%xfield(iloc(ityp),i)%qm  = plink%ps%qm
-               xdata(ityp)%xfield(iloc(ityp),i)%err = plink%ps%err
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = plink%ps%val
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%qm  = plink%ps%qm
+               xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = plink%ps%err
             end if
-            xdata(ityp)%xfield(iloc(ityp),i)%rptype = plink%rptype
+            xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%rptype = plink%rptype
          end do
          plink % each => plink % each % next
       end do levels
