@@ -354,7 +354,7 @@ if __name__ == '__main__':
     for key, value in obsvars.items():
         outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(nc.default_fillvals['f4']))
         outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'], 1, 0)
-        outdata[varDict[key]['errKey']] = np.full((nlocs), 0.02)
+        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'], nc.default_fillvals['f4'], 0.02)
 
     # Define global atrributes
     print('Define global atrributes')
