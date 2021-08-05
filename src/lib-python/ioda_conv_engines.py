@@ -92,7 +92,7 @@ class IodaWriter(object):
                 pass  # no metadata for this variable
             # add var units if exists
             try:
-                UnitStr = LocUnits[Vname]
+                UnitStr = VarUnits[Vname]
                 tmpVar.write_attr("units", UnitStr)
             except (KeyError, NameError):
                 # add error message here later, eventually all need units!

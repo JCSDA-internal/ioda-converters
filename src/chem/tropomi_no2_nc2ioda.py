@@ -40,7 +40,6 @@ AttrData = {
 }
 
 DimDict = {
-    "nlevs": 34,
 }
 
 VarDims = {
@@ -103,7 +102,6 @@ class tropomi(object):
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
-            akvar = ('averaging_kernel', 'MetaData')
             if first:
                 self.loc_mdata['datetime'] = times
                 self.loc_mdata['latitude'] = lats
@@ -157,7 +155,11 @@ class tropomi(object):
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
             DimDict['nlocs'] = len(self.loc_mdata['datetime'])
-            self.var_mdata['averaging_kernel']['coordinates'] = 'longitude latitude nlevs'
+            DimDict['ndatetime'] = len(self.loc_mdata['datetime'][0])
+            for k in range(nlevs):
+                varname = 'averaging_kernel_level_'+str(k+1)
+                self.var_mdata[varname]['coordinates'] = 'longitude latitude'
+                self.var_mdata[varname]['units'] = ''
 
 
 def main():
