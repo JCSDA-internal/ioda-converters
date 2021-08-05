@@ -245,25 +245,28 @@ if __name__ == '__main__':
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-		    '-d', '--date',
+		    '-t', '--time',
 		    help="time (YYYYMMDDTHH) of AERONET AOD files to be downloaded from NASA website",
 		    type=str, required=True)
+    required.add_argument(
+		    '-w', '--window',
+		    help="An integer/float number defines a time window in hours centered at time argument within which AERONET AOD data will be downloaded",
+		    type=float, required=True)
     required.add_argument(
 		    '-o', '--output',
 		    help="path of AERONET AOD IODA file",
 		    type=str, required=True)
 
     args = parser.parse_args()
-    date_center1 = args.date
-    print(type(date_center1))
-    print(date_center1)
-    print(len(date_center1))
+    date_center1 = args.time
+    hwindow=args.window
+    hwindow=hwindow/2.0
     outfile = args.output
     date_center = datetime.strptime(date_center1, '%Y%m%d%H') 
-    date_start = date_center + timedelta(hours=-3)
-    date_end = date_center + timedelta(hours=3)
+    date_start = date_center + timedelta(hours=-1.*hwindow)
+    date_end = date_center + timedelta(hours=hwindow)
 
-    print('Download AERONET AOD within +/3 hours at: ')
+    print('Download AERONET AOD within +/- ' + str(hwindow) + ' hours at: ')
     print(date_center)
 
     dates = pd.date_range(start=date_start,end=date_end,freq='H')
@@ -352,7 +355,7 @@ if __name__ == '__main__':
 
     for key, value in obsvars.items():
         outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(nc.default_fillvals['f4']))
-        outdata[varDict[key]['errKey']] = np.full((nlocs), 0.002)
+        outdata[varDict[key]['errKey']] = np.full((nlocs), 0.02)
         outdata[varDict[key]['qcKey']] = np.full((nlocs), 0)
 
     # Define global atrributes

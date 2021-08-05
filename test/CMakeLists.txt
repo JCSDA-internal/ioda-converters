@@ -548,7 +548,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
 		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
 		  ARGS    netcdf
 		          "${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
-			  -d 2018041500
+			  -t 2018041500
+			  -w 6
 			  -o testrun/aeronet_aod.nc"
 			  aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
