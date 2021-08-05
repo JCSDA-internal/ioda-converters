@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # read/interpolate online aeronet AOD data and convert to netcdf
+# Usage:
+#	python aeronet_aod2ioda.py -t 2021080500 -w 6 -o aeronet_aod.nc
+#	-t: time of AERONET AOD in YYYYMMDDHH format
+#	-w: time wihdow within which AERONET AOD will be collected and converted (e.g., [time-window/2, time+window/2])
+#       -o: output file name. 
+
 import netCDF4 as nc
 import numpy as np
 import inspect, sys, os, argparse
@@ -293,14 +299,6 @@ if __name__ == '__main__':
     outcols=['time', 'siteid', 'longitude', 'latitude', 'elevation', 'aod_int_550nm', 'aod_340nm', 'aod_380nm', 'aod_440nm', 'aod_500nm', 'aod_675nm','aod_870nm', 'aod_1020nm','aod_1640nm']
 
     f3 = add_data(dates=dates, product='AOD15',interp_to_aod_values=aod_new_wav)
-    #tfile1=open("df_header_new_aod.txt", "w")
-    #for line in f3:
-    #    tfile1.write(line)
-    #    tfile1.write("\n")
-    #tfile1.close()
-    #
-    #f3.to_csv('df_output_new_aod_all.txt', sep=' ', na_rep='NaN', index=False)
-    #f3.to_csv('df_output_new_aod_interp.txt', sep=' ', na_rep='NaN', index=False, columns=outcols)
 
     # Define AOD varname that match with those in f3
     nlocs, columns = f3.shape
@@ -355,8 +353,8 @@ if __name__ == '__main__':
 
     for key, value in obsvars.items():
         outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(nc.default_fillvals['f4']))
+        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'], 1, 0)
         outdata[varDict[key]['errKey']] = np.full((nlocs), 0.02)
-        outdata[varDict[key]['qcKey']] = np.full((nlocs), 0)
 
     # Define global atrributes
     print('Define global atrributes')
@@ -368,8 +366,5 @@ if __name__ == '__main__':
     # Write out IODA V1 NC files
     print('Write into IODA format file: ' + outfile)
     writer._nvars = len(aod_wav)
-    print('Write into IODA format file0: ' + outfile)
     writer._nlocs = nlocs
-    print('Write into IODA format file1: ' + outfile)
     writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units)
-    print('Write into IODA format file2: ' + outfile)
