@@ -48,10 +48,13 @@ namespace Ingester
         }
         else
         {
-            std::stringstream errStr;
-            errStr << "Tried to apply transform to a string field in ";
-            errStr << getExportName() << ".";
-            throw eckit::BadParameter(errStr.str());
+            if (transforms_.size() > 0)
+            {
+                std::stringstream errStr;
+                errStr << "Tried to apply transform to a string field in ";
+                errStr << getExportName() << ".";
+                throw eckit::BadParameter(errStr.str());
+            }
         }
 
         return data;
