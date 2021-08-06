@@ -67,13 +67,13 @@ def tspsi(x, y, ncd=1, slopes=None, curvs=None, per=0, tension=None):
     if slopes is not None and curvs is not None:
         raise ValueError("You can't constrain both the slopes and curvs at the endpoints")
     if slopes is not None:
-        if type(slopes) is not type([]):
+        if ~ isinstance(slopes, []):
             raise TypeError("slopes must be a list:  [slope0,slope1]")
         iendc = 1
         yp[0] = slopes[0]
         yp[1] = slopes[1]
     elif curvs is not None:
-        if type(curvs) is not type([]):
+        if ~ isinstance(curvs, []):
             raise TypeError("curvs must be a list:  [curv1,curv2]")
         iendc = 2
         yp[0] = curvs[0]
@@ -169,7 +169,7 @@ def tspss(x, y, w, per=0, tension=None, s=None, stol=None, full_output=0):
 
 def tsval1(x, xydt, degree=0, verbose=0):
 
-    if type(xydt) is not type(()):
+    if ~ isinstance(xydt, ()):
         raise TypeError("xydt must be a 4-tuple:  x, y, yp, sigma")
     if len(xydt) != 4:
         raise TypeError("xydt must be a 4-tuple:  x, y, yp, sigma")

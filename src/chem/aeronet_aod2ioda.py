@@ -1,10 +1,31 @@
 #!/usr/bin/env python3
-# read/interpolate online aeronet AOD data and convert to netcdf
+
+# Description:
+#        This code reads and (or) interpolates online AERONET AOD data at avaiable
+#        wavelenths (340/380/440/500/675/870/1020/1640 nm) and write into IODA format.
+#
 # Usage:
-#	python aeronet_aod2ioda.py -t 2021080500 -w 6 -o aeronet_aod.nc
-#	-t: time of AERONET AOD in YYYYMMDDHH format
-#	-w: time wihdow within which AERONET AOD will be collected and converted (e.g., [time-window/2, time+window/2])
-#       -o: output file name. 
+#        python aeronet_aod2ioda.py -t 2021080500 -w 6 -o aeronet_aod.nc
+#        -t: time of AERONET AOD data in YYYYMMDDHH format
+#        -w: time wihdow within which AERONET AOD will be collected
+#            (e.g., [time-window/2, time+window/2])
+#        -o: output file name.
+#
+# Acknowledgement:
+#        Barry Baker from ARL for this initial preparation for for this code.
+#
+# Additional notes:
+#        An example of interpolating AOD at other wavelengths (e.g., 550) is illustrated
+#        by defining "aod_new_wav" which is assigned to "interp_to_aod_values" in add_data.
+#        (1) A tension spline function is applied for the interpolation to avoid
+#            overshoots and the interpolation is based on log(wavelength).
+#        (2) For the purpose of testing the interpolation capability, Interpolated AOD
+#            at 550 nm is only saved in outcols (aod_int_550nm) and f3 variables, but
+#            not written out in the output IODA file. To write out interpolated AOD value,
+#            please define/modify aod_new_chan, frequency_new, outcols, obsvars variables.
+#        (3) Since current hofx utility for AERONET AOD only includes 1-8 channels
+#            that correspond to eight avaiable wavelengths), it may not work for additional
+#            interpolated AOD, e.g., at 550 nm.
 
 import netCDF4 as nc
 import numpy as np
@@ -25,8 +46,10 @@ import ioda_conv_ncio as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
+
 def dateparse(x):
     return datetime.strptime(x, '%d:%m:%Y %H:%M:%S')
+
 
 def add_data(dates=None,
              product='AOD15',
@@ -36,7 +59,7 @@ def add_data(dates=None,
              inv_type=None,
              freq=None,
              siteid=None,
-             detect_dust=False, n_procs=1, verbose=10):
+             n_procs=1, verbose=10):
     a = AERONET()
     df = a.add_data(dates=dates,
                     product=product,
@@ -45,8 +68,7 @@ def add_data(dates=None,
                     interp_to_aod_values=interp_to_aod_values,
                     inv_type=inv_type,
                     siteid=siteid,
-                    freq=freq,
-                    detect_dust=detect_dust)
+                    freq=freq)
     return df.reset_index(drop=True)
 
 
@@ -164,8 +186,7 @@ class AERONET(object):
                  interp_to_aod_values=None,
                  inv_type=None,
                  freq=None,
-                 siteid=None,
-                 detect_dust=False):
+		 siteid=None):
         self.latlonbox = latlonbox
         self.siteid = siteid
         if dates is None:  # get the current day
@@ -188,13 +209,11 @@ class AERONET(object):
         self.build_url()
         try:
             self.read_aeronet()
-        except:
+        except Exception:
             print(self.url)
         if freq is not None:
             self.df = self.df.groupby('siteid').resample(
                 freq).mean().reset_index()
-        if detect_dust:
-            self.dust_detect()
         if self.new_aod_values is not None:
             self.calc_new_aod_values()
         return self.df
@@ -210,10 +229,10 @@ class AERONET(object):
             aods = row[aod_columns]
             wv = [float(aod_column.replace('aod_', '').replace('nm', '')) for aod_column in aod_columns]
             a = pd.DataFrame({'aod': aods}).reset_index()
-	    # Interpolate AOD based on log(wv)
-            wv_log=np.log(wv, dtype='float64')
+            # Interpolate AOD based on log(wv)
+            wv_log = np.log(wv, dtype='float64')
             a['wv'] = wv_log
-            new_wv_log=np.log(new_wv, dtype='float64')
+            new_wv_log = np.log(new_wv, dtype='float64')
             df_aod_nu = a.dropna()
             df_aod_nu_sorted = df_aod_nu.sort_values(by='wv').dropna()
             if len(df_aod_nu_sorted) < 2:
@@ -239,78 +258,76 @@ class AERONET(object):
             Description of returned object.
 
         """
-        self.df['dust'] = (self.df['aod_1020nm'] >
-                           0.3) & (self.df['440-870_angstrom_exponent'] < 0.6)
+        self.df['dust'] = (self.df['aod_1020nm'] > 0.3) & (self.df['440-870_angstrom_exponent'] < 0.6)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-	     description=(
-		          'Reads online AERONET data from NASA website '
-			  ' and converts into IODA formatted output files')
+        description=(
+            'Reads online AERONET data from NASA website '
+            ' and converts into IODA formatted output files')
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-		    '-t', '--time',
-		    help="time (YYYYMMDDTHH) of AERONET AOD files to be downloaded from NASA website",
-		    type=str, required=True)
+        '-t', '--time',
+        help="time (YYYYMMDDTHH) of AERONET AOD files to be downloaded from NASA website",
+        type=str, required=True)
     required.add_argument(
-		    '-w', '--window',
-		    help="An integer/float number defines a time window in hours centered at time argument within which AERONET AOD data will be downloaded",
-		    type=float, required=True)
+        '-w', '--window',
+        help="An integer/float number defines a time window [time-window/2, time+window/2] to download AERONET AOD",
+        type=float, required=True)
     required.add_argument(
-		    '-o', '--output',
-		    help="path of AERONET AOD IODA file",
-		    type=str, required=True)
+        '-o', '--output',
+        help="path of AERONET AOD IODA file",
+        type=str, required=True)
 
     args = parser.parse_args()
     date_center1 = args.time
-    hwindow=args.window
-    hwindow=hwindow/2.0
+    hwindow = args.window
+    hwindow = hwindow/2.0
     outfile = args.output
-    date_center = datetime.strptime(date_center1, '%Y%m%d%H') 
+    date_center = datetime.strptime(date_center1, '%Y%m%d%H')
     date_start = date_center + timedelta(hours=-1.*hwindow)
     date_end = date_center + timedelta(hours=hwindow)
 
     print('Download AERONET AOD within +/- ' + str(hwindow) + ' hours at: ')
     print(date_center)
 
-    dates = pd.date_range(start=date_start,end=date_end,freq='H')
+    dates = pd.date_range(start=date_start, end=date_end, freq='H')
 
     # Define AOD wavelengths, channels and frequencies
-    aod_wav = np.array([340., 380., 440., 500., 675, 870., 1020., 1640.,], dtype=np.float32)
-    aod_chan = np.array([1,   2,    3,    4,    5,   6,    7,     8 ], dtype=np.intc)
+    aod_wav = np.array([340., 380., 440., 500., 675, 870., 1020., 1640.], dtype=np.float32)
+    aod_chan = np.array([1, 2, 3, 4, 5, 6, 7, 8], dtype=np.intc)
 
-    # If AOD at other wavelenths (e.g., 550nm) are needed, please define/calculate aod_new_wav, aod_new_chan (other than 1-8),
-    # frequency_new, concatanate aod_new_chan to aod_chan, and frequency_new to frequency and modify outcols and obsvars. 
-    # In the current, AOD at aod_new_wav is not written out in the IODA files (e.g, obsvars).
-    aod_new_wav=np.array([550.,], dtype=np.float32)
-    aod_new_chan=None
-    frequency_new=None
+    # An example of interpolating AOD at 550 nm
+    aod_new_wav = np.array([550.], dtype=np.float32)
+    aod_new_chan = None
+    frequency_new = None
     speed_light = 2.99792458E8
     frequency = speed_light*1.0E9/aod_wav
-    print('Calculate AERONET AOD at wavelengths/channels/frequencies: ')
+    print('Extract AERONET AOD at wavelengths/channels/frequencies: ')
     print(aod_wav)
     print(aod_chan)
     print(frequency)
 
-    # Read and extract online AERONET AOD
-    print('Read and extract online AERONET AOD')
-    outcols=['time', 'siteid', 'longitude', 'latitude', 'elevation', 'aod_int_550nm', 'aod_340nm', 'aod_380nm', 'aod_440nm', 'aod_500nm', 'aod_675nm','aod_870nm', 'aod_1020nm','aod_1640nm']
+    outcols = ['time', 'siteid', 'longitude', 'latitude', 'elevation',
+               'aod_340nm', 'aod_380nm', 'aod_440nm', 'aod_500nm', 'aod_675nm',
+               'aod_870nm', 'aod_1020nm', 'aod_1640nm', 'aod_int_550nm']
 
-    f3 = add_data(dates=dates, product='AOD15',interp_to_aod_values=aod_new_wav)
+    f3 = add_data(dates=dates, product='AOD15', interp_to_aod_values=aod_new_wav)
 
-    # Define AOD varname that match with those in f3
+    # Define AOD varname that match with those in f3 (match aod_wav and aod_chan)
     nlocs, columns = f3.shape
-    if nlocs==0:
+    if nlocs == 0:
         print('No avaiable AERONET AOD at ' + date_center1 + '  and exit')
         exit(0)
-    obsvars = { 'aerosol_optical_depth_1': 'aod_340nm',  'aerosol_optical_depth_2': 'aod_380nm',
-		'aerosol_optical_depth_3': 'aod_440nm',  'aerosol_optical_depth_4': 'aod_675nm',
-		'aerosol_optical_depth_5': 'aod_500nm',  'aerosol_optical_depth_6': 'aod_870nm', 
-		'aerosol_optical_depth_7': 'aod_1020nm', 'aerosol_optical_depth_8': 'aod_1640nm',}
+    obsvars = {'aerosol_optical_depth_1': 'aod_340nm', 'aerosol_optical_depth_2': 'aod_380nm',
+               'aerosol_optical_depth_3': 'aod_440nm', 'aerosol_optical_depth_4': 'aod_675nm',
+               'aerosol_optical_depth_5': 'aod_500nm', 'aerosol_optical_depth_6': 'aod_870nm',
+               'aerosol_optical_depth_7': 'aod_1020nm', 'aerosol_optical_depth_8': 'aod_1640nm'}
 
-    locationKeyList = [("latitude", "float"), ("longitude", "float"), ("datetime", "string"),] 
+    locationKeyList = [("latitude", "float"), ("longitude", "float"), ("datetime", "string")]
     writer = iconv.NcWriter(outfile, locationKeyList)
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -320,7 +337,7 @@ if __name__ == '__main__':
     units['latitude'] = 'degree'
     units['longitude'] = 'degree'
     units['station_elevation'] = 'm'
-    
+
     # Define varDict variables
     print('Define varDict variables')
     for key, value in obsvars.items():
@@ -340,10 +357,10 @@ if __name__ == '__main__':
     c[:] = np.array(f3.siteid)
     loc_mdata['station_id'] = writer.FillNcVector(c, 'string')
 
-     # Define datetime
+    # Define datetime
     d = np.empty([nlocs], 'S20')
     for i in range(nlocs):
-        d[i]=f3.time[i].strftime('%Y-%m-%dT%H:%M:%SZ') 
+        d[i] = f3.time[i].strftime('%Y-%m-%dT%H:%M:%SZ')
     loc_mdata['datetime'] = writer.FillNcVector(d, 'datetime')
 
     # Define var_mdata
@@ -353,15 +370,17 @@ if __name__ == '__main__':
 
     for key, value in obsvars.items():
         outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(nc.default_fillvals['f4']))
-        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'], 1, 0)
-        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'], nc.default_fillvals['f4'], 0.02)
+        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'],
+                                                  1, 0)
+        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'],
+                                                   nc.default_fillvals['f4'], 0.02)
 
     # Define global atrributes
     print('Define global atrributes')
-    AttrData = {'observation_type': 'Aod', 
-		'date_time_string': date_center.strftime('%Y-%m-%dT%H:%M:%SZ'),
-		'sensor': "aeronet", 
-		'surface_type': 'ocean=0,land=1,costal=2',}
+    AttrData = {'observation_type': 'Aod',
+                'date_time_string': date_center.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'sensor': "aeronet",
+                'surface_type': 'ocean=0,land=1,costal=2'}
 
     # Write out IODA V1 NC files
     print('Write into IODA format file: ' + outfile)
