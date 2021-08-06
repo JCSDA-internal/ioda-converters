@@ -186,7 +186,7 @@ class AERONET(object):
                  interp_to_aod_values=None,
                  inv_type=None,
                  freq=None,
-		 siteid=None):
+                 siteid=None):
         self.latlonbox = latlonbox
         self.siteid = siteid
         if dates is None:  # get the current day
@@ -246,19 +246,6 @@ class AERONET(object):
         names = 'aod_int_' + pd.Series(self.new_aod_values.astype(int).astype(str)) + 'nm'
         out.columns = names.values
         self.df = pd.concat([self.df, out], axis=1)
-
-    def dust_detect(self):
-        """Detect dust from AERONET. See [Dubovik et al., 2002].
-
-        AOD_1020 > 0.3 and AE(440,870) < 0.6
-
-        Returns
-        -------
-        type
-            Description of returned object.
-
-        """
-        self.df['dust'] = (self.df['aod_1020nm'] > 0.3) & (self.df['440-870_angstrom_exponent'] < 0.6)
 
 
 if __name__ == '__main__':
