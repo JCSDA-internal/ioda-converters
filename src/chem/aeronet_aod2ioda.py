@@ -1,31 +1,36 @@
 #!/usr/bin/env python3
 
 # Description:
-#        This code reads and (or) interpolates online AERONET AOD data at avaiable
+#        This code reads and (or) interpolates online AERONET AOD data at available
 #        wavelenths (340/380/440/500/675/870/1020/1640 nm) and write into IODA format.
 #
 # Usage:
 #        python aeronet_aod2ioda.py -t 2021080500 -w 6 -o aeronet_aod.nc
 #        -t: time of AERONET AOD data in YYYYMMDDHH format
-#        -w: time wihdow within which AERONET AOD will be collected
+#        -w: time wihdow in hours within which AERONET AOD will be collected
 #            (e.g., [time-window/2, time+window/2])
 #        -o: output file name.
 #
+# Contact:
+#        Bo Huang (bo.huang@noaa.gov) from CU/CIRES and NOAA/ESRL/GSL
+#
 # Acknowledgement:
-#        Barry Baker from ARL for this initial preparation for for this code.
+#        Barry Baker from ARL for his initial preparation for this code.
 #
 # Additional notes:
 #        An example of interpolating AOD at other wavelengths (e.g., 550) is illustrated
-#        by defining "aod_new_wav" which is assigned to "interp_to_aod_values" in add_data.
+#        by defining "aod_new_wav" which is assigned to "interp_to_aod_values" in add_data
+#        function.
 #        (1) A tension spline function is applied for the interpolation to avoid
 #            overshoots and the interpolation is based on log(wavelength).
-#        (2) For the purpose of testing the interpolation capability, Interpolated AOD
-#            at 550 nm is only saved in outcols (aod_int_550nm) and f3 variables, but
-#            not written out in the output IODA file. To write out interpolated AOD value,
-#            please define/modify aod_new_chan, frequency_new, outcols, obsvars variables.
+#        (2) For the purpose of testing the interpolation capability, interpolated AOD
+#            at 550 nm is calculated and only saved in outcols (as aod_int_550nm) and f3
+#            variables, but not written out in the output IODA file. If desired too write
+#            out interpolated AOD value, please define/modify aod_new_chan, frequency_new,
+#            outcols, obsvars variables.
 #        (3) Since current hofx utility for AERONET AOD only includes 1-8 channels
-#            that correspond to eight avaiable wavelengths), it may not work for additional
-#            interpolated AOD, e.g., at 550 nm.
+#            that correspond to eight available wavelengths, it may not work for additional
+#            interpolated AOD (e.g., 550nm) hofx calculation.
 
 import netCDF4 as nc
 import numpy as np
