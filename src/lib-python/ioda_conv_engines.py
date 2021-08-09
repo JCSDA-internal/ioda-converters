@@ -12,6 +12,9 @@ _oqc_name = "PreQC"
 _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
 
+# list of groups to not assign the standard variable unit to
+_no_units = [_oqc_name]
+
 
 def OvalName():
     return _oval_name
@@ -91,12 +94,13 @@ class IodaWriter(object):
             except KeyError:
                 pass  # no metadata for this variable
             # add var units if exists
-            try:
-                UnitStr = VarUnits[Vname]
-                tmpVar.write_attr("units", UnitStr)
-            except (KeyError, NameError):
-                # add error message here later, eventually all need units!
-                pass
+            if Gname not in _no_units:
+                try:
+                    UnitStr = VarUnits[Vname]
+                    tmpVar.write_attr("units", UnitStr)
+                except (KeyError, NameError):
+                    # add error message here later, eventually all need units!
+                    pass
 
     def WriteGlobalAttrs(self, AttrData):
         # this method will create global attributes from AttrData dictionary

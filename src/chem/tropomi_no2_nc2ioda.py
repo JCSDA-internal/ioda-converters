@@ -37,6 +37,7 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
+    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
@@ -155,7 +156,8 @@ class tropomi(object):
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
             DimDict['nlocs'] = len(self.loc_mdata['datetime'])
-            DimDict['ndatetime'] = len(self.loc_mdata['datetime'][0])
+            AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+
             for k in range(nlevs):
                 varname = 'averaging_kernel_level_'+str(k+1)
                 self.var_mdata[varname]['coordinates'] = 'longitude latitude'
