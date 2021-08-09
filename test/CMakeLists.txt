@@ -46,6 +46,7 @@ list( APPEND test_input
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
+  testinput/aeronet_aod.dat
 )
 
 list( APPEND test_output
@@ -548,8 +549,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
 		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
 		  ARGS    netcdf
 		          "${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
-			  -t 2018041500
-			  -w 6
+			  -i testinput/aeronet_aod.dat
 			  -o testrun/aeronet_aod.nc"
 			  aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
