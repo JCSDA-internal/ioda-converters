@@ -3,6 +3,7 @@ list(APPEND programs
   tropomi_no2_nc2ioda.py
   airnow2ioda-nc.py
   modis_aod2ioda.py
+  aeronet_aod2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
