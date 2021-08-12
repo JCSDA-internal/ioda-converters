@@ -282,7 +282,7 @@ do j = 1,  maxval(gpsro_data%record_number(:))
   end do
 end do
 
-call check( nf90_create(trim(obsname_out), nf90_clobber, ncid_out))
+call check( nf90_create(trim(obsname_out), NF90_CLOBBER + NF90_NETCDF4,ncid_out))
 call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_dim(ncid_out, 'nlocs', nsub,  nlocs_dimid) )
 call check( nf90_def_var(ncid_out, "latitude@MetaData",        NF90_FLOAT, nlocs_dimid, varid_lat) )
@@ -345,7 +345,7 @@ call check( nf90_def_var(ncid_out, "bending_angle@GsiHofX", NF90_FLOAT, nlocs_di
 call check( nf90_enddef(ncid_out) )
 
 if ( geovalwrite =="1" ) then
-call check( nf90_create(trim(geoname_out), nf90_clobber, ncid_out2))
+call check( nf90_create(trim(geoname_out), NF90_CLOBBER + NF90_NETCDF4, ncid_out2))
 call check( nf90_put_att(ncid_out2, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_dim(ncid_out2, 'nlocs',  nsub,     nlocs_dimid2) )
 call check( nf90_def_dim(ncid_out2, 'nlevs',  nlevs,    nlevs_dimid) )
