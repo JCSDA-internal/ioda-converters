@@ -731,13 +731,15 @@ class Conv(BaseGSI):
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
                     if outvars[o] == 'surface_pressure':
-                        if np.max(obsdata) < 1100.:
+                        if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
-                    obserr[mask] = self.FLOAT_FILL
-                    obserr[obserr > 4e8] = self.FLOAT_FILL
+                    # below is a temporary hack until missing ObsError support returns to IODA/UFO
+                    obserr[mask] = 1e8
+                    #obserr[mask] = self.FLOAT_FILL
+                    #obserr[obserr > 4e8] = self.FLOAT_FILL
                     try:
                         obsqc = self.var('Prep_QC_Mark')[idx]
                     except BaseException:
@@ -760,7 +762,9 @@ class Conv(BaseGSI):
                                 tmp = df_key[idx]
                                 mask = tmp < self.EPSILON
                                 tmp[~mask] = 1.0 / tmp[~mask]
-                                tmp[mask] = self.FLOAT_FILL
+                                # below is a temporary hack
+                                tmp[mask] = 1e8
+                                #tmp[mask] = self.FLOAT_FILL
                             elif "Obs_Minus_" in key:
                                 if 'u_Forecast_adjusted' in self.df.variables:
                                     continue
@@ -801,7 +805,7 @@ class Conv(BaseGSI):
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
-                        if np.max(tmpps) > 1100.:
+                        if np.median(tmpps) > 1100.:
                             loc_mdata[loc_mdata_name] = tmpps
                         else:
                             loc_mdata[loc_mdata_name] = tmpps * 100.  # from hPa to Pa
