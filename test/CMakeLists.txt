@@ -199,6 +199,29 @@ endforeach(FILENAME)
 set(IODA_CONV_COMP_TOL_ZERO "0.0")
 set(IODA_CONV_COMP_TOL "0.5e-4")
 
+# The ioda-engines CMake configuration has set the variable _ioda_python to
+# the full path to the library file containing the python bindings created
+# by pybind11. For example:
+#
+#   path_to_lib/python3.9/ioda/_ioda_python.cpython-39-darwin.so
+#
+# To be able to import the ioda python module, PYTHONPATH needs to be
+# set to the directory that is one above where the ioda module is located.
+# Using the above example:
+#
+#   PYTHONPATH=path_to_lib/python3.9
+#
+# This can be accompilished by using the TARGET_FILE_DIR cmake generator
+# which works like the shell dirname command. In the ecbuild_add_test command
+# PYTHONPATH can be set using the ENVIRONMENT keyword. Note that the desired
+# path is one directory above what TARGET_FILE_DIR will return in the example below.
+#
+#   ecbuild_add_test(
+#        ...
+#        ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
+#        ...
+#        )
+
 #===============================================================================
 # Marine converters
 #===============================================================================
@@ -527,6 +550,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
