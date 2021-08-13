@@ -70,6 +70,7 @@ phases:
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
+      - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
       - ls /jcsda/ioda-bundle/
 
   build:
@@ -81,7 +82,7 @@ phases:
         && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle/"
 
 
-      - su - jedi -c "cd /home/jedi/iodconv
+      - su - jedi -c "cd /home/jedi/iodaconv
         && echo $CC
         && echo $CXX
         && echo $FC

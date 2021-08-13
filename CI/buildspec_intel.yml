@@ -80,7 +80,7 @@ phases:
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
-        #      - chmod 777 -R /jcsda/ioda-bundle
+      - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
 
   build:
     on-failure: CONTINUE
