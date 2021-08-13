@@ -89,7 +89,7 @@ phases:
       - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
 
-      - make -j4 
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS

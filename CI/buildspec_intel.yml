@@ -94,7 +94,7 @@ phases:
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
       - sed -i 's/jedi/jedi\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-      - make -j4
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
       - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
