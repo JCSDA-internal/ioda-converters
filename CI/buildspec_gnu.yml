@@ -74,7 +74,7 @@ phases:
 
   build:
     commands:
-      - su - jcsdauser -c "cd /home/jedi
+      - su - jedi -c "cd /home/jedi
         && echo $CC
         && echo $CXX
         && echo $FC
