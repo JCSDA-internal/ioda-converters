@@ -307,7 +307,7 @@ subroutine filter_obs_satwnd
    rlink => rhead
    do while ( associated(rlink) )
 
-      rlink%qm = 0
+      rlink%qm = 2  ! neutral or not checked
 
       if ( rlink%satzen > 68.0_r_kind ) rlink%qm = 15
 
