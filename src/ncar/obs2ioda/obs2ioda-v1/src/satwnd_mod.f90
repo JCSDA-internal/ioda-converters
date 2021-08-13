@@ -75,7 +75,7 @@ subroutine read_satwnd(filename, filedate)
    real(r_double), dimension(nqc1,2) :: qc1dat
    real(r_double), dimension(nqc2,4) :: qc2dat
 
-   integer(i_kind), parameter :: nmsgtyp = 9  ! number of message types to process
+   integer(i_kind), parameter :: nmsgtyp = 10  ! number of message types to process
    ! message types that are not processed into prepbufr
    character(len=8), dimension(nmsgtyp) :: message_types = &
       (/ 'NC005030',  &
@@ -86,8 +86,8 @@ subroutine read_satwnd(filename, filedate)
          'NC005080',  &
          'NC005081',  &  ! not tested
          'NC005090',  &
-         'NC005091'   &
-!to-do   'NC005072'   &
+         'NC005091',  &
+         'NC005072'   &
       /)
    character(len=8)  :: subset
    character(len=10) :: cdate

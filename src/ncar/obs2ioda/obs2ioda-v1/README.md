@@ -24,7 +24,7 @@ Example output files (date in the output filename is extracted from the input bu
 > obs2ioda.x -i input_dir -o output_dir gdas.satwnd.tHHz.YYYYMMDD.bufr
 
 Example output files (date in the output filename is extracted from the input bufr files):  
-  satwnd_obs_YYYYMMDDHH.nc4  (contains GOES-16/GOES-17, AVHRR (METOP/NOAA), VIIRS (NPP/NOAA) AMVs)  
+  satwnd_obs_YYYYMMDDHH.nc4  (GOES-16/GOES-17, AVHRR (METOP/NOAA), VIIRS (NPP/NOAA), LEOGEO AMVs)  
   
 > obs2ioda.x -i input_dir -o output_dir gdas.1bamua.tHHz.YYYYMMDD.bufr
 
@@ -65,7 +65,7 @@ Number of pixels to skip is optional.
 * The output prefix (before _obs) is defined in define_mod.f90
 * The mapping of numeric report types to the named types is coded in define_mod.f90
 through subroutines set_obtype_conv, set_name_satellite, set_name_sensor.
-* For gdas.satwnd.tHHz.YYYYMMDD.bufr, only GOES-16/GOES-17, AVHRR (METOP/NOAA), VIIRS (NPP/NOAA) AMVs are converted. Other AMVs are available through PREPBUFR files.
+* For gdas.satwnd.tHHz.YYYYMMDD.bufr, only GOES-16/GOES-17, AVHRR (METOP/NOAA), VIIRS (NPP/NOAA), LEOGEO AMVs are converted when available. Other AMVs are available through PREPBUFR files.
 
 ## The current version is coded to match current GSI-processed diags as close as possible.
 * The ob errors of conventional observations are either extracted from the input prepbufr or from an external error table (if obs_errtable exists in the working directory).
