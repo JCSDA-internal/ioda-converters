@@ -75,6 +75,20 @@ subroutine read_satwnd(filename, filedate)
    real(r_double), dimension(nqc1,2) :: qc1dat
    real(r_double), dimension(nqc2,4) :: qc2dat
 
+   integer(i_kind), parameter :: nmsgtyp = 9  ! number of message types to process
+   ! message types that are not processed into prepbufr
+   character(len=8), dimension(nmsgtyp) :: message_types = &
+      (/ 'NC005030',  &
+         'NC005031',  &
+         'NC005032',  &
+         'NC005034',  &
+         'NC005039',  &
+         'NC005080',  &
+         'NC005081',  &  ! not tested
+         'NC005090',  &
+         'NC005091'   &
+!to-do   'NC005072'   &
+      /)
    character(len=8)  :: subset
    character(len=10) :: cdate
    character(len=14) :: cdate_min, cdate_max
@@ -176,12 +190,9 @@ subroutine read_satwnd(filename, filedate)
 
    msg_loop: do while (ireadmg(iunit,subset,idate)==0)
 !print*,subset
-      if ( subset /= 'NC005030' .and. &
-           subset /= 'NC005031' .and. &
-           subset /= 'NC005032' .and. &
-           subset /= 'NC005034' .and. &
-           subset /= 'NC005039' ) then
-         ! only handles GOES-16/17 AMV for now
+      if ( ufo_vars_getindex(message_types, subset) <= 0 ) then
+         ! skip types other than GOES-16/17, AVHRR (METOP/NOAA), VIIRS (NPP/NOAA-20) AMVs
+         ! that are included in prepbufr
          cycle msg_loop
       end if
       subset_loop: do while (ireadsb(iunit)==0)
@@ -211,7 +222,12 @@ subroutine read_satwnd(filename, filedate)
             cycle subset_loop
          end if
 
-         call ufbint(iunit,lalodat,nlalo,1,iret,lalostr)
+         if ( subset == 'NC005080' .or. &
+              subset == 'NC005090' ) then
+            call ufbint(iunit,lalodat,nlalo,1,iret,'CLAT CLON')
+         else
+            call ufbint(iunit,lalodat,nlalo,1,iret,lalostr)
+         end if
          if ( abs(lalodat(1)) > 90.0 .or. abs(lalodat(1)) > 360.0 ) cycle subset_loop
 
          call ufbint(iunit,infodat,ninfo,1,iret,infostr)
@@ -260,7 +276,7 @@ subroutine read_satwnd(filename, filedate)
             end do
          end if
 
-!write(333,*) subset
+!write(333,*) subset, rlink%satid, rlink%stid
 !write(333,*) rlink%datetime,'/', rlink % lat, '/',rlink % lon,'/', rlink % prs,'/',rlink % wdir,'/',rlink % wspd
 !write(333,*) rlink % cvwd,'/',rlink % pccf1 ,'/',rlink % pccf2
          allocate ( rlink%next )
@@ -295,33 +311,44 @@ subroutine filter_obs_satwnd
 
       if ( rlink%satzen > 68.0_r_kind ) rlink%qm = 15
 
-      if ( rlink%pccf1 < 80.0_r_kind .or. rlink%pccf1 > 100.0_r_kind ) rlink%qm = 15 ! reject data with low QI
-
-      if ( rlink%prs < 12500.0_r_kind ) rlink%qm = 15 ! reject data above 125hPa
-
-      experr_norm = 10.0_r_kind - 0.1_r_kind * rlink%pccf2
-      if ( rlink%wspd > 0.1_r_kind ) then
-         experr_norm = experr_norm / rlink%wspd
-      else
-         experr_norm = 100.0_r_kind
+      if ( rlink%rptype == 260 ) then
+         if ( rlink%pccf1 < 85.0_r_kind ) rlink%qm = 15
       end if
-      if ( experr_norm > 0.9_r_kind ) rlink%qm = 15 ! reject data with estimated error/spd>0.9
 
       if ( rlink%rptype == 240 .or. &
            rlink%rptype == 245 .or. &
            rlink%rptype == 246 .or. &
+           rlink%rptype == 247 .or. &
            rlink%rptype == 251 ) then
-         if ( rlink%cvwd < 0.04_r_kind ) rlink%qm = 15
-         if ( rlink%cvwd > 0.50_r_kind ) rlink%qm = 15
-      end if
 
-      if ( EC_AMV_QC ) then
-         if ( rlink%pccf1 < 90_r_kind .or. rlink%pccf1 > 100.0_r_kind ) rlink%qm = 15 ! stricter QI
-         if ( rlink%prs < 15000.0_r_kind) rlink%qm = 15 ! all high level
-         if ( rlink%rptype == 251 .and. rlink%prs < 70000.0_r_kind ) rlink%qm = 15  ! VIS
-         if ( rlink%rptype == 246 .and. rlink%prs > 30000.0_r_kind ) rlink%qm = 15  ! WVCA
-         if ( nint(rlink%landsea) == iland .and. rlink%prs > 85000.0_r_kind) rlink%qm = 15  ! low over land
-      end if
+         if ( rlink%pccf1 < 80.0_r_kind .or. rlink%pccf1 > 100.0_r_kind ) rlink%qm = 15 ! reject data with low QI
+
+         if ( rlink%prs < 12500.0_r_kind ) rlink%qm = 15 ! reject data above 125hPa
+
+         experr_norm = 10.0_r_kind - 0.1_r_kind * rlink%pccf2
+         if ( rlink%wspd > 0.1_r_kind ) then
+            experr_norm = experr_norm / rlink%wspd
+         else
+            experr_norm = 100.0_r_kind
+         end if
+         if ( experr_norm > 0.9_r_kind ) rlink%qm = 15 ! reject data with estimated error/spd>0.9
+
+         if ( rlink%rptype == 240 .or. &
+              rlink%rptype == 245 .or. &
+              rlink%rptype == 246 .or. &
+              rlink%rptype == 251 ) then
+            if ( rlink%cvwd < 0.04_r_kind ) rlink%qm = 15
+            if ( rlink%cvwd > 0.50_r_kind ) rlink%qm = 15
+         end if
+
+         if ( EC_AMV_QC ) then
+            if ( rlink%pccf1 < 90_r_kind .or. rlink%pccf1 > 100.0_r_kind ) rlink%qm = 15 ! stricter QI
+            if ( rlink%prs < 15000.0_r_kind) rlink%qm = 15 ! all high level
+            if ( rlink%rptype == 251 .and. rlink%prs < 70000.0_r_kind ) rlink%qm = 15  ! VIS
+            if ( rlink%rptype == 246 .and. rlink%prs > 30000.0_r_kind ) rlink%qm = 15  ! WVCA
+            if ( nint(rlink%landsea) == iland .and. rlink%prs > 85000.0_r_kind) rlink%qm = 15  ! low over land
+         end if
+      end if  ! rptype 240, 245, 246, 247, 251
 
       rlink => rlink%next
 
@@ -517,6 +544,8 @@ subroutine fill_datalink (datalink, rfill, ifill)
    datalink % cvwd     = rfill
    datalink % pccf1    = rfill
    datalink % pccf2    = rfill
+   datalink % err      = rfill
+   datalink % qm       = ifill
 
 end subroutine fill_datalink
 
@@ -537,21 +566,30 @@ subroutine set_rptype_satwnd(subset, satid, rptype, stid)
   write(csatid, '(i3.3)') satid
 
   select case ( trim(subset) )
-  case ( 'NC005030' )  ! IR LW
+  case ( 'NC005030' )  ! GOES IR LW
      rptype = 245
      stid = 'IR'//csatid
-  case ( 'NC005039' )  ! IR SW
+  case ( 'NC005039' )  ! GOES IR SW
      rptype = 240
      stid = 'IR'//csatid
-  case ( 'NC005032' )  ! VIS
+  case ( 'NC005032' )  ! GOES VIS
      rptype = 251
      stid = 'VI'//csatid
-  case ( 'NC005034' )  ! WV cloud top
+  case ( 'NC005034' )  ! GOES WV cloud top
      rptype = 246
      stid = 'WV'//csatid
-  case ( 'NC005031' )  ! WV clear sky/deep layer
+  case ( 'NC005031' )  ! GOES WV clear sky/deep layer
      rptype = 247
      stid = 'WV'//csatid
+  case ( 'NC005080', 'NC005081' )  ! AVHRR (METOP-a/b/c, NOAA-15/18/19)
+     rptype = 244
+     stid = 'IR'//csatid
+  case ( 'NC005090', 'NC005091' )  ! VIIRS (NPP, NOAA-20)
+     rptype = 260
+     stid = 'IR'//csatid
+  case ( 'NC005072' )  ! LEOGEO (non-specific mixture of geostationary and low earth orbiting satellites)
+     rptype = 255
+     stid = 'IR'//csatid  ! satid=854
   end select
 end subroutine set_rptype_satwnd
 

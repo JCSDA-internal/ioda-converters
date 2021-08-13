@@ -4,7 +4,6 @@
 #GNU compiler
 #------------
 #FC = gfortran
-#LD = gfortran
 #BUFR_LIB = -L/glade/u/home/hclin/extlib -lbufr
 #GNU10 = #-fallow-argument-mismatch -fallow-invalid-boz
 #FFLAGS = -ffree-line-length-none ${GNU10} #-fbacktrace -ggdb -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
@@ -13,13 +12,11 @@
 #INTEL compiler
 #--------------
 FC = ifort
-LD = ifort
 BUFR_LIB = -L/glade/u/home/hclin/extlib/intel -lbufr
 FFLAGS = -mcmodel medium # needed for intel error message "failed to convert GOTPCREL relocation"
 
 LIBS = -L$(NETCDF)/lib -lnetcdff -lnetcdf ${BUFR_LIB}
 INCS = -I$(NETCDF)/include
-LDFLAGS = $(FFLAGS) $(LIBS)
 
 OBJS = \
        define_mod.o \
