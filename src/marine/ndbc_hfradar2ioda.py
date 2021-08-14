@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # ioda-converter for National Data Buoy Center High Frequency Radar radial velocity
 # Script modified by Ling Liu (IMSG@NOAA/NCEP/EMC)
