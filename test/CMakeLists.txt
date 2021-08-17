@@ -199,28 +199,20 @@ endforeach(FILENAME)
 set(IODA_CONV_COMP_TOL_ZERO "0.0")
 set(IODA_CONV_COMP_TOL "0.5e-4")
 
-# The ioda-engines CMake configuration has set the variable _ioda_python to
-# the full path to the library file containing the python bindings created
-# by pybind11. For example:
+# We need to locate where ioda installed its python module for setting PYTHONPATH
+# during CI testing. To do this determine the major and minor version numbers of the
+# local python package and place those on the path to the build area lib directory.
+# The ioda module is directly underneath that path. For example if the local python
+# is version 3.9.5, then the path you need for PYTHONPATH is:
 #
-#   path_to_lib/python3.9/ioda/_ioda_python.cpython-39-darwin.so
+#    your_build_area/lib/python3.9
 #
-# To be able to import the ioda python module, PYTHONPATH needs to be
-# set to the directory that is one above where the ioda module is located.
-# Using the above example:
+# and the ioda python module will be located here:
 #
-#   PYTHONPATH=path_to_lib/python3.9
+#    your_build_area/lib/python3.9/ioda
 #
-# This can be accompilished by using the TARGET_FILE_DIR cmake generator
-# which works like the shell dirname command. In the ecbuild_add_test command
-# PYTHONPATH can be set using the ENVIRONMENT keyword. Note that the desired
-# path is one directory above what TARGET_FILE_DIR will return in the example below.
-#
-#   ecbuild_add_test(
-#        ...
-#        ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
-#        ...
-#        )
+set( IODA_PYTHONPATH "${CMAKE_BINARY_DIR}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}" )
+message(STATUS "IODA_PYTHONPATH = ${IODA_PYTHONPATH}")
 
 #===============================================================================
 # Marine converters
@@ -550,7 +542,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                   TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
+                  ENVIRONMENT "PYTHONPATH=${IODA_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
