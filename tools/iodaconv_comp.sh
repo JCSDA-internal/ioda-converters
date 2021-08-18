@@ -19,6 +19,7 @@ verbose=${5:-${VERBOSE:-"N"}}
 echo "DEBUG: pwd: $(pwd)"
 echo "DEBUG: ls ../../lib: $(ls ../../lib)"
 echo "DEBUG: ls ../../lib/py*: $(ls ../../lib/py*)"
+echo "DEBUG: ls ../../lib/py*/ioda: $(ls ../../lib/py*/ioda)"
 
 rc="-1"
 case $file_type in
