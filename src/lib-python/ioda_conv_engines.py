@@ -4,6 +4,7 @@ import numpy as np
 
 # DEBUG
 import sys
+import os
 print("DEBUG: dir(ioda): ", dir(ioda))
 print("DEBUG: sys.path: ", sys.path)
 print("DEBUG: __file__: ", ioda.__file__)

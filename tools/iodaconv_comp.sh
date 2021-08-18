@@ -16,6 +16,10 @@ verbose=${5:-${VERBOSE:-"N"}}
 
 [[ $verbose =~ 'yYtT' ]] && set -x
 
+echo "DEBUG: pwd: $(pwd)"
+echo "DEBUG: ls ../../lib: $(ls ../../lib)"
+echo "DEBUG: ls ../../lib/py*: $(ls ../../lib/py*)"
+
 rc="-1"
 case $file_type in
   netcdf)
