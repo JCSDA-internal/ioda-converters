@@ -18,11 +18,11 @@ namespace Ingester
 {
     QueryVariable::QueryVariable(const std::string& exportName,
                                  const std::string& query,
-                                 const std::string& forField,
+                                 const std::string& groupByField,
                                  const Transforms& transforms) :
         Variable(exportName),
         query_(query),
-        forField_(forField),
+        groupByField_(groupByField),
         transforms_(transforms)
     {
         initQueryMap();
@@ -75,7 +75,7 @@ namespace Ingester
         QueryInfo info;
         info.name = getExportName();
         info.query = query_;
-        info.forField = forField_;
+        info.groupByField = groupByField_;
         queries.push_back(info);
 
         return queries;

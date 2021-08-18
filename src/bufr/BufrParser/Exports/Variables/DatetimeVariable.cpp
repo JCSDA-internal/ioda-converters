@@ -30,21 +30,22 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* ForField = "for";
+        const char* GroupByField = "group_by";
     }  // namespace ConfKeys
 }  // namespace
 
 
 namespace Ingester
 {
-    DatetimeVariable::DatetimeVariable(const std::string& exportName, const eckit::Configuration &conf) :
+    DatetimeVariable::DatetimeVariable(const std::string& exportName, 
+                                       const eckit::Configuration &conf) :
       Variable(exportName),
       yearQuery_(conf.getString(ConfKeys::Year)),
       monthQuery_(conf.getString(ConfKeys::Month)),
       dayQuery_(conf.getString(ConfKeys::Day)),
       hourQuery_(conf.getString(ConfKeys::Hour)),
       minuteQuery_(conf.getString(ConfKeys::Minute)),
-      forField_(""),
+      groupByField_(""),
       hoursFromUtc_(0)
     {
         if (conf.has(ConfKeys::Second))
@@ -57,9 +58,9 @@ namespace Ingester
             hoursFromUtc_ = conf.getInt(ConfKeys::HoursFromUtc);
         }
 
-        if (conf.has(ConfKeys::ForField))
+        if (conf.has(ConfKeys::GroupByField))
         {
-            forField_ = conf.getString(ConfKeys::ForField);
+            groupByField_ = conf.getString(ConfKeys::GroupByField);
         }
 
         initQueryMap();
@@ -150,7 +151,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Year);
             info.query = yearQuery_;
-            info.forField = forField_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
@@ -158,7 +159,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Month);
             info.query = monthQuery_;
-            info.forField = forField_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
@@ -166,7 +167,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Day);
             info.query = dayQuery_;
-            info.forField = forField_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
@@ -174,7 +175,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Hour);
             info.query = hourQuery_;
-            info.forField = forField_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
@@ -182,7 +183,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Minute);
             info.query = minuteQuery_;
-            info.forField = forField_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
@@ -191,7 +192,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Second);
             info.query = secondQuery_;
-            info.forField = forField_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 

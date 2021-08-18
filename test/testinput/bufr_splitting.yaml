@@ -27,8 +27,8 @@ observations:
 
         splits:
           hour:
-           category:
-             variable: timestamp_hour
+            category:
+              variable: timestamp_hour
           minute:
             category:
               variable: timestamp_minute

@@ -73,7 +73,7 @@ namespace Ingester
         {
             for (const auto& queryInfo : var->getQueryList())
             {
-                auto result = result_set.get(queryInfo.name, queryInfo.forField);
+                auto result = result_set.get(queryInfo.name, queryInfo.groupByField);
 
                 if (auto floatRes = std::dynamic_pointer_cast<bufr::Result<float>>(result))
                 {

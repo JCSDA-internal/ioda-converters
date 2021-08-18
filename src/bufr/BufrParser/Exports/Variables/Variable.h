@@ -22,7 +22,7 @@ namespace Ingester
     {
         std::string name;
         std::string query;
-        std::string forField;
+        std::string groupByField;
     };
 
     typedef std::string QueryName;
@@ -47,13 +47,13 @@ namespace Ingester
         /// \brief Get Export Name
         inline std::string getExportName() const { return exportName_; }
 
-    protected:
+     protected:
         inline void initQueryMap() { queryList_ = makeQueryList(); }
 
         /// \brief Make a map of name and queries
         virtual QueryList makeQueryList() const = 0;
 
-    private:
+     private:
         /// \brief Name used to export this variable
         std::string exportName_;
 

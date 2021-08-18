@@ -53,7 +53,7 @@ namespace Ingester
         std::string secondQuery_;
 
         /// \brief For field (optional)
-        std::string forField_;
+        std::string groupByField_;
 
         /// \brief Hours to offset from UTC (optional)
         int hoursFromUtc_;

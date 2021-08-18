@@ -33,7 +33,7 @@ namespace
             const char* Datetime = "datetime";
             const char* Mnemonic = "mnemonic";
             const char* Query = "query";
-            const char* ForField = "for";
+            const char* GroupByField = "group_by";
         }  // namespace Variable
 
         namespace Split
@@ -109,15 +109,15 @@ namespace Ingester
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
                 const auto& query = subConf.getString(ConfKeys::Variable::Query);
 
-                std::string forField = "";
-                if (subConf.has(ConfKeys::Variable::ForField))
+                std::string groupByField = "";
+                if (subConf.has(ConfKeys::Variable::GroupByField))
                 {
-                    forField = subConf.getString(ConfKeys::Variable::ForField);
+                    groupByField = subConf.getString(ConfKeys::Variable::GroupByField);
                 }
 
                 variable = std::make_shared<QueryVariable>(key,
                                                            query,
-                                                           forField,
+                                                           groupByField,
                                                            transforms);
             }
             else

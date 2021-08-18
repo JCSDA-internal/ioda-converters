@@ -27,7 +27,7 @@ namespace Ingester
      public:
         explicit QueryVariable(const std::string& exportName,
                                const std::string& query,
-                               const std::string& forField,
+                               const std::string& groupByField,
                                const Transforms& transforms);
 
         ~QueryVariable() final = default;
@@ -44,7 +44,7 @@ namespace Ingester
         std::string query_;
 
         /// \brief The for field of interest
-        std::string forField_;
+        std::string groupByField_;
 
         /// \brief Collection of transforms to apply to the data during export
         Transforms transforms_;
