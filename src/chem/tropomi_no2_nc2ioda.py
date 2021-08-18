@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # (C) Copyright 2020 UCAR
@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("datetime", "string"),
 ]
 
 obsvars = {
@@ -157,8 +157,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             'Reads TROPOMI NO2 netCDF files provided by NESDIS'
-            ' and converts into IODA formatted output files. Multiple'
-            ' files are able to be concatenated.')
+            'and converts into IODA formatted output files. Multiple'
+            'files are able to be concatenated.')
     )
 
     required = parser.add_argument_group(title='required arguments')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # script to run to test if the GSI ncdiag converters are still working
 import sys
 import argparse
