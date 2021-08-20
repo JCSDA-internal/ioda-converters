@@ -2,16 +2,6 @@
 import ioda
 import numpy as np
 
-# DEBUG
-import sys
-import os
-print("DEBUG: dir(ioda): ", dir(ioda))
-print("DEBUG: sys.path: ", sys.path)
-print("DEBUG: __file__: ", ioda.__file__)
-print("DEBUG: __path__: ", ioda.__path__)
-print("DEBUG: __spec__: ", ioda.__spec__)
-# DEBUG
-
 # define vars
 _metagroup = 'MetaData'
 # Names assigned to obs values, error estimates and qc marks
