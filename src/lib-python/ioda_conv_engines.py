@@ -8,7 +8,7 @@ _metagroup = 'MetaData'
 _oval_name = "ObsValue"
 _oerr_name = "ObsError"
 _oqc_name = "PreQC"
-# Names assigned to obs bias terms and predoctirs related to observations
+# Names assigned to obs bias terms and predictors related to observations
 _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
 
