@@ -1,6 +1,7 @@
 list( APPEND libs
   ioda_conv_ncio.py
   ioda_conv_util.py
+  ioda_conv_engines.py
   collect_sources.py
   meteo_utils.py
   orddicts.py
@@ -15,6 +16,10 @@ set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
                    lib_python_scripts_deps)
+
+# Create a target representing this "library", add it to the default "all" target
+# and set its dependency to the ioda python module.
+add_custom_target(iodaconv_libdeps ALL DEPENDS _ioda_python)
 
 # Configure files for local bin
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

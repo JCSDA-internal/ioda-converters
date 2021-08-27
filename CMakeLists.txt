@@ -31,7 +31,7 @@ set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/p
 
 ## Dependencies
 
-ecbuild_find_python( REQUIRED VERSION 3 )
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
     $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
