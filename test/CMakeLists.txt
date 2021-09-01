@@ -139,7 +139,7 @@ if( iodaconv_bufr_ENABLED )
 endif()
 
 if (iodaconv_satbias_ENABLED )
-    list( APPEND test_input
+  list( APPEND test_input
     testinput/satbias_converter_amsua.yaml
     testinput/satbias_converter_cris.yaml
     testinput/satbias_converter_ssmis.yaml
@@ -154,6 +154,15 @@ if (iodaconv_satbias_ENABLED )
   )
 endif()
 
+if (iodaconv_obserror_ENABLED )
+  list( APPEND test_input
+    testinput/Rcov_iasi_metop-b_sea.bin
+  )
+
+  list( APPEND test_output
+    testoutput/Rcov_iasi_metop-b_sea.nc4
+  )
+endif()
 
 if( iodaconv_pbfortran_ENABLED )
   list( APPEND test_input
@@ -754,6 +763,22 @@ if( iodaconv_satbias_ENABLED )
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_ssmis.yaml"
                             satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
+endif()
+
+
+#==============================================================================
+# ObsError correlations tests
+#==============================================================================
+
+if( iodaconv_obserror_ENABLED )
+
+  ecbuild_add_test( TARGET  test_iodaconv_obserror
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/obserror2ioda.x testinput/Rcov_iasi_metop-b_sea.bin testrun/Rcov_iasi_metop-b_sea.nc4"
+                            Rcov_iasi_metop-b_sea.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS obserror2ioda.x )
 endif()
 
 
