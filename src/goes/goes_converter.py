@@ -32,7 +32,7 @@
 # /nstring
 # /nvars
 #
-import datetime
+
 import os
 import sys
 
@@ -40,7 +40,7 @@ import numpy as np
 import pytz
 from netCDF4 import Dataset
 from numpy import ma
-from solo.date import JediDate, CoreDate
+from solo.date import JediDate
 from goes import Goes
 from goes_latlon import GoesLatLon
 
