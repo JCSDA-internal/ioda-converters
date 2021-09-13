@@ -186,8 +186,10 @@ class GoesConverter:
         sensor_zenith_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_zenith_angle'][:].real
         self._output_dataset_rf.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle_data_array
+        self._output_dataset_rf['/MetaData/sensor_zenith_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle_data_array
+        self._output_dataset_bt['/MetaData/sensor_zenith_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_sensor_azimuth_angle_variables(self):
         """
@@ -197,8 +199,10 @@ class GoesConverter:
         sensor_azimuth_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_azimuth_angle'][:].real
         self._output_dataset_rf.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle_data_array
+        self._output_dataset_rf['/MetaData/sensor_azimuth_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle_data_array
+        self._output_dataset_bt['/MetaData/sensor_azimuth_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_sensor_view_angle_variables(self):
         """
@@ -208,8 +212,10 @@ class GoesConverter:
         sensor_view_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_view_angle'][:].real
         self._output_dataset_rf.createVariable('/MetaData/sensor_view_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/sensor_view_angle'][:] = sensor_view_angle_data_array
+        self._output_dataset_rf['/MetaData/sensor_view_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/sensor_view_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/sensor_view_angle'][:] = sensor_view_angle_data_array
+        self._output_dataset_bt['/MetaData/sensor_view_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_zenith_angle_variables(self):
         """
@@ -237,9 +243,11 @@ class GoesConverter:
         self._output_dataset_rf.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/solar_zenith_angle'][:] = \
             self._goes_dict_bt[7].filter_by_dqf_data_array(solar_zenith_angle_data_array)
+        self._output_dataset_rf['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/solar_zenith_angle'][:] = \
             self._goes_dict_bt[7].filter_by_dqf_data_array(solar_zenith_angle_data_array)
+        self._output_dataset_bt['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_azimuth_angle_variables(self):
         """
@@ -268,9 +276,11 @@ class GoesConverter:
         self._output_dataset_rf.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/solar_azimuth_angle'][:] = \
             self._goes_dict_bt[7].filter_by_dqf_data_array(solar_azimuth_angle_data_array)
+        self._output_dataset_rf['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/solar_azimuth_angle'][:] = \
             self._goes_dict_bt[7].filter_by_dqf_data_array(solar_azimuth_angle_data_array)
+        self._output_dataset_bt['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_elevation_angle_variables(self):
         """
