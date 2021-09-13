@@ -4,7 +4,9 @@
 # This class generates two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 or GOES-17
 # LB1 products. This class works with the Goes and GoesLatLon classes. The final result of this class is two IODAv2
 # formatted data files - one for Brightness Temperature and one for Reflectance Factor. The following groups, variables,
-# dimensions, and attributes are created using this class.
+# dimensions, and attributes are created using this class. Calculations within this program utilize
+# "Calculating Zenith and Azimuth Angles for GridSat-B1"
+# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf).
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
 #

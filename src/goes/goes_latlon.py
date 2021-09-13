@@ -5,10 +5,10 @@
 # dimensions. This program is designed to be executed from the GoesConverter class is the event that the
 # nadir for GOES-16 or GOES-17 has changed. Once created, the GoesConverter class will consume this file for each
 # conversion. The argument source_file_path must be a GOES-16 or GOES-17 file with 2km resolution. Calculations within
-# this program utilize section 5.1.2.8.1 of the GOES R SERIES PRODUCT DEFINITION AND USERS' GUIDE Dec 17, 2019
-# REVISION 2.2 416-R-PUG-L1B-0347 Vol 3 (https://www.goes-r.gov/users/docs/PUG-L1b-vol3.pdf), GOES-R Semi-Static
-# Data README (https://satepsanone.nesdis.noaa.gov/pub/GASP/documentations/GOESR/GOES-R_SemiStatic_Data_README2.docx),
-# and Calculating zenith and azimuth angles for GridSat-B1
+# this program utilize section 5.1.2.8.1 of the "GOES R SERIES PRODUCT DEFINITION AND USERS' GUIDE" Dec 17, 2019
+# REVISION 2.2 416-R-PUG-L1B-0347 Vol 3 (https://www.goes-r.gov/users/docs/PUG-L1b-vol3.pdf), "GOES-R Semi-Static
+# Data README" (https://satepsanone.nesdis.noaa.gov/pub/GASP/documentations/GOESR/GOES-R_SemiStatic_Data_README2.docx),
+# and "Calculating Zenith and Azimuth Angles for GridSat-B1"
 # (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf).
 #
 # /GROUP/VARIABLE -> ATTRIBUTE

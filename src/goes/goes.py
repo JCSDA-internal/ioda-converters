@@ -4,9 +4,9 @@
 # This class loads, calculates, filters, and makes accessible the variables and attributes required by the
 # GoesConverter class for a single GOES-16 or GOES-17 LB1 ABI channel (1-16). The brightness temperature and reflectance
 # factor calculations and down-sampling / subsampling techniques used in this class are derived from sections 3.4.1.2,
-# 3.4.1.3, and 3.4.3 in the GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud
-# and Moisture Imagery Product (CMIP) Version 3.0 July 30, 2012. The calculations for the propagation of standard error
-# are from section 2.5.5 of the NIST/SEMATECH e-Handbook of Statistical Methods
+# 3.4.1.3, and 3.4.3 in the "GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud
+# and Moisture Imagery Product (CMIP)" Version 3.0 July 30, 2012. The calculations for the propagation of standard error
+# are from section 2.5.5 of the "NIST/SEMATECH e-Handbook of Statistical Methods"
 # (https://www.itl.nist.gov/div898/handbook/mpc/section5/mpc55.htm). GOES ABI channels 1, 3, and 5 are subsampled from
 # 1km to 2km resolution and ABI channel 2 is subsampled from 0.5km to 2km resolution using methods in this class. This
 # class includes two subsampling and two down-sampling functions. The down-sampling functions are not currently used
