@@ -16,11 +16,11 @@
 # /MetaData/latitude
 # /MetaData/longitude
 # /MetaData/scan_angle
-# /MetaData/sensor_azimuth_angle
-# /MetaData/sensor_view_angle
-# /MetaData/sensor_zenith_angle
-# /MetaData/solar_azimuth_angle
-# /MetaData/solar_zenith_angle
+# /MetaData/sensor_azimuth_angle -> units
+# /MetaData/sensor_view_angle -> units
+# /MetaData/sensor_zenith_angle -> units
+# /MetaData/solar_azimuth_angle -> units
+# /MetaData/solar_zenith_angle -> units
 # /MetaData/time
 # /ObsError/reflectance_factor or /ObsError/brightness_temperature
 # /ObsValue/reflectance_factor or /ObsValue/brightness_temperature

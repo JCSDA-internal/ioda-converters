@@ -15,9 +15,9 @@
 #
 # /MetaData/elevation_angle
 # /MetaData/scan_angle
-# /MetaData/sensor_azimuth_angle
-# /MetaData/sensor_view_angle
-# /MetaData/sensor_zenith_angle
+# /MetaData/sensor_azimuth_angle -> units
+# /MetaData/sensor_view_angle -> units
+# /MetaData/sensor_zenith_angle -> units
 # /MetaData/latitude
 # /MetaData/latitude -> lat_nadir
 # /MetaData/longitude
