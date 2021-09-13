@@ -6,12 +6,18 @@
 # nadir for GOES-16 or GOES-17 has changed. Once created, the GoesConverter class will consume this file for each
 # conversion. The argument source_file_path must be a GOES-16 or GOES-17 file with 2km resolution. Calculations within
 # this program utilize section 5.1.2.8.1 of the GOES R SERIES PRODUCT DEFINITION AND USERS' GUIDE Dec 17, 2019
-# REVISION 2.2 416-R-PUG-L1B-0347 Vol 3
+# REVISION 2.2 416-R-PUG-L1B-0347 Vol 3 (https://www.goes-r.gov/users/docs/PUG-L1b-vol3.pdf), GOES-R Semi-Static
+# Data README (https://satepsanone.nesdis.noaa.gov/pub/GASP/documentations/GOESR/GOES-R_SemiStatic_Data_README2.docx),
+# and Calculating zenith and azimuth angles for GridSat-B1
+# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf).
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
 #
 # /MetaData/elevation_angle
 # /MetaData/scan_angle
+# /MetaData/sensor_azimuth_angle
+# /MetaData/sensor_view_angle
+# /MetaData/sensor_zenith_angle
 # /MetaData/latitude
 # /MetaData/latitude -> lat_nadir
 # /MetaData/longitude
@@ -98,7 +104,7 @@ class GoesLatLon:
         source_dataset.close()
         return lat_nadir, lon_nadir
 
-    def _calc_angles(self):
+    def _calc_scan_elevation_angles(self):
         """
         Calculates the scan and elevation angles from source_file_path Dataset, reshapes the scan and elevation angle
         data arrays to a single dimension, and returns a tuple containing these data arrays.
@@ -119,13 +125,42 @@ class GoesLatLon:
         source_dataset.close()
         return scan_angle, elevation_angle
 
+    def _calc_sensor_zenith_azimuth_view_angles(self, latitude, longitude):
+        """
+        Calculates the sensor zenith, azimuth, and view angles.
+        """
+        source_dataset = Dataset(self._source_file_path, 'r')
+        source_dataset.set_auto_scale(True)
+        goes_imager_projection = source_dataset.variables['goes_imager_projection']
+        r_eq = goes_imager_projection.getncattr('semi_major_axis')
+        h = goes_imager_projection.getncattr('perspective_point_height') + \
+            goes_imager_projection.getncattr('semi_major_axis')
+        lat_0 = goes_imager_projection.getncattr('latitude_of_projection_origin')
+        lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
+        h_sqr = np.power(h, 2.0)
+        r_eq_sqr = np.power(r_eq, 2.0)
+        beta = np.arccos(np.cos(latitude - lat_0) * np.cos(longitude - lon_0))
+        sqrt_comp = h_sqr + r_eq_sqr - (2.0 * h * r_eq * np.cos(beta))
+        sensor_zenith_angle = np.arcsin((h*np.sin(beta)) / np.sqrt(sqrt_comp)) * 180.0 / np.pi
+        sensor_azimuth_angle = np.arcsin(np.sin(lon_0-longitude)/np.sin(beta)) * 180.0 / np.pi
+        sensor_view_angle = sensor_zenith_angle
+        yaw_flip_flag = source_dataset.variables['yaw_flip_flag'][0]
+        if not yaw_flip_flag:
+            sensor_zenith_angle = sensor_zenith_angle[::-1]
+            sensor_azimuth_angle = sensor_azimuth_angle[::-1]
+            sensor_view_angle = sensor_view_angle[::-1]
+        source_dataset.close()
+        return sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle
+
     def create(self):
         """
         Generates an IODAv2 formatted data file containing the groups, variables, attributes and dimensions listed in
         the class header documentation.
         """
         latitude, longitude = self._calc_latlon()
-        scan_angle, elevation_angle = self._calc_angles()
+        scan_angle, elevation_angle = self._calc_scan_elevation_angles()
+        sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
+            self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
         nlocs = len(latitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
         latlon_dataset.createDimension('nlocs', nlocs)
@@ -136,10 +171,16 @@ class GoesLatLon:
         latlon_dataset.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset['/MetaData/latitude'][:] = latitude
         latlon_dataset['/MetaData/longitude'][:] = longitude
         latlon_dataset['/MetaData/scan_angle'][:] = scan_angle
         latlon_dataset['/MetaData/elevation_angle'][:] = elevation_angle
+        latlon_dataset['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle
+        latlon_dataset['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle
+        latlon_dataset['/MetaData/sensor_view_angle'][:] = sensor_view_angle
         lat_nadir, lon_nadir = self._get_nadir_attributes()
         latlon_dataset['/MetaData/latitude'].setncattr('lat_nadir', lat_nadir)
         latlon_dataset['/MetaData/longitude'].setncattr('lon_nadir', lon_nadir)

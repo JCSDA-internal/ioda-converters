@@ -6,8 +6,8 @@
 # factor calculations and down-sampling / subsampling techniques used in this class are derived from sections 3.4.1.2,
 # 3.4.1.3, and 3.4.3 in the GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud
 # and Moisture Imagery Product (CMIP) Version 3.0 July 30, 2012. The calculations for the propagation of standard error
-# are from section 2.5.5 of the NIST/SEMATECH e-Handbook of Statistical Methods available at
-# https://www.itl.nist.gov/div898/handbook/mpc/section5/mpc55.htm. GOES ABI channels 1, 3, and 5 are subsampled from
+# are from section 2.5.5 of the NIST/SEMATECH e-Handbook of Statistical Methods
+# (https://www.itl.nist.gov/div898/handbook/mpc/section5/mpc55.htm). GOES ABI channels 1, 3, and 5 are subsampled from
 # 1km to 2km resolution and ABI channel 2 is subsampled from 0.5km to 2km resolution using methods in this class. This
 # class includes two subsampling and two down-sampling functions. The down-sampling functions are not currently used
 # due to the long computation time required. The preferred subsampling method which is used by this class is called
@@ -53,6 +53,8 @@ class Goes:
         self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
         self._metadata_dict['end_date'] = Date(metadata_array[4][1:-1])
         self._metadata_dict['creation_date'] = Date(metadata_array[5][1:-1])
+        self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
+        self._metadata_dict['day_of_year'] = metadata_array[3][1:-1][4:7]
 
     def _open(self):
         """
@@ -256,7 +258,7 @@ class Goes:
         after fill value filtering by the DQF flags.
         """
         temp_data_array = self._rad_data_array * self._kappa0
-        self._obsvalue_rf_data_array = np.where(self._dqf_data_array == -999, -999, temp_data_array)
+        self._obsvalue_rf_data_array = self.filter_by_dqf_data_array(temp_data_array)
 
     def _create_obsvalue_bt_data_array(self):
         """
@@ -265,7 +267,7 @@ class Goes:
         """
         log_comp = np.log((self._planck_fk1 / self._rad_data_array) + 1)
         temp_data_array = ((self._planck_fk2 / log_comp) - self._planck_bc1) / self._planck_bc2
-        self._obsvalue_bt_data_array = np.where(self._dqf_data_array == -999, -999, temp_data_array)
+        self._obsvalue_bt_data_array = self.filter_by_dqf_data_array(temp_data_array)
 
     def _create_obserror_rf_data_array(self):
         """
@@ -274,7 +276,7 @@ class Goes:
         """
         sqrt_comp = np.power(self._kappa0, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
         temp_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
-        self._obserror_rf_data_array = np.where(self._dqf_data_array == -999, -999, temp_data_array)
+        self._obserror_rf_data_array = self.filter_by_dqf_data_array(temp_data_array)
 
     def _create_obserror_bt_data_array(self):
         """
@@ -286,7 +288,7 @@ class Goes:
         sqrt_comp_2 = 1 / (self._planck_fk1 + self._rad_data_array) - 1 / self._rad_data_array
         sqrt_comp = np.power(sqrt_comp_1 * sqrt_comp_2, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
         temp_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
-        self._obserror_bt_data_array = np.where(self._dqf_data_array == -999, -999, temp_data_array)
+        self._obserror_bt_data_array = self.filter_by_dqf_data_array(temp_data_array)
 
     def get_abi_channel(self):
         """
@@ -305,6 +307,12 @@ class Goes:
         Returns the scan's start date.
         """
         return self._metadata_dict['start_date']
+
+    def get_day_of_year(self):
+        """
+        Returns the scan's day of year.
+        """
+        return self._metadata_dict['day_of_year']
 
     def get_input_file_path(self):
         """
@@ -341,6 +349,12 @@ class Goes:
         Returns the preqc data array.
         """
         return self._dqf_data_array
+
+    def filter_by_dqf_data_array(self, data_array):
+        """
+        Returns the preqc data array.
+        """
+        return np.where(self._dqf_data_array == -999, -999, data_array)
 
     def close(self):
         """
@@ -381,7 +395,7 @@ class Goes:
         self._rad_data_array = np.array(self._rad_data_array)
         self._rad_data_array = self._rad_data_array.reshape(shape)
         self._rad_data_array = self._filter_data_array_by_yaw_flip_flag(self._rad_data_array)
-        self._rad_data_array = np.where(self._dqf_data_array == -999, -999, self._rad_data_array)
+        self._rad_data_array = self.filter_by_dqf_data_array(self._rad_data_array)
 
         if self._metadata_dict['abi_channel'] < 7:
             self._create_obsvalue_rf_data_array()
