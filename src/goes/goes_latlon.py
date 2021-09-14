@@ -39,18 +39,19 @@ class GoesLatLon:
         """
         self._source_file_path = source_file_path
         self._latlon_file_path = latlon_file_path
+        self._source_dataset = Dataset(self._source_file_path, 'r')
+        self._source_dataset.set_auto_scale(True)
+        self._x = ma.getdata(self._source_dataset['x'][:])
+        self._y = ma.getdata(self._source_dataset['y'][:])
+        self._yaw_flip_flag = self._source_dataset.variables['yaw_flip_flag'][0]
 
     def _calc_latlon(self):
         """
         Calculates the latitude and longitude from source_file_path Dataset, reshapes the latitude and longitude
         data arrays to a single dimension, and returns a tuple containing these data arrays.
         """
-        source_dataset = Dataset(self._source_file_path, 'r')
-        source_dataset.set_auto_scale(True)
-        x = ma.getdata(source_dataset['x'][:])
-        y = ma.getdata(source_dataset['y'][:])
-        grid_x, grid_y = np.meshgrid(x, y, indexing='xy')
-        goes_imager_projection = source_dataset.variables['goes_imager_projection']
+        grid_x, grid_y = np.meshgrid(self._x, self._y, indexing='xy')
+        goes_imager_projection = self._source_dataset.variables['goes_imager_projection']
         r_eq = goes_imager_projection.getncattr('semi_major_axis')
         r_pol = goes_imager_projection.getncattr('semi_minor_axis')
         h = goes_imager_projection.getncattr('perspective_point_height') + \
@@ -87,21 +88,16 @@ class GoesLatLon:
         lon = lon.reshape(len(lon) * len(lon))
         lat = np.nan_to_num(lat, nan=-999)
         lon = np.nan_to_num(lon, nan=-999)
-        yaw_flip_flag = source_dataset.variables['yaw_flip_flag'][0]
-        if not yaw_flip_flag:
-            lat = lat[::-1]
-            lon = lon[::-1]
-        source_dataset.close()
+        lat = self._filter_data_array_by_yaw_flip_flag(lat)
+        lon = self._filter_data_array_by_yaw_flip_flag(lon)
         return lat, lon
 
     def _get_nadir_attributes(self):
         """
         Returns the latitude and longitude nadir attributes from the source_file_path Dataset.
         """
-        source_dataset = Dataset(self._source_file_path, 'r')
-        lat_nadir = source_dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lat_nadir')
-        lon_nadir = source_dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lon_nadir')
-        source_dataset.close()
+        lat_nadir = self._source_dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lat_nadir')
+        lon_nadir = self._source_dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lon_nadir')
         return lat_nadir, lon_nadir
 
     def _calc_scan_elevation_angles(self):
@@ -109,29 +105,20 @@ class GoesLatLon:
         Calculates the scan and elevation angles from source_file_path Dataset, reshapes the scan and elevation angle
         data arrays to a single dimension, and returns a tuple containing these data arrays.
         """
-        source_dataset = Dataset(self._source_file_path, 'r')
-        source_dataset.set_auto_scale(True)
-        x = ma.getdata(source_dataset['x'][:])
-        y = ma.getdata(source_dataset['y'][:])
-        grid_x, grid_y = np.meshgrid(x, y, indexing='xy')
+        grid_x, grid_y = np.meshgrid(self._x, self._y, indexing='xy')
         scan_angle = grid_x * 180.0 / np.pi
         elevation_angle = grid_y * 180.0 / np.pi
         scan_angle = scan_angle.reshape(len(scan_angle) * len(scan_angle))
         elevation_angle = elevation_angle.reshape(len(elevation_angle) * len(elevation_angle))
-        yaw_flip_flag = source_dataset.variables['yaw_flip_flag'][0]
-        if not yaw_flip_flag:
-            scan_angle = scan_angle[::-1]
-            elevation_angle = elevation_angle[::-1]
-        source_dataset.close()
+        scan_angle = self._filter_data_array_by_yaw_flip_flag(scan_angle)
+        elevation_angle = self._filter_data_array_by_yaw_flip_flag(elevation_angle)
         return scan_angle, elevation_angle
 
     def _calc_sensor_zenith_azimuth_view_angles(self, latitude, longitude):
         """
         Calculates the sensor zenith, azimuth, and view angles.
         """
-        source_dataset = Dataset(self._source_file_path, 'r')
-        source_dataset.set_auto_scale(True)
-        goes_imager_projection = source_dataset.variables['goes_imager_projection']
+        goes_imager_projection = self._source_dataset.variables['goes_imager_projection']
         r_eq = goes_imager_projection.getncattr('semi_major_axis')
         h = goes_imager_projection.getncattr('perspective_point_height') + \
             goes_imager_projection.getncattr('semi_major_axis')
@@ -144,13 +131,20 @@ class GoesLatLon:
         sensor_zenith_angle = np.arcsin((h*np.sin(beta)) / np.sqrt(sqrt_comp)) * 180.0 / np.pi
         sensor_azimuth_angle = np.arcsin(np.sin(lon_0-longitude)/np.sin(beta)) * 180.0 / np.pi
         sensor_view_angle = sensor_zenith_angle
-        yaw_flip_flag = source_dataset.variables['yaw_flip_flag'][0]
-        if not yaw_flip_flag:
-            sensor_zenith_angle = sensor_zenith_angle[::-1]
-            sensor_azimuth_angle = sensor_azimuth_angle[::-1]
-            sensor_view_angle = sensor_view_angle[::-1]
-        source_dataset.close()
+        sensor_zenith_angle = self._filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
+        sensor_azimuth_angle = self._filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
+        sensor_view_angle = self._filter_data_array_by_yaw_flip_flag(sensor_view_angle)
         return sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle
+
+    def _filter_data_array_by_yaw_flip_flag(self, data_array):
+        """
+        Returns data_array after filtering by the yaw_flip_flag.
+        data_array - the data array to filter
+        """
+        if not self._yaw_flip_flag:
+            return data_array[::-1]
+        else:
+            return data_array
 
     def create(self):
         """
@@ -185,3 +179,4 @@ class GoesLatLon:
         latlon_dataset['/MetaData/latitude'].setncattr('lat_nadir', lat_nadir)
         latlon_dataset['/MetaData/longitude'].setncattr('lon_nadir', lon_nadir)
         latlon_dataset.close()
+        self._source_dataset.close()

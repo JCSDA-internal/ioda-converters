@@ -98,7 +98,8 @@ class GoesConverter:
                 self._goes_dict_rf[abi_channel] = goes
             else:
                 self._goes_dict_bt[abi_channel] = goes
-        self._template_input_file_path = self._goes_dict_bt[7].get_input_file_path()
+        self._template_goes_file = self._goes_dict_bt[7]
+        self._template_input_file_path = self._template_goes_file.get_input_file_path()
 
     def _check_nadir(self):
         """
@@ -228,27 +229,26 @@ class GoesConverter:
         dataset.set_auto_scale(True)
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
-        start_date = self._goes_dict_bt[7].get_start_date()
+        start_date = self._template_goes_file.get_start_date()
         t = start_date.hour_int() + (start_date.minute_int() / 60.0) + (start_date.second_int() / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
-        j = self._goes_dict_bt[7].get_day_of_year()
+        j = self._template_goes_file.get_day_of_year()
         declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
         solar_zenith_angle_data_array = np.arccos((np.sin(latitude) * np.sin(declin)) +
                                                   (np.cos(latitude) * np.cos(declin) * np.cos(h)))
-        yaw_flip_flag = dataset.variables['yaw_flip_flag'][0]
-        if not yaw_flip_flag:
-            solar_zenith_angle_data_array = solar_zenith_angle_data_array[::-1]
+        solar_zenith_angle_data_array = \
+            self._template_goes_file.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
         dataset.close()
         dataset_latlon.close()
         solar_zenith_angle_data_array = np.nan_to_num(solar_zenith_angle_data_array, nan=-999)
         self._output_dataset_rf.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/solar_zenith_angle'][:] = \
-            self._goes_dict_bt[7].filter_by_dqf_data_array(solar_zenith_angle_data_array)
+            self._template_goes_file.filter_by_dqf_data_array(solar_zenith_angle_data_array)
         self._output_dataset_rf['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/solar_zenith_angle'][:] = \
-            self._goes_dict_bt[7].filter_by_dqf_data_array(solar_zenith_angle_data_array)
+            self._template_goes_file.filter_by_dqf_data_array(solar_zenith_angle_data_array)
         self._output_dataset_bt['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_azimuth_angle_variables(self):
@@ -263,25 +263,24 @@ class GoesConverter:
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
-        start_date = self._goes_dict_bt[7].get_start_date()
+        start_date = self._template_goes_file.get_start_date()
         t = start_date.hour_int() + (start_date.minute_int() / 60.0) + (start_date.second_int() / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
         beta_0 = np.arccos(np.cos(latitude) * np.cos(longitude - lon_0))
         solar_azimuth_angle_data_array = np.arcsin((np.sin(h - longitude)) / (np.sin(beta_0)))
-        yaw_flip_flag = dataset.variables['yaw_flip_flag'][0]
-        if not yaw_flip_flag:
-            solar_azimuth_angle_data_array = solar_azimuth_angle_data_array[::-1]
+        solar_azimuth_angle_data_array = \
+            self._template_goes_file.filter_data_array_by_yaw_flip_flag(solar_azimuth_angle_data_array)
         solar_azimuth_angle_data_array = solar_azimuth_angle_data_array * 180.0 / np.pi
         dataset.close()
         dataset_latlon.close()
         solar_azimuth_angle_data_array = np.nan_to_num(solar_azimuth_angle_data_array, nan=-999)
         self._output_dataset_rf.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/solar_azimuth_angle'][:] = \
-            self._goes_dict_bt[7].filter_by_dqf_data_array(solar_azimuth_angle_data_array)
+            self._template_goes_file.filter_by_dqf_data_array(solar_azimuth_angle_data_array)
         self._output_dataset_rf['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/solar_azimuth_angle'][:] = \
-            self._goes_dict_bt[7].filter_by_dqf_data_array(solar_azimuth_angle_data_array)
+            self._template_goes_file.filter_by_dqf_data_array(solar_azimuth_angle_data_array)
         self._output_dataset_bt['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_elevation_angle_variables(self):
@@ -502,7 +501,7 @@ class GoesConverter:
         Creates the /MetaData/datetime and MetaData/time variables and /date_time attribute in the reflectance factor
         and brightness temperature netCDF4 Datasets.
         """
-        start_date = str(JediDate(self._goes_dict_bt[7].get_start_date()))
+        start_date = str(JediDate(self._template_goes_file.get_start_date()))
         datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), start_date)
         time_array = np.full(self._get_nlocs(self._output_dataset_rf), 0.0)
         self._output_dataset_rf.createVariable('/MetaData/datetime', 'str', 'nlocs')

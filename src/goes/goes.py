@@ -242,7 +242,7 @@ class Goes:
         if 'M2' in string:
             return ABISectorType.MESOSCALE_REGION_2
 
-    def _filter_data_array_by_yaw_flip_flag(self, data_array):
+    def filter_data_array_by_yaw_flip_flag(self, data_array):
         """
         Returns data_array after filtering by the yaw_flip_flag.
         data_array - the data array to filter
@@ -389,12 +389,12 @@ class Goes:
 
         self._dqf_data_array = np.array(self._dqf_data_array)
         self._dqf_data_array = self._dqf_data_array.reshape(shape)
-        self._dqf_data_array = self._filter_data_array_by_yaw_flip_flag(self._dqf_data_array)
+        self._dqf_data_array = self.filter_data_array_by_yaw_flip_flag(self._dqf_data_array)
         self._dqf_data_array = np.where(self._dqf_data_array == 255, -999, self._dqf_data_array)
 
         self._rad_data_array = np.array(self._rad_data_array)
         self._rad_data_array = self._rad_data_array.reshape(shape)
-        self._rad_data_array = self._filter_data_array_by_yaw_flip_flag(self._rad_data_array)
+        self._rad_data_array = self.filter_data_array_by_yaw_flip_flag(self._rad_data_array)
         self._rad_data_array = self.filter_by_dqf_data_array(self._rad_data_array)
 
         if self._metadata_dict['abi_channel'] < 7:
