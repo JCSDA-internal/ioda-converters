@@ -4,7 +4,11 @@ import numpy as np
 #
 # goes_util.py
 #
-# This class ...
+# This class contains methods for sub-sampling data arrays and filtering data arrays by the yaw_flip_flag. The
+# sub-sampling techniques used in this class are derived from section 3.4.3 in the
+# "GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud
+# and Moisture Imagery Product (CMIP)" Version 3.0 July 30, 2012
+# (https://www.star.nesdis.noaa.gov/goesr/docs/ATBD/Imagery.pdf).
 #
 class GoesUtil:
 
