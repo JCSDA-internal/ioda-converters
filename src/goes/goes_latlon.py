@@ -27,23 +27,28 @@
 from netCDF4 import Dataset
 from numpy import ma
 import numpy as np
+from goes_util import GoesUtil
 
 
 class GoesLatLon:
 
-    def __init__(self, source_file_path, latlon_file_path):
+    def __init__(self, source_file_path, latlon_file_path, goes_util: GoesUtil):
         """
         Constructor
         source_file_path - a GOES-16 or GOES-17 raw data file with 2km resolution
-        latlon_file_path - The path to the resulting IODAv2 formatted data file
+        latlon_file_path - the path to the resulting IODAv2 formatted data file
+        goes_util - an instance of the GoesUtil class
         """
         self._source_file_path = source_file_path
         self._latlon_file_path = latlon_file_path
+        self._goes_util = goes_util
         self._source_dataset = Dataset(self._source_file_path, 'r')
         self._source_dataset.set_auto_scale(True)
-        self._x = ma.getdata(self._source_dataset['x'][:])
-        self._y = ma.getdata(self._source_dataset['y'][:])
-        self._yaw_flip_flag = self._source_dataset.variables['yaw_flip_flag'][0]
+        self._x = ma.getdata(self._source_dataset['x'][:]).real
+        self._y = ma.getdata(self._source_dataset['y'][:]).real
+        self._x = self._goes_util.subsample_1d(ma.getdata(self._source_dataset['x'][:]))
+        self._y = self._goes_util.subsample_1d(ma.getdata(self._source_dataset['y'][:]))
+        self._latitude = None
 
     def _calc_latlon(self):
         """
@@ -69,7 +74,7 @@ class GoesLatLon:
         cos_x_sqr = np.power(cos_x, 2.0)
         sin_y_sqr = np.power(sin_y, 2.0)
         cos_y_sqr = np.power(cos_y, 2.0)
-        a = sin_x_sqr + cos_x_sqr * (cos_y_sqr + (r_eq_sqr / r_pol_sqr) * sin_y_sqr)
+        a = sin_x_sqr + (cos_x_sqr * (cos_y_sqr + ((r_eq_sqr / r_pol_sqr) * sin_y_sqr)))
         b = -2.0 * h * cos_x * cos_y
         c = h_sqr - r_eq_sqr
         arg = np.power(b, 2.0) - (4.0 * a * c)
@@ -86,10 +91,11 @@ class GoesLatLon:
         lon = lon * 180.0 / np.pi
         lat = lat.reshape(len(lat) * len(lat))
         lon = lon.reshape(len(lon) * len(lon))
+        lat = self._goes_util.filter_data_array_by_yaw_flip_flag(lat)
+        lon = self._goes_util.filter_data_array_by_yaw_flip_flag(lon)
+        lon = np.where(lon <= -180.0, lon + 360.0, lon)
         lat = np.nan_to_num(lat, nan=-999)
         lon = np.nan_to_num(lon, nan=-999)
-        lat = self._filter_data_array_by_yaw_flip_flag(lat)
-        lon = self._filter_data_array_by_yaw_flip_flag(lon)
         return lat, lon
 
     def _get_nadir_attributes(self):
@@ -110,8 +116,10 @@ class GoesLatLon:
         elevation_angle = grid_y * 180.0 / np.pi
         scan_angle = scan_angle.reshape(len(scan_angle) * len(scan_angle))
         elevation_angle = elevation_angle.reshape(len(elevation_angle) * len(elevation_angle))
-        scan_angle = self._filter_data_array_by_yaw_flip_flag(scan_angle)
-        elevation_angle = self._filter_data_array_by_yaw_flip_flag(elevation_angle)
+        scan_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(scan_angle)
+        elevation_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(elevation_angle)
+        scan_angle = self._filter_by_latitude(scan_angle)
+        elevation_angle = self._filter_by_latitude(elevation_angle)
         return scan_angle, elevation_angle
 
     def _calc_sensor_zenith_azimuth_view_angles(self, latitude, longitude):
@@ -128,34 +136,34 @@ class GoesLatLon:
         r_eq_sqr = np.power(r_eq, 2.0)
         beta = np.arccos(np.cos(latitude - lat_0) * np.cos(longitude - lon_0))
         sqrt_comp = h_sqr + r_eq_sqr - (2.0 * h * r_eq * np.cos(beta))
-        sensor_zenith_angle = np.arcsin((h*np.sin(beta)) / np.sqrt(sqrt_comp)) * 180.0 / np.pi
-        sensor_azimuth_angle = np.arcsin(np.sin(lon_0-longitude)/np.sin(beta)) * 180.0 / np.pi
+        sensor_zenith_angle = np.arcsin((h * np.sin(beta)) / np.sqrt(sqrt_comp)) * 180.0 / np.pi
+        sensor_azimuth_angle = np.arcsin(np.sin(lon_0 - longitude) / np.sin(beta)) * 180.0 / np.pi
         sensor_view_angle = sensor_zenith_angle
-        sensor_zenith_angle = self._filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
-        sensor_azimuth_angle = self._filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
-        sensor_view_angle = self._filter_data_array_by_yaw_flip_flag(sensor_view_angle)
+        sensor_zenith_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
+        sensor_azimuth_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
+        sensor_view_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_view_angle)
+        sensor_zenith_angle = self._filter_by_latitude(sensor_zenith_angle)
+        sensor_azimuth_angle = self._filter_by_latitude(sensor_azimuth_angle)
+        sensor_view_angle = self._filter_by_latitude(sensor_view_angle)
         return sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle
 
-    def _filter_data_array_by_yaw_flip_flag(self, data_array):
+    def _filter_by_latitude(self, data_array):
         """
-        Returns data_array after filtering by the yaw_flip_flag.
-        data_array - the data array to filter
+        Returns a data array filtered by latitude.
+        data_array - a one dimensional data array
         """
-        if not self._yaw_flip_flag:
-            return data_array[::-1]
-        else:
-            return data_array
+        return np.where(self._latitude == -999, -999, data_array)
 
     def create(self):
         """
         Generates an IODAv2 formatted data file containing the groups, variables, attributes and dimensions listed in
         the class header documentation.
         """
-        latitude, longitude = self._calc_latlon()
+        self._latitude, longitude = self._calc_latlon()
         scan_angle, elevation_angle = self._calc_scan_elevation_angles()
         sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
-            self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
-        nlocs = len(latitude)
+            self._calc_sensor_zenith_azimuth_view_angles(self._latitude, longitude)
+        nlocs = len(self._latitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
         latlon_dataset.createDimension('nlocs', nlocs)
         latlon_dataset.createVariable('nlocs', 'i4', ('nlocs',))
@@ -168,7 +176,7 @@ class GoesLatLon:
         latlon_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset['/MetaData/latitude'][:] = latitude
+        latlon_dataset['/MetaData/latitude'][:] = self._latitude
         latlon_dataset['/MetaData/longitude'][:] = longitude
         latlon_dataset['/MetaData/scan_angle'][:] = scan_angle
         latlon_dataset['/MetaData/elevation_angle'][:] = elevation_angle

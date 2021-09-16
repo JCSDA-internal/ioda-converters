@@ -49,22 +49,25 @@ from numpy import ma
 from solo.date import JediDate
 from goes import Goes
 from goes_latlon import GoesLatLon
+from goes_util import GoesUtil
 
 
 class GoesConverter:
 
-    def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt):
+    def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt, resolution=2):
         """
         Constructor
         input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
         latlon_file_path - The path to an existing Goes LatLon file or if it does not exist the path to write the file
         output_file_path_rf - The path to write the IODAv2 reflectance factor data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
+        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, 64, 128, 256
         """
         self._input_file_paths = input_file_paths
         self._latlon_file_path = latlon_file_path
         self._output_file_path_rf = output_file_path_rf
         self._output_file_path_bt = output_file_path_bt
+        self._resolution = resolution
         self._latlon_dataset = None
         self._output_dataset_bt = None
         self._output_dataset_rf = None
@@ -78,6 +81,11 @@ class GoesConverter:
         if len(self._input_file_paths) != 16:
             print("ERROR: input_file_paths must contain 16 GOES-16 or GOES-17 data files. One for each ABI channel.")
             good_args = False
+        good_resolutions = [2, 4, 8, 16, 32, 64, 128, 256]
+        if self._resolution not in good_resolutions:
+            print("ERROR: resolution (in km) must be one of the following values: 2 (default), 4, 8, 16, 32, 64, 128, "
+                  "256.")
+            good_args = False
         if not good_args:
             sys.exit(2)
 
@@ -87,19 +95,29 @@ class GoesConverter:
         and reflectance factor (ABI channels 7-16). Each Goes instance calls the load method. This function also
         assigns the file path for a template GOES file from ABI channel 7.
         """
+        self._goes_util = GoesUtil(self._get_yaw_flip_flag(), self._resolution)
         self._input_file_paths.sort()
         self._goes_dict_rf = {}
         self._goes_dict_bt = {}
         for input_file_path in self._input_file_paths:
-            goes = Goes(input_file_path)
+            goes = Goes(input_file_path, self._goes_util)
             goes.load()
             abi_channel = int(goes.get_abi_channel())
             if abi_channel < 7:
                 self._goes_dict_rf[abi_channel] = goes
             else:
                 self._goes_dict_bt[abi_channel] = goes
-        self._template_goes_file = self._goes_dict_bt[7]
-        self._template_input_file_path = self._template_goes_file.get_input_file_path()
+        self._goes_file_template = self._goes_dict_bt[7]
+        self._input_file_path_template = self._goes_file_template.get_input_file_path()
+
+    def _get_yaw_flip_flag(self):
+        """
+        Returns the yaw_flip_flag from channel 1
+        """
+        dataset = Dataset(self._input_file_paths[0], 'r')
+        yaw_flip_flag = dataset.variables['yaw_flip_flag'][0]
+        dataset.close()
+        return yaw_flip_flag
 
     def _check_nadir(self):
         """
@@ -124,7 +142,7 @@ class GoesConverter:
         """
         Returns the lat and lon nadir attribute from the Goes template data file.
         """
-        dataset = Dataset(self._template_input_file_path, 'r')
+        dataset = Dataset(self._input_file_path_template, 'r')
         lat_nadir_template = dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lat_nadir')
         lon_nadir_template = dataset.variables['geospatial_lat_lon_extent'].getncattr('geospatial_lon_nadir')
         dataset.close()
@@ -140,7 +158,7 @@ class GoesConverter:
         """
         Creates a new Goes LatLon data file using the GoesLatLon class.
         """
-        self._goes_lat_lon = GoesLatLon(self._template_input_file_path, self._latlon_file_path)
+        self._goes_lat_lon = GoesLatLon(self._input_file_path_template, self._latlon_file_path, self._goes_util)
         self._goes_lat_lon.create()
 
     def _close_datasets(self):
@@ -225,30 +243,30 @@ class GoesConverter:
         Creates the /MetaData/solar_zenith_angle variable in the reflectance factor and brightness temperature netCDF4
         Datasets.
         """
-        dataset = Dataset(self._template_input_file_path, 'r')
+        dataset = Dataset(self._input_file_path_template, 'r')
         dataset.set_auto_scale(True)
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
-        start_date = self._template_goes_file.get_start_date()
+        start_date = self._goes_file_template.get_start_date()
         t = start_date.hour_int() + (start_date.minute_int() / 60.0) + (start_date.second_int() / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
-        j = self._template_goes_file.get_day_of_year()
+        j = self._goes_file_template.get_day_of_year()
         declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
         solar_zenith_angle_data_array = np.arccos((np.sin(latitude) * np.sin(declin)) +
                                                   (np.cos(latitude) * np.cos(declin) * np.cos(h)))
         solar_zenith_angle_data_array = \
-            self._template_goes_file.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
+            self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
         dataset.close()
         dataset_latlon.close()
         solar_zenith_angle_data_array = np.nan_to_num(solar_zenith_angle_data_array, nan=-999)
         self._output_dataset_rf.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/solar_zenith_angle'][:] = \
-            self._template_goes_file.filter_by_dqf_data_array(solar_zenith_angle_data_array)
+            self._goes_file_template.filter_by_dqf_data_array(solar_zenith_angle_data_array)
         self._output_dataset_rf['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/solar_zenith_angle'][:] = \
-            self._template_goes_file.filter_by_dqf_data_array(solar_zenith_angle_data_array)
+            self._goes_file_template.filter_by_dqf_data_array(solar_zenith_angle_data_array)
         self._output_dataset_bt['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_azimuth_angle_variables(self):
@@ -256,31 +274,31 @@ class GoesConverter:
         Creates the /MetaData/solar_azimuth_angle variable in the reflectance factor and brightness temperature netCDF4
         Datasets.
         """
-        dataset = Dataset(self._template_input_file_path, 'r')
+        dataset = Dataset(self._input_file_path_template, 'r')
         dataset.set_auto_scale(True)
         goes_imager_projection = dataset.variables['goes_imager_projection']
         lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
-        start_date = self._template_goes_file.get_start_date()
+        start_date = self._goes_file_template.get_start_date()
         t = start_date.hour_int() + (start_date.minute_int() / 60.0) + (start_date.second_int() / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
         beta_0 = np.arccos(np.cos(latitude) * np.cos(longitude - lon_0))
         solar_azimuth_angle_data_array = np.arcsin((np.sin(h - longitude)) / (np.sin(beta_0)))
         solar_azimuth_angle_data_array = \
-            self._template_goes_file.filter_data_array_by_yaw_flip_flag(solar_azimuth_angle_data_array)
+            self._goes_util.filter_data_array_by_yaw_flip_flag(solar_azimuth_angle_data_array)
         solar_azimuth_angle_data_array = solar_azimuth_angle_data_array * 180.0 / np.pi
         dataset.close()
         dataset_latlon.close()
         solar_azimuth_angle_data_array = np.nan_to_num(solar_azimuth_angle_data_array, nan=-999)
         self._output_dataset_rf.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_rf['/MetaData/solar_azimuth_angle'][:] = \
-            self._template_goes_file.filter_by_dqf_data_array(solar_azimuth_angle_data_array)
+            self._goes_file_template.filter_by_dqf_data_array(solar_azimuth_angle_data_array)
         self._output_dataset_rf['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
         self._output_dataset_bt.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/solar_azimuth_angle'][:] = \
-            self._template_goes_file.filter_by_dqf_data_array(solar_azimuth_angle_data_array)
+            self._goes_file_template.filter_by_dqf_data_array(solar_azimuth_angle_data_array)
         self._output_dataset_bt['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_elevation_angle_variables(self):
@@ -501,7 +519,7 @@ class GoesConverter:
         Creates the /MetaData/datetime and MetaData/time variables and /date_time attribute in the reflectance factor
         and brightness temperature netCDF4 Datasets.
         """
-        start_date = str(JediDate(self._template_goes_file.get_start_date()))
+        start_date = str(JediDate(self._goes_file_template.get_start_date()))
         datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), start_date)
         time_array = np.full(self._get_nlocs(self._output_dataset_rf), 0.0)
         self._output_dataset_rf.createVariable('/MetaData/datetime', 'str', 'nlocs')
