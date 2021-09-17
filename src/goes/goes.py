@@ -224,13 +224,6 @@ class Goes:
         """
         return self._dqf_data_array
 
-    def _filter_by_fill_value(self, data_array):
-        """
-        Returns a data array filtered by latitude.
-        data_array - a one dimensional data array
-        """
-        return np.delete(data_array, self._lat_fill_value_index_array)
-
     def close(self):
         """
         Closes this netCDF4 Dataset.
@@ -275,12 +268,12 @@ class Goes:
         self._dqf_data_array = self._dqf_data_array.reshape(shape)
         self._dqf_data_array = self._goes_util.filter_data_array_by_yaw_flip_flag(self._dqf_data_array)
         self._dqf_data_array = np.where(self._dqf_data_array == 255, -999, self._dqf_data_array)
-        self._dqf_data_array = self._filter_by_fill_value(self._dqf_data_array)
+        self._dqf_data_array = self._goes_util.filter_data_array_by_fill_value(self._dqf_data_array)
 
         self._rad_data_array = np.array(self._rad_data_array)
         self._rad_data_array = self._rad_data_array.reshape(shape)
         self._rad_data_array = self._goes_util.filter_data_array_by_yaw_flip_flag(self._rad_data_array)
-        self._rad_data_array = self._filter_by_fill_value(self._rad_data_array)
+        self._rad_data_array = self._goes_util.filter_data_array_by_fill_value(self._rad_data_array)
 
         if self._metadata_dict['abi_channel'] < 7:
             self._create_obsvalue_rf_data_array()

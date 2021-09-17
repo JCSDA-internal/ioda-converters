@@ -90,13 +90,13 @@ class GoesConverter:
         if not good_args:
             sys.exit(2)
 
-    def _create_input_data_file_dicts(self):
+    def _initialize(self):
         """
         Create two local dictionaries contained the Goes class instances for brightness temperature (ABI channels 1-6)
         and reflectance factor (ABI channels 7-16). Each Goes instance calls the load method. This function also
         assigns the file path for a template GOES file from ABI channel 7.
         """
-        self._goes_util = GoesUtil(self._get_yaw_flip_flag(), self._resolution)
+        self._goes_util = GoesUtil()
         self._input_file_paths.sort()
         self._goes_dict_rf = {}
         self._goes_dict_bt = {}
@@ -110,6 +110,8 @@ class GoesConverter:
         self._day_of_year = self._goes_dict_bt[7].get_day_of_year()
         self._start_date = self._goes_dict_bt[7].get_start_date()
         self._input_file_path_template = self._goes_dict_bt[7].get_input_file_path()
+        self._goes_util.set_yaw_flip_flag(self._get_yaw_flip_flag())
+        self._goes_util.set_resolution(self._resolution)
 
     def _get_yaw_flip_flag(self):
         """
@@ -565,22 +567,18 @@ class GoesConverter:
         self._output_dataset_rf.setncattr('_ioda_layout_version', '0')
         self._output_dataset_bt.setncattr('_ioda_layout_version', '0')
 
-    def _load_goes(self):
+    def _load_all_goes(self):
         for key in self._goes_dict_rf.keys():
-            goes = self._goes_dict_rf[key]
-            goes.set_lat_fill_value_index_array(self._lat_fill_value_index_array)
-            goes.load()
+            self._goes_dict_rf[key].load()
         for key in self._goes_dict_bt.keys():
-            goes = self._goes_dict_bt[key]
-            goes.set_lat_fill_value_index_array(self._lat_fill_value_index_array)
-            goes.load()
+            self._goes_dict_bt[key].load()
 
     def convert(self):
         """
         Creates the reflectance factor and brightness temperature IODAv2 data files. This functions also checks for
         the existence and nadir change of the Goes LatLon data file.
         """
-        self._create_input_data_file_dicts()
+        self._initialize()
         if self._check_latlon_file_path():
             if not self._check_nadir():
                 self._create_latlon_dataset()
@@ -589,8 +587,8 @@ class GoesConverter:
         self._output_dataset_rf = Dataset(self._output_file_path_rf, 'w')
         self._output_dataset_bt = Dataset(self._output_file_path_bt, 'w')
         self._latlon_dataset = Dataset(self._latlon_file_path, 'r')
-        self._lat_fill_value_index_array = self._goes_lat_lon.get_lat_fill_value_index_array()
-        self._load_goes()
+        self._goes_util.set_fill_value_index_array(ma.getdata(self._latlon_dataset.variables['nindices']).real)
+        self._load_all_goes()
         self._create_groups()
         self._create_nlocs_dimensions()
         self._create_nchans_dimensions()

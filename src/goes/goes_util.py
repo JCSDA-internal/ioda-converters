@@ -4,7 +4,7 @@ import numpy as np
 #
 # goes_util.py
 #
-# This class contains methods for sub-sampling data arrays and filtering data arrays by the yaw_flip_flag. The
+# This class contains methods for sub-sampling data arrays and filtering data arrays. The
 # sub-sampling techniques used in this class are derived from section 3.4.3 in the
 # "GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud
 # and Moisture Imagery Product (CMIP)" Version 3.0 July 30, 2012
@@ -12,15 +12,36 @@ import numpy as np
 #
 class GoesUtil:
 
-    def __init__(self, yaw_flip_flag, resolution):
+    def __init__(self):
         """
         Constructor
-        yaw_flip_flag - the yaw_flip_flag attribute value
-        resolution - the resolution in km for subsampling: 2 (default), 4, 8, 16, 32, 64, 128, 256
+        """
+        self._increment = None
+        self._yaw_flip_flag = None
+        self._resolution = None
+        self._fill_value_index_array = None
+
+    def set_yaw_flip_flag(self, yaw_flip_flag):
+        """
+        Sets the yaw_flip_flag variable
+        yaw_flip_flag - the yaw_flip_flag
         """
         self._yaw_flip_flag = yaw_flip_flag
+
+    def set_resolution(self, resolution):
+        """
+        Sets the resolution variable and array slicing increment for sub_sampling
+        resolution - the resolution
+        """
         self._resolution = resolution
         self._increment = int(self._resolution / 2)
+
+    def set_fill_value_index_array(self, fill_value_index_array):
+        """
+        Sets the fill_value_index_array
+        fill_value_index_array - an array of indices to remove
+        """
+        self._fill_value_index_array = fill_value_index_array
 
     def subsample_1d(self, data_array):
         """
@@ -80,10 +101,17 @@ class GoesUtil:
 
     def filter_data_array_by_yaw_flip_flag(self, data_array):
         """
-        Returns data_array after filtering by the yaw_flip_flag.
+        Returns data_array filtered by the yaw_flip_flag.
         data_array - the data array to filter
         """
         if self._yaw_flip_flag == 2:
             return data_array[::-1]
         else:
             return data_array
+
+    def filter_data_array_by_fill_value(self, data_array):
+        """
+        Returns a data array filtered by bad latitude indices.
+        data_array - a one dimensional data array
+        """
+        return np.delete(data_array, self._fill_value_index_array)

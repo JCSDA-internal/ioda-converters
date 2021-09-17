@@ -44,10 +44,6 @@ class GoesLatLon:
         self._goes_util = goes_util
         self._source_dataset = Dataset(self._source_file_path, 'r')
         self._source_dataset.set_auto_scale(True)
-        self._x = ma.getdata(self._source_dataset['x'][:]).real
-        self._y = ma.getdata(self._source_dataset['y'][:]).real
-        self._x = self._goes_util.subsample_1d(ma.getdata(self._source_dataset['x'][:]))
-        self._y = self._goes_util.subsample_1d(ma.getdata(self._source_dataset['y'][:]))
         self._lat_fill_value_index_array = None
 
     def _calc_latlon(self):
@@ -55,6 +51,10 @@ class GoesLatLon:
         Calculates the latitude and longitude from source_file_path Dataset, reshapes the latitude and longitude
         data arrays to a single dimension, and returns a tuple containing these data arrays.
         """
+        self._x = ma.getdata(self._source_dataset['x'][:]).real
+        self._y = ma.getdata(self._source_dataset['y'][:]).real
+        self._x = self._goes_util.subsample_1d(ma.getdata(self._source_dataset['x'][:]))
+        self._y = self._goes_util.subsample_1d(ma.getdata(self._source_dataset['y'][:]))
         grid_x, grid_y = np.meshgrid(self._x, self._y, indexing='xy')
         goes_imager_projection = self._source_dataset.variables['goes_imager_projection']
         r_eq = goes_imager_projection.getncattr('semi_major_axis')
@@ -155,12 +155,6 @@ class GoesLatLon:
         """
         return np.delete(data_array, self._lat_fill_value_index_array)
 
-    def get_lat_fill_value_index_array(self):
-        """
-        Returns an array of latitude indices of bad coordinates.
-        """
-        return self._lat_fill_value_index_array
-
     def create(self):
         """
         Generates an IODAv2 formatted data file containing the groups, variables, attributes and dimensions listed in
@@ -170,11 +164,18 @@ class GoesLatLon:
         scan_angle, elevation_angle = self._calc_scan_elevation_angles()
         sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
             self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
-        nlocs = len(latitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
+
+        nlocs = len(latitude)
         latlon_dataset.createDimension('nlocs', nlocs)
         latlon_dataset.createVariable('nlocs', 'i4', ('nlocs',))
         latlon_dataset.variables['nlocs'][:] = np.arange(1, nlocs + 1, 1, dtype='int32')
+
+        nindices = len(self._lat_fill_value_index_array[0])
+        latlon_dataset.createDimension('nindices', nindices)
+        latlon_dataset.createVariable('nindices', 'i4', ('nindices',))
+        latlon_dataset.variables['nindices'][:] = np.array(self._lat_fill_value_index_array[0])
+
         latlon_dataset.createGroup('MetaData')
         latlon_dataset.createVariable('/MetaData/latitude', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
