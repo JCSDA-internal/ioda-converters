@@ -32,6 +32,7 @@ class Goes:
         self._get_metadata_from_input_file_path()
         self._rad_data_array = None
         self._dqf_data_array = None
+        self._lat_fill_value_index_array = None
         self._obsvalue_rf_data_array = None
         self._obsvalue_bt_data_array = None
         self._obserror_rf_data_array = None
@@ -133,8 +134,7 @@ class Goes:
         Creates a local data array variable containing the calculated obsvalue reflectance factor data
         after fill value filtering by the DQF flags.
         """
-        temp_data_array = self._rad_data_array * self._kappa0
-        self._obsvalue_rf_data_array = self.filter_by_dqf_data_array(temp_data_array)
+        self._obsvalue_rf_data_array = self._rad_data_array * self._kappa0
 
     def _create_obsvalue_bt_data_array(self):
         """
@@ -142,8 +142,7 @@ class Goes:
         after fill value filtering by the DQF flags.
         """
         log_comp = np.log((self._planck_fk1 / self._rad_data_array) + 1)
-        temp_data_array = ((self._planck_fk2 / log_comp) - self._planck_bc1) / self._planck_bc2
-        self._obsvalue_bt_data_array = self.filter_by_dqf_data_array(temp_data_array)
+        self._obsvalue_bt_data_array = ((self._planck_fk2 / log_comp) - self._planck_bc1) / self._planck_bc2
 
     def _create_obserror_rf_data_array(self):
         """
@@ -151,8 +150,8 @@ class Goes:
         after fill value filtering by the DQF flags.
         """
         sqrt_comp = np.power(self._kappa0, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
-        temp_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
-        self._obserror_rf_data_array = self.filter_by_dqf_data_array(temp_data_array)
+        temp_data = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
+        self._obserror_rf_data_array = np.full(len(self._rad_data_array), temp_data)
 
     def _create_obserror_bt_data_array(self):
         """
@@ -163,8 +162,7 @@ class Goes:
                       (self._planck_bc2 * np.power(np.log((self._planck_fk1 / self._rad_data_array) + 1), 2))
         sqrt_comp_2 = 1 / (self._planck_fk1 + self._rad_data_array) - 1 / self._rad_data_array
         sqrt_comp = np.power(sqrt_comp_1 * sqrt_comp_2, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
-        temp_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
-        self._obserror_bt_data_array = self.filter_by_dqf_data_array(temp_data_array)
+        self._obserror_bt_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
 
     def get_abi_channel(self):
         """
@@ -226,18 +224,25 @@ class Goes:
         """
         return self._dqf_data_array
 
-    def filter_by_dqf_data_array(self, data_array):
+    def _filter_by_fill_value(self, data_array):
         """
-        Returns a data array filtered by the DQF data array.
+        Returns a data array filtered by latitude.
         data_array - a one dimensional data array
         """
-        return np.where(self._dqf_data_array == -999, -999, data_array)
+        return np.delete(data_array, self._lat_fill_value_index_array)
 
     def close(self):
         """
         Closes this netCDF4 Dataset.
         """
         self._input_dataset.close()
+
+    def set_lat_fill_value_index_array(self, lat_fill_value_index_array):
+        """
+        Sets the self._lat_fill_value_index_array variable
+        lat_fill_value_index_array - arry of bad latitude coordinate indices
+        """
+        self._lat_fill_value_index_array = lat_fill_value_index_array
 
     def load(self):
         """
@@ -270,11 +275,12 @@ class Goes:
         self._dqf_data_array = self._dqf_data_array.reshape(shape)
         self._dqf_data_array = self._goes_util.filter_data_array_by_yaw_flip_flag(self._dqf_data_array)
         self._dqf_data_array = np.where(self._dqf_data_array == 255, -999, self._dqf_data_array)
+        self._dqf_data_array = self._filter_by_fill_value(self._dqf_data_array)
 
         self._rad_data_array = np.array(self._rad_data_array)
         self._rad_data_array = self._rad_data_array.reshape(shape)
         self._rad_data_array = self._goes_util.filter_data_array_by_yaw_flip_flag(self._rad_data_array)
-        self._rad_data_array = self.filter_by_dqf_data_array(self._rad_data_array)
+        self._rad_data_array = self._filter_by_fill_value(self._rad_data_array)
 
         if self._metadata_dict['abi_channel'] < 7:
             self._create_obsvalue_rf_data_array()
