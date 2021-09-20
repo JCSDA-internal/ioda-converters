@@ -18,6 +18,7 @@
 # /MetaData/latitude
 # /MetaData/longitude
 # /MetaData/scan_angle
+# /MetaData/scan_position
 # /MetaData/sensor_azimuth_angle -> units
 # /MetaData/sensor_view_angle -> units
 # /MetaData/sensor_zenith_angle -> units
@@ -201,6 +202,17 @@ class GoesConverter:
         self._output_dataset_rf['/MetaData/scan_angle'][:] = scan_angle_data_array
         self._output_dataset_bt.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
         self._output_dataset_bt['/MetaData/scan_angle'][:] = scan_angle_data_array
+
+    def _create_metadata_scan_position_variables(self):
+        """
+        Creates the /MetaData/scan_position variable in the reflectance factor and brightness temperature netCDF4
+        Datasets.
+        """
+        scan_position_data_array = self._latlon_dataset['MetaData'].variables['scan_position'][:].real
+        self._output_dataset_rf.createVariable('/MetaData/scan_position', 'f4', 'nlocs', fill_value=-999)
+        self._output_dataset_rf['/MetaData/scan_position'][:] = scan_position_data_array
+        self._output_dataset_bt.createVariable('/MetaData/scan_position', 'f4', 'nlocs', fill_value=-999)
+        self._output_dataset_bt['/MetaData/scan_position'][:] = scan_position_data_array
 
     def _create_metadata_sensor_zenith_angle_variables(self):
         """
@@ -599,6 +611,7 @@ class GoesConverter:
         self._create_metadata_longitude_variables()
         self._create_metadata_elevation_angle_variables()
         self._create_metadata_scan_angle_variables()
+        self._create_metadata_scan_position_variables()
         self._create_metadata_sensor_azimuth_angle_variables()
         self._create_metadata_sensor_view_angle_variables()
         self._create_metadata_sensor_zenith_angle_variables()

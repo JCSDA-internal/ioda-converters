@@ -15,6 +15,7 @@
 #
 # /MetaData/elevation_angle
 # /MetaData/scan_angle
+# /MetaData/scan_position
 # /MetaData/sensor_azimuth_angle -> units
 # /MetaData/sensor_view_angle -> units
 # /MetaData/sensor_zenith_angle -> units
@@ -126,6 +127,14 @@ class GoesLatLon:
         elevation_angle = self._filter_by_fill_value(elevation_angle)
         return scan_angle, elevation_angle
 
+    def _calc_scan_position(self, latitude):
+        """
+        Calculates the scan position...
+        """
+        #scan_position = np.arange(1, len(latitude) + 1, 1, dtype='int32')
+        scan_position = np.full(latitude.shape, 1, dtype='int32')
+        return scan_position
+
     def _calc_sensor_zenith_azimuth_view_angles(self, latitude, longitude):
         """
         Calculates the sensor zenith, azimuth, and view angles.
@@ -146,6 +155,7 @@ class GoesLatLon:
         sensor_zenith_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
         sensor_azimuth_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
         sensor_view_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_view_angle)
+        sensor_zenith_angle = np.where(sensor_zenith_angle >= 80, 80, sensor_zenith_angle)
         return sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle
 
     def _filter_by_fill_value(self, data_array):
@@ -162,24 +172,23 @@ class GoesLatLon:
         """
         latitude, longitude = self._calc_latlon()
         scan_angle, elevation_angle = self._calc_scan_elevation_angles()
+        scan_position = self._calc_scan_position(latitude)
         sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
             self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
-
         nlocs = len(latitude)
         latlon_dataset.createDimension('nlocs', nlocs)
         latlon_dataset.createVariable('nlocs', 'i4', ('nlocs',))
         latlon_dataset.variables['nlocs'][:] = np.arange(1, nlocs + 1, 1, dtype='int32')
-
         nindices = len(self._lat_fill_value_index_array[0])
         latlon_dataset.createDimension('nindices', nindices)
         latlon_dataset.createVariable('nindices', 'i4', ('nindices',))
         latlon_dataset.variables['nindices'][:] = np.array(self._lat_fill_value_index_array[0])
-
         latlon_dataset.createGroup('MetaData')
         latlon_dataset.createVariable('/MetaData/latitude', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/scan_position', 'i4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
@@ -187,6 +196,7 @@ class GoesLatLon:
         latlon_dataset['/MetaData/latitude'][:] = latitude
         latlon_dataset['/MetaData/longitude'][:] = longitude
         latlon_dataset['/MetaData/scan_angle'][:] = scan_angle
+        latlon_dataset['/MetaData/scan_position'][:] = scan_position
         latlon_dataset['/MetaData/elevation_angle'][:] = elevation_angle
         latlon_dataset['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle
         latlon_dataset['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle
