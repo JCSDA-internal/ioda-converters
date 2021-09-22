@@ -6,6 +6,7 @@
 |          |        |                                                          |
 | NC000000 | A51001 | MTYP 000-000 SYNOPTIC-LAND, RESTRICTED (WMO RES 40)      |
 |          |        |                                                          |
+| SFCSTNID | 301004 | SURFACE STATION IDENTIFICATION                           |
 | YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
 | HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
 | LALOLV   | 301024 | LOCATION -- LATITUDE, LONGITUDE, ELEVATION               |
@@ -14,13 +15,17 @@
 | RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
 | RPSEC1   | 361036 | SYNOPTIC REPORT WMO FM 12/13 SECTION 1 DATA              |
 | TMPSQ1   | 361037 | SYNOPTIC REPORT TEMPERATURE DATA                         |
+| TMPSQ2   | 361038 | SYNOPTIC REPORT WET BULB TEMPERATURE DATA                |
+| TMPSQ3   | 361039 | SYNOPTIC REPORT MAXIMUM AND MINIMUM TEMPERATURE DATA     |
 | CTMPS5   | 361040 | SYNOPTIC REPORT CITY TEMPERATURE DATA                    |
 | CLDSQ1   | 361041 | SYNOPTIC REPORT CLOUD DATA                               |
 | WNDSQ1   | 361042 | SYNOPTIC REPORT WIND DATA                                |
+| WNDSQ2   | 361043 | SYNOPTIC REPORT HIGHEST WIND GUST DATA                   |
 | PRSSQ1   | 361045 | SYNOPTIC REPORT PRESSURE DATA                            |
 | PRSSQ2   | 361046 | SYNOPTIC REPORT GEOPOTENTAL DATA                         |
 | PRSSQ3   | 361047 | SYNOPTIC REPORT 24 HOUR PRESSURE CHANGE DATA             |
 | PCPSQ1   | 361048 | SYNOPTIC REPORT PRECIPITATION DATA 1                     |
+| PCPSQ2   | 361049 | SYNOPTIC REPORT PRECIPITATION DATA 2                     |
 | WAVSQ1   | 361051 | SYNOPTIC REPORT INSTRUMENT WAVE DATA                     |
 | WAVSQ2   | 361052 | SYNOPTIC REPORT WIND WAVE DATA                           |
 | WAVSQ3   | 361053 | SYNOPTIC REPORT SWELL WAVE DATA                          |
@@ -29,6 +34,7 @@
 | GRDSQ1   | 361056 | SYNOPTIC REPORT STATE OF THE GROUND DATA                 |
 | ICESQ1   | 361057 | SYNOPTIC REPORT SHIP ICE DATA                            |
 | RPSEC3   | 361089 | SYNOPTIC REPORT WMO FM 12 SECTION 3 DATA                 |
+| CLDSQ2   | 361092 | SYNOPTIC REPORT SECTION 4 CLOUD DATA                     |
 |          |        |                                                          |
 | WMOB     | 001001 | WMO BLOCK NUMBER                                         |
 | WMOS     | 001002 | WMO STATION NUMBER                                       |
@@ -43,6 +49,8 @@
 | DAYS     | 004003 | DAY                                                      |
 | HOUR     | 004004 | HOUR                                                     |
 | MINU     | 004005 | MINUTES                                                  |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
 | RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
 | RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
 | RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
@@ -53,6 +61,7 @@
 | SELV     | 007001 | HEIGHT OF STATION                                        |
 | PRLC     | 007004 | PRESSURE                                                 |
 | VSSO     | 008002 | VERT. SIGNIFICANCE (SFC OBSERVATION)                     |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
 | RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
 | PRES     | 010004 | PRESSURE                                                 |
 | GP10     | 010008 | GEOPOTENTIAL                                             |
@@ -146,11 +155,17 @@
 |          |                                                                   |
 | TMPSQ1   | QMAT  TMDB  QMDD  TMDP  MSST  QMST  SST1  <TMPSQ2>  <TMPSQ3>      |
 |          |                                                                   |
+| TMPSQ2   | MWBT  TMWB  REHU                                                  |
+|          |                                                                   |
+| TMPSQ3   | .DTHMXTM  MXTM  .DTHMITM  MITM                                    |
+|          |                                                                   |
 | CTMPS5   | CTTP  CTMX  CTMN                                                  |
 |          |                                                                   |
 | CLDSQ1   | VSSO  CLAM  CLTP  HOCB  <CLDSQ2>                                  |
 |          |                                                                   |
 | WNDSQ1   | TIWM  QMWN  WDIR  WSPD  <WNDSQ2>                                  |
+|          |                                                                   |
+| WNDSQ2   | .DTMMXGS  MXGS                                                    |
 |          |                                                                   |
 | PRSSQ1   | QMPR  PRES  PMSL  CHPT  3HPC                                      |
 |          |                                                                   |
@@ -159,6 +174,8 @@
 | PRSSQ3   | 24PC                                                              |
 |          |                                                                   |
 | PCPSQ1   | TP06  <PCPSQ2>  <PCPSQ3>                                          |
+|          |                                                                   |
+| PCPSQ2   | TP01  TP03  TP12  TP24                                            |
 |          |                                                                   |
 | WAVSQ1   | POWV  HOWV                                                        |
 |          |                                                                   |
@@ -175,6 +192,8 @@
 | ICESQ1   | COIA  IDTH  ROIA                                                  |
 |          |                                                                   |
 | RPSEC3   | VTVI                                                              |
+|          |                                                                   |
+| CLDSQ2   | HOCT  CTDS                                                        |
 |          |                                                                   |
 |------------------------------------------------------------------------------|
 | MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
@@ -193,6 +212,8 @@
 | DAYS     |    0 |           0 |   6 | DAY                      |-------------|
 | HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
 | MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
 | RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
 | RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
 | RCDY     |    0 |           0 |   6 | DAY                      |-------------|
@@ -203,6 +224,7 @@
 | SELV     |    0 |        -400 |  15 | METERS                   |-------------|
 | PRLC     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
 | RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
 | PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | GP10     |    0 |      -10000 |  20 | (METERS/SECOND)**2       |-------------|
