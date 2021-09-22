@@ -233,7 +233,7 @@ class Goes:
     def set_lat_fill_value_index_array(self, lat_fill_value_index_array):
         """
         Sets the self._lat_fill_value_index_array variable
-        lat_fill_value_index_array - arry of bad latitude coordinate indices
+        lat_fill_value_index_array - array of bad latitude coordinate indices
         """
         self._lat_fill_value_index_array = lat_fill_value_index_array
 

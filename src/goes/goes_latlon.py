@@ -131,7 +131,6 @@ class GoesLatLon:
         """
         Calculates the scan position...
         """
-        #scan_position = np.arange(1, len(latitude) + 1, 1, dtype='int32')
         scan_position = np.full(latitude.shape, 1, dtype='int32')
         return scan_position
 
@@ -155,7 +154,15 @@ class GoesLatLon:
         sensor_zenith_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
         sensor_azimuth_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
         sensor_view_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_view_angle)
-        sensor_zenith_angle = np.where(sensor_zenith_angle >= 80, 80, sensor_zenith_angle)
+        sensor_zenith_angle = np.nan_to_num(sensor_zenith_angle, nan=-999)
+        sensor_azimuth_angle = np.nan_to_num(sensor_azimuth_angle, nan=-999)
+        sensor_view_angle = np.nan_to_num(sensor_view_angle, nan=-999)
+        sensor_zenith_angle = np.where(sensor_zenith_angle > 80, 80, sensor_zenith_angle)
+        sensor_zenith_angle = np.where(sensor_zenith_angle < -80, -80, sensor_zenith_angle)
+        sensor_azimuth_angle = np.where(sensor_azimuth_angle > 80, 80, sensor_azimuth_angle)
+        sensor_azimuth_angle = np.where(sensor_azimuth_angle < -80, -80, sensor_azimuth_angle)
+        sensor_view_angle = np.where(sensor_view_angle > 80, 80, sensor_view_angle)
+        sensor_view_angle = np.where(sensor_view_angle < -80, -80, sensor_view_angle)
         return sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle
 
     def _filter_by_fill_value(self, data_array):
