@@ -19,7 +19,8 @@ def test_goes_converter(input_file_paths, latlon_file_path, output_file_path_rf,
     output_file_path_bt - The path to write the IODAv2 brightness temperature data file
     resolution - The resolution in km: 2 (default), 4, 8, 16, 32, or 64
     """
-    goes_converter = GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt)
+    goes_converter = \
+        GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt, resolution)
     goes_converter.convert()
 
 
