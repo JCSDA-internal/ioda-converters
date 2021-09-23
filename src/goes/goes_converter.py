@@ -265,8 +265,8 @@ class GoesConverter:
         h = -1.0 * ((t - 12.0) / 12.0)
         j = self._day_of_year
         declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
-        solar_zenith_angle_data_array = np.arccos((np.sin(latitude) * np.sin(declin)) +
-                                                  (np.cos(latitude) * np.cos(declin) * np.cos(h)))
+        solar_zenith_angle_data_array = \
+            np.arccos((np.sin(latitude) * np.sin(declin)) + (np.cos(latitude) * np.cos(declin) * np.cos(h)))
         solar_zenith_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
