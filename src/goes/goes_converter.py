@@ -62,7 +62,7 @@ class GoesConverter:
         latlon_file_path - The path to an existing Goes LatLon file or if it does not exist the path to write the file
         output_file_path_rf - The path to write the IODAv2 reflectance factor data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
-        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, 64, 128, 256
+        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, or 64
         """
         self._input_file_paths = input_file_paths
         self._latlon_file_path = latlon_file_path
@@ -83,10 +83,9 @@ class GoesConverter:
         if len(self._input_file_paths) != 16:
             print("ERROR: input_file_paths must contain 16 GOES-16 or GOES-17 data files. One for each ABI channel.")
             good_args = False
-        good_resolutions = [2, 4, 8, 16, 32, 64, 128, 256]
+        good_resolutions = [2, 4, 8, 16, 32, 64]
         if self._resolution not in good_resolutions:
-            print("ERROR: resolution (in km) must be one of the following values: 2 (default), 4, 8, 16, 32, 64, 128, "
-                  "256.")
+            print("ERROR: resolution (in km) must be one of the following values: 2 (default), 4, 8, 16, 32, 64.")
             good_args = False
         if not good_args:
             sys.exit(2)
@@ -267,8 +266,8 @@ class GoesConverter:
         h = -1.0 * ((t - 12.0) / 12.0)
         j = self._day_of_year
         declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
-        solar_zenith_angle_data_array = np.arccos((np.sin(latitude) * np.sin(declin)) +
-                                                  (np.cos(latitude) * np.cos(declin) * np.cos(h)))
+        solar_zenith_angle_data_array = \
+            np.arccos((np.sin(latitude) * np.sin(declin)) + (np.cos(latitude) * np.cos(declin) * np.cos(h)))
         solar_zenith_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
