@@ -137,7 +137,8 @@ class GoesLatLon:
 
     def _calc_sensor_zenith_azimuth_view_angles(self, latitude, longitude):
         """
-        Calculates the sensor zenith, azimuth, and view angles.
+        Calculates the sensor zenith, azimuth, and view angles. These angles are limited to values between -80 and 80
+        degrees due to a constraint in CRTM.
         """
         goes_imager_projection = self._source_dataset.variables['goes_imager_projection']
         r_eq = goes_imager_projection.getncattr('semi_major_axis')
