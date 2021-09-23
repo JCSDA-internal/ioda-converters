@@ -12,11 +12,11 @@
 # requested resolution using methods in this class.
 #
 import os
+import datetime
 from enum import Enum
 import numpy as np
 from netCDF4 import Dataset
 from numpy import ma
-from solo.date import Date
 from goes_util import GoesUtil
 
 
@@ -51,11 +51,14 @@ class Goes:
         self._metadata_dict['abi_mode'] = Goes._string_to_abimode(metadata_array[1])
         self._metadata_dict['abi_channel'] = int(metadata_array[1][-2:])
         self._metadata_dict['platform_identifier'] = metadata_array[2]
-        self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
-        self._metadata_dict['end_date'] = Date(metadata_array[4][1:-1])
-        self._metadata_dict['creation_date'] = Date(metadata_array[5][1:-1])
-        self._metadata_dict['start_date'] = Date(metadata_array[3][1:-1])
-        self._metadata_dict['day_of_year'] = metadata_array[3][1:-1][4:7]
+        year = int(metadata_array[3][1:-1][0:4])
+        day_of_year = int(metadata_array[3][1:-1][4:7])
+        hour = int(metadata_array[3][1:-1][7:9])
+        minute = int(metadata_array[3][1:-1][9:11])
+        second = int(metadata_array[3][1:-1][11:13])
+        scan_start_datetime = datetime.datetime(year, 1, 1, hour, minute, second) + datetime.timedelta(day_of_year - 1)
+        self._metadata_dict['day_of_year'] = day_of_year
+        self._metadata_dict['start_date'] = scan_start_datetime
 
     def _open(self):
         """
@@ -178,7 +181,7 @@ class Goes:
 
     def get_start_date(self):
         """
-        Returns the scan's start date.
+        Returns the scan's start date as a datetime object
         """
         return self._metadata_dict['start_date']
 

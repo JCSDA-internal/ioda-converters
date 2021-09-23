@@ -43,11 +43,9 @@
 
 import os
 import sys
-
 import numpy as np
 from netCDF4 import Dataset
 from numpy import ma
-from solo.date import JediDate
 from goes import Goes
 from goes_latlon import GoesLatLon
 from goes_util import GoesUtil
@@ -62,7 +60,7 @@ class GoesConverter:
         latlon_file_path - The path to an existing Goes LatLon file or if it does not exist the path to write the file
         output_file_path_rf - The path to write the IODAv2 reflectance factor data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
-        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, or 64
+        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, 64, 128, 256
         """
         self._input_file_paths = input_file_paths
         self._latlon_file_path = latlon_file_path
@@ -83,9 +81,10 @@ class GoesConverter:
         if len(self._input_file_paths) != 16:
             print("ERROR: input_file_paths must contain 16 GOES-16 or GOES-17 data files. One for each ABI channel.")
             good_args = False
-        good_resolutions = [2, 4, 8, 16, 32, 64]
+        good_resolutions = [2, 4, 8, 16, 32, 64, 128, 256]
         if self._resolution not in good_resolutions:
-            print("ERROR: resolution (in km) must be one of the following values: 2 (default), 4, 8, 16, 32, 64.")
+            print("ERROR: resolution (in km) must be one of the following values: 2 (default), 4, 8, 16, 32, 64, 128, "
+                  "256.")
             good_args = False
         if not good_args:
             sys.exit(2)
@@ -262,12 +261,12 @@ class GoesConverter:
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         start_date = self._start_date
-        t = start_date.hour_int() + (start_date.minute_int() / 60.0) + (start_date.second_int() / 3600.0)
+        t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
         j = self._day_of_year
         declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
-        solar_zenith_angle_data_array = \
-            np.arccos((np.sin(latitude) * np.sin(declin)) + (np.cos(latitude) * np.cos(declin) * np.cos(h)))
+        solar_zenith_angle_data_array = np.arccos((np.sin(latitude) * np.sin(declin)) +
+                                                  (np.cos(latitude) * np.cos(declin) * np.cos(h)))
         solar_zenith_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
@@ -294,7 +293,7 @@ class GoesConverter:
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
         start_date = self._start_date
-        t = start_date.hour_int() + (start_date.minute_int() / 60.0) + (start_date.second_int() / 3600.0)
+        t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
         beta_0 = np.arccos(np.cos(latitude) * np.cos(longitude - lon_0))
         solar_azimuth_angle_data_array = np.arcsin((np.sin(h - longitude)) / (np.sin(beta_0)))
@@ -529,7 +528,7 @@ class GoesConverter:
         Creates the /MetaData/datetime and MetaData/time variables and /date_time attribute in the reflectance factor
         and brightness temperature netCDF4 Datasets.
         """
-        start_date = str(JediDate(self._start_date))
+        start_date = self._start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
         datetime_array = np.full(self._get_nlocs(self._output_dataset_rf), start_date)
         time_array = np.full(self._get_nlocs(self._output_dataset_rf), 0.0)
         self._output_dataset_rf.createVariable('/MetaData/datetime', 'str', 'nlocs')

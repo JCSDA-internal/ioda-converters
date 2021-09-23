@@ -127,7 +127,8 @@ class GoesLatLon:
         elevation_angle = self._filter_by_fill_value(elevation_angle)
         return scan_angle, elevation_angle
 
-    def _calc_scan_position(self, latitude):
+    @staticmethod
+    def _calc_scan_position(latitude):
         """
         Calculates the scan position...
         """
@@ -179,7 +180,7 @@ class GoesLatLon:
         """
         latitude, longitude = self._calc_latlon()
         scan_angle, elevation_angle = self._calc_scan_elevation_angles()
-        scan_position = self._calc_scan_position(latitude)
+        scan_position = GoesLatLon._calc_scan_position(latitude)
         sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
             self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
