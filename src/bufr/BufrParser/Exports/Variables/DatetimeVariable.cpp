@@ -14,6 +14,10 @@
 
 #include "DatetimeVariable.h"
 
+#include "DataObject/ArrayDataObject.h"
+#include "DataObject/DataObject.h"
+#include "DataObject/StrVecDataObject.h"
+
 
 namespace
 {
@@ -26,25 +30,27 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* Utc = "isUTC";  // deprecated
+        const char* GroupByField = "group_by";
     }  // namespace ConfKeys
 }  // namespace
 
 
 namespace Ingester
 {
-    DatetimeVariable::DatetimeVariable(const eckit::Configuration& conf) :
-      yearKey_(conf.getString(ConfKeys::Year)),
-      monthKey_(conf.getString(ConfKeys::Month)),
-      dayKey_(conf.getString(ConfKeys::Day)),
-      hourKey_(conf.getString(ConfKeys::Hour)),
-      minuteKey_(conf.getString(ConfKeys::Minute)),
-      secondKey_(""),
+    DatetimeVariable::DatetimeVariable(const std::string& exportName, 
+                                       const eckit::Configuration &conf) :
+      Variable(exportName),
+      yearQuery_(conf.getString(ConfKeys::Year)),
+      monthQuery_(conf.getString(ConfKeys::Month)),
+      dayQuery_(conf.getString(ConfKeys::Day)),
+      hourQuery_(conf.getString(ConfKeys::Hour)),
+      minuteQuery_(conf.getString(ConfKeys::Minute)),
+      groupByField_(""),
       hoursFromUtc_(0)
     {
         if (conf.has(ConfKeys::Second))
         {
-            secondKey_ = conf.getString(ConfKeys::Second);
+            secondQuery_ = conf.getString(ConfKeys::Second);
         }
 
         if (conf.has(ConfKeys::HoursFromUtc))
@@ -52,14 +58,12 @@ namespace Ingester
             hoursFromUtc_ = conf.getInt(ConfKeys::HoursFromUtc);
         }
 
-        if (conf.has(ConfKeys::Utc))
+        if (conf.has(ConfKeys::GroupByField))
         {
-            std::cout << "WARNING: usage of " \
-                      << ConfKeys::Utc \
-                      << " in datetime is depricated!" \
-                      << std::endl;
-            std::cout << "Use the optional parameter " << ConfKeys::HoursFromUtc << " instead.";
+            groupByField_ = conf.getString(ConfKeys::GroupByField);
         }
+
+        initQueryMap();
     }
 
     std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
@@ -68,21 +72,29 @@ namespace Ingester
 
         auto datetimes = std::vector<std::string>();
 
-        datetimes.reserve(map.at(yearKey_).size());
-        for (unsigned int idx = 0; idx < map.at(yearKey_).size(); idx++)
+        auto years = map.at(getExportKey(ConfKeys::Year))->getFloats();
+        auto months = map.at(getExportKey(ConfKeys::Month))->getFloats();
+        auto days = map.at(getExportKey(ConfKeys::Day))->getFloats();
+        auto hours = map.at(getExportKey(ConfKeys::Hour))->getFloats();
+        auto minutes = map.at(getExportKey(ConfKeys::Minute))->getFloats();
+
+        datetimes.resize(years.size());
+        for (unsigned int idx = 0; idx < years.size(); idx++)
         {
             // YYYY-MM-DDThh:mm:ssZ
             std::ostringstream datetimeStr;
             datetimeStr << std::setfill('0')
-                        << std::setw(4) << map.at(yearKey_)(idx) << "-" \
-                        << std::setw(2) << map.at(monthKey_)(idx) << "-" \
-                        << std::setw(2) << map.at(dayKey_)(idx) << "T" \
-                        << std::setw(2) << map.at(hourKey_)(idx) - hoursFromUtc_ << ":" \
-                        << std::setw(2) << map.at(minuteKey_)(idx) << ":";
+                        << std::setw(4) << years[idx] << "-" \
+                        << std::setw(2) << months[idx] << "-" \
+                        << std::setw(2) << days[idx] << "T" \
+                        << std::setw(2) << hours[idx] - hoursFromUtc_ << ":" \
+                        << std::setw(2) << minutes[idx] << ":";
 
-            if (!secondKey_.empty())
+            if (!secondQuery_.empty())
             {
-                datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
+                datetimeStr << std::setw(2)
+                            << map.at(getExportKey(ConfKeys::Second))->getFloat(idx, 0)
+                            << ":";
             }
             else
             {
@@ -90,8 +102,7 @@ namespace Ingester
             }
 
             datetimeStr << "Z";
-
-            datetimes.push_back(datetimeStr.str());
+            datetimes[idx] = datetimeStr.str();
         }
 
         return std::make_shared<StrVecDataObject>(datetimes);
@@ -99,22 +110,22 @@ namespace Ingester
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)
     {
-        std::vector<std::string> requiredKeys = {yearKey_,
-                                                 monthKey_,
-                                                 dayKey_,
-                                                 hourKey_,
-                                                 minuteKey_};
+        std::vector<std::string> requiredKeys = {getExportKey(ConfKeys::Year),
+                                                 getExportKey(ConfKeys::Month),
+                                                 getExportKey(ConfKeys::Day),
+                                                 getExportKey(ConfKeys::Hour),
+                                                 getExportKey(ConfKeys::Minute)};
 
-        if (!secondKey_.empty())
+        if (!secondQuery_.empty())
         {
-            requiredKeys.push_back(secondKey_);
+            requiredKeys.push_back(getExportKey(ConfKeys::Second));
         }
 
         std::stringstream errStr;
-        errStr << "Mnemonic ";
+        errStr << "Query ";
 
         bool isKeyMissing = false;
-        for (auto key : requiredKeys)
+        for (const auto& key : requiredKeys)
         {
             if (map.find(key) == map.end())
             {
@@ -130,5 +141,66 @@ namespace Ingester
         {
             throw eckit::BadParameter(errStr.str());
         }
+    }
+
+    QueryList DatetimeVariable::makeQueryList() const
+    {
+        auto queries = QueryList();
+
+        {  // Year
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Year);
+            info.query = yearQuery_;
+            info.groupByField = groupByField_;
+            queries.push_back(info);
+        }
+
+        {  // Month
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Month);
+            info.query = monthQuery_;
+            info.groupByField = groupByField_;
+            queries.push_back(info);
+        }
+
+        {  // Day
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Day);
+            info.query = dayQuery_;
+            info.groupByField = groupByField_;
+            queries.push_back(info);
+        }
+
+        {  // Hour
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Hour);
+            info.query = hourQuery_;
+            info.groupByField = groupByField_;
+            queries.push_back(info);
+        }
+
+        {  // Minute
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Minute);
+            info.query = minuteQuery_;
+            info.groupByField = groupByField_;
+            queries.push_back(info);
+        }
+
+        if (!secondQuery_.empty()) // Second
+        {
+            QueryInfo info;
+            info.name = getExportKey(ConfKeys::Second);
+            info.query = secondQuery_;
+            info.groupByField = groupByField_;
+            queries.push_back(info);
+        }
+
+        return queries;
+    }
+
+    std::string DatetimeVariable::getExportKey(const char* name) const
+    {
+        return getExportName() + "_" + name;
     }
 }  // namespace Ingester

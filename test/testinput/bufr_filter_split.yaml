@@ -7,50 +7,43 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
-      mnemonicSets:
-        - mnemonics: [SAID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH, HOLS]
-        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
-          channels : 1-5
 
       exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
+          longitude:
+            query: "*/CLON"
+          latitude:
+            query: "*/CLAT"
+          radiance:
+            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
+
         filters:
           - bounding:
-              mnemonic: CLAT
+              variable: latitude
               upperBound: 42.5
           - bounding:
-              mnemonic: CLAT
+              variable: latitude
               lowerBound: 35
           - bounding:
-              mnemonic: CLON
+              variable: longitude
               upperBound: -68
               lowerBound: -86.3
 
         splits:
           hour:
-           category:
-             mnemonic: HOUR
+            category:
+              variable: timestamp_hour
           minute:
             category:
-              mnemonic: MINU
-
-        variables:
-          timestamp:
-            datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-              second: SECO
-          longitude:
-            mnemonic: CLON
-            transforms:
-              - offset: 0
-          latitude:
-            mnemonic: CLAT
-          radiance:
-            mnemonic: TMBR
+              variable: timestamp_minute
 
     ioda:
       backend: netcdf

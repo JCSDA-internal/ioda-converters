@@ -7,8 +7,6 @@
 #pragma once
 
 #include "IngesterTypes.h"
-#include "BufrParser/BufrTypes.h"
-
 
 namespace Ingester
 {

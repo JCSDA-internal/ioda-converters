@@ -7,45 +7,41 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
-      mnemonicSets:
-        - mnemonics: [SAID, SIID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH] 
-        - mnemonics: [LSQL, HOLS, HMSL]
-        - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
-          channels : 1-5
 
       exports:
         variables:
           timestamp:
             datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-              second: SECO
-          height: 
-            mnemonic: HMSL
-          hols: 
-            mnemonic: HOLS
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
+          height:
+            query: "*/HMSL"
+          hols:
+            query: "*/HOLS"
           fovn:
-            mnemonic: FOVN 
+            query: "*/FOVN"
           lsql:
-            mnemonic: LSQL
+            query: "*/LSQL"
           longitude:
-            mnemonic: CLON
+            query: "*/CLON"
+            transforms:
+              - offset: 50
           latitude:
-            mnemonic: CLAT
+            query: "*/CLAT"
           sza:
-            mnemonic: SOZA
+            query: "*/SOZA"
           saz:
-            mnemonic: SOLAZI
+            query: "*/SOLAZI"
           vza:
-            mnemonic: SAZA
+            query: "*/SAZA"
           vaz:
-            mnemonic: BEARAZ
+            query: "*/BEARAZ"
           radiance:
-            mnemonic: TMBR
+            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
     
     ioda:
       backend: netcdf
@@ -76,7 +72,7 @@ observations:
 
         - name: "heightOfSurface@MetaData"
           source: variables/hols
-          dimensions: ["nlocs"]
+          dimensions: [ "nlocs" ]
           longName: "Height of Land Surface"
           units: "meters"
 

@@ -24,7 +24,6 @@
 #include "oops/util/IntSetParser.h"
 
 #include "BufrParser/BufrDescription.h"
-#include "BufrParser/BufrMnemonicSet.h"
 #include "IodaEncoder/IodaDescription.h"
 
 
@@ -47,7 +46,7 @@ namespace Ingester
                         auto bufrConf = obsConf.getSubConfiguration("obs space");
                         auto description = Ingester::BufrDescription(bufrConf);
 
-                        EXPECT(description.getMnemonicSets().size() > 0);
+                        // EXPECT(description.getMnemonicSets().size() > 0);
                         EXPECT(description.getExport().getVariables().size() > 0);
                     }
                     else

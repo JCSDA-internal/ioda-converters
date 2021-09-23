@@ -13,7 +13,6 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
-#include "BufrTypes.h"
 #include "Exports/Export.h"
 
 
@@ -41,16 +40,12 @@ namespace Ingester
         inline void setExport(const Export& newExport) { export_ = newExport; }
 
         // Getters
-        inline std::vector<BufrMnemonicSet> getMnemonicSets() const { return mnemonicSets_; }
         inline std::string filepath() const { return filepath_; }
         inline bool isWmoFormat() const { return isWmoFormat_; }
         inline std::string tablepath() const { return tablepath_; }
         inline Export getExport() const { return export_; }
 
      private:
-        /// \brief Sets of mnemonic strings for the data to read.
-        std::vector<BufrMnemonicSet> mnemonicSets_;
-
         /// \brief Specifies the relative path to the BUFR file to read.
         std::string filepath_;
 

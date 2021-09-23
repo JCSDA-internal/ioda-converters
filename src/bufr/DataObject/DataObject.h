@@ -13,6 +13,7 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
+
 namespace Ingester
 {
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
@@ -41,6 +42,44 @@ namespace Ingester
 
         /// \brief Get number of rows represented in the data.
         virtual size_t nrows() const = 0;
+
+        /// \brief Get float value for a given row and column.
+        /// \param row Row number to check
+        /// \param col Column number to check
+        /// \return Float value at the given row and column.
+        virtual float getFloat(size_t row, size_t col) const = 0;
+
+        /// \brief Get string value for a given row and column.
+        /// \param row Row number to check
+        /// \param col Column number to check
+        /// \return String value at the given row and column.
+        virtual std::string getString(size_t row, size_t col) const = 0;
+
+        /// \brief Get int value for a given row and column.
+        /// \param row Row number to check
+        /// \param col Column number to check
+        /// \return Int value at the given row and column.
+        virtual int getInt(size_t row, size_t col) const = 0;
+
+        /// \brief Get vector of float values for a given column.
+        /// \param col Column number
+        /// \return Vector of float values at the given column.
+        virtual std::vector<float> getFloats(size_t col=0) const = 0;
+
+        /// \brief Get vector of string values for a given column.
+        /// \param col Column number
+        /// \return Vector of string values at the given column.
+        virtual std::vector<std::string> getStrings(size_t col=0) const = 0;
+
+        /// \brief Get vector of int values for a given column.
+        /// \param col Column number
+        /// \return Vector of int values at the given column.
+        virtual std::vector<int> getInts(size_t col=0) const = 0;  
+
+        /// \brief Slice the data object given a vector of row indices.
+        /// \param rowIndices Vector of row indices to slice on.
+        /// \return Slice of the data object.
+        virtual std::shared_ptr<DataObject> slice(const std::vector<size_t>& rowIndices) const = 0;      
     };
 }  // namespace Ingester
 

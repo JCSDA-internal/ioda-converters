@@ -7,55 +7,51 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/bufr_satwnd_old_format.bufr"
-      mnemonicSets:
-        - mnemonics: [SAID, CLAT, CLON, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM]
-        - mnemonics: [HAMD, PRLC, WDIR, WSPD]
-        - mnemonics: [GNAP, PCCF]
-          channels: 1-12
 
       exports:
-        filters:
-          - bounding:
-              mnemonic: CLON
-              lowerBound: -180
-              upperBound: 180
         variables:
           satellite:
-            mnemonic: SAID
+            query: "*/SAID"
           datetime:
             datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-              second: SECO
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
           longitude:
-            mnemonic: CLON
+            query: "*/CLON"
           latitude:
-            mnemonic: CLAT
+            query: "*/CLAT"
           satellite_wind_calculation_method:
-            mnemonic: SWCM
+            query: "*/SWCM"
           satellite_zenith_angle:
-            mnemonic: SAZA
+            query: "*/SAZA"
           satellite_channel_center_frequency:
-            mnemonic: SCCF
+            query: "*/SCCF"
           originating_generating_center:
-            mnemonic: OGCE
+            query: "*/OGCE"
           satellite_wind_quality_mark:
-            mnemonic: SWQM
+            query: "*/SWQM"
           height_assignment_method:
-            mnemonic: HAMD
+            query: "*/MDPT/HAMD"
           pressure:
-            mnemonic: PRLC
+            query: "*/PRLC"
           wind_direction:
-            mnemonic: WDIR
+            query: "*/WDIR"
           wind_speed:
-            mnemonic: WSPD
+            query: "*/WSPD"
           generating_application:
-            mnemonic: GNAP
+            query: "[*/GQCPRMS/GNAP[1], */QCPRMS/GNAP[1]]"
           percent_confidence:
-            mnemonic: PCCF
+            query: "[*/GQCPRMS/PCCF[1], */QCPRMS/PCCF[1]]"
+
+        filters:
+          - bounding:
+              variable: longitude
+              lowerBound: -180
+              upperBound: 180
 
     ioda:
       backend: netcdf

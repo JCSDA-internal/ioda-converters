@@ -15,7 +15,6 @@
 #include "eckit/filesystem/PathName.h"
 
 #include "BufrParser/BufrDescription.h"
-#include "BufrParser/BufrMnemonicSet.h"
 #include "BufrParser/BufrParser.h"
 #include "IodaEncoder/IodaDescription.h"
 #include "IodaEncoder/IodaEncoder.h"

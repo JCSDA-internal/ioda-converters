@@ -18,33 +18,20 @@ list(APPEND _ingester_srcs
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h
   BufrParser/BufrDescription.cpp
-  BufrParser/BufrMnemonicSet.h
-  BufrParser/BufrMnemonicSet.cpp
-  BufrParser/BufrTypes.h
-  BufrParser/BufrCollectors/BufrAccumulator.cpp
-  BufrParser/BufrCollectors/BufrAccumulator.h
-  BufrParser/BufrCollectors/BufrCollector.cpp
-  BufrParser/BufrCollectors/BufrCollector.h
-  BufrParser/BufrCollectors/BufrIntCollector.cpp
-  BufrParser/BufrCollectors/BufrIntCollector.h
-  BufrParser/BufrCollectors/BufrRepCollector.cpp
-  BufrParser/BufrCollectors/BufrRepCollector.h
-  BufrParser/BufrCollectors/BufrCollectors.cpp
-  BufrParser/BufrCollectors/BufrCollectors.h
   BufrParser/Exports/Export.h
   BufrParser/Exports/Export.cpp
-  BufrParser/Exports/RowSlice.h
   BufrParser/Exports/Filters/Filter.h
   BufrParser/Exports/Filters/BoundingFilter.h
   BufrParser/Exports/Filters/BoundingFilter.cpp
   BufrParser/Exports/Splits/Split.h
+  BufrParser/Exports/Splits/Split.cpp
   BufrParser/Exports/Splits/CategorySplit.h
   BufrParser/Exports/Splits/CategorySplit.cpp
   BufrParser/Exports/Variables/Variable.h
   BufrParser/Exports/Variables/DatetimeVariable.h
   BufrParser/Exports/Variables/DatetimeVariable.cpp
-  BufrParser/Exports/Variables/MnemonicVariable.h
-  BufrParser/Exports/Variables/MnemonicVariable.cpp
+  BufrParser/Exports/Variables/QueryVariable.h
+  BufrParser/Exports/Variables/QueryVariable.cpp
   BufrParser/Exports/Variables/Transforms/Transform.h
   BufrParser/Exports/Variables/Transforms/OffsetTransform.h
   BufrParser/Exports/Variables/Transforms/OffsetTransform.cpp
@@ -80,7 +67,7 @@ target_include_directories(ingester PUBLIC
   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
 )
 
-add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
+add_library( ${PROJECT_NAME}::ingester ALIAS ingester)
 
 ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp

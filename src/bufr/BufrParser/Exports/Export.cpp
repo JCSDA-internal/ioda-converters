@@ -14,7 +14,7 @@
 
 #include "Filters/BoundingFilter.h"
 #include "Splits/CategorySplit.h"
-#include "Variables/MnemonicVariable.h"
+#include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
 #include "Variables/Transforms/Transform.h"
 #include "Variables/Transforms/TransformBuilder.h"
@@ -32,18 +32,20 @@ namespace
         {
             const char* Datetime = "datetime";
             const char* Mnemonic = "mnemonic";
+            const char* Query = "query";
+            const char* GroupByField = "group_by";
         }  // namespace Variable
 
         namespace Split
         {
             const char* Category = "category";
-            const char* Mnemonic = "mnemonic";
+            const char* Variable = "variable";
             const char* NameMap = "map";
         }  // namespace Split
 
         namespace Filter
         {
-            const char* Mnemonic = "mnemonic";
+            const char* Variable = "variable";
             const char* Bounding = "bounding";
             const char* UpperBound = "upperBound";
             const char* LowerBound = "lowerBound";
@@ -93,13 +95,30 @@ namespace Ingester
             if (subConf.has(ConfKeys::Variable::Datetime))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
-                variable = std::make_shared<DatetimeVariable>(dtconf);
+                variable = std::make_shared<DatetimeVariable>(key, dtconf);
             }
             else if (subConf.has(ConfKeys::Variable::Mnemonic))
             {
+                std::ostringstream errMsg;
+                errMsg << "Obsolete format::exports::variable of type " << key << std::endl;
+                errMsg << "Use \"query:\" instead.";
+                throw eckit::BadParameter(errMsg.str());
+            }
+            else if (subConf.has(ConfKeys::Variable::Query))
+            {
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
-                variable = std::make_shared<MnemonicVariable>(
-                    subConf.getString(ConfKeys::Variable::Mnemonic), transforms);
+                const auto& query = subConf.getString(ConfKeys::Variable::Query);
+
+                std::string groupByField = "";
+                if (subConf.has(ConfKeys::Variable::GroupByField))
+                {
+                    groupByField = subConf.getString(ConfKeys::Variable::GroupByField);
+                }
+
+                variable = std::make_shared<QueryVariable>(key,
+                                                           query,
+                                                           groupByField,
+                                                           transforms);
             }
             else
             {
@@ -108,7 +127,7 @@ namespace Ingester
                 throw eckit::BadParameter(errMsg.str());
             }
 
-            variables_.insert({key, variable});
+            variables_.push_back(variable);
         }
     }
 
@@ -142,9 +161,9 @@ namespace Ingester
                     }
                 }
 
-                split = std::make_shared<CategorySplit>(
-                    catConf.getString(ConfKeys::Split::Mnemonic),
-                    nameMap);
+                split = std::make_shared<CategorySplit>(key,
+                                                catConf.getString(ConfKeys::Split::Variable),
+                                                        nameMap);
             }
             else
             {
@@ -153,7 +172,7 @@ namespace Ingester
                 throw eckit::BadParameter(errMsg.str());
             }
 
-            splits_.insert({key, split});
+            splits_.push_back(split);
         }
     }
 
@@ -190,7 +209,7 @@ namespace Ingester
                 }
 
                 filter = std::make_shared<BoundingFilter>(
-                    filterConf.getString(ConfKeys::Filter::Mnemonic),
+                    filterConf.getString(ConfKeys::Filter::Variable),
                     lowerBound,
                     upperBound);
             }
