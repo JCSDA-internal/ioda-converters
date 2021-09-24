@@ -130,7 +130,8 @@ class GoesLatLon:
     @staticmethod
     def _calc_scan_position(latitude):
         """
-        Calculates the scan position...
+        Calculates the scan position.
+        latitude - the latitude data array
         """
         scan_position = np.full(latitude.shape, 1, dtype='int32')
         return scan_position
@@ -139,6 +140,8 @@ class GoesLatLon:
         """
         Calculates the sensor zenith, azimuth, and view angles. These angles are limited to values between -80 and 80
         degrees due to a constraint in CRTM.
+        latitude - the latitude data array
+        longitude - the longitude data array
         """
         goes_imager_projection = self._source_dataset.variables['goes_imager_projection']
         r_eq = goes_imager_projection.getncattr('semi_major_axis')
