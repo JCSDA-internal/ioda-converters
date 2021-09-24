@@ -58,7 +58,7 @@ class GoesConverter:
         """
         Constructor
         input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
-        latlon_file_path - The path to an existing Goes LatLon file or if it does not exist the path to write the file
+        latlon_file_path - The path to an existing GoesLatLon file or if it does not exist the path to write the file
         output_file_path_rf - The path to write the IODAv2 reflectance factor data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
         include_rf - Boolean value indicating whether to create the reflectance factor output data file: False (default)
