@@ -271,12 +271,12 @@ class Goes:
         self._dqf_data_array = self._dqf_data_array.reshape(shape)
         self._dqf_data_array = self._goes_util.filter_data_array_by_yaw_flip_flag(self._dqf_data_array)
         self._dqf_data_array = np.where(self._dqf_data_array == 255, -999, self._dqf_data_array)
-        self._dqf_data_array = self._goes_util.filter_data_array_by_fill_value(self._dqf_data_array)
+        self._dqf_data_array = self._goes_util.filter_data_array_by_nonexistent_indices(self._dqf_data_array)
 
         self._rad_data_array = np.array(self._rad_data_array)
         self._rad_data_array = self._rad_data_array.reshape(shape)
         self._rad_data_array = self._goes_util.filter_data_array_by_yaw_flip_flag(self._rad_data_array)
-        self._rad_data_array = self._goes_util.filter_data_array_by_fill_value(self._rad_data_array)
+        self._rad_data_array = self._goes_util.filter_data_array_by_nonexistent_indices(self._rad_data_array)
 
         if self._metadata_dict['abi_channel'] < 7:
             self._create_obsvalue_rf_data_array()

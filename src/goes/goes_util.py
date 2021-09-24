@@ -19,7 +19,7 @@ class GoesUtil:
         self._increment = None
         self._yaw_flip_flag = None
         self._resolution = None
-        self._fill_value_index_array = None
+        self._nonexistent_indices_data_array = None
 
     def set_yaw_flip_flag(self, yaw_flip_flag):
         """
@@ -36,12 +36,12 @@ class GoesUtil:
         self._resolution = resolution
         self._increment = int(self._resolution / 2)
 
-    def set_fill_value_index_array(self, fill_value_index_array):
+    def set_nonexistent_indices_data_array(self, nonexistent_indices_data_array):
         """
-        Sets the fill_value_index_array
-        fill_value_index_array - an array of indices to remove
+        Sets the nonexistent_indices_array
+        nonexistent_indices_array - an array of indices to remove
         """
-        self._fill_value_index_array = fill_value_index_array
+        self._nonexistent_indices_data_array = nonexistent_indices_data_array
 
     def subsample_1d(self, data_array):
         """
@@ -109,9 +109,10 @@ class GoesUtil:
         else:
             return data_array
 
-    def filter_data_array_by_fill_value(self, data_array):
+    def filter_data_array_by_nonexistent_indices(self, data_array):
         """
-        Returns a data array filtered by bad latitude indices.
+        Returns a data array filtered by nonexistent latitude indices. A nonexistent latitude has a value of -999
+        assigned.
         data_array - a one dimensional data array
         """
-        return np.delete(data_array, self._fill_value_index_array)
+        return np.delete(data_array, self._nonexistent_indices_data_array)

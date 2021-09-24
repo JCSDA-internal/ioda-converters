@@ -70,11 +70,7 @@ class GoesConverter:
         self._output_file_path_bt = output_file_path_bt
         self._resolution = resolution
         self._include_rf = include_rf
-
-        print(self._include_rf, self._resolution)
-
         self._latlon_dataset = None
-        self._lat_fill_value_index_array = None
         self._check_arguments()
 
     def _check_arguments(self):
@@ -572,7 +568,8 @@ class GoesConverter:
         else:
             self._create_latlon_dataset()
         self._latlon_dataset = Dataset(self._latlon_file_path, 'r')
-        self._goes_util.set_fill_value_index_array(ma.getdata(self._latlon_dataset.variables['nindices']).real)
+        nonexistent_indices_data_array = ma.getdata(self._latlon_dataset.variables['nonexistent_indices']).real
+        self._goes_util.set_nonexistent_indices_data_array(nonexistent_indices_data_array)
         self._load_all_goes()
         self._convert_bt()
         if self._include_rf:
