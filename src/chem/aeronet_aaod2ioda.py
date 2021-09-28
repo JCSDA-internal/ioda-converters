@@ -12,7 +12,7 @@
 #
 # Usage:
 #        python aeronet_aaod2ioda.py -i testinput -o aeronet_aaod.nc
-#        -i: input directory to AERONET inversion files
+#        -i: input path of AERONET inversion files
 #            (aeronet_cad.dat, aeronet_ssa.dat, aeronet_tab.dat)
 #        -o: output IODA file
 #
@@ -173,11 +173,13 @@ if __name__ == '__main__':
     loc_mdata['longitude'] = np.array(f3['longitude'])
     loc_mdata['station_elevation'] = np.array(f3['elevation'])
     loc_mdata['surface_type'] = np.full((nlocs), 1)
+
     # Whether inversion data pass Level 2.0 QC without the threshold of aod_440>=0.4 (0:yes, 1: no)
     loc_mdata['l20_without_aod440_0.4_threshold_qc'] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1,
                                                                 0, 1)
     # Whether inversion data pass Level 2.0 QC with the threshold of aod_440>=0.4 (0:yes, 1: no)
     loc_mdata['l20_qc'] = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
+
     # AERONET inversion data QC level (0 for Level 2.0 and 1 for Level 1.5)
     loc_mdata['inversion_l20_qc'] = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
 
