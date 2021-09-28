@@ -54,7 +54,7 @@ from goes_util import GoesUtil
 class GoesConverter:
 
     def __init__(self, input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt, include_rf=False,
-                 resolution=2):
+                 resolution=8):
         """
         Constructor
         input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
@@ -62,7 +62,7 @@ class GoesConverter:
         output_file_path_rf - The path to write the IODAv2 reflectance factor data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
         include_rf - Boolean value indicating whether to create the reflectance factor output data file: False (default)
-        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, 64
+        resolution - The resolution in km: 8 (default), 4, 8, 16, 32, 64
         """
         self._input_file_paths = input_file_paths
         self._latlon_file_path = latlon_file_path
@@ -90,8 +90,8 @@ class GoesConverter:
 
     def _initialize(self):
         """
-        Create two local dictionaries contained the Goes class instances for brightness temperature (ABI channels 1-6)
-        and reflectance factor (ABI channels 7-16). This function also assigns the file path for a template GOES file
+        Create two local dictionaries contained the Goes class instances for reflectance factor (ABI channels 1-6)
+        and brightness temperature (ABI channels 7-16). This function also assigns the file path for a template GOES file
         from ABI channel 7.
         """
         self._goes_util = GoesUtil()
