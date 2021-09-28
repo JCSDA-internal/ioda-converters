@@ -550,11 +550,11 @@ class GoesConverter:
         """
         Calls the Goes load method on all input data files.
         """
-        for key in self._goes_dict_rf.keys():
-            self._goes_dict_rf[key].load()
+        for key in self._goes_dict_bt.keys():
+            self._goes_dict_bt[key].load()
         if self._include_rf:
-            for key in self._goes_dict_bt.keys():
-                self._goes_dict_bt[key].load()
+            for key in self._goes_dict_rf.keys():
+                self._goes_dict_rf[key].load()
 
     def convert(self):
         """
