@@ -47,6 +47,9 @@ list( APPEND test_input
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
+  testinput/aeronet_ssa.dat
+  testinput/aeronet_cad.dat
+  testinput/aeronet_tab.dat
 )
 
 list( APPEND test_output
@@ -88,6 +91,7 @@ list( APPEND test_output
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
   testoutput/aeronet_aod.nc
+  testoutput/aeronet_aaod.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -586,6 +590,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
 			  -i testinput/aeronet_aod.dat
 			  -o testrun/aeronet_aod.nc"
 			  aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
+                  TYPE    SCRIPT
+		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+		  ARGS    netcdf
+		          "${CMAKE_BINARY_DIR}/bin/aeronet_aaod2ioda.py
+			  -i testinput
+			  -o testrun/aeronet_aaod.nc"
+			  aeronet_aaod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
