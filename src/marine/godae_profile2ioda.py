@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -19,7 +19,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -151,7 +151,7 @@ class profile(object):
 
 class IODA(object):
 
-    def __init__(self, filename, date, varDict, obsList):
+    def __init__(self, filename, date, varDict, varDims, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -169,19 +169,18 @@ class IODA(object):
             ("datetime", "string")
         ]
 
-        self.AttrData = {
+        self.GlobalAttrs = {
             'odb_version': 1,
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
             value = self.varDict[key]
-            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
-            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
-            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
+            self.keyDict[key]['valKey'] = value, iconv.OvalName()
+            self.keyDict[key]['errKey'] = value, iconv.OerrName()
+            self.keyDict[key]['qcKey'] = value, iconv.OqcName()
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -220,8 +219,11 @@ class IODA(object):
 
                 recKey += 1
 
-        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
+        ObsVars, nlocs = iconv.ExtractObsData(self.data)
+        DimDict = {'nlocs' : nlocs}
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+        self.writer.BuildIoda(ObsVars, varDims, varAttrs, self.GlobalAttrs)
 
         return
 
@@ -258,7 +260,12 @@ def main():
         'ob_sal': 'sea_water_salinity'
     }
 
-    IODA(foutput, fdate, varDict, obsList)
+    varDims = {
+        'sea_water_temperature': ['nlocs'],
+        'sea_water_salinity': ['nlocs'],
+    }
+
+    IODA(foutput, fdate, varDict, varDims, obsList)
 
 
 if __name__ == '__main__':

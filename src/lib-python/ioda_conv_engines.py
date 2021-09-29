@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import ioda
 import numpy as np
+from collections import OrderedDict
 
 # define vars
 _metagroup = 'MetaData'
@@ -45,7 +46,7 @@ class IodaWriter(object):
         # open IODA obs backend
         self.obsspace = ioda.ObsSpace(Fname, mode='w', dim_dict=DimDict)
 
-    def WriteObsVars(self, ObsVars, VarDims, VarMdata, VarUnits):
+    def WriteObsVars(self, ObsVars, VarDims, VarAttrs, VarUnits):
         # this method will create variables in the ouput obs group and
         # fill them with the provided data and metadata
         for VarKey, Vvals in ObsVars.items():
@@ -67,7 +68,7 @@ class IodaWriter(object):
             tmpVar.write_data(Vvals)
             # add var metadata
             try:
-                for MetaVar, MetaVal in VarMdata[Vname].items():
+                for MetaVar, MetaVal in VarAttrs[Vname].items():
                     tmpVar.write_attr(MetaVar, MetaVal)
             except KeyError:
                 pass  # no metadata for this variable
@@ -80,12 +81,83 @@ class IodaWriter(object):
                     # add error message here later, eventually all need units!
                     pass
 
-    def WriteGlobalAttrs(self, AttrData):
-        # this method will create global attributes from AttrData dictionary
-        for AttrKey, AttrVal in AttrData.items():
+    def WriteGlobalAttrs(self, GlobalAttrs):
+        # this method will create global attributes from GlobalAttrs dictionary
+        for AttrKey, AttrVal in GlobalAttrs.items():
             self.obsspace.write_attr(AttrKey, AttrVal)
 
-    def BuildIoda(self, ObsVars, VarDims, VarMdata, AttrData,
+    def BuildIoda(self, ObsVars, VarDims, VarAttrs, GlobalAttrs,
                   VarUnits={}, TestData=None):
-        self.WriteObsVars(ObsVars, VarDims, VarMdata, VarUnits)
-        self.WriteGlobalAttrs(AttrData)
+        self.WriteObsVars(ObsVars, VarDims, VarAttrs, VarUnits)
+        self.WriteGlobalAttrs(GlobalAttrs)
+
+def ExtractObsData(ObsData):
+    ############################################################
+    # This method will extract information from the ObsData
+    # dictionary and reformat it into a more amenable form for
+    # writing into the output file.
+
+    _nlocs = 0
+    _defaultF4 = 9e9
+    _defaultI4 = 99999999
+
+    VarNames = set()
+
+    # Walk through the structure and get counts so arrays
+    # can be preallocated, and variable numbers can be assigned
+    ObsVarList = []
+    ObsVarExamples = []
+    VMName = []
+    VMData = {}
+    nrecs = 0
+    for RecKey, RecDict in ObsData.items():
+        nrecs += 1
+        for LocKey, LocDict in RecDict.items():
+            _nlocs += 1
+            for VarKey, VarVal in LocDict.items():
+                if (VarKey[1] == _oval_name):
+                    VarNames.add(VarKey[0])
+                if (VarKey not in ObsVarList):
+                    ObsVarList.append(VarKey)
+                    ObsVarExamples.append(VarVal)
+    VarList = sorted(list(VarNames))
+
+    # Preallocate arrays and fill them up with data from the dictionary
+    ObsVars = OrderedDict()
+    for o in range(len(ObsVarList)):
+        VarType = type(ObsVarExamples[o])
+        if (VarType in [float, np.float32, np.float64]):
+            defaultval = _defaultF4
+            defaultvaltype = np.float32
+        elif (VarType in [int, np.int64, np.int32, np.int8]):
+            defaultval = _defaultI4    # convert long to int
+            defaultvaltype = np.int32
+        elif (VarType in [str, np.str_]):
+            defaultval = ''
+            defaultvaltype = np.str_
+        elif (VarType in [np.ma.core.MaskedConstant]):
+            # If we happened to pick an invalid value (inf, nan, etc.) from
+            # a masked array, then the type is a MaskedConstant, and that implies
+            # floating point values.
+            defaultval = _defaultF4
+            defaultvaltype = np.float32
+        else:
+            print('Warning: VarType', VarType, ' not in float, int, str for:', ObsVarList[o])
+            continue
+        ObsVars[ObsVarList[o]] = np.full((_nlocs), defaultval, dtype=defaultvaltype)
+
+    RecNum = 0
+    LocNum = 0
+    for RecKey, RecDict in ObsData.items():
+        RecNum += 1
+
+        # Exract record metadata encoded in the keys
+        for LocKey, LocDict in RecDict.items():
+            LocNum += 1
+
+            for VarKey, VarVal in LocDict.items():
+                if (type(VarVal) in [np.ma.core.MaskedConstant]):
+                    VarVal = _defaultF4
+                ObsVars[VarKey][LocNum-1] = VarVal
+
+    return ObsVars, _nlocs
