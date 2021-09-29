@@ -5,15 +5,14 @@
 #        downloaded from from NASA websit
 #        (https://aeronet.gsfc.nasa.gov/print_web_data_help_v3_inv_new.html)
 #        and converts to IODA format.
-#        Inversion products include conicident AOT data with almucantar
-#        retrieval (CAD), single scattering albedo (SSA),
-#        AOD aborption (TAB) for inversion types of ALM15 or ALM20 and
+#        Inversion products here include conicident AOT data with almucantar
+#        retrieval (CAD), AOD aborption (TAB) for inversion types of ALM15 or ALM20
 #        at wavelengths of 440/675/870/1020nm)
 #
 # Usage:
 #        python aeronet_aaod2ioda.py -i testinput -o aeronet_aaod.nc
-#        -i: input path of AERONET inversion files
-#            (aeronet_cad.dat, aeronet_ssa.dat, aeronet_tab.dat)
+#        -i: input path to directory containing  AERONET inversion product
+#            files of aeronet_cad.dat and aeronet_tab.dat
 #        -o: output IODA file
 #
 # Contact:
@@ -90,8 +89,8 @@ if __name__ == '__main__':
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
                     '-i', '--input',
-                    help="path of AERONET inversion ASCII files that include "
-                         " aeronet_cad.dat, aeronet_ssa.dat and aeronet_tab.dat",
+                    help="path to directory containing AERONET inversion product "
+                         " files of aeronet_cad.dat and aeronet_tab.dat",
                     type=str, required=True) 
     required.add_argument(
                     '-o', '--output',
@@ -103,20 +102,17 @@ if __name__ == '__main__':
     outfile = args.output
 
     # Read and extract online AERONET inversion data
-    print('Read and extract AERONET inversion data: CAD, SSA, TAB')
-    f3_cad_all = add_data('%s/aeronet_cad.dat' % (indir))
-    f3_ssa_all = add_data('%s/aeronet_ssa.dat' % (indir))
-    f3_tab_all = add_data('%s/aeronet_tab.dat' % (indir))
+    print('Read and extract AERONET inversion data: CAD, TAB')
+    f3_cad_all = add_data(os.path.join(f"{indir}/", "aeronet_cad.dat"))
+    f3_tab_all = add_data(os.path.join(f"{indir}/", "aeronet_tab.dat"))
     f3_cad = f3_cad_all[['time', 'siteid', 'longitude', 'latitude', 'elevation',
                          'if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)',
                          'if_aod_is_l2', 'inversion_data_quality_level',
                          'aod_coincident_input[440nm]', 'aod_coincident_input[675nm]',
                          'aod_coincident_input[870nm]', 'aod_coincident_input[1020nm]']]
-    f3_ssa = f3_ssa_all[['single_scattering_albedo[440nm]', 'single_scattering_albedo[675nm]',
-                         'single_scattering_albedo[870nm]', 'single_scattering_albedo[1020nm]']]
     f3_tab = f3_tab_all[['absorption_aod[440nm]', 'absorption_aod[675nm]',
                          'absorption_aod[870nm]', 'absorption_aod[1020nm]']]
-    f3 = pd.concat([f3_cad, f3_ssa, f3_tab], axis=1, join='inner')
+    f3 = pd.concat([f3_cad, f3_tab], axis=1, join='inner')
 
     # Define wavelengths, channels and frequencies of AERONET inversion data
     aeronetinv_wav = np.array([440., 675, 870., 1020.], dtype=np.float32)
@@ -150,38 +146,31 @@ if __name__ == '__main__':
                'aerosol_optical_depth_5': 'aod_coincident_input[675nm]',
                'aerosol_optical_depth_6': 'aod_coincident_input[870nm]',
                'aerosol_optical_depth_7': 'aod_coincident_input[1020nm]',
-               'single_scattering_albedo_3': 'single_scattering_albedo[440nm]',
-               'single_scattering_albedo_5': 'single_scattering_albedo[675nm]',
-               'single_scattering_albedo_6': 'single_scattering_albedo[870nm]',
-               'single_scattering_albedo_7': 'single_scattering_albedo[1020nm]',
                'absorption_aerosol_optical_depth_3': 'absorption_aod[440nm]',
                'absorption_aerosol_optical_depth_5': 'absorption_aod[675nm]',
                'absorption_aerosol_optical_depth_6': 'absorption_aod[870nm]',
                'absorption_aerosol_optical_depth_7': 'absorption_aod[1020nm]'}
 
     # Define varDict variables
-    print('Define varDict variables')
     for key, value in obsvars.items():
-        print(key, value)
         varDict[key]['valKey'] = key, writer.OvalName()
         varDict[key]['errKey'] = key, writer.OerrName()
         varDict[key]['qcKey'] = key, writer.OqcName()
 
     # Define loc_mdata
-    print('Define loc_mdata')
     loc_mdata['latitude'] = np.array(f3['latitude'])
     loc_mdata['longitude'] = np.array(f3['longitude'])
     loc_mdata['station_elevation'] = np.array(f3['elevation'])
     loc_mdata['surface_type'] = np.full((nlocs), 1)
 
-    # Whether inversion data pass Level 2.0 QC without the threshold of aod_440>=0.4 (0:yes, 1: no)
-    loc_mdata['l20_without_aod440_0.4_threshold_qc'] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1,
+    # Whether aaod reaches Level 2.0 without the threshold of aod440 >= 0.4 (0: yes, 1: no)
+    loc_mdata['aaod_l2_qc_without_aod440_0.4_threshold'] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1,
                                                                 0, 1)
-    # Whether inversion data pass Level 2.0 QC with the threshold of aod_440>=0.4 (0:yes, 1: no)
-    loc_mdata['l20_qc'] = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
+    # Whether "Coincident_AOD440nm" in "aeronet_cad.txt" reaches Level 2.0 (0: yes, 1: no)
+    loc_mdata['aod_l2_qc'] = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
 
-    # AERONET inversion data QC level (0 for Level 2.0 and 1 for Level 1.5)
-    loc_mdata['inversion_l20_qc'] = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
+    # Whether aaod reaches Level 2.0 with the threshold of aod440 >= 0.4 (0: yes, 1: no)
+    loc_mdata['aaod_l2_qc'] = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
 
     c = np.empty([nlocs], dtype='S50')
     c[:] = np.array(f3.siteid)
@@ -194,7 +183,6 @@ if __name__ == '__main__':
     loc_mdata['datetime'] = writer.FillNcVector(d, 'datetime')
 
     # Define var_mdata
-    print('Define var_mdata')
     var_mdata['frequency'] = writer.FillNcVector(frequency, 'float')
     var_mdata['sensor_channel'] = writer.FillNcVector(aeronetinv_chan, 'integer')
 
@@ -209,13 +197,11 @@ if __name__ == '__main__':
             outdata[varDict[key]['errKey']] = np.array(nc.default_fillvals['f4'], dtype=np.float32)
 
     # Define global atrributes
-    print('Define global atrributes')
     AttrData = {'observation_type': 'AERONET inversion data',
 		'sensor': "aeronet",
 		'surface_type': 'ocean=0, land=1, costal=2'}
 
     # Write out IODA V1 NC files
-    print('Write into IODA format file: ' + outfile)
     writer._nvars = len(aeronetinv_wav)
     writer._nlocs = nlocs
     writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units)
