@@ -149,12 +149,16 @@ class GoesLatLon:
             goes_imager_projection.getncattr('semi_major_axis')
         lat_0 = goes_imager_projection.getncattr('latitude_of_projection_origin')
         lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
+        lat_0_rad = lat_0 * np.pi / 180.0
+        lon_0_rad = lon_0 * np.pi / 180.0
+        latitude_rad = latitude * np.pi / 180.0
+        longitude_rad = longitude * np.pi / 180.0
         h_sqr = np.power(h, 2.0)
         r_eq_sqr = np.power(r_eq, 2.0)
-        beta = np.arccos(np.cos(latitude - lat_0) * np.cos(longitude - lon_0))
+        beta = np.arccos(np.cos(latitude_rad - lat_0_rad) * np.cos(longitude_rad - lon_0_rad))
         sqrt_comp = h_sqr + r_eq_sqr - (2.0 * h * r_eq * np.cos(beta))
         sensor_zenith_angle = np.arcsin((h * np.sin(beta)) / np.sqrt(sqrt_comp)) * 180.0 / np.pi
-        sensor_azimuth_angle = np.arcsin(np.sin(lon_0 - longitude) / np.sin(beta)) * 180.0 / np.pi
+        sensor_azimuth_angle = np.arcsin(np.sin(lon_0_rad - longitude_rad) / np.sin(beta)) * 180.0 / np.pi
         sensor_view_angle = sensor_zenith_angle
         sensor_zenith_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
         sensor_azimuth_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)

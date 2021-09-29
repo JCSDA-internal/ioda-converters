@@ -237,13 +237,14 @@ class GoesConverter:
         dataset.set_auto_scale(True)
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
+        latitude_rad = latitude * np.pi / 180.00
         start_date = self._start_date
         t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
         j = self._day_of_year
         declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
         solar_zenith_angle_data_array = \
-            np.arccos((np.sin(latitude) * np.sin(declin)) + (np.cos(latitude) * np.cos(declin) * np.cos(h)))
+            np.arccos((np.sin(latitude_rad) * np.sin(declin)) + (np.cos(latitude_rad) * np.cos(declin) * np.cos(h)))
         solar_zenith_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
@@ -263,14 +264,17 @@ class GoesConverter:
         dataset.set_auto_scale(True)
         goes_imager_projection = dataset.variables['goes_imager_projection']
         lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
+        lon_0_rad = lon_0 * np.pi / 180.00
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
+        latitude_rad = latitude * np.pi /180.00
+        longitude_rad = longitude * np.pi /180.00
         start_date = self._start_date
         t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
-        beta_0 = np.arccos(np.cos(latitude) * np.cos(longitude - lon_0))
-        solar_azimuth_angle_data_array = np.arcsin((np.sin(h - longitude)) / (np.sin(beta_0)))
+        beta_0 = np.arccos(np.cos(latitude_rad) * np.cos(longitude_rad - lon_0_rad))
+        solar_azimuth_angle_data_array = np.arcsin((np.sin(h - longitude_rad)) / (np.sin(beta_0)))
         solar_azimuth_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_azimuth_angle_data_array)
         solar_azimuth_angle_data_array = solar_azimuth_angle_data_array * 180.0 / np.pi
