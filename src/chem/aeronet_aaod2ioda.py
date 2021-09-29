@@ -82,20 +82,20 @@ def add_data(infile):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=(
-                     'Reads AERONET inversion files downloaded from NASA website '
-                     ' and converts into IODA format')
+            "Reads AERONET inversion files downloaded from NASA website "
+            " and converts into IODA format")
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-                    '-i', '--input',
-                    help="path to directory containing AERONET inversion product "
-                         " files of aeronet_cad.dat and aeronet_tab.dat",
-                    type=str, required=True) 
+        '-i', '--input',
+        help="path to directory containing AERONET inversion product "
+             " files of aeronet_cad.dat and aeronet_tab.dat",
+        type=str, required=True)
     required.add_argument(
-                    '-o', '--output',
-                    help="path and filename of AERONET inversion IODA file",
-                    type=str, required=True)
+        '-o', '--output',
+        help="path and filename of AERONET inversion IODA file",
+        type=str, required=True)
 
     args = parser.parse_args()
     indir = args.input
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         print('No AERONET inversion data available in input files')
         exit(0)
 
-    locationKeyList = [("latitude", "float"), ("longitude", "float"), ("datetime", "string"),]
+    locationKeyList = [("latitude", "float"), ("longitude", "float"), ("datetime", "string")]
     writer = iconv.NcWriter(outfile, locationKeyList)
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -164,12 +164,11 @@ if __name__ == '__main__':
     loc_mdata['surface_type'] = np.full((nlocs), 1)
 
     # Whether aaod reaches Level 2.0 without the threshold of aod440 >= 0.4 (0: yes, 1: no)
-    loc_mdata['aaod_l2_qc_without_aod440_0.4_threshold'] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1,
-                                                                0, 1)
-    # Whether "Coincident_AOD440nm" in "aeronet_cad.txt" reaches Level 2.0 (0: yes, 1: no)
+    loc_mdata['aaod_l2_qc_without_aod440_le_0.4_threshold'] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1, 0, 1)
+    # Whether Coincident_AOD440nm in aeronet_cad.txt reaches Level 2.0 (0: yes, 1: no)
     loc_mdata['aod_l2_qc'] = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
 
-    # Whether aaod reaches Level 2.0 with the threshold of aod440 >= 0.4 (0: yes, 1: no)
+    # Whether aaod reaches Level 2.0 with the threshold of aod440 >= 0.4 (0: yes for inv_type ALM20, 1: no for inv_type ALM15)
     loc_mdata['aaod_l2_qc'] = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
 
     c = np.empty([nlocs], dtype='S50')
@@ -197,9 +196,9 @@ if __name__ == '__main__':
             outdata[varDict[key]['errKey']] = np.array(nc.default_fillvals['f4'], dtype=np.float32)
 
     # Define global atrributes
-    AttrData = {'observation_type': 'AERONET inversion data',
-		'sensor': "aeronet",
-		'surface_type': 'ocean=0, land=1, costal=2'}
+    AttrData = {'observation_type': 'AERONET inversion aaod',
+                'sensor': "aeronet",
+                'surface_type': 'ocean=0, land=1, costal=2'}
 
     # Write out IODA V1 NC files
     writer._nvars = len(aeronetinv_wav)
