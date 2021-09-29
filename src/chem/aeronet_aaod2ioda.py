@@ -165,10 +165,11 @@ if __name__ == '__main__':
 
     # Whether aaod reaches Level 2.0 without the threshold of aod440 >= 0.4 (0: yes, 1: no)
     loc_mdata['aaod_l2_qc_without_aod440_le_0.4_threshold'] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1, 0, 1)
+
     # Whether Coincident_AOD440nm in aeronet_cad.txt reaches Level 2.0 (0: yes, 1: no)
     loc_mdata['aod_l2_qc'] = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
 
-    # Whether aaod reaches Level 2.0 with the threshold of aod440 >= 0.4 (0: yes for inv_type ALM20, 1: no for inv_type ALM15)
+    # aaod inversion type: 0 for ALM20 and 1 for ALM15
     loc_mdata['aaod_l2_qc'] = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
 
     c = np.empty([nlocs], dtype='S50')
@@ -196,7 +197,7 @@ if __name__ == '__main__':
             outdata[varDict[key]['errKey']] = np.array(nc.default_fillvals['f4'], dtype=np.float32)
 
     # Define global atrributes
-    AttrData = {'observation_type': 'AERONET inversion aaod',
+    AttrData = {'observation_type': 'AERONET AAOD',
                 'sensor': "aeronet",
                 'surface_type': 'ocean=0, land=1, costal=2'}
 

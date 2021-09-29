@@ -47,7 +47,6 @@ list( APPEND test_input
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
-  testinput/aeronet_ssa.dat
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
 )
