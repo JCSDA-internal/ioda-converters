@@ -6,7 +6,8 @@
 # formatted data files - one for Brightness Temperature and one for Reflectance Factor (if include_rf is set to True).
 # The following groups, variables, dimensions, and attributes are created using this class. Calculations within this
 # program utilize "Calculating Zenith and Azimuth Angles for GridSat-B1"
-# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf).
+# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf) and the Zeeman_Utility CRTM code at
+# https://github.com/JCSDA-internal/crtm/blob/develop/src/Zeeman/Zeeman_Utility.f90.
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
 #
@@ -189,6 +190,15 @@ class GoesConverter:
         output_dataset.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
         output_dataset['/MetaData/scan_angle'][:] = scan_angle_data_array
 
+    def _create_metadata_elevation_angle_variable(self, output_dataset):
+        """
+        Creates the /MetaData/elevation_angle variable in an output netCDF4 dataset.
+        output_dataset - A netCDF4 Dataset object
+        """
+        elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['elevation_angle'][:].real
+        output_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset['/MetaData/elevation_angle'][:] = elevation_angle_data_array
+
     def _create_metadata_scan_position_variable(self, output_dataset):
         """
         Creates the /MetaData/scan_position variable in an output netCDF4 dataset.
@@ -237,14 +247,25 @@ class GoesConverter:
         dataset.set_auto_scale(True)
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
-        latitude_rad = latitude * np.pi / 180.00
+        longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
+        latitude_rad = latitude * np.pi / 180.0
         start_date = self._start_date
-        t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
-        h = -1.0 * ((t - 12.0) / 12.0)
-        j = self._day_of_year
-        declin = -23.45 * np.cos(((2.0 * np.pi * float(j)) / 365.0) + ((20.0 * np.pi) / 365.0))
+        start_date_tt = start_date.timetuple()
+        julian_day = start_date_tt.tm_yday
+        day_angle = (360.0 / 365.0) * (julian_day - 1.0) * np.pi / 180.0
+        equation_of_time = (0.000075 + (0.001868 * np.cos(day_angle))
+                            - (0.032077 * np.sin(day_angle)) - (0.014615 * np.cos(2.0 * day_angle))
+                            - (0.040890 * np.sin(2.0 * day_angle))) * 229.18 / 60.0
+        universal_time = (start_date.hour * 60 + start_date.minute) / 1440.0
+        local_sun_time = universal_time + equation_of_time + longitude / (360.0 / 24.0)
+        hour_angle = (360.0 / 24.0) * np.mod(local_sun_time + 12.0, 24.0)
+        hour_angle_rad = hour_angle * np.pi / 180.0
+        declin = (0.006918 - 0.399912 * np.cos(day_angle) + 0.070257 * np.sin(day_angle)
+                  - 0.006758 * np.cos(2.0 * day_angle) + 0.000907 * np.sin(2.0 * day_angle)
+                  - 0.002697 * np.cos(3.0 * day_angle) + 0.001480 * np.sin(3.0 * day_angle))
         solar_zenith_angle_data_array = \
-            np.arccos((np.sin(latitude_rad) * np.sin(declin)) + (np.cos(latitude_rad) * np.cos(declin) * np.cos(h)))
+            np.arccos((np.sin(latitude_rad) * np.sin(declin))
+                      + (np.cos(latitude_rad) * np.cos(declin) * np.cos(hour_angle_rad)))
         solar_zenith_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
@@ -264,12 +285,12 @@ class GoesConverter:
         dataset.set_auto_scale(True)
         goes_imager_projection = dataset.variables['goes_imager_projection']
         lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
-        lon_0_rad = lon_0 * np.pi / 180.00
+        lon_0_rad = lon_0 * np.pi / 180.0
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
-        latitude_rad = latitude * np.pi /180.00
-        longitude_rad = longitude * np.pi /180.00
+        latitude_rad = latitude * np.pi / 180.0
+        longitude_rad = longitude * np.pi / 180.0
         start_date = self._start_date
         t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
         h = -1.0 * ((t - 12.0) / 12.0)
@@ -284,15 +305,6 @@ class GoesConverter:
         output_dataset.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
         output_dataset['/MetaData/solar_azimuth_angle'][:] = solar_azimuth_angle_data_array
         output_dataset['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
-
-    def _create_metadata_elevation_angle_variable(self, output_dataset):
-        """
-        Creates the /MetaData/elevation_angle variable in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['elevation_angle'][:].real
-        output_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
-        output_dataset['/MetaData/elevation_angle'][:] = elevation_angle_data_array
 
     def _create_nlocs_dimension(self, output_dataset):
         """
@@ -602,8 +614,8 @@ class GoesConverter:
         self._create_metadata_sensor_azimuth_angle_variable(dataset)
         self._create_metadata_sensor_view_angle_variable(dataset)
         self._create_metadata_sensor_zenith_angle_variable(dataset)
-        self._create_metadata_solar_azimuth_angle_variable(dataset)
         self._create_metadata_solar_zenith_angle_variable(dataset)
+        self._create_metadata_solar_azimuth_angle_variable(dataset)
         self._create_metadata_time_variable(dataset)
         self._create_obsvalue_brightness_temperature_variable(dataset)
         self._create_obserror_brightness_temperature_variable(dataset)
@@ -632,8 +644,8 @@ class GoesConverter:
         self._create_metadata_sensor_azimuth_angle_variable(dataset)
         self._create_metadata_sensor_view_angle_variable(dataset)
         self._create_metadata_sensor_zenith_angle_variable(dataset)
-        self._create_metadata_solar_azimuth_angle_variable(dataset)
         self._create_metadata_solar_zenith_angle_variable(dataset)
+        self._create_metadata_solar_azimuth_angle_variable(dataset)
         self._create_metadata_time_variable(dataset)
         self._create_obsvalue_reflectance_factor_variable(dataset)
         self._create_obserror_reflectance_factor_variable(dataset)
