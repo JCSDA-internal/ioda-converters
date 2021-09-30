@@ -782,6 +782,12 @@ class Conv(BaseGSI):
                             else:
                                 tmp[tmp > 4e8] = self.FLOAT_FILL
                             outdata[gvname] = tmp
+                    # create a GSI effective QC variable
+                    gsiqcname = outvars[o], 'GsiEffectiveQC'
+                    errname = outvars[o], 'GsiFinalObsError'
+                    gsiqc = np.zeros_like(obsdata)
+                    gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+                    outdata[gsiqcname] = gsiqc
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
@@ -1306,6 +1312,12 @@ class Radiances(BaseGSI):
             outdata[varDict[value]['valKey']] = obsdatasub
             outdata[varDict[value]['errKey']] = obserrsub
             outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
+            # create a GSI effective QC variable
+            gsiqcname = value, 'GsiEffectiveQC'
+            errname = value, 'GsiFinalObsError'
+            gsiqc = np.zeros_like(obsdatasub)
+            gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+            outdata[gsiqcname] = gsiqc
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(chanlist[c]),
