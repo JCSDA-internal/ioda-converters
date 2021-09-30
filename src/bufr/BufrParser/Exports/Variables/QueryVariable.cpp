@@ -28,7 +28,7 @@ namespace Ingester
         initQueryMap();
     }
 
-    std::shared_ptr<DataObject> QueryVariable::exportData(const BufrDataMap& map)
+    std::shared_ptr<DataObjectBase> QueryVariable::exportData(const BufrDataMap& map)
     {
         if (map.find(getExportName()) == map.end())
         {
@@ -38,34 +38,14 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-        auto data = map.at(getExportName());
+        auto dataObject = map.at(getExportName());
 
-        if (auto arrDataObj = std::dynamic_pointer_cast<ArrayDataObject>(data))
-        {
-            auto arr = arrDataObj->get();
-            applyTransforms( arr);
-            data = std::make_shared<ArrayDataObject>(arr);
-        }
-        else
-        {
-            if (transforms_.size() > 0)
-            {
-                std::stringstream errStr;
-                errStr << "Tried to apply transform to a string field in ";
-                errStr << getExportName() << ".";
-                throw eckit::BadParameter(errStr.str());
-            }
-        }
-
-        return data;
-    }
-
-    void QueryVariable::applyTransforms(IngesterArray& data)
-    {
         for (auto transform : transforms_)
         {
-            transform->apply(data);
+            transform->apply(dataObject);
         }
+
+        return dataObject;
     }
 
     QueryList QueryVariable::makeQueryList() const

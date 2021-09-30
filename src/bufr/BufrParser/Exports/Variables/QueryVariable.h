@@ -15,7 +15,7 @@
 
 #include "Variable.h"
 #include "IngesterTypes.h"
-#include "DataObject/ArrayDataObject.h"
+#include "DataObject.h"
 #include "Transforms/Transform.h"
 
 
@@ -34,7 +34,7 @@ namespace Ingester
 
         /// \brief Gets the requested data, applies transforms, and returns the requested data
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
-        std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
+        std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
 
         /// \brief Get a list of queries for this variable
         QueryList makeQueryList() const final;
@@ -48,9 +48,5 @@ namespace Ingester
 
         /// \brief Collection of transforms to apply to the data during export
         Transforms transforms_;
-
-        /// \brief Apply the transforms
-        /// \param data Eigen Array data to apply the transform to.
-        void applyTransforms(IngesterArray& data);
     };
 }  // namespace Ingester

@@ -14,9 +14,7 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "DataContainer.h"
-#include "DataObject/ArrayDataObject.h"
-#include "DataObject/DataObject.h"
-#include "DataObject/StrVecDataObject.h"
+#include "DataObject.h"
 #include "Exports/Export.h"
 #include "Exports/Splits/Split.h"
 
@@ -73,20 +71,8 @@ namespace Ingester
         {
             for (const auto& queryInfo : var->getQueryList())
             {
-                auto result = result_set.get(queryInfo.name, queryInfo.groupByField);
-
-                if (auto floatRes = std::dynamic_pointer_cast<bufr::Result<float>>(result))
-                {
-                    auto dataArr = Eigen::Map<IngesterArray>(floatRes->data.data(),
-                                                             floatRes->dims[0],
-                                                             floatRes->dims[1]);
-
-                    srcData[queryInfo.name] = std::make_shared<ArrayDataObject>(dataArr);
-                }
-                else if (auto strRes = std::dynamic_pointer_cast<bufr::Result<std::string>>(result))
-                {
-                    srcData[queryInfo.name] = std::make_shared<StrVecDataObject>(strRes->data);
-                }
+                auto resultBase = result_set.get(queryInfo.name, queryInfo.groupByField);
+                srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase);
             }
         }
 
@@ -181,7 +167,7 @@ namespace Ingester
             std::cout << " subkeys: ";
             for (const auto &m2p : mp.second)
             {
-                std::cout << m2p.first << " " << m2p.second->nrows() << " ";
+                std::cout << m2p.first << " " << m2p.second->getDims()[0] << " ";
             }
 
             std::cout << std::endl;

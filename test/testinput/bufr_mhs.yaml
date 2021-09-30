@@ -47,12 +47,6 @@ observations:
       backend: netcdf
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
 
-      dimensions:
-        - name: "nlocs"
-          size: variables/radiance.nrows
-        - name: "nchans"
-          size: variables/radiance.ncols
-
       globals: 
         - name: "sensorCentralFrequency@MetaData"
           type: floatVector
@@ -66,72 +60,61 @@ observations:
 
         - name: "stationElevation@MetaData"
           source: variables/height
-          dimensions: ["nlocs"]
           longName: "Station Elevation"
           units: "meters"
 
         - name: "heightOfSurface@MetaData"
           source: variables/hols
-          dimensions: [ "nlocs" ]
           longName: "Height of Land Surface"
           units: "meters"
 
         - name: "fieldOfViewNumber@MetaData"
           source: variables/fovn
-          dimensions: ["nlocs"]
           longName: "Field of View Number"
           units: "none"
 
         - name: "landSeaQualifier@MetaData"
           source: variables/lsql
-          dimensions: ["nlocs"]
           longName: "Land/Sea Qualifier"
           units: "none"
 
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
           source: variables/latitude
-          dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
           source: variables/longitude
-          dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
         - name: "solarZenithAngle@MetaData"
           source: variables/sza
-          dimensions: ["nlocs"]
           longName: "Solar Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
         - name: "solarAzimuthAngle@MetaData"
           source: variables/saz
-          dimensions: ["nlocs"]
           longName: "Solar Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
 
         - name: "sensorZenithAngle@MetaData"
           source: variables/vza
-          dimensions: ["nlocs"]
           longName: "Sensor Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
         - name: "sensorAzimuthAngle@MetaData"
           source: variables/vaz
-          dimensions: ["nlocs"]
           longName: "Sensor Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
@@ -139,7 +122,6 @@ observations:
         - name: "brightnessTemperature@ObsValue"
           coordinates: "longitude latitude nchans"
           source: variables/radiance
-          dimensions: ["nlocs", "nchans"]
           longName: "Brightness Temperature"
           units: "K"
           range: [120, 500]

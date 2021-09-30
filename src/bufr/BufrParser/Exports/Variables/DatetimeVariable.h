@@ -28,7 +28,7 @@ namespace Ingester
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
-        std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
+        std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
 
         /// \brief Get a list of queries for this variable
         QueryList makeQueryList() const final;

@@ -31,7 +31,7 @@ namespace Ingester
     }
 
     void DataContainer::add(const std::string& fieldName,
-                            const std::shared_ptr<DataObject> data,
+                            const std::shared_ptr<DataObjectBase> data,
                             const SubCategory& categoryId)
     {
         if (hasKey(fieldName, categoryId))
@@ -45,8 +45,8 @@ namespace Ingester
         dataSets_.at(categoryId).insert({fieldName, data});
     }
 
-    std::shared_ptr<DataObject> DataContainer::get(const std::string& fieldName,
-                                                   const SubCategory& categoryId) const
+    std::shared_ptr<DataObjectBase> DataContainer::get(const std::string& fieldName,
+                                                       const SubCategory& categoryId) const
     {
         if (!hasKey(fieldName, categoryId))
         {
@@ -85,7 +85,7 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-        return  dataSets_.at(categoryId).begin()->second->nrows();
+        return  dataSets_.at(categoryId).begin()->second->getDims().at(0);
     }
 
     std::vector<SubCategory> DataContainer::allSubCategories() const

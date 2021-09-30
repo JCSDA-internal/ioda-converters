@@ -12,13 +12,12 @@
 #include <vector>
 #include <memory>
 
+#include "DataObject.h"
 #include "Eigen/Dense"
-
-#include "DataObject/DataObject.h"
 
 namespace Ingester
 {
     typedef float FloatType;
-    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> IngesterArray;
-    typedef std::map<std::string, std::shared_ptr<DataObject>> BufrDataMap;
+    typedef Eigen::Array<FloatType, Eigen::Dynamic, 1, Eigen::RowMajor> RawData;
+    typedef std::map<std::string, std::shared_ptr<DataObjectBase> > BufrDataMap;
 }

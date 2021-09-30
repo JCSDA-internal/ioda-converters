@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 
-#include "IngesterTypes.h"
+#include "DataObject.h"
 
 namespace Ingester
 {
@@ -22,7 +22,7 @@ namespace Ingester
 
         /// \brief Modify data according to the rules of the transform.
         /// \param array Array of data to modify.
-        virtual void apply(IngesterArray& array) = 0;
+        virtual void apply(std::shared_ptr<DataObjectBase>& array) = 0;
     };
 
     typedef std::vector <std::shared_ptr<Transform>> Transforms;

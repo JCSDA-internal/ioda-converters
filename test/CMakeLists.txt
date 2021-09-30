@@ -548,15 +548,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           -t 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                  ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
-                          -i testinput/tropomi_no2.nc
-                          -o testrun/tropomi_no2.nc"
-                          tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
+# ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
+#                   TYPE    SCRIPT
+#                   ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
+#                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                   ARGS    netcdf
+#                           "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+#                           -i testinput/tropomi_no2.nc
+#                           -o testrun/tropomi_no2.nc"
+#                           tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT

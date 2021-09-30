@@ -14,7 +14,7 @@
 #include "ResultSet.h"
 
 #include "IngesterTypes.h"
-#include "DataObject/DataObject.h"
+#include "DataObject.h"
 
 namespace Ingester
 {
@@ -39,7 +39,7 @@ namespace Ingester
         virtual ~Variable() = default;
 
         /// \brief Variable data objects for previously parsed data from BufrDataMap.
-        virtual std::shared_ptr<DataObject> exportData(const BufrDataMap& dataMap) = 0;
+        virtual std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& dataMap) = 0;
 
         /// \brief Get Query List
         inline QueryList getQueryList() { return queryList_; }

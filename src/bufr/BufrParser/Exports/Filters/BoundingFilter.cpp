@@ -11,12 +11,15 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "DataObject/ArrayDataObject.h"
-#include "DataObject/DataObject.h"
+#include "DataObject.h"
+
+#include "Eigen/Dense"
 
 
 namespace Ingester
 {
+    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigArray;
+
     BoundingFilter::BoundingFilter(const std::string& variable,
                    std::shared_ptr<float> lowerBound,
                    std::shared_ptr<float> upperBound) :
@@ -49,10 +52,19 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-        if (const auto& var = std::dynamic_pointer_cast<ArrayDataObject>(dataMap.at(variable_)))
+        if (const auto& var = std::dynamic_pointer_cast<DataObject<FloatType>>(dataMap.at(variable_)))
         {
-            const IngesterArray& array = var->get();
-            for (size_t rowIdx = 0; rowIdx < static_cast<size_t>(array.rows()); rowIdx++)
+            auto dims = var->getDims();
+            size_t colDims = 1;
+
+            for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
+            {
+                colDims *= dims[dimIdx];
+            }
+
+            auto array = Eigen::Map<EigArray> (var->getRawData().data(), dims[0], colDims);
+
+            for (size_t rowIdx = 0; rowIdx < dims[0]; rowIdx++)
             {
                 if (lowerBound_ && upperBound_)
                 {

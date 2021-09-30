@@ -46,9 +46,12 @@ namespace Ingester
         {
             // Find matching rows
             std::vector<size_t> indexVec;
-            for (size_t rowIdx = 0; rowIdx < dataObject->nrows(); rowIdx++)
+            for (size_t rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
             {
-                if (dataObject->getInt(rowIdx, 0) == mapPair.first)
+                auto location = Location(dataObject->getDims().size(), 0);
+                location[0] = rowIdx;
+
+                if (dataObject->getAsInt(location) == mapPair.first)
                 {
                     indexVec.push_back(rowIdx);
                 }
@@ -73,9 +76,12 @@ namespace Ingester
         if (nameMap_.empty())
         {
             const auto& dataObject = dataMap.at(variable_);
-            for (auto rowIdx = 0; rowIdx < dataObject->nrows(); rowIdx++)
+            for (auto rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
             {
-                auto itemVal =  dataObject->getFloat(rowIdx, 0);
+                auto location = Location(dataObject->getDims().size(), 0);
+                location[0] = rowIdx;
+
+                auto itemVal =  dataObject->getAsFloat(location);
                 if (trunc(itemVal) == itemVal)
                 {
                     nameMap_.insert({static_cast<int> (itemVal),

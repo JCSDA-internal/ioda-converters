@@ -6,6 +6,7 @@
  */
 
 #include "OffsetTransform.h"
+#include "IngesterTypes.h"
 
 
 namespace Ingester
@@ -15,9 +16,16 @@ namespace Ingester
     {
     }
 
-    void OffsetTransform::apply(IngesterArray& array)
+    void OffsetTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-        array = array + offset_;
+      if (auto object = std::dynamic_pointer_cast<DataObject<FloatType>>(dataObject))
+      {
+        auto data = object->getRawData();
+        for (auto& val : data)
+        {
+            val += offset_;
+        }
+      }
     }
 
 }  // namespace Ingester

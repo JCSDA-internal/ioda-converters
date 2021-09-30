@@ -12,11 +12,8 @@
 
 #include "eckit/exception/Exceptions.h"
 
+#include "DataObject.h"
 #include "DatetimeVariable.h"
-
-#include "DataObject/ArrayDataObject.h"
-#include "DataObject/DataObject.h"
-#include "DataObject/StrVecDataObject.h"
 
 
 namespace
@@ -66,17 +63,17 @@ namespace Ingester
         initQueryMap();
     }
 
-    std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
+    std::shared_ptr<DataObjectBase> DatetimeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
 
         auto datetimes = std::vector<std::string>();
 
-        auto years = map.at(getExportKey(ConfKeys::Year))->getFloats();
-        auto months = map.at(getExportKey(ConfKeys::Month))->getFloats();
-        auto days = map.at(getExportKey(ConfKeys::Day))->getFloats();
-        auto hours = map.at(getExportKey(ConfKeys::Hour))->getFloats();
-        auto minutes = map.at(getExportKey(ConfKeys::Minute))->getFloats();
+        auto years = map.at(getExportKey(ConfKeys::Year))->getAsFloatVector();
+        auto months = map.at(getExportKey(ConfKeys::Month))->getAsFloatVector();
+        auto days = map.at(getExportKey(ConfKeys::Day))->getAsFloatVector();
+        auto hours = map.at(getExportKey(ConfKeys::Hour))->getAsFloatVector();
+        auto minutes = map.at(getExportKey(ConfKeys::Minute))->getAsFloatVector();
 
         datetimes.resize(years.size());
         for (unsigned int idx = 0; idx < years.size(); idx++)
@@ -92,8 +89,12 @@ namespace Ingester
 
             if (!secondQuery_.empty())
             {
+                auto dataObject = map.at(getExportKey(ConfKeys::Second));
+                auto location = Location(dataObject->getDims().size(), 0);
+                location[0] = idx;
+
                 datetimeStr << std::setw(2)
-                            << map.at(getExportKey(ConfKeys::Second))->getFloat(idx, 0)
+                            << dataObject->getAsFloat(location)
                             << ":";
             }
             else
@@ -105,7 +106,7 @@ namespace Ingester
             datetimes[idx] = datetimeStr.str();
         }
 
-        return std::make_shared<StrVecDataObject>(datetimes);
+        return std::make_shared<DataObject<std::string>>(datetimes);
     }
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)
