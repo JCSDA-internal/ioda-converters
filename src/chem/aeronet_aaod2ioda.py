@@ -10,12 +10,12 @@
 #        at wavelengths of 440/675/870/1020nm)
 #
 # Usage:
-#        python aeronet_aaod2ioda.py -i 'testinput/aeronet_cad.dat'
-#                                    -j 'testinput/aeronet_tab.dat'
+#        python aeronet_aaod2ioda.py -c 'testinput/aeronet_cad.dat'
+#                                    -t 'testinput/aeronet_tab.dat'
 #                                    -o aeronet_aaod.nc
-#        -i: input file of AERONET inversion conicident AOT data with
+#        -c: input file of AERONET inversion conicident AOT data with
 #            almucantar retrieval (CAD)
-#        -j: input file of AERONET inversion AOD aborption (TAB)
+#        -t: input file of AERONET inversion AOD aborption (TAB)
 #        -o: output IODA file
 #
 # Contact:
@@ -91,12 +91,12 @@ if __name__ == '__main__':
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-        '-i', '--incad',
+        '-c', '--incad',
         help="input file of AERONET inversion conicident AOT data "
              " with almucantar retrieval (CAD)",
         type=str, required=True)
     required.add_argument(
-        '-j', '--intab',
+        '-t', '--intab',
         help="input file of AERONET inversion AOD aborption (TAB)",
         type=str, required=True)
     required.add_argument(
