@@ -253,19 +253,29 @@ class GoesConverter:
         start_date_tt = start_date.timetuple()
         julian_day = start_date_tt.tm_yday
         day_angle = (360.0 / 365.0) * (julian_day - 1.0) * np.pi / 180.0
-        equation_of_time = (0.000075 + (0.001868 * np.cos(day_angle))
-                            - (0.032077 * np.sin(day_angle)) - (0.014615 * np.cos(2.0 * day_angle))
-                            - (0.040890 * np.sin(2.0 * day_angle))) * 229.18 / 60.0
+        comps_eqt = []
+        comps_eqt[0] = 0.001868 * np.cos(day_angle)
+        comps_eqt[1] = 0.032077 * np.sin(day_angle)
+        comps_eqt[2] = 0.014615 * np.cos(2.0 * day_angle)
+        comps_eqt[3] = 0.040890 * np.sin(2.0 * day_angle)
+        comps_eqt[4] = 229.18 / 60.0
+        equation_of_time = (0.000075 + (comps_eqt[0]) - (comps_eqt[1]) - (comps_eqt[2]) - (comps_eqt[3])) * comps_eqt[4]
         universal_time = start_date.hour + start_date.minute / 60.0 + start_date.second / 3600.0
         local_sun_time = universal_time + equation_of_time + longitude / (360.0 / 24.0)
         hour_angle = (360.0 / 24.0) * np.mod(local_sun_time + 12.0, 24.0)
         hour_angle_rad = hour_angle * np.pi / 180.0
-        declin = (0.006918 - 0.399912 * np.cos(day_angle) + 0.070257 * np.sin(day_angle)
-                  - 0.006758 * np.cos(2.0 * day_angle) + 0.000907 * np.sin(2.0 * day_angle)
-                  - 0.002697 * np.cos(3.0 * day_angle) + 0.001480 * np.sin(3.0 * day_angle))
-        solar_zenith_angle_data_array = \
-            np.arccos((np.sin(latitude_rad) * np.sin(declin))
-                      + (np.cos(latitude_rad) * np.cos(declin) * np.cos(hour_angle_rad)))
+        comps_dec = []
+        comps_dec[0] = 0.399912 * np.cos(day_angle)
+        comps_dec[1] = 0.070257 * np.sin(day_angle)
+        comps_dec[2] = 0.006758 * np.cos(2.0 * day_angle)
+        comps_dec[3] = 0.000907 * np.sin(2.0 * day_angle)
+        comps_dec[4] = 0.002697 * np.cos(3.0 * day_angle)
+        comps_dec[5] = 0.001480 * np.sin(3.0 * day_angle)
+        declin = 0.006918 - comps_dec[0] + comps_dec[1] - comps_dec[2] + comps_dec[3] - comps_dec[4] + comps_dec[5]
+        comps_za = []
+        comps_za[0] = np.arccos(np.sin(latitude_rad) * np.sin(declin))
+        comps_za[1] = np.cos(latitude_rad) * np.cos(declin) * np.cos(hour_angle_rad)
+        solar_zenith_angle_data_array = comps_za[0] + comps_za[1]
         solar_zenith_angle_data_array = \
             self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
         solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
