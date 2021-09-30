@@ -10,9 +10,12 @@
 #        at wavelengths of 440/675/870/1020nm)
 #
 # Usage:
-#        python aeronet_aaod2ioda.py -i testinput -o aeronet_aaod.nc
-#        -i: input path to directory containing  AERONET inversion product
-#            files of aeronet_cad.dat and aeronet_tab.dat
+#        python aeronet_aaod2ioda.py -i 'testinput/aeronet_cad.dat'
+#                                    -j 'testinput/aeronet_tab.dat'
+#                                    -o aeronet_aaod.nc
+#        -i: input file of AERONET inversion conicident AOT data with
+#            almucantar retrieval (CAD)
+#        -j: input file of AERONET inversion AOD aborption (TAB)
 #        -o: output IODA file
 #
 # Contact:
@@ -88,9 +91,13 @@ if __name__ == '__main__':
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-        '-i', '--input',
-        help="path to directory containing AERONET inversion product "
-             " files of aeronet_cad.dat and aeronet_tab.dat",
+        '-i', '--incad',
+        help="input file of AERONET inversion conicident AOT data "
+             " with almucantar retrieval (CAD)",
+        type=str, required=True)
+    required.add_argument(
+        '-j', '--intab',
+        help="input file of AERONET inversion AOD aborption (TAB)",
         type=str, required=True)
     required.add_argument(
         '-o', '--output',
@@ -98,13 +105,14 @@ if __name__ == '__main__':
         type=str, required=True)
 
     args = parser.parse_args()
-    indir = args.input
+    incad = args.incad
+    intab = args.intab
     outfile = args.output
 
     # Read and extract online AERONET inversion data
     print('Read and extract AERONET inversion data: CAD, TAB')
-    f3_cad_all = add_data(os.path.join(f"{indir}/", "aeronet_cad.dat"))
-    f3_tab_all = add_data(os.path.join(f"{indir}/", "aeronet_tab.dat"))
+    f3_cad_all = add_data(incad)
+    f3_tab_all = add_data(intab)
     f3_cad = f3_cad_all[['time', 'siteid', 'longitude', 'latitude', 'elevation',
                          'if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)',
                          'if_aod_is_l2', 'inversion_data_quality_level',
