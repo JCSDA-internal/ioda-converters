@@ -107,24 +107,21 @@ def ExtractObsData(ObsData, loc_key_list):
     # can be preallocated, and variable numbers can be assigned
     ObsVarList = []
     ObsVarExamples = []
-    nrecs = 0
-    for RecKey, RecDict in ObsData.items():
-        nrecs += 1
-        for LocKey, LocDict in RecDict.items():
-            _nlocs += 1
-            for VarKey, VarVal in LocDict.items():
-                if (VarKey[1] == _oval_name):
-                    VarNames.add(VarKey[0])
-                if (VarKey not in ObsVarList):
-                    ObsVarList.append(VarKey)
-                    ObsVarExamples.append(VarVal)
-            # Extract the locations metadata encoded in the keys
-            for i in range(len(loc_key_list)):
-                (LocVname, LocVtype) = loc_key_list[i]
-                locvar = (LocVname, 'MetaData')
-                if (locvar not in ObsVarList):
-                    ObsVarList.append(locvar)
-                    ObsVarExamples.append(LocKey[i])
+    for LocKey, LocDict in ObsData.items():
+        _nlocs += 1
+        for VarKey, VarVal in LocDict.items():
+            if (VarKey[1] == _oval_name):
+                VarNames.add(VarKey[0])
+            if (VarKey not in ObsVarList):
+                ObsVarList.append(VarKey)
+                ObsVarExamples.append(VarVal)
+        # Extract the locations metadata encoded in the keys
+        for i in range(len(loc_key_list)):
+            (LocVname, LocVtype) = loc_key_list[i]
+            locvar = (LocVname, 'MetaData')
+            if (locvar not in ObsVarList):
+                ObsVarList.append(locvar)
+                ObsVarExamples.append(LocKey[i])
 
 
     # Preallocate arrays and fill them up with data from the dictionary
@@ -151,23 +148,19 @@ def ExtractObsData(ObsData, loc_key_list):
             continue
         ObsVars[ObsVarList[o]] = np.full((_nlocs), defaultval, dtype=defaultvaltype)
 
-    RecNum = 0
     LocNum = 0
-    for RecKey, RecDict in ObsData.items():
-        RecNum += 1
+    # Exract record metadata encoded in the keys
+    for LocKey, LocDict in ObsData.items():
+        LocNum += 1
 
-        # Exract record metadata encoded in the keys
-        for LocKey, LocDict in RecDict.items():
-            LocNum += 1
+        # Extract the locations metadata encoded in the keys
+        for i in range(len(loc_key_list)):
+            (LocVname, LocVtype) = loc_key_list[i]
+            ObsVars[(LocVname,'MetaData')][LocNum-1] = LocKey[i]
 
-            # Extract the locations metadata encoded in the keys
-            for i in range(len(loc_key_list)):
-                (LocVname, LocVtype) = loc_key_list[i]
-                ObsVars[(LocVname,'MetaData')][LocNum-1] = LocKey[i]
-
-            for VarKey, VarVal in LocDict.items():
-                if (type(VarVal) in [np.ma.core.MaskedConstant]):
-                    VarVal = _defaultF4
-                ObsVars[VarKey][LocNum-1] = VarVal
+        for VarKey, VarVal in LocDict.items():
+            if (type(VarVal) in [np.ma.core.MaskedConstant]):
+                VarVal = _defaultF4
+            ObsVars[VarKey][LocNum-1] = VarVal
 
     return ObsVars, _nlocs

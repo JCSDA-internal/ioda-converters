@@ -185,8 +185,6 @@ class IODA(object):
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        recKey = 0
-
         for obs in obsList:
 
             if obs.data['n_obs'] <= 0:
@@ -213,11 +211,9 @@ class IODA(object):
                         errKey = self.keyDict[key]['errKey']
                         qcKey = self.keyDict[key]['qcKey']
 
-                        self.data[recKey][locKey][valKey] = val
-                        self.data[recKey][locKey][errKey] = err
-                        self.data[recKey][locKey][qcKey] = qc
-
-                recKey += 1
+                        self.data[locKey][valKey] = val
+                        self.data[locKey][errKey] = err
+                        self.data[locKey][qcKey] = qc
 
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'nlocs' : nlocs}
