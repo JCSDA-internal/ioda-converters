@@ -58,7 +58,7 @@ conv_platforms = {
 # note in python range, last number is not used so second values are +1
 # bufr codes
 uv_bufrtypes = {
-    "aircraft": range(230, 240),
+    "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
     "sondes": range(220, 223),
     "satwind": range(240, 261),
     "vadwind": [224],
@@ -66,16 +66,18 @@ uv_bufrtypes = {
     "sfcship": [280, 282, 284],
     "sfc": [281, 287],
     "scatwind": [290],
+    # 232 are dropsondes
 }
 
 conv_bufrtypes = {
-    "aircraft": range(130, 140),
+    "aircraft": [130, 131, 133, 135],  # 234 is TAMDAR; always rstprod
     "sondes": range(120, 123),
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
     "gps": [3, 4, 42, 43, 745, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
+    # 132 are dropsondes
 }
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
@@ -102,6 +104,8 @@ all_LocKeyList = {
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
+    'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
+    'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -111,6 +115,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
     'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
     'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
+    'LaunchTime': ('LaunchTime', 'float'),
 }
 
 checkuv = {
@@ -150,6 +155,9 @@ gsi_add_vars_allsky = {
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
+    'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'Obs_Minus_Forecast_unadjusted_clear': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
@@ -173,6 +181,8 @@ gsi_add_vars = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
@@ -208,6 +218,10 @@ gsi_add_vars_uv = {
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
     'v_Forecast_unadjusted': 'GsiHofX',
+    'u_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'u_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'v_Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
+    'v_Obs_Minus_Forecast_unadjusted': 'GsiHofX',
 }
 
 radar_qc = {
@@ -257,8 +271,10 @@ rad_sensors = [
     'abi',
     'ahi',
     'avhrr',
+    'avhrr3',
     'saphir',
     'gmi',
+    'amsr2',
 ]
 
 radar_sensors = [
@@ -286,10 +302,12 @@ geovals_vars = {
     'height': 'height_above_mean_sea_level',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
+    'surface_air_pressure': 'surface_pressure',
     'surface_temperature': 'surface_temperature',
     'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
+    'surface_geopotential_height': 'surface_geopotential_height',
     'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
@@ -298,6 +316,7 @@ geovals_vars = {
     'air_pressure_levels': 'air_pressure_levels',
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
+    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
     'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
@@ -324,7 +343,6 @@ geovals_vars = {
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
     'Sfc_Height': 'surface_geopotential_height',
-    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -367,6 +385,9 @@ oz_sensors = [
     'omi',
     'ompsnp',
     'ompstc8',
+    'ompslp',
+    'mls55',
+    'ompsnm',
 ]
 
 # units
@@ -443,6 +464,8 @@ units_values = {
     'solar_azimuth_angle': 'degree',
     'modis_deep_blue_flag': '1',
     'row_anomaly_index': '1',
+    'total_ozone_error_flag': '1',
+    'profile_ozone_error_flag': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
     'tropopause_pressure': 'Pa',
@@ -454,6 +477,7 @@ units_values = {
     'clw_retrieved_from_observation': 'kg/m/m',
     'clw_retrieved_from_background': 'kg/m/m',
     'scat_retrieved_from_observation': '1',
+    'LaunchTime': 'hours',
 }
 
 # @TestReference
@@ -489,6 +513,13 @@ test_fields_with_channels = {
     'Cloudy_Channel': ('cloudy_channel', 'integer'),
     'Transmittance_at_Cloud_Top': ('tao_cldtop', 'float'),
     'NSST_Retrieval_check': ('nsstret_check', 'integer'),
+}
+gmi_chan_dep_loc_vars = {
+    'Sat_Zenith_Angle',
+    'Sat_Azimuth_Angle',
+    'Sol_Zenith_Angle',
+    'Sol_Azimuth_Angle',
+    'Scan_Angle',
 }
 
 
@@ -603,6 +634,8 @@ class Conv(BaseGSI):
                 if (v != "sst"):
                     ncout.createDimension(
                         "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+                    ncout.createDimension(
+                        "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
                 dimname = "Observation_Class_maxstrlen"
@@ -623,7 +656,10 @@ class Conv(BaseGSI):
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
-                                dims = ("nlocs", "nlevs")
+                                if vname == "atmosphere_pressure_coordinate_interface":
+                                    dims = ("nlocs", "ninterfaces")
+                                else:
+                                    dims = ("nlocs", "nlevs")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                 ncout.close()
@@ -695,9 +731,7 @@ class Conv(BaseGSI):
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
                     if outvars[o] == 'surface_pressure':
-                        try:
-                            tmpps = self.var('surface_pressure')[0]
-                        except IndexError:
+                        if np.max(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
@@ -727,6 +761,19 @@ class Conv(BaseGSI):
                                 mask = tmp < self.EPSILON
                                 tmp[~mask] = 1.0 / tmp[~mask]
                                 tmp[mask] = self.FLOAT_FILL
+                            elif "Obs_Minus_" in key:
+                                if 'u_Forecast_adjusted' in self.df.variables:
+                                    continue
+                                elif 'Forecast_adjusted' in self.df.variables:
+                                    continue
+                                if v == 'uv':
+                                    if (checkuv[outvars[o]] != key[0]):
+                                        continue
+                                    else:
+                                        key1 = key[0]+'_Observation'
+                                else:
+                                    key1 = 'Observation'
+                                tmp = self.var(key1)[idx] - df_key[idx]
                             else:
                                 tmp = df_key[idx]
                             if value in gsiint:
@@ -735,6 +782,12 @@ class Conv(BaseGSI):
                             else:
                                 tmp[tmp > 4e8] = self.FLOAT_FILL
                             outdata[gvname] = tmp
+                    # create a GSI effective QC variable
+                    gsiqcname = outvars[o], 'GsiEffectiveQC'
+                    errname = outvars[o], 'GsiFinalObsError'
+                    gsiqc = np.zeros_like(obsdata)
+                    gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+                    outdata[gsiqcname] = gsiqc
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
@@ -753,11 +806,11 @@ class Conv(BaseGSI):
                         loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
-                        try:
-                            tmpps = self.var('surface_pressure')[0]
-                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
-                        except IndexError:
-                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx] * 100.  # convert to Pa from hPa
+                        tmpps = self.var(lvar)[idx]
+                        if np.max(tmpps) > 1100.:
+                            loc_mdata[loc_mdata_name] = tmpps
+                        else:
+                            loc_mdata[loc_mdata_name] = tmpps * 100.  # from hPa to Pa
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
@@ -1169,6 +1222,15 @@ class Radiances(BaseGSI):
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+            elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
+                # Channels 1-9
+                tmp = self.var(lvar)[::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                loc_mdata[loc_mdata_name] = tmp
+                # Channels 10-13
+                tmp = self.var(lvar)[nchans-1::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                loc_mdata[loc_mdata_name+'1'] = tmp
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -1213,6 +1275,11 @@ class Radiances(BaseGSI):
                     mask = tmp < self.EPSILON
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
+                elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
+                    key1 = 'Observation'
+                    tmp = self.var(key1) - self.var(gsivar)
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
@@ -1245,6 +1312,12 @@ class Radiances(BaseGSI):
             outdata[varDict[value]['valKey']] = obsdatasub
             outdata[varDict[value]['errKey']] = obserrsub
             outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
+            # create a GSI effective QC variable
+            gsiqcname = value, 'GsiEffectiveQC'
+            errname = value, 'GsiFinalObsError'
+            gsiqc = np.zeros_like(obsdatasub)
+            gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+            outdata[gsiqcname] = gsiqc
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(chanlist[c]),
@@ -1582,7 +1655,8 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        if (self.sensor not in ["ompslp", "mls55"]):
+            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1632,6 +1706,8 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
+        if (self.sensor in ["ompslp", "mls55"]):
+            vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, writer.OvalName()
         varDict[vname]['errKey'] = vname, writer.OerrName()
         varDict[vname]['qcKey'] = vname, writer.OqcName()
@@ -1667,6 +1743,11 @@ class Ozone(BaseGSI):
                     mask = tmp < self.EPSILON
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
+                elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
+                    key1 = 'Observation'
+                    tmp = self.var(key1) - self.var(gsivar)
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:

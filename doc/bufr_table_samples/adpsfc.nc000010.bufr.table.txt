@@ -1,0 +1,286 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC000010 | A56100 | MTYP 000-010 PRODUCTS (SHEF) NOT IN ANY OTHER TANK       |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| SHTPMOSQ | 356101 | SHEF TIME PERIOD SEQUENCE (MONTHS)                       |
+| SHTPHRSQ | 356102 | SHEF TIME PERIOD SEQUENCE (HOURS)                        |
+| SHTPMISQ | 356103 | SHEF TIME PERIOD SEQUENCE (MINUTES)                      |
+| SHPRESSQ | 356104 | SHEF PRESSURE SEQUENCE                                   |
+| SHPMSLSQ | 356105 | SHEF PRESSURE (MSL) SEQUENCE                             |
+| SHTOPCSQ | 356106 | SHEF TOTAL PRECIPITATION SEQUENCE                        |
+| SHPRTPSQ | 356107 | SHEF TYPE OF PRECIPITATION SEQUENCE                      |
+| SHDOFSSQ | 356108 | SHEF DEPTH OF FRESH SNOW SEQUENCE                        |
+| SHTOSDSQ | 356109 | SHEF TOTAL SNOW DEPTH SEQUENCE                           |
+| SHSWEMSQ | 356110 | SHEF SNOW WATER EQUIVALENT SEQUENCE                      |
+| SHTMDBSQ | 356111 | SHEF TEMPERATURE SEQUENCE                                |
+| SHMXTMSQ | 356112 | SHEF MAXIMUM TEMPERATURE SEQUENCE                        |
+| SHMITMSQ | 356113 | SHEF MINIMUM TEMPERATURE SEQUENCE                        |
+| SHWATMSQ | 356114 | SHEF WATER TEMPERATURE SEQUENCE                          |
+| SHTMWBSQ | 356115 | SHEF WET BULB TEMPERATURE SEQUENCE                       |
+| SHREHUSQ | 356116 | SHEF RELATIVE HUMIDITY SEQUENCE                          |
+| SHMXRHSQ | 356117 | SHEF MAXIMUM RELATIVE HUMIDITY SEQUENCE                  |
+| SHMIRHSQ | 356118 | SHEF MINIMUM RELATIVE HUMIDITY SEQUENCE                  |
+| SHTMDPSQ | 356119 | SHEF DEW POINT TEMPERATURE SEQUENCE                      |
+| SHWDIRSQ | 356120 | SHEF WIND DIRECTION SEQUENCE                             |
+| SHWSPDSQ | 356121 | SHEF WIND SPEED SEQUENCE                                 |
+| SHMXGSSQ | 356122 | SHEF WIND SPEED (GUSTS) SEQUENCE                         |
+| SHPKWDSQ | 356123 | SHEF PEAK WIND DIRECTION SEQUENCE                        |
+| SHPKWSSQ | 356124 | SHEF PEAK WIND SPEED SEQUENCE                            |
+| SHPRWESQ | 356125 | SHEF PRESENT WEATHER SEQUENCE                            |
+| SHPSW1SQ | 356126 | SHEF PAST WEATHER (1) SEQUENCE                           |
+| SHCLAMSQ | 356127 | SHEF CLOUD AMOUNT SEQUENCE                               |
+| SHHOVISQ | 356128 | SHEF HORIZONTAL VISIBILITY SEQUENCE                      |
+| SHALBDSQ | 356129 | SHEF ALBEDO SEQUENCE                                     |
+| SHTOSHSQ | 356130 | SHEF TOTAL SUNSHINE SEQUENCE                             |
+| SHSOGRSQ | 356131 | SHEF STATE OF THE GROUND SEQUENCE                        |
+| SHRSHMSQ | 356132 | SHEF RIVER STAGE HEIGHT SEQUENCE                         |
+| SHSTM1SQ | 356133 | SHEF SOIL TEMPERATURE (DEPTH #1) SEQUENCE                |
+| SHSTM2SQ | 356134 | SHEF SOIL TEMPERATURE (DEPTH #2) SEQUENCE                |
+| SHXST1SQ | 356135 | SHEF MAXIMUM SOIL TEMPERATURE (DEPTH #1) SEQUENCE        |
+| SHXST2SQ | 356136 | SHEF MAXIMUM SOIL TEMPERATURE (DEPTH #2) SEQUENCE        |
+| SHIST1SQ | 356137 | SHEF MINIMUM SOIL TEMPERATURE (DEPTH #1) SEQUENCE        |
+| SHIST2SQ | 356138 | SHEF MINIMUM SOIL TEMPERATURE (DEPTH #2) SEQUENCE        |
+| SHWACNSQ | 356139 | SHEF WATER CONDUCTIVITY SEQUENCE                         |
+| SHTLLWSQ | 356140 | SHEF TIDE HEIGHT SEQUENCE                                |
+| BID      | 352001 | BULLETIN ID DATA                                         |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+|          |        |                                                          |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTES                                                  |
+| TPMO     | 004022 | TIME PERIOD OR DISPLACEMENT                              |
+| TPHR     | 004024 | TIME PERIOD OR DISPLACEMENT                              |
+| TPMI     | 004025 | TIME PERIOD OR DISPLACEMENT                              |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLAT     | 005002 | LATITUDE (COARSE ACCURACY)                               |
+| CLON     | 006002 | LONGITUDE (COARSE ACCURACY)                              |
+| HSMSL    | 007030 | HEIGHT OF STATION GROUND ABOVE MSL                       |
+| DBLS     | 007061 | DEPTH BELOW LAND SURFACE                                 |
+| RSHM     | 007198 | RIVER STAGE HEIGHT                                       |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| PRES     | 010004 | PRESSURE                                                 |
+| PMSL     | 010051 | PRESSURE REDUCED TO MSL                                  |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| MXGS     | 011041 | MAXIMUM WIND GUST SPEED                                  |
+| PKWDDR   | 011202 | PEAK WIND DIRECTION                                      |
+| PKWDSP   | 011203 | PEAK WIND SPEED                                          |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| TMWB     | 012102 | WET BULB TEMPERATURE                                     |
+| TMDP     | 012103 | DEW POINT TEMPERATURE                                    |
+| MXTM     | 012111 | MAXIMUM TEMPERATURE                                      |
+| MITM     | 012112 | MINIMUM TEMPERATURE                                      |
+| STEMH    | 012130 | SOIL TEMPERATURE                                         |
+| MISTH    | 012212 | MINIMUM SOIL TEMPERATURE                                 |
+| REHU     | 013003 | RELATIVE HUMIDITY                                        |
+| MIRH     | 013007 | MINIMUM RELATIVE HUMIDITY                                |
+| MXRH     | 013008 | MAXIMUM RELATIVE HUMIDITY                                |
+| TOPC     | 013011 | TOTAL PRECIPITATION/TOTAL WATER EQUIVALENT               |
+| DOFS     | 013012 | DEPTH OF FRESH SNOW                                      |
+| TOSD     | 013013 | TOTAL SNOW DEPTH                                         |
+| WACN     | 013081 | WATER CONDUCTIVITY                                       |
+| WATM     | 013082 | WATER TEMPERATURE                                        |
+| SWEM     | 013210 | SNOW WATER EQUIVALENT                                    |
+| ALBD     | 014027 | ALBEDO                                                   |
+| TOSH     | 014032 | TOTAL SUNSHINE                                           |
+| HOVI     | 020001 | HORIZONTAL VISIBILITY                                    |
+| PRWE     | 020003 | PRESENT WEATHER                                          |
+| PSW1     | 020004 | PAST WEATHER (1)                                         |
+| CLAM     | 020011 | CLOUD AMOUNT                                             |
+| PRTP     | 020021 | TYPE OF PRECIPITATION                                    |
+| SOGR     | 020062 | STATE OF THE GROUND                                      |
+| TLLW     | 022226 | TIDE ELEV. WITH RESPECT TO MEAN LOWER LOW WATER          |
+| SHRV     | 033230 | SHEF DATA REVISION FLAG                                  |
+| SHQL     | 033231 | SHEF DATA QUALIFIER FLAG                                 |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC000010 | YYMMDD  HHMM  <SHTPMOSQ>  <SHTPHRSQ>  <SHTPMISQ>  BID  RCPTIM     |
+| NC000010 | RPID  CLAT  CLON  HSMSL  <SHPRESSQ>  <SHPMSLSQ>  <SHTOPCSQ>       |
+| NC000010 | <SHPRTPSQ>  <SHDOFSSQ>  <SHTOSDSQ>  <SHSWEMSQ>  <SHTMDBSQ>        |
+| NC000010 | <SHMXTMSQ>  <SHMITMSQ>  <SHWATMSQ>  <SHTMWBSQ>  <SHREHUSQ>        |
+| NC000010 | <SHMXRHSQ>  <SHMIRHSQ>  <SHTMDPSQ>  <SHWACNSQ>  <SHWDIRSQ>        |
+| NC000010 | <SHWSPDSQ>  <SHMXGSSQ>  <SHPKWDSQ>  <SHPKWSSQ>  <SHPRWESQ>        |
+| NC000010 | <SHPSW1SQ>  <SHCLAMSQ>  <SHHOVISQ>  <SHALBDSQ>  <SHTOSHSQ>        |
+| NC000010 | <SHSOGRSQ>  <SHRSHMSQ>  <SHTLLWSQ>  <SHSTM1SQ>  <SHSTM2SQ>        |
+| NC000010 | <SHXST1SQ>  <SHXST2SQ>  <SHIST1SQ>  <SHIST2SQ>                    |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| SHTPMOSQ | TPMO                                                              |
+|          |                                                                   |
+| SHTPHRSQ | TPHR                                                              |
+|          |                                                                   |
+| SHTPMISQ | TPMI                                                              |
+|          |                                                                   |
+| SHPRESSQ | PRES  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHPMSLSQ | PMSL  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHTOPCSQ | TOPC  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHPRTPSQ | PRTP  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHDOFSSQ | DOFS  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHTOSDSQ | TOSD  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHSWEMSQ | SWEM  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHTMDBSQ | TMDB  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHMXTMSQ | MXTM  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHMITMSQ | MITM  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHWATMSQ | WATM  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHTMWBSQ | TMWB  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHREHUSQ | REHU  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHMXRHSQ | MXRH  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHMIRHSQ | MIRH  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHTMDPSQ | TMDP  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHWDIRSQ | WDIR  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHWSPDSQ | WSPD  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHMXGSSQ | MXGS  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHPKWDSQ | PKWDDR  SHRV  SHQL                                                |
+|          |                                                                   |
+| SHPKWSSQ | PKWDSP  SHRV  SHQL                                                |
+|          |                                                                   |
+| SHPRWESQ | PRWE  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHPSW1SQ | PSW1  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHCLAMSQ | CLAM  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHHOVISQ | HOVI  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHALBDSQ | ALBD  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHTOSHSQ | TOSH  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHSOGRSQ | SOGR  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHRSHMSQ | RSHM  SHRV  SHQL                                                  |
+|          |                                                                   |
+| SHSTM1SQ | DBLS  STEMH  SHRV  SHQL                                           |
+|          |                                                                   |
+| SHSTM2SQ | DBLS  STEMH  SHRV  SHQL                                           |
+|          |                                                                   |
+| SHXST1SQ | DBLS  MXSTH  SHRV  SHQL                                           |
+|          |                                                                   |
+| SHXST2SQ | DBLS  MXSTH  SHRV  SHQL                                           |
+|          |                                                                   |
+| SHIST1SQ | DBLS  MISTH  SHRV  SHQL                                           |
+|          |                                                                   |
+| SHIST2SQ | DBLS  MISTH  SHRV  SHQL                                           |
+|          |                                                                   |
+| SHWACNSQ | 207001  WACN  207000  SHRV  SHQL                                  |
+|          |                                                                   |
+| SHTLLWSQ | TLLW  SHRV  SHQL                                                  |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| TPMO     |    0 |       -1024 |  11 | MONTH                    |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLAT     |    2 |       -9000 |  15 | DEGREES                  |-------------|
+| CLON     |    2 |      -18000 |  16 | DEGREES                  |-------------|
+| HSMSL    |    1 |       -4000 |  17 | METERS                   |-------------|
+| DBLS     |    2 |           0 |  14 | METERS                   |-------------|
+| RSHM     |    3 |           0 |  15 | METERS                   |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| PMSL     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| MXGS     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| PKWDDR   |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| PKWDSP   |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMWB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMDP     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| MXTM     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| MITM     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| STEMH    |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| MISTH    |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| MIRH     |    0 |           0 |   7 | %                        |-------------|
+| MXRH     |    0 |           0 |   7 | %                        |-------------|
+| TOPC     |    1 |          -1 |  14 | KG/METER**2              |-------------|
+| DOFS     |    2 |          -2 |  12 | METERS                   |-------------|
+| TOSD     |    2 |          -2 |  16 | METERS                   |-------------|
+| WACN     |    3 |           0 |  14 | SIEMENS/M                |-------------|
+| WATM     |    1 |           0 |  12 | DEGREES KELVIN           |-------------|
+| SWEM     |    2 |           0 |  18 | KG/METER**2              |-------------|
+| ALBD     |    0 |           0 |   7 | %                        |-------------|
+| TOSH     |    0 |           0 |  10 | HOUR                     |-------------|
+| HOVI     |   -1 |           0 |  13 | METERS                   |-------------|
+| PRWE     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| PSW1     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| CLAM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| PRTP     |    0 |           0 |  30 | FLAG TABLE               |-------------|
+| SOGR     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TLLW     |    3 |       -9999 |  15 | METERS                   |-------------|
+| SHRV     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| SHQL     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

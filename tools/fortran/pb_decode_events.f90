@@ -1,6 +1,6 @@
 program pb_decode_events
 !
-! read all observations out from prepbufr. 
+! read all observations out from prepbufr.
 ! read bufr table from prepbufr file
 !
  implicit none

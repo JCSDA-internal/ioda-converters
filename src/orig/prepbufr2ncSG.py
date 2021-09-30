@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """convert prepbufr file to netCDF"""
 from __future__ import print_function
 import ncepbufr

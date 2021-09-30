@@ -1,0 +1,154 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC004103 | A55210 | MTYP 004-103  All other automated AMDAR (BUFR)           |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMMSS   | 301013 | TIME -- HOUR, MINUTE, SECOND                             |
+| LTLONH   | 301021 | HIGH ACCURACY LATITUDE/LONGITUDE POSITION                |
+| WIGOSID  | 301150 | WIGOS IDENTIFIER                                         |
+| BID      | 352001 | BULLETIN ID DATA                                         |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| APTRB    | 362037 | PIREP TURBULENCE DATA                                    |
+| ADRBLSEQ | 362042 | AMDAR BUFR LEVEL SEQUENCE                                |
+|          |        |                                                          |
+| ACID     | 001006 | AIRCRAFT FLIGHT NUMBER                                   |
+| ACRN     | 001008 | AIRCRAFT REGISTRATION NUMBER (TAIL NUMBER)               |
+| OSQN     | 001023 | OBSERVATION SEQUENCE NUMBER                              |
+| OAPT     | 001111 | ORIGINATION AIRPORT                                      |
+| DAPT     | 001112 | DESTINATION AIRPORT                                      |
+| WGOSLID  | 001128 | WIGOS LOCAL IDENTIFIER (CHARACTER)                       |
+| PCAT     | 002005 | PRECISION OF TEMPERATURE OBSERVATION                     |
+| ACNS     | 002061 | AIRCRAFT NAVIGATION SYSTEM                               |
+| TADR     | 002062 | TYPE OF AIRCRAFT DATA RELAY SYSTEM                       |
+| ROLQ     | 002064 | AIRCRAFT ROLL ANGLE QUALITY                              |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| SECO     | 004006 | SECOND                                                   |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| FLVLST   | 007010 | FLIGHT LEVEL                                             |
+| DPOF     | 008009 | DETAILED PHASE OF FLIGHT                                 |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| DGOT     | 011031 | DEGREE OF TURBULENCE                                     |
+| HBOT     | 011032 | HEIGHT OF BASE OF TURBULENCE                             |
+| HTOT     | 011033 | HEIGHT OF TOP OF TURBULENCE                              |
+| MDEVG    | 011036 | MAXIMUM DERIVED EQUIVALENT VERTICAL GUST SPEED           |
+| TASP     | 011100 | AIRCRAFT TRUE AIRSPEED                                   |
+| AVLU     | 011101 | AIRCRAFT GROUND SPEED U-COMPONENT                        |
+| AVLV     | 011102 | AIRCRAFT GROUND SPEED V-COMPONENT                        |
+| ACTH     | 011104 | TRUE HEADING OF AIRCRAFT, SHIP OR OTHER MOBILE PLATFORM  |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| TMDP     | 012103 | DEW POINT TEMPERATURE                                    |
+| MIXR     | 013002 | MIXING RATIO                                             |
+| AFIC     | 020041 | AIRFRAME ICING                                           |
+| INTV     | 033025 | ACARS INTERPOLATED VALUES                                |
+| QMAT     | 033193 | SDMEDIT QUALITY MARK FOR TEMPERATURE                     |
+| QMDD     | 033194 | SDMEDIT QUALITY MARK FOR MOISTURE                        |
+| QMWN     | 033195 | SDMEDIT QUALITY MARK FOR WIND                            |
+| CORN     | 033215 | CORRECTED REPORT INDICATOR                               |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+| RSRD     | 035200 | RESTRICTIONS ON REDISTRIBUTION                           |
+| EXPRSRD  | 035201 | EXPIRATION OF RESTRICTIONS ON REDISTRIBUTION             |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC004103 | YYMMDD  HHMMSS  OAPT  DAPT  ACID  ACRN  DPOF  LTLONH  OSQN  ACNS  |
+| NC004103 | WIGOSID  TADR  PCAT  {ADRBLSEQ}  APTRB  AFIC  MDEVG  INTV  RCPTIM |
+| NC004103 | BID  CORN  QMAT  QMWN  QMDD  RSRD  EXPRSRD  TASP  AVLU  AVLV      |
+| NC004103 | ACTH                                                              |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| WIGOSID  | WGOSIDS  WGOSISID  WGOSISNM  WGOSLID                              |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| APTRB    | DGOT  HBOT  HTOT                                                  |
+|          |                                                                   |
+| ADRBLSEQ | FLVLST  LTLONH  WDIR  WSPD  ROLQ  TMDB  TMDP  207005  MIXR        |
+| ADRBLSEQ | 207000                                                            |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| ACID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| ACRN     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| OSQN     |    0 |           0 |   9 | NUMERIC                  |-------------|
+| OAPT     |    0 |           0 |  24 | CCITT IA5                |-------------|
+| DAPT     |    0 |           0 |  24 | CCITT IA5                |-------------|
+| WGOSLID  |    0 |           0 | 128 | CCITT IA5                |-------------|
+| PCAT     |    2 |           0 |   7 | DEGREES KELVIN           |-------------|
+| ACNS     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| TADR     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| ROLQ     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREES                  |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREES                  |-------------|
+| FLVLST   |    0 |       -1024 |  16 | METERS                   |-------------|
+| DPOF     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| DGOT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HBOT     |   -1 |         -40 |  16 | METERS                   |-------------|
+| HTOT     |   -1 |         -40 |  16 | METERS                   |-------------|
+| MDEVG    |    1 |           0 |  10 | METERS/SECOND            |-------------|
+| TASP     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| AVLU     |    1 |       -4096 |  13 | METERS/SECOND            |-------------|
+| AVLV     |    1 |       -4096 |  13 | METERS/SECOND            |-------------|
+| ACTH     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMDP     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| MIXR     |    5 |           0 |  14 | KG/KG                    |-------------|
+| AFIC     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| INTV     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| QMAT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMDD     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMWN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CORN     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+| RSRD     |    0 |           0 |   9 | FLAG TABLE               |-------------|
+| EXPRSRD  |    0 |           0 |   8 | HOURS                    |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # (C) Copyright 2019 UCAR
@@ -34,9 +34,9 @@ class Observation(object):
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = writer
-        self._read()
+        self._read(date)
 
-    def _read(self):
+    def _read(self, date):
 
         ncd = nc.MFDataset(self.filename)
         datein = ncd.variables['dtg_yyyymmdd'][:]
@@ -61,17 +61,19 @@ class Observation(object):
             vals = vals[mask_thin]
             qc = qc[mask_thin]
 
+        date2 = int(date.strftime("%Y%m%d"))
         for i in range(len(lons)):
-            obs_date = datetime.combine(
-                datetime.strptime(
-                    np.array2string(
-                        datein[i]), "%Y%m%d"), datetime.strptime(
-                    np.array2string(
-                        timein[i]).zfill(4), "%H%M").time())
-            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.1
-            self.data[0][locKey][qcKey] = qc[i]
+            if datein[i] == date2:
+                obs_date = datetime.combine(
+                    datetime.strptime(
+                        np.array2string(
+                            datein[i]), "%Y%m%d"), datetime.strptime(
+                        np.array2string(
+                            timein[i]).zfill(4), "%H%M").time())
+                locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                self.data[0][locKey][valKey] = vals[i]
+                self.data[0][locKey][errKey] = 0.1
+                self.data[0][locKey][qcKey] = qc[i]
 
 
 vName = "sea_ice_area_fraction"

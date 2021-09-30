@@ -1,40 +1,20 @@
-[![Build Status](https://travis-ci.com/JCSDA/ioda-converters.svg?branch=develop)](https://travis-ci.com/JCSDA/ioda-converters)
 GNU:[![AWS-gnu](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieHZsZGhxZEo1a0diR0hCMVE5SCtpRlovVFJ3N1EyTi8wUkpneklzNjRiMWZyY01qNmxmRkZHMDZlWHAyNm1DSDdXTGJhaXVNM1IwK3c5b1B0ck5ib2VzPSIsIml2UGFyYW1ldGVyU3BlYyI6InBFd0NyeDdJN3Y5WTl0S0wiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-gnu/history)
 INTEL:[![AWS-intel](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiNmUzcndiY2VIVGtYcC92S2luakNsVGUrdUV5WjhnSGpYWWp2U3JVVERWM0pjSzNHeUg4c1lUTEV6R2VldDdPcmtyZzZHUHYvaFFHek5WV3hxNlJWQ3A4PSIsIml2UGFyYW1ldGVyU3BlYyI6IjZyU21lWUtRTkVEdG9Ld2ciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-intel/history)
 CLANG:[![AWS-clang](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoicE8zR0dRZmo1NUV6TVVVSTJsY0RYejA0SlRIR1dGOXZBTDVQNVh5dy9vb0ViNXFEbENHZTFPN20wa3p6aHV2ZWhQOTRHUDNyYlc3TnJKdVloOGtqVTM0PSIsIml2UGFyYW1ldGVyU3BlYyI6IjBENU9vV00xRDI5L3MwRmYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-clang/history?region=us-east-1)
 
 # ioda-converters
 
-The intended way to use this repository is to install in `/usr/local` by default, and if you cannot write into `/usr/local` use the `--prefix` option of `ecbuild` to install in your home directory under `tools`.  Run the scripts from the place they are installed, not the source directory. That way the scripts can reference each other without providing a path.
+The converters can be built and tested using ioda-bundle. In ioda-bundle the build of the converters is disabled by default (for now) so you must enable the build using the BUILD_IODA_CONVERTERS directive. Here is an example:
 
-For example,
 ```
-ecbuild --prefix=$HOME/tools  /your/path/to/ioda-converters
-make
-make install
+git clone https://github.com/jcsda-internal/ioda-bundle
+cd ioda-bundle
+mkdir build
+cd build
+ecbuild -DBUILD_IODA_CONVERTERS=ON ..
+make -j4
 ctest
 ```
-## bufr2nc
-
-Python script, `bufr2nc.py`, for converting BUFR to netCDF4. bufr2nc is built upon the py-ncepbufr package.
-
-```
-Usage: bufr2nc.py [-h] [-m <max_num_msgs>] [-c] [-p] obs_type input_bufr output_netcdf
-```
-  * The idea is for bufr2nc.py to create separate netCDF files for different observation types
-
-The short term plan is to handle aircraft, radiance, radiosonde and GPSRO observation types.
-AOD observation type may also be included in the short term plans
-
-Currently supported obs types
-
-| Obs Type           | raw BUFR | prepBUFR |
-|:-------------------|:--------:|:--------:|
-| Aircraft           | Y        | Y        |
-| Radiosonde         | N        | Y        |
-| Radiance (AMSU-A)  | Y        | N/A      |
-| GPSRO              | Y        | N/A      |
-| AOD                | N        | N/A      |
 
 ## gsi-ncdiag
 These scripts use classes defined in the gsincdiag Python library to convert output from GSI netCDF diag files into
@@ -89,6 +69,18 @@ Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 * `viirs_modis_oc2ioda.py` - L2 satellite ocean color observations from NOAA Coastwatch for VIIRS instruments on board JPSS1/NOAA-20 and SNPP satellites, and from NASA GSFC for MODIS instrument on board Aqua satellite. Observations available from `ftp://ftpcoastwatch.noaa.gov/pub/socd2/mecb/coastwatch/viirs/n20/nrt/L2` (VIIRS-JPSS1/NOAA-20), `ftp://ftpcoastwatch.noaa.gov/pub/socd1/mecb/coastwatch/viirs/nrt/L2` (VIIRS-SNPP), and `https://oceandata.sci.gsfc.nasa.gov/MODIS-Aqua/L2` (MODIS-Aqua).
 
 * `ncep_classes.py` - Convert (prep-)BUFR with embedded BUFR table to IODA format. See [here](src/ncep/README.md) for usage.
+
+
+## metar
+A converter of Surface observation METAR reports in simple CSV format into IODA-ready netCDF4 file.
+Currently, the CSV-formatted file should contain a header line such as the following:
+Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw
+
+At this time, only the output variables of air_temperature, surface_pressure (computed from altimeter setting), specific_humidity (computed from dewpoint temperature and surface_pressure), and eastward/northward_wind (computed from wind speed and direction) are output into the netCDF4 file.  All initial values of PreQC are set to 2 (un-checked) and obserror=0 since UFO software (under development) will be used to flag/discard/QC/etc. these data.  Other variables are expected to be converted as needed such as horizontal visibility in the near future.
+
+```
+Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
+```
 
 
 ## odbapi2nc
@@ -154,4 +146,64 @@ For AOD, `viirs_aod2ioda.py`, is used to convert the native netCDF format for ob
 ```
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -m nesdis -k maskout -t 0.0
 ```
-For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to mask all missing values out. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.    
+For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to not write out missing values. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.
+
+
+## land
+
+The land converters include all converter scripts for snowpack, soil, vegeation, and the other surface related land variables.
+
+For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.py`.
+```
+Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+
+For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
+```
+Usage: afwa_snod2ioda.py -i input_afwa_file.grb -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+It should be noted that both ims_scf2ioda.py and afwa_snod2ioda.py are depending on the python pygrib module. To enable the testing of these two scripts when the user has a pygrib module available, during the ecbuild process, please add -DUSE_PYGRIB=True to the ecbuild command line.  
+
+
+For snow depth (snod), GHCN csv files are supported with `ghcn_snod2ioda.py`.
+```
+Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD -m maskout
+````
+In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+
+For surface volumetric soil moisture (ssm), SMAP NRT h5 files are supported with `smap_ssm2ioda.py`.
+```
+Usage: smap_ssm2ioda.py -i input_smap_file.h5 -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. It should be noted that SMAP NRT h5 filename contains date and time which has been transferred to the datetime in smap_ssm2ioda.py because the data in the file does not have date and time variables. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
+
+For surface volumetric soil moisture (ssm), SMOS L2 NRT Netcdf files are supported with `smos_ssm2ioda.py`.
+```
+Usage: smos_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. Here soil moisture with negative values is also not written out.
+
+For surface soil moisture normalized (ssm), ASCAT L2 NRT Netcdf files are supported with `ascat_ssm2ioda.py`.
+```
+Usage: ascat_ssm2ioda.py -i input_smos_file.nc -o output_ioda_file.nc -m maskout
+```
+For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+
+## GOES
+
+The GOES converter classes generate two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 or GOES-17 
+LB1 products. The final result of this class is two IODAv2 formatted data files - one for Reflectance Factor (RF, ABI channels 1-6) 
+and one for Brightness Temperature (BT, ABI channels 7-16). Since GOES-16 and GOES-17 are in a geostationary orbit, auxiliary files 
+containing relevant variables and attributes for latitude, longitude, scan angle, and elevation angle is accessed (or created if
+it does not exist) through the latlon_file_path input argument for each satellite. This converter checks to see if the 
+nadir for each satellite has changed and will create a new latlon file if a nadir change has occurred.
+
+```
+Usage goes_converter = GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt)
+      goes_converter.convert()
+```

@@ -9,10 +9,14 @@ list(APPEND programs
   hgodas_adt2ioda.py
   hgodas_insitu2ioda.py
   hgodas_sst2ioda.py
+  glider2ioda.py
+  ndbc_hfradar2ioda.py
   rads_adt2ioda.py
   smap_sss2ioda.py
+  smos_sss2ioda.py
   argoClim2ioda.py
-  viirs_modis_oc2ioda.py
+  viirs_modis_l2_oc2ioda.py
+  viirs_modis_l3_oc2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
@@ -31,6 +35,7 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${install_bin_marine_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-add_test(NAME iodaconv_marine_coding_norms
-         COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
-                 ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_marine_coding_norms
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
+                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )

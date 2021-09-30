@@ -1,0 +1,133 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC004003 | A63233 | MTYP 004-003  Automated AMDAR (FM-42 AMDAR)              |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| BID      | 352001 | BULLETIN ID DATA                                         |
+| RAWRPT   | 352002 | RAW REPORT                                               |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| AFRID    | 362030 | AIRCRAFT REPORT ID DATA                                  |
+| AFTMP    | 362032 | AIRCRAFT TEMPERATURE DATA                                |
+| AFWND    | 362033 | AIRCRAFT WIND DATA                                       |
+| AFMST    | 362034 | AIRCRAFT MOISTURE DATA                                   |
+| ADSUP    | 362041 | AMDAR SUPPLEMENTARY DATA                                 |
+|          |        |                                                          |
+| ACID     | 001006 | AIRCRAFT FLIGHT NUMBER                                   |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| PCAT     | 002005 | PRECISION OF TEMPERATURE OBSERVATION                     |
+| ACNS     | 002061 | AIRCRAFT NAVIGATION SYSTEM                               |
+| TADR     | 002062 | TYPE OF AIRCRAFT DATA RELAY SYSTEM                       |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLAT     | 005002 | LATITUDE (COARSE ACCURACY)                               |
+| CLON     | 006002 | LONGITUDE (COARSE ACCURACY)                              |
+| PSAL     | 007196 | PRESSURE ALTITUDE RELATIVE TO MEAN SEA LEVEL             |
+| FLVL     | 007197 | FLIGHT LEVEL                                             |
+| POAF     | 008004 | PHASE OF AIRCRAFT FLIGHT                                 |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| DGOT     | 011031 | DEGREE OF TURBULENCE                                     |
+| MDEVG    | 011036 | MAXIMUM DERIVED EQUIVALENT VERTICAL GUST SPEED           |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| TMDP     | 012103 | DEW POINT TEMPERATURE                                    |
+| REHU     | 013003 | RELATIVE HUMIDITY                                        |
+| QMAT     | 033193 | SDMEDIT QUALITY MARK FOR TEMPERATURE                     |
+| QMDD     | 033194 | SDMEDIT QUALITY MARK FOR MOISTURE                        |
+| QMWN     | 033195 | SDMEDIT QUALITY MARK FOR WIND                            |
+| CORN     | 033215 | CORRECTED REPORT INDICATOR                               |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+| RSRD     | 035200 | RESTRICTIONS ON REDISTRIBUTION                           |
+| EXPRSRD  | 035201 | EXPIRATION OF RESTRICTIONS ON REDISTRIBUTION             |
+| RRSTG    | 058008 | RAW REPORT STRING                                        |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC004003 | YYMMDD  HHMM  RCPTIM  RSRD  EXPRSRD  BID  AFRID  {RAWRPT}  AFTMP  |
+| NC004003 | AFWND  <AFMST>  ADSUP  ACID  DGOT                                 |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RAWRPT   | RRSTG                                                             |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| AFRID    | RPID  CORN  CLAT  CLON  FLVL  PSAL                                |
+|          |                                                                   |
+| AFTMP    | QMAT  TMDB                                                        |
+|          |                                                                   |
+| AFWND    | QMWN  WDIR  WSPD                                                  |
+|          |                                                                   |
+| AFMST    | QMDD  TMDP  REHU                                                  |
+|          |                                                                   |
+| ADSUP    | POAF  ACNS  TADR  PCAT  MDEVG                                     |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| ACID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| PCAT     |    2 |           0 |   7 | DEGREES KELVIN           |-------------|
+| ACNS     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| TADR     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLAT     |    2 |       -9000 |  15 | DEGREES                  |-------------|
+| CLON     |    2 |      -18000 |  16 | DEGREES                  |-------------|
+| PSAL     |    1 |       -4000 |  20 | METERS                   |-------------|
+| FLVL     |    1 |       -4000 |  20 | METERS                   |-------------|
+| POAF     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| DGOT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| MDEVG    |    1 |           0 |  10 | METERS/SECOND            |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMDP     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| QMAT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMDD     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMWN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CORN     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+| RSRD     |    0 |           0 |   9 | FLAG TABLE               |-------------|
+| EXPRSRD  |    0 |           0 |   8 | HOURS                    |-------------|
+| RRSTG    |    0 |           0 |  64 | CCITT IA5                |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

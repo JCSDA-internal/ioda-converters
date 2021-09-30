@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # (C) Copyright 2019 UCAR
@@ -149,12 +149,12 @@ class Giirs2Ioda:
                     detector_array = np.arange(1, ndetectors+1, dtype=np.int32)
 
                     # Determine maximum size of output and pre-allocate output arrays
-                    nlocs_max = ndetectors * len(filenames)  # Maximum possible locs
+                    self.nlocs_max = ndetectors * len(filenames)  # Maximum possible locs
                     # obs_vals (nchans, nlocs) will contain all observed values
                     # values are appended for each dataset
-                    obs_vals = np.full((nchans, nlocs_max), nc.default_fillvals['f4'], dtype=np.float32, order='F')
+                    obs_vals = np.full((nchans, self.nlocs_max), nc.default_fillvals['f4'], dtype=np.float32, order='F')
                     # Note, scan_position is integer valued, but currently must be a float32 to be recognized by UFO/CRTM operator
-                    self.LocMdata['scan_position'] = np.full(nlocs_max, nc.default_fillvals['f4'], dtype=np.float32)
+                    self.LocMdata['scan_position'] = np.full(self.nlocs_max, nc.default_fillvals['f4'], dtype=np.float32)
                     self.units_values['scan_position'] = '1'
 
                     self.VarMdata['channel_wavenumber'] = self.writer.FillNcVector(LW_wnum, 'float')
@@ -162,10 +162,7 @@ class Giirs2Ioda:
                     self.units_values['channel_wavenumber'] = ncd.variables['LW_wnum'].getncattr('units')
                     self.units_values['channel_number'] = '1'
                     for new_key, old_key in self.LOC_MDATA_MAP.items():
-                        if old_key in ncd.variables:
-                            self.LocMdata[new_key] = np.full(nlocs_max, nc.default_fillvals['f4'], dtype=np.float32)
-                            if 'units' in ncd.variables[old_key].ncattrs():
-                                self.units_values[new_key] = ncd.variables[old_key].getncattr('units')
+                        self._initialize_metadata_key(new_key, old_key, ncd)
                 else:
                     # Check this file uses the same dimensions as the initial file
                     this_nchans = ncd.dimensions["LWchannel"].size
@@ -191,6 +188,9 @@ class Giirs2Ioda:
                 # Read metadata
                 for new_key, old_key in self.LOC_MDATA_MAP.items():
                     if old_key in ncd.variables:
+                        if new_key not in self.LocMdata:
+                            # If we haven't seen this key before initialize it now and set to fillvalue for all previous locs
+                            self._initialize_metadata_key(new_key, old_key, ncd)
                         self.LocMdata[new_key][nlocs_tot:nlocs_tot+nlocs] = np.asarray(ncd.variables[old_key])[mask]
                 self.LocMdata['scan_position'][nlocs_tot:nlocs_tot+nlocs] = detector_array[mask]  # detector number
 
@@ -240,6 +240,18 @@ class Giirs2Ioda:
         K3 = cls._K2 * wavnum**3
         bt = cls._K1 * wavnum / np.log1p(K3/radiance)
         return bt
+
+    def _initialize_metadata_key(self, new_key, old_key, ncd):
+        """
+        Common initialization for LocMdata metadata for new variable names
+        new_key - IODA variable name
+        old_key - GIIRS SSEC NetCDF variable name
+        ncd - GIIRS NetCDF scan file
+        """
+        if old_key in ncd.variables:
+            self.LocMdata[new_key] = np.full(self.nlocs_max, nc.default_fillvals['f4'], dtype=np.float32)
+            if 'units' in ncd.variables[old_key].ncattrs():
+                self.units_values[new_key] = ncd.variables[old_key].getncattr('units')
 
 
 def main():
