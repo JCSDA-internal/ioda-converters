@@ -6,8 +6,7 @@
 # formatted data files - one for Brightness Temperature and one for Reflectance Factor (if include_rf is set to True).
 # The following groups, variables, dimensions, and attributes are created using this class. Calculations within this
 # program utilize "Calculating Zenith and Azimuth Angles for GridSat-B1"
-# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf) and the  Zeeman_Utility CRTM code at
-# https://github.com/JCSDA-internal/crtm/blob/develop/src/Zeeman/Zeeman_Utility.f90.
+# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf).
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
 #
@@ -256,7 +255,7 @@ class GoesConverter:
         equation_of_time = (0.000075 + (0.001868 * np.cos(day_angle))
                             - (0.032077 * np.sin(day_angle)) - (0.014615 * np.cos(2.0 * day_angle))
                             - (0.040890 * np.sin(2.0 * day_angle))) * 229.18 / 60.0
-        universal_time = (start_date.hour * 60 + start_date.minute) / 1440.0
+        universal_time = start_date.hour + start_date.minute / 60.0 + start_date.second / 3600.0
         local_sun_time = universal_time + equation_of_time + longitude / (360.0 / 24.0)
         hour_angle = (360.0 / 24.0) * np.mod(local_sun_time + 12.0, 24.0)
         hour_angle_rad = hour_angle * np.pi / 180.0
