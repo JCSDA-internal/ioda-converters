@@ -91,7 +91,7 @@ class IodaWriter(object):
         self.WriteObsVars(ObsVars, VarDims, VarAttrs, VarUnits)
         self.WriteGlobalAttrs(GlobalAttrs)
 
-def ExtractObsData(ObsData):
+def ExtractObsData(ObsData, loc_key_list):
     ############################################################
     # This method will extract information from the ObsData
     # dictionary and reformat it into a more amenable form for
@@ -107,8 +107,6 @@ def ExtractObsData(ObsData):
     # can be preallocated, and variable numbers can be assigned
     ObsVarList = []
     ObsVarExamples = []
-    VMName = []
-    VMData = {}
     nrecs = 0
     for RecKey, RecDict in ObsData.items():
         nrecs += 1
@@ -120,7 +118,14 @@ def ExtractObsData(ObsData):
                 if (VarKey not in ObsVarList):
                     ObsVarList.append(VarKey)
                     ObsVarExamples.append(VarVal)
-    VarList = sorted(list(VarNames))
+            # Extract the locations metadata encoded in the keys
+            for i in range(len(loc_key_list)):
+                (LocVname, LocVtype) = loc_key_list[i]
+                locvar = (LocVname, 'MetaData')
+                if (locvar not in ObsVarList):
+                    ObsVarList.append(locvar)
+                    ObsVarExamples.append(LocKey[i])
+
 
     # Preallocate arrays and fill them up with data from the dictionary
     ObsVars = OrderedDict()
@@ -133,8 +138,8 @@ def ExtractObsData(ObsData):
             defaultval = _defaultI4    # convert long to int
             defaultvaltype = np.int32
         elif (VarType in [str, np.str_]):
-            defaultval = ''
-            defaultvaltype = np.str_
+            defaultval = 'NONE'
+            defaultvaltype = np.object_
         elif (VarType in [np.ma.core.MaskedConstant]):
             # If we happened to pick an invalid value (inf, nan, etc.) from
             # a masked array, then the type is a MaskedConstant, and that implies
@@ -154,6 +159,11 @@ def ExtractObsData(ObsData):
         # Exract record metadata encoded in the keys
         for LocKey, LocDict in RecDict.items():
             LocNum += 1
+
+            # Extract the locations metadata encoded in the keys
+            for i in range(len(loc_key_list)):
+                (LocVname, LocVtype) = loc_key_list[i]
+                ObsVars[(LocVname,'MetaData')][LocNum-1] = LocKey[i]
 
             for VarKey, VarVal in LocDict.items():
                 if (type(VarVal) in [np.ma.core.MaskedConstant]):

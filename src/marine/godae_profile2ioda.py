@@ -219,7 +219,7 @@ class IODA(object):
 
                 recKey += 1
 
-        ObsVars, nlocs = iconv.ExtractObsData(self.data)
+        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'nlocs' : nlocs}
         varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
