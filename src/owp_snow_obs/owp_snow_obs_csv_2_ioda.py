@@ -6,8 +6,13 @@ import os
 import pandas as pd
 import pathlib
 import sys
-# sys.path.append("/home/vagrant/jedi/bundle-ioda/build/tools/lib/pyiodaconv")  # dummy before install
-sys.path.append("@SCRIPT_LIB_PATH@")
+from pathlib import Path
+
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 import ioda_conv_ncio as iconv
 
 # (C) Copyright 2019 UCAR
