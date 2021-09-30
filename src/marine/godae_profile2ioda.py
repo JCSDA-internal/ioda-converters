@@ -174,7 +174,6 @@ class IODA(object):
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
             value = self.varDict[key]
@@ -216,7 +215,7 @@ class IODA(object):
                         self.data[locKey][qcKey] = qc
 
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
-        DimDict = {'nlocs' : nlocs}
+        DimDict = {'nlocs': nlocs}
         varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
         self.writer.BuildIoda(ObsVars, varDims, varAttrs, self.GlobalAttrs)

@@ -91,6 +91,7 @@ class IodaWriter(object):
         self.WriteObsVars(ObsVars, VarDims, VarAttrs, VarUnits)
         self.WriteGlobalAttrs(GlobalAttrs)
 
+
 def ExtractObsData(ObsData, loc_key_list):
     ############################################################
     # This method will extract information from the ObsData
@@ -122,7 +123,6 @@ def ExtractObsData(ObsData, loc_key_list):
             if (locvar not in ObsVarList):
                 ObsVarList.append(locvar)
                 ObsVarExamples.append(LocKey[i])
-
 
     # Preallocate arrays and fill them up with data from the dictionary
     ObsVars = OrderedDict()
@@ -156,7 +156,7 @@ def ExtractObsData(ObsData, loc_key_list):
         # Extract the locations metadata encoded in the keys
         for i in range(len(loc_key_list)):
             (LocVname, LocVtype) = loc_key_list[i]
-            ObsVars[(LocVname,'MetaData')][LocNum-1] = LocKey[i]
+            ObsVars[(LocVname, 'MetaData')][LocNum-1] = LocKey[i]
 
         for VarKey, VarVal in LocDict.items():
             if (type(VarVal) in [np.ma.core.MaskedConstant]):

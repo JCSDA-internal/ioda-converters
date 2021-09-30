@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -19,7 +19,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -35,18 +35,17 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
+GlobalAttrs = {
     'odb_version': 1,
 }
 
 
 class Profile(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, date):
         self.filename = filename
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     def _read(self):
@@ -69,16 +68,16 @@ class Profile(object):
             if qcs[i] != 0:
                 continue
 
-            valKey = vName[obid[i]], self.writer.OvalName()
-            errKey = vName[obid[i]], self.writer.OerrName()
-            qcKey = vName[obid[i]], self.writer.OqcName()
+            valKey = vName[obid[i]], iconv.OvalName()
+            errKey = vName[obid[i]], iconv.OerrName()
+            qcKey = vName[obid[i]], iconv.OqcName()
 
             dt = base_date + timedelta(hours=float(hrs[i]))
             locKey = lats[i], lons[i], dpth[i], dt.strftime(
                 "%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
-            self.data[0][locKey][qcKey] = qcs[i]
+            self.data[locKey][valKey] = vals[i]
+            self.data[locKey][errKey] = errs[i]
+            self.data[locKey][qcKey] = qcs[i]
 
 
 def main():
@@ -105,15 +104,23 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    VarDims = {
+        'sea_water_temperature': ['nlocs'],
+        'sea_water_salinity': ['nlocs'],
+    }
 
     # Read in the profiles
-    prof = Profile(args.input, fdate, writer)
+    prof = Profile(args.input, fdate)
 
     # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
+
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
