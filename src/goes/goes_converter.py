@@ -6,7 +6,7 @@
 # formatted data files - one for Brightness Temperature and one for Reflectance Factor (if include_rf is set to True).
 # The following groups, variables, dimensions, and attributes are created using this class. Calculations within this
 # program utilize "Calculating Zenith and Azimuth Angles for GridSat-B1"
-# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf) and the Zeeman_Utility CRTM code at
+# (https://www.ncdc.noaa.gov/gridsat/docs/Angle_Calculations.pdf) and the  Zeeman_Utility CRTM code at
 # https://github.com/JCSDA-internal/crtm/blob/develop/src/Zeeman/Zeeman_Utility.f90.
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
