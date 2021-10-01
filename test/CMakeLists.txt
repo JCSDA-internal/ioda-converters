@@ -47,6 +47,8 @@ list( APPEND test_input
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
+  testinput/aeronet_cad.dat
+  testinput/aeronet_tab.dat
 )
 
 list( APPEND test_output
@@ -88,6 +90,7 @@ list( APPEND test_output
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
   testoutput/aeronet_aod.nc
+  testoutput/aeronet_aaod.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -139,7 +142,7 @@ if( iodaconv_bufr_ENABLED )
 endif()
 
 if (iodaconv_satbias_ENABLED )
-    list( APPEND test_input
+  list( APPEND test_input
     testinput/satbias_converter_amsua.yaml
     testinput/satbias_converter_cris.yaml
     testinput/satbias_converter_ssmis.yaml
@@ -154,6 +157,15 @@ if (iodaconv_satbias_ENABLED )
   )
 endif()
 
+if (iodaconv_obserror_ENABLED )
+  list( APPEND test_input
+    testinput/Rcov_iasi_metop-b_sea.bin
+  )
+
+  list( APPEND test_output
+    testoutput/Rcov_iasi_metop-b_sea.nc4
+  )
+endif()
 
 if( iodaconv_pbfortran_ENABLED )
   list( APPEND test_input
@@ -198,6 +210,30 @@ endforeach(FILENAME)
 # For a converter that is generating new data, use a non-zero tolerance.
 set(IODA_CONV_COMP_TOL_ZERO "0.0")
 set(IODA_CONV_COMP_TOL "0.5e-4")
+
+# The ioda-engines CMake configuration has set the file target _ioda_python to
+# the full path to the library file containing the python bindings created
+# by pybind11. For example:
+#
+#   path_to_lib/python3.9/ioda/_ioda_python.cpython-39-darwin.so
+#
+# To be able to import the ioda python module, PYTHONPATH needs to be
+# set to the directory that is one above where the ioda module is located.
+# Using the above example:
+#
+#   PYTHONPATH=path_to_lib/python3.9
+#
+# This can be accompilished by using the TARGET_FILE_DIR cmake generator
+# which works like the shell dirname command. In the ecbuild_add_test command
+# PYTHONPATH can be set using the ENVIRONMENT keyword. Note that the desired
+# path is one directory above what TARGET_FILE_DIR will return in the example below.
+#
+#   ecbuild_add_test(
+#        ...
+#        ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
+#        ...
+#        )
+set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 #===============================================================================
 # Marine converters
@@ -527,6 +563,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
@@ -552,6 +589,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
 			  -i testinput/aeronet_aod.dat
 			  -o testrun/aeronet_aod.nc"
 			  aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
+                  TYPE    SCRIPT
+		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+		  ARGS    netcdf
+		          "${CMAKE_BINARY_DIR}/bin/aeronet_aaod2ioda.py
+			  -c testinput/aeronet_cad.dat
+			  -t testinput/aeronet_tab.dat
+			  -o testrun/aeronet_aaod.nc"
+			  aeronet_aaod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
@@ -730,6 +777,22 @@ if( iodaconv_satbias_ENABLED )
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_ssmis.yaml"
                             satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
+endif()
+
+
+#==============================================================================
+# ObsError correlations tests
+#==============================================================================
+
+if( iodaconv_obserror_ENABLED )
+
+  ecbuild_add_test( TARGET  test_iodaconv_obserror
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/obserror2ioda.x testinput/Rcov_iasi_metop-b_sea.bin testrun/Rcov_iasi_metop-b_sea.nc4"
+                            Rcov_iasi_metop-b_sea.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS obserror2ioda.x )
 endif()
 
 

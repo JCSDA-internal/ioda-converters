@@ -23,6 +23,7 @@
 | RPID     | 001198 | REPORT IDENTIFIER                                        |
 | YEAR     | 004001 | YEAR                                                     |
 | MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
 | HOUR     | 004004 | HOUR                                                     |
 | MINU     | 004005 | MINUTE                                                   |
 | RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
@@ -102,6 +103,7 @@
 | RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
 | YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
 | MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
 | HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
 | MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
 | RCYR     |    0 |           0 |  12 | YEAR                     |-------------|

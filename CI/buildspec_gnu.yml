@@ -79,7 +79,7 @@ phases:
         && echo $CC
         && echo $CXX
         && echo $FC
-        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle/"
+        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON /jcsda/ioda-bundle/"
 
 
       - su - jedi -c "cd /home/jedi/iodaconv

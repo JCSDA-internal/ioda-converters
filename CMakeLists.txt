@@ -31,7 +31,7 @@ set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/p
 
 ## Dependencies
 
-ecbuild_find_python( REQUIRED VERSION 3 )
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
     $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
@@ -107,6 +107,14 @@ if( eckit_FOUND AND oops_FOUND AND ioda_FOUND )
 else()
     set(iodaconv_satbias_ENABLED False)
     message(STATUS "Disabled Component: satbias converter")
+endif()
+
+if (NetCDF_Fortran_FOUND )
+    set(iodaconv_obserror_ENABLED True)
+    message(STATUS "Enabled Component: obserror converter")
+else()
+    set(iodaconv_obserror_ENABLED False)
+    message(STATUS "Disabled Component: obserror converter")
 endif()
 
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )

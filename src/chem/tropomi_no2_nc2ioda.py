@@ -20,7 +20,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
@@ -37,16 +37,24 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
+    'nvars': np.int32(len(obsvars)),
+}
+
+DimDict = {
+}
+
+VarDims = {
+    'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
+    'nitrogen_dioxide_in_total_column': ['nlocs'],
 }
 
 
 class tropomi(object):
-    def __init__(self, filenames, writer):
+    def __init__(self, filenames):
         self.filenames = filenames
-        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.units = {}
         self._read()
@@ -55,10 +63,11 @@ class tropomi(object):
     def _read(self):
         # set up variable names for IODA
         for iodavar in ['nitrogen_dioxide_in_tropospheric_column', 'nitrogen_dioxide_in_total_column']:
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
             self.units[iodavar] = 'mol m-2'
+            self.var_mdata[iodavar]['coordinates'] = 'longitude latitude'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -95,39 +104,42 @@ class tropomi(object):
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
             if first:
-                self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
-                self.loc_mdata['latitude'] = lats
-                self.loc_mdata['longitude'] = lons
-                self.loc_mdata['quality_assurance_value'] = qa_value
-                self.loc_mdata['troposphere_layer_index'] = trop_layer
-                self.loc_mdata['air_mass_factor_total'] = total_airmass
-                self.loc_mdata['air_mass_factor_troposphere'] = trop_airmass
-                self.loc_mdata['tropospheric_averaging_kernel_precision'] = kernel_err
-                self.loc_mdata['averaging_kernel_precision'] = kernel_err_total
+                # add metadata variables
+                self.outdata[('datetime', 'MetaData')] = times
+                self.outdata[('latitude', 'MetaData')] = lats
+                self.outdata[('longitude', 'MetaData')] = lons
+                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value
+                self.outdata[('troposphere_layer_index', 'MetaData')] = trop_layer
+                self.outdata[('air_mass_factor_total', 'MetaData')] = total_airmass
+                self.outdata[('air_mass_factor_troposphere', 'MetaData')] = trop_airmass
+                self.outdata[('tropospheric_averaging_kernel_precision', 'MetaData')] = kernel_err
+                self.outdata[('averaging_kernel_precision', 'MetaData')] = kernel_err_total
                 for k in range(nlevs):
-                    varname = 'averaging_kernel_level_'+str(k+1)
-                    self.loc_mdata[varname] = avg_kernel[..., k].ravel()
+                    varname = ('averaging_kernel_level_'+str(k+1), 'MetaData')
+                    self.outdata[varname] = avg_kernel[..., k].ravel()
             else:
-                self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'],
-                                                            self.writer.FillNcVector(times, "datetime")))
-                self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
-                self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
-                self.loc_mdata['quality_assurance_value'] = np.concatenate((
-                    self.loc_mdata['quality_assurance_value'], qa_value))
-                self.loc_mdata['troposphere_layer_index'] = np.concatenate((
-                    self.loc_mdata['troposphere_layer_index'], trop_layer))
-                self.loc_mdata['air_mass_factor_total'] = np.concatenate((
-                    self.loc_mdata['air_mass_factor_total'], total_airmass))
-                self.loc_mdata['air_mass_factor_troposphere'] = np.concatenate((
-                    self.loc_mdata['air_mass_factor_troposphere'], trop_airmass))
-                self.loc_mdata['tropospheric_averaging_kernel_precision'] = np.concatenate((
-                    self.loc_mdata['tropospheric_averaging_kernel_precision'], kernel_err))
-                self.loc_mdata['averaging_kernel_precision'] = np.concatenate((
-                    self.loc_mdata['averaging_kernel_precision'], kernel_err_total))
+                self.outdata[('datetime', 'MetaData')] = np.concatenate((
+                    self.outdata[('datetime', 'MetaData')], times))
+                self.outdata[('latitude', 'MetaData')] = np.concatenate((
+                    self.outdata[('latitude', 'MetaData')], lats))
+                self.outdata[('longitude', 'MetaData')] = np.concatenate((
+                    self.outdata[('longitude', 'MetaData')], lons))
+                self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
+                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value))
+                self.outdata[('troposphere_layer_index', 'MetaData')] = np.concatenate((
+                    self.outdata[('troposphere_layer_index', 'MetaData')], trop_layer))
+                self.outdata[('air_mass_factor_total', 'MetaData')] = np.concatenate((
+                    self.outdata[('air_mass_factor_total', 'MetaData')], total_airmass))
+                self.outdata[('air_mass_factor_troposphere', 'MetaData')] = np.concatenate((
+                    self.outdata[('air_mass_factor_troposphere', 'MetaData')], trop_airmass))
+                self.outdata[('tropospheric_averaging_kernel_precision', 'MetaData')] = np.concatenate((
+                    self.outdata[('tropospheric_averaging_kernel_precision', 'MetaData')], kernel_err))
+                self.outdata[('averaging_kernel_precision', 'MetaData')] = np.concatenate((
+                    self.outdata[('averaging_kernel_precision', 'MetaData')], kernel_err_total))
                 for k in range(nlevs):
-                    varname = 'averaging_kernel_level_'+str(k+1)
+                    varname = ('averaging_kernel_level_'+str(k+1), 'MetaData')
                     self.loc_mdata[varname] = np.concatenate((self.loc_mdata[varname],
-                                                             avg_kernel[..., k].ravel()))
+                                                              avg_kernel[..., k].ravel()))
             for ncvar, iodavar in obsvars.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
@@ -147,8 +159,13 @@ class tropomi(object):
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['datetime'])
+            DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+            AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+
+            for k in range(nlevs):
+                varname = 'averaging_kernel_level_'+str(k+1)
+                self.var_mdata[varname]['coordinates'] = 'longitude latitude'
+                self.var_mdata[varname]['units'] = ''
 
 
 def main():
@@ -173,14 +190,14 @@ def main():
 
     args = parser.parse_args()
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, locationKeyList)
-
     # Read in the NO2 data
-    no2 = tropomi(args.input, writer)
+    no2 = tropomi(args.input)
+
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildNetcdf(no2.outdata, no2.loc_mdata, no2.var_mdata, AttrData, no2.units)
+    writer.BuildIoda(no2.outdata, VarDims, no2.var_mdata, AttrData, no2.units)
 
 
 if __name__ == '__main__':
