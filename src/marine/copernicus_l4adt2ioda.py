@@ -46,9 +46,11 @@ VarDims = {
     'adt': ['nlocs'],
 }
 
+
 class copernicus(object):
     def __init__(self, filename):
-        # Create simple data structure for Copernicus L4 adt product
+        # Create a simple data structure for Copernicus L4 adt product obtained from
+        # https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-sea-level-global?tab=form
         ncd = nc.Dataset(filename, 'r')
         self.lons = ncd.variables['longitude'][:]
         self.lats = ncd.variables['latitude'][:]
@@ -61,17 +63,17 @@ class copernicus(object):
         ncd.close()
 
         # Remove observations out of sane bounds
-        I=np.where(np.abs(self.adt) < 3.0)
-        self.nlocs = len(I[0])
-        print('nlocs=',self.nlocs)
-        self.lons = self.lons[I]
-        self.lats = self.lats[I]
-        self.adt = self.adt[I]
-        self.err = self.err[I]
+        qci = np.where(np.abs(self.adt) < 3.0)
+        self.nlocs = len(qci[0])
+        self.lons = self.lons[qci]
+        self.lats = self.lats[qci]
+        self.adt = self.adt[qci].astype(np.single)
+        self.err = self.err[qci].astype(np.single)
 
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.adt, dtype=object)
         self.datetime[:] = self.date
+
 
 class copernicus_l4adt2ioda(object):
     def __init__(self, filename):
@@ -86,7 +88,7 @@ class copernicus_l4adt2ioda(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar='adt'
+        iodavar = 'obs_absolute_dynamic_topography'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -105,6 +107,7 @@ class copernicus_l4adt2ioda(object):
 
         DimDict['nlocs'] = adt.nlocs
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+
 
 def main():
 
