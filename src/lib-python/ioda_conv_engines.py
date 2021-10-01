@@ -13,9 +13,6 @@ _oqc_name = "PreQC"
 _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
 
-# list of groups to not assign the standard variable unit to
-_no_units = [_oqc_name]
-
 
 def OvalName():
     return _oval_name
@@ -46,7 +43,7 @@ class IodaWriter(object):
         # open IODA obs backend
         self.obsspace = ioda.ObsSpace(Fname, mode='w', dim_dict=DimDict)
 
-    def WriteObsVars(self, ObsVars, VarDims, VarAttrs, VarUnits):
+    def WriteObsVars(self, ObsVars, VarDims, VarAttrs):
         # this method will create variables in the ouput obs group and
         # fill them with the provided data and metadata
         for VarKey, Vvals in ObsVars.items():
@@ -59,27 +56,25 @@ class IodaWriter(object):
             else:
                 # assume it is just nlocs
                 dims = ['nlocs']
+            fillval = get_default_fill_val(Vvals.dtype)
+            # get fill value
+            if VarKey in VarAttrs.keys():
+                if '_FillValue' in VarAttrs[VarKey].keys():
+                    fillval = VarAttrs[VarKey]['_FillValue']
             self.obsspace.create_var(VarName,
                                      dtype=Vvals.dtype,
                                      dim_list=dims,
+                                     fillval=fillval,
                                      )
             # write the data to the file
             tmpVar = self.obsspace.Variable(VarName)
             tmpVar.write_data(Vvals)
             # add var metadata
             try:
-                for MetaVar, MetaVal in VarAttrs[Vname].items():
+                for MetaVar, MetaVal in VarAttrs[VarKey].items():
                     tmpVar.write_attr(MetaVar, MetaVal)
             except KeyError:
                 pass  # no metadata for this variable
-            # add var units if exists
-            if Gname not in _no_units:
-                try:
-                    UnitStr = VarUnits[Vname]
-                    tmpVar.write_attr("units", UnitStr)
-                except (KeyError, NameError):
-                    # add error message here later, eventually all need units!
-                    pass
 
     def WriteGlobalAttrs(self, GlobalAttrs):
         # this method will create global attributes from GlobalAttrs dictionary
@@ -87,8 +82,8 @@ class IodaWriter(object):
             self.obsspace.write_attr(AttrKey, AttrVal)
 
     def BuildIoda(self, ObsVars, VarDims, VarAttrs, GlobalAttrs,
-                  VarUnits={}, TestData=None):
-        self.WriteObsVars(ObsVars, VarDims, VarAttrs, VarUnits)
+                  TestData=None):
+        self.WriteObsVars(ObsVars, VarDims, VarAttrs)
         self.WriteGlobalAttrs(GlobalAttrs)
 
 
@@ -99,8 +94,6 @@ def ExtractObsData(ObsData, loc_key_list):
     # writing into the output file.
 
     _nlocs = 0
-    _defaultF4 = 9e9
-    _defaultI4 = 99999999
 
     VarNames = set()
 
