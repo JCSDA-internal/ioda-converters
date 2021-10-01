@@ -33,6 +33,8 @@ def OerrName():
 def OqcName():
     return _oqc_name
 
+def get_default_fill_val(mydtype):
+    # {'S1': '\x00', 'i1': -127, 'u1': 255, 'i2': -32767, 'u2': 65535, 'i4': -2147483647, 'u4': 4294967295, 'i8': -9223372036854775806, 'u8': 18446744073709551614, 'f4': 9.969209968386869e+36, 'f8': 9.969209968386869e+36}
 
 class IodaWriter(object):
     # Constructor

@@ -180,6 +180,7 @@ class IODA(object):
             self.keyDict[key]['valKey'] = value, iconv.OvalName()
             self.keyDict[key]['errKey'] = value, iconv.OerrName()
             self.keyDict[key]['qcKey'] = value, iconv.OqcName()
+            #self.AttrData[value, iconv.OvalName()]['units'] : 'K'
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -216,7 +217,8 @@ class IODA(object):
 
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'nlocs': nlocs}
-        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        #varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        #varAttrs[(var,group)]['_FillValue'] = 
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
         self.writer.BuildIoda(ObsVars, varDims, varAttrs, self.GlobalAttrs)
 
