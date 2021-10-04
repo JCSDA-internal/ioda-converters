@@ -8,12 +8,15 @@ import pathlib
 import sys
 from pathlib import Path
 
+
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
+from collections import defaultdict, OrderedDict
 
 # (C) Copyright 2019 UCAR
 # This software is licensed under the terms of the Apache Licence Version 2.0
@@ -57,6 +60,19 @@ output_var_names = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': '
 output_type_names = {'snow_depth_mm': 'output_depth', 'snow_water_equivalent_mm': 'output_swe'}
 output_var_units = {'snow_depth': 'm', 'swe': 'm'}
 
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("datetime", "string"),
+]
+
+DimDict = {
+}
+
+VarDims = {
+    'snow_depth': ['nlocs'],
+    #'swe': ['nlocs'],
+}
 
 def read_input(input_file, global_config):
     """
@@ -165,9 +181,6 @@ def owp_snow_obs_csv_2_ioda(args):
     else:
         raise ValueError("Neither SWE nor depth outputfile requested")
 
-    writer_dum = iconv.NcWriter(output_dum, [], [])
-    pathlib.Path(output_dum).unlink()
-
     # TODO JLM: Global config: is what?
     # {
     #   'date': for what purpose - seems to only be used for
@@ -181,9 +194,9 @@ def owp_snow_obs_csv_2_ioda(args):
     global_config = {}
     global_config['ref_date_time'] = args.ref_date_time
     global_config['thin'] = args.thin
-    global_config['oval_name'] = writer_dum.OvalName()
-    global_config['oerr_name'] = writer_dum.OerrName()
-    global_config['opqc_name'] = writer_dum.OqcName()
+    global_config['oval_name'] = iconv.OvalName()
+    global_config['oerr_name'] = iconv.OerrName()
+    global_config['opqc_name'] = iconv.OqcName()
 
     # Create a list of arg dicts
     obs = read_input(input_file=args.input[0], global_config=global_config)
@@ -191,13 +204,32 @@ def owp_snow_obs_csv_2_ioda(args):
     for var_name, output_type in output_type_names.items():
         if args_dict[output_type] is None:
             continue
-        writer = iconv.NcWriter(args_dict[output_type], [], [])
+       
+
+        var_list_name = output_var_names[var_name]
 
         obs_data = obs[var_name]['obs_data']
         loc_data = obs[var_name]['loc_data']
         attr_data = obs[var_name]['attr_data']
-        loc_data['datetime'] = writer.FillNcVector(
-            loc_data['datetime'], "datetime")
+        #loc_data['datetime'] = writer.FillNcVector(
+        #    loc_data['datetime'], "datetime")
+
+        outdata = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+        outdata[('datetime', 'MetaData')]  =  np.array(loc_data['datetime'], dtype = object) 
+        outdata[('latitude', 'MetaData')]  =  loc_data['latitude']  
+        outdata[('longitude', 'MetaData')] =  loc_data['longitude']  
+        
+        keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        # set up variable name
+        key = 'oneob'
+        keyDict[key]['valKey'] = var_list_name, iconv.OvalName()
+        keyDict[key]['errKey'] = var_list_name, iconv.OerrName()
+        keyDict[key]['qcKey'] = var_list_name, iconv.OqcName()
+
+        outdata[keyDict[key]['valKey']] = obs_data[(var_list_name,'ObsValue')]
+        outdata[keyDict[key]['errKey']] = obs_data[(var_list_name,'ObsError')]
+        outdata[keyDict[key]['qcKey']]  = obs_data[(var_list_name,'PreQC')]
 
         # prepare global attributes we want to output in the file,
         # in addition to the ones already loaded in from the input file
@@ -219,22 +251,39 @@ def owp_snow_obs_csv_2_ioda(args):
         attr_data['date_time_string'] = global_config[
             'ref_date_time'].strftime("%Y-%m-%dT%H:%M:%SZ")
         attr_data['thinning'] = global_config['thin']
-        attr_data['converter'] = os.path.basename(__file__)
+        attr_data['converter'] = os.path.basename(__file__)    
+        
+        DimDict['nlocs'] = obs_data[(var_list_name, 'ObsValue')].shape[0]
+        attr_data['nlocs'] = np.int32(DimDict['nlocs'])
 
-        var_list_name = output_var_names[var_name]
-        # var_list_name = var_name
-        var_data = {
-            writer._var_list_name: writer.FillNcVector(var_list_name, "string")}
 
-        # pass parameters to the IODA writer
-        # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-        writer._nrecs = 1
-        writer._nvars = 1
-        writer._nlocs = obs_data[(output_var_names[var_name], 'ObsValue')].shape[0]
+        print(f'args_dict[output_type] = {args_dict[output_type]}')
+        print(f'locationKeyList = {locationKeyList}')
+        print(f'DimDict = {DimDict}')
+
+
+
+        writer = iconv.IodaWriter(args_dict[output_type], locationKeyList, DimDict)
+
+        varMdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        varUnits = {}
+        
+        varMdata[var_list_name]['coordinates'] = 'longitude latitude'
+        varUnits[var_list_name] = 'mm' #output_var_units
 
         # use the writer class to create the final output file
-        writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)
+        #writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)
 
+        print(f'outdate = {outdata}')
+        print(f'VarDims = {VarDims}')
+        print(f'varMdata = {varMdata}')
+        print(f'attr_data = {attr_data}')
+        print(f'varUnits = {varUnits}')
+
+
+
+        # call the IODA API and write the file
+        writer.BuildIoda(outdata, VarDims, varMdata, attr_data, varUnits)
 
 # Make parser separate, testable.
 def parse_arguments():
