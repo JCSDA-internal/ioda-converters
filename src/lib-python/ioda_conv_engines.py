@@ -34,7 +34,30 @@ def OqcName():
     return _oqc_name
 
 def get_default_fill_val(mydtype):
-    # {'S1': '\x00', 'i1': -127, 'u1': 255, 'i2': -32767, 'u2': 65535, 'i4': -2147483647, 'u4': 4294967295, 'i8': -9223372036854775806, 'u8': 18446744073709551614, 'f4': 9.969209968386869e+36, 'f8': 9.969209968386869e+36}
+    dtype_tmp = np.array([],dtype=mydtype)
+    NumpyDtype = dtype_tmp.dtype
+    if (NumpyDtype == np.dtype('float64')):
+        fillval = 9.969209968386869e+36
+    elif (NumpyDtype == np.dtype('float32')):
+        fillval = 9.969209968386869e+36
+    elif (NumpyDtype == np.dtype('int64')):
+        fillval = -9223372036854775806
+    elif (NumpyDtype == np.dtype('int32')):
+        fillval = -2147483647
+    elif (NumpyDtype == np.dtype('int16')):
+        fillval = -32767
+    elif (NumpyDtype == np.dtype('int8')):
+        fillval = -127
+    elif (NumpyDtype == np.dtype('S1')):
+        fillval = '\x00'
+    elif (NumpyDtype == np.dtype('U1')):
+        fillval = '\x00'
+    elif (NumpyDtype == np.dtype('object')):
+        fillval = '\x00'
+    else:
+        print("ERROR: Unrecognized data type", NumpyDtype)
+        exit(-2)
+    return fillval
 
 class IodaWriter(object):
     # Constructor
@@ -124,19 +147,19 @@ def ExtractObsData(ObsData, loc_key_list):
     for o in range(len(ObsVarList)):
         VarType = type(ObsVarExamples[o])
         if (VarType in [float, np.float32, np.float64]):
-            defaultval = _defaultF4
+            defaultval = get_default_fill_val(np.float32)
             defaultvaltype = np.float32
         elif (VarType in [int, np.int64, np.int32, np.int8]):
-            defaultval = _defaultI4    # convert long to int
+            defaultval = get_default_fill_val(np.int32)
             defaultvaltype = np.int32
         elif (VarType in [str, np.str_]):
-            defaultval = 'NONE'
+            defaultval = get_default_fill_val(np.str)
             defaultvaltype = np.object_
         elif (VarType in [np.ma.core.MaskedConstant]):
             # If we happened to pick an invalid value (inf, nan, etc.) from
             # a masked array, then the type is a MaskedConstant, and that implies
             # floating point values.
-            defaultval = _defaultF4
+            defaultval = get_default_fill_val(np.float32)
             defaultvaltype = np.float32
         else:
             print('Warning: VarType', VarType, ' not in float, int, str for:', ObsVarList[o])
