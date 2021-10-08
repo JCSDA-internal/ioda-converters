@@ -64,8 +64,7 @@ class copernicus(object):
         # set time stamp for all obs
         self.datetime = np.empty_like(self.swh, dtype=object)
         for t in range(len(self.datetime)):
-          self.datetime[t] = datetime.utcfromtimestamp(self.time[t]+datetime(2000, 1, 1, 0, tzinfo=pytz.UTC).timestamp()).strftime("%Y-%m-%dT%H:%M:%SZ") 
-
+            self.datetime[t] = datetime.utcfromtimestamp(self.time[t]+datetime(2000, 1, 1, 0, tzinfo=pytz.UTC).timestamp()).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Remove observations out of sane bounds
         qci = np.where(self.swh > 0.001)
@@ -76,10 +75,11 @@ class copernicus(object):
         self.swh = self.swh[qci].astype(np.single)
         self.err = self.err[qci].astype(np.single)
 
+
 class copernicus_l3swh2ioda(object):
     def __init__(self, filename, factor):
         self.filename = filename
-        self.factor = factor 
+        self.factor = factor
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -130,9 +130,9 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
     required.add_argument(
-	'-f', '--factor',
-         help="error factor, 0.1 means 10% of obs value, defalut is 0.1",
-         type=float, required=False, default=0.1)
+        '-f', '--factor',
+        help="error factor, 0.1 means 10% of obs value, defalut is 0.1",
+        type=float, required=False, default=0.1)
 
     args = parser.parse_args()
 
