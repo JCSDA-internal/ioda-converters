@@ -53,10 +53,10 @@ class copernicus(object):
         # Create a simple data structure for Copernicus L3 swh near-realtime product obtained from
         # ftp://nrt.cmems-du.eu/Core/WAVE_GLO_WAV_L3_SWH_NRT_OBSERVATIONS_014_001/
         ncd = nc.Dataset(filename, 'r')
-        self.lons = np.squeeze(ncd.variables['longitude'][:]).ravel()
-        self.lats = np.squeeze(ncd.variables['latitude'][:]).ravel()
-        self.time = np.squeeze(ncd.variables['time'][:]).ravel()
-        self.swh = np.squeeze(ncd.variables['VAVH'][:]).ravel()
+        self.lons = ncd.variables['longitude'][:]
+        self.lats = ncd.variables['latitude'][:]
+        self.time = ncd.variables['time'][:]
+        self.swh = ncd.variables['VAVH'][:]
         self.err = factor*self.swh
         self.date = ncd.getncattr('first_meas_time')
         ncd.close()
@@ -67,7 +67,7 @@ class copernicus(object):
             self.datetime[t] = datetime.utcfromtimestamp(self.time[t]+datetime(2000, 1, 1, 0, tzinfo=pytz.UTC).timestamp()).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Remove observations out of sane bounds
-        qci = np.where(self.swh > 0.001)
+        qci = np.where(self.swh > 0.0)
         self.nlocs = len(qci[0])
         self.lons = self.lons[qci].astype(np.single)
         self.lats = self.lats[qci].astype(np.single)
