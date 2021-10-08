@@ -48,6 +48,7 @@ list( APPEND test_input
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
   testinput/dt_global_twosat_phy_l4_20150101_vDT2018.nc
+  testinput/global_vavh_l3_rt_s3a_20210930T18.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
 )
@@ -92,6 +93,7 @@ list( APPEND test_output
   testoutput/airnow_2020081306.nc
   testoutput/aeronet_aod.nc
   testoutput/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc
+  testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
 )
 
@@ -393,6 +395,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4adt
                           -i testinput/dt_global_twosat_phy_l4_20150101_vDT2018.nc
                           -o testrun/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc"
                           ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/copernicus_l3swh2ioda.py
+                          -i testinput/global_vavh_l3_rt_s3a_20210930T18.nc
+                          -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
+                          ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, surface Obs - METAR converter
