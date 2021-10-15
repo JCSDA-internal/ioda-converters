@@ -17,7 +17,6 @@
 
 namespace Ingester
 {
-    typedef float FloatType;
-    typedef Eigen::Array<FloatType, Eigen::Dynamic, 1, Eigen::RowMajor> RawData;
+    typedef Eigen::Array<float, Eigen::Dynamic, 1, Eigen::RowMajor> RawData;
     typedef std::map<std::string, std::shared_ptr<DataObjectBase> > BufrDataMap;
 }

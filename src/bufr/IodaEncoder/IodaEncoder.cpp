@@ -9,9 +9,14 @@
 
 #include <memory>
 #include <type_traits>
+#include <map>
+#include <string>
+#include <sstream>
 
 #include "eckit/exception/Exceptions.h"
+
 #include "ioda/Layout.h"
+#include "ioda/Misc/DimensionScales.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -32,8 +37,30 @@ namespace Ingester
         IodaEncoder::encode(const std::shared_ptr<DataContainer>& dataContainer, bool append)
     {
         auto backendParams = ioda::Engines::BackendCreationParameters();
-
         std::map<SubCategory, ioda::ObsGroup> obsGroups;
+
+        // Get the named dimensions
+        std::map<std::string, std::string> namedPathDims;
+
+        {
+            std::set<std::string> dimNames;
+            std::set<std::string> dimPaths;
+            for (const auto& dim : description_.getDims())
+            {
+                if (dimNames.find(dim.name) != dimNames.end())
+                {
+                    throw eckit::UserError("Duplicate dimension name: " + dim.name);
+                }
+                if (dimPaths.find(dim.path) != dimPaths.end())
+                {
+                    throw eckit::UserError("Duplicate dimension path: " + dim.path);
+                }
+
+                namedPathDims.insert({dim.path, dim.name});
+                dimNames.insert(dim.name);
+                dimPaths.insert(dim.path);
+            }
+        }
 
         for (const auto& categories : dataContainer->allSubCategories())
         {
@@ -63,60 +90,58 @@ namespace Ingester
             auto rootGroup = ioda::Engines::constructBackend(description_.getBackend(),
                                                              backendParams);
 
-            bool foundInvalidDim = false;
-            ioda::NewDimensionScales_t newDims;
-            for (const auto& scale : description_.getDims())
+            // Create the dimensions variables
+            std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> knownDims;
+            knownDims.insert({"*", ioda::NewDimensionScale<int>("nlocs", dataContainer->size(categories))});
+            namedPathDims.insert({"*", "nlocs"});
+
+            int autoGenDimNumber = 1;
+            for (const auto& varDesc : description_.getVariables())
             {
-                std::size_t size = 0;
-                if (isInteger(scale.size))
-                {
-                    size = std::stoi(scale.size);
-                }
-                else
-                {
-                    std::string token = scale.size.substr(scale.size.find('.') + 1,
-                                                          scale.size.size());
+                auto dataObject = dataContainer->get(varDesc.source, categories);
 
-                    std::string varName = scale.size.substr(0,
-                                                            scale.size.find('.'));
-
-                    if (token == "ncols")
+                for (auto dimIdx  = 0; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
+                {
+                    auto dimPath = dataObject->getDimPaths()[dimIdx];
+                    std::string dimName = "";
+                    if (namedPathDims.find(dimPath) != namedPathDims.end())
                     {
-                        size = dataContainer->get(varName, categories)->ncols();
-                    }
-                    else if (token == "nrows")
-                    {
-                        size = dataContainer->get(varName, categories)->nrows();
+                        dimName = namedPathDims[dimPath];
                     }
                     else
                     {
-                        std::ostringstream errStr;
-                        errStr << "Tried to get unknown parameter " <<  token;
-                        errStr << " from " << varName;
-                        throw eckit::BadParameter(errStr.str());
+                        auto newDimStr = std::ostringstream();
+
+                        if (dimIdx == 0)  // First dim corresponds to variables "Location"
+                        {
+                            newDimStr << "nlocs_" << dataObject->getGroupByFieldName();
+                        }
+                        else
+                        {
+                            newDimStr << "dim_" << autoGenDimNumber;
+                        }
+
+                        dimName = newDimStr.str();
+                        namedPathDims[dimPath] = dimName;
+                        autoGenDimNumber++;
+                    }
+
+                    if (knownDims.find(dimPath) == knownDims.end())
+                    {
+                        knownDims[dimPath] = ioda::NewDimensionScale<int>(dimName, dataObject->getDims()[dimIdx]);
                     }
                 }
-
-                auto newDim = ioda::NewDimensionScale<int>(scale.name, size);
-                newDims.push_back(newDim);
-
-                if (size <= 0) { foundInvalidDim = true; }
             }
 
-            if (foundInvalidDim)
+            ioda::NewDimensionScales_t allDims;
+            for (auto dimPair : knownDims)
             {
-                continue;
+                allDims.push_back(dimPair.second);
             }
 
             auto policy = ioda::detail::DataLayoutPolicy::Policies::ObsGroup;
             auto layoutPolicy = ioda::detail::DataLayoutPolicy::generate(policy);
-            auto obsGroup = ioda::ObsGroup::generate(rootGroup, newDims, layoutPolicy);
-
-            auto scaleMap = std::map<std::string, ioda::Variable>();
-            for (const auto& scale : description_.getDims())
-            {
-                scaleMap.insert({scale.name, obsGroup.vars[scale.name]});
-            }
+            auto obsGroup = ioda::ObsGroup::generate(rootGroup, allDims, layoutPolicy);
 
             // Create Globals
             for (auto& global : description_.getGlobals())
@@ -129,9 +154,11 @@ namespace Ingester
             {
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
-                for (size_t dimIdx = 0; dimIdx < varDesc.dimensions.size(); dimIdx++)
+                auto data = dataContainer->get(varDesc.source, categories);
+                for (size_t dimIdx = 0; dimIdx < data->getDims().size(); dimIdx++)
                 {
-                    auto dimVar = scaleMap.at(varDesc.dimensions[dimIdx]);
+                    auto dimPath = data->getDimPaths()[dimIdx];
+                    auto dimVar = obsGroup.vars[namedPathDims[dimPath]];
                     dimensions.push_back(dimVar);
 
                     if (dimIdx < varDesc.chunks.size())
@@ -145,14 +172,11 @@ namespace Ingester
                     }
                 }
 
-                auto data = dataContainer->get(varDesc.source, categories);
                 auto var = data->createVariable(obsGroup,
                                                 varDesc.name,
                                                 dimensions,
                                                 chunks,
                                                 varDesc.compressionLevel);
-
-
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
                 var.atts.add<std::string>("units", { varDesc.units }, {1});
@@ -164,7 +188,7 @@ namespace Ingester
 
                 if (varDesc.range)
                 {
-                    var.atts.add<FloatType>("valid_range",
+                    var.atts.add<float>("valid_range",
                                             {varDesc.range->start, varDesc.range->end},
                                             {2});
                 }

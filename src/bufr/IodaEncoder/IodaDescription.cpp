@@ -17,13 +17,14 @@ namespace
     {
         const char* Backend = "backend";
         const char* Filename = "obsdataout";
+        const char* Dimensions = "dimensions";
         const char* Variables = "variables";
         const char* Globals = "globals";
 
         namespace Dimension
         {
             const char* Name = "name";
-            const char* Size = "size";
+            const char* Path = "path";
         }  // Dimension
 
         namespace Variable
@@ -81,13 +82,22 @@ namespace Ingester
             }
         }
 
+        auto dimConfs = conf.getSubConfigurations(ConfKeys::Dimensions);
+        if (dimConfs.size() == 0)
+        {
+            std::stringstream errStr;
+            errStr << "ioda::dimensions must contain a list of dimensions!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+
         for (const auto& dimConf : dimConfs)
         {
-            DimensionDescription scale;
-            scale.name = dimConf.getString(ConfKeys::Dimension::Name);
-            scale.size = dimConf.getString(ConfKeys::Dimension::Size);
+            DimensionDescription dim;
+            dim.name = dimConf.getString(ConfKeys::Dimension::Name);
+            dim.path = dimConf.getString(ConfKeys::Dimension::Path);
 
-            addDimension(scale);
+            addDimension(dim);
         }
 
         auto varConfs = conf.getSubConfigurations(ConfKeys::Variables);
@@ -206,9 +216,9 @@ namespace Ingester
         }
     }
 
-    void IodaDescription::addDimension(const DimensionDescription& scale)
+    void IodaDescription::addDimension(const DimensionDescription& dim)
     {
-        dimensions_.push_back(scale);
+        dimensions_.push_back(dim);
     }
 
     void IodaDescription::addVariable(const VariableDescription& variable)

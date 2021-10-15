@@ -27,7 +27,7 @@ namespace Ingester
     struct DimensionDescription
     {
         std::string name;
-        std::string size;
+        std::string path;
     };
 
     struct VariableDescription

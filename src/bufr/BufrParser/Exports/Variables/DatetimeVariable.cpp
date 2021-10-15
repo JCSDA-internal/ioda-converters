@@ -105,8 +105,15 @@ namespace Ingester
             datetimeStr << "Z";
             datetimes[idx] = datetimeStr.str();
         }
-
-        return std::make_shared<DataObject<std::string>>(datetimes);
+        
+        Dimensions dims = {datetimes.size()};
+        return std::make_shared<DataObject<std::string>>(
+            datetimes,
+            getExportName(),
+            groupByField_,
+            dims,
+            map.at(getExportKey(ConfKeys::Year))->getPath(),
+            map.at(getExportKey(ConfKeys::Year))->getDimPaths());
     }
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)

@@ -18,7 +18,7 @@
 
 namespace Ingester
 {
-    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigArray;
+    typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigArray;
 
     BoundingFilter::BoundingFilter(const std::string& variable,
                    std::shared_ptr<float> lowerBound,
@@ -52,7 +52,7 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-        if (const auto& var = std::dynamic_pointer_cast<DataObject<FloatType>>(dataMap.at(variable_)))
+        if (const auto& var = std::dynamic_pointer_cast<DataObject<float>>(dataMap.at(variable_)))
         {
             auto dims = var->getDims();
             size_t colDims = 1;

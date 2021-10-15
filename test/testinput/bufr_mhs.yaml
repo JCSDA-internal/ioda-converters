@@ -47,6 +47,12 @@ observations:
       backend: netcdf
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
 
+      dimensions:
+        - name: Location
+          path: "*"
+        - name: Channel
+          path: "*/BRITCSTC"
+
       globals: 
         - name: "sensorCentralFrequency@MetaData"
           type: floatVector

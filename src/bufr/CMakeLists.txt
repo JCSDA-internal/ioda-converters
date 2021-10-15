@@ -10,6 +10,7 @@ list(APPEND _ingester_srcs
   Parser.h
   ParserFactory.h
   DataObject.h
+  DataObject.cpp
   BufrParser/BufrParser.h
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h

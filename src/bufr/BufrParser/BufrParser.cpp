@@ -72,7 +72,7 @@ namespace Ingester
             for (const auto& queryInfo : var->getQueryList())
             {
                 auto resultBase = result_set.get(queryInfo.name, queryInfo.groupByField);
-                srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase);
+                srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase, queryInfo.query);
             }
         }
 
