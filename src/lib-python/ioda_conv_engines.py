@@ -33,8 +33,9 @@ def OerrName():
 def OqcName():
     return _oqc_name
 
+
 def get_default_fill_val(mydtype):
-    dtype_tmp = np.array([],dtype=mydtype)
+    dtype_tmp = np.array([], dtype=mydtype)
     NumpyDtype = dtype_tmp.dtype
     if (NumpyDtype == np.dtype('float64')):
         fillval = 9.969209968386869e+36
@@ -58,6 +59,7 @@ def get_default_fill_val(mydtype):
         print("ERROR: Unrecognized data type", NumpyDtype)
         exit(-2)
     return fillval
+
 
 class IodaWriter(object):
     # Constructor
