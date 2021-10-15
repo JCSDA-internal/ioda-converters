@@ -93,8 +93,8 @@ class copernicus_l3swh2ioda(object):
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-        self.var_mdata[iodavar, iconv.OvalName()] = 'm'
-        self.var_mdata[iodavar, iconv.OerrName()] = 'm'
+        self.var_mdata[iodavar, iconv.OvalName()]['units'] = 'm'
+        self.var_mdata[iodavar, iconv.OerrName()]['units'] = 'm'
 
         # read input filename
         swh = copernicus(self.filename, self.factor)
