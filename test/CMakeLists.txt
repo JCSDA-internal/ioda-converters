@@ -47,6 +47,10 @@ list( APPEND test_input
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
+  testinput/dt_global_twosat_phy_l4_20150101_vDT2018.nc
+  testinput/global_vavh_l3_rt_s3a_20210930T18.nc
+  testinput/aeronet_cad.dat
+  testinput/aeronet_tab.dat
 )
 
 list( APPEND test_output
@@ -76,7 +80,7 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
-  testoutput/modis_aod.nc 
+  testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
   testoutput/afwa_snod.nc
@@ -88,6 +92,9 @@ list( APPEND test_output
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
   testoutput/aeronet_aod.nc
+  testoutput/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc
+  testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
+  testoutput/aeronet_aaod.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -231,6 +238,7 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
+
 
 #===============================================================================
 # Marine converters
@@ -379,6 +387,26 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_sss
                           -o testrun/smos_sss_l2.nc
                           -d 2010060100"
                           smos_sss_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4adt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/copernicus_l4adt2ioda.py
+                          -i testinput/dt_global_twosat_phy_l4_20150101_vDT2018.nc
+                          -o testrun/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc"
+                          ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/copernicus_l3swh2ioda.py
+                          -i testinput/global_vavh_l3_rt_s3a_20210930T18.nc
+                          -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
+                          ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, surface Obs - METAR converter
@@ -575,19 +603,29 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
-                          -i testinput/modis_aod.nc 
-                          -t 2016060100 
+                          -i testinput/modis_aod.nc
+                          -t 2016060100
                           -o testrun/modis_aod.nc"
                           modis_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
                   TYPE    SCRIPT
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
+                          -i testinput/aeronet_aod.dat
+                          -o testrun/aeronet_aod.nc"
+                          aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
+                  TYPE    SCRIPT
 		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
 		  ARGS    netcdf
-		          "${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
-			  -i testinput/aeronet_aod.dat
-			  -o testrun/aeronet_aod.nc"
-			  aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+		          "${CMAKE_BINARY_DIR}/bin/aeronet_aaod2ioda.py
+			  -c testinput/aeronet_cad.dat
+			  -t testinput/aeronet_tab.dat
+			  -o testrun/aeronet_aaod.nc"
+			  aeronet_aaod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import ioda
+import ioda_obs_space as ioda_os
 import numpy as np
 from collections import OrderedDict
 
@@ -66,7 +66,7 @@ class IodaWriter(object):
         self._dim_dict = DimDict
         self._test_key_list = TestKeyList
         # open IODA obs backend
-        self.obsspace = ioda.ObsSpace(Fname, mode='w', dim_dict=DimDict)
+        self.obsspace = ioda_os.ObsSpace(Fname, mode='w', dim_dict=DimDict)
 
     def WriteObsVars(self, ObsVars, VarDims, VarAttrs):
         # this method will create variables in the ouput obs group and
