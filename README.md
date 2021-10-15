@@ -199,11 +199,18 @@ For -i you can specify an input file and the converter will write it to one outp
 The GOES converter classes generate two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 or GOES-17 
 LB1 products. The final result of this class is two IODAv2 formatted data files - one for Reflectance Factor (RF, ABI channels 1-6) 
 and one for Brightness Temperature (BT, ABI channels 7-16). Since GOES-16 and GOES-17 are in a geostationary orbit, auxiliary files 
-containing relevant variables and attributes for latitude, longitude, scan angle, and elevation angle is accessed (or created if
+containing relevant variables and attributes for latitude, longitude, and various angles are accessed (or created if
 it does not exist) through the latlon_file_path input argument for each satellite. This converter checks to see if the 
-nadir for each satellite has changed and will create a new latlon file if a nadir change has occurred.
+nadir for each satellite has changed and will create a new latlon file if a nadir change has occurred.  
 
 ```
-Usage goes_converter = GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt)
-      goes_converter.convert()
+Usage   goes_converter = GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt, include_rf, resolution)
+        goes_converter.convert()
+
+Where   input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
+        latlon_file_path - The path to an existing GoesLatLon file or if it does not exist the path to write the file
+        output_file_path_rf - The path to write the IODAv2 reflectance factor data file
+        output_file_path_bt - The path to write the IODAv2 brightness temperature data file
+        include_rf - Boolean value indicating whether to create the reflectance factor output data file: False (default)
+        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, 64
 ```
