@@ -51,6 +51,7 @@ list( APPEND test_input
   testinput/global_vavh_l3_rt_s3a_20210930T18.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
+  testinput/owp_snow_obs.csv
 )
 
 list( APPEND test_output
@@ -95,6 +96,9 @@ list( APPEND test_output
   testoutput/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
+  testoutput/owp_snow_obs.nc
+  testoutput/owp_snow_obs_depth_csv.nc
+  testoutput/owp_snow_obs_swe_csv.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -888,3 +892,41 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ascat_ssm
                             -o testrun/ascat_ssm.nc
                             -m maskout"
                             ascat_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#=============================================================================
+# OWP Snow observation converters
+#==============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_owp_class
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_csv_class.py
+                          -i testinput/owp_snow_obs.csv
+                          -o testrun/owp_snow_obs.nc"
+                          owp_snow_obs.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_owp_proc
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_csv_2_ioda.py
+                          -i testinput/owp_snow_obs.csv
+			  -d 2018100100
+                          -o_depth testrun/owp_snow_obs_depth_csv.nc"
+                          owp_snow_obs_depth_csv.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_owp_class_depth
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${CMAKE_BINARY_DIR}/bin/owp_snow_obs_csv_class.py
+                          -i testinput/owp_snow_obs.csv
+                          -o testrun/owp_snow_obs_depth_csv.nc
+			  --thin_swe 1"
+                          owp_snow_obs_depth_csv.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+# could make a simlar test for just swe.

@@ -60,6 +60,16 @@ attr_data = {
     'nvars': np.int32(len(var_dims)), }
 
 
+fill_value = 9.96921e+36 
+
+
+def mask_nans(arr):
+    arr2 = arr.astype('float32')
+    arr2 = np.nan_to_num(arr2, nan=fill_value)
+    arr2 = np.ma.masked_where(arr2 == fill_value, arr2)
+    return arr2
+
+
 class OwpSnowObs(object):
     def __init__(self, file_in, file_out, thin_swe, thin_depth):
         self.file_in = file_in
@@ -78,16 +88,23 @@ class OwpSnowObs(object):
 
     def _read(self):
         print(f"Reading: {self.file_in}")
-        self.attr_data['obs_file'] = str(self.file_in)
+        self.attr_data['obs_file'] = str(self.file_in.split('/')[-1])
         # use pandas to get the data lined up
         obs_df = pd.read_csv(self.file_in, header=0, index_col=False)
         # TODO: drop rows where PreQC != 0 ?
         data_cols = set(['ObsValue', 'ObsError', 'PreQC'])
         index_cols = list(
             set(obs_df.columns.values.tolist()).difference(data_cols))
+        index_cols2 = sorted(set(index_cols).difference(set(['variable_name'])))
         obs_df = obs_df.reset_index().set_index(index_cols).drop(columns='index')
         obs_df = obs_df.unstack('variable_name').reset_index()
         obs_df.columns = [' '.join(col).strip() for col in obs_df.columns.values]
+        # Unstack is not reproducible, must stort after
+        obs_df = (
+            obs_df
+            .set_index(index_cols2)
+            .sort_index()
+            .reset_index())
 
         self.attr_data['ref_date_time'] = (
             pd.to_datetime(obs_df.datetime[0])
@@ -108,7 +125,7 @@ class OwpSnowObs(object):
             pd.Timestamp('1979-01-01 00:00:00', tz='UTC'))
         np.random.seed(int(time_diff.total_seconds()))
         for var, thin in thin_dict.items():
-            if thin > 0:
+            if thin > 0.0:
                 wh_var = np.where(~np.isnan(obs_df[f'ObsValue {var}']))[0] # 1-D
                 randoms = np.random.uniform(size=len(wh_var))
                 thin_quantile = np.quantile(randoms, thin)
@@ -131,9 +148,12 @@ class OwpSnowObs(object):
             self.units[iodavar] = output_var_unit_dict[iodavar]
             self.var_metadata[iodavar]['coordinates'] = 'longitude latitude'
             # the data
-            self.data[self.var_dict[iodavar]['valKey']] = obs_df[f'ObsValue {obsvar}'].values
-            self.data[self.var_dict[iodavar]['errKey']] = obs_df[f'ObsError {obsvar}'].values
-            self.data[self.var_dict[iodavar]['qcKey']] = obs_df[f'PreQC {obsvar}'].values
+            self.data[self.var_dict[iodavar]['valKey']] = (
+                mask_nans(obs_df[f'ObsValue {obsvar}'].values))
+            self.data[self.var_dict[iodavar]['errKey']] = (
+                mask_nans(obs_df[f'ObsError {obsvar}'].values))
+            self.data[self.var_dict[iodavar]['qcKey']] = (
+                mask_nans(obs_df[f'PreQC {obsvar}'].values))
 
         nlocs = len(self.data[('datetime', 'MetaData')])
         dim_dict['nlocs'] = nlocs
@@ -156,7 +176,7 @@ def parse_arguments():
         '-i', '--input',
         help="path of OWP snow observation input file(s)",
         type=str,
-        # nargs='+',
+        # nargs='+',  # could consider multiple days/files in the future.
         required=True)
     required.add_argument(
         '-o', '--output',

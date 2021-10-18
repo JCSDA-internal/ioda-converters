@@ -74,6 +74,16 @@ VarDims = {
     #'swe': ['nlocs'],
 }
 
+fill_value = 9.96921e+36 
+
+
+def mask_nans(arr):
+    arr2 = arr.astype('float32')
+    arr2 = np.nan_to_num(arr2, nan=fill_value)
+    arr2 = np.ma.masked_where(arr2 == fill_value, arr2)
+    return arr2
+
+
 def read_input(input_file, global_config):
     """
     Reads/converts a csv input file, performing optional thinning.
@@ -87,6 +97,8 @@ def read_input(input_file, global_config):
     # Get the input data and massage it.
     print("Reading ", input_file)
     obs_df = pd.read_csv(input_file, header=0)
+    inds = sorted(['latitude', 'longitude', 'datetime'])
+    obs_df = obs_df.reset_index().set_index(inds).sort_index().reset_index()
     attr_data = {}
     variable_dict = {}
     variable_names = list(output_var_names.keys())
@@ -145,9 +157,9 @@ def read_input(input_file, global_config):
         # Structure it for easy iteration in populating the output structure.
         # TODO JLM: the err and qc multipliers are COMPLETELY MADE UP.
         variable_dict[vv] = {
-            'values': var_df['ObsValue'].ravel()[thin_mask],
-            'err': var_df['ObsError'].ravel()[thin_mask],
-            'qc': var_df['PreQC'].ravel()[thin_mask]}
+            'values': mask_nans(var_df['ObsValue'].ravel()[thin_mask]),
+            'err': mask_nans(var_df['ObsError'].ravel()[thin_mask]),
+            'qc': mask_nans(var_df['PreQC'].ravel()[thin_mask])}
 
         # calculate output values
         # Note: the qc flags in GDS2.0 run from 0 to 5, with higher numbers
@@ -159,7 +171,7 @@ def read_input(input_file, global_config):
         opqc_name = global_config['opqc_name']
         obs_data = {}
         var_name = output_var_names[vv]  # shorten
-        obs_data[(var_name, oval_name)] = variable_dict[vv]['values'] / 1000.  # mm to m
+        obs_data[(var_name, oval_name)] = variable_dict[vv]['values'] # / 1000.  # mm to m
         obs_data[(var_name, oerr_name)] = variable_dict[vv]['err']
         obs_data[(var_name, opqc_name)] = variable_dict[vv]['qc']
 
@@ -204,7 +216,6 @@ def owp_snow_obs_csv_2_ioda(args):
     for var_name, output_type in output_type_names.items():
         if args_dict[output_type] is None:
             continue
-       
 
         var_list_name = output_var_names[var_name]
 
@@ -256,12 +267,9 @@ def owp_snow_obs_csv_2_ioda(args):
         DimDict['nlocs'] = obs_data[(var_list_name, 'ObsValue')].shape[0]
         attr_data['nlocs'] = np.int32(DimDict['nlocs'])
 
-
-        print(f'args_dict[output_type] = {args_dict[output_type]}')
-        print(f'locationKeyList = {locationKeyList}')
-        print(f'DimDict = {DimDict}')
-
-
+        #print(f'args_dict[output_type] = {args_dict[output_type]}')
+        #print(f'locationKeyList = {locationKeyList}')
+        #print(f'DimDict = {DimDict}')
 
         writer = iconv.IodaWriter(args_dict[output_type], locationKeyList, DimDict)
 
@@ -274,13 +282,11 @@ def owp_snow_obs_csv_2_ioda(args):
         # use the writer class to create the final output file
         #writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)
 
-        print(f'outdate = {outdata}')
-        print(f'VarDims = {VarDims}')
-        print(f'varMdata = {varMdata}')
-        print(f'attr_data = {attr_data}')
-        print(f'varUnits = {varUnits}')
-
-
+        # print(f'outdate = {outdata}')
+        # print(f'VarDims = {VarDims}')
+        # print(f'varMdata = {varMdata}')
+        # print(f'attr_data = {attr_data}')
+        # print(f'varUnits = {varUnits}')
 
         # call the IODA API and write the file
         writer.BuildIoda(outdata, VarDims, varMdata, attr_data, varUnits)
