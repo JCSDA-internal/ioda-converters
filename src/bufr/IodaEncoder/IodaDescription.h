@@ -27,7 +27,7 @@ namespace Ingester
     struct DimensionDescription
     {
         std::string name;
-        std::string path;
+        std::vector<std::string> paths;
     };
 
     struct VariableDescription
@@ -98,7 +98,7 @@ namespace Ingester
         explicit IodaDescription(const eckit::Configuration& conf);
 
         /// \brief Add Dimension defenition
-        void addDimension(const DimensionDescription& scale);
+        void addDimension(const DimensionDescription& dim);
 
         /// \brief Add Variable defenition
         void addVariable(const VariableDescription& variable);
@@ -135,5 +135,8 @@ namespace Ingester
 
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);
+
+        /// \brief Process the dimension description paths
+        std::vector<std::string> parseDimPathStr(const std::string& dimPath);
     };
 }  // namespace Ingester

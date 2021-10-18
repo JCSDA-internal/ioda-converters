@@ -34,6 +34,8 @@ namespace Ingester
                                                     bool append = false);
 
      private:
+        typedef std::map<std::vector<std::string>, std::string> NamedPathDims;
+
         /// \brief The description
         const IodaDescription description_;
 
@@ -50,11 +52,8 @@ namespace Ingester
 
         bool isInteger(const std::string& str) const;
 
-        // Todo: Delete with USE_OLD_LAYOUT
-        std::string fixCoordinatesStr(const std::string& coordStr,
-                                      std::map<std::string, std::string> varMap);
+        bool existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const;
 
-        // Todo: Delete with USE_OLD_LAYOUT
-        std::pair<std::string, std::string> splitVar(const std::string& varNameStr);
+        std::string nameForDimPath(const std::string& path, const NamedPathDims& pathMap) const;
     };
 }  // namespace Ingester

@@ -23,6 +23,9 @@
 
 namespace Ingester
 {
+    const static char* DefualtLocationName = "nlocs";
+    const static char* DefualtDimName = "dim";
+
     IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
         description_(IodaDescription(conf))
     {
@@ -40,7 +43,7 @@ namespace Ingester
         std::map<SubCategory, ioda::ObsGroup> obsGroups;
 
         // Get the named dimensions
-        std::map<std::string, std::string> namedPathDims;
+        NamedPathDims namedPathDims;
 
         {
             std::set<std::string> dimNames;
@@ -49,17 +52,28 @@ namespace Ingester
             {
                 if (dimNames.find(dim.name) != dimNames.end())
                 {
-                    throw eckit::UserError("Duplicate dimension name: " + dim.name);
-                }
-                if (dimPaths.find(dim.path) != dimPaths.end())
-                {
-                    throw eckit::UserError("Duplicate dimension path: " + dim.path);
+                    throw eckit::UserError("ioda::dimensions: Duplicate dimension name: " + dim.name);
                 }
 
-                namedPathDims.insert({dim.path, dim.name});
                 dimNames.insert(dim.name);
-                dimPaths.insert(dim.path);
+
+                for (auto path : dim.paths)
+                {
+                    if (dimPaths.find(path) != dimPaths.end())
+                    {
+                        throw eckit::BadParameter("ioda::dimensions: Declared duplicate dimension path: " + path);
+                    }
+
+                    dimPaths.insert(path);
+                }
+
+                namedPathDims.insert({dim.paths, dim.name});
             }
+        }
+
+        if (!existsInNamedPath("*", namedPathDims))
+        {
+            namedPathDims.insert({{"*"}, DefualtLocationName});
         }
 
         for (const auto& categories : dataContainer->allSubCategories())
@@ -92,8 +106,6 @@ namespace Ingester
 
             // Create the dimensions variables
             std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> knownDims;
-            knownDims.insert({"*", ioda::NewDimensionScale<int>("nlocs", dataContainer->size(categories))});
-            namedPathDims.insert({"*", "nlocs"});
 
             int autoGenDimNumber = 1;
             for (const auto& varDesc : description_.getVariables())
@@ -104,9 +116,9 @@ namespace Ingester
                 {
                     auto dimPath = dataObject->getDimPaths()[dimIdx];
                     std::string dimName = "";
-                    if (namedPathDims.find(dimPath) != namedPathDims.end())
+                    if (existsInNamedPath(dimPath, namedPathDims))
                     {
-                        dimName = namedPathDims[dimPath];
+                        dimName = nameForDimPath(dimPath, namedPathDims);
                     }
                     else
                     {
@@ -114,15 +126,15 @@ namespace Ingester
 
                         if (dimIdx == 0)  // First dim corresponds to variables "Location"
                         {
-                            newDimStr << "nlocs_" << dataObject->getGroupByFieldName();
+                            newDimStr << DefualtLocationName << "_" << dataObject->getGroupByFieldName();
                         }
                         else
                         {
-                            newDimStr << "dim_" << autoGenDimNumber;
+                            newDimStr << DefualtDimName << "_" << autoGenDimNumber;
                         }
 
                         dimName = newDimStr.str();
-                        namedPathDims[dimPath] = dimName;
+                        namedPathDims[{dimPath}] = dimName;
                         autoGenDimNumber++;
                     }
 
@@ -158,7 +170,8 @@ namespace Ingester
                 for (size_t dimIdx = 0; dimIdx < data->getDims().size(); dimIdx++)
                 {
                     auto dimPath = data->getDimPaths()[dimIdx];
-                    auto dimVar = obsGroup.vars[namedPathDims[dimPath]];
+
+                    auto dimVar = obsGroup.vars[nameForDimPath(dimPath, namedPathDims)];
                     dimensions.push_back(dimVar);
 
                     if (dimIdx < varDesc.chunks.size())
@@ -281,4 +294,34 @@ namespace Ingester
 
       return isInt;
   }
+
+    bool IodaEncoder::existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const
+    {
+        for (auto paths : pathMap)
+        {
+            if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    std::string IodaEncoder::nameForDimPath(const std::string& path, const NamedPathDims& pathMap) const
+    {
+        std::string name;
+
+        for (auto paths : pathMap)
+        {
+            if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
+            {
+                name = paths.second;
+                break;
+            }
+        }
+
+        return name;
+
+    }
 }  // namespace Ingester

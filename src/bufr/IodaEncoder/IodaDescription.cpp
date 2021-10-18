@@ -95,7 +95,7 @@ namespace Ingester
         {
             DimensionDescription dim;
             dim.name = dimConf.getString(ConfKeys::Dimension::Name);
-            dim.path = dimConf.getString(ConfKeys::Dimension::Path);
+            dim.paths = parseDimPathStr(dimConf.getString(ConfKeys::Dimension::Path));
 
             addDimension(dim);
         }
@@ -247,4 +247,58 @@ namespace Ingester
             throw eckit::BadParameter("Unknown ioda::backend specified.");
         }
     }
+
+    std::vector<std::string> IodaDescription::parseDimPathStr(const std::string& dimPath)
+    {
+        std::string pathSubstr = dimPath;
+
+        // Remove all the spaces
+        boost::erase_all(pathSubstr, " ");
+
+        // Split up the dimensions path string into components
+        std::vector<std::string> dimPaths;
+        if (pathSubstr.find('[', 0) != pathSubstr.npos || pathSubstr.find(']', 0) != pathSubstr.npos)
+        {
+            if (pathSubstr.front() == '[' && pathSubstr.back() == ']')
+            {
+                pathSubstr = pathSubstr.substr(1, pathSubstr.size() - 2);
+                boost::split(dimPaths, pathSubstr, boost::is_any_of(","));
+            }
+            else
+            {
+                throw eckit::BadParameter("ioda::dimensions path string brackets missing or misplaced.");
+            }
+        }
+        else
+        {
+            dimPaths.push_back(pathSubstr);
+        }
+
+
+        // Check and clean up the dimension path strings
+        for (std::size_t pathIdx = 0; pathIdx < dimPaths.size(); pathIdx++)
+        {
+            std::string pathStr = "";
+            std::vector<std::string> pathParts;
+
+            boost::split(pathParts, dimPaths[pathIdx], boost::is_any_of("/"));
+
+            if (pathParts[0] != "*")
+            {
+                throw eckit::BadParameter("ioda::dimensions path string must start with '*'.");
+            }
+
+            for (auto part : pathParts)
+            {
+                pathStr.append(part);
+                pathStr.append("/");
+            }
+
+            pathStr.pop_back();
+            dimPaths[pathIdx] = pathStr;
+        }
+
+        return dimPaths;
+    }
+
 }  // namespace Ingester
