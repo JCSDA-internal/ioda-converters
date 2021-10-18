@@ -133,11 +133,18 @@ namespace Ingester
 
         T get(const Location& loc) const
         {
+            size_t dim_prod = 1;
+            for (int dim_idx = dims_.size(); dim_idx > loc.size(); --dim_idx)
+            {
+                dim_prod *= dims_[dim_idx];
+            }
+
             //Compute the index into the data array
             size_t index = 0;
-            for (auto i = 0; i < loc.size(); ++i)
+            for (int dim_idx = loc.size() - 1; dim_idx >= 0; --dim_idx)
             {
-                index += loc[i] * dims_[i];
+                index += dim_prod*loc[dim_idx];
+                dim_prod *= dims_[dim_idx];
             }
 
             return data_[index];

@@ -1,6 +1,8 @@
 
 #include "DataObject.h"
 
+#include <iostream>
+
 #include "eckit/exception/Exceptions.h"
 
 

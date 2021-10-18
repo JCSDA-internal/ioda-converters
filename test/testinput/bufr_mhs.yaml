@@ -48,8 +48,6 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
 
       dimensions:
-        - name: Location
-          path: "*"
         - name: Channel
           path: "*/BRITCSTC"
 
@@ -133,6 +131,3 @@ observations:
           range: [120, 500]
           chunks: [1000, 15]
           compressionLevel: 4
-
-
-        
