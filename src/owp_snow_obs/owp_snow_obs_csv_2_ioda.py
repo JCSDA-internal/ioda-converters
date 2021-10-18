@@ -71,10 +71,10 @@ DimDict = {
 
 VarDims = {
     'snow_depth': ['nlocs'],
-    #'swe': ['nlocs'],
+    # 'swe': ['nlocs'],  # TODO JLM: This is a hack that will break
 }
 
-fill_value = 9.96921e+36 
+fill_value = 9.96921e+36
 
 
 def mask_nans(arr):
@@ -171,7 +171,7 @@ def read_input(input_file, global_config):
         opqc_name = global_config['opqc_name']
         obs_data = {}
         var_name = output_var_names[vv]  # shorten
-        obs_data[(var_name, oval_name)] = variable_dict[vv]['values'] # / 1000.  # mm to m
+        obs_data[(var_name, oval_name)] = variable_dict[vv]['values']  # / 1000.  # mm to m
         obs_data[(var_name, oerr_name)] = variable_dict[vv]['err']
         obs_data[(var_name, opqc_name)] = variable_dict[vv]['qc']
 
@@ -222,15 +222,15 @@ def owp_snow_obs_csv_2_ioda(args):
         obs_data = obs[var_name]['obs_data']
         loc_data = obs[var_name]['loc_data']
         attr_data = obs[var_name]['attr_data']
-        #loc_data['datetime'] = writer.FillNcVector(
-        #    loc_data['datetime'], "datetime")
+        # loc_data['datetime'] = writer.FillNcVector(
+        #     loc_data['datetime'], "datetime")
 
         outdata = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        outdata[('datetime', 'MetaData')]  =  np.array(loc_data['datetime'], dtype = object) 
-        outdata[('latitude', 'MetaData')]  =  loc_data['latitude']  
-        outdata[('longitude', 'MetaData')] =  loc_data['longitude']  
-        
+        outdata[('datetime', 'MetaData')] = np.array(loc_data['datetime'], dtype=object)
+        outdata[('latitude', 'MetaData')] = loc_data['latitude']
+        outdata[('longitude', 'MetaData')] = loc_data['longitude']
+
         keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         # set up variable name
         key = 'oneob'
@@ -238,9 +238,9 @@ def owp_snow_obs_csv_2_ioda(args):
         keyDict[key]['errKey'] = var_list_name, iconv.OerrName()
         keyDict[key]['qcKey'] = var_list_name, iconv.OqcName()
 
-        outdata[keyDict[key]['valKey']] = obs_data[(var_list_name,'ObsValue')]
-        outdata[keyDict[key]['errKey']] = obs_data[(var_list_name,'ObsError')]
-        outdata[keyDict[key]['qcKey']]  = obs_data[(var_list_name,'PreQC')]
+        outdata[keyDict[key]['valKey']] = obs_data[(var_list_name, 'ObsValue')]
+        outdata[keyDict[key]['errKey']] = obs_data[(var_list_name, 'ObsError')]
+        outdata[keyDict[key]['qcKey']] = obs_data[(var_list_name, 'PreQC')]
 
         # prepare global attributes we want to output in the file,
         # in addition to the ones already loaded in from the input file
@@ -262,25 +262,25 @@ def owp_snow_obs_csv_2_ioda(args):
         attr_data['date_time_string'] = global_config[
             'ref_date_time'].strftime("%Y-%m-%dT%H:%M:%SZ")
         attr_data['thinning'] = global_config['thin']
-        attr_data['converter'] = os.path.basename(__file__)    
-        
+        attr_data['converter'] = os.path.basename(__file__)
+
         DimDict['nlocs'] = obs_data[(var_list_name, 'ObsValue')].shape[0]
         attr_data['nlocs'] = np.int32(DimDict['nlocs'])
 
-        #print(f'args_dict[output_type] = {args_dict[output_type]}')
-        #print(f'locationKeyList = {locationKeyList}')
-        #print(f'DimDict = {DimDict}')
+        # print(f'args_dict[output_type] = {args_dict[output_type]}')
+        # print(f'locationKeyList = {locationKeyList}')
+        # print(f'DimDict = {DimDict}')
 
         writer = iconv.IodaWriter(args_dict[output_type], locationKeyList, DimDict)
 
         varMdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         varUnits = {}
-        
+
         varMdata[var_list_name]['coordinates'] = 'longitude latitude'
-        varUnits[var_list_name] = 'mm' #output_var_units
+        varUnits[var_list_name] = 'mm'  # output_var_units
 
         # use the writer class to create the final output file
-        #writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)
+        # writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)
 
         # print(f'outdate = {outdata}')
         # print(f'VarDims = {VarDims}')
@@ -290,6 +290,7 @@ def owp_snow_obs_csv_2_ioda(args):
 
         # call the IODA API and write the file
         writer.BuildIoda(outdata, VarDims, varMdata, attr_data, varUnits)
+
 
 # Make parser separate, testable.
 def parse_arguments():

@@ -41,12 +41,13 @@ arg_parse_description = (
 # obs file name -> ioda file name
 output_var_dict = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
 # ioda file_name -> ioda file units
-output_var_unit_dict = {'snow_depth': 'mm', 'swe': 'mm'}
+output_var_unit_dict = {'snow_depth': 'm', 'swe': 'mm'}
+output_conversion_factor = {'snow_depth': 1./1000., 'swe': 1.00000000000000}
 
 location_key_list = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),]
+    ("datetime", "string"), ]
 
 dim_dict = {}
 
@@ -60,7 +61,7 @@ attr_data = {
     'nvars': np.int32(len(var_dims)), }
 
 
-fill_value = 9.96921e+36 
+fill_value = 9.96921e+36
 
 
 def mask_nans(arr):
@@ -81,7 +82,7 @@ class OwpSnowObs(object):
         self.meta_dict = defaultdict(lambda: defaultdict(dict))
         self.data = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.var_metadata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        
+
         self.attr_data = attr_data
         self.units = {}
         self._read()
@@ -99,7 +100,7 @@ class OwpSnowObs(object):
         obs_df = obs_df.reset_index().set_index(index_cols).drop(columns='index')
         obs_df = obs_df.unstack('variable_name').reset_index()
         obs_df.columns = [' '.join(col).strip() for col in obs_df.columns.values]
-        # Unstack is not reproducible, must stort after
+        # Unstack is not reproducible, must sort after
         obs_df = (
             obs_df
             .set_index(index_cols2)
@@ -120,13 +121,12 @@ class OwpSnowObs(object):
             'snow_water_equivalent_mm': self.thin_swe,
             'snow_depth_mm': self.thin_depth}
         # Set a seed for each day - reproducibly random
-        time_diff = (
-            pd.Timestamp(self.attr_data['ref_date_time']) -
-            pd.Timestamp('1979-01-01 00:00:00', tz='UTC'))
+        time_datum = pd.Timestamp('1979-01-01 00:00:00', tz='UTC')
+        time_diff = pd.Timestamp(self.attr_data['ref_date_time']) - time_datum
         np.random.seed(int(time_diff.total_seconds()))
         for var, thin in thin_dict.items():
             if thin > 0.0:
-                wh_var = np.where(~np.isnan(obs_df[f'ObsValue {var}']))[0] # 1-D
+                wh_var = np.where(~np.isnan(obs_df[f'ObsValue {var}']))[0]  # 1-D
                 randoms = np.random.uniform(size=len(wh_var))
                 thin_quantile = np.quantile(randoms, thin)
                 thin_inds = np.where(randoms <= thin_quantile)[0]
@@ -139,21 +139,22 @@ class OwpSnowObs(object):
         self.data[('latitude', 'MetaData')] = obs_df.latitude.values
         self.data[('longitude', 'MetaData')] = obs_df.longitude.values
 
-        for obsvar, iodavar in output_var_dict.items():
+        for obs_var, ioda_var in output_var_dict.items():
             # define the ioda variable
-            self.var_dict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-            self.var_dict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-            self.var_dict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.var_dict[ioda_var]['valKey'] = ioda_var, iconv.OvalName()
+            self.var_dict[ioda_var]['errKey'] = ioda_var, iconv.OerrName()
+            self.var_dict[ioda_var]['qcKey'] = ioda_var, iconv.OqcName()
             # define ioda meta/ancillary
-            self.units[iodavar] = output_var_unit_dict[iodavar]
-            self.var_metadata[iodavar]['coordinates'] = 'longitude latitude'
+            self.units[ioda_var] = output_var_unit_dict[ioda_var]
+            self.var_metadata[ioda_var]['coordinates'] = 'longitude latitude'
             # the data
-            self.data[self.var_dict[iodavar]['valKey']] = (
-                mask_nans(obs_df[f'ObsValue {obsvar}'].values))
-            self.data[self.var_dict[iodavar]['errKey']] = (
-                mask_nans(obs_df[f'ObsError {obsvar}'].values))
-            self.data[self.var_dict[iodavar]['qcKey']] = (
-                mask_nans(obs_df[f'PreQC {obsvar}'].values))
+            conv_fact = output_conversion_factor[ioda_var]
+            self.data[self.var_dict[ioda_var]['valKey']] = (
+                mask_nans(obs_df[f'ObsValue {obs_var}'].values * conv_fact))
+            self.data[self.var_dict[ioda_var]['errKey']] = (
+                mask_nans(obs_df[f'ObsError {obs_var}'].values * conv_fact))
+            self.data[self.var_dict[ioda_var]['qcKey']] = (
+                mask_nans(obs_df[f'PreQC {obs_var}'].values * conv_fact))
 
         nlocs = len(self.data[('datetime', 'MetaData')])
         dim_dict['nlocs'] = nlocs
@@ -201,6 +202,6 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     owp_snow_obs = OwpSnowObs(
-        args.input, args.output , args.thin_swe, args.thin_depth)
+        args.input, args.output, args.thin_swe, args.thin_depth)
     result = owp_snow_obs.write()
     sys.exit(result)
