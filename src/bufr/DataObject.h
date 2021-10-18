@@ -11,6 +11,7 @@
 #include <string>
 #include <memory>
 #include <type_traits>
+#include <iostream>
 
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
@@ -230,11 +231,12 @@ namespace Ingester
 
             // Make new DataObject with the rows we want
             std::vector<T> newData;
-            newData.resize(dims_[0] * extraDims);
+            newData.reserve(rows.size() * extraDims);
             for (auto i = 0; i < rows.size(); ++i)
             {
-                newData.insert(newData.end(), 
-                    data_.begin() + rows[i] * extraDims, data_.begin() + (rows[i] + 1) * extraDims);
+                newData.insert(newData.end(),
+                               data_.begin() + rows[i] * extraDims,
+                               data_.begin() + (rows[i] + 1) * extraDims);
             }
 
             auto sliceDims = dims_;

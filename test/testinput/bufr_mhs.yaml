@@ -49,7 +49,7 @@ observations:
 
       dimensions:
         - name: Channel
-          path: "*/BRITCSTC"
+          path: "[*/BRIT, */BRITCSTC]"
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
