@@ -42,7 +42,8 @@ namespace Ingester
         std::map<SubCategory, ioda::ObsGroup> obsGroups;
 
         // Get the named dimensions
-        NamedPathDims namedPathDims;
+        NamedPathDims namedLocDims;
+        NamedPathDims namedExtraDims;
 
         {
             std::set<std::string> dimNames;
@@ -66,13 +67,13 @@ namespace Ingester
                     dimPaths.insert(path);
                 }
 
-                namedPathDims.insert({dim.paths, dim.name});
+                namedExtraDims.insert({dim.paths, dim.name});
             }
         }
 
-        if (!existsInNamedPath("*", namedPathDims))
+        if (!existsInNamedPath("*", namedExtraDims))
         {
-            namedPathDims.insert({{"*"}, DefualtLocationName});
+            namedLocDims.insert({{"*"}, DefualtLocationName});
         }
 
         for (const auto& categories : dataContainer->allSubCategories())
@@ -104,48 +105,60 @@ namespace Ingester
                                                              backendParams);
 
             // Create the dimensions variables
-            std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> knownDims;
+            std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> dimMap;
 
-            int autoGenDimNumber = 1;
+            int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
                 auto dataObject = dataContainer->get(varDesc.source, categories);
 
-                for (auto dimIdx  = 0; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
+                for (std::size_t dimIdx  = 0; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
                 {
                     auto dimPath = dataObject->getDimPaths()[dimIdx];
                     std::string dimName = "";
-                    if (existsInNamedPath(dimPath, namedPathDims))
-                    {
-                        dimName = nameForDimPath(dimPath, namedPathDims);
-                    }
-                    else
-                    {
-                        auto newDimStr = std::ostringstream();
 
-                        if (dimIdx == 0)  // First dim corresponds to variables "Location"
+                    if (dimIdx == 0)
+                    {
+                        if (existsInNamedPath(dimPath, namedLocDims))
                         {
-                            newDimStr << DefualtLocationName << "_" << dataObject->getGroupByFieldName();
+                            dimName = nameForDimPath(dimPath, namedLocDims);
                         }
                         else
                         {
-                            newDimStr << DefualtDimName << "_" << autoGenDimNumber;
-                        }
+                            auto newDimStr = std::ostringstream();
+                            newDimStr << DefualtLocationName << "_" << dataObject->getGroupByFieldName();
 
-                        dimName = newDimStr.str();
-                        namedPathDims[{dimPath}] = dimName;
-                        autoGenDimNumber++;
+                            dimName = newDimStr.str();
+                            namedLocDims[{dimPath}] = dimName;
+                            autoGenDimNumber++;
+                        }
+                    }
+                    else
+                    {
+                        if (existsInNamedPath(dimPath, namedExtraDims))
+                        {
+                            dimName = nameForDimPath(dimPath, namedExtraDims);
+                        }
+                        else
+                        {
+                            auto newDimStr = std::ostringstream();
+                            newDimStr << DefualtDimName << "_" << autoGenDimNumber;
+
+                            dimName = newDimStr.str();
+                            namedExtraDims[{dimPath}] = dimName;
+                            autoGenDimNumber++;
+                        }
                     }
 
-                    if (knownDims.find(dimPath) == knownDims.end())
+                    if (dimMap.find(dimName) == dimMap.end())
                     {
-                        knownDims[dimPath] = ioda::NewDimensionScale<int>(dimName, dataObject->getDims()[dimIdx]);
+                        dimMap[dimName] = ioda::NewDimensionScale<int>(dimName, dataObject->getDims()[dimIdx]);
                     }
                 }
             }
 
             ioda::NewDimensionScales_t allDims;
-            for (auto dimPair : knownDims)
+            for (auto dimPair : dimMap)
             {
                 allDims.push_back(dimPair.second);
             }
@@ -169,6 +182,16 @@ namespace Ingester
                 for (size_t dimIdx = 0; dimIdx < data->getDims().size(); dimIdx++)
                 {
                     auto dimPath = data->getDimPaths()[dimIdx];
+
+                    NamedPathDims namedPathDims;
+                    if (dimIdx == 0)
+                    {
+                        namedPathDims = namedLocDims;
+                    }
+                    else
+                    {
+                        namedPathDims = namedExtraDims;
+                    }
 
                     auto dimVar = obsGroup.vars[nameForDimPath(dimPath, namedPathDims)];
                     dimensions.push_back(dimVar);

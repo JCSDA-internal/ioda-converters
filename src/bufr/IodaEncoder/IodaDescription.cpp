@@ -82,22 +82,22 @@ namespace Ingester
             }
         }
 
-        auto dimConfs = conf.getSubConfigurations(ConfKeys::Dimensions);
-        if (dimConfs.size() == 0)
+        if (conf.has(ConfKeys::Dimensions))
         {
-            std::stringstream errStr;
-            errStr << "ioda::dimensions must contain a list of dimensions!";
-            throw eckit::BadParameter(errStr.str());
-        }
+            auto dimConfs = conf.getSubConfigurations(ConfKeys::Dimensions);
+            if (dimConfs.size() == 0) {
+                std::stringstream errStr;
+                errStr << "ioda::dimensions must contain a list of dimensions!";
+                throw eckit::BadParameter(errStr.str());
+            }
 
+            for (const auto &dimConf: dimConfs) {
+                DimensionDescription dim;
+                dim.name = dimConf.getString(ConfKeys::Dimension::Name);
+                dim.paths = parseDimPathStr(dimConf.getString(ConfKeys::Dimension::Path));
 
-        for (const auto& dimConf : dimConfs)
-        {
-            DimensionDescription dim;
-            dim.name = dimConf.getString(ConfKeys::Dimension::Name);
-            dim.paths = parseDimPathStr(dimConf.getString(ConfKeys::Dimension::Path));
-
-            addDimension(dim);
+                addDimension(dim);
+            }
         }
 
         auto varConfs = conf.getSubConfigurations(ConfKeys::Variables);

@@ -50,10 +50,8 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.{splits/hour}.{splits/minute}.filter_split.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/radiance.nrows
         - name: "nchans"
-          size: variables/radiance.ncols
+          path: "[*/BRITCSTC, */BRIT]"
 
       variables:
         - name: "datetime@MetaData"

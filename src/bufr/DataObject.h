@@ -53,6 +53,7 @@ namespace Ingester
         std::string getPath() const { return query_; }
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
+        virtual void print() const = 0;
         virtual int getAsInt(const Location& loc) const = 0;
         virtual float getAsFloat(const Location& loc) const = 0;
         virtual std::string getAsString(const Location& loc) const = 0;
@@ -125,9 +126,16 @@ namespace Ingester
         };
 
         /// \brief Print data to stdout for debug purposes.
-        void print() const 
+        void print() const final
         {
-            std::cout << "DataObject: " << data_ << std::endl;
+            std::cout << "DataObject " << fieldName_ << ":";
+
+            for (auto element : data_)
+            {
+                std::cout << element << ", ";
+            }
+
+            std::cout << std::endl;
         };
 
         std::vector<T> getRawData() const { return data_; }
@@ -135,7 +143,7 @@ namespace Ingester
         T get(const Location& loc) const
         {
             size_t dim_prod = 1;
-            for (int dim_idx = dims_.size(); dim_idx > loc.size(); --dim_idx)
+            for (int dim_idx = dims_.size(); dim_idx > static_cast<int>(loc.size()); --dim_idx)
             {
                 dim_prod *= dims_[dim_idx];
             }
@@ -224,7 +232,7 @@ namespace Ingester
         {
             //Compute product of extra dimensions)
             std::size_t extraDims = 1;
-            for (auto i = 1; i < dims_.size(); ++i)
+            for (std::size_t i = 1; i < dims_.size(); ++i)
             {
                 extraDims *= dims_[i];
             }
@@ -232,7 +240,7 @@ namespace Ingester
             // Make new DataObject with the rows we want
             std::vector<T> newData;
             newData.reserve(rows.size() * extraDims);
-            for (auto i = 0; i < rows.size(); ++i)
+            for (std::size_t i = 0; i < rows.size(); ++i)
             {
                 newData.insert(newData.end(),
                                data_.begin() + rows[i] * extraDims,
@@ -263,7 +271,7 @@ namespace Ingester
             params.chunk = true;
             params.chunks = chunks;
             params.compressWithGZIP(compressionLevel);
-            params.setFillValue<T>(999);
+            params.setFillValue<T>(10e10);
 
             return params;
         }
