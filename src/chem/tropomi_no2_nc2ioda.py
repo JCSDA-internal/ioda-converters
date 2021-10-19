@@ -53,7 +53,6 @@ class tropomi(object):
     def __init__(self, filenames):
         self.filenames = filenames
         self.varDict = defaultdict(lambda: defaultdict(dict))
-        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
