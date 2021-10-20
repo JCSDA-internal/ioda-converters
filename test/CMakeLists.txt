@@ -128,6 +128,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
+    testinput/airep_wmoBUFR2ioda.yaml
+    testinput/airep_multi.bufr
   )
 
   list( APPEND test_output
@@ -142,6 +144,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
     testoutput/NC005066.nc
+    testoutput/airep_multi.nc
   )
 endif()
 
