@@ -50,57 +50,57 @@ observations:
           size: variables/latitude.nrows
 
       variables:
-        - name: "datetime@MetaData"
+        - name: "MetaData/datetime"
           source: variables/timestamp
           dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
           dimensions: [ "nlocs" ]
           longName: "Latitude"
           units: "degrees_north"
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
           dimensions: [ "nlocs" ]
           longName: "Longitude"
           units: "degrees_east"
 
-        - name: "altitude@MetaData"
+        - name: "MetaData/altitude"
           source: variables/altitude
           dimensions: [ "nlocs" ]
           longName: "Altitude"
           units: "m"
 
-        - name: "aircraftFlightNum@MetaData"
+        - name: "MetaData/aircraftFlightNum"
           source: variables/aircraftFlightNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight number"
           units: ""
 
-        - name: "aircraftFlightPhase@MetaData"
+        - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight phase (ascending/descending/level)"
           units: ""
 
-        - name: "temperatureAir@ObsValue"
+        - name: "ObsValue/temperatureAir"
           coordinates: "longitude latitude"
           source: variables/temperatureAir
           dimensions: [ "nlocs" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "windDirection@ObsValue"
+        - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
           dimensions: [ "nlocs" ]
           longName: "Wind Direction"
           units: "degrees true"
 
-        - name: "windSpeed@ObsValue"
+        - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           dimensions: [ "nlocs" ]

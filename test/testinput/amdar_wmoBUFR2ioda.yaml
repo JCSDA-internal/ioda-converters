@@ -67,106 +67,106 @@ observations:
           size: variables/latitude.nrows
 
       variables:
-        - name: "datetime@MetaData"
+        - name: "MetaData/datetime"
           source: variables/timestamp
           dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
           dimensions: [ "nlocs" ]
           longName: "Latitude"
           units: "degrees_north"
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
           dimensions: [ "nlocs" ]
           longName: "Longitude"
           units: "degrees_east"
 
-        - name: "altitude@MetaData"
+        - name: "MetaData/altitude"
           source: variables/altitude
           dimensions: [ "nlocs" ]
           longName: "Altitude"
           units: "m"
 
-        - name: "pressureAltitude@MetaData"
+        - name: "MetaData/pressureAltitude"
           source: variables/pressureAltitude
           dimensions: [ "nlocs" ]
           longName: "Pressure altitude"
           units: "m"
 
-        - name: "aircraftRegistrationNum@MetaData"
+        - name: "MetaData/aircraftRegistrationNum"
           source: variables/aircraftRegistrationNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft registration number or other ID"
           units: ""
 
-        - name: "aircraftFlightNum@MetaData"
+        - name: "MetaData/aircraftFlightNum"
           source: variables/aircraftFlightNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight number"
           units: ""
 
-        - name: "aircraftTailNum@MetaData"
+        - name: "MetaData/aircraftTailNum"
           source: variables/aircraftTailNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft tail number"
           units: ""
 
-        - name: "observationSequenceNum@MetaData"
+        - name: "MetaData/observationSequenceNum"
           source: variables/observationSequenceNum
           dimensions: [ "nlocs" ]
           longName: "Observation sequence number"
           units: ""
 
-        - name: "aircraftFlightPhase@MetaData"
+        - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight phase (ascending/descending/level)"
           units: ""
 
-        - name: "aircraftTrueAirspeed@MetaData"
+        - name: "MetaData/aircraftTrueAirspeed"
           source: variables/aircraftTrueAirspeed
           dimensions: [ "nlocs" ]
           longName: "Aircraft true airspeed"
           units: "m s-1"
 
-        - name: "aircraftHeading@MetaData"
+        - name: "MetaData/aircraftHeading"
           source: variables/aircraftHeading
           dimensions: [ "nlocs" ]
           longName: "Aircraft heading"
           units: "deg"
 
-        - name: "aircraftRollAngle@MetaData"
+        - name: "MetaData/aircraftRollAngle"
           source: variables/aircraftRollAngle
           dimensions: [ "nlocs" ]
           longName: "Aircraft roll angle quality"
           units: ""
 
-        - name: "temperatureAir@ObsValue"
+        - name: "ObsValue/temperatureAir"
           coordinates: "longitude latitude"
           source: variables/temperatureAir
           dimensions: [ "nlocs" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "temperatureDewpoint@ObsValue"
+        - name: "ObsValue/temperatureDewpoint"
           coordinates: "longitude latitude"
           source: variables/temperatureDewpoint
           dimensions: [ "nlocs" ]
           longName: "Dewpoint Temperature"
           units: "K"
 
-        - name: "windDirection@ObsValue"
+        - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
           dimensions: [ "nlocs" ]
           longName: "Wind Direction"
           units: "degrees true"
 
-        - name: "windSpeed@ObsValue"
+        - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           dimensions: [ "nlocs" ]
