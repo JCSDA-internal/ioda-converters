@@ -63,7 +63,7 @@ namespace Ingester
 
 static void showHelp()
 {
-    std::cerr << "Usage: [-n NUM_MESSAGES] YAML_PATH"
+    std::cerr << "Usage: bufr2ioda.x [-n NUM_MESSAGES] YAML_PATH"
               << "Options:\n"
               << "  -h,  Show this help message\n"
               << "  -n NUM_MESSAGES,  Number of BUFR messages to parse."

@@ -42,8 +42,10 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.filtering.nc"
 
       dimensions:
-        - name: "nchans"
-          path: "[*/BRITCSTC, */BRIT]"
+        - name: nchans
+          paths:
+            - "*/BRITCSTC"
+            - "*/BRIT"
 
       variables:
         - name: "datetime@MetaData"

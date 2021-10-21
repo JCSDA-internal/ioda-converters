@@ -135,8 +135,5 @@ namespace Ingester
 
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);
-
-        /// \brief Process the dimension description paths
-        std::vector<std::string> parseDimPathStr(const std::string& dimPath);
     };
 }  // namespace Ingester

@@ -48,8 +48,10 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
 
       dimensions:
-        - name: Channel
-          path: "[*/BRIT, */BRITCSTC]"
+        - name: nchans
+          paths:
+            - "*/BRIT"
+            - "*/BRITCSTC"
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
