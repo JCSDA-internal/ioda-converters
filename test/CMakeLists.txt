@@ -129,9 +129,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
     testinput/airep_wmoBUFR2ioda.yaml
-    testinput/airep_multi.bufr
+    testinput/airep_wmo_multi.bufr
     testinput/amdar_wmoBUFR2ioda.yaml
-    testinput/amdar_single.bufr
+    testinput/amdar_wmo_single.bufr
   )
 
   list( APPEND test_output
