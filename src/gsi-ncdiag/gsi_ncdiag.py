@@ -1097,12 +1097,9 @@ class Radiances(BaseGSI):
         TestKeyList = []
         LocVars = []
         TestVars = []
-        AttrData = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         if self.sensor == "amsua":
             test_fields_ = test_fields_allsky
             test_fields_with_channels_ = test_fields_with_channels_allsky
@@ -1128,12 +1125,6 @@ class Radiances(BaseGSI):
                 TestKeyList.append(test_fields_with_channels_[ncv])
                 TestVars.append(ncv)
 
-        # for now, record len is 1 and the list is empty?
-        if (TestRefs):
-            writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
-        else:
-            writer = iconv.NcWriter(outname, LocKeyList)
-
         chan_number = self.var('sensor_chan')
         chan_number = chan_number[chan_number >= 0]
         chan_indx = self.var('Channel_Index')
@@ -1141,12 +1132,17 @@ class Radiances(BaseGSI):
         nlocs = int(self.nobs / nchans)
 
         chanlist = chan_number
+
+        value = "brightness_temperature"
+        varDict[value]['valKey'] = value, iconv.OvalName()
+        varDict[value]['errKey'] = value, iconv.OerrName()
+        varDict[value]['qcKey'] = value, iconv.OqcName()
+        VarDims[value] = ['nlocs', 'nchans']
+        varAttrs[varDict[value]['valKey']]['units'] = 'K'
+        varAttrs[varDict[value]['errKey']]['units'] = 'K'
+        varAttrs[varDict[value]['qcKey']]['units'] = ''
+
         for a in chanlist:
-            value = "brightness_temperature_{:d}".format(a)
-            varDict[value]['valKey'] = value, writer.OvalName()
-            varDict[value]['errKey'] = value, writer.OerrName()
-            varDict[value]['qcKey'] = value, writer.OqcName()
-            units_values[value] = 'K'
             if (ObsBias):
                 valuebc = [
                     "constant_{:d}".format(a),
@@ -1219,20 +1215,20 @@ class Radiances(BaseGSI):
                 tmp = self.var(lvar)[::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
             elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
                 # Channels 1-9
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                loc_mdata[loc_mdata_name] = tmp
+                outdata[(loc_mdata_name, 'MetaData')] = tmp
                 # Channels 10-13
                 tmp = self.var(lvar)[nchans-1::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                loc_mdata[loc_mdata_name+'1'] = tmp
+                outdata[(loc_mdata_name+'1', 'MetaData')] = tmp
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                loc_mdata[loc_mdata_name] = tmp
+                outdata[(loc_mdata_name, 'MetaData')] = tmp
 
         # put the TestReference fields in the structure for writing out
         for tvar in TestVars:
@@ -1350,25 +1346,17 @@ class Radiances(BaseGSI):
             except IndexError:
                 pass
 
-        # dummy record metadata, for now
-        loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
-
         # global attributes
-
-        AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
+        globalAttrs["satellite"] = self.satellite
+        globalAttrs["sensor"] = self.sensor
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nvars = nchans
-        writer._nlocs = nlocs
-        if (TestRefs):
-            writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
-                               AttrData, units_values, test_mdata)
-        else:
-            writer.BuildNetcdf(outdata, loc_mdata, var_mdata,
-                               AttrData, units_values)
+        DimDict['nlocs'] = nlocs
+        DimDict['nchans'] = nchans
+
+        writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
+        writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
 
         print("Satellite radiance obs processed, wrote to: %s" % outname)
 
