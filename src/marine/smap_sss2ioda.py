@@ -166,7 +166,7 @@ def main():
 
     # write them out
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
+    ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
 
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
