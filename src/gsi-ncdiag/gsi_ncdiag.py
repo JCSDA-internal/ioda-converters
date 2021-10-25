@@ -14,7 +14,7 @@ import numpy as np
 import datetime as dt
 import netCDF4 as nc
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 
 __ALL__ = ['conv_platforms']
 
@@ -522,6 +522,15 @@ gmi_chan_dep_loc_vars = {
     'Scan_Angle',
 }
 
+DimDict = {
+}
+
+VarDims = {
+}
+
+globalAttrs = {
+    'converter': os.path.basename(__file__),
+}
 
 class BaseGSI:
     EPSILON = 9e-12
@@ -696,12 +705,9 @@ class Conv(BaseGSI):
                 TestKeyList = []
                 LocVars = []
                 TestVars = []
-                AttrData = {}
                 varDict = defaultdict(lambda: defaultdict(dict))
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-                loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-                var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-                test_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+                varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
                 test_fields_ = test_fields_conv
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
@@ -720,13 +726,15 @@ class Conv(BaseGSI):
                     continue
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
 
-                writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
-
                 outvars = conv_varnames[v]
                 for value in outvars:
-                    varDict[value]['valKey'] = value, writer.OvalName()
-                    varDict[value]['errKey'] = value, writer.OerrName()
-                    varDict[value]['qcKey'] = value, writer.OqcName()
+                    varDict[value]['valKey'] = value, iconv.OvalName()
+                    varDict[value]['errKey'] = value, iconv.OerrName()
+                    varDict[value]['qcKey'] = value, iconv.OqcName()
+                    VarDims[value] = ['nlocs']
+                    varAttrs[varDict[value]['valKey']]['units'] = units_values[value]
+                    varAttrs[varDict[value]['errKey']]['units'] = units_values[value]
+                    varAttrs[varDict[value]['qcKey']]['units'] = ''
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
@@ -798,19 +806,19 @@ class Conv(BaseGSI):
                     if lvar == 'Station_ID':
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
-                        loc_mdata[loc_mdata_name] = writer.FillNcVector(StationIDs, "string")
+                        outdata[(loc_mdata_name, 'MetaData')] = StationIDs
                     elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                        loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                        outdata[(loc_mdata_name, 'MetaData')] = obstimes
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
                         if np.max(tmpps) > 1100.:
-                            loc_mdata[loc_mdata_name] = tmpps
+                            outdata[(loc_mdata_name, 'MetaData')] = tmpps
                         else:
-                            loc_mdata[loc_mdata_name] = tmpps * 100.  # from hPa to Pa
+                            outdata[(loc_mdata_name, 'MetaData')] = tmpps * 100.  # from hPa to Pa
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
@@ -824,39 +832,28 @@ class Conv(BaseGSI):
                                 hgt = elev + 2.
                                 hgt[hgt > 9998.] = self.FLOAT_FILL
                                 tmp = hgt
-                            loc_mdata[loc_mdata_name] = tmp
+                            outdata[(loc_mdata_name, 'MetaData')] = tmp
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
                             tmp = self.var(lvar)[idx]
                             tmp[tmp > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for sondes, etc.
-                            loc_mdata[loc_mdata_name] = tmp
+                            outdata[(loc_mdata_name, 'MetaData')] = tmp
                         else:
-                            loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                     else:
-                        loc_mdata[loc_mdata_name] = self.var(lvar)[idx]
+                        outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                 # put the TestReference fields in the structure for writing out
                 for tvar in TestVars:
                     if tvar in test_fields_:
                         test_mdata_name = test_fields_[tvar][0]
                         tmp = self.var(tvar)[idx]
                         tmp[tmp > 4e8] = self.FLOAT_FILL
-                        test_mdata[test_mdata_name] = tmp
-                # record info
-                SIDUnique, idxs, invs = np.unique(StationIDs, return_index=True, return_inverse=True, axis=0)
-                loc_mdata['record_number'] = invs
-
-                # var metadata
-                var_mdata['variable_names'] = writer.FillNcVector(outvars, "string")
-
-                AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        outdata[(test_mdata_name, 'TestReference')] = tmp
 
                 # writer metadata
-                nvars = len(outvars)
-                nlocs = len(StationIDs)
+                DimDict['nlocs'] = len(StationIDs)
 
-                writer._nvars = nvars
-                writer._nlocs = nlocs
-
-                writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values, test_mdata)
+                writer = iconv.IodaWriter(outname, LocKeyList)
+                writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
 
                 print("ProcessedL %d Conventional obs processed to: %s" % (len(obsdata), outname))
 
