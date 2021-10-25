@@ -53,10 +53,8 @@ class tropomi(object):
     def __init__(self, filenames):
         self.filenames = filenames
         self.varDict = defaultdict(lambda: defaultdict(dict))
-        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     # Open input file and read relevant info
@@ -66,8 +64,11 @@ class tropomi(object):
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.units[iodavar] = 'mol m-2'
-            self.var_mdata[iodavar]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mol m-2'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol m-2'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -159,13 +160,14 @@ class tropomi(object):
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
             first = False
-            DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-            AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
-            for k in range(nlevs):
-                varname = 'averaging_kernel_level_'+str(k+1)
-                self.var_mdata[varname]['coordinates'] = 'longitude latitude'
-                self.var_mdata[varname]['units'] = ''
+        for k in range(nlevs):
+            varname = 'averaging_kernel_level_'+str(k+1)
+            vkey = (varname, 'MetaData')
+            self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+            self.varAttrs[vkey]['units'] = ''
 
 
 def main():
@@ -197,7 +199,7 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildIoda(no2.outdata, VarDims, no2.var_mdata, AttrData, no2.units)
+    writer.BuildIoda(no2.outdata, VarDims, no2.varAttrs, AttrData)
 
 
 if __name__ == '__main__':

@@ -84,7 +84,6 @@ class copernicus_l3swh2ioda(object):
         self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
         self._read()
 
     # Open input file and read relevant info
@@ -94,7 +93,8 @@ class copernicus_l3swh2ioda(object):
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-        self.units[iodavar] = 'm'
+        self.var_mdata[iodavar, iconv.OvalName()]['units'] = 'm'
+        self.var_mdata[iodavar, iconv.OerrName()]['units'] = 'm'
 
         # read input filename
         swh = copernicus(self.filename, self.factor)
@@ -143,7 +143,7 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildIoda(swh.outdata, VarDims, swh.var_mdata, AttrData, swh.units)
+    writer.BuildIoda(swh.outdata, VarDims, swh.var_mdata, AttrData)
 
 
 if __name__ == '__main__':
