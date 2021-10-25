@@ -33,31 +33,6 @@ def OerrName():
 def OqcName():
     return _oqc_name
 
-def get_default_fill_val(mydtype):
-    dtype_tmp = np.array([],dtype=mydtype)
-    NumpyDtype = dtype_tmp.dtype
-    if (NumpyDtype == np.dtype('float64')):
-        fillval = 9.969209968386869e+36
-    elif (NumpyDtype == np.dtype('float32')):
-        fillval = 9.969209968386869e+36
-    elif (NumpyDtype == np.dtype('int64')):
-        fillval = -9223372036854775806
-    elif (NumpyDtype == np.dtype('int32')):
-        fillval = -2147483647
-    elif (NumpyDtype == np.dtype('int16')):
-        fillval = -32767
-    elif (NumpyDtype == np.dtype('int8')):
-        fillval = -127
-    elif (NumpyDtype == np.dtype('S1')):
-        fillval = '\x00'
-    elif (NumpyDtype == np.dtype('U1')):
-        fillval = '\x00'
-    elif (NumpyDtype == np.dtype('object')):
-        fillval = '\x00'
-    else:
-        print("ERROR: Unrecognized data type", NumpyDtype)
-        exit(-2)
-    return fillval
 
 def get_default_fill_val(mydtype):
     dtype_tmp = np.array([], dtype=mydtype)
