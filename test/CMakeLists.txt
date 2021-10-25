@@ -412,6 +412,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
