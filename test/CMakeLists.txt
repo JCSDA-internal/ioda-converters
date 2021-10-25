@@ -268,6 +268,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l3u
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/smap_sss2ioda.py
