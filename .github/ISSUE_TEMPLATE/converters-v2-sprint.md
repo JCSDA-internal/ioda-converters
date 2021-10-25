@@ -18,6 +18,7 @@ Update the converter identified in the title (hereafter referred to as the **tar
 - Units, Fill values, other metadata
 - Change order of when writer is called
 - Remove ExtractoObsData if possible
+- Update CMakeLists.txt with environment variable
 - Run test to make sure it runs (but will fail because of unupdated test reference)
 - Update test reference file
 - run unit tests making use of the target converter and verify that they pass. Make sure you verify the results by examining the file using ```ncdump```, ```h5dump```, ```HDFview```, or a similar utility.
