@@ -43,7 +43,6 @@ class Salinity(object):
         self.filenames = filenames
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
 
