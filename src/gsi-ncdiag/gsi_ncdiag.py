@@ -532,6 +532,7 @@ globalAttrs = {
     'converter': os.path.basename(__file__),
 }
 
+
 class BaseGSI:
     EPSILON = 9e-12
     FLOAT_FILL = nc.default_fillvals['f4']
@@ -806,12 +807,12 @@ class Conv(BaseGSI):
                     if lvar == 'Station_ID':
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
-                        outdata[(loc_mdata_name, 'MetaData')] = StationIDs
+                        outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
                     elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                        outdata[(loc_mdata_name, 'MetaData')] = obstimes
+                        outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
@@ -852,7 +853,7 @@ class Conv(BaseGSI):
                 # writer metadata
                 DimDict['nlocs'] = len(StationIDs)
 
-                writer = iconv.IodaWriter(outname, LocKeyList)
+                writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
                 writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
 
                 print("ProcessedL %d Conventional obs processed to: %s" % (len(obsdata), outname))
