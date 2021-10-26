@@ -1285,55 +1285,47 @@ class Radiances(BaseGSI):
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[gvname] = ['nlocs', 'nchans']
 
-        # loop through channels for subset
-        for c in range(len(chanlist)):
-            value = "brightness_temperature_{:d}".format(chanlist[c])
-            idx = chan_indx == c+1
-            if (np.sum(idx) == 0):
-                print("No matching observations for: %s" % value)
-                continue
-            obsdatasub = obsdata[idx]
-            obsdatasub[obsdatasub > 9e5] = self.FLOAT_FILL
-            obserrsub = obserr[idx]
-            obsqcsub = obsqc[idx]
-            obsqcsub[obsdatasub > 9e5] = self.INT_FILL
+        # brightness temperature variables
+        value = 'brightness_temperature'
+        obsdata[obsdata > 9e5] = self.FLOAT_FILL
+        obsqc[obsdata > 9e5] = self.INT_FILL
 
-            # store values in output data dictionary
-            outdata[varDict[value]['valKey']] = obsdatasub
-            outdata[varDict[value]['errKey']] = obserrsub
-            outdata[varDict[value]['qcKey']] = obsqcsub.astype(int)
-            # create a GSI effective QC variable
-            gsiqcname = value, 'GsiEffectiveQC'
-            errname = value, 'GsiFinalObsError'
-            gsiqc = np.zeros_like(obsdatasub)
-            gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
-            outdata[gsiqcname] = gsiqc
-            if (ObsBias):
-                valuebc = [
-                    "constant_{:d}".format(chanlist[c]),
-                    "zenith_angle_{:d}".format(chanlist[c]),
-                    "cloud_liquid_water_{:d}".format(chanlist[c]),
-                    "lapse_rate_squared_{:d}".format(chanlist[c]),
-                    "lapse_rate_{:d}".format(chanlist[c]),
-                    "cosine_of_latitude_times_orbit_node_{:d}".format(chanlist[c]),
-                    "sine_of_latitude_{:d}".format(chanlist[c]),
-                    "emissivity_{:d}".format(chanlist[c]),
-                    "scan_angle_order_4_{:d}".format(chanlist[c]),
-                    "scan_angle_order_3_{:d}".format(chanlist[c]),
-                    "scan_angle_order_2_{:d}".format(chanlist[c]),
-                    "scan_angle_{:d}".format(chanlist[c]),
-                ]
-                ii = 0
-                for value in valuebc:
-                    obsbiastermsub = obsbiasterm[ii][idx]
-                    obsbiaspredsub = obsbiaspred[ii][idx]
-                    obsbiastermsub[obsbiastermsub > 9e5] = self.FLOAT_FILL
-                    obsbiaspredsub[obsbiaspredsub > 9e5] = self.FLOAT_FILL
+        # store values in output data dictionary
+        outdata[varDict[value]['valKey']] = np.reshape(obsdata, (nlocs, nchans))
+        outdata[varDict[value]['errKey']] = np.reshape(obserr, (nlocs, nchans))
+        outdata[varDict[value]['qcKey']] = np.reshape(obsqc.astype(int), (nlocs, nchans))
+        # create a GSI effective QC variable
+        gsiqcname = value, 'GsiEffectiveQC'
+        errname = value, 'GsiFinalObsError'
+        gsiqc = np.zeros_like(obsdata)
+        gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+        outdata[gsiqcname] = gsiqc
+        if (ObsBias):
+            valuebc = [
+                "constant",
+                "zenith_angle",
+                "cloud_liquid_water",
+                "lapse_rate_squared",
+                "lapse_rate",
+                "cosine_of_latitude_times_orbit_node",
+                "sine_of_latitude",
+                "emissivity",
+                "scan_angle_order_4",
+                "scan_angle_order_3",
+                "scan_angle_order_2",
+                "scan_angle",
+            ]
+            ii = 0
+            for value in valuebc:
+                obsbiastermsub = obsbiasterm[ii][idx]
+                obsbiaspredsub = obsbiaspred[ii][idx]
+                obsbiastermsub[obsbiastermsub > 9e5] = self.FLOAT_FILL
+                obsbiaspredsub[obsbiaspredsub > 9e5] = self.FLOAT_FILL
 
-                    # store values in output data dictionary
-                    outdata[varDict[value]['bctKey']] = obsbiastermsub
-                    outdata[varDict[value]['bcpKey']] = obsbiaspredsub
-                    ii += 1
+                # store values in output data dictionary
+                outdata[varDict[value]['bctKey']] = obsbiastermsub
+                outdata[varDict[value]['bcpKey']] = obsbiaspredsub
+                ii += 1
         # var metadata
         for key, value2 in chan_metadata_dict.items():
             try:
