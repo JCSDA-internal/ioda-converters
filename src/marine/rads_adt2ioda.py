@@ -31,16 +31,17 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
+GlobalAttrs = {
     'odb_version': 1,
 }
 
 VarDims = {
-   'adt': ['nlocs'],
+    'adt': ['nlocs'],
 }
 
 DimDict = {
 }
+
 
 class Observation(object):
 
@@ -48,7 +49,7 @@ class Observation(object):
 
         self.filename = filename
         self.date = date
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict)
+        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
@@ -118,13 +119,13 @@ def main():
 
     # Set attributes
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    DimDIct['nlocs'] = nlocs
+    DimDict['nlocs'] = nlocs
 
     # Set up the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # Write the obs out
-    writer.BuildIoda(ObsVars, Vardims, altim.VarAttrs, GlobalAttrs)
+    writer.BuildIoda(ObsVars, VarDims, altim.VarAttrs, GlobalAttrs)
 
 if __name__ == '__main__':
     main()
