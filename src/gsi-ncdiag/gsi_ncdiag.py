@@ -1317,8 +1317,8 @@ class Radiances(BaseGSI):
             ]
             ii = 0
             for value in valuebc:
-                obsbiastermsub = obsbiasterm[ii][idx]
-                obsbiaspredsub = obsbiaspred[ii][idx]
+                obsbiastermsub = obsbiasterm[ii]
+                obsbiaspredsub = obsbiaspred[ii]
                 obsbiastermsub[obsbiastermsub > 9e5] = self.FLOAT_FILL
                 obsbiaspredsub[obsbiaspredsub > 9e5] = self.FLOAT_FILL
 
