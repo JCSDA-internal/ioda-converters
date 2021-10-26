@@ -45,7 +45,6 @@ class Salinity(object):
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
-
     # Open obs file and read/load relevant info
     def _read(self):
         valKey = vName, iconv.OvalName()
@@ -156,7 +155,6 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-   # writer = iconv.NcWriter(args.output, locationKeyList)
     VarDims = {
         'sea_surface_salinity': ['nlocs'],
     }
