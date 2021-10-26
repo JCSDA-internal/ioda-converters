@@ -1130,6 +1130,7 @@ class Radiances(BaseGSI):
         chan_indx = self.var('Channel_Index')
         nchans = len(chan_number)
         nlocs = int(self.nobs / nchans)
+        #print(np.reshape(chan_indx, (nlocs, nchans)))
 
         chanlist = chan_number
 
@@ -1142,27 +1143,27 @@ class Radiances(BaseGSI):
         varAttrs[varDict[value]['errKey']]['units'] = 'K'
         varAttrs[varDict[value]['qcKey']]['units'] = ''
 
-        for a in chanlist:
-            if (ObsBias):
-                valuebc = [
-                    "constant_{:d}".format(a),
-                    "zenith_angle_{:d}".format(a),
-                    "cloud_liquid_water_{:d}".format(a),
-                    "lapse_rate_squared_{:d}".format(a),
-                    "lapse_rate_{:d}".format(a),
-                    "cosine_of_latitude_times_orbit_node_{:d}".format(a),
-                    "sine_of_latitude_{:d}".format(a),
-                    "emissivity_{:d}".format(a),
-                    "scan_angle_order_4_{:d}".format(a),
-                    "scan_angle_order_3_{:d}".format(a),
-                    "scan_angle_order_2_{:d}".format(a),
-                    "scan_angle_{:d}".format(a),
-                ]
-                ibc = 0
-                for vbc in valuebc:
-                    varDict[vbc]['bctKey'] = vbc, writer.ObiastermName()
-                    varDict[vbc]['bcpKey'] = vbc, writer.ObiaspredName()
-                    ibc += 1
+        if (ObsBias):
+            valuebc = [
+                "constant",
+                "zenith_angle",
+                "cloud_liquid_water",
+                "lapse_rate_squared",
+                "lapse_rate",
+                "cosine_of_latitude_times_orbit_node",
+                "sine_of_latitude",
+                "emissivity",
+                "scan_angle_order_4",
+                "scan_angle_order_3",
+                "scan_angle_order_2",
+                "scan_angle",
+            ]
+            ibc = 0
+            for vbc in valuebc:
+                varDict[vbc]['bctKey'] = vbc, iconv.ObiastermName()
+                varDict[vbc]['bcpKey'] = vbc, iconv.ObiaspredName()
+                VarDims[(vbc, 'MetaData')] = ['nlocs']
+                ibc += 1
         obsdata = self.var('Observation')
         try:
             obserr = self.var('Input_Observation_Error')
@@ -1233,18 +1234,18 @@ class Radiances(BaseGSI):
         # put the TestReference fields in the structure for writing out
         for tvar in TestVars:
             if tvar in test_fields_with_channels_:
-                for ii, ch in enumerate(chanlist):
-                    test_mdata_name = test_fields_with_channels_[tvar][0]+"_{:d}".format(ch)
-                    tmp = self.var(tvar)[:]
-                    tmp[tmp > 4e8] = self.FLOAT_FILL
-                    idx = chan_indx == ii+1
-                    outvals = tmp[idx]
-                    test_mdata[test_mdata_name] = outvals
+                test_mdata_name = (test_fields_with_channels_[tvar][0], 'MetaData')
+                tmp = self.var(tvar)[:]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                outdata[test_mdata_name] = np.reshape(tmp, (nlocs, nchans))
+                VarDims[test_mdata_name] = ['nlocs', 'nchans']
+
             if tvar in test_fields_:
-                test_mdata_name = test_fields_[tvar][0]
+                test_mdata_name = (test_fields_[tvar][0], 'MetaData')
                 tmp = self.var(tvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                test_mdata[test_mdata_name] = tmp
+                outdata[test_mdata_name] = tmp
+                VarDims[test_mdata_name] = ['nlocs']
 
         gsi_add_radvars = gsi_add_vars
         if (QCVars):
@@ -1280,18 +1281,13 @@ class Radiances(BaseGSI):
                     tmp = tmp.astype(int)
                 else:
                     tmp[tmp > 4e8] = self.FLOAT_FILL
-                for ii, ch in enumerate(chanlist):
-                    varname = "brightness_temperature_{:d}".format(ch)
-                    gvname = varname, iodavar
-                    idx = chan_indx == ii+1
-                    outvals = tmp[idx]
-                    outdata[gvname] = outvals
+                gvname = "brightness_temperature", iodavar
+                outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
+                VarDims[gvname] = ['nlocs', 'nchans']
 
         # loop through channels for subset
-        var_names = []
         for c in range(len(chanlist)):
             value = "brightness_temperature_{:d}".format(chanlist[c])
-            var_names.append(value)
             idx = chan_indx == c+1
             if (np.sum(idx) == 0):
                 print("No matching observations for: %s" % value)
@@ -1339,10 +1335,10 @@ class Radiances(BaseGSI):
                     outdata[varDict[value]['bcpKey']] = obsbiaspredsub
                     ii += 1
         # var metadata
-        var_mdata['variable_names'] = writer.FillNcVector(var_names, "string")
         for key, value2 in chan_metadata_dict.items():
             try:
-                var_mdata[value2] = self.var(key)
+                outdata[(value2, 'MetaData')] = self.var(key)
+                VarDims[(value2, 'MetaData')] = nchans
             except IndexError:
                 pass
 
