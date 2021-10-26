@@ -43,6 +43,7 @@ class Salinity(object):
         self.filenames = filenames
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
 
@@ -51,6 +52,11 @@ class Salinity(object):
         valKey = vName, iconv.OvalName()
         errKey = vName, iconv.OerrName()
         qcKey = vName, iconv.OqcName()
+        self.varAttrs[vName, iconv.OvalName()]['units'] = 'psu'
+        self.varAttrs[vName, iconv.OerrName()]['units'] = 'psu'
+        self.varAttrs[vName, iconv.OvalName()]['_FillValue'] = -999.
+        self.varAttrs[vName, iconv.OerrName()]['_FillValue'] = -999.
+        self.varAttrs[vName, iconv.OqcName()]['_FillValue'] = -999
 
         for f in self.filenames:
             print(" Reading file: ", f)
