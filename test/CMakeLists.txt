@@ -415,7 +415,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
                           -i testinput/2020100106_metars_small.csv
                           -o testrun/2020100106_metars_small.nc
                           -d 2020100106"
