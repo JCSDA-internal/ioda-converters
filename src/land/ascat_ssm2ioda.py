@@ -154,6 +154,9 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
+    ssm.varAttrs[('wetlandFraction', 'MetaData')]['units'] = 'unitless'
+    ssm.varAttrs[('topographyComplexity', 'MetaData')]['units'] = 'unitless'
+
     # write everything out
     writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)
 
