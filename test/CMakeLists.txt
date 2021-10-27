@@ -308,9 +308,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_ship
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
                   TYPE    SCRIPT
-                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
                           -i testinput/godae_trak.bin
                           -o testrun/godae_trak.nc
                           -d 2004070812"
