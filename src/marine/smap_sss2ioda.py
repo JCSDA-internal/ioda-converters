@@ -33,6 +33,8 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
+GlobalAttrs = {}
+
 
 class Salinity(object):
     def __init__(self, filenames, date):
