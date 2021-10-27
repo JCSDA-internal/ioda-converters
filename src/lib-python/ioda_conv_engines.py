@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import ioda_obs_space as ioda_os
 import numpy as np
 from collections import OrderedDict
@@ -100,6 +100,10 @@ class IodaWriter(object):
             try:
                 for MetaVar, MetaVal in VarAttrs[VarKey].items():
                     tmpVar.write_attr(MetaVar, MetaVal)
+                    if type(MetaVal) is not str:
+                        tmpVar.write_attr(MetaVar, [MetaVal])
+                    else:
+                        tmpVar.write_attr(MetaVar, MetaVal)
             except KeyError:
                 pass  # no metadata for this variable
 
