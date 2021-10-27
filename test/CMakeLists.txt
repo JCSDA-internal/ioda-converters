@@ -562,7 +562,7 @@ if( iodaconv_gnssro_ENABLED )
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda
+                            "${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda
                             2018041500
                             testinput/gnssro_kompsat5_20180415_00Z.bufr
                             testrun/gnssro_kompsat5_2018041500.nc4"
