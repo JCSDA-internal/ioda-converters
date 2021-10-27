@@ -112,20 +112,14 @@ class IodaWriter(object):
             # add var metadata
             try:
                 for MetaVar, MetaVal in VarAttrs[VarKey].items():
-                    if isinstance(MetaVal, ((list, np.ndarray, str)))
-                        tmpVar.write_attr(MetaVar, MetaVal)
-                    else:
-                        tmpVar.write_attr(MetaVar, [MetaVal])
+                    tmpVar.write_attr(MetaVar, MetaVal)
             except KeyError:
                 pass  # no metadata for this variable
 
     def WriteGlobalAttrs(self, GlobalAttrs):
         # this method will create global attributes from GlobalAttrs dictionary
         for AttrKey, AttrVal in GlobalAttrs.items():
-            if isinstance(AttrVal, ((list, np.ndarray, str)))
-                self.obsspace.write_attr(AttrKey, AttrVal)
-            else:
-                self.obsspace.write_attr(AttrKey, [AttrVal])
+            self.obsspace.write_attr(AttrKey, AttrVal)
 
     def BuildIoda(self, ObsVars, VarDims, VarAttrs, GlobalAttrs,
                   TestData=None):
