@@ -135,7 +135,7 @@ class IODA(object):
             self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
-            self.varAttrs[value, iconv.OvalName()]['units'] = " degree C"
+            self.varAttrs[value, iconv.OvalName()]['units'] = "degree C"
             self.varAttrs[value, iconv.OerrName()]['units'] = "degree C"
 
         # data is the dictionary containing IODA friendly data structure
