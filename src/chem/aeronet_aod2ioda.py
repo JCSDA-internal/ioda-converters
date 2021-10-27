@@ -176,7 +176,7 @@ if __name__ == '__main__':
     DimDict['nlocs'] = nlocs
     DimDict['nchans'] = aod_chan
     AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-    AttrData['nchans'] = np.int32(DimDict['nchans'])
+    AttrData['nchans'] = np.int32(nchans)
     AttrData['observation_type'] = 'AOD'
     AttrData['sensor'] = 'aeronet'
     AttrData['surface_type'] = 'ocean=0,land=1,costal=2'
