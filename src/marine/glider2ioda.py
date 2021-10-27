@@ -8,6 +8,8 @@
 
 from __future__ import print_function
 import sys
+import numpy as np
+import numpy.matlib
 from datetime import datetime
 from scipy.io import FortranFile
 import argparse
