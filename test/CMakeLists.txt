@@ -341,7 +341,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/glider2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/glider2ioda.py
                           -i testinput/marineglider_AOML.nc
                           -o testrun/test_glider.nc
                           -d 2016080412"
