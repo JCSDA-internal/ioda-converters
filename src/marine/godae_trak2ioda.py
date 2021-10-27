@@ -24,7 +24,7 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 unitDict = {
-    'ob_sst': 'degree C',
+    'ob_sst': 'degree_C',
     'ob_sal': 'PSU',
     'ob_uuu': 'm/s',
     'ob_vvv': 'm/s'
