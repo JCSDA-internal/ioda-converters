@@ -71,7 +71,7 @@ class Observation(object):
                     locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]
-                        self.datalocKey][errKey] = 0.1
+                        self.data[locKey][errKey] = 0.1
                         self.datalocKey][qcKey] = 0
                     else:
                         self.data[locKey][valKey] = vals_v[i]
