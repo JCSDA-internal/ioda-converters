@@ -20,7 +20,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
@@ -37,27 +37,42 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
+    'nvars': np.int32(len(obsvars)),
+}
+
+
+DimDict = {
+}
+
+VarDims = {
+    'aerosol_optical_depth': ['nlocs']
 }
 
 
 class AOD(object):
-    def __init__(self, filenames, obs_time, writer):
+    def __init__(self, filenames, obs_time):
         self.filenames = filenames
         self.obs_time = obs_time
-        self.writer = writer
+#        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
+#        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+#        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+#        self.units = {}
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
         # set up variable names for IODA
         for ncvar, iodavar in obsvars.items():
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = ''
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = ''
 
         # loop through input filenames
         first = True
@@ -86,7 +101,7 @@ class AOD(object):
             aod = ncd.variables['AOD_550_Dark_Target_Deep_Blue_Combined'][:].ravel()
             land_sea_flag = ncd.variables['Land_sea_Flag'][:].ravel()
             QC_flag = ncd.variables['Land_Ocean_Quality_Flag'][:].ravel()
-            QC_flag = QC_flag.astype('int8')
+            QC_flag = QC_flag.astype('int32')
             sol_zen = ncd.variables['Solar_Zenith'][:].ravel()
             sen_zen = ncd.variables['Sensor_Zenith'][:].ravel()
             unc_land = ncd.variables['Deep_Blue_Aerosol_Optical_Depth_550_Land_Estimated_Uncertainty'][:].ravel()
@@ -102,8 +117,10 @@ class AOD(object):
             sen_zen = sen_zen[pos_index]
             unc_land = unc_land[pos_index]
             modis_time = modis_time[pos_index]
+            obs_time = np.empty_like(QC_flag, dtype=object)
             obs_time_2 = [datetime.fromisoformat('1993-01-01') + timedelta(seconds=x) for x in modis_time]
-            obs_time = [t.strftime('%Y-%m-%dT%H:%M:%SZ') for t in obs_time_2]
+            for t in range(len(obs_time_2)):
+                obs_time[t] = obs_time_2[t].strftime('%Y-%m-%dT%H:%M:%SZ')
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
@@ -112,15 +129,14 @@ class AOD(object):
             over_ocean = np.logical_not(land_sea_flag > 0)
             over_land = np.logical_not(land_sea_flag == 0)
             UNC = np.where(over_land, unc_land, np.add(0.05, np.multiply(0.15, aod)))
-
             if first:
-                self.loc_mdata['latitude'] = lats
-                self.loc_mdata['longitude'] = lons
-                self.loc_mdata['datetime'] = self.writer.FillNcVector(obs_time, "datetime")
+                self.outdata[('latitude', 'MetaData')] = lats
+                self.outdata[('longitude', 'MetaData')] = lons
+                self.outdata[('datetime', 'MetaData')] = obs_time
             else:
-                self.loc_mdata['latitude'] = np.concatenate((self.loc_mdata['latitude'], lats))
-                self.loc_mdata['longitude'] = np.concatenate((self.loc_mdata['longitude'], lons))
-                self.loc_mdata['datetime'] = np.concatenate((self.loc_mdata['datetime'], self.writer.FillNcVector(obs_time, "datetime")))
+                self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))
+                self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons))
+                self.outdata[('datetime', 'MetaData')] = np.concatenate((self.outdata[('datetime', 'MetaData')], obs_time))
 
             for ncvar, iodavar in obsvars.items():
                 data = aod.astype('float32')
@@ -139,8 +155,8 @@ class AOD(object):
                         (self.outdata[self.varDict[iodavar]['qcKey']], QC_flag))
 
             first = False
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['longitude'])
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
@@ -174,16 +190,16 @@ def main():
     args = parser.parse_args()
 
     # setup the IODA writer
-    writer = iconv.NcWriter(args.output, locationKeyList)
 
     # get the obs time
     obs_time = args.time
 
     # Read in the AOD data
-    aod_class = AOD(args.input, args.time, writer)
+    aod_class = AOD(args.input, args.time)
     # write everything out
-    original_stdout = sys.stdout
-    writer.BuildNetcdf(aod_class.outdata, aod_class.loc_mdata, aod_class.var_mdata, AttrData)
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+#    original_stdout = sys.stdout
+    writer.BuildIoda(aod_class.outdata, VarDims, aod_class.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
