@@ -611,7 +611,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
 		  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
+		          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
                           -i testinput/aeronet_aod.dat
                           -o testrun/aeronet_aod.nc"
                           aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
@@ -621,7 +621,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
 		  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
 		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
 		  ARGS    netcdf
-		          "${CMAKE_BINARY_DIR}/bin/aeronet_aaod2ioda.py
+		          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/aeronet_aaod2ioda.py
 			  -c testinput/aeronet_cad.dat
 			  -t testinput/aeronet_tab.dat
 			  -o testrun/aeronet_aaod.nc"

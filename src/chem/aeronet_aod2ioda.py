@@ -9,18 +9,6 @@
 #        python aeronet_aod2ioda.py -i aeronet_aod.dat 6 -o aeronet_aod.nc
 #        -i: input AOD file path
 #        -o: output file path
-#
-# Contact:
-#        Bo Huang (bo.huang@noaa.gov) from CU/CIRES and NOAA/ESRL/GSL
-#        (August 9, 2021)
-#
-# Acknowledgement:
-#        Barry Baker from ARL for his initial preparation for this code.
-#
-# Updates:
-# -- Update to V2 API (Bo Huang, October 26, 2021)
-# ---- AttrData['nchans'] on Line 195 is not correctly assigned
-# ---- and needs to be corrected later.
 
 import netCDF4 as nc
 import numpy as np
@@ -162,9 +150,7 @@ if __name__ == '__main__':
 
     # Add metadata variables
     outdata[('latitude', 'MetaData')] = np.array(np.float32(f3['latitude']))
-    varAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     outdata[('longitude', 'MetaData')] = np.array(np.float32(f3['longitude']))
-    varAttrs[('longitude', 'MetaData')]['units'] = 'degree'
     outdata[('station_elevation', 'MetaData')] = np.array(np.float32(f3['elevation']))
     varAttrs[('station_elevation', 'MetaData')]['units'] = 'm'
     outdata[('surface_type', 'MetaData')] = np.full((nlocs), 1)
@@ -188,10 +174,8 @@ if __name__ == '__main__':
 
     # Add global atrributes
     DimDict['nlocs'] = nlocs
-    DimDict['nchans'] = nchans
+    DimDict['nchans'] = aod_chan
     AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-    # Warning
-    # --- AttrData['nchans'] is not correctly assigned and needs to  be corrected later.
     AttrData['nchans'] = np.int32(DimDict['nchans'])
     AttrData['observation_type'] = 'AOD'
     AttrData['sensor'] = 'aeronet'
