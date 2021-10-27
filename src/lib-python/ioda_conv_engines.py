@@ -122,7 +122,10 @@ class IodaWriter(object):
     def WriteGlobalAttrs(self, GlobalAttrs):
         # this method will create global attributes from GlobalAttrs dictionary
         for AttrKey, AttrVal in GlobalAttrs.items():
-            self.obsspace.write_attr(AttrKey, AttrVal)
+            if isinstance(AttrVal, ((list, np.ndarray, str)))
+                self.obsspace.write_attr(AttrKey, AttrVal)
+            else:
+                self.obsspace.write_attr(AttrKey, [AttrVal])
 
     def BuildIoda(self, ObsVars, VarDims, VarAttrs, GlobalAttrs,
                   TestData=None):
