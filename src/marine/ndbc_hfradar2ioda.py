@@ -18,7 +18,8 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 vName = ["sea_water_meridional_current",
@@ -30,11 +31,6 @@ locationKeyList = [
     ("longitude", "float"),
     ("datetime", "string")
 ]
-
-AttrData = {
-    'odb_version': 1,
-}
-
 
 class Observation(object):
 
@@ -66,60 +62,57 @@ class Observation(object):
         count = 0
         for i in range(len(lons)):
             for j in [0, 1]:
-                valKey = vName[j], self.writer.OvalName()
-                errKey = vName[j], self.writer.OerrName()
-                qcKey = vName[j], self.writer.OqcName()
+                valKey = vName[j], iconv.OvalName()
+                errKey = vName[j], iconv.OerrName()
+                qcKey = vName[j], iconv.OqcName()
                 if vals_u[i] != '--':
                     count += 1
                     obs_date = reftime + timedelta(seconds=int(time[i]))
                     locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
                     if j == 0:
-                        self.data[0][locKey][valKey] = vals_u[i]
-                        self.data[0][locKey][errKey] = 0.1
-                        self.data[0][locKey][qcKey] = 0
+                        self.data[locKey][valKey] = vals_u[i]
+                        self.datalocKey][errKey] = 0.1
+                        self.datalocKey][qcKey] = 0
                     else:
-                        self.data[0][locKey][valKey] = vals_v[i]
-                        self.data[0][locKey][errKey] = 0.1
-                        self.data[0][locKey][qcKey] = 0
+                        self.data[locKey][valKey] = vals_v[i]
+                        self.data[locKey][errKey] = 0.1
+                        self.data[locKey][qcKey] = 0
 
 
 def main():
+    desc = 'Convert HF radar data to IODA netCDF4 format'
+    parser = ArgumentParser(
+        description=desc,
+        formatter_class=ArgumentDefaultsHelpFormatter)
 
-    # Get command line arguments
-    parser = argparse.ArgumentParser(
-        description=(
-            'Reads marine HF radar radial velocity from archiving'
-            'and converts into IODA formatted'
-            'output files')
-    )
-
-    required = parser.add_argument_group(title='required arguments')
-    required.add_argument(
+    parser.add_argument(
         '-i', '--input',
         help="Radar observation input file(s)",
         type=str, nargs='+', required=True)
-    required.add_argument(
+    parser.add_argument(
         '-o', '--output',
         help="path of ioda output file",
         type=str, required=True)
-    required.add_argument(
+    parser.add_argument(
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
 
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    #writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the altimeter
     altim = Observation(args.input, fdate, writer)
 
     # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    #AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(altim.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
-
+    ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList,DimDict)
+    #writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    DimDict = {'nlocs': nlocs}
+    self.writer = iconv.IodaWriter(self.filename, self.locKeyList,DimDict)
+    self.writer.BuildIoda(ObsVars, varDims, self.varAttrs,self.GlobalAttrs)
 
 if __name__ == '__main__':
     main()
