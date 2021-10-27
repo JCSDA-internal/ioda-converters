@@ -17,24 +17,24 @@
 # Acknowledgement:
 #        Barry Baker from ARL for his initial preparation for this code.
 #
+# Updates:
+# -- Update to V2 API (Bo Huang, October 26, 2021)
+# ---- AttrData['nchans'] on Line 195 is not correctly assigned
+# ---- and needs to be corrected later.
 
 import netCDF4 as nc
 import numpy as np
 import inspect, sys, os, argparse
 import pandas as pd
 from datetime import datetime, timedelta
-from builtins import object, str
+from builtins import str
 from numpy import NaN
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
-   IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-#sys.path.append('/scratch2/BMC/gsd-fv3-dev/MAPP_2018/bhuang/JEDI-2020/JEDI-FV3/MISC/codeDev/JEDI/iodaSprint-20211025/build/lib64/pyiodaconv')
-#sys.path.append('/scratch2/BMC/gsd-fv3-dev/MAPP_2018/bhuang/JEDI-2020/JEDI-FV3/MISC/codeDev/JEDI/iodaSprint-20211025/build/lib64/python3.7/pyioda/ioda/../')
-#sys.path.append('/scratch2/BMC/gsd-fv3-dev/MAPP_2018/bhuang/JEDI-2020/JEDI-FV3/MISC/codeDev/JEDI/iodaSprint-20211025/build/lib/python3.7/pyioda/ioda/../')
-#sys.path.append('/scratch1/NCEPDEV/jcsda/jedipara/opt/modules/intel-2020.2/bufr/noaa-emc-11.5.0/lib/python3.6/site-packages')
 
 import meteo_utils
 import ioda_conv_engines as iconv
@@ -109,9 +109,9 @@ if __name__ == '__main__':
     print(aod_chan)
     print(frequency)
 
-    # Define AOD varname that match with those in f3 (match aod_wav and aod_chan)
-
+    # Add obs data
     nlocs, columns = f3.shape
+    nchans = len(aod_chan)
     if nlocs == 0:
         print('Zero AERONET AOD is available in file: ' + infile + ' and exit.')
         exit(0)
@@ -121,78 +121,83 @@ if __name__ == '__main__':
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    # Add obs data
-    obsvars = {'aerosol_optical_depth_1': 'aod_340nm', 'aerosol_optical_depth_2': 'aod_380nm',
-               'aerosol_optical_depth_3': 'aod_440nm', 'aerosol_optical_depth_4': 'aod_675nm',
-               'aerosol_optical_depth_5': 'aod_500nm', 'aerosol_optical_depth_6': 'aod_870nm',
-               'aerosol_optical_depth_7': 'aod_1020nm', 'aerosol_optical_depth_8': 'aod_1640nm'}
+    obsvars = {'aerosol_optical_depth': ['aod_340nm', 'aod_380nm',
+                                         'aod_440nm', 'aod_675nm',
+                                         'aod_500nm', 'aod_870nm',
+                                         'aod_1020nm', 'aod_1640nm']}
 
     AttrData = {
         'converter': os.path.basename(__file__),
-        'nvars': np.int32(len(obsvars)),
     }
 
     DimDict = {
     }
 
     VarDims = {
-        'aerosol_optical_depth_1' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_2' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_3' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_4' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_5' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_6' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_7' : ['nlocs', 'nchans'],
-        'aerosol_optical_depth_8' : ['nlocs', 'nchans'],
+        'aerosol_optical_depth': ['nlocs', 'nchans'],
+        'frequency': ['nchans'],
+        'sensor_channel': ['nchans']
     }
 
     for key, value in obsvars.items():
         varDict[key]['valKey'] = key, iconv.OvalName()
-        varDict[key]['errKey'] = key, iconv.OerrName()
-        varDict[key]['qcKey'] = key, iconv.OqcName()
+        varAttrs[key, iconv.OvalName()]['_FillValue'] = -999.
         varAttrs[key, iconv.OvalName()]['coordinates'] = 'longitude latitude station_elevation'
+        varAttrs[key, iconv.OvalName()]['units'] = 'unitless'
+        varDict[key]['errKey'] = key, iconv.OerrName()
+        varAttrs[key, iconv.OerrName()]['_FillValue'] = -999.
+        varAttrs[key, iconv.OerrName()]['units'] = 'unitless'
         varAttrs[key, iconv.OerrName()]['coordinates'] = 'longitude latitude station_elevation'
+        varDict[key]['qcKey'] = key, iconv.OqcName()
+        varAttrs[key, iconv.OqcName()]['_FillValue'] = -999
         varAttrs[key, iconv.OqcName()]['coordinates'] = 'longitude latitude station_elevation'
-        varAttrs[key, iconv.OvalName()]['units'] = '1'
-        varAttrs[key, iconv.OerrName()]['units'] = '1'
+        varAttrs[key, iconv.OqcName()]['units'] = ''
 
     for key, value in obsvars.items():
-        outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(nc.default_fillvals['f4']))
-        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'],
+        outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(np.float32(-999.)))
+        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
                                                   1, 0)
-        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == nc.default_fillvals['f4'],
-                                                   nc.default_fillvals['f4'], 0.02)
+        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
+                                                   np.float32(-999.), 0.02)
 
     # Add metadata variables
-    outdata[('latitude', 'MetaData')] = np.array(f3['latitude'])
-    outdata[('longitude', 'MetaData')] = np.array(f3['longitude'])
-    outdata[('station_elevation', 'MetaData')] = np.array(f3['elevation'])
+    outdata[('latitude', 'MetaData')] = np.array(np.float32(f3['latitude']))
+    varAttrs[('latitude', 'MetaData')]['units'] = 'degree'
+    outdata[('longitude', 'MetaData')] = np.array(np.float32(f3['longitude']))
+    varAttrs[('longitude', 'MetaData')]['units'] = 'degree'
+    outdata[('station_elevation', 'MetaData')] = np.array(np.float32(f3['elevation']))
+    varAttrs[('station_elevation', 'MetaData')]['units'] = 'm'
     outdata[('surface_type', 'MetaData')] = np.full((nlocs), 1)
-    units['latitude'] = 'degree'
-    units['longitude'] = 'degree'
-    units['station_elevation'] = 'm'
+    varAttrs[('surface_type', 'MetaData')]['units'] = ''
 
-    outdata[('frequency', 'MetaData')] = frequency #writer.FillNcVector(frequency, 'float')
-    outdata[('sensor_channel', 'MetaData')] = aod_chan #  writer.FillNcVector(aod_chan, 'integer')
-
-    c = np.empty([nlocs], dtype='S50')
+    c = np.empty([nlocs], dtype=object)
     c[:] = np.array(f3.siteid)
-    outdata[('station_id', 'MetaData')] = c # writer.FillNcVector(c, 'string')
+    outdata[('station_id', 'MetaData')] = c
+    varAttrs[('station_id', 'MetaData')]['units'] = ''
 
-    d = np.empty([nlocs], 'S20')
+    d = np.empty([nlocs], dtype=object)
     for i in range(nlocs):
         d[i] = f3.time[i].strftime('%Y-%m-%dT%H:%M:%SZ')
-    outdata[('datetime', 'MetaData')] = d  #writer.FillNcVector(d, 'datetime')
+    outdata[('datetime', 'MetaData')] = d
+    varAttrs[('datetime', 'MetaData')]['units'] = ''
 
+    outdata[('frequency', 'VarMetaData')] = np.float32(frequency)
+    varAttrs[('frequency', 'VarMetaData')]['units'] = 'Hz'
+    outdata[('sensor_channel', 'VarMetaData')] = np.int32(aod_chan)
+    varAttrs[('sensor_channel', 'VarMetaData')]['units'] = ''
 
     # Add global atrributes
     DimDict['nlocs'] = nlocs
+    DimDict['nchans'] = nchans
     AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-    AttrData = {'observation_type': 'Aod',
-                'sensor': "aeronet",
-                'surface_type': 'ocean=0,land=1,costal=2'}
+    # Warning
+    # --- AttrData['nchans'] is not correctly assigned and needs to  be corrected later.
+    AttrData['nchans'] = np.int32(DimDict['nchans'])
+    AttrData['observation_type'] = 'AOD'
+    AttrData['sensor'] = 'aeronet'
+    AttrData['surface_type'] = 'ocean=0,land=1,costal=2'
 
-    # setup the IODA writer
+    # Setup the IODA writer
     writer = iconv.IodaWriter(outfile, locationKeyList, DimDict)
 
     # Write out IODA V1 NC files
