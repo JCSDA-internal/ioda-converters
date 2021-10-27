@@ -10,15 +10,18 @@ from __future__ import print_function
 import sys
 from datetime import datetime
 from scipy.io import FortranFile
+import argparse
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import netCDF4 as nc
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_engines as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 vName = [
@@ -79,33 +82,30 @@ class Profile(object):
 
 
 def main():
+    desc = 'Convert AOML glider data to IODA netCDF4 format'
+    parser = ArgumentParser(
+        description=desc,
+        formatter_class=ArgumentDefaultsHelpFormatter)
 
-    parser = argparse.ArgumentParser(
-        description=(
-            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) '
-        )
-    )
-
-    required = parser.add_argument_group(title='required arguments')
-    required.add_argument(
+    parser.add_argument(
         '-i', '--input',
         help="name of Glider observation input file(s)",
         type=str, required=True)
-    required.add_argument(
+    parser.add_argument(
         '-o', '--output',
-        help="path of ioda output file",
+        help="path of netCDF4 output file",
         type=str, required=True)
-    required.add_argument(
+    parser.add_argument(
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    #writer = iconv.NcWriter(args.output, locationKeyList)
 
     prof = Profile(args.input, fdate)
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    #AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     #(ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
     ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList,DimDict)
     DimDict = {'nlocs': nlocs}
