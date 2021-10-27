@@ -112,7 +112,8 @@ class IodaWriter(object):
             # add var metadata
             try:
                 for MetaVar, MetaVal in VarAttrs[VarKey].items():
-                    tmpVar.write_attr(MetaVar, MetaVal)
+                    if MetaVar not in ['_FillValue']:
+                        tmpVar.write_attr(MetaVar, MetaVal)
             except KeyError:
                 pass  # no metadata for this variable
 
