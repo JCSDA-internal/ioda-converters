@@ -259,7 +259,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l3u
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "i${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gds2_sst2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gds2_sst2ioda.py
                           -i testinput/gds2_sst_l3u.nc
                           -o testrun/gds2_sst_l3u.nc
                           -d 2018041512
