@@ -173,5 +173,6 @@ def main():
     VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
+
 if __name__ == '__main__':
     main()
