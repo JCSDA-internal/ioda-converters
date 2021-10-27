@@ -60,6 +60,13 @@ def get_default_fill_val(mydtype):
         exit(-2)
     return fillval
 
+_default_units = {
+    'latitude': 'degrees_north',
+    'longitude': 'degrees_east',
+}
+
+_defaultF4 = 9.969209968386869e+36
+
 
 class IodaWriter(object):
     # Constructor
@@ -96,10 +103,19 @@ class IodaWriter(object):
             # write the data to the file
             tmpVar = self.obsspace.Variable(VarName)
             tmpVar.write_data(Vvals)
+
+            # add some default metadata if necessary
+            if Vname in _default_units.keys():
+                if 'units' not in VarAttrs[VarKey].keys():
+                    VarAttrs[VarKey]['units'] = _default_units[Vname]
+
             # add var metadata
             try:
                 for MetaVar, MetaVal in VarAttrs[VarKey].items():
-                    tmpVar.write_attr(MetaVar, MetaVal)
+                    if isinstance(MetaVal, ((list, np.ndarray, str)))
+                        tmpVar.write_attr(MetaVar, MetaVal)
+                    else:
+                        tmpVar.write_attr(MetaVar, [MetaVal])
             except KeyError:
                 pass  # no metadata for this variable
 
