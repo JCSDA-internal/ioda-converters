@@ -338,6 +338,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_sst
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/glider2ioda.py
