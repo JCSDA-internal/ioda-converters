@@ -120,7 +120,6 @@ class IODA(object):
 
         self.GlobalAttrs = {
             'odb_version': 1,
-            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -130,12 +129,12 @@ class IODA(object):
             self.keyDict[key]['valKey'] = value, iconv.OvalName()
             self.keyDict[key]['errKey'] = value, iconv.OerrName()
             self.keyDict[key]['qcKey'] = value, iconv.OqcName()
-            # TO DO the missing value should be the on edefined in class ship
+            # TO DO the missing value should be the one defined in class ship
             # instead of being hardcoded here
             self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
-            self.varAttrs[value, iconv.OvalName()]['units'] = " degree C"
+            self.varAttrs[value, iconv.OvalName()]['units'] = "degree C"
             self.varAttrs[value, iconv.OerrName()]['units'] = "degree C"
 
         # data is the dictionary containing IODA friendly data structure
