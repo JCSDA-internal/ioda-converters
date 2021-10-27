@@ -34,7 +34,6 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
@@ -143,9 +142,6 @@ def main():
 
     # Read in the IMS snow cover data
     scf = imsscf(args.input, args.mask)
-
-    scf.varAttrs[('latitude', 'MetaData')]['units'] = 'degree'
-    scf.varAttrs[('longitude', 'MetaData')]['units'] = 'degree'
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

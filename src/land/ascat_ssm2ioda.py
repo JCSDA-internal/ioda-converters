@@ -36,7 +36,6 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
@@ -154,9 +153,6 @@ def main():
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-
-    ssm.varAttrs[('latitude', 'MetaData')]['units'] = 'degree'
-    ssm.varAttrs[('longitude', 'MetaData')]['units'] = 'degree'
 
     # write everything out
     writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)
