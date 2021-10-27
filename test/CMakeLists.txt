@@ -308,6 +308,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_ship
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
