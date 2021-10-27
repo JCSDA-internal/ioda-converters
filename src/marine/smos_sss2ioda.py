@@ -31,10 +31,6 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-GlobalAttrs = {
-    'odb_version': 1,
-}
-
 
 class Salinity(object):
     def __init__(self, filenames, date):
@@ -128,7 +124,6 @@ def main():
     sal = Salinity(args.input, fdate)
 
     # write them out
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
 
     DimDict = {'nlocs': nlocs}
@@ -136,7 +131,9 @@ def main():
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
+    VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
     VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
