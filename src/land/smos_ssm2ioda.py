@@ -118,7 +118,7 @@ class SMOS_L2NRT(object):
         # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
-        self.outdata[('longitude', 'MetaData')]  = lons
+        self.outdata[('longitude', 'MetaData')] = lons
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
@@ -153,7 +153,7 @@ def main():
     # Read in the SMOS soil moisture data
     ssm = SMOS_L2NRT(args.input, args.mask)
 
-        # setup the IODA writer
+    # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     ssm.varAttrs[('latitude', 'MetaData')]['units'] = 'degree'

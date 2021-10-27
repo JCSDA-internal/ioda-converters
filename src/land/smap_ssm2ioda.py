@@ -66,7 +66,7 @@ class smap(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-        
+
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
@@ -105,7 +105,7 @@ class smap(object):
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
-        errs = errs.astype('float32') 
+        errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         AttrData['date_time_string'] = base_datetime
 
@@ -122,11 +122,11 @@ class smap(object):
                 qflg[i] = 1
 
             times[i] = base_datetime
-        
+
         # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
-        self.outdata[('longitude', 'MetaData')]  = lons
+        self.outdata[('longitude', 'MetaData')] = lons
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
@@ -134,7 +134,7 @@ class smap(object):
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])        
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
@@ -160,12 +160,12 @@ def main():
 
     # Read in the SMAP volumetric soil moisture data
     ssm = smap(args.input, args.mask)
-    
+
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     ssm.varAttrs[('latitude', 'MetaData')]['units'] = 'degree'
-    ssm.varAttrs[('longitude', 'MetaData')]['units'] = 'degree' 
+    ssm.varAttrs[('longitude', 'MetaData')]['units'] = 'degree'
     # write everything out
     writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)
 

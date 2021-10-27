@@ -44,6 +44,7 @@ VarDims = {
     'snowCover': ['nlocs'],
 }
 
+
 class imsscf(object):
 
     def __init__(self, filename, mask):
@@ -145,7 +146,7 @@ def main():
 
     scf.varAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     scf.varAttrs[('longitude', 'MetaData')]['units'] = 'degree'
-    
+
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 

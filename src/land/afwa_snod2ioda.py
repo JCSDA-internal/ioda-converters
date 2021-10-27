@@ -52,7 +52,7 @@ class AFWA(object):
 
     def __init__(self, filename, mask):
         self.filename = filename
-        self.mask = mask        
+        self.mask = mask
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
