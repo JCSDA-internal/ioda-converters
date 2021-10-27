@@ -1,0 +1,127 @@
+
+Found BUFR message #      1
+  
+        Message length:         136
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          22
+          Master table:           0
+    Originating center:          74 (= UK Meteorological Office, Exeter (RSMC))
+ Originating subcenter:           0 (= No sub-centre)
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           4 (= Single level upper-air data (other than satellite))
+     Local subcategory:         255
+ Internatl subcategory:           0 (= ASDAR/ACARS (AMDAR))
+  Master table version:          33
+   Local table version:           0
+                  Year:        2021
+                 Month:           2
+                   Day:           1
+                  Hour:          12
+                Minute:           1
+                Second:          39
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:           1
+        1: 311010
+
+BUFR message #      1 of type MSTTB001 and date 2021020112 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001008  ACRN                      EU0384  ( 8)CCITT IA5                 Aircraft registration number or other identifica
+001023  OSQN                         1.0  NUMERIC                       Observation sequence number                     
+001006  ACID                              ( 8)CCITT IA5                 Aircraft flight number                          
+001110  ACTN                              ( 6)CCITT IA5                 Aircraft tail number                            
+001111  OAPT                         ???  ( 3)CCITT IA5                 Origination airport                             
+001112  DAPT                         ???  ( 3)CCITT IA5                 Destination airport                             
+031021  AFSI                         8.0  CODE TABLE                    Associated field significance                   
+                                      8 = 2-bit indicator of suspected data (0 = Not suspected, 1 = Suspected, 2 = Reserved, 3 = Information not required)
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+004002  MNTH                         2.0  MONTH                         Month                                           
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+004003  DAYS                         1.0  DAY                           Day                                             
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+004004  HOUR                        11.0  HOUR                          Hour                                            
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+004005  MINU                        59.0  MINUTE                        Minute                                          
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+004006  SECO                        49.0  S                             Second                                          
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+005001  CLATH                   54.98500  DEGREE                        Latitude (high accuracy)                        
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+006001  CLONH                   77.23833  DEGREE                        Longitude (high accuracy)                       
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+007010  FLVLST                   10058.0  M                             Flight level                                    
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+010053  GNSA                     MISSING  M                             Global navigation satellite system altitude     
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+008009  DPOF                         3.0  CODE TABLE                    Detailed phase of flight                        
+                                      3 = Level flight, routine observation (LVR)
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+011001  WDIR                       354.0  DEGREE TRUE                   Wind direction                                  
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+011002  WSPD                         3.1  M S⁻¹                      Wind speed                                      
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+002064  ROLQ                     MISSING  CODE TABLE                    Aircraft roll angle quality                     
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011100  TASP                     MISSING  M S⁻¹                      Aircraft true airspeed                          
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011101  AVLU                     MISSING  M S⁻¹                      Aircraft ground speed u-component               
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011102  AVLV                     MISSING  M S⁻¹                      Aircraft ground speed v-component               
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011103  AVLW                     MISSING  M S⁻¹                      Aircraft ground speed w-component               
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011104  ACTH                     MISSING  DEGREE TRUE                   True heading of aircraft, ship or other mobile p
+054001  204002                       0.0  NUMERIC                       Associated field of   2 bits                    
+012101  TMDB                      211.20  K                             Temperature/air temperature                     
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+002170  ACHS                     MISSING  CODE TABLE                    Aircraft humidity sensors                       
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+013002  MIXR                     MISSING  KG KG⁻¹                    Mixing ratio                                    
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+013003  REHU                     MISSING  %                             Relative humidity                               
+           <RPSEQ004>     1 REPLICATIONS
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+012103  TMDP                     MISSING  K                             Dewpoint temperature                            
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+033026  MSTQ                     MISSING  CODE TABLE                    Moisture quality                                
+           <RPSEQ005>     1 REPLICATIONS
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+020042  AFICP                    MISSING  CODE TABLE                    Airframe icing present                          
+           <RPSEQ006>     1 REPLICATIONS
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+020043  PLWC                     MISSING  KG M⁻³                     Peak liquid water content                       
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+020044  ALWC                     MISSING  KG M⁻³                     Average liquid water content                    
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+020045  SCLD                     MISSING  CODE TABLE                    Supercooled large droplet (SLD) conditions      
+           <RPSEQ007>     1 REPLICATIONS
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+033025  INTV                     MISSING  CODE TABLE                    ACARS interpolated values indicator             
+           {RPSEQ008}     0 REPLICATIONS
+           <RPSEQ009>     1 REPLICATIONS
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011037  TRBXST                   MISSING  CODE TABLE                    Turbulence index                                
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011077  RIEDR                    MISSING  S                             Reporting interval or averaging time for eddy di
+           <RPSEQ010>     1 REPLICATIONS
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011034  VGVL                     MISSING  M S⁻¹                      Vertical gust velocity                          
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011035  VGAC                     MISSING  M S⁻²                      Vertical gust acceleration                      
+054001  204002                   MISSING  NUMERIC                       Associated field of   2 bits                    
+011036  MDEVG                    MISSING  M S⁻¹                      Maximum derived equivalent vertical gust speed  
+           {RPSEQ011}     0 REPLICATIONS
+
+ >>> END OF SUBSET <<< 
+
+
+End of BUFR message #      1
