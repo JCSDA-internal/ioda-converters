@@ -123,7 +123,6 @@ class IODA(object):
             'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
@@ -136,6 +135,8 @@ class IODA(object):
             self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
+            self.varAttrs[value, iconv.OvalName()]['units'] = " degree C"
+            self.varAttrs[value, iconv.OerrName()]['units'] = "degree C"
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -168,8 +169,8 @@ class IODA(object):
                     self.data[locKey][errKey] = err
                     self.data[locKey][qcKey] = qc
         # Extract obs
-        ObsVars, nlocs = iconv.ExtractObsData(self.data,self.locKeyList)
-        DimDIct = {'nlocs': nlocs}
+        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
+        DimDict = {'nlocs': nlocs}
 
         # Set up IODA writer
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
@@ -209,10 +210,10 @@ def main():
     }
 
     varDims = {
-        'sea_surface_temperature': ['nclocs'],
+        'sea_surface_temperature': ['nlocs'],
     }
 
-    IODA(foutput, fdate, varDict, varDims,obsList)
+    IODA(foutput, fdate, varDict, varDims, obsList)
 
 
 if __name__ == '__main__':
