@@ -42,14 +42,15 @@ GlobalAttrs = {
     'odb_version': 1,
 }
 
-class Profile(object):
+class glider(object):
     def __init__(self, filename, date):
         self.filename = filename
         self.date = date
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self._read()
-
-    def _read(self):
+        #self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        #self._read()
+        self._rd_glider()
+        return
+    def _rd_glider(self):
         ncd = nc.Dataset(self.filename)
         dpth = (ncd.variables['ctd_depth'][:])
         time = ncd.variables['ctd_time'][:]
