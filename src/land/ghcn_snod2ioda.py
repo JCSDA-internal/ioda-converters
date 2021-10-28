@@ -46,7 +46,7 @@ DimDict = {
 }
 
 VarDims = {
-    'soilMoistureVolumetric': ['nlocs'],
+    'snowDepth': ['nlocs'],
 }
 
 
