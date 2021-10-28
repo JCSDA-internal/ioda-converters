@@ -17,13 +17,13 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import netCDF4 as nc
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_engines as iconv
-from collections import defaultdict, OrderedDict
+#from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 vName = [
@@ -38,16 +38,16 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-self.GlobalAttrs = {
-    'odb_version': 1}
+#self.GlobalAttrs = {
+#    'odb_version': 1}
 
 class Profile(object):
     def __init__(self, filename, date):
         self.filename = filename
         self.date = date
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        #self._read()
-        self._rd_glider()
+        self._read()
+        #self._rd_glider()
         return
     def _read(self):
         ncd = nc.Dataset(self.filename)
