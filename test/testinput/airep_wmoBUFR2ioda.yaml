@@ -1,0 +1,108 @@
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/airep_wmo_multi.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH, HMSL]
+        - mnemonics: [ACID, POAF]
+        - mnemonics: [TMDBST, WDIR, WSPD]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          altitude:
+            mnemonic: HMSL
+          aircraftFlightNum:
+            mnemonic: ACID
+          aircraftFlightPhase:
+            mnemonic: POAF
+          temperatureAir:
+            mnemonic: TMDBST
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/airep_multi.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "nlocs" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "nlocs" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/altitude"
+          source: variables/altitude
+          dimensions: [ "nlocs" ]
+          longName: "Altitude"
+          units: "m"
+
+        - name: "MetaData/aircraftFlightNum"
+          source: variables/aircraftFlightNum
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft flight number"
+          units: ""
+
+        - name: "MetaData/aircraftFlightPhase"
+          source: variables/aircraftFlightPhase
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft flight phase (ascending/descending/level)"
+          units: ""
+
+        - name: "ObsValue/temperatureAir"
+          coordinates: "longitude latitude"
+          source: variables/temperatureAir
+          dimensions: [ "nlocs" ]
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          dimensions: [ "nlocs" ]
+          longName: "Wind Direction"
+          units: "degrees true"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          dimensions: [ "nlocs" ]
+          longName: "Wind Speed"
+          units: "m/s"
