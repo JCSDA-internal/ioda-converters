@@ -80,25 +80,24 @@ class Observation(object):
 
 
 def main():
-    desc = 'Convert HF radar data to IODA netCDF4 format'
-    parser = ArgumentParser(
-        description=desc,
-        formatter_class=ArgumentDefaultsHelpFormatter)
+    parser =  argparse.ArgumentParser(
+        description=('HF radar converter to v2')
+    )
 
-    parser.add_argument(
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
         '-i', '--input',
-        help="Radar observation input file(s)",
-        type=str, nargs='+', required=True)
-    parser.add_argument(
-        '-o', '--output',
-        help="path of ioda output file",
+        help="path of radar input file",
         type=str, required=True)
-    parser.add_argument(
+    required.add_argument(
+        '-o', '--output',
+        help="path of ioda v2 output",
+        type=str, required=True)
+    required.add_argument(
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
-
-    args = parser.parse_args()
+   
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     #writer = iconv.NcWriter(args.output, locationKeyList)
 
@@ -107,7 +106,7 @@ def main():
         'sea_water_zonal_current': ['nlocs']}
     # Read in the radar data
     radar = Observation(args.input, fdate)
-
+    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     # write them out
     #AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
