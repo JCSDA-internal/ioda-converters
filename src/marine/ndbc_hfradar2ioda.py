@@ -97,7 +97,7 @@ def main():
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
-   
+    args = parser.parse_args() 
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     #writer = iconv.NcWriter(args.output, locationKeyList)
 
