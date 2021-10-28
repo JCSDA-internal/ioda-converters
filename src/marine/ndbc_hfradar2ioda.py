@@ -102,17 +102,23 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     #writer = iconv.NcWriter(args.output, locationKeyList)
 
-    # Read in the altimeter
-    altim = Observation(args.input, fdate, writer)
+    VarDims = {
+        'sea_water_meridional_current': ['nlocs'],
+        'sea_water_zonal_current': ['nlocs']}
+    # Read in the radar data
+    radar = Observation(args.input, fdate)
 
     # write them out
     #AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList,DimDict)
+    ObsVars, nlocs = iconv.ExtractObsData(radar.data, self.locKeyList,DimDict)
     #writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
     DimDict = {'nlocs': nlocs}
-    self.writer = iconv.IodaWriter(self.filename, self.locKeyList,DimDict)
-    self.writer.BuildIoda(ObsVars, varDims, self.varAttrs,self.GlobalAttrs)
+    writer = iconv.IodaWriter(args.output, locKeyList,DimDict)
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
+    VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs)
 
 if __name__ == '__main__':
     main()
