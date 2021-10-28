@@ -72,7 +72,7 @@ class Observation(object):
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]
                         self.data[locKey][errKey] = 0.1
-                        self.datalocKey][qcKey] = 0
+                        self.data[locKey][qcKey] = 0
                     else:
                         self.data[locKey][valKey] = vals_v[i]
                         self.data[locKey][errKey] = 0.1
