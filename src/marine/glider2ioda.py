@@ -65,7 +65,7 @@ class Profile(object):
         ncd.close()
         base_date = datetime(1970, 1, 1)
         for i in range(len(time)-1):
-            for j in [0, 0]:
+            for j in [0, 1]:
                 valKey = vName[j], iconv.OvalName()
                 errKey = vName[j], iconv.OerrName()
                 qcKey = vName[j], iconv.OqcName()
