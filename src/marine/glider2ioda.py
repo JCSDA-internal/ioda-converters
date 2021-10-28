@@ -107,7 +107,7 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     VarDims = {
-        'sea_water_temperature': ['nlocs']
+        'sea_water_temperature': ['nlocs'],
         'sea_water_salinity': ['nlocs']}
     prof = Profile(args.input, fdate)
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
