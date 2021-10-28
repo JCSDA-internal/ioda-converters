@@ -122,8 +122,6 @@ class IODA(object):
         ]
 
         self.GlobalAttrs = {
-            'odb_version': 1,
-            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
