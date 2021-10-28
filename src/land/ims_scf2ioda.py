@@ -64,8 +64,8 @@ class imsscf(object):
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '%'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = '%'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'percent'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'percent'
 
         # read self.filename to get data
         data = pygrib.open(self.filename)
