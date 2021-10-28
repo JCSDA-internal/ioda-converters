@@ -23,8 +23,9 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-vName = "sea_water_temperature"
-
+vName = [
+    "sea_water_temperature",
+    "sea_water_salinity"]
 
 locationKeyList = [
     ("latitude", "float"),
@@ -105,10 +106,9 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    #writer = iconv.NcWriter(args.output, locationKeyList)
     VarDims = {
         'sea_water_temperature': ['nlocs']
-    }
+        'sea_water_salinity': ['nlocs']}
     prof = Profile(args.input, fdate)
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -116,7 +116,8 @@ def main():
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_water_temperature', 'ObsValue')]['units'] = 'celcius'
+    VarAttrs[('sea_water_temperature', 'ObsValue')]['units'] = 'celsius'
+    VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'psu'
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
