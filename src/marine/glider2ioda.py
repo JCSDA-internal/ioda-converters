@@ -38,19 +38,18 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-GlobalAttrs = {
-    'odb_version': 1,
-}
+self.GlobalAttrs = {
+    'odb_version': 1}
 
-class glider(object):
+class Profile(object):
     def __init__(self, filename, date):
         self.filename = filename
         self.date = date
-        #self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         #self._read()
         self._rd_glider()
         return
-    def _rd_glider(self):
+    def _read(self):
         ncd = nc.Dataset(self.filename)
         dpth = (ncd.variables['ctd_depth'][:])
         time = ncd.variables['ctd_time'][:]
