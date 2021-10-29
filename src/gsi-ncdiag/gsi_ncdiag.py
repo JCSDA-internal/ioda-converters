@@ -1297,7 +1297,7 @@ class Radiances(BaseGSI):
         # create a GSI effective QC variable
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
-        gsiqc = np.zeros_like(obsdata)
+        gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
         gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
         outdata[gsiqcname] = gsiqc
         if (ObsBias):
@@ -1330,7 +1330,7 @@ class Radiances(BaseGSI):
         for key, value2 in chan_metadata_dict.items():
             try:
                 outdata[(value2, 'MetaData')] = self.var(key)
-                VarDims[(value2, 'MetaData')] = nchans
+                VarDims[(value2, 'MetaData')] = ['nchans']
             except IndexError:
                 pass
 
@@ -1341,7 +1341,7 @@ class Radiances(BaseGSI):
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
         DimDict['nlocs'] = nlocs
-        DimDict['nchans'] = nchans
+        DimDict['nchans'] = chanlist
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
