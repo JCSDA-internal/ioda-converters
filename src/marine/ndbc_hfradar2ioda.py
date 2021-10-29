@@ -84,9 +84,9 @@ class Observation(object):
 
 def main():
 
-    parser =  argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description=(
-             'HF radar converter to v2'
+            'HF radar converter to v2'
         )
     )
 
@@ -103,7 +103,7 @@ def main():
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
-    args = parser.parse_args() 
+    args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     VarDims = {
@@ -113,13 +113,13 @@ def main():
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     ObsVars, nlocs = iconv.ExtractObsData(radar.data, locKeyList)
-    #writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
     VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
+
 
 if __name__ == '__main__':
     main()
