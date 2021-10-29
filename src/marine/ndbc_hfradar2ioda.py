@@ -35,6 +35,7 @@ GlobalAttrs = {
     'odb_version': 1,
 }
 
+
 class Observation(object):
 
     def __init__(self, filename, date):
@@ -82,8 +83,11 @@ class Observation(object):
 
 
 def main():
+
     parser =  argparse.ArgumentParser(
-        description=('HF radar converter to v2')
+        description=(
+             'HF radar converter to v2'
+        )
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -101,21 +105,17 @@ def main():
         metavar="YYYYMMDDHH", type=str, required=True)
     args = parser.parse_args() 
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    #writer = iconv.NcWriter(args.output, locationKeyList)
 
     VarDims = {
         'sea_water_meridional_current': ['nlocs'],
         'sea_water_zonal_current': ['nlocs']}
-    # Read in the radar data
     radar = Observation(args.input, fdate)
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    # write them out
-    #AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     ObsVars, nlocs = iconv.ExtractObsData(radar.data, locKeyList)
     #writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
     DimDict = {'nlocs': nlocs}
-    writer = iconv.IodaWriter(args.output, locKeyList,DimDict)
+    writer = iconv.IodaWriter(args.output, locKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
     VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
