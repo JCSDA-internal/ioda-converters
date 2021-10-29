@@ -735,7 +735,13 @@ class Conv(BaseGSI):
                     VarDims[value] = ['nlocs']
                     varAttrs[varDict[value]['valKey']]['units'] = units_values[value]
                     varAttrs[varDict[value]['errKey']]['units'] = units_values[value]
-                    varAttrs[varDict[value]['qcKey']]['units'] = ''
+                    varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
+                    varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
+                    varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
+                    varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
+                    varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
+                    varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
+                    varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
@@ -797,6 +803,8 @@ class Conv(BaseGSI):
                     gsiqc = np.zeros_like(obsdata)
                     gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
                     outdata[gsiqcname] = gsiqc
+                    varAttrs[gsiqcname]['units'] = 'unitless'
+                    varAttrs[gsiqcname]['_FillValue'] = self.INT_FILL
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
@@ -813,6 +821,7 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
+                        varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
@@ -820,6 +829,7 @@ class Conv(BaseGSI):
                             outdata[(loc_mdata_name, 'MetaData')] = tmpps
                         else:
                             outdata[(loc_mdata_name, 'MetaData')] = tmpps * 100.  # from hPa to Pa
+                        varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'Pa'
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
@@ -834,14 +844,19 @@ class Conv(BaseGSI):
                                 hgt[hgt > 9998.] = self.FLOAT_FILL
                                 tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
                             tmp = self.var(lvar)[idx]
                             tmp[tmp > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for sondes, etc.
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         else:
                             outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                     else:
                         outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
+                        if loc_mdata_name in units_values.keys():
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
                 # put the TestReference fields in the structure for writing out
                 for tvar in TestVars:
                     if tvar in test_fields_:
@@ -1127,10 +1142,8 @@ class Radiances(BaseGSI):
 
         chan_number = self.var('sensor_chan')
         chan_number = chan_number[chan_number >= 0]
-        chan_indx = self.var('Channel_Index')
         nchans = len(chan_number)
         nlocs = int(self.nobs / nchans)
-        #print(np.reshape(chan_indx, (nlocs, nchans)))
 
         chanlist = chan_number
 
@@ -1141,7 +1154,13 @@ class Radiances(BaseGSI):
         VarDims[value] = ['nlocs', 'nchans']
         varAttrs[varDict[value]['valKey']]['units'] = 'K'
         varAttrs[varDict[value]['errKey']]['units'] = 'K'
-        varAttrs[varDict[value]['qcKey']]['units'] = ''
+        varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
+        varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
+        varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
+        varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
+        varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
+        varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
+        varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
 
         if (ObsBias):
             valuebc = [
@@ -1217,19 +1236,26 @@ class Radiances(BaseGSI):
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
+                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
             elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
                 # Channels 1-9
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if loc_mdata_name in units_values.keys():
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
                 # Channels 10-13
                 tmp = self.var(lvar)[nchans-1::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name+'1', 'MetaData')] = tmp
+                if loc_mdata_name in units_values.keys():
+                    varAttrs[(loc_mdata_name+'1', 'MetaData')]['units'] = units_values[loc_mdata_name]
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if loc_mdata_name in units_values.keys():
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
         # put the TestReference fields in the structure for writing out
         for tvar in TestVars:
@@ -1239,6 +1265,8 @@ class Radiances(BaseGSI):
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[test_mdata_name] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[test_mdata_name] = ['nlocs', 'nchans']
+                if test_fields_with_channels_[tvar][0] in units_values.keys():
+                    varAttrs[test_mdata_name]['units'] = units_values[test_fields_with_channels_[tvar][0]]
 
             if tvar in test_fields_:
                 test_mdata_name = (test_fields_[tvar][0], 'MetaData')
@@ -1246,6 +1274,8 @@ class Radiances(BaseGSI):
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[test_mdata_name] = tmp
                 VarDims[test_mdata_name] = ['nlocs']
+                if test_fields[tvar][0] in units_values.keys():
+                    varAttrs[test_mdata_name]['units'] = units_values[test_fields[tvar][0]]
 
         gsi_add_radvars = gsi_add_vars
         if (QCVars):
@@ -1283,6 +1313,7 @@ class Radiances(BaseGSI):
                     tmp[tmp > 4e8] = self.FLOAT_FILL
                 gvname = "brightness_temperature", iodavar
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
+                print(gvname)
                 VarDims[gvname] = ['nlocs', 'nchans']
 
         # brightness temperature variables
@@ -1300,6 +1331,8 @@ class Radiances(BaseGSI):
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
         gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
         outdata[gsiqcname] = gsiqc
+        varAttrs[gsiqcname]['units'] = 'unitless'
+
         if (ObsBias):
             valuebc = [
                 "constant",
@@ -1325,12 +1358,17 @@ class Radiances(BaseGSI):
                 # store values in output data dictionary
                 outdata[varDict[value]['bctKey']] = obsbiastermsub
                 outdata[varDict[value]['bcpKey']] = obsbiaspredsub
+                if valuebc  in units_values.keys():
+                    varAttrs[varDict[value]['bctKey']]['units'] = units_values[valuebc]
+                    varAttrs[varDict[value]['bptKey']]['units'] = units_values[valuebc]
                 ii += 1
         # var metadata
         for key, value2 in chan_metadata_dict.items():
             try:
                 outdata[(value2, 'MetaData')] = self.var(key)
                 VarDims[(value2, 'MetaData')] = ['nchans']
+                if value2 in units_values.keys():
+                    varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
             except IndexError:
                 pass
 

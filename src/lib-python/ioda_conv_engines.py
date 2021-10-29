@@ -86,7 +86,9 @@ class IodaWriter(object):
             (Vname, Gname) = VarKey
             VarName = "{0:s}/{1:s}".format(Gname, Vname)
             # create variable
-            if Vname in VarDims.keys():
+            if VarKey in VarDims.keys():
+                dims = VarDims[VarKey]
+            elif Vname in VarDims.keys():
                 dims = VarDims[Vname]
             else:
                 # assume it is just nlocs
