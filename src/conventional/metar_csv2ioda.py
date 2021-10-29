@@ -103,6 +103,7 @@ class reformatMetar(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = obsvars_units[n]
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = obsvars_units[n]
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
             n += 1
 
         # Set units of some MetaData variables
