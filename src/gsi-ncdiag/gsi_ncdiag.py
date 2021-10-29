@@ -1492,26 +1492,30 @@ class Ozone(BaseGSI):
                 return
         LocKeyList = []
         LocVars = []
-        AttrData = {}
+        globalAttrs = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
-        # for now, record len is 1 and the list is empty?
-        writer = iconv.NcWriter(outname, LocKeyList)
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
         if (self.sensor in ["ompslp", "mls55"]):
             vname = "mole_fraction_of_ozone_in_air"
-        varDict[vname]['valKey'] = vname, writer.OvalName()
-        varDict[vname]['errKey'] = vname, writer.OerrName()
-        varDict[vname]['qcKey'] = vname, writer.OqcName()
+        varDict[vname]['valKey'] = vname, iconv.OvalName()
+        varDict[vname]['errKey'] = vname, iconv.OerrName()
+        varDict[vname]['qcKey'] = vname, iconv.OqcName()
+        VarDims[vname] = ['nlocs']
+        varAttrs[[vname]['valKey']]['units'] = 'mol mol-1'
+        varAttrs[[vname]['errKey']]['units'] = 'mol mol-1'
+        varAttrs[[vname]['qcKey']]['units'] = 'unitless'
+        varAttrs[varDict[vname]['valKey']]['_FillValue'] = self.FLOAT_FILL
+        varAttrs[varDict[vname]['errKey']]['_FillValue'] = self.FLOAT_FILL
+        varAttrs[varDict[vname]['qcKey']]['_FillValue'] = self.INT_FILL
 
         obsdata = self.var('Observation')
         try:
@@ -1522,18 +1526,21 @@ class Ozone(BaseGSI):
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
         obsqc = self.var('Analysis_Use_Flag').astype(int)
-        locKeys = []
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time':
                 tmp = self.var(lvar)
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
+                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
             else:
                 tmp = self.var(lvar)
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                loc_mdata[loc_mdata_name] = tmp
+                outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if loc_mdata_name in units_values.keys():
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
+            VarDims[(loc_mdata_name, 'MetaData')] = ['nlocs']
 
         for gsivar, iodavar in gsi_add_vars.items():
             # some special actions need to be taken depending on var name...
@@ -1557,23 +1564,23 @@ class Ozone(BaseGSI):
                     tmp[tmp > 4e8] = self.FLOAT_FILL
                 gvname = vname, iodavar
                 outdata[gvname] = tmp
+                if vname in units_values.keys():
+                    varAttrs[gvname]['units'] units_values[vname]
         # observation data
         outdata[varDict[vname]['valKey']] = obsdata
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
 
-        # dummy record metadata, for now
-        loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
+        globalAttrs["satellite"] = self.satellite
+        globalAttrs["sensor"] = self.sensor
 
-        AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nvars = 1
-        writer._nlocs = nlocs
+        DimDict['nlocs'] = nlocs
+        DimDict['nchans'] = chanlist
 
-        writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
+        writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
         print("Ozone obs processed, wrote to: %s" % outname)
 
 
@@ -1678,33 +1685,40 @@ class Radar(BaseGSI):
                 return
         LocKeyList = []
         LocVars = []
-        AttrData = {}
+        globalAttrs = {}
         varDict = defaultdict(lambda: defaultdict(dict))
         outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         # get list of location variable for this var/platform
         for ncv in self.df.variables:
             if ncv in all_LocKeyList:
                 LocKeyList.append(all_LocKeyList[ncv])
                 LocVars.append(ncv)
-        # for now, record len is 1 and the list is empty?
-        writer = iconv.NcWriter(outname, LocKeyList)
 
         nlocs = self.nobs
         if self.obstype == "dbz":
             radar_varnames = {
                 'obsdbz': 'equivalent_reflectivity_factor',
             }
+            myunits = 'dbz'
         elif self.obstype == "rw":
             radar_varnames = {
                 'obsrw': 'radial_velocity',
             }
+            myunits = 'm s-1'
 
         for key, value in radar_varnames.items():
             varDict[value]['valKey'] = value, writer.OvalName()
             varDict[value]['errKey'] = value, writer.OerrName()
             varDict[value]['qcKey'] = value, writer.OqcName()
+            VarDims[value] = ['nlocs']
+            varAttrs[varDict[value]['valKey']]['units'] = myunits
+            varAttrs[varDict[value]['errKey']]['units'] = myunits
+            varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
+            varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
+            varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
+            varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
+
 
             obsdata = self.var(key)
             errvarname = radar_err[key]
@@ -1734,28 +1748,28 @@ class Radar(BaseGSI):
                         tmp[tmp > 4e8] = self.FLOAT_FILL
                     gvname = vname, iodavar
                     outdata[gvname] = tmp
-        locKeys = []
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time':
                 tmp = self.var(lvar)[:]
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                loc_mdata[loc_mdata_name] = writer.FillNcVector(obstimes, "datetime")
+                outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
+                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
             else:
                 tmp = self.var(lvar)[:]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                loc_mdata[loc_mdata_name] = tmp
+                outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if loc_mdata_name in units_values.keys():
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
-        # dummy record metadata, for now
-        loc_mdata['record_number'] = np.full((nlocs), 1, dtype='i4')
+        globalAttrs["sensor"] = self.sensor
 
-        AttrData["date_time_string"] = self.validtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-        AttrData["sensor"] = self.sensor
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        writer._nvars = 1
-        writer._nlocs = nlocs
+        DimDict['nlocs'] = nlocs
 
-        writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units_values)
+        writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
+        writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
+
         print("Radar obs processed, wrote to: %s" % outname)
