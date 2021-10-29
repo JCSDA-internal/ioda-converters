@@ -25,21 +25,23 @@ from orddicts import DefaultOrderedDict
 vName = ["sea_water_meridional_current",
          "sea_water_zonal_current"]
 
-
-locationKeyList = [
+locKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string")
 ]
 
+GlobalAttrs = {
+    'odb_version': 1,
+}
+
 class Observation(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, date):
 
         self.filename = filename
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     def _read(self):
@@ -110,14 +112,14 @@ def main():
     # write them out
     #AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    ObsVars, nlocs = iconv.ExtractObsData(radar.data, self.locKeyList,DimDict)
+    ObsVars, nlocs = iconv.ExtractObsData(radar.data, locKeyList)
     #writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locKeyList,DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
     VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
-    writer.BuildIoda(ObsVars, VarDims, VarAttrs)
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 if __name__ == '__main__':
     main()
