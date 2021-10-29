@@ -65,6 +65,7 @@ class SMOS_L2NRT(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')

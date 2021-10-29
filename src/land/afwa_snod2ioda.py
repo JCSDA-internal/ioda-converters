@@ -68,6 +68,7 @@ class AFWA(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         data = pygrib.open(self.filename)
         lat, lon = data[1].latlons()

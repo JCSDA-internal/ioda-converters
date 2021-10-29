@@ -66,6 +66,7 @@ class imsscf(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'percent'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'percent'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # read self.filename to get data
         data = pygrib.open(self.filename)

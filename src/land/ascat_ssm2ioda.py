@@ -67,6 +67,8 @@ class ascat(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'percent'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'percent'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes

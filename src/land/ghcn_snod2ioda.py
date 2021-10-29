@@ -74,6 +74,7 @@ class ghcn(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
