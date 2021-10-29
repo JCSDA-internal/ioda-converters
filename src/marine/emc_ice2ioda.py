@@ -123,13 +123,14 @@ def main():
     ice = Observation(args.input, args.thin, fdate)
 
     # write them out
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     ObsVars, nlocs = iconv.ExtractObsData(ice.data, locationKeyList)
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_ice_area_fraction', 'ObsValue')]['units'] = 'unitless'
+    VarAttrs[vName, iconv.OvalName()]['units'] = '1'
+    VarAttrs[vName, iconv.OerrName()]['units'] = '1'
+    VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
 
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
