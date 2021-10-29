@@ -53,12 +53,8 @@ class AOD(object):
     def __init__(self, filenames, obs_time):
         self.filenames = filenames
         self.obs_time = obs_time
-#        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-#        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-#        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-#        self.units = {}
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
@@ -198,7 +194,6 @@ def main():
     aod_class = AOD(args.input, args.time)
     # write everything out
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-#    original_stdout = sys.stdout
     writer.BuildIoda(aod_class.outdata, VarDims, aod_class.varAttrs, AttrData)
 
 
