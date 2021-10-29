@@ -105,6 +105,11 @@ class reformatMetar(object):
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = obsvars_units[n]
             n += 1
 
+        # Set units of some MetaData variables
+        self.varAttrs['station_elevation', 'MetaData']['units'] = 'm'
+        self.varAttrs['height', 'MetaData']['units'] = 'm'
+        self.varAttrs['unixtime', 'MetaData']['units'] = 's'
+
         # data is the dictionary of incoming observation (METAR) data
         data = {}
 
