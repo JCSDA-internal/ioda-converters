@@ -45,7 +45,6 @@ class Profile(object):
         self.filename = filename
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        #self.writer = writer
         self._read()
 
     def _read(self):
