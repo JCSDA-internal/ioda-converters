@@ -1565,7 +1565,7 @@ class Ozone(BaseGSI):
                 gvname = vname, iodavar
                 outdata[gvname] = tmp
                 if vname in units_values.keys():
-                    varAttrs[gvname]['units'] units_values[vname]
+                    varAttrs[gvname]['units'] = units_values[vname]
         # observation data
         outdata[varDict[vname]['valKey']] = obsdata
         outdata[varDict[vname]['errKey']] = obserr
