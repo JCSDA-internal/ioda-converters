@@ -172,7 +172,7 @@ class ghcn(object):
                 errs[i] = 40.0
                 vals[i] = 1.0*vals[i]  # use 1.0 for mm(use 0.001 for m)
             times[i] = base_datetime
-        # add metadata variables  
+        # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
