@@ -215,6 +215,7 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
+    snod.varAttrs[('altitude', 'MetaData')]['units'] = 'm'
     # write everything out
     writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
 
