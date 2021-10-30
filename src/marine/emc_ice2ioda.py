@@ -117,7 +117,7 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        'sea_ice_area_fraction': ['nlocs'],
+        vName: ['nlocs'],
     }
     # Read in
     ice = Observation(args.input, args.thin, fdate)
