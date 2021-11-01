@@ -30,7 +30,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("altitude", "float"),
+    ("height", "float"),
     ("datetime", "string")
 ]
 
@@ -66,16 +66,16 @@ class ghcn(object):
     def _read(self):
 
         # set up variable names for IODA
-        for iodavar in ['totalSnowDepth']:
-            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+        iodavar = 'totalSnowDepth'
+        self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+        self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+        self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
+        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
+        self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
@@ -170,18 +170,18 @@ class ghcn(object):
         for i in range(len(vals)):
             if vals[i] >= 0.0:
                 errs[i] = 40.0
-                vals[i] = 1.0*vals[i]  # use 1.0 for mm(use 0.001 for m)
             times[i] = base_datetime
         # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.outdata[('altitude', 'MetaData')] = alts
-        for iodavar in ['totalSnowDepth']:
-            self.outdata[self.varDict[iodavar]['valKey']] = vals
-            self.outdata[self.varDict[iodavar]['errKey']] = errs
-            self.outdata[self.varDict[iodavar]['qcKey']] = qflg
+        self.outdata[('height', 'MetaData')] = alts
+        self.varAttrs[('height', 'MetaData')]['units'] = 'm'
+
+        self.outdata[self.varDict[iodavar]['valKey']] = vals
+        self.outdata[self.varDict[iodavar]['errKey']] = errs
+        self.outdata[self.varDict[iodavar]['qcKey']] = qflg
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
@@ -218,7 +218,6 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    snod.varAttrs[('altitude', 'MetaData')]['units'] = 'm'
     # write all data out
     writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
 
