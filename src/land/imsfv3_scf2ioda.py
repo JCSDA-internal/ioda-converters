@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("altitude", "float"),
+    ("height", "float"),
     ("datetime", "string")
 ]
 
@@ -122,7 +122,8 @@ class imsFV3(object):
         self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.outdata[('altitude', 'MetaData')] = oros
+        self.outdata[('height', 'MetaData')] = oros
+        self.varAttrs[('height', 'MetaData')]['units'] = 'm'
 
         # add output variables
         for i in range(len(sncv)):
@@ -161,7 +162,6 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    ims.varAttrs[('altitude', 'MetaData')]['units'] = 'm'
     # write everything out
     writer.BuildIoda(ims.outdata, VarDims, ims.varAttrs, AttrData)
 
