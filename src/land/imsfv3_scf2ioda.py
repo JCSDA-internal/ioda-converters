@@ -75,7 +75,7 @@ class imsFV3(object):
                 self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = -999.
                 self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -999.
                 self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -999
-                   
+
             if iodavar == 'totalSnowDepth':
                 self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
                 self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
