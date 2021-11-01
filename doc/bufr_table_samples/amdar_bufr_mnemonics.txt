@@ -1,0 +1,184 @@
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| AMDARDTA | 311010 | BUFR template for AMDAR, version 7                       |
+| RPSEQ001 | 354002 | REPLICATION SEQUENCE 001                                 |
+| RPSEQ002 | 354003 | REPLICATION SEQUENCE 002                                 |
+| RPSEQ003 | 354004 | REPLICATION SEQUENCE 003                                 |
+| RPSEQ004 | 354005 | REPLICATION SEQUENCE 004                                 |
+| RPSEQ005 | 354006 | REPLICATION SEQUENCE 005                                 |
+| RPSEQ006 | 354007 | REPLICATION SEQUENCE 006                                 |
+| RPSEQ007 | 354008 | REPLICATION SEQUENCE 007                                 |
+| RPSEQ008 | 354009 | REPLICATION SEQUENCE 008                                 |
+| RPSEQ009 | 354010 | REPLICATION SEQUENCE 009                                 |
+| RPSEQ010 | 354011 | REPLICATION SEQUENCE 010                                 |
+| RPSEQ011 | 354012 | REPLICATION SEQUENCE 011                                 |
+| YYMMDD   | 301011 | Year, month, day                                         |
+| HHMMSS   | 301013 | Hour, minute, second                                     |
+| LTLONH   | 301021 | Latitude/longitude (high accuracy)                       |
+|          |        |                                                          |
+| ACRN     | 001008 | Aircraft registration number or other identification     |
+| OSQN     | 001023 | Observation sequence number                              |
+| ACID     | 001006 | Aircraft flight number                                   |
+| ACTN     | 001110 | Aircraft tail number                                     |
+| OAPT     | 001111 | Origination airport                                      |
+| DAPT     | 001112 | Destination airport                                      |
+| 204002   | 054001 | Associated field of   2 bits                             |
+| AFSI     | 031021 | Associated field significance                            |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| SECO     | 004006 | Second                                                   |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| FLVLST   | 007010 | Flight level                                             |
+| GNSA     | 010053 | Global navigation satellite system altitude              |
+| DPOF     | 008009 | Detailed phase of flight                                 |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| ROLQ     | 002064 | Aircraft roll angle quality                              |
+| TASP     | 011100 | Aircraft true airspeed                                   |
+| AVLU     | 011101 | Aircraft ground speed u-component                        |
+| AVLV     | 011102 | Aircraft ground speed v-component                        |
+| AVLW     | 011103 | Aircraft ground speed w-component                        |
+| ACTH     | 011104 | True heading of aircraft, ship or other mobile platform  |
+| TMDB     | 012101 | Temperature/air temperature                              |
+| ACHS     | 002170 | Aircraft humidity sensors                                |
+| MIXR     | 013002 | Mixing ratio                                             |
+| REHU     | 013003 | Relative humidity                                        |
+| TMDP     | 012103 | Dewpoint temperature                                     |
+| MSTQ     | 033026 | Moisture quality                                         |
+| AFICP    | 020042 | Airframe icing present                                   |
+| PLWC     | 020043 | Peak liquid water content                                |
+| ALWC     | 020044 | Average liquid water content                             |
+| SCLD     | 020045 | Supercooled large droplet (SLD) conditions               |
+| INTV     | 033025 | ACARS interpolated values indicator                      |
+| MTRB     | 011075 | Mean turbulence intensity (eddy dissipation rate)        |
+| PTRB     | 011076 | Peak turbulence intensity (eddy dissipation rate)        |
+| XTOPEDR  | 011039 | Extended time of occurrence of peak eddy dissipation ra  |
+| TRBXST   | 011037 | Turbulence index                                         |
+| RIEDR    | 011077 | Reporting interval or averaging time for eddy dissipati  |
+| VGVL     | 011034 | Vertical gust velocity                                   |
+| VGAC     | 011035 | Vertical gust acceleration                               |
+| MDEVG    | 011036 | Maximum derived equivalent vertical gust speed           |
+| HEIT     | 007007 | Height                                                   |
+| EDRV     | 011105 | EDR algorithm version                                    |
+| 204007   | 054013 | Associated field of   7 bits                             |
+| RMCF     | 011106 | Running minimum confidence                               |
+| MNBI     | 011107 | Maximum number bad inputs                                |
+| PKLN     | 011108 | Peak location                                            |
+| GEDR     | 011109 | Number of good EDR                                       |
+| WSPD3    | 011084 | Wind speed                                               |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | AMDARDTA                                                          |
+|          |                                                                   |
+| AMDARDTA | ACRN  OSQN  ACID  ACTN  OAPT  DAPT  AFSI  RPSEQ001  RPSEQ002      |
+| AMDARDTA | RPSEQ003  204002  FLVLST  204002  GNSA  204002  DPOF  204002      |
+| AMDARDTA | WDIR  204002  WSPD  204002  ROLQ  204002  TASP  204002  AVLU      |
+| AMDARDTA | 204002  AVLV  204002  AVLW  204002  ACTH  204002  TMDB  204002    |
+| AMDARDTA | ACHS  201144  202133  204002  MIXR  202000  201000  201135        |
+| AMDARDTA | 202130  204002  REHU  202000  201000  <RPSEQ004>  204002  MSTQ    |
+| AMDARDTA | <RPSEQ005>  <RPSEQ006>  <RPSEQ007>  {RPSEQ008}  <RPSEQ009>        |
+| AMDARDTA | <RPSEQ010>  {RPSEQ011}                                            |
+|          |                                                                   |
+| RPSEQ001 | 204002  YEAR  204002  MNTH  204002  DAYS                          |
+|          |                                                                   |
+| RPSEQ002 | 204002  HOUR  204002  MINU  204002  SECO                          |
+|          |                                                                   |
+| RPSEQ003 | 204002  CLATH  204002  CLONH                                      |
+|          |                                                                   |
+| RPSEQ004 | 204002  TMDP                                                      |
+|          |                                                                   |
+| RPSEQ005 | 204002  AFICP                                                     |
+|          |                                                                   |
+| RPSEQ006 | 204002  PLWC  204002  ALWC  204002  SCLD                          |
+|          |                                                                   |
+| RPSEQ007 | 204002  INTV                                                      |
+|          |                                                                   |
+| RPSEQ008 | 204002  MTRB  204002  PTRB  204002  XTOPEDR                       |
+|          |                                                                   |
+| RPSEQ009 | 204002  TRBXST  204002  RIEDR                                     |
+|          |                                                                   |
+| RPSEQ010 | 204002  VGVL  204002  VGAC  204002  MDEVG                         |
+|          |                                                                   |
+| RPSEQ011 | YYMMDD  HHMMSS  LTLONH  HEIT  EDRV  AFSI  204007  PTRB  204007    |
+| RPSEQ011 | MTRB  RMCF  MNBI  PKLN  GEDR  TMDB  WDIR  201130  WSPD3  201000   |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| ACRN     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| OSQN     |    0 |           0 |   9 | NUMERIC                  |-------------|
+| ACID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| ACTN     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| OAPT     |    0 |           0 |  24 | CCITT IA5                |-------------|
+| DAPT     |    0 |           0 |  24 | CCITT IA5                |-------------|
+| 204002   |    0 |           0 |   2 | NUMERIC                  |-------------|
+| AFSI     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | S                        |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| FLVLST   |    0 |       -1024 |  16 | M                        |-------------|
+| GNSA     |    0 |       -1000 |  17 | M                        |-------------|
+| DPOF     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| ROLQ     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| TASP     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| AVLU     |    1 |       -4096 |  13 | M S⁻¹                 |-------------|
+| AVLV     |    1 |       -4096 |  13 | M S⁻¹                 |-------------|
+| AVLW     |    1 |        -512 |  10 | M S⁻¹                 |-------------|
+| ACTH     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| TMDB     |    2 |           0 |  16 | K                        |-------------|
+| ACHS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| MIXR     |    5 |           0 |  14 | KG KG⁻¹               |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| TMDP     |    2 |           0 |  16 | K                        |-------------|
+| MSTQ     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| AFICP    |    0 |           0 |   2 | CODE TABLE               |-------------|
+| PLWC     |    4 |           0 |   7 | KG M⁻³                |-------------|
+| ALWC     |    4 |           0 |   7 | KG M⁻³                |-------------|
+| SCLD     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| INTV     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| MTRB     |    2 |           0 |   8 | M⅔ S⁻¹              |-------------|
+| PTRB     |    2 |           0 |   8 | M⅔ S⁻¹              |-------------|
+| XTOPEDR  |    0 |           0 |   6 | CODE TABLE               |-------------|
+| TRBXST   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RIEDR    |    0 |           0 |  12 | S                        |-------------|
+| VGVL     |    1 |       -1024 |  11 | M S⁻¹                 |-------------|
+| VGAC     |    2 |       -8192 |  14 | M S⁻²                 |-------------|
+| MDEVG    |    1 |           0 |  10 | M S⁻¹                 |-------------|
+| HEIT     |    0 |       -1000 |  17 | M                        |-------------|
+| EDRV     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| 204007   |    0 |           0 |   7 | NUMERIC                  |-------------|
+| RMCF     |    1 |           0 |   4 | NUMERIC                  |-------------|
+| MNBI     |    0 |           0 |   5 | NUMERIC                  |-------------|
+| PKLN     |    1 |           0 |   4 | NUMERIC                  |-------------|
+| GEDR     |    0 |           0 |   4 | NUMERIC                  |-------------|
+| WSPD3    |    0 |           0 |   8 | KT                       |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
