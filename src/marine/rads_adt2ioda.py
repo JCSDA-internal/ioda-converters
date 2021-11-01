@@ -32,7 +32,6 @@ locationKeyList = [
 ]
 
 GlobalAttrs = {
-    'odb_version': 1,
 }
 
 VarDims = {
@@ -70,9 +69,12 @@ class Observation(object):
         valKey = vName, iconv.OvalName()
         errKey = vName, iconv.OerrName()
         qcKey = vName, iconv.OqcName()
-        self.VarAttrs[ vName, iconv.OvalName()]['_FillValue'] = Fill_val
-        self.VarAttrs[ vName, iconv.OvalName()]['units'] = val_units
-        self.VarAttrs[ vName, iconv.OvalName()]['scale_factor'] = scale_factor
+        self.VarAttrs[vName, iconv.OvalName()]['_FillValue'] = Fill_val
+        self.VarAttrs[vName, iconv.OerrName()]['_FillValue'] = Fill_val
+        self.VarAttrs[vName, iconv.OqcName()]['_FillValue'] = Fill_val
+        self.VarAttrs[vName, iconv.OvalName()]['units'] = val_units
+        self.VarAttrs[vName, iconv.OerrName()]['units'] = val_units
+        self.VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
 
         for i in range(len(lons)):
 
@@ -118,7 +120,6 @@ def main():
     ObsVars, nlocs = iconv.ExtractObsData(altim.data, locationKeyList)
 
     # Set attributes
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     DimDict['nlocs'] = nlocs
 
     # Set up the IODA writer
