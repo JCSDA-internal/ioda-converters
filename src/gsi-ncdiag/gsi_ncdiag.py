@@ -1358,7 +1358,7 @@ class Radiances(BaseGSI):
                 # store values in output data dictionary
                 outdata[varDict[value]['bctKey']] = obsbiastermsub
                 outdata[varDict[value]['bcpKey']] = obsbiaspredsub
-                if valuebc  in units_values.keys():
+                if valuebc in units_values.keys():
                     varAttrs[varDict[value]['bctKey']]['units'] = units_values[valuebc]
                     varAttrs[varDict[value]['bptKey']]['units'] = units_values[valuebc]
                 ii += 1
@@ -1708,9 +1708,9 @@ class Radar(BaseGSI):
             myunits = 'm s-1'
 
         for key, value in radar_varnames.items():
-            varDict[value]['valKey'] = value, writer.OvalName()
-            varDict[value]['errKey'] = value, writer.OerrName()
-            varDict[value]['qcKey'] = value, writer.OqcName()
+            varDict[value]['valKey'] = value, iconv.OvalName()
+            varDict[value]['errKey'] = value, iconv.OerrName()
+            varDict[value]['qcKey'] = value, iconv.OqcName()
             VarDims[value] = ['nlocs']
             varAttrs[varDict[value]['valKey']]['units'] = myunits
             varAttrs[varDict[value]['errKey']]['units'] = myunits
@@ -1718,7 +1718,6 @@ class Radar(BaseGSI):
             varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
             varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
             varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
-
 
             obsdata = self.var(key)
             errvarname = radar_err[key]
