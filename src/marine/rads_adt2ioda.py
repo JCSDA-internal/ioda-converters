@@ -128,5 +128,6 @@ def main():
     # Write the obs out
     writer.BuildIoda(ObsVars, VarDims, altim.VarAttrs, GlobalAttrs)
 
+
 if __name__ == '__main__':
     main()
