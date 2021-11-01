@@ -2,6 +2,7 @@ list(APPEND programs
   goes.py
   goes_converter.py
   goes_latlon.py
+  goes_util.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
