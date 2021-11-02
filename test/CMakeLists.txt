@@ -16,6 +16,7 @@ list( APPEND test_input
   testinput/godae_trak.bin
   testinput/rads_adt.nc
   testinput/smap_sss_rss.nc
+  testinput/hgodas_adt.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
   testinput/marineglider_AOML.nc
@@ -63,6 +64,7 @@ list( APPEND test_output
   testoutput/godae_trak.nc
   testoutput/rads_adt.nc
   testoutput/smap_sss_rss.nc
+  testoutput/hgodas_adt.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
   testoutput/test_glider.nc
@@ -321,6 +323,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
                           -o testrun/godae_trak.nc
                           -d 2004070812"
                           godae_trak.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_adt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/hgodas_adt2ioda.py
+                          -i testinput/hgodas_adt.nc
+                          -o testrun/hgodas_adt.nc
+                          -d 2018041512"
+                          hgodas_adt.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_insitu
                   TYPE    SCRIPT
