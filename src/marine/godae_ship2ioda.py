@@ -119,7 +119,6 @@ class IODA(object):
         ]
 
         self.GlobalAttrs = {
-            'odb_version': 1,
         }
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
