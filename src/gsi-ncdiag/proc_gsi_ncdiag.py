@@ -37,16 +37,6 @@ def run_radiances_obs(radfile, outdir, obsbias, qcvars, testrefs):
     return 0
 
 
-def run_aod_obs(aodfile, outdir):
-    print("Processing:"+str(aodfile))
-    startt = time.time()
-    Diag = gsid.AOD(aodfile)
-    Diag.read()
-    Diag.toIODAobs(outdir)
-    print("Time (OBS) %s: %.3g sec" % (aodfile, time.time() - startt))
-    return 0
-
-
 def run_oz_obs(ozfile, outdir):
     print("Processing:"+str(ozfile))
     startt = time.time()
@@ -74,16 +64,6 @@ def run_radiances_geo(radfile, outdir):
     Diag.read()
     Diag.toGeovals(outdir)
     print("Time (GEO) %s: %.3g sec" % (radfile, time.time() - startt))
-    return 0
-
-
-def run_aod_geo(aodfile, outdir):
-    print("Processing:"+str(aodfile))
-    startt = time.time()
-    Diag = gsid.AOD(aodfile)
-    Diag.read()
-    Diag.toGeovals(outdir)
-    print("Time (GEO) %s: %.3g sec" % (aodfile, time.time() - startt))
     return 0
 
 
@@ -169,14 +149,6 @@ if MyArgs.obs_dir:
         if process:
             res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir, ObsBias, QCVars, TestRefs))
     # atmospheric composition observations
-    # aod first
-    for radfile in radfiles:
-        process = False
-        for p in gsid.aod_sensors:
-            if p in radfile:
-                process = True
-        if process:
-            res = obspool.apply_async(run_aod_obs, args=(radfile, ObsDir))
     # ozone
     for radfile in radfiles:
         process = False
@@ -204,14 +176,6 @@ if MyArgs.geovals_dir:
         if process:
             res = obspool.apply_async(run_radiances_geo, args=(radfile, GeoDir))
     # atmospheric composition observations
-    # aod first
-    for radfile in radfiles:
-        process = False
-        for p in gsid.aod_sensors:
-            if p in radfile:
-                process = True
-        if process:
-            res = obspool.apply_async(run_aod_geo, args=(radfile, GeoDir))
     # ozone
     for radfile in radfiles:
         process = False
