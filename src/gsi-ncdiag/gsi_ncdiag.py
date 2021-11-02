@@ -790,7 +790,8 @@ class Conv(BaseGSI):
                     gsiqcname = outvars[o], 'GsiEffectiveQC'
                     errname = outvars[o], 'GsiFinalObsError'
                     gsiqc = np.zeros_like(obsdata)
-                    gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+                    gsiqc[outdata[errname] == 1e8] = 1
+                    #gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
                     outdata[gsiqcname] = gsiqc
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
