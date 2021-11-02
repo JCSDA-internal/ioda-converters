@@ -117,6 +117,8 @@ def main():
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
     VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
