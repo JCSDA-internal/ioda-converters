@@ -35,7 +35,7 @@ GlobalAttrs = {
 }
 
 VarDims = {
-    'adt': ['nlocs'],
+    vName: ['nlocs'],
 }
 
 DimDict = {
