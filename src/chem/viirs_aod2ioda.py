@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+
 #
 # (C) Copyright 2020 UCAR
 #
@@ -10,7 +11,8 @@ import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
+import os
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -18,12 +20,9 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
-
-vName = {
-    'A': "aerosol_optical_depth_4",
-}
 
 locationKeyList = [
     ("latitude", "float"),
@@ -31,21 +30,55 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {}
+
+obsvars = {
+    'A': "aerosol_optical_depth_4",
+}
+
+AttrData = {
+    'converter': os.path.basename(__file__),
+    'nvars': np.int32(len(obsvars)),
+}
+
+
+DimDict = {
+}
+
+VarDims = {
+    'aerosol_optical_depth_4': ['nlocs']
+}
 
 
 class AOD(object):
-
-    def __init__(self, filename, method, mask, thin, writer):
+    def __init__(self, filename, method, mask, thin):
+        print('filename= ',filename)
+        print('pwd=',os.getcwd())
         self.filename = filename
-        self.method = method
+        print('self.filename= ',self.filename) 
         self.mask = mask
-        self.thin = thin
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
+        self.method = method
+        self.thin = thin 
+        self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
+        # set up variable names for IODA
+        for ncvar, iodavar in obsvars.items():
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+           
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+
+        # Read file(s)
+
         ncd = nc.Dataset(self.filename)
         lons = ncd.variables['Longitude'][:].ravel()
         lats = ncd.variables['Latitude'][:].ravel()
@@ -61,16 +94,25 @@ class AOD(object):
             errs = errs[mask]
             qcpath = qcpath[mask]
             qcall = qcall[mask]
-        # get global attributes
+
         gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
         base_datetime = gatts["time_coverage_end"]
         self.satellite = gatts["satellite_name"]
         self.sensor = gatts["instrument_name"]
         ncd.close()
 
-        valKey = vName['A'], self.writer.OvalName()
-        errKey = vName['A'], self.writer.OerrName()
-        qcKey = vName['A'], self.writer.OqcName()
+        # Get global attributes
+
+        AttrData["observation_type"] = "AOD"
+        AttrData["satellite"] = self.satellite
+        AttrData["sensor"] = self.sensor
+
+        # write global attributes out
+        if AttrData['sensor'] == 'NPP':
+            AttrData['sensor'] = "suomi_npp"
+        if AttrData['satellite'] == 'VIIRS':
+            AttrData['satellite'] = "v.viirs-m_npp"
+        AttrData['date_time_string'] = base_datetime
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -81,13 +123,6 @@ class AOD(object):
             errs = errs[mask_thin]
             qcpath = qcpath[mask_thin]
             qcall = qcall[mask_thin]
-
-        # set variable keys
-        sfcKey = "surface_type", "MetaData"
-        szaKey = "sol_zenith_angle", "MetaData"
-        saaKey = "sol_azimuth_angle", "MetaData"
-        mduKey = "modis_deep_blue_flag", "MetaData"
-        biaKey = "aerosol_optical_depth_4", "KnownObsBias"
 
         # defined surface type, uncertainty, and bias array
         sfctyp = 0*qcall
@@ -122,45 +157,48 @@ class AOD(object):
                     uncertainty[i] = uncertainty2[i]
                 errs[i] = uncertainty[i]
 
-            locKey = lats[i], lons[i], base_datetime
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
-            self.data[0][locKey][qcKey] = qcall[i]
-            self.data[0][locKey][biaKey] = bias[i]
 
-            # solar zenith angle (sza) is set all 0 for test
-            # solar azimuth angle (saa) is set  all 0 for test
-            # modis_deep_blue_flag (mdu)is set all 0 for test
-            self.data[0][locKey][szaKey] = 0.0
-            self.data[0][locKey][saaKey] = 0.0
-            self.data[0][locKey][sfcKey] = sfctyp[i]
-            self.data[0][locKey][mduKey] = 0
 
-            # write global attributes out
-            if self.satellite == 'NPP':
-                self.satellite = "suomi_npp"
-            if self.sensor == 'VIIRS':
-                self.sensor = "v.viirs-m_npp"
+        #  Write out data 
 
-            AttrData["observation_type"] = "AOD"
-            AttrData["satellite"] = self.satellite
-            AttrData["sensor"] = self.sensor
-            AttrData['date_time_string'] = base_datetime
+        #  Values 
+
+        self.outdata[self.varDict[iodavar]['valKey']] = vals  
+        self.outdata[self.varDict[iodavar]['errKey']] = errs 
+        self.outdata[self.varDict[iodavar]['qcKey']] = qcall
+
+        #  Add Meta data 
+
+        self.outdata[('latitude', 'MetaData')] = lats 
+        self.outdata[('longitude','MetaData')] = lons
+        self.outdata[('bias','MetaData')] = bias
+
+
+
+        DimDict['nlocs'] = len(self.outdata[('latitude', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
 
+    # get command line arguments
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -t Analysis_time /path/to/obs/2021060823.nc
+    # -o /path/to/ioda/20210608.nc
+    # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
+    # analysis window.
     parser = argparse.ArgumentParser(
         description=('Read VIIRS aerosol optical depth file(s) and Converter'
                      ' of native NetCDF format for observations of optical'
-                     ' depth from VIIRS AOD550 to IODA netCDF format.')
+                     ' depth from VIIRS AOD550 to IODA-V2 netCDF format.')
     )
-    parser.add_argument('-i', '--input',
-                        help="name of viirs aod input file(s)",
-                        type=str, required=True)
-    parser.add_argument('-o', '--output',
-                        help="name of ioda output file",
-                        type=str, required=True)
+    parser.add_argument(
+        '-i', '--input',
+        help="name of viirs aod input file(s)",
+        type=str, required=True)
+    parser.add_argument(
+        '-o', '--output',
+        help="name of ioda-v2 output file",
+        type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-m', '--method',
@@ -178,21 +216,24 @@ def main():
 
     args = parser.parse_args()
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
 
-    # Read in the profiles
-    aod = AOD(args.input, args.method, args.mask, args.thin, writer)
+    # setup the IODA writer
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(aod.data)
 
-    # set constants for the four variables
-    VarMdata['frequency'] = np.full(1, 5.401666e+14, dtype='f4')
-    VarMdata['polarization'] = np.full(1, 1, dtype='i4')
-    VarMdata['wavenumber'] = np.full(1, 18161.61, dtype='f4')
-    VarMdata['sensor_channel'] = np.full(1, 4, dtype='i4')
+    # Read in the AOD data
+    aod = AOD(args.input, args.method, args.mask, args.thin)
 
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    # Set constants 
+#    AttrData['frequency'] = np.full(1, 5.401666e+14, dtype='f4')
+#    AttrData['polarization'] = np.full(1, 1, dtype='i4')
+#    AttrData['wavenumber'] = np.full(1, 18161.61, dtype='f4')
+#    AttrData['sensor_channel'] = np.full(1, 4, dtype='i4')
 
+    # write everything out
+
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    print('AttrData=',AttrData)
+    writer.BuildIoda(aod.outdata, VarDims, aod.varAttrs, AttrData)
 
 if __name__ == '__main__':
     main()
