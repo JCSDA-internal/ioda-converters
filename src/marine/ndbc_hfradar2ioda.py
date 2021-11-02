@@ -105,7 +105,6 @@ def main():
         metavar="YYYYMMDDHH", type=str, required=True)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-
     VarDims = {
         'sea_water_meridional_current': ['nlocs'],
         'sea_water_zonal_current': ['nlocs']}
