@@ -32,7 +32,7 @@ locationKeyList = [
 ]
 
 obsvars = {
-    'snow_cover_fraction_': 'snowCoverFraction',
+    'snow_cover_fraction': 'snowCoverFraction',
     'total_snow_depth': 'totalSnowDepth',
 }
 
