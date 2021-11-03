@@ -39,14 +39,13 @@ class Salinity(object):
         self.filenames = filenames
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     # Open obs file and read/load relevant info
     def _read(self):
-        valKey = vName, self.iconv.OvalName()
-        errKey = vName, self.iconv.OerrName()
-        qcKey = vName, self.iconv.OqcName()
+        valKey = vName, iconv.OvalName()
+        errKey = vName, iconv.OerrName()
+        qcKey = vName, iconv.OqcName()
 
         for f in self.filenames:
             print(" Reading file: ", f)
