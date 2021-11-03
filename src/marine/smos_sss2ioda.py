@@ -135,12 +135,12 @@ def main():
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
     VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless
+    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless'
     VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
     VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('sea_surface_salinity', 'PreQC')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
-'
+
 if __name__ == '__main__':
     main()
