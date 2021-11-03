@@ -19,7 +19,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -31,24 +31,21 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
-    'odb_version': 1,
-}
+GlobalAttrs = {}
 
 
 class Salinity(object):
-    def __init__(self, filenames, date, writer):
+    def __init__(self, filenames, date):
         self.filenames = filenames
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     # Open obs file and read/load relevant info
     def _read(self):
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
+        valKey = vName, iconv.OvalName()
+        errKey = vName, iconv.OerrName()
+        qcKey = vName, iconv.OqcName()
 
         for f in self.filenames:
             print(" Reading file: ", f)
@@ -92,9 +89,9 @@ class Salinity(object):
                 basetime = datetime.strptime(date1, '%Y%m%d')
                 obs_date = basetime + timedelta(seconds=int(seconds))
                 locKey = lat[i], lon[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                self.data[0][locKey][valKey] = sss[i]
-                self.data[0][locKey][errKey] = sss_err[i]
-                self.data[0][locKey][qcKey] = sss_qc[i]
+                self.data[locKey][valKey] = sss[i]
+                self.data[locKey][errKey] = sss_err[i]
+                self.data[locKey][qcKey] = sss_qc[i]
             ncd.close()
 
 
@@ -121,16 +118,27 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 #
-    writer = iconv.NcWriter(args.output, locationKeyList)
-#
-#    # Read in the salinity
-    sal = Salinity(args.input, fdate, writer)
-#
-#    # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-#
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(sal.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    VarDims = {
+        'sea_surface_salinity': ['nlocs'],
+    }
+
+    # Read in the salinity
+    sal = Salinity(args.input, fdate)
+
+    # write them out
+    ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
+
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
+    VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
+    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_salinity', 'PreQC')]['_FillValue'] = 999
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
