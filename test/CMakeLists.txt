@@ -274,6 +274,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l3u
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_sss2ioda.py
@@ -284,6 +285,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_rads_adt
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/rads_adt2ioda.py
@@ -304,6 +306,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_ship
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_ship2ioda.py
@@ -314,6 +317,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_ship
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_trak2ioda.py
@@ -384,6 +388,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_sss
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smos_sss2ioda.py
@@ -854,6 +859,7 @@ endif()
 if( iodaconv_pygrib_ENABLED )
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ims_scf
                     TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
@@ -864,6 +870,7 @@ if( iodaconv_pygrib_ENABLED )
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_afwa_snod
                     TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/afwa_snod2ioda.py
@@ -875,6 +882,7 @@ endif()
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ghcn_snod2ioda.py
@@ -887,6 +895,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                     TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
@@ -897,6 +906,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
                     TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smos_ssm2ioda.py
@@ -907,6 +917,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ascat_ssm
                     TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ascat_ssm2ioda.py
