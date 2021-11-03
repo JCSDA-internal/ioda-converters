@@ -170,12 +170,12 @@ if __name__ == '__main__':
         varAttrs[key, iconv.OqcName()]['units'] = ''
 
     for key, value in obsvars.items():
-        outdata[varDict[key]['valKey']] = np.array(f3[value].fillna(np.float32(-999.)))
+        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-999.))))
         outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
                                                   1, 0)
         if key in ["aerosol_optical_depth"]:
             outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
-                                                       np.float32(-999.), 0.02)
+                                                       np.float32(-999.), np.float32(0.02))
         else:
             outdata[varDict[key]['errKey']] = np.full((nlocs, nchans), np.float32(-999.))
 
