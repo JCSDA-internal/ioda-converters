@@ -23,7 +23,9 @@ from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 vName = ["sea_water_meridional_current",
-         "sea_water_zonal_current"]
+         "sea_water_zonal_current",
+         "DOPX",
+         "DOPY"]
 
 locKeyList = [
     ("latitude", "float"),
@@ -79,14 +81,14 @@ class Observation(object):
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]
                         self.data[locKey][errKey] = 0.1
-                        if dopx[i] <= 10:
+                        if dopx[i] <= 0.5:
                             self.data[locKey][qcKey] = 0
                         else:
                             self.data[locKey][qcKey] = 11
                     else:
                         self.data[locKey][valKey] = vals_v[i]
                         self.data[locKey][errKey] = 0.1
-                        if dopy[i] <= 10:
+                        if dopy[i] <= 0.5:
                             self.data[locKey][qcKey] = 0
                         else:
                             self.data[locKey][qcKey] = 11
