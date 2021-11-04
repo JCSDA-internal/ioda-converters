@@ -76,21 +76,20 @@ class Observation(object):
                     count += 1
                     obs_date = reftime + timedelta(seconds=int(time[i]))
                     locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    print('dopx',len(dopx),len(vals_u))
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]
                         self.data[locKey][errKey] = 0.1
-                        if dopx[i] <= 10: 
-                           self.data[locKey][qcKey] = 0
+                        if dopx[i] <= 10:
+                            self.data[locKey][qcKey] = 0
                         else:
-                           self.data[locKey][qcKey] = 11
+                            self.data[locKey][qcKey] = 11
                     else:
                         self.data[locKey][valKey] = vals_v[i]
                         self.data[locKey][errKey] = 0.1
                         if dopy[i] <= 10:
-                           self.data[locKey][qcKey] = 0
+                            self.data[locKey][qcKey] = 0
                         else:
-                           self.data[locKey][qcKey] = 11
+                            self.data[locKey][qcKey] = 11
 
 
 def main():
