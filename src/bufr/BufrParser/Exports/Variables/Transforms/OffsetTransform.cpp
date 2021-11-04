@@ -25,6 +25,8 @@ namespace Ingester
         {
             val += offset_;
         }
+
+        object->setRawData(data);
       }
     }
 

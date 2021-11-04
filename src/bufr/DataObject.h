@@ -102,7 +102,7 @@ namespace Ingester
                    const std::string& query,
                    const std::vector<std::string>& dimPaths) :
             DataObjectBase(field_name, group_by_field_name, dimensions, query, dimPaths),
-            data_(data) 
+            data_(data)
         {};
 
         ~DataObject() = default;
@@ -139,6 +139,7 @@ namespace Ingester
         };
 
         std::vector<T> getRawData() const { return data_; }
+        void setRawData(std::vector<T> data) { data_ = data; }
 
         T get(const Location& loc) const
         {

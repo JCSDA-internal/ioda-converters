@@ -20,11 +20,12 @@ namespace Ingester
       if (auto object = std::dynamic_pointer_cast<DataObject<float>>(dataObject))
       {
         auto data = object->getRawData();
-
         for (auto& val : data)
         {
             val *= scaling_;
         }
+
+        object->setRawData(data);
       }
     }
 }  // namespace Ingester
