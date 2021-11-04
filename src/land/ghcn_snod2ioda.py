@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -23,7 +23,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
@@ -42,30 +42,39 @@ AttrData = {
     'converter': os.path.basename(__file__),
 }
 
+DimDict = {
+}
+
+VarDims = {
+    'snowDepth': ['nlocs'],
+}
+
 
 class ghcn(object):
 
-    def __init__(self, filename, fixfile, date, mask, writer):
+    def __init__(self, filename, fixfile, date, mask):
         self.filename = filename
         self.fixfile = fixfile
         self.date = date
         self.mask = mask
-        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
+        self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
 
     def _read(self):
 
         # set up variable names for IODA
         for iodavar in ['snowDepth']:
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
-            self.units[iodavar] = 'm'
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
@@ -159,16 +168,19 @@ class ghcn(object):
                 errs[i] = 0.0
                 vals[i] = 0.001*vals[i]  # coverted to m from mm
             times[i] = base_datetime
-        self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
-        self.loc_mdata['latitude'] = lats
-        self.loc_mdata['longitude'] = lons
-        self.loc_mdata['altitude'] = alts
+
+        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('latitude', 'MetaData')] = lats
+        self.outdata[('longitude', 'MetaData')] = lons
+        self.outdata[('altitude', 'MetaData')] = alts
+
         for iodavar in ['snowDepth']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['datetime'])
+
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
@@ -197,12 +209,15 @@ def main():
 
     args = parser.parse_args()
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    # Read in the snow depth data
+    snod = ghcn(args.input, args.fixfile, args.date, args.mask)
 
-    # Read in the profiles
-    snod = ghcn(args.input, args.fixfile, args.date, args.mask, writer)
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    writer.BuildNetcdf(snod.outdata, snod.loc_mdata, snod.var_mdata, AttrData, snod.units)
+    snod.varAttrs[('altitude', 'MetaData')]['units'] = 'm'
+    # write everything out
+    writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
