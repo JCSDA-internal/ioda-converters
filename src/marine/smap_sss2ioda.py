@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -21,7 +21,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -33,24 +33,21 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
-    'odb_version': 1,
-}
+GlobalAttrs = {}
 
 
 class Salinity(object):
-    def __init__(self, filenames, date, writer):
+    def __init__(self, filenames, date):
         self.filenames = filenames
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     # Open obs file and read/load relevant info
     def _read(self):
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
+        valKey = vName, iconv.OvalName()
+        errKey = vName, iconv.OerrName()
+        qcKey = vName, iconv.OqcName()
 
         for f in self.filenames:
             print(" Reading file: ", f)
@@ -119,17 +116,17 @@ class Salinity(object):
                 obs_date = basetime + timedelta(seconds=float(data['time'][i]))
                 locKey = data['lat'][i], data['lon'][i], obs_date.strftime(
                     "%Y-%m-%dT%H:%M:%SZ")
-                self.data[0][locKey][valKey] = data['sss'][i]
+                self.data[locKey][valKey] = data['sss'][i]
                 # if source == 'JPL':          #RTOFS-DA
                 #   if data['sss_qc'][i] <= 4:
                 #      data['sss_qc'][i] = 0
                 #   else:
                 #      data['sss_qc'][i] = 1
-                self.data[0][locKey][qcKey] = data['sss_qc'][i]
+                self.data[locKey][qcKey] = data['sss_qc'][i]
                 if 'sss_err' in data:
-                    self.data[0][locKey][errKey] = data['sss_err'][i]
+                    self.data[locKey][errKey] = data['sss_err'][i]
                 else:
-                    self.data[0][locKey][errKey] = 1.0
+                    self.data[locKey][errKey] = 1.0
             ncd.close()
 
 
@@ -156,16 +153,27 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    VarDims = {
+        'sea_surface_salinity': ['nlocs'],
+    }
 
     # Read in the salinity
-    sal = Salinity(args.input, fdate, writer)
+    sal = Salinity(args.input, fdate)
 
     # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(sal.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
+    VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
+    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_salinity', 'PreQC')]['_FillValue'] = 999
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':

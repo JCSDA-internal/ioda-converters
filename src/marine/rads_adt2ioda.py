@@ -20,46 +20,8 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
-
-
-class Observation(object):
-
-    def __init__(self, filename, date, writer):
-
-        self.filename = filename
-        self.date = date
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
-        self._read()
-
-    def _read(self):
-
-        ncd = nc.MFDataset(self.filename)
-        time = ncd.variables['time_mjd'][:]
-        lons = ncd.variables['lon'][:]
-        lats = ncd.variables['lat'][:]
-        vals = ncd.variables['adt_xgm2016'][:]
-        units = ncd.variables['time_mjd'].units[-23:-4]
-        reftime = dateutil.parser.parse(units)
-        ncd.close()
-
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
-
-        count = 0
-        for i in range(len(lons)):
-
-            count += 1
-            obs_date = reftime + timedelta(days=time[i])
-
-            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = 0.1
-            self.data[0][locKey][qcKey] = 0
-
 
 vName = "obs_absolute_dynamic_topography"
 
@@ -69,9 +31,59 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
-    'odb_version': 1,
+GlobalAttrs = {
 }
+
+VarDims = {
+    vName: ['nlocs'],
+}
+
+DimDict = {
+}
+
+
+class Observation(object):
+
+    def __init__(self, filename, date):
+
+        self.filename = filename
+        self.date = date
+        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self._read()
+
+    def _read(self):
+
+        ncd = nc.MFDataset(self.filename)
+        time = ncd.variables['time_mjd'][:]
+        lons = ncd.variables['lon'][:]
+        lats = ncd.variables['lat'][:]
+        vals = ncd.variables['adt_xgm2016'][:]
+        val_units = ncd.variables['adt_xgm2016'].units
+        Fill_val = ncd.variables['adt_xgm2016']._FillValue
+        scale_factor = ncd.variables['adt_xgm2016'].scale_factor
+        units = ncd.variables['time_mjd'].units[-23:-4]
+        reftime = dateutil.parser.parse(units)
+        ncd.close()
+
+        valKey = vName, iconv.OvalName()
+        errKey = vName, iconv.OerrName()
+        qcKey = vName, iconv.OqcName()
+        self.VarAttrs[vName, iconv.OvalName()]['_FillValue'] = Fill_val
+        self.VarAttrs[vName, iconv.OerrName()]['_FillValue'] = Fill_val
+        self.VarAttrs[vName, iconv.OqcName()]['_FillValue'] = Fill_val
+        self.VarAttrs[vName, iconv.OvalName()]['units'] = val_units
+        self.VarAttrs[vName, iconv.OerrName()]['units'] = val_units
+        self.VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
+
+        for i in range(len(lons)):
+
+            obs_date = reftime + timedelta(days=time[i])
+
+            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.data[locKey][valKey] = vals[i]
+            self.data[locKey][errKey] = 0.1
+            self.data[locKey][qcKey] = 0
 
 
 def main():
@@ -100,16 +112,21 @@ def main():
 
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the altimeter
-    altim = Observation(args.input, fdate, writer)
+    altim = Observation(args.input, fdate)
 
-    # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Extract Obsdata
+    ObsVars, nlocs = iconv.ExtractObsData(altim.data, locationKeyList)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(altim.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    # Set attributes
+    DimDict['nlocs'] = nlocs
+
+    # Set up the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    # Write the obs out
+    writer.BuildIoda(ObsVars, VarDims, altim.VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
