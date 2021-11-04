@@ -124,25 +124,19 @@ class AOD(object):
             qcpath = qcpath[mask_thin]
             qcall = qcall[mask_thin]
 
-        # defined surface type, uncertainty, and bias array
+        # defined surface type and uncertainty
         sfctyp = 0*qcall
         uncertainty = 0.0*errs
         uncertainty1 = 0.0*errs
         uncertainty2 = 0.0*errs
-        bias = 0.0*errs
-        bias1 = 0.0*errs
-        bias2 = 0.0*errs
 
         if self.method == "nesdis":
             # Case of water high quality
             uncertainty = 0.00784394 + 0.219923*vals
-            bias = 0.0151799 + 0.0767385*vals
             # case of bright land high quality
             uncertainty1 = 0.0550472 + 0.299558*vals
-            bias1 = -0.0107621 + 0.150480*vals
             # case of dark land high quality
             uncertainty2 = 0.111431 + 0.128699*vals
-            bias2 = -0.0138969 + 0.157877*vals
 
         for i in range(len(lons)):
 
@@ -150,10 +144,8 @@ class AOD(object):
             sfctyp[i] = int.from_bytes(qcpath[i], byteorder='big')
             if self.method == "nesdis":
                 if sfctyp[i] == 1:   # case of bright land high quality
-                    bias[i] = bias1[i]
                     uncertainty[i] = uncertainty1[i]
                 else:   # case of dark land high quality
-                    bias[i] = bias2[i]
                     uncertainty[i] = uncertainty2[i]
                 errs[i] = uncertainty[i]
 
@@ -171,7 +163,6 @@ class AOD(object):
 
         self.outdata[('latitude', 'MetaData')] = lats 
         self.outdata[('longitude','MetaData')] = lons
-        self.outdata[('bias','MetaData')] = bias
 
 
 
@@ -202,7 +193,7 @@ def main():
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-m', '--method',
-        help="calculation bias/error method: nesdis/default, default=none",
+        help="calculation error method: nesdis/default, default=none",
         type=str, required=True)
     optional.add_argument(
         '-k', '--mask',
