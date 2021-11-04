@@ -53,6 +53,8 @@ class Observation(object):
         lats = ncd.variables['lat'][:]
         vals_u = ncd.variables['u'][:]
         vals_v = ncd.variables['v'][:]
+        dopx = ncd.variables['dopx'][:]
+        dopy = ncd.variables['dopy'][:]
         units = '1970-01-01 00:00:00'
         reftime = dateutil.parser.parse(units)
         ncd.close()
@@ -61,6 +63,8 @@ class Observation(object):
         lats = lats.flatten()
         vals_u = vals_u.flatten()
         vals_v = vals_v.flatten()
+        dopx = dopx.flatten()
+        dopy = dopy.flatten()
         time = np.matlib.repmat(time, len(lons), 1)
         count = 0
         for i in range(len(lons)):
@@ -72,14 +76,21 @@ class Observation(object):
                     count += 1
                     obs_date = reftime + timedelta(seconds=int(time[i]))
                     locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    print('dopx',len(dopx),len(vals_u))
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]
                         self.data[locKey][errKey] = 0.1
-                        self.data[locKey][qcKey] = 0
+                        if dopx[i] <= 10: 
+                           self.data[locKey][qcKey] = 0
+                        else:
+                           self.data[locKey][qcKey] = 11
                     else:
                         self.data[locKey][valKey] = vals_v[i]
                         self.data[locKey][errKey] = 0.1
-                        self.data[locKey][qcKey] = 0
+                        if dopy[i] <= 10:
+                           self.data[locKey][qcKey] = 0
+                        else:
+                           self.data[locKey][qcKey] = 11
 
 
 def main():
