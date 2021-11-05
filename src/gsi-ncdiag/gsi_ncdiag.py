@@ -291,6 +291,12 @@ chan_metadata_dict = {
     'mean_lapse_rate': 'mean_lapse_rate',
 }
 
+chan_metadata_int = [
+    'sensor_channel',
+    'gsi_use_flag',
+    'polarization',
+]
+
 # geovals_vars = {gsiname:geoval_name}
 geovals_vars = {
     'virtual_temperature': 'virtual_temperature',
@@ -792,7 +798,7 @@ class Conv(BaseGSI):
                             else:
                                 tmp = df_key[idx]
                             if value in gsiint:
-                                tmp = tmp.astype(int)
+                                tmp = tmp.astype(np.int32)
                                 tmp[tmp > 4e4] = self.INT_FILL
                             else:
                                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -802,13 +808,13 @@ class Conv(BaseGSI):
                     errname = outvars[o], 'GsiFinalObsError'
                     gsiqc = np.zeros_like(obsdata)
                     gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
-                    outdata[gsiqcname] = gsiqc
+                    outdata[gsiqcname] = gsiqc.astype(np.int32)
                     varAttrs[gsiqcname]['units'] = 'unitless'
                     varAttrs[gsiqcname]['_FillValue'] = self.INT_FILL
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
-                    outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(int)
+                    outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(np.int32)
 
                 for lvar in LocVars:
                     loc_mdata_name = all_LocKeyList[lvar][0]
@@ -1188,7 +1194,7 @@ class Radiances(BaseGSI):
             obserr = self.var('Input_Observation_Error')
         except IndexError:
             obserr = 1./self.var('Inverse_Observation_Error')
-        obsqc = self.var('QC_Flag').astype(int)
+        obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
                 'BC_Constant',
@@ -1308,7 +1314,7 @@ class Radiances(BaseGSI):
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
-                    tmp = tmp.astype(int)
+                    tmp = tmp.astype(np.int32)
                 else:
                     tmp[tmp > 4e8] = self.FLOAT_FILL
                 gvname = "brightness_temperature", iodavar
@@ -1324,13 +1330,13 @@ class Radiances(BaseGSI):
         # store values in output data dictionary
         outdata[varDict[value]['valKey']] = np.reshape(obsdata, (nlocs, nchans))
         outdata[varDict[value]['errKey']] = np.reshape(obserr, (nlocs, nchans))
-        outdata[varDict[value]['qcKey']] = np.reshape(obsqc.astype(int), (nlocs, nchans))
+        outdata[varDict[value]['qcKey']] = np.reshape(obsqc.astype(np.int32), (nlocs, nchans))
         # create a GSI effective QC variable
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
         gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
-        outdata[gsiqcname] = gsiqc
+        outdata[gsiqcname] = gsiqc.astype(np.int32)
         varAttrs[gsiqcname]['units'] = 'unitless'
 
         if (ObsBias):
@@ -1365,10 +1371,13 @@ class Radiances(BaseGSI):
         # var metadata
         for key, value2 in chan_metadata_dict.items():
             try:
-                outdata[(value2, 'MetaData')] = self.var(key)
-                VarDims[(value2, 'MetaData')] = ['nchans']
+                if value2 in chan_metadata_int:
+                    outdata[(value2, 'VarMetaData')] = self.var(key).astype(np.int32)
+                else:
+                    outdata[(value2, 'VarMetaData')] = self.var(key).astype(np.float32)
+                VarDims[(value2, 'VarMetaData')] = ['nchans']
                 if value2 in units_values.keys():
-                    varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
+                    varAttrs[(value2, 'VarMetaData')]['units'] = units_values[value2]
             except IndexError:
                 pass
 
@@ -1525,7 +1534,7 @@ class Ozone(BaseGSI):
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
-        obsqc = self.var('Analysis_Use_Flag').astype(int)
+        obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time':
@@ -1559,7 +1568,7 @@ class Ozone(BaseGSI):
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
-                    tmp = tmp.astype(int)
+                    tmp = tmp.astype(np.int32)
                 else:
                     tmp[tmp > 4e8] = self.FLOAT_FILL
                 gvname = vname, iodavar
@@ -1724,7 +1733,7 @@ class Radar(BaseGSI):
             qcvarname = radar_qc[key]
             obserr = self.var(errvarname)
             obserr[np.isinf(obserr)] = self.FLOAT_FILL
-            obsqc = self.var(qcvarname).astype(int)
+            obsqc = self.var(qcvarname).astype(np.int32)
             # observation data
             outdata[varDict[value]['valKey']] = obsdata
             outdata[varDict[value]['errKey']] = obserr
@@ -1742,7 +1751,7 @@ class Radar(BaseGSI):
                     else:
                         tmp = self.var(gsivar)[:]
                     if gsivar in gsiint:
-                        tmp = tmp.astype(int)
+                        tmp = tmp.astype(np.int32)
                     else:
                         tmp[tmp > 4e8] = self.FLOAT_FILL
                     gvname = vname, iodavar
