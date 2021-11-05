@@ -5,8 +5,7 @@ list(APPEND libs
 list( APPEND programs
   proc_gsi_ncdiag.py
   test_gsidiag.py
-  combine_files.py
-  subset_files.py)
+  combine_files.py)
 
 set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
