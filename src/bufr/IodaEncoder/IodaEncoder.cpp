@@ -78,35 +78,10 @@ namespace Ingester
 
         for (const auto& categories : dataContainer->allSubCategories())
         {
-            // Make the filename string
-            if (description_.getBackend() == ioda::Engines::BackendNames::Hdf5File)
-            {
-                std::string filename = description_.getFilepath();
-
-                size_t catIdx = 0;
-                std::map<std::string, std::string> substitutions;
-                for (const auto &catPair : dataContainer->getCategoryMap())
-                {
-                    substitutions.insert({catPair.first, categories.at(catIdx)});
-                    catIdx++;
-                }
-
-                backendParams.fileName = makeStrWithSubstitions(filename, substitutions);
-            }
-
-            backendParams.openMode = ioda::Engines::BackendOpenModes::Read_Write;
-            backendParams.createMode = ioda::Engines::BackendCreateModes::Truncate_If_Exists;
-            backendParams.action = append ? ioda::Engines::BackendFileActions::Open : \
-                                        ioda::Engines::BackendFileActions::Create;
-            backendParams.flush = true;
-            backendParams.allocBytes = dataContainer->size(categories);
-
-            auto rootGroup = ioda::Engines::constructBackend(description_.getBackend(),
-                                                             backendParams);
-
             // Create the dimensions variables
             std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> dimMap;
 
+            bool primaryDimIsZero = false;
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
@@ -132,6 +107,11 @@ namespace Ingester
                             namedLocDims[{dimPath}] = dimName;
                             autoGenDimNumber++;
                         }
+
+                        if (dataObject->getDims()[dimIdx] == 0)
+                        {
+                            primaryDimIsZero = true;
+                        }
                     }
                     else
                     {
@@ -156,6 +136,43 @@ namespace Ingester
                     }
                 }
             }
+
+            // When we find that the primary index is zero we need to skip this category
+            if (primaryDimIsZero)
+            {
+                for (auto category : categories)
+                {
+                    std::cout << "  Skipped category " << category << std::endl;
+                }
+
+                continue;
+            }
+
+            // Make the filename string
+            if (description_.getBackend() == ioda::Engines::BackendNames::Hdf5File)
+            {
+                std::string filename = description_.getFilepath();
+
+                size_t catIdx = 0;
+                std::map<std::string, std::string> substitutions;
+                for (const auto &catPair : dataContainer->getCategoryMap())
+                {
+                    substitutions.insert({catPair.first, categories.at(catIdx)});
+                    catIdx++;
+                }
+
+                backendParams.fileName = makeStrWithSubstitions(filename, substitutions);
+            }
+
+            backendParams.openMode = ioda::Engines::BackendOpenModes::Read_Write;
+            backendParams.createMode = ioda::Engines::BackendCreateModes::Truncate_If_Exists;
+            backendParams.action = append ? ioda::Engines::BackendFileActions::Open : \
+                                        ioda::Engines::BackendFileActions::Create;
+            backendParams.flush = true;
+            backendParams.allocBytes = dataContainer->size(categories);
+
+            auto rootGroup = ioda::Engines::constructBackend(description_.getBackend(),
+                                                             backendParams);
 
             ioda::NewDimensionScales_t allDims;
             for (auto dimPair : dimMap)

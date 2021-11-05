@@ -78,6 +78,7 @@ namespace Ingester
 
         std::cout << "Built Bufr Data" << std::endl;
 
+        std::cout << "Exporting Data" << std::endl;
         return exportData(srcData);
     }
 
