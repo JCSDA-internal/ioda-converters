@@ -504,7 +504,6 @@ test_fields_allsky = {
 }
 test_fields_with_channels_allsky = {
     'Hydrometeor_Affected_Channels': ('Hydrometeor_Affected_Channels', 'float'),
-    'Input_Observation_Error': ('ObsError', 'float'),
     'Cloud_Match_Index': ('Cloud_Match_Index', 'float'),
     'Error_Inflation_Factor_sdoei': ('error_inflation_factor_sdoei', 'float'),
 }
@@ -1335,6 +1334,7 @@ class Radiances(BaseGSI):
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
         gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+        gsiqc[np.reshape(self.var('QC_Flag'), (nlocs, nchans)) < 0] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
         varAttrs[gsiqcname]['units'] = 'unitless'
 
@@ -1388,7 +1388,6 @@ class Radiances(BaseGSI):
         # ExtractObsData
         DimDict['nlocs'] = nlocs
         DimDict['nchans'] = chanlist
-        print(VarDims)
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
