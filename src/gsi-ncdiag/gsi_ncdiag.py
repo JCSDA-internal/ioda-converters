@@ -1319,7 +1319,6 @@ class Radiances(BaseGSI):
                     tmp[tmp > 4e8] = self.FLOAT_FILL
                 gvname = "brightness_temperature", iodavar
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
-                print(gvname)
                 VarDims[gvname] = ['nlocs', 'nchans']
 
         # brightness temperature variables
@@ -1389,6 +1388,7 @@ class Radiances(BaseGSI):
         # ExtractObsData
         DimDict['nlocs'] = nlocs
         DimDict['nchans'] = chanlist
+        print(VarDims)
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
