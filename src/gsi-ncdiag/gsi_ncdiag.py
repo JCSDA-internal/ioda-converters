@@ -758,8 +758,8 @@ class Conv(BaseGSI):
                     obserr[~mask] = 1.0 / obserr[~mask]
                     # below is a temporary hack until missing ObsError support returns to IODA/UFO
                     obserr[mask] = 1e8
-                    #obserr[mask] = self.FLOAT_FILL
-                    #obserr[obserr > 4e8] = self.FLOAT_FILL
+                    # obserr[mask] = self.FLOAT_FILL
+                    # obserr[obserr > 4e8] = self.FLOAT_FILL
                     try:
                         obsqc = self.var('Prep_QC_Mark')[idx]
                     except BaseException:
@@ -784,7 +784,7 @@ class Conv(BaseGSI):
                                 tmp[~mask] = 1.0 / tmp[~mask]
                                 # below is a temporary hack
                                 tmp[mask] = 1e8
-                                #tmp[mask] = self.FLOAT_FILL
+                                # tmp[mask] = self.FLOAT_FILL
                             elif "Obs_Minus_" in key:
                                 if 'u_Forecast_adjusted' in self.df.variables:
                                     continue
@@ -810,7 +810,7 @@ class Conv(BaseGSI):
                     gsiqcname = outvars[o], 'GsiEffectiveQC'
                     errname = outvars[o], 'GsiFinalObsError'
                     gsiqc = np.zeros_like(obsdata)
-                    gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+                    gsiqc[outdata[errname] == 1e8] = 1
                     outdata[gsiqcname] = gsiqc.astype(np.int32)
                     varAttrs[gsiqcname]['units'] = 'unitless'
                     varAttrs[gsiqcname]['_FillValue'] = self.INT_FILL
@@ -1337,7 +1337,7 @@ class Radiances(BaseGSI):
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
-        gsiqc[outdata[errname] == self.FLOAT_FILL] = 1
+        gsiqc[outdata[errname] > 1e8] = 1
         gsiqc[np.reshape(self.var('QC_Flag'), (nlocs, nchans)) < 0] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
         varAttrs[gsiqcname]['units'] = 'unitless'
