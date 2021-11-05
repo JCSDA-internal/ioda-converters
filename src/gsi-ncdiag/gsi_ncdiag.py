@@ -811,6 +811,7 @@ class Conv(BaseGSI):
                     errname = outvars[o], 'GsiFinalObsError'
                     gsiqc = np.zeros_like(obsdata)
                     gsiqc[outdata[errname] == 1e8] = 1
+                    gsiqc[outdata[(outvars[o], "GsiUseFlag")] < 0] = 1
                     outdata[gsiqcname] = gsiqc.astype(np.int32)
                     varAttrs[gsiqcname]['units'] = 'unitless'
                     varAttrs[gsiqcname]['_FillValue'] = self.INT_FILL
