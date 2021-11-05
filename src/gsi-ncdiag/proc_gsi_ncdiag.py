@@ -4,7 +4,6 @@ import os
 import sys
 import glob
 import time
-from multiprocessing import Pool
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -91,8 +90,6 @@ ScriptName = os.path.basename(sys.argv[0])
 
 # Parse command line
 ap = argparse.ArgumentParser()
-ap.add_argument("-n", "--nprocs",
-                help="Number of tasks/processors for multiprocessing")
 ap.add_argument("input_dir", help="Path to concatenated GSI diag files")
 ap.add_argument("-o", "--obs_dir",
                 help="Path to directory to output observations")
@@ -109,15 +106,8 @@ ap.add_argument("-r", "--add_testrefs", default=False,
 
 MyArgs = ap.parse_args()
 
-if MyArgs.nprocs:
-    nprocs = int(MyArgs.nprocs)
-else:
-    nprocs = 1
-
 DiagDir = MyArgs.input_dir
 
-print("Proc GSI Using %d processors." % nprocs)
-obspool = Pool(processes=nprocs)
 # process obs files
 if MyArgs.obs_dir:
     ObsDir = MyArgs.obs_dir
@@ -136,8 +126,8 @@ if MyArgs.obs_dir:
             c = "_".join(splitfname[i:i + 2])
         try:
             for p in gsid.conv_platforms[c]:
-                res = obspool.apply_async(run_conv_obs, args=(convfile, ObsDir, [p]))
-        except KeyError:
+                run_conv_obs(convfile, ObsDir, [p])
+        except (KeyError, IndexError):
             pass
     # radiances next
     radfiles = glob.glob(DiagDir+'/diag*')
@@ -147,7 +137,7 @@ if MyArgs.obs_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_radiances_obs, args=(radfile, ObsDir, ObsBias, QCVars, TestRefs))
+            run_radiances_obs(radfile, ObsDir, ObsBias, QCVars, TestRefs)
     # atmospheric composition observations
     # ozone
     for radfile in radfiles:
@@ -156,7 +146,7 @@ if MyArgs.obs_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_oz_obs, args=(radfile, ObsDir))
+            run_oz_obs(radfile, ObsDir)
 
 # process geovals files
 if MyArgs.geovals_dir:
@@ -165,7 +155,7 @@ if MyArgs.geovals_dir:
     # get list of conv diag files
     convfiles = glob.glob(DiagDir+'/*conv*')
     for convfile in convfiles:
-        res = obspool.apply_async(run_conv_geo, args=(convfile, GeoDir))
+        run_conv_geo(convfile, GeoDir)
     # radiances next
     radfiles = glob.glob(DiagDir+'/diag*')
     for radfile in radfiles:
@@ -174,7 +164,7 @@ if MyArgs.geovals_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_radiances_geo, args=(radfile, GeoDir))
+            run_radiances_geo(radfile, GeoDir)
     # atmospheric composition observations
     # ozone
     for radfile in radfiles:
@@ -183,7 +173,7 @@ if MyArgs.geovals_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_oz_geo, args=(radfile, GeoDir))
+            run_oz_geo(radfile, GeoDir)
 
 # process obsdiag files
 if MyArgs.obsdiag_dir:
@@ -196,8 +186,4 @@ if MyArgs.obsdiag_dir:
             if p in radfile:
                 process = True
         if process:
-            res = obspool.apply_async(run_radiances_obsdiag, args=(radfile, ObsdiagDir))
-
-# process all in the same time, because sats with many channels are so slow...
-obspool.close()
-obspool.join()
+            run_radiances_obsdiag(radfile, ObsdiagDir)
