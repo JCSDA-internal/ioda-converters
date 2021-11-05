@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -23,7 +23,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 
 output_var_names = [
     "sea_surface_temperature",
@@ -219,8 +219,6 @@ def main():
         args.sst = True
         args.skin_sst = True
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, [], [])
 
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
@@ -229,9 +227,9 @@ def main():
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
-    global_config['oval_name'] = writer.OvalName()
-    global_config['oerr_name'] = writer.OerrName()
-    global_config['opqc_name'] = writer.OqcName()
+    global_config['oval_name'] = iconv.OvalName()
+    global_config['oerr_name'] = iconv.OerrName()
+    global_config['opqc_name'] = iconv.OqcName()
     global_config['output_sst'] = args.sst
     global_config['output_skin_sst'] = args.skin_sst
     pool_inputs = [(i, global_config) for i in args.input]
@@ -242,8 +240,6 @@ def main():
 
     # concatenate the data from the files
     obs_data, loc_data, attr_data = obs[0]
-    loc_data['datetime'] = writer.FillNcVector(
-        loc_data['datetime'], "datetime")
     for i in range(1, len(obs)):
         for k in obs_data:
             axis = len(obs[i][0][k].shape)-1
@@ -252,7 +248,6 @@ def main():
         for k in loc_data:
             d = obs[i][1][k]
             if k == 'datetime':
-                d = writer.FillNcVector(d, 'datetime')
             loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
 
     # prepare global attributes we want to output in the file,
@@ -267,16 +262,36 @@ def main():
         selected_names.append(output_var_names[0])
     if args.skin_sst:
         selected_names.append(output_var_names[1])
-    var_data = {writer._var_list_name: writer.FillNcVector(
-        selected_names, "string")}
 
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    writer._nvars = len(selected_names)
-    writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
+    VarDims = {
+        'sea_surface_temperature': ['nlocs']
+    }
 
-    # use the writer class to create the final output file
-    writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
+    # Read in the profiles
+
+    # write them out
+    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
+
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('sea_surface_temperature', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_temperature', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_temperature', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
