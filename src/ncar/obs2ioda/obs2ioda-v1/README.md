@@ -3,13 +3,13 @@
 ```
 Compile: cd obs2ioda-v1/src; make
 ```
-
+## Converting PREPBUFR and BUFR files
 ```
 Usage: obs2ioda.x [-i input_dir] [-o output_dir] [bufr_filename(s)_to_convert] [-split]
 ```
 If [-i input_dir] [-o output_dir] are not specified in the command line, the default is the current working directory.  
 If [bufr_filename(s)_to_convert] is not specified in the command line, the code looks for file name, **prepbufr.bufr** (also **satwnd.bufr**, **gnssro.bufr**, **amsua.bufr**, **airs.bufr**, **mhs.bufr**, **iasi.bufr**, **cris.bufr**), in the input/working directory. If the file exists, do the conversion, otherwise skip it.  
-If specify -split, the converted file will contain hourly data.
+If specify ``-split``, the converted file will contain hourly data.
 
 > obs2ioda.x -i input_dir -o output_dir prepbufr.gdas.YYYYMMDD.tHHz.nr
 
@@ -52,8 +52,8 @@ Example output files:
 
 **the following CRTM SpcCoeff files in little_endian must be present in the working directory for IASI radiance to brightness temperature conversion**  
 iasi_metop-a.SpcCoeff.bin -> iasi616_metop-a.SpcCoeff.bin  
-iasi_metop-b.SpcCoeff.bin -> iasi616_metop-a.SpcCoeff.bin  
-iasi_metop-c.SpcCoeff.bin -> iasi616_metop-a.SpcCoeff.bin  
+iasi_metop-b.SpcCoeff.bin -> iasi616_metop-b.SpcCoeff.bin  
+iasi_metop-c.SpcCoeff.bin -> iasi616_metop-c.SpcCoeff.bin  
 
 Example output files:  
   iasi_metop-a_obs_YYYYMMDDHH.nc4  
@@ -63,7 +63,7 @@ Example output files:
 > obs2ioda.x -i input_dir -o output_dir gdas.crisf4.tHHz.YYYYMMDD.bufr
 
 **the following CRTM SpcCoeff files in little_endian must be present in the working directory for CrIS radiance to brightness temperature conversion**  
-cris_npp.SpcCoeff.bin -> cris-fsr431_n20.SpcCoeff.bin  
+cris_npp.SpcCoeff.bin -> cris-fsr431_npp.SpcCoeff.bin  
 cris_n20.SpcCoeff.bin -> cris-fsr431_n20.SpcCoeff.bin  
 
 Example output files:  
@@ -75,6 +75,7 @@ Example output files:
 Example output files:  
   gnssro_obs_YYYYMMDDHH.nc4  
 
+## Converting Himawari Standard Data (HSD) FLDK files
 ```
 Usage: obs2ioda.x -i input_dir -ahi -t YYYYMMDDHHNN [-s 3]
 ```
