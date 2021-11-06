@@ -35,7 +35,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    character(len=nstring)                :: ncname
    integer(i_kind)                       :: ncfileid
    integer(i_kind)                       :: ntype, nvar
-   integer(i_kind)                       :: i, ityp, ivar, ii
+   integer(i_kind)                       :: i, ityp, ivar, ii, iv
    integer(i_kind)                       :: idim, dim1, dim2
    character(len=nstring),   allocatable :: str_nstring(:)
    character(len=ndatetime), allocatable :: str_ndatetime(:)
@@ -43,6 +43,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    character(len=nstring)                :: str_tmp
    character(len=4)                      :: c4
    integer(i_kind)                       :: iflag
+   integer(i_kind), allocatable :: ichan(:)
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
@@ -66,10 +67,14 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
       else if ( write_opt == write_nc_radiance ) then
          ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
-         allocate (name_var_tb(xdata(ityp,itim)%nvars))
       else if ( write_opt == write_nc_radiance_geo ) then
          ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+      end if
+      if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
          allocate (name_var_tb(xdata(ityp,itim)%nvars))
+         iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
+         allocate (ichan(xdata(ityp,itim)%nvars))
+         ichan(:) = xdata(ityp,itim)%xseninfo_int(:,iv)
       end if
       write(*,*) '--- writing ', trim(ncfname)
       call open_netcdf_for_write(trim(ncfname),ncfileid)
@@ -95,11 +100,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             ncname = trim(name_var_met(ivar))//'@ObsType'
             call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_INT)
          else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
-            if ( write_opt == write_nc_radiance ) then
-               write(unit=c4, fmt='(i4)') i
-            else if ( write_opt == write_nc_radiance_geo ) then
-               write(unit=c4, fmt='(i4)') i+6
-            end if
+            write(unit=c4, fmt='(i4)') ichan(i)
             name_var_tb(i) = trim(var_tb)//'_'//trim(adjustl(c4))
             ncname = trim(name_var_tb(i))//'@ObsValue'
             call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units','K')
@@ -230,6 +231,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
                call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xseninfo_char(:,i))
             end if
          end do
+         deallocate (ichan)
          deallocate (name_var_tb)
       end if ! write_nc_radiance
 

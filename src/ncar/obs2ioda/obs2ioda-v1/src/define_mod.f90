@@ -21,8 +21,7 @@ integer(i_kind), parameter :: nvar_met          = 6
 integer(i_kind), parameter :: nvar_info         = 8 !9  ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
 integer(i_kind), parameter :: ninst_geo         = 1
-integer(i_kind), parameter :: ninst             = 12
-!integer(i_kind), parameter :: ninst             = 13 ! including airs
+integer(i_kind), parameter :: ninst             = 17
 integer(i_kind), parameter :: write_nc_conv     = 1
 integer(i_kind), parameter :: write_nc_radiance = 2
 integer(i_kind), parameter :: write_nc_radiance_geo = 3
@@ -88,7 +87,12 @@ character(len=nstring), dimension(ninst) :: inst_list = &
       'mhs_n19         ', &
       'mhs_metop-a     ', &
       'mhs_metop-b     ', &
-      'mhs_metop-c     '  &
+      'mhs_metop-c     ', &
+      'iasi_metop-a    ', &
+      'iasi_metop-b    ', &
+      'iasi_metop-c    ', &
+      'cris_npp        ', &
+      'cris_n20        '  &
    /)
 
 character(len=nstring), dimension(ninst_geo) :: geoinst_list = &

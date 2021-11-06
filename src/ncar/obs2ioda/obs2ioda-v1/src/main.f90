@@ -1,9 +1,11 @@
 program obs2ioda
 
-use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata
+use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
+   ninst
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
-use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance
+use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
+   read_iasi, radiance_to_temperature
 use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
 use ahi_hsd_mod, only: read_hsd, subsample
@@ -15,7 +17,7 @@ implicit none
 integer(i_kind), parameter :: NameLen   = 64
 integer(i_kind), parameter :: DateLen   = 10
 integer(i_kind), parameter :: DateLen14 = 14
-integer(i_kind), parameter :: nfile_all = 6
+integer(i_kind), parameter :: nfile_all = 8
 integer(i_kind), parameter :: ftype_unknown  = -1
 integer(i_kind), parameter :: ftype_prepbufr =  1
 integer(i_kind), parameter :: ftype_gnssro   =  2
@@ -23,6 +25,8 @@ integer(i_kind), parameter :: ftype_amsua    =  3
 integer(i_kind), parameter :: ftype_mhs      =  4
 integer(i_kind), parameter :: ftype_airs     =  5
 integer(i_kind), parameter :: ftype_satwnd   =  6
+integer(i_kind), parameter :: ftype_iasi     =  7
+integer(i_kind), parameter :: ftype_cris     =  8
 
 integer(i_kind)            :: ftype(nfile_all)
 character(len=NameLen)     :: flist_all(nfile_all) = &
@@ -32,7 +36,9 @@ character(len=NameLen)     :: flist_all(nfile_all) = &
       "satwnd.bufr    ", &
       "amsua.bufr     ", &
       "airs.bufr      ", &
-      "mhs.bufr       "  &
+      "mhs.bufr       ", &
+      "iasi.bufr      ", &
+      "cris.bufr      "  &
    /)
 character (len=NameLen) :: flist(nfile_all)  ! file names to be read in from command line arguments
 character (len=NameLen) :: filename
@@ -40,6 +46,7 @@ character (len=DateLen) :: filedate, filedate_out
 character (len=StrLen)  :: inpdir, outdir, cdatetime
 logical                 :: fexist
 logical                 :: do_radiance
+logical                 :: do_radiance_hyperIR
 logical                 :: do_ahi
 logical                 :: apply_gsi_qc
 logical                 :: time_split
@@ -52,6 +59,7 @@ character (len=DateLen14) :: dtime, datetmp
 
 do_tv_to_ts = .true.
 do_radiance = .false. ! initialize
+do_radiance_hyperIR = .false. ! initialize
 do_ahi = .false.
 apply_gsi_qc = .true. !.false.
 time_split = .false.
@@ -197,6 +205,44 @@ if ( do_radiance ) then
    if ( allocated(xdata) ) deallocate(xdata)
 end if
 
+do ifile = 1, nfile
+
+   filename = flist(ifile)
+
+   if ( ftype(ifile) == ftype_iasi ) then
+      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
+      else
+         do_radiance_hyperIR = .true.
+         ! read bufr file and store data in sequential linked list for radiances
+         call read_iasi(trim(inpdir)//trim(filename), filedate)
+      end if
+   end if
+
+end do
+
+if ( do_radiance_hyperIR ) then
+   ! transfer info from linked list to arrays grouped by satellite instrument types
+   call sort_obs_radiance(filedate, nfgat)
+
+   call radiance_to_temperature(ninst, nfgat)
+
+   ! write out netcdf files
+   if ( nfgat > 1 ) then
+      do itime = 1, nfgat
+         ! corresponding to dtime_min='-3h' and dtime_max='+3h'
+         write(dtime,'(i2,a)')  itime-4, 'h'
+         call da_advance_time(filedate, trim(dtime), datetmp)
+         filedate_out = datetmp(1:10)
+         call write_obs(filedate_out, write_nc_radiance, outdir, itime)
+      end do
+   else
+      call write_obs(filedate, write_nc_radiance, outdir, 1)
+   end if
+   if ( allocated(xdata) ) deallocate(xdata)
+end if
+
 if ( do_ahi ) then
    if ( len_trim(cdatetime) /= 12 ) then
       write(*,*) 'Error: -t ccyymmddhhnn not specified for -ahi'
@@ -273,7 +319,9 @@ if ( narg > 0 ) then
    if ( ifile == 0 ) then
       nfile = nfile_all
       flist(:) = flist_all(:)
-      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd, ftype_amsua, ftype_airs, ftype_mhs /)
+      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd,  &
+                    ftype_amsua, ftype_airs, ftype_mhs,  &
+                    ftype_iasi, ftype_cris /)
    else
       nfile = ifile
    end if
@@ -282,7 +330,9 @@ else
    outdir = '.'
    nfile = nfile_all
    flist(:) = flist_all(:)
-   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd, ftype_amsua, ftype_airs, ftype_mhs /)
+   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd,  &
+                 ftype_amsua, ftype_airs, ftype_mhs,  &
+                 ftype_iasi, ftype_cris /)
 end if
 
 itmp = len_trim(inpdir)
@@ -317,7 +367,10 @@ fileloop: do ifile = 1, nfile
       ftype(ifile) = ftype_mhs
    case ( 'NC021249' )
       ftype(ifile) = ftype_airs
-   !case ( 'NC005030', 'NC005031', 'NC005032', 'NC005034', 'NC005039' )
+   case ( 'NC021241' )
+      ftype(ifile) = ftype_iasi
+   case ( 'NC021206' )
+      ftype(ifile) = ftype_cris
    case default
       ftype(ifile) = ftype_unknown
    end select
