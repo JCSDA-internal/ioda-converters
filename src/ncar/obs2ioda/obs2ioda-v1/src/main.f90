@@ -5,7 +5,7 @@ use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, S
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
-   read_iasi, radiance_to_temperature
+   read_iasi, read_cris, radiance_to_temperature
 use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
 use ahi_hsd_mod, only: read_hsd, subsample
@@ -217,6 +217,17 @@ do ifile = 1, nfile
          do_radiance_hyperIR = .true.
          ! read bufr file and store data in sequential linked list for radiances
          call read_iasi(trim(inpdir)//trim(filename), filedate)
+      end if
+   end if
+
+   if ( ftype(ifile) == ftype_cris ) then
+      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
+      else
+         do_radiance_hyperIR = .true.
+         ! read bufr file and store data in sequential linked list for radiances
+         call read_cris(trim(inpdir)//trim(filename), filedate)
       end if
    end if
 

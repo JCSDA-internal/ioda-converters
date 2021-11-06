@@ -14,6 +14,7 @@ private
 public  :: read_amsua_amsub_mhs
 public  :: read_airs_colocate_amsua
 public  :: read_iasi
+public  :: read_cris
 public  :: sort_obs_radiance
 public  :: radiance_to_temperature
 
@@ -740,6 +741,204 @@ end subroutine read_iasi
 
 !--------------------------------------------------------------
 
+subroutine read_cris (filename, filedate)
+
+!| NC021206 | A10198 | MTYP 021-206 CrIS FULL SPCTRL RADIANCE  (431 CHN SUBSET  |
+!|------------------------------------------------------------------------------|
+!| MNEMONIC | SEQUENCE                                                          |
+!|----------|-------------------------------------------------------------------|
+!| NC021206 | SAID  OGCE  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000        |
+!| NC021206 | LOCPLAT  LTLONH  SAZA  BEARAZ  SOZA  SOLAZI  STKO  201133  SLNM   |
+!| NC021206 | 201000  FORN  FOVN  ORBN  HOLS  201129  HMSL  201000  202127      |
+!| NC021206 | 201125  ALFR  201000  202000  LSQL  TOCC  HOCT  RDTF  NSQF        |
+!| NC021206 | "BCFQFSQ"3  TOBD  NGQI  QMRKH  (CRCHNM)  MTYP  TOBD  {GCRCHN}     |
+!| NC021206 | TOBD  SIID  "CRISCS"7                                             |
+!|          |                                                                   |
+!| MTYP     | 002141 | MEASUREMENT TYPE                                         |
+!| CRCHN    | 350201 | NPP CrIS CHANNEL DATA                                    |
+!| CRCHNM   | 350216 | NPP CrIS CHANNEL DATA EXTENDED                           |
+!|          |                                                                   |
+!| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+!| HHMM     | HOUR  MINU                                                        |
+!| LTLONH   | CLATH  CLONH                                                      |
+!| CRCHN    | CHNM  SRAD                                                        |
+!| CRCHNM   | CHNM  SRAD                                                        |
+! SRAD | W M**-2 SR**-1 CM
+
+
+   implicit none
+
+   character (len=*),  intent(in)  :: filename
+   character (len=10), intent(out) :: filedate  ! ccyymmddhh
+
+   integer(i_kind), parameter :: ntime = 6  ! number of data to read in timestr
+   integer(i_kind), parameter :: ninfo = 10 ! number of data to read in infostr
+   integer(i_kind), parameter :: nlalo = 2  ! number of data to read in lalostr
+   integer(i_kind), parameter :: nchan_bufr = 431  ! nchan in cris bufr
+
+   character(len=80) :: timestr, infostr, lalostr
+
+   real(r_double), dimension(ntime) :: timedat
+   real(r_double), dimension(ninfo) :: infodat
+   real(r_double), dimension(nlalo) :: lalodat
+   real(r_double), dimension(2,nchan_bufr) :: data1b8
+
+   character(len=8)  :: subset
+   character(len=10) :: cdate
+
+   integer(i_kind) :: iunit, iost, iret, i
+   integer(i_kind) :: nchan
+   integer(i_kind) :: idate
+   integer(i_kind) :: num_report_infile
+   integer(i_kind) :: ireadmg, ireadsb
+
+   integer(i_kind) :: iyear, imonth, iday, ihour, imin, isec
+   real(r_double)  :: ref_time, obs_time
+
+   character(len=3) :: cmtyp
+   real(r_double) :: r8mtyp(1)
+   equivalence (r8mtyp, cmtyp)
+
+   write(*,*) '--- reading '//trim(filename)//' ---'
+
+   timestr = 'YEAR MNTH DAYS HOUR MINU SECO'
+   infostr = 'SAID SIID SAZA BEARAZ SOZA SOLAZI SLNM FORN FOVN HMSL'
+   lalostr = 'CLATH CLONH'
+
+   num_report_infile  = 0
+
+   iunit = 96
+
+   ! open bufr file
+   open (unit=iunit, file=trim(filename), &
+         iostat=iost, form='unformatted', status='old')
+   if (iost /= 0) then
+      write(unit=*,fmt='(a,i5,a)') &
+         "Error",iost," opening BUFR obs file "//trim(filename)
+         return
+   end if
+
+   call openbf(iunit,'IN',iunit)
+   call datelen(10)
+   call readmg(iunit,subset,idate,iret)
+
+   if ( iret /= 0 ) then
+      write(unit=*,fmt='(A,I5,A)') &
+         "Error",iret," reading BUFR obs file "//trim(filename)
+      call closbf(iunit)
+      return
+   end if
+   rewind(iunit)
+
+   write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
+   write(unit=filedate, fmt='(i10)') idate
+   read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
+   call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
+
+   if ( .not. associated(rhead) ) then
+      nullify ( rhead )
+      allocate ( rhead )
+      nullify ( rhead%next )
+   end if
+
+   if ( .not. associated(rlink) ) then
+      rlink => rhead
+   else
+      allocate ( rlink%next )
+      rlink => rlink%next
+      nullify ( rlink%next )
+   end if
+
+   msg_loop: do while (ireadmg(iunit,subset,idate)==0)
+!print*,subset
+      subset_loop: do while (ireadsb(iunit)==0)
+
+         num_report_infile = num_report_infile + 1
+
+         call ufbint(iunit,timedat,ntime,1,iret,timestr)
+
+         iyear  = nint(timedat(1))
+         imonth = nint(timedat(2))
+         iday   = nint(timedat(3))
+         ihour  = nint(timedat(4))
+         imin   = nint(timedat(5))
+         isec   = min(59, nint(timedat(6))) ! raw BUFR data that has SECO = 60.0 SECOND
+                                            ! that was probably rounded from 59.x seconds
+                                            ! reset isec to 59 rather than advancing one minute
+         if ( iyear  > 1900 .and. iyear  < 3000 .and. &
+              imonth >=   1 .and. imonth <=  12 .and. &
+              iday   >=   1 .and. iday   <=  31 .and. &
+              ihour  >=   0 .and. ihour  <   24 .and. &
+              imin   >=   0 .and. imin   <   60 .and. &
+              isec   >=   0 .and. isec   <   60 ) then
+            write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+               iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+            call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+            rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
+            rlink%gstime = obs_time
+         else
+            cycle subset_loop
+         end if
+
+         call ufbint(iunit,lalodat,nlalo,1,iret,lalostr)
+         if ( abs(lalodat(1)) > 90.0 .or. abs(lalodat(2)) > 360.0 ) cycle subset_loop
+
+         call ufbint(iunit,infodat,ninfo,1,iret,infostr)  ! SAID SIID SAZA BEARAZ SOZA SOLAZI SLNM FORN FOVN HMSL
+         if ( iret /= 1 ) cycle subset_loop
+
+         call ufbint(iunit,r8mtyp,1,1,iret,'MTYP')
+         if ( iret /= 1 ) cycle subset_loop
+         if ( cmtyp == 'FSR' ) then
+            call ufbseq(iunit,data1b8,2,nchan_bufr,iret,'CRCHNM')
+         else
+            call ufbseq(iunit,data1b8,2,nchan_bufr,iret,'CRCHN')
+         end if
+         if ( iret /= nchan_bufr ) cycle subset_loop
+
+         nchan = nchan_bufr
+         rlink % nchan = nchan_bufr
+         allocate ( rlink % tb(nchan) )   ! radiance for now
+         allocate ( rlink % ch(nchan) )   ! channel number
+
+         call fill_datalink(rlink, missing_r, missing_i)
+
+         if ( lalodat(1) < r8bfms ) rlink % lat = lalodat(1)
+         if ( lalodat(2) < r8bfms ) rlink % lon = lalodat(2)
+
+         rlink % satid  = nint(infodat(1))  ! SAID satellite identifier
+         rlink % instid = nint(infodat(2))  ! SIID instrument identifier
+
+         if ( infodat(3)  < r8bfms ) rlink % satzen  = infodat(3)        ! SAZA satellite zenith angle (degree)
+         if ( infodat(4)  < r8bfms ) rlink % satazi  = infodat(4)        ! BEARAZ satellite azimuth (degree true)
+         if ( infodat(5)  < r8bfms ) rlink % solzen  = infodat(5)        ! SOZA solar zenith angle (degree)
+         if ( infodat(6)  < r8bfms ) rlink % solazi  = infodat(6)        ! SOLAZI solar azimuth (degree true)
+         if ( infodat(7)  < r8bfms ) rlink % scanline = nint(infodat(7)) ! SLNM scan line number
+         if ( infodat(8)  < r8bfms ) rlink % scanpos = nint(infodat(8))  ! FORN field of regard number 1-30
+         !if ( infodat(9)  < r8bfms ) rlink % scanpos = nint(infodat(9))  ! FOVN field of view number 1-9
+         if ( infodat(10) < r8bfms ) rlink % elv = infodat(10)           ! HMSL height or altitude (eg. 836410.0 m)
+
+         chan_loop: do i = 1, nchan
+            if ( data1b8(1,i) > r8bfms .or. data1b8(2,i) > r8bfms ) cycle chan_loop
+            rlink % ch(i) = nint(data1b8(1,i))
+            rlink % tb(i) = data1b8(2,i) * 1000.0  ! radiance for now
+         end do chan_loop
+
+         allocate ( rlink%next )
+         rlink => rlink%next
+         nullify ( rlink%next )
+
+      end do subset_loop ! ireadsb
+   end do msg_loop ! ireadmg
+
+   call closbf(iunit)
+   close(iunit)
+
+   write(*,'(1x,a,a,a,i10)') 'num_report_infile ', trim(filename), ' : ', num_report_infile
+
+end subroutine read_cris
+
+!--------------------------------------------------------------
+
 subroutine sort_obs_radiance(filedate, nfgat)
 
    implicit none
@@ -1056,7 +1255,13 @@ fgat_loop: do ii = 1, nfgat
     allocate(band_c2(nchan))
 
     call read_spc(trim(inst_list(i)), nchan, planck_c1, planck_c2, band_c1, band_c2, ierr)
-    if ( ierr /= 0 ) cycle inst_loop
+    if ( ierr /= 0 ) then
+      deallocate(planck_c1)
+      deallocate(planck_c2)
+      deallocate(band_c1)
+      deallocate(band_c2)
+      cycle inst_loop
+    end if
 
     do ichan = 1, nchan
       do iloc = 1, nlocs

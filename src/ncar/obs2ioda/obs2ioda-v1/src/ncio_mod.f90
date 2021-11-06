@@ -100,6 +100,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             ncname = trim(name_var_met(ivar))//'@ObsType'
             call def_netcdf_var(ncfileid,ncname,(/ncid_ncdim(2)/),NF90_INT)
          else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
+            if ( ichan(i) < 0 ) cycle
             write(unit=c4, fmt='(i4)') ichan(i)
             name_var_tb(i) = trim(var_tb)//'_'//trim(adjustl(c4))
             ncname = trim(name_var_tb(i))//'@ObsValue'
@@ -168,6 +169,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
                call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%rptype)
             end if
          else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
+            if ( ichan(i) < 0 ) cycle
             ncname = trim(name_var_tb(i))//'@ObsValue'
             call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xfield(:,i)%val)
             ncname = trim(name_var_tb(i))//'@ObsError'

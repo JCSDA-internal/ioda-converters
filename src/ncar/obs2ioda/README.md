@@ -8,6 +8,8 @@ File types that obs2ioda can handle:
 * gdas.1bamua.tHHz.YYYYMMDD.bufr  
 * gdas.1bmhs.tHHz.YYYYMMDD.bufr  
 * gdas.airsev.tHHz.YYYYMMDD.bufr  
+* gdas.crisf4.tHHz.YYYYMMDD.bufr  
+* gdas.mtiasi.tHHz.YYYYMMDD.bufr  
 * HS_H08_YYYYMMDD_HH00_BNN_FLDK_R20_S0210.DAT  
 
 ## See obs2ioda-v1/README.md for compilation and usage.
