@@ -31,9 +31,6 @@ class Observation(object):
 
     def __init__(self, filename, thin, date):
 
-        if os.path.exists("cryosat_nc4classic.nc"):
-            os.remove("cryosat_nc4classic.nc")
-
         self.filenames = filename
         self.thin = thin
         self.date = date
@@ -46,7 +43,6 @@ class Observation(object):
         qcKey = vName, iconv.OqcName()
 
         for f in self.filenames:
-            print(f)
             subprocess.call('nccopy -k nc7 '+f+' cryosat_nc4classic.nc', shell=True)
             self.filename = "cryosat_nc4classic.nc"
             ncd = nc.MFDataset(self.filename, aggdim='time_20_ku')
