@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # read airnow data and convert to netcdf
 import netCDF4 as nc
 import numpy as np
@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
@@ -108,12 +108,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print('infile=', args.input, args.sitefile)
-    f = add_data(args.input, args.sitefile)
+    f = add_data(args.input, args.sitefile).drop_duplicates(subset=['PM2.5','OZONE','siteid','latitude','longitude'])
 
-    f3 = f.dropna(subset=['OZONE', 'PM2.5'], how='all')
+    f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
     nlocs, columns = f3.shape
-
-    obsvars = {'pm25_tot': 'pm25_tot', 'o3': 'o3', }
+    
+    obsvars = {'pm25': 'pm25', 'o3': 'o3', }
     AttrData = {'converter': os.path.basename(__file__), }
 
     locationKeyList = [("latitude", "float"), ("longitude", "float"),
@@ -127,31 +127,31 @@ if __name__ == '__main__':
     loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     units = {}
-    units['pm25_tot'] = 'microgram/m3'
+    units['pm25'] = 'microgram/m3'
     units['o3'] = 'ppmV'
 
-    for i in ['pm25_tot', 'o3']:
+    for i in ['pm25', 'o3']:
         varDict[i]['valKey'] = i, writer.OvalName()
         varDict[i]['errKey'] = i, writer.OerrName()
         varDict[i]['qcKey'] = i, writer.OqcName()
 
     d = np.empty([nlocs], 'S20')
-    d[:] = f3.time[1].strftime('%Y-%m-%dT%H:%M:%SZ')
+    d[:] = np.array(f3.time[1].strftime('%Y-%m-%dT%H:%M:%SZ'))
     loc_mdata['datetime'] = writer.FillNcVector(d, 'datetime')
     loc_mdata['latitude'] = np.array(f3['latitude'])
     loc_mdata['longitude'] = np.array(f3['longitude'])
     loc_mdata['height'] = np.full((nlocs), 10.)
-    loc_mdata['station_elevation'] = np.full((nlocs), 10.)
+    loc_mdata['station_elevation'] = np.array(f3['elevation'])
 
-    c = np.empty([nlocs], dtype=str)
+    c = np.empty([nlocs], dtype='S20')
     c[:] = np.array(f3.siteid)
     loc_mdata['station_id'] = writer.FillNcVector(c, 'string')
 
-    outdata[varDict['pm25_tot']['valKey']] = np.array(f3['PM2.5'].fillna(nc.default_fillvals['f4']))
+    outdata[varDict['pm25']['valKey']] = np.array(f3['PM2.5'].fillna(nc.default_fillvals['f4']))
     outdata[varDict['o3']['valKey']] = np.array((f3['OZONE']/1000).fillna(nc.default_fillvals['f4']))
-    for i in ['pm25_tot', 'o3']:
+    for i in ['pm25', 'o3']:
         outdata[varDict[i]['errKey']] = np.full((nlocs), 0.1)
-        outdata[varDict[i]['qcKey']] = np.full((nlocs), 0)
+        outdata[varDict[i]['qcKey']] = np.full((nlocs), 1)
 
     writer._nvars = 2
     writer._nlocs = nlocs
