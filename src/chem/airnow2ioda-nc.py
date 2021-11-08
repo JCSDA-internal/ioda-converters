@@ -151,7 +151,7 @@ if __name__ == '__main__':
     outdata[varDict['o3']['valKey']] = np.array((f3['OZONE']/1000).fillna(nc.default_fillvals['f4']))
     for i in ['pm25', 'o3']:
         outdata[varDict[i]['errKey']] = np.full((nlocs), 0.1)
-        outdata[varDict[i]['qcKey']] = np.full((nlocs), 1)
+        outdata[varDict[i]['qcKey']] = np.full((nlocs), 0)
 
     writer._nvars = 2
     writer._nlocs = nlocs
