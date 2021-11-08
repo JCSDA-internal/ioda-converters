@@ -108,11 +108,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print('infile=', args.input, args.sitefile)
-    f = add_data(args.input, args.sitefile).drop_duplicates(subset=['PM2.5','OZONE','siteid','latitude','longitude'])
+    f = add_data(args.input, args.sitefile).drop_duplicates(subset=['PM2.5', 'OZONE', 'siteid', 'latitude', 'longitude'])
 
     f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
     nlocs, columns = f3.shape
-    
+
     obsvars = {'pm25': 'pm25', 'o3': 'o3', }
     AttrData = {'converter': os.path.basename(__file__), }
 
