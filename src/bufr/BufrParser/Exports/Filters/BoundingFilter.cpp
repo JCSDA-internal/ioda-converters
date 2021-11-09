@@ -55,16 +55,17 @@ namespace Ingester
         if (const auto& var = std::dynamic_pointer_cast<DataObject<float>>(dataMap.at(variable_)))
         {
             auto dims = var->getDims();
-            size_t colDims = 1;
+            size_t extraDims = 1;
 
             for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
             {
-                colDims *= dims[dimIdx];
+                extraDims *= dims[dimIdx];
             }
 
-            auto array = Eigen::Map<EigArray> (var->getRawData().data(), dims[0], colDims);
+            auto rawData = var->getRawData(); // Make local copy otherwise you get weird memory corruption issue.
+            auto array = Eigen::Map<EigArray> (rawData.data(), dims[0], extraDims);
 
-            for (size_t rowIdx = 0; rowIdx < dims[0]; rowIdx++)
+            for (std::size_t rowIdx = 0; rowIdx < dims[0]; rowIdx++)
             {
                 if (lowerBound_ && upperBound_)
                 {
@@ -84,7 +85,7 @@ namespace Ingester
                 }
             }
 
-            if (validRows.size() != static_cast<size_t>(array.rows()))
+            if (validRows.size() != static_cast<size_t>(dims[0]))
             {
                 for (const auto& dataPair : dataMap)
                 {
