@@ -25,6 +25,7 @@ list( APPEND test_input
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
+  testinput/emc_ice.nc
   testinput/viirs_jpss1_oc_l2.nc
   testinput/modis_aqua_oc_l2.nc
   testinput/viirs_jpss1_oc_l3.nc
@@ -73,6 +74,7 @@ list( APPEND test_output
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
+  testoutput/emc_ice_ioda2.nc
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
   testoutput/viirs_jpss1_oc_l3.nc
@@ -389,6 +391,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
                           -o testrun/cryosat2_L2.nc
                           -d 2019092112"
                           cryosat2_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_emc_ice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/emc_ice2ioda.py
+                          -i testinput/emc_ice.nc
+                          -o testrun/emc_ice_ioda2.nc
+                          -d 2015082812"
+                          emc_ice_ioda2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_sss
                   TYPE    SCRIPT
