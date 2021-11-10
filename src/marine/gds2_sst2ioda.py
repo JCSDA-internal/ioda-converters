@@ -266,7 +266,7 @@ def main():
     attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     attr_data['thinning'] = args.thin
     attr_data['converter'] = os.path.basename(__file__)
-    
+
     # determine which variables we are going to output
     selected_names = []
     if args.sst:
