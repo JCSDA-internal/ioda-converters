@@ -30,7 +30,7 @@ vName = {
 }
 
 VarDims = {
-    vName: ['nlocs']
+    vName['chlor_a']: ['nlocs']
 }
 
 DimDict = {}
@@ -51,7 +51,7 @@ class OCL3(object):
         self.date = date
         self.thin = thin
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
@@ -76,12 +76,12 @@ class OCL3(object):
         errKey = vName['chlor_a'], iconv.OerrName()
         qcKey = vName['chlor_a'], iconv.OqcName()
 
-        self.VarAttrs[vName, iconv.OvalName()]['_FillValue'] = -32767.
-        self.VarAttrs[vName, iconv.OerrName()]['_FillValue'] = -32767.
-        self.VarAttrs[vName, iconv.OqcName()]['_FillValue'] = -32767
-        self.VarAttrs[vName, iconv.OvalName()]['units'] = 'mg m^-3'
-        self.VarAttrs[vName, iconv.OerrName()]['units'] = 'mg m^-3'
-        self.VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
+        self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['_FillValue'] = -32767.
+        self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['_FillValue'] = -32767.
+        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
+        self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
+        self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
+        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -135,6 +135,7 @@ def main():
 
     # Write them out
     writer.BuildIoda(ObsVars, VarDims, chl.VarAttrs, GlobalAttrs)
+
 
 if __name__ == '__main__':
     main()
