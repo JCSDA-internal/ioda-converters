@@ -116,6 +116,13 @@ observations:
           longName: "Air pressure"
           units: "Pa"
 
+        - name: "MetaData/process_center
+          coordinates: "longitude latitude"
+          source: variables/originatingCenter
+          dimensions: [ "nlocs" ]
+          longName: "Originating center"
+          units: "unitless"
+
         - name: "MetaData/gnss_sat_class
           coordinates: "longitude latitude"
           source: variables/satelliteClassification
