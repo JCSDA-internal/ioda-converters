@@ -154,7 +154,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005066.nc
     testoutput/airep_multi.nc
     testoutput/amdar_single.nc
-    testinput/gnssro_2020-306-2358C2E6.nc
+    testoutput/gnssro_2020-306-2358C2E6.nc
   )
 endif()
 
