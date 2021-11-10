@@ -24,10 +24,22 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 output_var_names = [
     "sea_surface_temperature",
     "sea_surface_skin_temperature"]
+
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("datetime", "string")
+]
+GlobalAttrs = {
+}
+
+DimDict = {
+}
 
 
 def read_input(input_args):
@@ -153,6 +165,7 @@ def read_input(input_args):
         'longitude': lons,
         'datetime': dates,
     }
+
     if global_config['output_sst']:
         obs_data[(output_var_names[0], global_config['oval_name'])] = val_sst
         obs_data[(output_var_names[0], global_config['oerr_name'])] = err
@@ -218,8 +231,7 @@ def main():
     if not args.sst and not args.skin_sst:
         args.sst = True
         args.skin_sst = True
-
-
+    
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
@@ -247,7 +259,6 @@ def main():
                 (obs_data[k], obs[i][0][k]), axis=axis)
         for k in loc_data:
             d = obs[i][1][k]
-            if k == 'datetime':
             loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
 
     # prepare global attributes we want to output in the file,
@@ -255,7 +266,7 @@ def main():
     attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     attr_data['thinning'] = args.thin
     attr_data['converter'] = os.path.basename(__file__)
-
+    
     # determine which variables we are going to output
     selected_names = []
     if args.sst:
@@ -272,8 +283,8 @@ def main():
     # Read in the profiles
 
     # write them out
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
+
+    nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
 
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
@@ -291,7 +302,7 @@ def main():
     VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
     VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
-    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
+    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
