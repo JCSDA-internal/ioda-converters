@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-#
-# This script will work with decoded, CSV files created by NCEI at NOAA/GHCN
-# data acess at ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/
 #
 
 import time, os, sys
@@ -66,6 +62,7 @@ class ghcn(object):
     def _read(self):
 
         # set up variable names for IODA
+
         iodavar = 'totalSnowDepth'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
@@ -182,6 +179,7 @@ class ghcn(object):
         self.outdata[self.varDict[iodavar]['valKey']] = vals
         self.outdata[self.varDict[iodavar]['errKey']] = errs
         self.outdata[self.varDict[iodavar]['qcKey']] = qflg
+
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
