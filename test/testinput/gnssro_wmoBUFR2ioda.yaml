@@ -1,4 +1,4 @@
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,8 +6,7 @@
 observations:
   - obs space:
       name: bufr
-#     obsdatain: "./testinput/gnssro_2020-306-2358C2E6.bufr"
-      obsdatain: "/data/users/gthompsn/JEDI/src/ioda-bundle/iodaconv/test/testinput/gnssro_2020-306-2358C2E6.bufr"
+      obsdatain: "./testinput/gnssro_2020-306-2358C2E6.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -117,13 +116,6 @@ observations:
           longName: "Air pressure"
           units: "Pa"
 
-        - name: "MetaData/airPressure"
-          coordinates: "longitude latitude"
-          source: variables/airPressure
-          dimensions: [ "nlocs" ]
-          longName: "Air pressure"
-          units: "Pa"
-
         - name: "MetaData/gnss_sat_class
           coordinates: "longitude latitude"
           source: variables/satelliteClassification
@@ -145,7 +137,7 @@ observations:
           longName: "GNSS platform transmitter ID"
           units: "unitless"
 
-        - name: "MetaData/ascending_flag
+        - name: "MetaData/qualityFlags
           coordinates: "longitude latitude"
           source: variables/qualityFlags
           dimensions: [ "nlocs" ]
@@ -179,6 +171,13 @@ observations:
           dimensions: [ "nlocs" ]
           longName: "Sensor azimuth angle"
           units: "degrees"
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          dimensions: [ "nlocs" ]
+          longName: "Air temperature"
+          units: "K"
 
         - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude"
