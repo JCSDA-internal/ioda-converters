@@ -18,7 +18,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
@@ -36,27 +36,37 @@ AttrData = {
     'converter': os.path.basename(__file__),
 }
 
+DimDict = {
+}
+
+VarDims = {
+    'soilMoistureVolumetric': ['nlocs'],
+}
+
 
 class smap(object):
-    def __init__(self, filename, mask, writer):
+    def __init__(self, filename, mask):
         self.filename = filename
         self.mask = mask
-        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
+        self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
 
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
         for iodavar in ['soilMoistureVolumetric']:
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
-            self.units[iodavar] = 'm3m-3'
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
@@ -92,7 +102,10 @@ class smap(object):
         str_datetime = str_split[7]
         my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
         base_datetime = my_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
-
+        vals = vals.astype('float32')
+        lats = lats.astype('float32')
+        lons = lons.astype('float32')
+        errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         AttrData['date_time_string'] = base_datetime
 
@@ -109,15 +122,19 @@ class smap(object):
                 qflg[i] = 1
 
             times[i] = base_datetime
-        self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
-        self.loc_mdata['latitude'] = lats
-        self.loc_mdata['longitude'] = lons
+
+        # add metadata variables
+        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('latitude', 'MetaData')] = lats
+        self.outdata[('longitude', 'MetaData')] = lons
+
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['datetime'])
+
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
@@ -141,12 +158,14 @@ def main():
 
     args = parser.parse_args()
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    # Read in the SMAP volumetric soil moisture data
+    ssm = smap(args.input, args.mask)
 
-    # Read in the profiles
-    ssm = smap(args.input, args.mask, writer)
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    writer.BuildNetcdf(ssm.outdata, ssm.loc_mdata, ssm.var_mdata, AttrData, ssm.units)
+    # write everything out
+    writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)
 
 
 if __name__ == '__main__':

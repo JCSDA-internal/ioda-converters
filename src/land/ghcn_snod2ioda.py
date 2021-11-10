@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-#
-# This script will work with decoded, CSV files created by NCEI at NOAA/GHCN
-# data acess at ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/
 #
 
 import time, os, sys
@@ -23,49 +19,60 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("altitude", "float"),
+    ("height", "float"),
     ("datetime", "string")
 ]
 
 obsvars = {
-    'snow_depth': 'snowDepth',
+    'snow_depth': 'totalSnowDepth',
 }
 
 AttrData = {
     'converter': os.path.basename(__file__),
 }
 
+DimDict = {
+}
+
+VarDims = {
+    'totalSnowDepth': ['nlocs'],
+}
+
 
 class ghcn(object):
 
-    def __init__(self, filename, fixfile, date, mask, writer):
+    def __init__(self, filename, fixfile, date, mask):
         self.filename = filename
         self.fixfile = fixfile
         self.date = date
         self.mask = mask
-        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
+        self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
 
     def _read(self):
 
         # set up variable names for IODA
-        for iodavar in ['snowDepth']:
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
-            self.units[iodavar] = 'm'
+
+        iodavar = 'totalSnowDepth'
+        self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+        self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+        self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
+        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
+        self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
@@ -133,7 +140,9 @@ class ghcn(object):
         alts = alts.astype('float32')
         qflg = 0*vals.astype('int32')
         errs = 0.0*vals
+        sites = np.empty_like(vals, dtype=object)
         times = np.empty_like(vals, dtype=object)
+        sites = id_array
 
         # use maskout options
         if self.mask == "maskout":
@@ -146,29 +155,33 @@ class ghcn(object):
             lons = lons[mask]
             lats = lats[mask]
             alts = alts[mask]
+            sites = sites[mask]
             times = times[mask]
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d")
         start_datetime = my_date.strftime('%Y-%m-%d')
-        base_datetime = start_datetime + 'T12:00:00Z'
+        base_datetime = start_datetime + 'T18:00:00Z'
         AttrData['date_time_string'] = base_datetime
 
         for i in range(len(vals)):
             if vals[i] >= 0.0:
-                errs[i] = 0.0
-                vals[i] = 0.001*vals[i]  # coverted to m from mm
+                errs[i] = 40.0
             times[i] = base_datetime
-        self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
-        self.loc_mdata['latitude'] = lats
-        self.loc_mdata['longitude'] = lons
-        self.loc_mdata['altitude'] = alts
-        for iodavar in ['snowDepth']:
-            self.outdata[self.varDict[iodavar]['valKey']] = vals
-            self.outdata[self.varDict[iodavar]['errKey']] = errs
-            self.outdata[self.varDict[iodavar]['qcKey']] = qflg
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['datetime'])
+        # add metadata variables
+        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('stationIdentification', 'MetaData')] = sites
+        self.outdata[('latitude', 'MetaData')] = lats
+        self.outdata[('longitude', 'MetaData')] = lons
+        self.outdata[('height', 'MetaData')] = alts
+        self.varAttrs[('height', 'MetaData')]['units'] = 'm'
+
+        self.outdata[self.varDict[iodavar]['valKey']] = vals
+        self.outdata[self.varDict[iodavar]['errKey']] = errs
+        self.outdata[self.varDict[iodavar]['qcKey']] = qflg
+
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
@@ -197,12 +210,14 @@ def main():
 
     args = parser.parse_args()
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    # Read in the GHCN snow depth data
+    snod = ghcn(args.input, args.fixfile, args.date, args.mask)
 
-    # Read in the profiles
-    snod = ghcn(args.input, args.fixfile, args.date, args.mask, writer)
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    writer.BuildNetcdf(snod.outdata, snod.loc_mdata, snod.var_mdata, AttrData, snod.units)
+    # write all data out
+    writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
