@@ -14,7 +14,7 @@ observations:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLATH, CLONH]
         - mnemonics: [HEIT]
         - mnemonics: [GPHTST, PRES, TMDBST, SPFH, PRES]
-        - mnemonics: [SAID, OGCE]
+        - mnemonics: [SAID, SIID, OGCE]
         - mnemonics: [IMPP, BNDA]
         - mnemonics: [QFRO, PCCF, SCLF, PTID, ELRC, BEARAZ, GEODU]
         - mnemonics: [ARFR]
@@ -46,6 +46,8 @@ observations:
 
           satelliteIdentifier:
             mnemonic: SAID
+          instrumentIdentifier:
+            mnemonic: SIID
           satelliteClassification:
             mnemonic: SCLF
           platformTransmitterId:
@@ -135,6 +137,13 @@ observations:
           source: variables/satelliteIdentifier
           dimensions: [ "nlocs" ]
           longName: "GNSS satellite ID"
+          units: "unitless"
+
+        - name: "MetaData/occulting_sat_is
+          coordinates: "longitude latitude"
+          source: variables/instrumentIdentifier
+          dimensions: [ "nlocs" ]
+          longName: "Instrument ID"
           units: "unitless"
 
         - name: "MetaData/occulting_sat_id
