@@ -93,7 +93,6 @@ class Observation(object):
                         else:
                             self.data[locKey][qcKey] = 11
 
-
 def main():
 
     parser = argparse.ArgumentParser(
@@ -129,6 +128,8 @@ def main():
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
     VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
+    VarAttrs[('sea_water_meridional_current', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('sea_water_zonal_current', 'ObsValue')]['_FillValue'] = -32767
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
