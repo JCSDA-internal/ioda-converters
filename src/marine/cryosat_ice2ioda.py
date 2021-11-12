@@ -135,7 +135,10 @@ def main():
     VarAttrs[vName, iconv.OvalName()]['units'] = 'm'
     VarAttrs[vName, iconv.OerrName()]['units'] = 'm'
     VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
-
+    VarAttrs[vName, iconv.OvalName()]['_FillValue'] = -32768
+    VarAttrs[vName, iconv.OerrName()]['_FillValue'] = -999.
+    VarAttrs[vName, iconv.OqcName()]['_FillValue'] = -2147483648 
+    
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
