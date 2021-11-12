@@ -231,7 +231,7 @@ def main():
     if not args.sst and not args.skin_sst:
         args.sst = True
         args.skin_sst = True
-    
+
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
