@@ -235,6 +235,7 @@ def main():
     obs_data, GlobalAttrs = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
+    nlocs = len(obs_data[('longitude','Metadata')])
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
