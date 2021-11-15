@@ -117,6 +117,8 @@ def main():
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_temperature', 'ObsValue')]['units'] = 'celsius'
     VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'psu'
+    VarAttrs[('sea_water_temperature', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('sea_water_salinity', 'ObsValue')]['_FillValue'] = -32767
     VarAttrs[('sea_water_temperature', 'PreQC')]['units'] = ''
     VarAttrs[('sea_water_salinity', 'ObsError')]['units'] = ''
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
