@@ -1,4 +1,4 @@
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,69 +7,57 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/gdas.t06z.adpsfc.tm00.bufr_d"
-
-      mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, WMOB, WMOS]
-        - mnemonics: [CLAT, CLON]
-        - mnemonics: [SELV, PRES, TMDB, TMDP, TOSD]
+      obsdatain: "./testinput/gdas.t06z.adpsfc.tm00.bufr_d" 
 
       exports:
         variables:
           timestamp:
             datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
+              year: "[NC000007/YEAR[1],*/YEAR]"
+              month: "[NC000007/MNTH[1],*/MNTH]"
+              day: "[NC000007/DAYS[1], */DAYS]"
+              hour: "[NC000007/HOUR[1], */HOUR]"
+              minute: "[NC000007/MINU[1], */MINU]"
 
           longitude:
-            mnemonic: CLON
+            query: "*/CLON"
 
           latitude:
-            mnemonic: CLAT
+            query: "*/CLAT"
 
           pressureAir:
-            mnemonic: PRES
+            query: "[*/PRES]"
 
           stationElevation:
-            mnemonic: SELV
+            query: "*/SELV"
 
           temperatureAir:
-            mnemonic: TMDB
+            query: "*/TMDB"
 
           temperatureDewpoint:
-            mnemonic: TMDP
+            query: "*/TMDP"
         
-          snowDepth:
-            mnemonic: TOSD
+          totalSnowDepth:
+            query: "[*/SNWSQ1/TOSD, */MTRPR3/MTRMSC/TOSD]"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t06z.adpsfc_snow.tm00.nc"
 
-      dimensions:
-        - name: "nlocs"
-          size: variables/latitude.nrows
-
       variables:
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
           source: variables/latitude
-          dimensions: ["nlocs"]
-          longName: "Latitude)"
+          longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
           source: variables/longitude
-          dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
@@ -77,21 +65,18 @@ observations:
         - name: "stationElevation@MetaData"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          dimensions: ["nlocs"]
           longName: "Height of Station"
           units: "m"
 
         - name: "pressureAir@ObsValue"
           coordinates: "longitude latitude"
           source: variables/pressureAir
-          dimensions: ["nlocs"]
           longName: "Pressure"
           units: "Pa"
           range: [90000, 105000] 
 
         - name: "temperatureAir@ObsValue"
           source: variables/temperatureAir
-          dimensions: ["nlocs"]
           longName: "Temperature"
           units: "K"
           range: [230, 315]
@@ -99,15 +84,13 @@ observations:
         - name: "temperatureDewpoint@ObsValue"
           coordinates: "longitude latitude"
           source: variables/temperatureDewpoint
-          dimensions: ["nlocs"]
           longName: "Dew Point Temperature"
           units: "K"
           range: [200, 315]
       
-        - name: "snowDepth@ObsValue"
+        - name: "totalSnowDepth@ObsValue"
           coordinates: "longitude latitude"
-          source: variables/snowDepth
-          dimensions: ["nlocs"]
-          longName: "Snow Depth"
+          source: variables/totalSnowDepth
+          longName: "Total Snow Depth"
           units: "m"
-
+          range: [0, 100]
