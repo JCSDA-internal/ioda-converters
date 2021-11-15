@@ -24,21 +24,24 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 output_var_names = [
     "ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon",
     "mass_concentration_of_chlorophyll_in_sea_water"]
 
-DimDict ={}
+DimDict = {}
 
 VarDims = {}
 
 GlobalAttrs = {}
+VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string"),
 ]
+
 
 def read_input(input_args):
     """
@@ -118,7 +121,7 @@ def read_input(input_args):
     # allocate space for output depending on which variables are to be saved
     num_vars = 0
     obs_dim = (len(lons))
-    obs_data = {}
+    obs_data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     if global_config['output_poc']:
         obs_data[output_var_names[0], global_config['oval_name']] = \
             np.zeros(obs_dim),
@@ -137,9 +140,9 @@ def read_input(input_args):
         num_vars += 1
 
     # create the final output structures
-    obs_data[('datetime','Metadata')] = dates
-    obs_data[('latitude','Metadata')] = lats
-    obs_data[('longitude','Metadata')] = lons
+    obs_data[('datetime', 'MetaData')] = dates
+    obs_data[('latitude', 'MetaData')] = lats
+    obs_data[('longitude', 'MetaData')] = lons
 
     if global_config['output_poc']:
         obs_data[output_var_names[0], global_config['oval_name']] = \
@@ -235,7 +238,7 @@ def main():
     obs_data, GlobalAttrs = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
-    nlocs = len(obs_data[('longitude','Metadata')])
+    nlocs = len(obs_data[('longitude', 'MetaData')])
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
