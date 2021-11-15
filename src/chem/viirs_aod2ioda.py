@@ -51,13 +51,13 @@ VarDims = {
 
 class AOD(object):
     def __init__(self, filename, method, mask, thin):
-        print('filename= ',filename)
-        print('pwd=',os.getcwd())
+        print('filename= ', filename)
+        print('pwd=', os.getcwd())
         self.filename = filename
-        print('self.filename= ',self.filename) 
+        print('self.filename= ', self.filename)
         self.mask = mask
         self.method = method
-        self.thin = thin 
+        self.thin = thin
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -69,7 +69,7 @@ class AOD(object):
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-           
+
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
@@ -149,22 +149,18 @@ class AOD(object):
                     uncertainty[i] = uncertainty2[i]
                 errs[i] = uncertainty[i]
 
+        #  Write out data
 
+        #  Values
 
-        #  Write out data 
-
-        #  Values 
-
-        self.outdata[self.varDict[iodavar]['valKey']] = vals  
-        self.outdata[self.varDict[iodavar]['errKey']] = errs 
+        self.outdata[self.varDict[iodavar]['valKey']] = vals
+        self.outdata[self.varDict[iodavar]['errKey']] = errs
         self.outdata[self.varDict[iodavar]['qcKey']] = qcall
 
-        #  Add Meta data 
+        #  Add Meta data
 
-        self.outdata[('latitude', 'MetaData')] = lats 
-        self.outdata[('longitude','MetaData')] = lons
-
-
+        self.outdata[('latitude', 'MetaData')] = lats
+        self.outdata[('longitude', 'MetaData')] = lons
 
         DimDict['nlocs'] = len(self.outdata[('latitude', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
@@ -207,24 +203,17 @@ def main():
 
     args = parser.parse_args()
 
-
     # setup the IODA writer
-
 
     # Read in the AOD data
     aod = AOD(args.input, args.method, args.mask, args.thin)
 
-    # Set constants 
-#    AttrData['frequency'] = np.full(1, 5.401666e+14, dtype='f4')
-#    AttrData['polarization'] = np.full(1, 1, dtype='i4')
-#    AttrData['wavenumber'] = np.full(1, 18161.61, dtype='f4')
-#    AttrData['sensor_channel'] = np.full(1, 4, dtype='i4')
-
     # write everything out
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-    print('AttrData=',AttrData)
+    print('AttrData=', AttrData)
     writer.BuildIoda(aod.outdata, VarDims, aod.varAttrs, AttrData)
+
 
 if __name__ == '__main__':
     main()
