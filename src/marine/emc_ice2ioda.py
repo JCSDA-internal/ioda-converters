@@ -22,22 +22,20 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 from orddicts import DefaultOrderedDict
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 
 
 class Observation(object):
 
-    def __init__(self, filename, thin, date, writer):
-        print(date)
+    def __init__(self, filename, thin, date):
+
         self.filename = filename
         self.thin = thin
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read(date)
 
     def _read(self, date):
-
         ncd = nc.MFDataset(self.filename)
         datein = ncd.variables['dtg_yyyymmdd'][:]
         timein = ncd.variables['dtg_hhmm'][:]
@@ -47,9 +45,9 @@ class Observation(object):
         qc = ncd.variables['quality'][:]
         ncd.close()
 
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
+        valKey = vName, iconv.OvalName()
+        errKey = vName, iconv.OerrName()
+        qcKey = vName, iconv.OqcName()
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -71,9 +69,9 @@ class Observation(object):
                         np.array2string(
                             timein[i]).zfill(4), "%H%M").time())
                 locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                self.data[0][locKey][valKey] = vals[i]
-                self.data[0][locKey][errKey] = 0.1
-                self.data[0][locKey][qcKey] = qc[i]
+                self.data[locKey][valKey] = vals[i]
+                self.data[locKey][errKey] = 0.1
+                self.data[locKey][qcKey] = qc[i]
 
 
 vName = "sea_ice_area_fraction"
@@ -84,7 +82,7 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
+GlobalAttrs = {
     'odb_version': 1,
 }
 
@@ -118,16 +116,23 @@ def main():
 
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.output, locationKeyList)
-
+    VarDims = {
+        vName: ['nlocs'],
+    }
     # Read in
-    ice = Observation(args.input, args.thin, fdate, writer)
+    ice = Observation(args.input, args.thin, fdate)
 
     # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    ObsVars, nlocs = iconv.ExtractObsData(ice.data, locationKeyList)
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(ice.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[vName, iconv.OvalName()]['units'] = '1'
+    VarAttrs[vName, iconv.OerrName()]['units'] = '1'
+    VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
+
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
