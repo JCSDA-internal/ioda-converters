@@ -8,68 +8,48 @@ observations:
       name: bufr
 
       obsdatain: "./testinput/gdas.t06z.adpsfc.tm00.bufr_d"
-
-      mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, WMOB, WMOS]
-        - mnemonics: [CLAT, CLON]
-        - mnemonics: [SELV, PRES, TMDB, TMDP, TOSD]
-
       exports:
         variables:
           timestamp:
             datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-
+              year: "*/YEAR[1]"
+              month: "*/MNTH[1]"
+              day: "*/DAYS[1]"
+              hour: "*/HOUR[1]"
+              minute: "*/MINU[1]"
           longitude:
-            mnemonic: CLON
-
+            query: "*/CLON"
           latitude:
-            mnemonic: CLAT
-
+            query: "*/CLAT"
           pressureAir:
-            mnemonic: PRES
-
+            query: "*/PRES"
           stationElevation:
-            mnemonic: SELV
-
+            query: "*/SELV"
           temperatureAir:
-            mnemonic: TMDB
-
+            query: "*/TMDB"
           temperatureDewpoint:
-            mnemonic: TMDP
-        
+            query: "*/TMDP"
           snowDepth:
-            mnemonic: TOSD
+            query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD]"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t06z.adpsfc_snow.tm00.nc"
 
-      dimensions:
-        - name: "nlocs"
-          size: variables/latitude.nrows
-
       variables:
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
           source: variables/latitude
-          dimensions: ["nlocs"]
           longName: "Latitude)"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
           source: variables/longitude
-          dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
@@ -77,21 +57,18 @@ observations:
         - name: "stationElevation@MetaData"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          dimensions: ["nlocs"]
           longName: "Height of Station"
           units: "m"
 
         - name: "pressureAir@ObsValue"
           coordinates: "longitude latitude"
           source: variables/pressureAir
-          dimensions: ["nlocs"]
           longName: "Pressure"
           units: "Pa"
-          range: [90000, 105000] 
+          range: [90000, 105000]
 
         - name: "temperatureAir@ObsValue"
           source: variables/temperatureAir
-          dimensions: ["nlocs"]
           longName: "Temperature"
           units: "K"
           range: [230, 315]
@@ -99,7 +76,6 @@ observations:
         - name: "temperatureDewpoint@ObsValue"
           coordinates: "longitude latitude"
           source: variables/temperatureDewpoint
-          dimensions: ["nlocs"]
           longName: "Dew Point Temperature"
           units: "K"
           range: [200, 315]
@@ -107,7 +83,5 @@ observations:
         - name: "snowDepth@ObsValue"
           coordinates: "longitude latitude"
           source: variables/snowDepth
-          dimensions: ["nlocs"]
           longName: "Snow Depth"
           units: "m"
-
