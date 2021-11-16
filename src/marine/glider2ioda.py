@@ -63,29 +63,19 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-
         dxy=1.0
         dz=1.0
-
         ii=int((98-8)/dxy)+10
         jj=int((45-2)/dxy)+10
         kk=int((1000)/dz)+10
-#        kk=int((len(lons))/dz)
         box=np.zeros((ii,jj,kk))
-        print('checks',kk,len(dpth),len(time),len(lons))  
-
         for i in range(len(lons)-1):
-          print('iiii',i)
           if lats[i]>2.0 and lats[i]<45.0 and lons[i]<-8.0 and lons[i]>-98.0:
            m=int((lons[i]+98)/dxy)
            n=int((lats[i]-2)/dxy)
-
            k=int((dpth[i])/dz)
-#           print('kkkk',k,box[k])
-
            if box[m,n,k] == 0:
             box[m,n,k] = 1
-
             for j in [0, 1]:
                 valKey = vName[j], iconv.OvalName()
                 errKey = vName[j], iconv.OerrName()
@@ -107,7 +97,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) '
+            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) and thin it using 1 degree 1 meter resolution thinning box'
         )
     )
 
