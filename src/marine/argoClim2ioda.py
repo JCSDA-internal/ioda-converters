@@ -145,11 +145,10 @@ class IODA(object):
 
         }
 
-
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        
+
         valKey = argo.varname, iconv.OvalName()
         errKey = argo.varname, iconv.OerrName()
         qcKey = argo.varname, iconv.OqcName()
@@ -169,16 +168,14 @@ class IODA(object):
                         self.data[locKey][valKey] = val
                         self.data[locKey][errKey] = err
                         self.data[locKey][qcKey] = qc
-                    
-                    #recKey += 1
 
         self.varAttrs[argo.varname, iconv.OvalName()]['_FillValue'] = -999.
         self.varAttrs[argo.varname, iconv.OerrName()]['_FillValue'] = -999.
-        self.varAttrs[argo.varname, iconv.OqcName()]['_FillValue'] = -999           
+        self.varAttrs[argo.varname, iconv.OqcName()]['_FillValue'] = -999
         self.varAttrs[argo.varname, iconv.OvalName()]['units'] = 'degree_C'
         self.varAttrs[argo.varname, iconv.OerrName()]['units'] = 'degree_C'
         self.varAttrs[argo.varname, iconv.OqcName()]['units'] = 'unitless'
-        
+
         # Extract obs
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'nlocs': nlocs}
