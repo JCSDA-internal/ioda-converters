@@ -283,8 +283,8 @@ def main():
     # Read in the profiles
 
     # write them out
-
-    nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
+    ObsVars, nlocs = iconv.ExtractObsData(obs_data, locationKeyList)
+    #nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
 
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
@@ -302,7 +302,7 @@ def main():
     VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
     VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
-    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
