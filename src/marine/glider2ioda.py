@@ -63,34 +63,34 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        dxy=1.0
-        dz=1.0
-        ii=int((98-8)/dxy)+10
-        jj=int((45-2)/dxy)+10
-        kk=int((1000)/dz)+10
-        box=np.zeros((ii,jj,kk))
+        dxy = 1.0
+        dz = 1.0
+        ii = int((98-8)/dxy)+10
+        jj = int((45-2)/dxy)+10
+        kk = int((1000)/dz)+10
+        box = np.zeros((ii, jj, kk))
         for i in range(len(lons)-1):
-          if lats[i]>2.0 and lats[i]<45.0 and lons[i]<-8.0 and lons[i]>-98.0:
-           m=int((lons[i]+98)/dxy)
-           n=int((lats[i]-2)/dxy)
-           k=int((dpth[i])/dz)
-           if box[m,n,k] == 0:
-            box[m,n,k] = 1
-            for j in [0, 1]:
-                valKey = vName[j], iconv.OvalName()
-                errKey = vName[j], iconv.OerrName()
-                qcKey = vName[j], iconv.OqcName()
-                dt = base_date + timedelta(seconds=int(time[i]))
-                locKey = lats[i], lons[i], dpth[i], dt.strftime(
+            if lats[i] > 2.0 and lats[i] < 45.0 and lons[i] < -8.0 and lons[i] > -98.0:
+                m=int((lons[i] + 98) / dxy)
+                n=int((lats[i] - 2) / dxy)
+                k=int((dpth[i]) / dz)
+                if box[m, n, k] == 0:
+                    box[m, n, k] = 1
+                    for j in [0, 1]:
+                        valKey = vName[j], iconv.OvalName()
+                        errKey = vName[j], iconv.OerrName()
+                        qcKey = vName[j], iconv.OqcName()
+                        dt = base_date + timedelta(seconds=int(time[i]))
+                        locKey = lats[i], lons[i], dpth[i], dt.strftime(
                     "%Y-%m-%dT%H:%M:%SZ")
-                if j == 0:
-                    self.data[locKey][valKey] = temperature[i]
-                    self.data[locKey][errKey] = errs[i]
-                    self.data[locKey][qcKey] = Tqcs[i]
-                else:
-                    self.data[locKey][valKey] = salinity[i]
-                    self.data[locKey][errKey] = errs[i]
-                    self.data[locKey][qcKey] = Sqcs[i]
+                        if j == 0:
+                            self.data[locKey][valKey] = temperature[i]
+                            self.data[locKey][errKey] = errs[i]
+                            self.data[locKey][qcKey] = Tqcs[i]
+                        else:
+                            self.data[locKey][valKey] = salinity[i]
+                            self.data[locKey][errKey] = errs[i]
+                            self.data[locKey][qcKey] = Sqcs[i]
 
 
 def main():
