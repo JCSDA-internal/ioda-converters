@@ -283,6 +283,7 @@ def main():
     # Read in the profiles
 
     # write them out
+    print(obs_data.shape)
     ObsVars, nlocs = iconv.ExtractObsData(obs_data, locationKeyList)
     #nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
 
