@@ -71,9 +71,9 @@ class Profile(object):
         box = np.zeros((ii, jj, kk))
         for i in range(len(lons)-1):
             if lats[i] > 2.0 and lats[i] < 45.0 and lons[i] < -8.0 and lons[i] > -98.0:
-                m=int((lons[i] + 98) / dxy)
-                n=int((lats[i] - 2) / dxy)
-                k=int((dpth[i]) / dz)
+                m = int((lons[i] + 98) / dxy)
+                n = int((lats[i] - 2) / dxy)
+                k = int((dpth[i]) / dz)
                 if box[m, n, k] == 0:
                     box[m, n, k] = 1
                     for j in [0, 1]:
@@ -81,8 +81,7 @@ class Profile(object):
                         errKey = vName[j], iconv.OerrName()
                         qcKey = vName[j], iconv.OqcName()
                         dt = base_date + timedelta(seconds=int(time[i]))
-                        locKey = lats[i], lons[i], dpth[i], dt.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ")
+                        locKey = lats[i], lons[i], dpth[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
                         if j == 0:
                             self.data[locKey][valKey] = temperature[i]
                             self.data[locKey][errKey] = errs[i]
