@@ -63,6 +63,10 @@ Example output files:
 > obs2ioda.x -i input_dir -o output_dir gdas.crisf4.tHHz.YYYYMMDD.bufr
 
 **the following CRTM SpcCoeff files in little_endian must be present in the working directory for CrIS radiance to brightness temperature conversion**  
+_for **cris** bufr file_  
+cris_npp.SpcCoeff.bin -> cris399_npp.SpcCoeff.bin  
+cris_n20.SpcCoeff.bin -> cris399_n20.SpcCoeff.bin  
+_for **crisf4** bufr file_  
 cris_npp.SpcCoeff.bin -> cris-fsr431_npp.SpcCoeff.bin  
 cris_n20.SpcCoeff.bin -> cris-fsr431_n20.SpcCoeff.bin  
 

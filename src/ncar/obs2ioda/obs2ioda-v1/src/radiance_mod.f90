@@ -743,6 +743,16 @@ end subroutine read_iasi
 
 subroutine read_cris (filename, filedate)
 
+!| NC021202 | A10060 | MTYP 021-202 CrIS APODIZED RADIANCE DATA (399 CHANNEL)   |
+!|------------------------------------------------------------------------------|
+!| MNEMONIC | SEQUENCE                                                          |
+!|----------|-------------------------------------------------------------------|
+!| NC021202 | SAID  OGCE  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000        |
+!| NC021202 | LOCPLAT  LTLONH  SAZA  BEARAZ  SOZA  SOLAZI  STKO  201133  SLNM   |
+!| NC021202 | 201000  FORN  FOVN  ORBN  HOLS  201129  HMSL  201000  202127      |
+!| NC021202 | 201125  ALFR  201000  202000  LSQL  TOCC  HOCT  RDTF  NSQF        |
+!| NC021202 | "BCFQFSQ"3  TOBD  NGQI  QMRKH  (CRCHN)                            |
+
 !| NC021206 | A10198 | MTYP 021-206 CrIS FULL SPCTRL RADIANCE  (431 CHN SUBSET  |
 !|------------------------------------------------------------------------------|
 !| MNEMONIC | SEQUENCE                                                          |
@@ -774,14 +784,15 @@ subroutine read_cris (filename, filedate)
    integer(i_kind), parameter :: ntime = 6  ! number of data to read in timestr
    integer(i_kind), parameter :: ninfo = 10 ! number of data to read in infostr
    integer(i_kind), parameter :: nlalo = 2  ! number of data to read in lalostr
-   integer(i_kind), parameter :: nchan_bufr = 431  ! nchan in cris bufr
+
+   integer(i_kind) :: nchan_bufr  ! nchan in cris bufr, either 399 or 431
 
    character(len=80) :: timestr, infostr, lalostr
 
    real(r_double), dimension(ntime) :: timedat
    real(r_double), dimension(ninfo) :: infodat
    real(r_double), dimension(nlalo) :: lalodat
-   real(r_double), dimension(2,nchan_bufr) :: data1b8
+   real(r_double), allocatable :: data1b8(:,:)
 
    character(len=8)  :: subset
    character(len=10) :: cdate
@@ -829,6 +840,18 @@ subroutine read_cris (filename, filedate)
       return
    end if
    rewind(iunit)
+
+   if ( subset == 'NC021202' ) then
+      nchan_bufr = 399
+   else if ( subset == 'NC021206' ) then
+      nchan_bufr = 431
+   else
+      write(unit=*,fmt='(A,I5,A)') &
+         "Error: "//subset//" from "//trim(filename)//" not implemented"
+      call closbf(iunit)
+      return
+   end if
+   allocate (data1b8(2,nchan_bufr))
 
    write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
    write(unit=filedate, fmt='(i10)') idate
@@ -886,12 +909,14 @@ subroutine read_cris (filename, filedate)
          call ufbint(iunit,infodat,ninfo,1,iret,infostr)  ! SAID SIID SAZA BEARAZ SOZA SOLAZI SLNM FORN FOVN HMSL
          if ( iret /= 1 ) cycle subset_loop
 
-         call ufbint(iunit,r8mtyp,1,1,iret,'MTYP')
-         if ( iret /= 1 ) cycle subset_loop
-         if ( cmtyp == 'FSR' ) then
-            call ufbseq(iunit,data1b8,2,nchan_bufr,iret,'CRCHNM')
-         else
+         if ( subset == 'NC021202' ) then
             call ufbseq(iunit,data1b8,2,nchan_bufr,iret,'CRCHN')
+         else if ( subset == 'NC021206' ) then
+            call ufbint(iunit,r8mtyp,1,1,iret,'MTYP')
+            if ( iret /= 1 ) cycle subset_loop
+            if ( cmtyp == 'FSR' ) then
+               call ufbseq(iunit,data1b8,2,nchan_bufr,iret,'CRCHNM')
+            end if
          end if
          if ( iret /= nchan_bufr ) cycle subset_loop
 
@@ -930,6 +955,7 @@ subroutine read_cris (filename, filedate)
       end do subset_loop ! ireadsb
    end do msg_loop ! ireadmg
 
+   deallocate (data1b8)
    call closbf(iunit)
    close(iunit)
 
@@ -1263,6 +1289,7 @@ fgat_loop: do ii = 1, nfgat
       cycle inst_loop
     end if
 
+    write(*,*) '--- converting radiance to brightness temperature... '
     do ichan = 1, nchan
       do iloc = 1, nlocs
         radiance = xdata(i,ii)%xfield(iloc,ichan)%val
@@ -1322,7 +1349,7 @@ if ( .not. fexist ) then
    return
 end if
 
-write(*,*) 'Reading from ', trim(coefdir)//'/'//trim(coefname)
+write(*,*) '--- reading ', trim(coefdir)//'/'//trim(coefname)
 
 open(fid, file=trim(coefname), access='sequential', form='unformatted', action='read', status='old')
 read(fid,iostat=status) magic_number

@@ -380,7 +380,7 @@ fileloop: do ifile = 1, nfile
       ftype(ifile) = ftype_airs
    case ( 'NC021241' )
       ftype(ifile) = ftype_iasi
-   case ( 'NC021206' )
+   case ( 'NC021202', 'NC021206' )
       ftype(ifile) = ftype_cris
    case default
       ftype(ifile) = ftype_unknown
