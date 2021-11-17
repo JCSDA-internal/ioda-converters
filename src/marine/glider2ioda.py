@@ -70,17 +70,17 @@ class Profile(object):
         jj = int((45-2)/dxy)+10
         kk = int((1000)/dz)+10
         box = np.zeros((ii, jj, kk))
-        for i in range(len(lons)-1):
+        for i in range(len(lons) - 1):
             if lats[i] > 2.0 and lats[i] < 45.0 and lons[i] < -8.0 and lons[i] > -98.0:
                 m = int((lons[i] + 98) / dxy)
                 n = int((lats[i] - 2) / dxy)
                 k = int((dpth[i]) / dz)
                 if box[m, n, k] == 0:
-                  if self.thin == 0.0:
-                    box[m, n, k] = 0
-                  elif self.thin == 1.0:
-                    box[m, n, k] = 1
-                  for j in [0, 1]:
+                    if self.thin == 0.0:
+                        box[m, n, k] = 0
+                    elif self.thin == 1.0:
+                        box[m, n, k] = 1
+                    for j in [0, 1]:
                         valKey = vName[j], iconv.OvalName()
                         errKey = vName[j], iconv.OerrName()
                         qcKey = vName[j], iconv.OqcName()
