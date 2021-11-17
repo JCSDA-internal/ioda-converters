@@ -84,7 +84,7 @@ class Profile(object):
                         valKey = vName[j], iconv.OvalName()
                         errKey = vName[j], iconv.OerrName()
                         qcKey = vName[j], iconv.OqcName()
-                        dt = base_date + timedelta(seconds = int(time[i]))
+                        dt = base_date + timedelta(seconds=int(time[i]))
                         locKey = lats[i], lons[i], dpth[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
                         if j == 0:
                             self.data[locKey][valKey] = temperature[i]
