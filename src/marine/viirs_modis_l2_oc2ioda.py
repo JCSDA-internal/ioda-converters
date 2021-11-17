@@ -55,7 +55,7 @@ def read_input(input_args):
 
     Returns:
 
-        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
+        A tuple of (obs_data,  GlobalAttrs) needed by the IODA writer.
     """
     input_file = input_args[0]
     global_config = input_args[1]
@@ -119,28 +119,25 @@ def read_input(input_args):
         dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     # allocate space for output depending on which variables are to be saved
-    num_vars = 0
     obs_dim = (len(lons))
-    obs_data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    obs_data = {}
     if global_config['output_poc']:
-        obs_data[output_var_names[0], global_config['oval_name']] = \
+        obs_data[(output_var_names[0], global_config['oval_name'])] = \
             np.zeros(obs_dim)
-        obs_data[output_var_names[0], global_config['oerr_name']] = \
+        obs_data[(output_var_names[0], global_config['oerr_name'])] = \
             np.zeros(obs_dim)
-        obs_data[output_var_names[0], global_config['opqc_name']] = \
+        obs_data[(output_var_names[0], global_config['opqc_name'])] = \
             np.zeros(obs_dim)
-        num_vars += 1
     if global_config['output_chl']:
-        obs_data[output_var_names[1], global_config['oval_name']] = \
+        obs_data[(output_var_names[1], global_config['oval_name'])] = \
             np.zeros(obs_dim)
-        obs_data[output_var_names[1], global_config['oerr_name']] = \
+        obs_data[(output_var_names[1], global_config['oerr_name'])] = \
             np.zeros(obs_dim)
-        obs_data[output_var_names[1], global_config['opqc_name']] = \
+        obs_data[(output_var_names[1], global_config['opqc_name'])] = \
             np.zeros(obs_dim)
-        num_vars += 1
 
-    # create the final output structures
-    obs_data[('datetime', 'MetaData')] = np.empty(len(dates),dtype=object)
+    # Add the metadata
+    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
     obs_data[('datetime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
@@ -218,9 +215,6 @@ def main():
         args.poc = True
 
     # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes, and can only take iterable
-    # objects. Rather than using global variables, embed them into
-    # the iterable object together with argument array passed in (args.input)
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
@@ -229,6 +223,11 @@ def main():
     global_config['opqc_name'] = iconv.OqcName()
     global_config['output_poc'] = args.poc
     global_config['output_chl'] = args.chl
+
+    # Note: Pool.map creates separate processes, and can only take iterable
+    # objects. Rather than using global variables, embed them into
+    # the iterable object together with argument array passed in (args.input)
+
     pool_inputs = [(i, global_config) for i in args.input]
 
     # read / process files in parallel
@@ -239,7 +238,9 @@ def main():
     obs_data, GlobalAttrs = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
+    # Get the nlocs
     nlocs = len(obs_data[('longitude', 'MetaData')])
+
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
