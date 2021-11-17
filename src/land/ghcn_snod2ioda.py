@@ -3,10 +3,6 @@
 # (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-#
-# This script will work with decoded, CSV files created by NCEI at NOAA/GHCN
-# data acess at ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/
 #
 
 import time, os, sys
@@ -30,12 +26,12 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("altitude", "float"),
+    ("height", "float"),
     ("datetime", "string")
 ]
 
 obsvars = {
-    'snow_depth': 'snowDepth',
+    'snow_depth': 'totalSnowDepth',
 }
 
 AttrData = {
@@ -46,7 +42,7 @@ DimDict = {
 }
 
 VarDims = {
-    'snowDepth': ['nlocs'],
+    'totalSnowDepth': ['nlocs'],
 }
 
 
@@ -58,6 +54,7 @@ class ghcn(object):
         self.date = date
         self.mask = mask
         self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
@@ -65,16 +62,17 @@ class ghcn(object):
     def _read(self):
 
         # set up variable names for IODA
-        for iodavar in ['snowDepth']:
-            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+
+        iodavar = 'totalSnowDepth'
+        self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+        self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+        self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
+        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
+        self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
@@ -142,7 +140,9 @@ class ghcn(object):
         alts = alts.astype('float32')
         qflg = 0*vals.astype('int32')
         errs = 0.0*vals
+        sites = np.empty_like(vals, dtype=object)
         times = np.empty_like(vals, dtype=object)
+        sites = id_array
 
         # use maskout options
         if self.mask == "maskout":
@@ -155,29 +155,30 @@ class ghcn(object):
             lons = lons[mask]
             lats = lats[mask]
             alts = alts[mask]
+            sites = sites[mask]
             times = times[mask]
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d")
         start_datetime = my_date.strftime('%Y-%m-%d')
-        base_datetime = start_datetime + 'T12:00:00Z'
+        base_datetime = start_datetime + 'T18:00:00Z'
         AttrData['date_time_string'] = base_datetime
 
         for i in range(len(vals)):
             if vals[i] >= 0.0:
-                errs[i] = 0.0
-                vals[i] = 0.001*vals[i]  # coverted to m from mm
+                errs[i] = 40.0
             times[i] = base_datetime
-
+        # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.outdata[('altitude', 'MetaData')] = alts
+        self.outdata[('height', 'MetaData')] = alts
+        self.varAttrs[('height', 'MetaData')]['units'] = 'm'
 
-        for iodavar in ['snowDepth']:
-            self.outdata[self.varDict[iodavar]['valKey']] = vals
-            self.outdata[self.varDict[iodavar]['errKey']] = errs
-            self.outdata[self.varDict[iodavar]['qcKey']] = qflg
+        self.outdata[self.varDict[iodavar]['valKey']] = vals
+        self.outdata[self.varDict[iodavar]['errKey']] = errs
+        self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
@@ -209,14 +210,13 @@ def main():
 
     args = parser.parse_args()
 
-    # Read in the snow depth data
+    # Read in the GHCN snow depth data
     snod = ghcn(args.input, args.fixfile, args.date, args.mask)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    snod.varAttrs[('altitude', 'MetaData')]['units'] = 'm'
-    # write everything out
+    # write all data out
     writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
 
 
