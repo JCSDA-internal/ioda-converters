@@ -84,7 +84,7 @@ class Profile(object):
                         valKey = vName[j], iconv.OvalName()
                         errKey = vName[j], iconv.OerrName()
                         qcKey = vName[j], iconv.OqcName()
-                        dt = base_date + timedelta(seconds=int(time[i]))
+                        dt = base_date + timedelta(seconds = int(time[i]))
                         locKey = lats[i], lons[i], dpth[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
                         if j == 0:
                             self.data[locKey][valKey] = temperature[i]
@@ -100,7 +100,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) and provide option to thin it using 1 degree 1 meter thinning box'
+            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) with thinning option'
         )
     )
 
@@ -117,21 +117,17 @@ def main():
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
-
     required.add_argument(
         '-t', '--thin',
         help="1 to thin; 0 not to thin",
         type=float, default=0.0)
-    
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-
     VarDims = {
         'sea_water_temperature': ['nlocs'],
         'sea_water_salinity': ['nlocs']}
     prof = Profile(args.input, args.thin, fdate)
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-
     ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
