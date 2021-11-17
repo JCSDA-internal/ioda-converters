@@ -124,23 +124,24 @@ def read_input(input_args):
     obs_data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     if global_config['output_poc']:
         obs_data[output_var_names[0], global_config['oval_name']] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[output_var_names[0], global_config['oerr_name']] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[output_var_names[0], global_config['opqc_name']] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         num_vars += 1
     if global_config['output_chl']:
         obs_data[output_var_names[1], global_config['oval_name']] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[output_var_names[1], global_config['oerr_name']] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[output_var_names[1], global_config['opqc_name']] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         num_vars += 1
 
     # create the final output structures
-    obs_data[('datetime', 'MetaData')] = dates
+    obs_data[('datetime', 'MetaData')] = np.empty(len(dates),dtype=object)
+    obs_data[('datetime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
 
@@ -244,6 +245,8 @@ def main():
     GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
+    DimDict['nlocs'] = nlocs
+    GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
 
     # determine which variables we are going to output
     if args.poc:
