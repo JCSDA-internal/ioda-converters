@@ -35,11 +35,14 @@ locationKeyList = [
     ("longitude", "float"),
     ("datetime", "string")
 ]
-GlobalAttrs = {
-}
 
-DimDict = {
-}
+GlobalAttrs = {}
+
+VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+DimDict = {}
+
+VarDims = {}
 
 
 def read_input(input_args):
@@ -54,7 +57,7 @@ def read_input(input_args):
 
     Returns:
 
-        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
+        A tuple of (obs_data, GlobalAttrs) needed by the IODA writer.
     """
     input_file = input_args[0]
     global_config = input_args[1]
@@ -67,9 +70,9 @@ def read_input(input_args):
     basetime = dateutil.parser.parse(ncd.variables['time'].units[-20:])
 
     # get some of the global attributes that we are interested in
-    attr_data = {}
+
     for v in ('platform', 'sensor', 'processing_level'):
-        attr_data[v] = ncd.getncattr(v)
+        GlobalAttrs[v] = ncd.getncattr(v)
 
     # get the QC flags, and calculate a mask from the non-missing values
     # (since L3 files are mostly empty, fields need a mask applied immediately
@@ -84,7 +87,7 @@ def read_input(input_args):
     # If len(time) > 1, also need to repeat the lat/lon vals
     lons = ncd.variables['lon'][:].ravel()
     lats = ncd.variables['lat'][:].ravel()
-    if attr_data['processing_level'][:2] == 'L3':
+    if GlobalAttrs['processing_level'][:2] == 'L3':
         len_grid = len(lons)*len(lats)
         lons, lats = np.meshgrid(lons, lats, copy=False)
         lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
@@ -145,37 +148,34 @@ def read_input(input_args):
     qc = 5 - data_in['quality_level']
 
     # allocate space for output depending on which variables are to be saved
-    num_vars = 0
+
     obs_dim = (len(lons))
     obs_data = {}
     if global_config['output_sst']:
         obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim),
         obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim),
         obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim),
-        num_vars += 1
+
     if global_config['output_skin_sst']:
         obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim),
         obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim),
         obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim),
-        num_vars += 1
 
-    # create the final output structures
-    loc_data = {
-        'latitude': lats,
-        'longitude': lons,
-        'datetime': dates,
-    }
+    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
+    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('latitude', 'MetaData')] = lats
+    obs_data[('longitude', 'MetaData')] = lons
 
     if global_config['output_sst']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = val_sst
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = err
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = qc
+        obs_data[output_var_names[0], global_config['oval_name']] = val_sst
+        obs_data[output_var_names[0], global_config['oerr_name']] = err
+        obs_data[output_var_names[0], global_config['opqc_name']] = qc
     if global_config['output_skin_sst']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = val_sst_skin
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = err
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = qc
+        obs_data[output_var_names[1], global_config['oval_name']] = val_sst_skin
+        obs_data[output_var_names[1], global_config['oerr_name']] = err
+        obs_data[output_var_names[1], global_config['opqc_name']] = qc
 
-    return (obs_data, loc_data, attr_data)
+    return (obs_data, GlobalAttrs)
 
 
 def main():
@@ -251,21 +251,19 @@ def main():
     obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, loc_data, attr_data = obs[0]
+    obs_data, GlobalAttrs = obs[0]
+
     for i in range(1, len(obs)):
         for k in obs_data:
             axis = len(obs[i][0][k].shape)-1
             obs_data[k] = np.concatenate(
                 (obs_data[k], obs[i][0][k]), axis=axis)
-        for k in loc_data:
-            d = obs[i][1][k]
-            loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    attr_data['thinning'] = args.thin
-    attr_data['converter'] = os.path.basename(__file__)
+    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['thinning'] = args.thin
+    GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # determine which variables we are going to output
     selected_names = []
@@ -277,19 +275,16 @@ def main():
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
     VarDims = {
-        'sea_surface_temperature': ['nlocs']
+        'sea_surface_temperature': ['nlocs'],
+        'sea_surface_skin_temperature': ['nlocs'],
     }
 
-    # Read in the profiles
-
-    # write them out
-
-    nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
+    nlocs = len(obs_data[('longitude', 'MetaData')])
 
     DimDict = {'nlocs': nlocs}
+
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'celsius'
     VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'celsius'
     VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
@@ -302,6 +297,7 @@ def main():
     VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
     VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
+
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
