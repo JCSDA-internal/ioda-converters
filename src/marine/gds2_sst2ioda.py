@@ -152,14 +152,14 @@ def read_input(input_args):
     obs_dim = (len(lons))
     obs_data = {}
     if global_config['output_sst']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim),
+        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
 
     if global_config['output_skin_sst']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim),
+        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim)
 
     obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
     obs_data[('datetime', 'MetaData')][:] = dates
@@ -169,11 +169,11 @@ def read_input(input_args):
     if global_config['output_sst']:
         obs_data[output_var_names[0], global_config['oval_name']] = val_sst
         obs_data[output_var_names[0], global_config['oerr_name']] = err
-        obs_data[output_var_names[0], global_config['opqc_name']] = qc
+        obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
     if global_config['output_skin_sst']:
         obs_data[output_var_names[1], global_config['oval_name']] = val_sst_skin
         obs_data[output_var_names[1], global_config['oerr_name']] = err
-        obs_data[output_var_names[1], global_config['opqc_name']] = qc
+        obs_data[output_var_names[1], global_config['opqc_name']] = qc.astype('int32')
 
     return (obs_data, GlobalAttrs)
 
