@@ -375,7 +375,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                           -i testinput/marineglider_AOML.nc
                           -o testrun/test_glider.nc
                           -d 2016080412
-                          -t 1.0"
+                          -thin 'True'"
                           test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar

@@ -76,9 +76,9 @@ class Profile(object):
                 n = int((lats[i] - 2) / dxy)
                 k = int((dpth[i]) / dz)
                 if box[m, n, k] == 0:
-                    if self.thin == 0.0:
+                    if self.thin == 'False':
                         box[m, n, k] = 0
-                    elif self.thin == 1.0:
+                    elif self.thin == 'True':
                         box[m, n, k] = 1
                     for j in [0, 1]:
                         valKey = vName[j], iconv.OvalName()
@@ -118,9 +118,9 @@ def main():
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
     required.add_argument(
-        '-t', '--thin',
-        help="1 to thin; 0 not to thin",
-        type=float, default=0.0)
+        '-thin', '--thin',
+        help="True to thin; False not to thin",
+        type=bool, default='False')
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
