@@ -73,7 +73,7 @@ observations:
           source: variables/pressureAir
           longName: "Pressure"
           units: "Pa"
-          range: [90000, 105000] 
+          range: [90000, 105000]
 
         - name: "temperatureAir@ObsValue"
           source: variables/temperatureAir
