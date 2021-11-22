@@ -49,6 +49,13 @@ class Profile(object):
         self._read()
 
     def _read(self):
+        lat_sth_HAT10 = 2.0
+        lat_nrth_HAT10 = 45.0
+        lon_wth_HAT10 = -98.0
+        lon_eth_HAT10 = -8.0
+        mdep = 1000
+        dxy = 1.0
+        dz = 1.0
         ncd = nc.Dataset(self.filename)
         dpth = (ncd.variables['ctd_depth'][:])
         time = ncd.variables['ctd_time'][:]
@@ -64,11 +71,9 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        dxy = 1.0
-        dz = 1.0
-        ii = int((98-8)/dxy)+10
-        jj = int((45-2)/dxy)+10
-        kk = int((1000)/dz)+10
+        ii = int((lon_eth_HAT10-lon_wth_HAT10)/dxy)+10
+        jj = int((lat_nrth_HAT10-lat_sth_HAT10)/dxy)+10
+        kk = int((mdep)/dz)+10
         box = np.zeros((ii, jj, kk))
         for i in range(len(lons) - 1):
             if lats[i] > 2.0 and lats[i] < 45.0 and lons[i] < -8.0 and lons[i] > -98.0:
