@@ -58,20 +58,17 @@ observations:
       variables:
         - name: "datetime@MetaData"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
           source: variables/latitude
-          dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
           source: variables/longitude
-          dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
@@ -79,7 +76,6 @@ observations:
         - name: "radiance@ObsValue"
           coordinates: "longitude latitude nchans"
           source: variables/radiance
-          dimensions: ["nlocs", "nchans"]
           longName: "Radiance"
           units: "K"
           range: [120, 500]

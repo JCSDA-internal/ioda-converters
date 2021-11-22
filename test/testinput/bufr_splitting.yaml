@@ -43,7 +43,7 @@ observations:
 
       dimensions:
         - name: "nchans"
-          path: "[*/BRITCSTC, */BRIT]"
+          path: "*/BRITCSTC"
 
       variables:
         - name: "datetime@MetaData"
