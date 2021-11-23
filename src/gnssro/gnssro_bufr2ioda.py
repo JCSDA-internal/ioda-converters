@@ -131,8 +131,8 @@ def get_obs_data(bufr, profile_meta_data):
 
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = bang
-    obs_data[('bending_angle', "ObsError")] = bang_err      # this is observation error not estimate from file
-    obs_data[('bending_angle', "PreQC")]    = 0             # this is also not from file
+    obs_data[('bending_angle', "ObsError")] = bang_err            # this is observation error not estimate from file
+    obs_data[('bending_angle', "PreQC")]    = np.full(krepfac[0], 0, dtype='int32')
 
     # get the refractivity
     height      = codes_get_array(bufr, 'height')
@@ -143,7 +143,7 @@ def get_obs_data(bufr, profile_meta_data):
     # value, ob_error, qc
     obs_data[('refractivity', "ObsValue")] = refrac
     obs_data[('refractivity', "ObsError")] = refrac_err
-    obs_data[('refractivity', "PreQC")]    = 0
+    obs_data[('refractivity', "PreQC")]    = np.full(krepfac[0], 0, dtype='int32')
 
 
     loc_data['latitude']        = lats
@@ -152,8 +152,6 @@ def get_obs_data(bufr, profile_meta_data):
     loc_data['height']          = height
     for k, v in profile_meta_data.items():
         loc_data[k]        = np.repeat(v, krepfac[0])
-#       - name: "MetaData/geopotentialHeight"
-
 
     # get derived profiles
     geop   = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -230,7 +228,6 @@ def main():
         'refractivity': ['nlocs']
     }
 
-
     # write them out
     nlocs = obs_data[('bending_angle', 'ObsValue')].shape[0]
 
@@ -245,8 +242,6 @@ def main():
     VarAttrs[('refractivity', 'ObsError')]['units']  = 'N'
     VarAttrs[('refractivity', 'PreQC')]['units']     = 'unitless'
 
-#   there is no PreQC defined in Hailing's fortran
-    #  REALLY???? say it isn't so????
     missing_value = -1.0000e+100
     int_missing_value = -2147483647
     VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = missing_value
@@ -256,20 +251,16 @@ def main():
     VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
     VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
 
+    for VarKey, Vvals in obs_data.items():
+        try:
+            print (VarKey, Vvals.dtype)
+        except:
+            print (VarKey)
+
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 def def_meta_data():
-#       - name: "MetaData/geopotentialHeight"
-#       - name: "MetaData/impact_parameter
-#       - name: "MetaData/datetime"
-#       - name: "MetaData/latitude"
-#       - name: "MetaData/longitude"
-
-#  these could be  in attr_data 
-#"latitude"                                : '#1#latitude',
-#"longitude"                               : '#1#longitude',
-#"sensor_azimuth_angle"                    : '#1#bearingOrAzimuth',
 
     meta_data_keys = {
  "qualityFlag"                             : 'radioOccultationDataQualityFlags',
