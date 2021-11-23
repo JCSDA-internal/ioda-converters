@@ -251,12 +251,6 @@ def main():
     VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
     VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
 
-    for VarKey, Vvals in obs_data.items():
-        try:
-            print (VarKey, Vvals.dtype)
-        except:
-            print (VarKey)
-
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
