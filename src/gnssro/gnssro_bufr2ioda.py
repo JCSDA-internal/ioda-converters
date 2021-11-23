@@ -240,17 +240,21 @@ def main():
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('bending_angle', 'ObsValue')]['units'] = 'Radians'
     VarAttrs[('bending_angle', 'ObsError')]['units'] = 'Radians'
-    VarAttrs[('refractivity', 'ObsValue')]['units'] = 'N'
-    VarAttrs[('refractivity', 'ObsError')]['units'] = 'N'
+    VarAttrs[('bending_angle', 'PreQC')]['units']    = 'unitless'
+    VarAttrs[('refractivity', 'ObsValue')]['units']  = 'N'
+    VarAttrs[('refractivity', 'ObsError')]['units']  = 'N'
+    VarAttrs[('refractivity', 'PreQC')]['units']     = 'unitless'
 
-#   there is no PreQc defined in Hailing's fortran
-#   VarAttrs[('bending_angle', 'PreQC')]['units'] = 'unitless'
+#   there is no PreQC defined in Hailing's fortran
     #  REALLY???? say it isn't so????
     missing_value = -1.0000e+100
+    int_missing_value = -2147483647
     VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = missing_value
     VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('bending_angle', 'PreQC')]['_FillValue'] = int_missing_value
     VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = missing_value
     VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
