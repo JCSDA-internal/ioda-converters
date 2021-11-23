@@ -48,18 +48,18 @@ class Profile(object):
             yamlconfig = yaml.safe_load(stream)
         self.filename = filename
         self.thin = yamlconfig['thin']
+        self.lat_sth_HAT10 = yamlconfig['lat_sth_HAT10']
+        self.lat_nth_HAT10 = yamlconfig['lat_nth_HAT10']
+        self.lon_wth_HAT10 = yamlconfig['lon_wth_HAT10']
+        self.lon_eth_HAT10 = yamlconfig['lon_eth_HAT10']
+        self.mdep = yamlconfig['max_depth']
+        self.dxy = yamlconfig['dxy']
+        self.dz = yamlconfig['dz']
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
-        lat_sth_HAT10 = 2.0
-        lat_nrth_HAT10 = 45.0
-        lon_wth_HAT10 = -98.0
-        lon_eth_HAT10 = -8.0
-        mdep = 1000
-        dxy = 1.0
-        dz = 1.0
         ncd = nc.Dataset(self.filename)
         dpth = (ncd.variables['ctd_depth'][:])
         time = ncd.variables['ctd_time'][:]
@@ -75,15 +75,15 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        ii = int((lon_eth_HAT10-lon_wth_HAT10)/dxy)+10
-        jj = int((lat_nrth_HAT10-lat_sth_HAT10)/dxy)+10
-        kk = int((mdep)/dz)+10
+        ii = int((self.lon_eth_HAT10-self.lon_wth_HAT10)/self.dxy)+10
+        jj = int((self.lat_nth_HAT10-self.lat_sth_HAT10)/self.dxy)+10
+        kk = int((self.mdep)/self.dz)+10
         box = np.zeros((ii, jj, kk))
         for i in range(len(lons) - 1):
             if lats[i] > 2.0 and lats[i] < 45.0 and lons[i] < -8.0 and lons[i] > -98.0:
-                m = int((lons[i] + 98) / dxy)
-                n = int((lats[i] - 2) / dxy)
-                k = int((dpth[i]) / dz)
+                m = int((lons[i] + 98) / self.dxy)
+                n = int((lats[i] - 2) / self.dxy)
+                k = int((dpth[i]) / self.dz)
                 if box[m, n, k] == 0:
                     if self.thin == 'False':
                         box[m, n, k] = 0
