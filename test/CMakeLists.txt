@@ -16,6 +16,7 @@ list( APPEND test_input
   testinput/godae_trak.bin
   testinput/rads_adt.nc
   testinput/smap_sss_rss.nc
+  testinput/hgodas_adt.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
   testinput/marineglider_AOML.nc
@@ -25,6 +26,7 @@ list( APPEND test_input
   testinput/gsidiag_amsua_aqua_radiance_test.nc
   testinput/argoclim_test.nc
   testinput/cryosat2_L2_test.nc
+  testinput/emc_ice.nc
   testinput/viirs_jpss1_oc_l2.nc
   testinput/modis_aqua_oc_l2.nc
   testinput/viirs_jpss1_oc_l3.nc
@@ -64,6 +66,7 @@ list( APPEND test_output
   testoutput/godae_trak.nc
   testoutput/rads_adt.nc
   testoutput/smap_sss_rss.nc
+  testoutput/hgodas_adt.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
   testoutput/test_glider.nc
@@ -73,6 +76,7 @@ list( APPEND test_output
   testoutput/amsua_aqua_obs_2018041500.nc4
   testoutput/argoclim.nc
   testoutput/cryosat2_L2.nc
+  testoutput/emc_ice_ioda2.nc
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
   testoutput/viirs_jpss1_oc_l3.nc
@@ -134,6 +138,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/airep_wmo_multi.bufr
     testinput/amdar_wmoBUFR2ioda.yaml
     testinput/amdar_wmo_single.bufr
+    testinput/gnssro_wmoBUFR2ioda.yaml
+    testinput/gnssro_2020-306-2358C2E6.bufr
   )
 
   list( APPEND test_output
@@ -150,6 +156,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005066.nc
     testoutput/airep_multi.nc
     testoutput/amdar_single.nc
+    testoutput/gnssro_2020-306-2358C2E6.nc
   )
 endif()
 
@@ -328,6 +335,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
                           -d 2004070812"
                           godae_trak.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_adt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/hgodas_adt2ioda.py
+                          -i testinput/hgodas_adt.nc
+                          -o testrun/hgodas_adt.nc
+                          -d 2018041512"
+                          hgodas_adt.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_insitu
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -387,6 +405,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
                           -o testrun/cryosat2_L2.nc
                           -d 2019092112"
                           cryosat2_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_emc_ice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/emc_ice2ioda.py
+                          -i testinput/emc_ice.nc
+                          -o testrun/emc_ice_ioda2.nc
+                          -d 2015082812"
+                          emc_ice_ioda2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_sss
                   TYPE    SCRIPT
@@ -767,6 +796,14 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/amdar_wmoBUFR2ioda.yaml"
                     amdar_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_gnssro_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/gnssro_wmoBUFR2ioda.yaml"
+                    gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 endif()
 
