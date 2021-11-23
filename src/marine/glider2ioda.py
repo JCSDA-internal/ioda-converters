@@ -9,6 +9,7 @@
 from __future__ import print_function
 import sys
 import argparse
+import yaml
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import numpy as np
@@ -41,9 +42,12 @@ GlobalAttrs = {
 
 class Profile(object):
 
-    def __init__(self, filename, thin, date):
+    def __init__(self, filename, yamlfile, date):
+        # read in YAML file on thinning option
+        with open(yamlfile, 'r') as stream:
+            yamlconfig = yaml.safe_load(stream)
         self.filename = filename
-        self.thin = thin
+        self.thin = yamlconfig['thin']
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
@@ -123,15 +127,16 @@ def main():
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
     required.add_argument(
-        '-thin', '--thin',
-        help="True to thin; False not to thin",
-        type=bool, default='False')
+        '-y', '--yaml', help='path to input YAML file', type=str, required=True)
     args = parser.parse_args()
+    yamlfile = args.yaml
+    #Profile(yamlfile)    
+
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
         'sea_water_temperature': ['nlocs'],
         'sea_water_salinity': ['nlocs']}
-    prof = Profile(args.input, args.thin, fdate)
+    prof = Profile(args.input, args.yaml, fdate)
     GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
     DimDict = {'nlocs': nlocs}

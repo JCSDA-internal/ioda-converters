@@ -54,6 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
+  testinput/glider.yaml
 )
 
 list( APPEND test_output
@@ -375,7 +376,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                           -i testinput/marineglider_AOML.nc
                           -o testrun/test_glider.nc
                           -d 2016080412
-                          -thin 'True'"
+                          -y testinput/glider.yaml"
                           test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
