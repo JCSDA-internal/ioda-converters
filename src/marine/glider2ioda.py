@@ -130,8 +130,6 @@ def main():
         '-y', '--yaml', help='path to input YAML file', type=str, required=True)
     args = parser.parse_args()
     yamlfile = args.yaml
-    #Profile(yamlfile)    
-
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
         'sea_water_temperature': ['nlocs'],
