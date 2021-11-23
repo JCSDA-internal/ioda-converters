@@ -65,30 +65,15 @@ def read_input(input_args):
     bufr = codes_bufr_new_from_file(f)
     codes_set(bufr, 'unpack', 1)
 
-    qc_data = get_meta_qc(bufr)
+#   attr_data  = get_meta_data(bufr)
+    profile_meta_data  = get_meta_data(bufr)
 
-    attr_data  = get_meta_data(bufr)
+    obs_data, loc_data = get_obs_data(bufr, profile_meta_data)
 
-    loc_data = get_loc_data(bufr)
-
-    obs_data = get_obs_data(bufr)
+    # nothing to define here
+    attr_data = {}
 
     return (obs_data, loc_data, attr_data)
-
-def get_meta_qc(bufr):
-
-    ro_quality = codes_get_array(bufr, 'radioOccultationDataQualityFlags')
-    ro_conf = codes_get_array(bufr, 'percentConfidence')[0]
-#   skip if flagged? there's no spot in IODA for this 
-#   if ro_conf == 0:
-#     return
-
-    qc_data = {
-        'ro_quality_word'        : ro_quality,
-        'ro_precent_confidence'  : ro_conf,
-}
-
-    return qc_data
 
 def get_meta_data(bufr):
 
@@ -96,29 +81,9 @@ def get_meta_data(bufr):
     meta_data_keys = def_meta_data()
 
     # these are the MetaData we are interested in
-    attr_data = {}
-    for k in meta_data_keys.keys():
-        attr_data[k] = codes_get(bufr, v)
-
-    # these are derived but single per profile
-    #attr_data["ascending_flag"] = bit decomposition of ro_quality_word
-    #attr_data["record_number"]  = # do not know how this works (one per profile or occultation point)
-
-    return attr_data
-
-
-def get_loc_data(bufr):
-
-    # location data
-    loc_data_keys = {
-        "latitude"                                : '#1#latitude',
-        "longitude"                               : '#1#longitude',
-    }
-
-    # these are the MetaData we are interested in
-    loc_data = {}
+    profile_meta_data = {}
     for k, v in meta_data_keys.items():
-        loc_data[k] = codes_get(bufr, v)
+        profile_meta_data[k] = codes_get(bufr, v)
 
     # do the hokey time structure to time structure
     year  = codes_get(bufr, 'year')
@@ -129,15 +94,22 @@ def get_loc_data(bufr):
     second = codes_get(bufr, 'second')  #  non-integer value
 
     # thought this string conversion was gone ???
-    dtg = ( '%4i%.2i%.2i%.2i%.2i' % (year, month, day, hour, minute) )
-    # which time is needed ???
-    loc_data['datetime'] = dtg
-    loc_data['datetime'] = datetime.strptime( dtg ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # should really add seconds
+    dtg = ( "%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute) )
+#   profile_meta_data['datetime'] = dtg
+    profile_meta_data['datetime'] = datetime.strptime( dtg ,"%Y-%m-%dT%H:%M:%SZ")
 
-    return loc_data
+    # these are derived but also single per profile
+    #profile_meta_data["ascending_flag"] = bit decomposition of ro_quality_word
+    #profile_meta_data["record_number"]  = # do not know how this works (one per profile or occultation point)
+
+    return profile_meta_data
+
+def get_obs_data(bufr, profile_meta_data):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
+    loc_data = {}
 
     # replication factors for the datasets, bending angle, refractivity and derived profiles
     krepfac = codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
@@ -149,25 +121,39 @@ def get_loc_data(bufr):
     #  note the label bendingAngle is used for both the value and its error !!!
 
     # get the bending angle
-    lats      = codes_get_array(bufr, 'latitude')[1:]             # geolocation the first value if the average
+    lats      = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons      = codes_get_array(bufr, 'longitude')[1:]
-    bang      = codes_get_array(bufr, 'bendingAngle')[4::6]       # L1, L2, combined -- only care about combined
-    bang_err  = codes_get_array(bufr, 'bendingAngle')[5::6]
-    impact    = codes_get_array(bufr, 'impactParameter')[2::3]
+    bang      = codes_get_array(bufr, 'bendingAngle')[4::drepfac[0]*2]    # L1, L2, combined -- only care about combined
+    bang_err  = codes_get_array(bufr, 'bendingAngle')[5::drepfac[0]*2]
+    impact    = codes_get_array(bufr, 'impactParameter')[2::drepfac[0]]
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     #len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
     # value, ob_error, qc
-    obs_data[('bending_angle', global_config['oval_name'])] = bang
-    obs_data[('bending_angle', global_config['oerr_name'])] = bang_err
-    obs_data[('bending_angle', global_config['opqc_name'])] = bang_conf
-
-    ## left off here ##
+    obs_data[('bending_angle', "ObsValue")] = bang
+    obs_data[('bending_angle', "ObsError")] = bang_err      # this is observation error not estimate from file
+    obs_data[('bending_angle', "PreQC")]    = 0             # this is also not from file
 
     # get the refractivity
-    height = codes_get_array(bufr, 'height')
-    refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
-    refr_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
+    height      = codes_get_array(bufr, 'height')
+    refrac      = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
+    refrac_err  = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
+    refrac_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
+
+    # value, ob_error, qc
+    obs_data[('refractivity', "ObsValue")] = refrac
+    obs_data[('refractivity', "ObsError")] = refrac_err
+    obs_data[('refractivity', "PreQC")]    = 0
+
+
+    loc_data['latitude']        = lats
+    loc_data['longitude']       = lons
+    loc_data['impactParameter'] = impact
+    loc_data['height']          = height
+    for k, v in profile_meta_data.items():
+        loc_data[k]        = np.repeat(v, krepfac[0])
+#       - name: "MetaData/geopotentialHeight"
+
 
     # get derived profiles
     geop   = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -176,7 +162,7 @@ def get_loc_data(bufr):
     spchum = codes_get_array(bufr, 'specificHumidity')[0::2]
     prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
 
-    return obs_data
+    return obs_data, loc_data
 
 
 def main():
@@ -186,7 +172,7 @@ def main():
         description=(
             'Reads the GNSS-RO data from BUFR file'
             ' convert into IODA formatted output files. '
-            ' Multiple files are concatenated' 
+            ' Multiple files are concatenated' )
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -214,18 +200,15 @@ def main():
     args = parser.parse_args()
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, [], [])
-
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
     # the iterable object together with argument array passed in (args.input)
     global_config = {}
     global_config['date'] = args.date
-    global_config['oval_name'] = writer.OvalName()
-    global_config['oerr_name'] = writer.OerrName()
-    global_config['opqc_name'] = writer.OqcName()
+    global_config['oval_name'] = 'ObsValue'
+    global_config['oerr_name'] = 'ObsError'
+    global_config['opqc_name'] = 'PreQC'
 
     pool_inputs = [(i, global_config) for i in args.input]
 
@@ -243,14 +226,12 @@ def main():
 
     # pass parameters to the IODA writer
     VarDims = {
-        'bending_angle': ['nlocs']
+        'bending_angle': ['nlocs'],
         'refractivity': ['nlocs']
     }
 
-    # Read in the profiles
 
     # write them out
-
     nlocs = obs_data[('bending_angle', 'ObsValue')].shape[0]
 
     DimDict = {'nlocs': nlocs}
@@ -261,22 +242,35 @@ def main():
     VarAttrs[('bending_angle', 'ObsError')]['units'] = 'Radians'
     VarAttrs[('refractivity', 'ObsValue')]['units'] = 'N'
     VarAttrs[('refractivity', 'ObsError')]['units'] = 'N'
+
 #   there is no PreQc defined in Hailing's fortran
 #   VarAttrs[('bending_angle', 'PreQC')]['units'] = 'unitless'
     #  REALLY???? say it isn't so????
-    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = 9.9e10
-    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = 9.9e10
-    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = 9.9e10
-    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = 9.9e10
+    missing_value = -1.0000e+100
+    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = missing_value
+    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = missing_value
+    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
+
+    # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 def def_meta_data():
+#       - name: "MetaData/geopotentialHeight"
+#       - name: "MetaData/impact_parameter
+#       - name: "MetaData/datetime"
+#       - name: "MetaData/latitude"
+#       - name: "MetaData/longitude"
+
+#  these could be  in attr_data 
+#"latitude"                                : '#1#latitude',
+#"longitude"                               : '#1#longitude',
+#"sensor_azimuth_angle"                    : '#1#bearingOrAzimuth',
+
     meta_data_keys = {
- "latitude"                                : '#1#latitude',
- "longitude"                               : '#1#longitude',
+ "qualityFlag"                             : 'radioOccultationDataQualityFlags',
  "geoid_height_above_reference_ellipsoid"  : 'geoidUndulation',
  "earth_radius_of_curvature"               : 'earthLocalRadiusOfCurvature',
- "sensor_azimuth_angle"                    : '#1#bearingOrAzimuth',
  "occulting_sat_id"                        : 'satelliteIdentifier',
  "occulting_sat_is"                        : 'satelliteInstruments',
  "process_center"                          : 'centre',
