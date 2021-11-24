@@ -3,7 +3,7 @@ program bufr2nc
 use define_mod, only: write_nc_conv, write_nc_radiance
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv
-use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance
+use radiance_mod, only: read_amsua_amsub_mhs, read_amsua_amsub_mhs_ears, read_airs_colocate_amsua, read_iasi, sort_obs_radiance
 use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
 
@@ -12,13 +12,16 @@ implicit none
 integer(i_kind), parameter :: StrLen    = 512
 integer(i_kind), parameter :: NameLen   = 64
 integer(i_kind), parameter :: DateLen   = 10
-integer(i_kind), parameter :: nfile_all = 5
+integer(i_kind), parameter :: nfile_all = 8
 integer(i_kind), parameter :: ftype_unknown  = -1
 integer(i_kind), parameter :: ftype_prepbufr =  1
 integer(i_kind), parameter :: ftype_gnssro   =  2
 integer(i_kind), parameter :: ftype_amsua    =  3
 integer(i_kind), parameter :: ftype_mhs      =  4
 integer(i_kind), parameter :: ftype_airs     =  5
+integer(i_kind), parameter :: ftype_esamsua  =  6
+integer(i_kind), parameter :: ftype_esmhs    =  7
+integer(i_kind), parameter :: ftype_iasi     =  8
 
 integer(i_kind)            :: ftype(nfile_all)
 character(len=NameLen)     :: flist_all(nfile_all) = &
@@ -27,7 +30,10 @@ character(len=NameLen)     :: flist_all(nfile_all) = &
       "prepbufr.bufr  ", &
       "amsua.bufr     ", &
       "airs.bufr      ", &
-      "mhs.bufr       "  &
+      "mhs.bufr       ", &
+      "esmhs.bufr     ", &
+      "esamsua.bufr   ", &
+      "iasi.bufr      "  &
    /)
 character (len=NameLen) :: flist(nfile_all)  ! file names to be read in from command line arguments
 character (len=NameLen) :: filename
@@ -48,6 +54,9 @@ call parse_files_to_convert
 do ifile = 1, nfile
 
    filename = flist(ifile)
+   write(*,*)'nfile = ', nfile 
+   write(*,*)'filename = ', filename
+   write(*,*)'ftype = ', ftype(ifile) 
 
    if ( ftype(ifile) == ftype_gnssro ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
@@ -64,6 +73,7 @@ do ifile = 1, nfile
       if ( .not. fexist ) then
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
+         write(*,*) '--- processing prepbufr.bufr ---'
          ! read prepbufr file and store data in sequential linked list for conv obs
          call read_prepbufr(trim(inpdir)//trim(filename), filedate)
 
@@ -85,9 +95,22 @@ do ifile = 1, nfile
       if ( .not. fexist ) then
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
+         write(*,*) '--- processing amsua.bufr ---'
          do_radiance = .true.
          ! read bufr file and store data in sequential linked list for radiances
          call read_amsua_amsub_mhs(trim(inpdir)//trim(filename), filedate)
+      end if
+   end if
+
+   if ( ftype(ifile) == ftype_esamsua ) then
+      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
+      else
+         write(*,*) '--- processing esamua.bufr ---'
+         do_radiance = .true.
+         ! read bufr file and store data in sequential linked list for radiances
+         call read_amsua_amsub_mhs_ears(trim(inpdir)//trim(filename), filedate)
       end if
    end if
 
@@ -96,6 +119,7 @@ do ifile = 1, nfile
       if ( .not. fexist ) then
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
+         write(*,*) '--- processing airs.bufr ---'
          do_radiance = .true.
          ! read bufr file and store data in sequential linked list for radiances
          call read_airs_colocate_amsua(trim(inpdir)//trim(filename), filedate)
@@ -107,9 +131,34 @@ do ifile = 1, nfile
       if ( .not. fexist ) then
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
+         write(*,*) '--- processing mhs.bufr ---'
          do_radiance = .true.
          ! read bufr file and store data in sequential linked list for radiances
          call read_amsua_amsub_mhs(trim(inpdir)//trim(filename), filedate)
+      end if
+   end if
+
+   if ( ftype(ifile) == ftype_esmhs ) then
+      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
+      else
+         write(*,*) '--- processing esmhs.bufr ---'
+         do_radiance = .true.
+         ! read bufr file and store data in sequential linked list for radiances
+         call read_amsua_amsub_mhs_ears(trim(inpdir)//trim(filename), filedate)
+      end if
+   end if
+
+   if ( ftype(ifile) == ftype_iasi ) then
+      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
+      if ( .not. fexist ) then
+         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
+      else
+         write(*,*) '--- processing iasi.bufr ---'
+         do_radiance = .true.
+         ! read bufr file and store data in sequential linked list for radiances
+         call read_iasi(trim(inpdir)//trim(filename), filedate)
       end if
    end if
 
@@ -166,7 +215,7 @@ if ( narg > 0 ) then
    if ( ifile == 0 ) then
       nfile = nfile_all
       flist(:) = flist_all(:)
-      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_amsua, ftype_airs, ftype_mhs /)
+      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_amsua, ftype_airs, ftype_mhs, ftype_esmhs, ftype_esamsua, ftype_iasi /)
    else
       nfile = ifile
    end if
@@ -175,7 +224,7 @@ else
    outdir = '.'
    nfile = nfile_all
    flist(:) = flist_all(:)
-   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_amsua, ftype_airs, ftype_mhs /)
+   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_amsua, ftype_airs, ftype_mhs, ftype_esmhs, ftype_esamsua, ftype_iasi /)
 end if
 
 itmp = len_trim(inpdir)
@@ -202,10 +251,16 @@ fileloop: do ifile = 1, nfile
       ftype(ifile) = ftype_gnssro
    case ( 'NC021023' )
       ftype(ifile) = ftype_amsua
+   case ( 'NC021033' )
+      ftype(ifile) = ftype_esamsua
    case ( 'NC021027' )
       ftype(ifile) = ftype_mhs
+   case ( 'NC021036' )
+      ftype(ifile) = ftype_esmhs
    case ( 'NC021249' )
       ftype(ifile) = ftype_airs
+   case ( 'NC021241' )
+      ftype(ifile) = ftype_iasi
    case default
       ftype(ifile) = ftype_unknown
    end select
