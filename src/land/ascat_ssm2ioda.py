@@ -20,7 +20,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
@@ -38,33 +38,42 @@ AttrData = {
     'converter': os.path.basename(__file__),
 }
 
+DimDict = {
+}
+
+VarDims = {
+    'soilMoistureNormalized': ['nlocs'],
+}
+
 
 class ascat(object):
-    def __init__(self, filename, mask, writer):
+    def __init__(self, filename, mask):
         self.filename = filename
         self.mask = mask
-        self.writer = writer
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.units = {}
+        self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
 
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
         for iodavar in ['soilMoistureNormalized']:
-            self.varDict[iodavar]['valKey'] = iodavar, self.writer.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, self.writer.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, self.writer.OqcName()
-            self.units[iodavar] = '%'
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'percent'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'percent'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
         AttrData["satellite"] = ncd.getncattr('source')
         AttrData['platform'] = ncd.getncattr('platform_long_name')
-
         lats = ncd.variables['lat'][:].ravel()
         lons = ncd.variables['lon'][:].ravel()
         vals = ncd.variables['soil_moisture'][:].ravel()
@@ -76,6 +85,9 @@ class ascat(object):
         num_cells = ncd.dimensions['numCells'].size
         secs = ncd.variables['record_start_time'][:].ravel()
         secs = np.repeat(secs, num_cells)
+        vals = vals.astype('float32')
+        lats = lats.astype('float32')
+        lons = lons.astype('float32')
         qflg = 0*vals.astype('int32')
         wflg = wflg.astype('int32')
         tflg = tflg.astype('int32')
@@ -98,17 +110,19 @@ class ascat(object):
             AttrData['date_time_string'] = base_datetime
             times[i] = base_datetime
 
-        self.loc_mdata['datetime'] = self.writer.FillNcVector(times, "datetime")
-        self.loc_mdata['latitude'] = lats
-        self.loc_mdata['longitude'] = lons
-        self.loc_mdata['wetlandFraction'] = wflg
-        self.loc_mdata['topographyComplexity'] = tflg
+        # add metadata variables
+        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('latitude', 'MetaData')] = lats
+        self.outdata[('longitude', 'MetaData')] = lons
+        self.outdata[('wetlandFraction', 'MetaData')] = wflg
+        self.outdata[('topographyComplexity', 'MetaData')] = tflg
+
         for iodavar in ['soilMoistureNormalized']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
-        self.writer._nvars = len(obsvars)
-        self.writer._nlocs = len(self.loc_mdata['datetime'])
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
@@ -136,14 +150,17 @@ def main():
 
     args = parser.parse_args()
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, locationKeyList)
-
     # Read in the ssm data
-    ssm = ascat(args.input, args.mask, writer)
+    ssm = ascat(args.input, args.mask)
+
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    ssm.varAttrs[('wetlandFraction', 'MetaData')]['units'] = 'unitless'
+    ssm.varAttrs[('topographyComplexity', 'MetaData')]['units'] = 'unitless'
 
     # write everything out
-    writer.BuildNetcdf(ssm.outdata, ssm.loc_mdata, ssm.var_mdata, AttrData, ssm.units)
+    writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
