@@ -116,7 +116,11 @@ endif()
 if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
     testinput/bufr_tables
+    testinput/gdas.t12z.1bamua.tm00.bufr_d
+    testinput/gdas.t12z.esamua.tm00.bufr_d
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
+    testinput/gdas.t12z.esmhs.tm00.bufr_d
+    testinput/gdas.t12z.mtiasi.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
@@ -197,6 +201,10 @@ if( iodaconv_pbfortran_ENABLED )
     testoutput/gnssro_obs_2018041500.nc4
     testoutput/sondes_obs_2020093018.nc4
     testoutput/mhs_metop-b_obs_2020101215.nc4
+    testoutput/mhs_metop-c_obs_2020110112.nc4
+    testoutput/amsua_metop-a_obs_2020110112.nc4
+    testoutput/amsua_metop-b_obs_2020110112.nc4
+    testoutput/iasi_metop-a_obs_2020110112.nc4
   )
 endif()
 
@@ -835,6 +843,42 @@ if( iodaconv_pbfortran_ENABLED )
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
                             mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_mhs_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t12z.esmhs.tm00.bufr_d"
+                            mhs_metop-c_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
+                            amsua_metop-a_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_amsua_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t12z.esamua.tm00.bufr_d"
+                            amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_iasi_conv
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t12z.mtiasi.tm00.bufr_d"
+                            iasi_metop-a_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2nc_fortran.x)
 
 endif()
