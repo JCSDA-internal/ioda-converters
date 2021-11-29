@@ -73,8 +73,8 @@ class AOD(object):
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'unitless'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
             self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # Read file(s)
