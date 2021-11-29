@@ -1,0 +1,447 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC021033 | A56033 | MTYP 021-033 RARS(EARS,AP,SA) AMSU-A 1C Tb DATA(N15-19)  |
+| NC021034 | A56034 | MTYP 021-034 RARS(EARS,AP,SA) AMSU-B 1C Tb DATA(N15-17)  |
+| NC021035 | A56035 | MTYP 021-035 RARS(EARS,AP,SA) HIRS   1C Tb DATA(N15-19)  |
+| NC021036 | A56036 | MTYP 021-036 RARS(EARS,AP,SA) MHS 1C Tb DATA   (N18-19)  |
+| NC021037 | A56037 | MTYP 021-037 RARS(EARS,AP,SA) CRIS RADIANCE DATA  (NPP)  |
+| NC021038 | A56038 | MTYP 021-038 RARS(EARS,AP,SA) ATMS Tb DATA  (NPP)        |
+| NC021039 | A56039 | MTYP 021-039 RARS(EARS,AP,SA) IASI RADIANCE DATA (METOP  |
+| NC021042 | A63194 | MTYP 021-042 PROC. MSG SEVIRI ALL SKY RADIANCES (ASR)    |
+| NC021043 | A63195 | MTYP 021-043 PROC. MSG SEVIRI CLEAR SKY RADIANCES (CSR)  |
+| NC021044 | A63188 | MTYP 021-044 JMA HIMAWARI-8 CLEAR SKY RADIANCES (CSR)    |
+| NC021212 | A10205 | MTYP 021-212 CrIS RADIANCES (direct broadcast)           |
+| NC021213 | A10204 | MTYP 021-213 ATMS BRIGHT. TEMPS (direct broadcast)       |
+| NC021239 | A56040 | MTYP 021-239 IASI 1C RAD.(VBL CHNS)(dir. b-cst)(M)       |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| HHMMSS   | 301013 | TIME -- HOUR, MINUTE, SECOND                             |
+| LTLONH   | 301021 | HIGH ACCURACY LATITUDE/LONGITUDE POSITION                |
+| LOCPLAT  | 304030 | LOCATION OF PLATFORM (SATELLITE) SEQUENCE                |
+| CLOUDCOV | 304036 | CLOUD COVERAGE                                           |
+| SIDGRSEQ | 301071 | SATELLITE IDENTIFIER/GENERATING RESOLUTION               |
+| SIDENSEQ | 301072 | SATELLITE IDENTIFICATION                                 |
+| ATFOV    | 310011 | ATOVS FIELD OF VIEW VARIABLES                            |
+| ATCHV    | 310012 | ATOVS CHANNEL VARIABLES                                  |
+| IASIL1CB | 340002 | IASI LEVEL 1C BAND DESCRIPTION                           |
+| IASIL1CS | 340004 | IASI LEVEL 1C AVHRR SINGLE SCENE                         |
+| BCFQFSQ  | 350200 | NPP CrIS BAND CALIBRATION & F-O-V QUALITY FLAG SEQUENCE  |
+| CRCHN    | 350201 | NPP CrIS CHANNEL DATA                                    |
+| ATMSCH   | 350206 | NPP ATMS CHANNEL DATA                                    |
+| CRCHNM   | 350216 | NPP CrIS CHANNEL DATA EXTENDED                           |
+| IASIQF   | 350217 | IASI CHANNEL QUALITY FLAGS                               |
+| IASISC   | 350218 | IASI CHANNEL SCORES                                      |
+| IASIPCS  | 350219 | IASI PRINCIPAL COMPONENT SCORES                          |
+| GCRCHN   | 350220 | NPP CrIS GUARD CHANNEL DATA                              |
+| CRCHFS   | 350221 | N20 CrIS FIRST ORDER STAT CHANNEL DATA                   |
+| CRISL1C  | 350222 | N20 CrIS LEVEL 1C                                        |
+| CRISN20  | 350223 | N20 CrIS DESCRIPTORS                                     |
+| RPSEQ7   | 362068 | CSR SEVIRI CLOUD & BRIGHTNESS TEMPERATURE DATA SEQUENCE  |
+| RPSEQ8   | 362069 | PERCENT CONFIDENCE W/MDPC REPLICATED DATA SEQUENCE       |
+| BID      | 352001 | BULLETIN HEADER DATA                                     |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| IASICHN  | 361137 | IASI LEVEL 1C SCALED RADIANCE SEQUENCE                   |
+| AVHRCHN  | 361139 | IASI LEVEL 1C MEAN AND STANDARD DEVIATION RADIANCE SEQ   |
+| RPSEQ10  | 362071 | ASR SEVIRI BRIGHTNESS TEMPERATURE REPLICATED SEQUENCE    |
+| RPSEQ11  | 362073 | CSR HIMAWARI-8 CLOUD & BRGHTNS TEMPERATURE DATA SEQUENC  |
+|          |        |                                                          |
+| SAID     | 001007 | SATELLITE IDENTIFIER                                     |
+| GCLONG   | 001031 | ORIGINATING/GENERATING CENTER                            |
+| GNAP     | 001032 | GENERATING APPLICATION                                   |
+| OGCE     | 001033 | IDENTIFICATION OF ORIGINATING/GENERATING CENTER          |
+| GSES     | 001034 | IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTER      |
+| SIID     | 002019 | SATELLITE INSTRUMENTS                                    |
+| SCLF     | 002020 | SATELLITE CLASSIFICATION                                 |
+| SSNX     | 002028 | SEGMENT SIZE AT NADIR IN X DIRECTION                     |
+| SSNY     | 002029 | SEGMENT SIZE AT NADIR IN Y DIRECTION                     |
+| SSIN     | 002048 | SATELLITE SENSOR INDICATOR                               |
+| ANPO     | 002104 | ANTENNA POLARIZATION                                     |
+| MTYP     | 002141 | MEASUREMENT TYPE                                         |
+| INCN     | 002150 | TOVS/ATOVS/AVHRR INSTRUMENTATION CHANNEL NUMBER          |
+| RAID     | 002151 | RADIOMETER IDENTIFIER                                    |
+| SIDP     | 002152 | SATELLITE INSTRUMENT DATA USED IN PROCESSING             |
+| SCCF     | 002153 | SATELLITE CHANNEL CENTER FREQUENCY                       |
+| SCBW     | 002154 | SATELLITE CHANNEL BAND WIDTH                             |
+| RDTF     | 002165 | RADIANCE TYPE FLAGS                                      |
+| RDTP     | 002166 | RADIANCE TYPE                                            |
+| RDCM     | 002167 | RADIANCE COMPUTATIONAL METHOD                            |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| SECO     | 004006 | SECOND                                                   |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| BEARAZ   | 005021 | BEARING OR AZIMUTH                                       |
+| SOLAZI   | 005022 | SOLAR AZIMUTH                                            |
+| ORBN     | 005040 | ORBIT NUMBER                                             |
+| SLNM     | 005041 | SCAN LINE NUMBER                                         |
+| CHNM     | 005042 | CHANNEL NUMBER                                           |
+| FOVN     | 005043 | FIELD OF VIEW NUMBER                                     |
+| FORN     | 005045 | FIELD OF REGARD NUMBER                                   |
+| YAPCG    | 005060 | Y ANGULAR POSITION FROM CENTRE OF GRAVITY                |
+| ZAPCG    | 005061 | Z ANGULAR POSITION FROM CENTRE OF GRAVITY                |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| WVNM     | 006029 | WAVE NUMBER                                              |
+| SELV     | 007001 | HEIGHT OF STATION                                        |
+| HMSL     | 007002 | HEIGHT OR ALTITUDE                                       |
+| SAZA     | 007024 | SATELLITE ZENITH ANGLE                                   |
+| SOZA     | 007025 | SOLAR ZENITH ANGLE                                       |
+| VSAT     | 008003 | VERTICAL SIGNIFICANCE (SATELLITE OBSERVATIONS)           |
+| METFET   | 008011 | METEOROLOGICAL FEATURE                                   |
+| LSQL     | 008012 | LAND/SEA QUALIFIER                                       |
+| FOST     | 008023 | First-order statistics                                   |
+| RSST     | 008029 | SURFACE TYPE                                             |
+| MDPC     | 008033 | METHOD OF DEVIATION OF PERCENTAGE CONFIDENCE             |
+| TAPQ     | 008070 | TOVS/ATOVS PRODUCT IDENTIFIER                            |
+| STKO     | 008075 | ASCENDING/DESCENDING ORBIT QUALIFIER                     |
+| TOBD     | 008076 | TYPE OF BAND                                             |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| HOLS     | 010001 | HEIGHT OF LAND SURFACE                                   |
+| HITE     | 010002 | GEOPOTENTIAL HEIGHT                                      |
+| PDNP     | 010031 | IN DIR. OF NORTH POLE, DISTANCE FROM THE EARTH'S CENTER  |
+| TMBRST   | 012063 | BRIGHTNESS TEMPERATURE                                   |
+| TMINST   | 012064 | INSTRUMENT TEMPERATURE                                   |
+| SDTB     | 012065 | STANDARD DEVIATION BRIGHTNESS TEMPERATURE                |
+| TMANT    | 012066 | ANTENNA TEMPERATURE                                      |
+| NEDTCO   | 012158 | NOISE-EQUIV. DELTA TEMPERATURE WHILE VIEWING COLD TARGE  |
+| NEDTWA   | 012159 | NOISE-EQUIV. DELTA TEMPERATURE WHILE VIEWING WARM TARGE  |
+| TMBR     | 012163 | BRIGHTNESS TEMPERATURE                                   |
+| SCHRAD   | 014043 | Channel radiance                                         |
+| SRAD     | 014044 | CHANNEL RADIANCE                                         |
+| CHRAD    | 014045 | CHANNEL RADIANCE                                         |
+| SCRA     | 014046 | SCALED IASI RADIANCE                                     |
+| SMRA     | 014047 | SCALED MEAN AVHRR RADIANCE                               |
+| SSDR     | 014048 | SCALED STANDARD DEVIATION AVHRR RADIANCE                 |
+| TOCC     | 020010 | CLOUD COVER (TOTAL)                                      |
+| CLTP     | 020012 | CLOUD TYPE                                               |
+| HOCT     | 020014 | HEIGHT OF TOP OF CLOUD                                   |
+| CLDMNT   | 020081 | CLOUD AMOUNT IN SEGMENT                                  |
+| NCLDMNT  | 020082 | AMOUNT SEGMENT CLOUD FREE                                |
+| ASCS     | 020083 | AMOUNT OF SEGMENT COVERED BY SCENE                       |
+| ALFR     | 021166 | LAND FRACTION                                            |
+| AVHCST   | 025051 | AVHRR CHANNEL COMBINATION                                |
+| DBID     | 025062 | DATABASE IDENTIFICATION                                  |
+| MJFC     | 025070 | MAJOR FRAME COUNT                                        |
+| SACV     | 025075 | SATELLITE ANTENNA CORRECTIONS VERSION NUMBER             |
+| LOGRCW   | 025076 | LOG-10 OF (TEMPERATURE-RADIANCE CENTRAL WAVENUMBER)      |
+| BWCC1    | 025077 | BANDWIDTH CORRECTION COEFFICIENT 1 FOR ATOVS             |
+| BWCC2    | 025078 | BANDWIDTH CORRECTION COEFFICIENT 2 FOR ATOVS             |
+| ASFI     | 025079 | ALBEDO-RADIANCE SOLAR FILTERED IRRADIANCE FOR ATOVS      |
+| AEFW     | 025080 | ALBEDO-RADIANCE EQUIVALENT FILTER WIDTH FOR ATOVS        |
+| FCPH     | 025085 | FRACTION OF CLEAR PIXELS IN HIRS FOV                     |
+| STCH     | 025140 | START CHANNEL                                            |
+| ENCH     | 025141 | END CHANNEL                                              |
+| CHSF     | 025142 | CHANNEL SCALE FACTOR                                     |
+| PD00     | 027031 | IN DIRECTION OF  0 DEG E, DISTANCE FROM EARTH'S CENTER   |
+| PD90     | 028031 | IN DIRECTION OF 90 DEG E, DISTANCE FROM EARTH'S CENTER   |
+| NPPR     | 030021 | NUMBER OF PIXELS PER ROW                                 |
+| NPPC     | 030022 | NUMBER OF PIXELS PER COLUMN                              |
+| QMRKH    | 033003 | QUALITY INFORMATION                                      |
+| PCCF     | 033007 | PERCENT CONFIDENCE                                       |
+| SLSF     | 033030 | SCAN LINE STATUS FLAGS FOR ATOVS                         |
+| SLQF     | 033031 | SCAN LINE QUALITY FLAGS FOR ATOVS                        |
+| ACQF     | 033032 | CHANNEL QUALITY FLAGS FOR ATOVS                          |
+| FOVQ     | 033033 | FIELD OF VIEW QUALITY FLAGS FOR ATOVS                    |
+| QGFQ     | 033060 | GqisFlagQual - individual IASI-System quality flag       |
+| QGQI     | 033061 | GqisQualIndex - indicator for instrument noise performa  |
+| QGQIL    | 033062 | GqisQualIndexLoc - indicator for geometric quality inde  |
+| QGQIR    | 033063 | GqisQualIndexRad - indicator for instrument noise perfo  |
+| QGQIS    | 033064 | GqisQualIndexSpect - indicator for instrument noise per  |
+| QGSSQ    | 033065 | GqisSysTecSondQual - output of system TEC (Technical Ex  |
+| NSQF     | 033075 | SCAN LEVEL QUALITY FLAGS                                 |
+| NCQF     | 033076 | CALIBRATION QUALITY FLAGS                                |
+| NFQF     | 033077 | FIELD OF VIEW QUALITY FLAGS                              |
+| NGQI     | 033078 | GEOLOCATION QUALITY                                      |
+| ATMSGQ   | 033079 | GRANULE LEVEL QUALITY FLAGS                              |
+| ATMSSQ   | 033080 | SCAN LEVEL QUALITY FLAGS                                 |
+| ATMSCHQ  | 033081 | CHANNEL DATA QUALITY FLAGS                               |
+| CORN     | 033215 | CORRECTED REPORT INDICATOR                               |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+| RRIB     | 040016 | RESIDUAL RMS IN BAND                                     |
+| NNPCS    | 040017 | NON-NORMALISED PRINCIPAL COMPONENT SCORE                 |
+| AOIM     | 040018 | GIacAvgImagIIS - average of imager measurements          |
+| VOIM     | 040019 | GIacVarImagIIS - variance of imager measurements         |
+| FICSI    | 040021 | FRACTION OF WEIGHTED AVHRR PIXEL IN IASI FOV COVERED     |
+| NMBFA    | 040022 | NUMBER OF MISSING, BAD OR FAILED AVHRR PIXELS            |
+| QFFS     | 040020 | GqisFlagQualDetailed - quality flag for the system       |
+| SQFA     | 040026 | SCORE QUANTIZATION FACTOR                                |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC021033 | ATFOV  "ATCHV"15  BID  RCPTIM                                     |
+|          |                                                                   |
+| NC021034 | ATFOV  "ATCHV"5  BID  RCPTIM                                      |
+|          |                                                                   |
+| NC021035 | ATFOV  "ATCHV"19  INCN  ASFI  AEFW  ACQF  CHRAD  BID  RCPTIM      |
+|          |                                                                   |
+| NC021036 | ATFOV  "ATCHV"5  BID  RCPTIM                                      |
+|          |                                                                   |
+| NC021037 | SAID  OGCE  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000        |
+| NC021037 | LOCPLAT  LTLONH  SAZA  BEARAZ  SOZA  SOLAZI  STKO  201133  SLNM   |
+| NC021037 | 201000  FORN  FOVN  ORBN  HOLS  201129  HMSL  201000  202127      |
+| NC021037 | 201125  ALFR  201000  202000  LSQL  TOCC  HOCT  RDTF  NSQF        |
+| NC021037 | "BCFQFSQ"3  TOBD  NGQI  QMRKH  (CRCHN)  BID  RCPTIM               |
+|          |                                                                   |
+| NC021038 | SAID  OGCE  GSES  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000  |
+| NC021038 | ORBN  SLNM  FOVN  ATMSGQ  ATMSSQ  NGQI  LTLONH  201129  HMSL      |
+| NC021038 | 201000  SAZA  BEARAZ  SOZA  SOLAZI  SACV  (ATMSCH)  BID  RCPTIM   |
+|          |                                                                   |
+| NC021039 | SAID  GCLONG  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000      |
+| NC021039 | LTLONH  SAZA  BEARAZ  SOZA  SOLAZI  FOVN  ORBN  201133  SLNM      |
+| NC021039 | 201000  201132  MJFC  201000  202126  SELV  202000  "IASIQF"3     |
+| NC021039 | QGQI  QGQIL  QGQIR  QGQIS  QGSSQ  QFFS  "IASIL1CB"10  (IASICHN)   |
+| NC021039 | "IASISC"3  SIID  AVHCST  "IASIL1CS"7  CLDMNT  RSST  ASCS  RSST    |
+| NC021039 | AOIM  VOIM  FICSI  NMBFA  BID  RCPTIM                             |
+|          |                                                                   |
+| NC021042 | SIDENSEQ  NPPR  NPPC  SAZA  SOZA  HITE  CLOUDCOV  SIDP  RDCM      |
+| NC021042 | GNAP  "RPSEQ10"11  BID  RCPTIM                                    |
+|          |                                                                   |
+| NC021043 | SIDENSEQ  NPPR  NPPC  LSQL  SAZA  SOZA  HITE  "RPSEQ7"12  BID     |
+| NC021043 | RCPTIM                                                            |
+|          |                                                                   |
+| NC021044 | SIDENSEQ  NPPR  NPPC  LSQL  SAZA  SOZA  HITE  "RPSEQ11"12  CORN   |
+| NC021044 | RCPTIM                                                            |
+|          |                                                                   |
+| NC021212 | SAID  OGCE  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000        |
+| NC021212 | LOCPLAT  LTLONH  SAZA  BEARAZ  SOZA  SOLAZI  STKO  201133  SLNM   |
+| NC021212 | 201000  FORN  FOVN  ORBN  HOLS  201129  HMSL  201000  202127      |
+| NC021212 | 201125  ALFR  201000  202000  LSQL  TOCC  HOCT  RDTF  NSQF        |
+| NC021212 | "BCFQFSQ"3  TOBD  NGQI  QMRKH  (CRCHN)  (CRCHNM)  <CRISN20>  BID  |
+| NC021212 | RCPTIM                                                            |
+|          |                                                                   |
+| NC021213 | SAID  OGCE  GSES  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000  |
+| NC021213 | ORBN  SLNM  FOVN  ATMSGQ  ATMSSQ  NGQI  LTLONH  201129  HMSL      |
+| NC021213 | 201000  SAZA  BEARAZ  SOZA  SOLAZI  SACV  (ATMSCH)  BID  RCPTIM   |
+|          |                                                                   |
+| NC021239 | SAID  GCLONG  SIID  SCLF  YYMMDD  HHMM  207003  SECO  207000      |
+| NC021239 | LTLONH  SAZA  BEARAZ  SOZA  SOLAZI  FOVN  ORBN  201133  SLNM      |
+| NC021239 | 201000  201132  MJFC  201000  202126  SELV  202000  "IASIQF"3     |
+| NC021239 | QGQI  QGQIL  QGQIR  QGQIS  QGSSQ  QFFS  "IASIL1CB"10  (IASICHN)   |
+| NC021239 | "IASISC"3  SIID  AVHCST  "IASIL1CS"7  CLDMNT  RSST  ASCS  RSST    |
+| NC021239 | AOIM  VOIM  FICSI  NMBFA  BID  RCPTIM                             |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| LOCPLAT  | PD00  PD90  PDNP                                                  |
+|          |                                                                   |
+| CLOUDCOV | NCLDMNT  LSQL  NCLDMNT  LSQL  CLDMNT  VSAT  CLDMNT  VSAT  CLDMNT  |
+| CLOUDCOV | VSAT  CLDMNT  VSAT                                                |
+|          |                                                                   |
+| SIDGRSEQ | SAID  GCLONG  SCLF  SSNX  SSNY                                    |
+|          |                                                                   |
+| SIDENSEQ | SIDGRSEQ  YYMMDD  HHMMSS  LTLONH                                  |
+|          |                                                                   |
+| ATFOV    | TAPQ  OGCE  GSES  TAPQ  OGCE  GSES  SAID  SSIN  ORBN  SACV        |
+| ATFOV    | 201133  SLNM  201000  FOVN  MJFC  SLSF  SLQF  YEAR  MNTH  DAYS    |
+| ATFOV    | HOUR  MINU  202131  201138  SECO  201000  202000  CLATH  CLONH    |
+| ATFOV    | 202126  SELV  202000  SAZA  BEARAZ  SOZA  SOLAZI  FOVQ  RAID      |
+| ATFOV    | TMINST  RAID  TMINST  RAID  TMINST  RAID  TMINST                  |
+|          |                                                                   |
+| ATCHV    | INCN  LOGRCW  BWCC1  BWCC2  ACQF  201132  202129  TMBRST  202000  |
+| ATCHV    | 201000                                                            |
+|          |                                                                   |
+| IASIL1CB | STCH  ENCH  CHSF                                                  |
+|          |                                                                   |
+| IASIL1CS | YAPCG  ZAPCG  FCPH  "AVHRCHN"6                                    |
+|          |                                                                   |
+| BCFQFSQ  | TOBD  WVNM  WVNM  STCH  ENCH  NCQF  NFQF                          |
+|          |                                                                   |
+| CRCHN    | 201134  CHNM  201000  SRAD                                        |
+|          |                                                                   |
+| ATMSCH   | CHNM  202131  SCCF  SCBW  202000  ANPO  TMANT  TMBR  NEDTCO       |
+| ATMSCH   | NEDTWA  ATMSCHQ                                                   |
+|          |                                                                   |
+| CRCHNM   | 201134  CHNM  201000  SRAD                                        |
+|          |                                                                   |
+| IASIQF   | STCH  ENCH  QGFQ                                                  |
+|          |                                                                   |
+| IASISC   | STCH  ENCH  SQFA  RRIB  DBID  (IASIPCS)                           |
+|          |                                                                   |
+| IASIPCS  | NNPCS                                                             |
+|          |                                                                   |
+| GCRCHN   | 201134  CHNM  201000  SRAD                                        |
+|          |                                                                   |
+| CRCHFS   | CHNM  FOST  SCHRAD  FOST  SCHRAD                                  |
+|          |                                                                   |
+| CRISL1C  | YAPCG  ZAPCG  FCPH  "CRCHFS"16                                    |
+|          |                                                                   |
+| CRISN20  | MTYP  TOBD  {GCRCHN}  TOBD  SIID  "CRISL1C"7                      |
+|          |                                                                   |
+| RPSEQ7   | SCCF  SCBW  CLDMNT  NCLDMNT  CLTP  SIDP  RDTP  RDCM  TMBRST  SDTB |
+| RPSEQ7   | PCCF  "RPSEQ8"4                                                   |
+|          |                                                                   |
+| RPSEQ8   | MDPC  PCCF                                                        |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| IASICHN  | 201136  CHNM  201000  SCRA                                        |
+|          |                                                                   |
+| AVHRCHN  | CHNM  CHSF  SMRA  CHSF  SSDR                                      |
+|          |                                                                   |
+| RPSEQ10  | SCCF  SCBW  TMBRST  SDTB  PCCF  METFET  TMBRST  SDTB  PCCF        |
+| RPSEQ10  | METFET  TMBRST  SDTB  PCCF  METFET  VSAT  TMBRST  SDTB  PCCF      |
+| RPSEQ10  | VSAT  TMBRST  SDTB  PCCF  VSAT  TMBRST  SDTB  PCCF  VSAT          |
+|          |                                                                   |
+| RPSEQ11  | SCCF  SCBW  CLDMNT  NCLDMNT  CLTP  SIDP  RDTP  RDCM  TMBRST  SDTB |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| GCLONG   |    0 |           0 |  16 | CODE TABLE               |-------------|
+| GNAP     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| OGCE     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| GSES     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| SIID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| SCLF     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| SSNX     |    0 |           0 |  18 | M                        |-------------|
+| SSNY     |    0 |           0 |  18 | M                        |-------------|
+| SSIN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| ANPO     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| MTYP     |    0 |           0 |  24 | CCITT IA5                |-------------|
+| INCN     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RAID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| SIDP     |    0 |           0 |  31 | FLAG TABLE               |-------------|
+| SCCF     |   -8 |           0 |  26 | HZ                       |-------------|
+| SCBW     |   -8 |           0 |  26 | HZ                       |-------------|
+| RDTF     |    0 |           0 |  15 | FLAG TABLE               |-------------|
+| RDTP     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| RDCM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| SOLAZI   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| ORBN     |    0 |           0 |  24 | NUMERIC                  |-------------|
+| SLNM     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| CHNM     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| FOVN     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| FORN     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| YAPCG    |    6 |    -8000000 |  24 | DEGREE                   |-------------|
+| ZAPCG    |    6 |    -8000000 |  24 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| WVNM     |    1 |           0 |  22 | M**-1                    |-------------|
+| SELV     |    0 |        -400 |  15 | M                        |-------------|
+| HMSL     |   -1 |         -40 |  16 | M                        |-------------|
+| SAZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| SOZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| VSAT     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| METFET   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| LSQL     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| FOST     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RSST     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| MDPC     |    0 |           0 |   7 | CODE TABLE               |-------------|
+| TAPQ     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| STKO     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| TOBD     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| HOLS     |    0 |        -400 |  15 | M                        |-------------|
+| HITE     |   -1 |         -40 |  16 | M                        |-------------|
+| PDNP     |    2 | -1073741824 |  31 | M                        |-------------|
+| TMBRST   |    1 |           0 |  12 | KELVIN                   |-------------|
+| TMINST   |    1 |           0 |  12 | KELVIN                   |-------------|
+| SDTB     |    1 |           0 |  12 | KELVIN                   |-------------|
+| TMANT    |    2 |           0 |  16 | K                        |-------------|
+| NEDTCO   |    2 |           0 |  12 | K                        |-------------|
+| NEDTWA   |    2 |           0 |  12 | K                        |-------------|
+| TMBR     |    2 |           0 |  16 | K                        |-------------|
+| SCHRAD   |    4 |           0 |  23 | W M**-2 SR**-1 UM**-1    |-------------|
+| SRAD     |    7 |     -100000 |  22 | W M**-2 SR**-1 CM        |-------------|
+| CHRAD    |    0 |           0 |  11 | W M**-2 SR**-1 CM        |-------------|
+| SCRA     |    0 |       -5000 |  16 | W M**-2 SR**-1 M         |-------------|
+| SMRA     |    0 |           0 |  31 | W M**-2 SR**-1 M         |-------------|
+| SSDR     |    0 |           0 |  31 | W M**-2 SR**-1 M         |-------------|
+| TOCC     |    0 |           0 |   7 | %                        |-------------|
+| CLTP     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| HOCT     |   -1 |         -40 |  11 | M                        |-------------|
+| CLDMNT   |    0 |           0 |   7 | %                        |-------------|
+| NCLDMNT  |    0 |           0 |   7 | %                        |-------------|
+| ASCS     |    0 |           0 |   7 | %                        |-------------|
+| ALFR     |    3 |           0 |  10 | NUMERIC                  |-------------|
+| AVHCST   |    0 |           0 |   7 | FLAG TABLE               |-------------|
+| DBID     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| MJFC     |    0 |           0 |   4 | NUMERIC                  |-------------|
+| SACV     |    0 |           0 |   5 | NUMERIC                  |-------------|
+| LOGRCW   |    8 |           0 |  30 | LOG/M                    |-------------|
+| BWCC1    |    5 |     -100000 |  18 | NUMERIC                  |-------------|
+| BWCC2    |    5 |           0 |  17 | NUMERIC                  |-------------|
+| ASFI     |    4 |           0 |  24 | W M**-2                  |-------------|
+| AEFW     |   10 |           0 |  14 | M                        |-------------|
+| FCPH     |    0 |           0 |   7 | NUMERIC                  |-------------|
+| STCH     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| ENCH     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| CHSF     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| PD00     |    2 | -1073741824 |  31 | M                        |-------------|
+| PD90     |    2 | -1073741824 |  31 | M                        |-------------|
+| NPPR     |    0 |           0 |  12 | NUMERIC                  |-------------|
+| NPPC     |    0 |           0 |  12 | NUMERIC                  |-------------|
+| QMRKH    |    0 |           0 |   3 | CODE TABLE               |-------------|
+| PCCF     |    0 |           0 |   7 | PERCENT                  |-------------|
+| SLSF     |    0 |           0 |  24 | FLAG TABLE               |-------------|
+| SLQF     |    0 |           0 |  24 | FLAG TABLE               |-------------|
+| ACQF     |    0 |           0 |  24 | FLAG TABLE               |-------------|
+| FOVQ     |    0 |           0 |  24 | FLAG TABLE               |-------------|
+| QGFQ     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| QGQI     |    0 |           0 |   7 | %                        |-------------|
+| QGQIL    |    0 |           0 |   7 | %                        |-------------|
+| QGQIR    |    0 |           0 |   7 | %                        |-------------|
+| QGQIS    |    0 |           0 |   7 | %                        |-------------|
+| QGSSQ    |    0 |           0 |  24 | NUMERIC                  |-------------|
+| NSQF     |    0 |           0 |  13 | FLAG TABLE               |-------------|
+| NCQF     |    0 |           0 |   9 | FLAG TABLE               |-------------|
+| NFQF     |    0 |           0 |  19 | FLAG TABLE               |-------------|
+| NGQI     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| ATMSGQ   |    0 |           0 |  16 | FLAG TABLE               |-------------|
+| ATMSSQ   |    0 |           0 |  20 | FLAG TABLE               |-------------|
+| ATMSCHQ  |    0 |           0 |  12 | FLAG TABLE               |-------------|
+| CORN     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+| RRIB     |    3 |           0 |  14 | NUMERIC                  |-------------|
+| NNPCS    |    0 | -1073741824 |  31 | NUMERIC                  |-------------|
+| AOIM     |    6 |           0 |  24 | W M**-2 SR**-1 M         |-------------|
+| VOIM     |    6 |           0 |  24 | W M**-2 SR**-1 M         |-------------|
+| FICSI    |    0 |           0 |   7 | %                        |-------------|
+| NMBFA    |    0 |           0 |   7 | NUMERIC                  |-------------|
+| QFFS     |    0 |           0 |  17 | FLAG TABLE               |-------------|
+| SQFA     |    2 |           0 |  16 | NUMERIC                  |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
