@@ -67,7 +67,10 @@ class AOD(object):
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = -9999.
+            self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -9999.
+            self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -9999
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'unitless'
 
         # loop through input filenames
