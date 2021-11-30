@@ -22,8 +22,10 @@
 
 namespace Ingester
 {
-    const static char* DefualtLocationName = "nlocs";
-    const static char* DefualtDimName = "dim";
+//  const static char* DefualtLocationName = "nlocs";
+//  const static char* DefualtDimName = "dim";
+    static const char* DefualtLocationName = "nlocs";
+    static const char* DefualtDimName = "dim";
 
     IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
         description_(IodaDescription(conf))
@@ -52,7 +54,8 @@ namespace Ingester
             {
                 if (dimNames.find(dim.name) != dimNames.end())
                 {
-                    throw eckit::UserError("ioda::dimensions: Duplicate dimension name: " + dim.name);
+                    throw eckit::UserError("ioda::dimensions: Duplicate dimension name: "
+                          + dim.name);
                 }
 
                 dimNames.insert(dim.name);
@@ -61,7 +64,8 @@ namespace Ingester
                 {
                     if (dimPaths.find(path) != dimPaths.end())
                     {
-                        throw eckit::BadParameter("ioda::dimensions: Declared duplicate dimension path: " + path);
+                        throw eckit::BadParameter("ioda::dimensions: Declared duplicate dim. path: "
+                              + path);
                     }
 
                     dimPaths.insert(path);
@@ -101,7 +105,8 @@ namespace Ingester
                         else
                         {
                             auto newDimStr = std::ostringstream();
-                            newDimStr << DefualtLocationName << "_" << dataObject->getGroupByFieldName();
+                            newDimStr << DefualtLocationName << "_"
+                                      << dataObject->getGroupByFieldName();
 
                             dimName = newDimStr.str();
                             namedLocDims[{dimPath}] = dimName;
@@ -132,7 +137,8 @@ namespace Ingester
 
                     if (dimMap.find(dimName) == dimMap.end())
                     {
-                        dimMap[dimName] = ioda::NewDimensionScale<int>(dimName, dataObject->getDims()[dimIdx]);
+                        dimMap[dimName] = ioda::NewDimensionScale<int>(dimName,
+                                          dataObject->getDims()[dimIdx]);
                     }
                 }
             }
@@ -347,7 +353,8 @@ namespace Ingester
         return false;
     }
 
-    std::string IodaEncoder::nameForDimPath(const std::string& path, const NamedPathDims& pathMap) const
+    std::string IodaEncoder::nameForDimPath(const std::string& path,
+                const NamedPathDims& pathMap) const
     {
         std::string name;
 
@@ -361,6 +368,5 @@ namespace Ingester
         }
 
         return name;
-
     }
 }  // namespace Ingester
