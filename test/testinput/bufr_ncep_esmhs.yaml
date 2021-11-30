@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t12z.esamua.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t12z.esmhs.tm00.bufr_d"
 
       exports:
         variables:
@@ -56,13 +56,12 @@ observations:
                 _3: metop-b
                 _4: metop-a
                 _5: metop-c
-#               _206: noaa-15
-                _209: noaa-18
+#               _209: noaa-18
                 _223: noaa-19
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.esamua.tm00.{splits/satId}.nc"
+      obsdataout: "./testrun/gdas.t12z.esmhs.tm00.{splits/satId}.nc"
 
       dimensions:
         - name: nchans
@@ -71,16 +70,15 @@ observations:
       globals:
         - name: "MetaData/platformCommonName"
           type: string
-          value: "AMSUA"
+          value: "MHS"
 
         - name: "MetaData/platformLongDescription"
           type: string
-          value: "MTYP 021-033 RARS(EARS,AP,SA) AMSU-A 1C Tb DATA)"
+          value: "MTYP 021-036 RARS(EARS,AP,SA) MHS 1C Tb DATA (N18-19, METOP-1,2,3)"
 
         - name: "MetaData/sensorCentralFrequency"
           type: floatVector
-          value: [23.800, 31.400, 50.300, 52.800, 53.596, 54.400, 54.940, 55.500, 57.290,
-                  57.290, 57.290, 57.290, 57.290, 57.290, 89.000]
+          value: [89.0, 157.0, 183.311, 183.311, 190.311]
 
       variables:
         - name: "MetaData/satelliteIdentifier"
