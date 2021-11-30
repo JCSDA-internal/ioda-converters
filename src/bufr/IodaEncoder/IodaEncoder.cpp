@@ -22,8 +22,6 @@
 
 namespace Ingester
 {
-//  const static char* DefualtLocationName = "nlocs";
-//  const static char* DefualtDimName = "dim";
     static const char* DefualtLocationName = "nlocs";
     static const char* DefualtDimName = "dim";
 
