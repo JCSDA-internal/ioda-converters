@@ -140,6 +140,10 @@ if( iodaconv_bufr_ENABLED )
     testinput/amdar_wmo_single.bufr
     testinput/gnssro_wmoBUFR2ioda.yaml
     testinput/gnssro_2020-306-2358C2E6.bufr
+    testinput/satwind_EUMet_wmoBUFR2ioda.yaml
+    testinput/satwind_EUMet_wmo.bufr
+    testinput/satwind_Himawari_wmoBUFR2ioda.yaml
+    testinput/satwind_Himawari_wmo.bufr
   )
 
   list( APPEND test_output
@@ -157,6 +161,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/airep_multi.nc
     testoutput/amdar_single.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
+    testoutput/satwind_EUMet.nc
+    testoutput/satwind_Himawari.nc
   )
 endif()
 
@@ -801,6 +807,22 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/gnssro_wmoBUFR2ioda.yaml"
                     gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_EUMet_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_EUMet_wmoBUFR2ioda.yaml"
+                    satwind_EUMet.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_Himawari_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Himawari_wmoBUFR2ioda.yaml"
+                    satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 endif()
 
