@@ -1,0 +1,555 @@
+
+Found BUFR message #      1
+  
+        Message length:       18638
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          22
+          Master table:           0
+    Originating center:         254 (= EUMETSAT Operation Centre)
+ Originating subcenter:           0 (= No sub-centre)
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           5 (= Single level upper-air data (satellite))
+     Local subcategory:          10
+ Internatl subcategory:         255
+  Master table version:          31
+   Local table version:           0
+                  Year:        2021
+                 Month:           3
+                   Day:          24
+                  Hour:          23
+                Minute:          30
+                Second:           0
+  
+ Number of data subsets:         307
+     Data are observed?: Yes
+   Data are compressed?: Yes
+  Number of descriptors:           1
+        1: 310077
+
+BUFR message #      1 of type MSTTB001 and date 2021032423 contains    307 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001033  OGCE                       254.0  CODE TABLE                    Identification of originating/generating centre 
+                                    254 = EUMETSAT Operation Centre
+001034  GSES                         0.0  CODE TABLE                    Identification of originating/generating sub-cen
+                                      0 = No sub-centre
+025061  SOFTV                   MPEF_2.9  (12)CCITT IA5                 Software identification and version number      
+025062  DBID                     MISSING  NUMERIC                       Database identification                         
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+001012  DOMO                     MISSING  DEGREE TRUE                   Direction of motion of moving observing platform
+002026  CTRE                     MISSING  M                             Cross-track resolution                          
+002027  ATRE                     MISSING  M                             Along-track resolution                          
+002028  SSNX                     72000.0  M                             Segment size at nadir in x-direction            
+002029  SSNY                     72000.0  M                             Segment size at nadir in y-direction            
+002161  WDPF                     MISSING  FLAG TABLE                    Wind processing method                          
+002164  TCMD                         2.0  CODE TABLE                    Tracer correlation method                       
+                                      2 = CC - Cross correlation
+002023  SWCM                         3.0  CODE TABLE                    Satellite-derived wind computation method       
+                                      3 = Wind derived from motion observed in the water vapour channel
+008012  LSQL                         1.0  CODE TABLE                    Land/sea qualifier                              
+                                      1 = Sea
+008013  DNQL                     MISSING  CODE TABLE                    Day/night qualifier                             
+001124  GPTI                     MISSING  NUMERIC                       Grid point identifier                           
+005001  CLATH                  -46.40128  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                   91.59269  DEGREE                        Longitude (high accuracy)                       
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         3.0  MONTH                         Month                                           
+004003  DAYS                        24.0  DAY                           Day                                             
+004004  HOUR                        23.0  HOUR                          Hour                                            
+004005  MINU                        30.0  MINUTE                        Minute                                          
+004006  SECO                         0.0  S                             Second                                          
+004086  LTDS                      3600.0  S                             Long time period or displacement                
+002162  EHAM                         4.0  CODE TABLE                    Extended height assignment method               
+                                      4 = CO₂ slicing height assignment
+007004  PRLC                     22720.0  PA                            Pressure                                        
+011001  WDIR                       282.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        41.1  M S⁻¹                      Wind speed                                      
+011003  UWND                        40.2  M S⁻¹                      u-component                                     
+011004  VWND                        -8.6  M S⁻¹                      v-component                                     
+012001  TMDBST                     217.3  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+007024  SAZA                       73.70  DEGREE                        Satellite zenith angle                          
+001023  OSQN                     MISSING  NUMERIC                       Observation sequence number                     
+           {RPSEQ001}     3 REPLICATIONS
+    ++++++  RPSEQ001  REPLICATION #     1  ++++++
+002162  EHAM                         2.0  CODE TABLE                    Extended height assignment method               
+                                      2 = WV height assignment
+007004  PRLC                     22060.0  PA                            Pressure                                        
+012001  TMDBST                     216.6  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ001  REPLICATION #     2  ++++++
+002162  EHAM                        15.0  CODE TABLE                    Extended height assignment method               
+                                     15 = Optimal estimation
+007004  PRLC                     23650.0  PA                            Pressure                                        
+012001  TMDBST                     218.3  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ001  REPLICATION #     3  ++++++
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+           {RPSEQ002}     4 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+004086  LTDS                     -1800.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       73.70  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+004086  LTDS                      -900.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       73.70  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ002  REPLICATION #     3  ++++++
+004086  LTDS                         0.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       73.70  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ002  REPLICATION #     4  ++++++
+004086  LTDS                       900.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       73.70  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+           {RPSEQ003}     3 REPLICATIONS
+    ++++++  RPSEQ003  REPLICATION #     1  ++++++
+004086  LTDS                     -1800.0  S                             Long time period or displacement                
+004086  LTDS                         0.0  S                             Long time period or displacement                
+005001  CLATH                    MISSING  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    MISSING  DEGREE                        Longitude (high accuracy)                       
+011003  UWND                        45.4  M S⁻¹                      u-component                                     
+011004  VWND                       -10.9  M S⁻¹                      v-component                                     
+011113  TCOV                     MISSING  NUMERIC                       Tracking correlation of vector                  
+025148  CVWD                     MISSING  NUMERIC                       Coefficient of variation                        
+           {RPSEQ004}     1 REPLICATIONS
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+           {RPSEQ005}     1 REPLICATIONS
+020111  XEEM                     MISSING  M                             x-axis error ellipse major component            
+020112  YEEM                     MISSING  M                             y-axis error ellipse minor component            
+020114  AXEE                     MISSING  DEGREE                        Angle of x-axis in error ellipse                
+    ++++++  RPSEQ003  REPLICATION #     2  ++++++
+004086  LTDS                      -900.0  S                             Long time period or displacement                
+004086  LTDS                       900.0  S                             Long time period or displacement                
+005001  CLATH                    MISSING  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    MISSING  DEGREE                        Longitude (high accuracy)                       
+011003  UWND                        41.2  M S⁻¹                      u-component                                     
+011004  VWND                        -9.8  M S⁻¹                      v-component                                     
+011113  TCOV                     MISSING  NUMERIC                       Tracking correlation of vector                  
+025148  CVWD                     MISSING  NUMERIC                       Coefficient of variation                        
+           {RPSEQ004}     1 REPLICATIONS
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+           {RPSEQ005}     1 REPLICATIONS
+020111  XEEM                     MISSING  M                             x-axis error ellipse major component            
+020112  YEEM                     MISSING  M                             y-axis error ellipse minor component            
+020114  AXEE                     MISSING  DEGREE                        Angle of x-axis in error ellipse                
+    ++++++  RPSEQ003  REPLICATION #     3  ++++++
+004086  LTDS                         0.0  S                             Long time period or displacement                
+004086  LTDS                      1800.0  S                             Long time period or displacement                
+005001  CLATH                    MISSING  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    MISSING  DEGREE                        Longitude (high accuracy)                       
+011003  UWND                        34.0  M S⁻¹                      u-component                                     
+011004  VWND                        -5.0  M S⁻¹                      v-component                                     
+011113  TCOV                     MISSING  NUMERIC                       Tracking correlation of vector                  
+025148  CVWD                     MISSING  NUMERIC                       Coefficient of variation                        
+           {RPSEQ004}     1 REPLICATIONS
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+           {RPSEQ005}     1 REPLICATIONS
+020111  XEEM                     MISSING  M                             x-axis error ellipse major component            
+020112  YEEM                     MISSING  M                             y-axis error ellipse minor component            
+020114  AXEE                     MISSING  DEGREE                        Angle of x-axis in error ellipse                
+001033  OGCE                       254.0  CODE TABLE                    Identification of originating/generating centre 
+                                    254 = EUMETSAT Operation Centre
+008021  TSIG                        27.0  CODE TABLE                    Time significance                               
+                                     27 = First guess
+007004  PRLC                     MISSING  PA                            Pressure                                        
+011095  UMWV                     MISSING  M S⁻¹                      u-component of the model wind vector            
+011096  VWMV                     MISSING  M S⁻¹                      v-component of the model wind vector            
+008021  TSIG                         4.0  CODE TABLE                    Time significance                               
+                                      4 = Forecast
+007004  PRLC                     MISSING  PA                            Pressure                                        
+011095  UMWV                     MISSING  M S⁻¹                      u-component of the model wind vector            
+011096  VWMV                     MISSING  M S⁻¹                      v-component of the model wind vector            
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+008086  VSNWP                       10.0  FLAG TABLE(9,11)              Vertical significance for NWP                   
+                                      9 = Virtual station height
+                                     11 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+007004  PRLC                     MISSING  PA                            Pressure                                        
+011095  UMWV                     MISSING  M S⁻¹                      u-component of the model wind vector            
+011096  VWMV                     MISSING  M S⁻¹                      v-component of the model wind vector            
+008086  VSNWP                    MISSING  FLAG TABLE                    Vertical significance for NWP                   
+           "RPSEQ006"     4 REPLICATIONS
+    ++++++  RPSEQ006  REPLICATION #     1  ++++++
+001044  GNAPS                        6.0  CODE TABLE                    Standard generating application                 
+                                      6 = QI with forecast
+033007  PCCF                        78.0  %                             Per cent confidence                             
+    ++++++  RPSEQ006  REPLICATION #     2  ++++++
+001044  GNAPS                        5.0  CODE TABLE                    Standard generating application                 
+                                      5 = QI without forecast
+033007  PCCF                        75.0  %                             Per cent confidence                             
+    ++++++  RPSEQ006  REPLICATION #     3  ++++++
+001044  GNAPS                        4.0  CODE TABLE                    Standard generating application                 
+                                      4 = Common quality index (QI) without forecast
+033007  PCCF                        57.0  %                             Per cent confidence                             
+    ++++++  RPSEQ006  REPLICATION #     4  ++++++
+001044  GNAPS                        2.0  CODE TABLE                    Standard generating application                 
+                                      2 = Weighted mixture of individual tests, but excluding forecast comparison
+033007  PCCF                        71.0  %                             Per cent confidence                             
+008092  MUNCEX                       0.0  CODE TABLE                    Measurement uncertainty expression              
+                                      0 = Standard uncertainty
+007004  PRLC                       900.0  PA                            Pressure                                        
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008092  MUNCEX                   MISSING  CODE TABLE                    Measurement uncertainty expression              
+033066  AMVQ                     MISSING  FLAG TABLE                    AMV quality flag                                
+020081  CLDMNT                   MISSING  %                             Cloud amount in segment                         
+020012  CLTP                     MISSING  CODE TABLE                    Cloud type                                      
+020056  CLDP                     MISSING  CODE TABLE                    Cloud phase                                     
+           {RPSEQ007}     1 REPLICATIONS
+008023  FOST                         4.0  CODE TABLE                    First-order statistics                          
+                                      4 = Mean value
+020016  CDTP                     23650.0  PA                            Pressure at top of cloud                        
+008092  MUNCEX                       0.0  CODE TABLE                    Measurement uncertainty expression              
+                                      0 = Standard uncertainty
+008003  VSAT                         2.0  CODE TABLE                    Vertical significance (satellite observations)  
+                                      2 = Cloud top
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+008003  VSAT                     MISSING  CODE TABLE                    Vertical significance (satellite observations)  
+020016  CDTP                       420.0  PA                            Pressure at top of cloud                        
+008092  MUNCEX                   MISSING  CODE TABLE                    Measurement uncertainty expression              
+025149  OECS                     MISSING  NUMERIC                       Optimal estimation cost                         
+020016  CDTP                     MISSING  PA                            Pressure at top of cloud                        
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+013093  COPT                     MISSING  NUMERIC                       Cloud optical thickness                         
+013109  ILWP                     MISSING  KG M⁻²                     Ice/liquid water path                           
+040038  COTH                     MISSING  M                             Cloud particle size                             
+008011  METFET                      12.0  CODE TABLE                    Meteorological feature                          
+                                     12 = Cloud
+014050  EMMI                     MISSING  %                             Emissivity                                      
+008011  METFET                   MISSING  CODE TABLE                    Meteorological feature                          
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001033  OGCE                       254.0  CODE TABLE                    Identification of originating/generating centre 
+                                    254 = EUMETSAT Operation Centre
+001034  GSES                         0.0  CODE TABLE                    Identification of originating/generating sub-cen
+                                      0 = No sub-centre
+025061  SOFTV                   MPEF_2.9  (12)CCITT IA5                 Software identification and version number      
+025062  DBID                     MISSING  NUMERIC                       Database identification                         
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+001012  DOMO                     MISSING  DEGREE TRUE                   Direction of motion of moving observing platform
+002026  CTRE                     MISSING  M                             Cross-track resolution                          
+002027  ATRE                     MISSING  M                             Along-track resolution                          
+002028  SSNX                     72000.0  M                             Segment size at nadir in x-direction            
+002029  SSNY                     72000.0  M                             Segment size at nadir in y-direction            
+002161  WDPF                     MISSING  FLAG TABLE                    Wind processing method                          
+002164  TCMD                         2.0  CODE TABLE                    Tracer correlation method                       
+                                      2 = CC - Cross correlation
+002023  SWCM                         3.0  CODE TABLE                    Satellite-derived wind computation method       
+                                      3 = Wind derived from motion observed in the water vapour channel
+008012  LSQL                         1.0  CODE TABLE                    Land/sea qualifier                              
+                                      1 = Sea
+008013  DNQL                     MISSING  CODE TABLE                    Day/night qualifier                             
+001124  GPTI                     MISSING  NUMERIC                       Grid point identifier                           
+005001  CLATH                  -44.86068  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                   91.73624  DEGREE                        Longitude (high accuracy)                       
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         3.0  MONTH                         Month                                           
+004003  DAYS                        24.0  DAY                           Day                                             
+004004  HOUR                        23.0  HOUR                          Hour                                            
+004005  MINU                        30.0  MINUTE                        Minute                                          
+004006  SECO                         0.0  S                             Second                                          
+004086  LTDS                      3600.0  S                             Long time period or displacement                
+002162  EHAM                         4.0  CODE TABLE                    Extended height assignment method               
+                                      4 = CO₂ slicing height assignment
+007004  PRLC                     23900.0  PA                            Pressure                                        
+011001  WDIR                       269.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        49.0  M S⁻¹                      Wind speed                                      
+011003  UWND                        49.0  M S⁻¹                      u-component                                     
+011004  VWND                         0.5  M S⁻¹                      v-component                                     
+012001  TMDBST                     218.4  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+007024  SAZA                       72.92  DEGREE                        Satellite zenith angle                          
+001023  OSQN                     MISSING  NUMERIC                       Observation sequence number                     
+           {RPSEQ001}     3 REPLICATIONS
+    ++++++  RPSEQ001  REPLICATION #     1  ++++++
+002162  EHAM                         2.0  CODE TABLE                    Extended height assignment method               
+                                      2 = WV height assignment
+007004  PRLC                     23120.0  PA                            Pressure                                        
+012001  TMDBST                     217.0  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ001  REPLICATION #     2  ++++++
+002162  EHAM                        15.0  CODE TABLE                    Extended height assignment method               
+                                     15 = Optimal estimation
+007004  PRLC                     24070.0  PA                            Pressure                                        
+012001  TMDBST                     218.7  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ001  REPLICATION #     3  ++++++
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+           {RPSEQ002}     4 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+004086  LTDS                     -1800.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       72.92  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+004086  LTDS                      -900.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       72.92  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ002  REPLICATION #     3  ++++++
+004086  LTDS                         0.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       72.92  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+    ++++++  RPSEQ002  REPLICATION #     4  ++++++
+004086  LTDS                       900.0  S                             Long time period or displacement                
+002020  SCLF                       333.0  CODE TABLE                    Satellite classification                        
+                                    333 = METEOSAT Second Generation Programme (MSG)
+001007  SAID                        55.0  CODE TABLE                    Satellite identifier                            
+                                     55 = METEOSAT 8
+002019  SIID                       207.0  CODE TABLE                    Satellite instruments                           
+                                    207 = EUMETSAT Radiometer SEVIRI (Spinning enhanced visible and infrared imager)
+005042  CHNM                         5.0  NUMERIC                       Channel number                                  
+002153  SCCF            47966800000000.0  HZ                            Satellite channel centre frequency              
+005040  ORBN                     MISSING  NUMERIC                       Orbit number                                    
+007024  SAZA                       72.92  DEGREE                        Satellite zenith angle                          
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+002162  EHAM                     MISSING  CODE TABLE                    Extended height assignment method               
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+           {RPSEQ003}     3 REPLICATIONS
+    ++++++  RPSEQ003  REPLICATION #     1  ++++++
+004086  LTDS                     -1800.0  S                             Long time period or displacement                
+004086  LTDS                         0.0  S                             Long time period or displacement                
+005001  CLATH                    MISSING  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    MISSING  DEGREE                        Longitude (high accuracy)                       
+011003  UWND                        49.7  M S⁻¹                      u-component                                     
+011004  VWND                        -0.8  M S⁻¹                      v-component                                     
+011113  TCOV                     MISSING  NUMERIC                       Tracking correlation of vector                  
+025148  CVWD                     MISSING  NUMERIC                       Coefficient of variation                        
+           {RPSEQ004}     1 REPLICATIONS
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+           {RPSEQ005}     1 REPLICATIONS
+020111  XEEM                     MISSING  M                             x-axis error ellipse major component            
+020112  YEEM                     MISSING  M                             y-axis error ellipse minor component            
+020114  AXEE                     MISSING  DEGREE                        Angle of x-axis in error ellipse                
+    ++++++  RPSEQ003  REPLICATION #     2  ++++++
+004086  LTDS                      -900.0  S                             Long time period or displacement                
+004086  LTDS                       900.0  S                             Long time period or displacement                
+005001  CLATH                    MISSING  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    MISSING  DEGREE                        Longitude (high accuracy)                       
+011003  UWND                        49.6  M S⁻¹                      u-component                                     
+011004  VWND                         0.5  M S⁻¹                      v-component                                     
+011113  TCOV                     MISSING  NUMERIC                       Tracking correlation of vector                  
+025148  CVWD                     MISSING  NUMERIC                       Coefficient of variation                        
+           {RPSEQ004}     1 REPLICATIONS
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+           {RPSEQ005}     1 REPLICATIONS
+020111  XEEM                     MISSING  M                             x-axis error ellipse major component            
+020112  YEEM                     MISSING  M                             y-axis error ellipse minor component            
+020114  AXEE                     MISSING  DEGREE                        Angle of x-axis in error ellipse                
+    ++++++  RPSEQ003  REPLICATION #     3  ++++++
+004086  LTDS                         0.0  S                             Long time period or displacement                
+004086  LTDS                      1800.0  S                             Long time period or displacement                
+005001  CLATH                    MISSING  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    MISSING  DEGREE                        Longitude (high accuracy)                       
+011003  UWND                        47.7  M S⁻¹                      u-component                                     
+011004  VWND                         1.7  M S⁻¹                      v-component                                     
+011113  TCOV                     MISSING  NUMERIC                       Tracking correlation of vector                  
+025148  CVWD                     MISSING  NUMERIC                       Coefficient of variation                        
+           {RPSEQ004}     1 REPLICATIONS
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+           {RPSEQ005}     1 REPLICATIONS
+020111  XEEM                     MISSING  M                             x-axis error ellipse major component            
+020112  YEEM                     MISSING  M                             y-axis error ellipse minor component            
+020114  AXEE                     MISSING  DEGREE                        Angle of x-axis in error ellipse                
+001033  OGCE                       254.0  CODE TABLE                    Identification of originating/generating centre 
+                                    254 = EUMETSAT Operation Centre
+008021  TSIG                        27.0  CODE TABLE                    Time significance                               
+                                     27 = First guess
+007004  PRLC                     MISSING  PA                            Pressure                                        
+011095  UMWV                     MISSING  M S⁻¹                      u-component of the model wind vector            
+011096  VWMV                     MISSING  M S⁻¹                      v-component of the model wind vector            
+008021  TSIG                         4.0  CODE TABLE                    Time significance                               
+                                      4 = Forecast
+007004  PRLC                     MISSING  PA                            Pressure                                        
+011095  UMWV                     MISSING  M S⁻¹                      u-component of the model wind vector            
+011096  VWMV                     MISSING  M S⁻¹                      v-component of the model wind vector            
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+008086  VSNWP                       10.0  FLAG TABLE(9,11)              Vertical significance for NWP                   
+                                      9 = Virtual station height
+                                     11 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+007004  PRLC                     MISSING  PA                            Pressure                                        
+011095  UMWV                     MISSING  M S⁻¹                      u-component of the model wind vector            
+011096  VWMV                     MISSING  M S⁻¹                      v-component of the model wind vector            
+008086  VSNWP                    MISSING  FLAG TABLE                    Vertical significance for NWP                   
+           "RPSEQ006"     4 REPLICATIONS
+    ++++++  RPSEQ006  REPLICATION #     1  ++++++
+001044  GNAPS                        6.0  CODE TABLE                    Standard generating application                 
+                                      6 = QI with forecast
+033007  PCCF                        95.0  %                             Per cent confidence                             
+    ++++++  RPSEQ006  REPLICATION #     2  ++++++
+001044  GNAPS                        5.0  CODE TABLE                    Standard generating application                 
+                                      5 = QI without forecast
+033007  PCCF                        94.0  %                             Per cent confidence                             
+    ++++++  RPSEQ006  REPLICATION #     3  ++++++
+001044  GNAPS                        4.0  CODE TABLE                    Standard generating application                 
+                                      4 = Common quality index (QI) without forecast
+033007  PCCF                        59.0  %                             Per cent confidence                             
+    ++++++  RPSEQ006  REPLICATION #     4  ++++++
+001044  GNAPS                        2.0  CODE TABLE                    Standard generating application                 
+                                      2 = Weighted mixture of individual tests, but excluding forecast comparison
+033007  PCCF                        94.0  %                             Per cent confidence                             
+008092  MUNCEX                       0.0  CODE TABLE                    Measurement uncertainty expression              
+                                      0 = Standard uncertainty
+007004  PRLC                       900.0  PA                            Pressure                                        
+011003  UWND                     MISSING  M S⁻¹                      u-component                                     
+011004  VWND                     MISSING  M S⁻¹                      v-component                                     
+008092  MUNCEX                   MISSING  CODE TABLE                    Measurement uncertainty expression              
+033066  AMVQ                     MISSING  FLAG TABLE                    AMV quality flag                                
+020081  CLDMNT                   MISSING  %                             Cloud amount in segment                         
+020012  CLTP                     MISSING  CODE TABLE                    Cloud type                                      
+020056  CLDP                     MISSING  CODE TABLE                    Cloud phase                                     
+           {RPSEQ007}     1 REPLICATIONS
+008023  FOST                         4.0  CODE TABLE                    First-order statistics                          
+                                      4 = Mean value
+020016  CDTP                     24070.0  PA                            Pressure at top of cloud                        
+008092  MUNCEX                       0.0  CODE TABLE                    Measurement uncertainty expression              
+                                      0 = Standard uncertainty
+008003  VSAT                         2.0  CODE TABLE                    Vertical significance (satellite observations)  
+                                      2 = Cloud top
+012001  TMDBST                   MISSING  K                             Temperature/air temperature                     
+008003  VSAT                     MISSING  CODE TABLE                    Vertical significance (satellite observations)  
+020016  CDTP                       200.0  PA                            Pressure at top of cloud                        
+008092  MUNCEX                   MISSING  CODE TABLE                    Measurement uncertainty expression              
+025149  OECS                     MISSING  NUMERIC                       Optimal estimation cost                         
+020016  CDTP                     MISSING  PA                            Pressure at top of cloud                        
+020014  HOCT                     MISSING  M                             Height of top of cloud                          
+013093  COPT                     MISSING  NUMERIC                       Cloud optical thickness                         
+013109  ILWP                     MISSING  KG M⁻²                     Ice/liquid water path                           
+040038  COTH                     MISSING  M                             Cloud particle size                             
+008011  METFET                      12.0  CODE TABLE                    Meteorological feature                          
+                                     12 = Cloud
+014050  EMMI                     MISSING  %                             Emissivity                                      
+008011  METFET                   MISSING  CODE TABLE                    Meteorological feature                          
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+
+ >>> END OF SUBSET <<< 
+
+End of BUFR message #      1
