@@ -21,7 +21,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -29,23 +29,29 @@ vName = {
     'chlor_a': "mass_concentration_of_chlorophyll_in_sea_water",
 }
 
+VarDims = {
+    vName['chlor_a']: ['nlocs']
+}
+
+DimDict = {}
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string")
 ]
 
-AttrData = {}
+GlobalAttrs = {}
 
 
 class OCL3(object):
 
-    def __init__(self, filename, date, thin, writer):
+    def __init__(self, filename, date, thin):
         self.filename = filename
         self.date = date
         self.thin = thin
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
+        self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
@@ -63,12 +69,19 @@ class OCL3(object):
         # get global attributes
         for v in ('platform', 'instrument', 'processing_version',
                   'time_coverage_start'):
-            AttrData[v] = ncd.getncattr(v)
+            GlobalAttrs[v] = ncd.getncattr(v)
         ncd.close()
 
-        valKey = vName['chlor_a'], self.writer.OvalName()
-        errKey = vName['chlor_a'], self.writer.OerrName()
-        qcKey = vName['chlor_a'], self.writer.OqcName()
+        valKey = vName['chlor_a'], iconv.OvalName()
+        errKey = vName['chlor_a'], iconv.OerrName()
+        qcKey = vName['chlor_a'], iconv.OqcName()
+
+        self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['_FillValue'] = -32767.
+        self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['_FillValue'] = -32767.
+        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
+        self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
+        self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
+        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -77,13 +90,11 @@ class OCL3(object):
             lats = lats[mask_thin]
             vals = vals[mask_thin]
 
-        count = 0
         for i in range(len(vals)):
-            count += 1
-            locKey = lats[i], lons[i], AttrData['time_coverage_start']
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = vals[i] * 0.25
-            self.data[0][locKey][qcKey] = 0
+            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
+            self.data[locKey][valKey] = vals[i]
+            self.data[locKey][errKey] = vals[i] * 0.25
+            self.data[locKey][qcKey] = 0
 
 
 def main():
@@ -107,18 +118,23 @@ def main():
                         type=float, required=False, default=0.0)
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.output, locationKeyList)
 
     # Read in the data
-    chl = OCL3(args.input, fdate, args.thin, writer)
+    chl = OCL3(args.input, fdate, args.thin)
 
-    # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    AttrData['thinning'] = args.thin
-    AttrData['converter'] = os.path.basename(__file__)
+    # Extract the obs data
+    ObsVars, nlocs = iconv.ExtractObsData(chl.data, locationKeyList)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(chl.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    # Set Attributes
+    GlobalAttrs['thinning'] = args.thin
+    GlobalAttrs['converter'] = os.path.basename(__file__)
+    DimDict['nlocs'] = nlocs
+
+    # Set up the writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    # Write them out
+    writer.BuildIoda(ObsVars, VarDims, chl.VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
