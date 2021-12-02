@@ -1,0 +1,226 @@
+
+Found BUFR message #      1
+  
+        Message length:       17278
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          22
+          Master table:           0
+    Originating center:          60 (= United States National Centre for Atmospheric Research (NCAR))
+ Originating subcenter:           0
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           3 (= Vertical soundings (satellite))
+     Local subcategory:          14
+ Internatl subcategory:          50 (= Radio occultation sounding)
+  Master table version:          12
+   Local table version:           0
+                  Year:        2020
+                 Month:          11
+                   Day:           1
+                  Hour:          23
+                Minute:          57
+                Second:          54
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:           1
+        1: 310026
+
+BUFR message #      1 of type MSTTB001 and date 2020110123 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001007  SAID                       755.0  CODE TABLE                    Satellite identifier                            
+                                    755 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+002019  SIID                       104.0  CODE TABLE                    Satellite instruments                           
+                                    104 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+001033  OGCE                        60.0  CODE TABLE                    Identification of originating/generating centre 
+                                     60 = United States National Centre for Atmospheric Research (NCAR)
+002172  PTAG                         2.0  CODE TABLE                    Product type for retrieved atmospheric gases    
+                                      2 = Retrieval from a limb sounding
+025060  SWID                      2019.0  NUMERIC                       Software identification                         
+008021  TSIG                        17.0  CODE TABLE                    Time significance                               
+                                     17 = Start of phenomenon
+004001  YEAR                      2020.0  YEAR                          Year                                            
+004002  MNTH                        11.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        23.0  HOUR                          Hour                                            
+004005  MINU                        57.0  MINUTE                        Minute                                          
+004006  SECO                      54.000  S                             Second                                          
+033039  QFRO                     16448.0  FLAG TABLE(2,10)              Quality flags for radio occultation data        
+                                      2 = Offline product
+                                     10 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+033007  PCCF                       100.0  %                             Percent confidence                              
+027031  PD00                 -5902285.50  M                             In direction of 0 degrees longitude, distance fr
+028031  PD90                 -2733253.00  M                             In direction 90 degrees East, distance from the 
+010031  PDNP                 -2814368.50  M                             In direction of the North Pole, distance from th
+001041  PS00                  6698.77002  M S⁻¹                      Absolute platform velocity - first component    
+001042  PS90                 -3312.32837  M S⁻¹                      Absolute platform velocity - second component   
+001043  PSNP                   675.55377  M S⁻¹                      Absolute platform velocity - third component    
+002020  SCLF                       402.0  CODE TABLE                    Satellite classification                        
+                                    402 = GLONASS
+001050  PTID                         4.0  NUMERIC                       Platform transmitter ID number                  
+027031  PD00                  -2487281.5  M                             In direction of 0 degrees longitude, distance fr
+028031  PD90                  24843054.0  M                             In direction 90 degrees East, distance from the 
+010031  PDNP                  -5228890.0  M                             In direction of the North Pole, distance from th
+001041  PS00                 -1704.06152  M S⁻¹                      Absolute platform velocity - first component    
+001042  PS90                  -757.53845  M S⁻¹                      Absolute platform velocity - second component   
+001043  PSNP                  3485.48047  M S⁻¹                      Absolute platform velocity - third component    
+004016  TISE                      61.751  S                             Time increment                                  
+005001  CLATH                  -29.24269  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  175.85043  DEGREE                        Longitude (high accuracy)                       
+027031  PD00                     -236.88  M                             In direction of 0 degrees longitude, distance fr
+028031  PD90                      235.89  M                             In direction 90 degrees East, distance from the 
+010031  PDNP                    20710.13  M                             In direction of the North Pole, distance from th
+010035  ELRC                   6382901.0  M                             Earth's local radius of curvature               
+005021  BEARAZ                     84.19  DEGREE TRUE                   Bearing or azimuth                              
+010036  GEODU                      47.03  M                             Geoid undulation                                
+           (RPSEQ001)   247 REPLICATIONS
+    ++++++  RPSEQ001  REPLICATION #     1  ++++++
+005001  CLATH                  -29.35406  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  176.33571  DEGREE                        Longitude (high accuracy)                       
+005021  BEARAZ                     84.11  DEGREE TRUE                   Bearing or azimuth                              
+           {RPSEQ002}     3 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+002121  MEFR                1500000000.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385042.5  M                             Impact parameter                                
+015037  BNDA                  0.02446111  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00597962  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+002121  MEFR                1200000000.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385042.5  M                             Impact parameter                                
+015037  BNDA                     MISSING  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00597962  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+    ++++++  RPSEQ002  REPLICATION #     3  ++++++
+002121  MEFR                         0.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385042.5  M                             Impact parameter                                
+015037  BNDA                  0.02445192  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00597962  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                        28.0  %                             Percent confidence                              
+    ++++++  RPSEQ001  REPLICATION #     2  ++++++
+005001  CLATH                  -29.34878  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  176.31244  DEGREE                        Longitude (high accuracy)                       
+005021  BEARAZ                     84.11  DEGREE TRUE                   Bearing or azimuth                              
+           {RPSEQ002}     3 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+002121  MEFR                1500000000.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385160.0  M                             Impact parameter                                
+015037  BNDA                  0.02778937  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00583053  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+002121  MEFR                1200000000.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385160.0  M                             Impact parameter                                
+015037  BNDA                     MISSING  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00583053  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+    ++++++  RPSEQ002  REPLICATION #     3  ++++++
+002121  MEFR                         0.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385160.0  M                             Impact parameter                                
+015037  BNDA                  0.02778009  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00583053  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                        37.0  %                             Percent confidence                              
+    ++++++  RPSEQ001  REPLICATION #     3  ++++++
+005001  CLATH                  -29.34353  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  176.28925  DEGREE                        Longitude (high accuracy)                       
+005021  BEARAZ                     84.12  DEGREE TRUE                   Bearing or azimuth                              
+           {RPSEQ002}     3 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+002121  MEFR                1500000000.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385278.0  M                             Impact parameter                                
+015037  BNDA                  0.02977946  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00570416  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+002121  MEFR                1200000000.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385278.0  M                             Impact parameter                                
+015037  BNDA                     MISSING  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00570416  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+    ++++++  RPSEQ002  REPLICATION #     3  ++++++
+002121  MEFR                         0.0  HZ                            Mean frequency                                  
+007040  IMPP                   6385278.0  M                             Impact parameter                                
+015037  BNDA                  0.02977010  RAD                           Bending angle                                   
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015037  BNDA                  0.00570416  RAD                           Bending angle                                   
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                        33.0  %                             Percent confidence                              
+
+
+           (RPSEQ003)   247 REPLICATIONS    [Showing only first 3]
+
+    ++++++  RPSEQ003  REPLICATION #     1  ++++++
+007007  HEIT                        27.0  M                             Height                                          
+015036  ARFR                     323.314  N UNITS                       Atmospheric refractivity                        
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015036  ARFR                     MISSING  N UNITS                       Atmospheric refractivity                        
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                        28.0  %                             Percent confidence                              
+    ++++++  RPSEQ003  REPLICATION #     2  ++++++
+007007  HEIT                       147.0  M                             Height                                          
+015036  ARFR                     323.557  N UNITS                       Atmospheric refractivity                        
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015036  ARFR                     MISSING  N UNITS                       Atmospheric refractivity                        
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                        37.0  %                             Percent confidence                              
+    ++++++  RPSEQ003  REPLICATION #     3  ++++++
+007007  HEIT                       294.0  M                             Height                                          
+015036  ARFR                     318.877  N UNITS                       Atmospheric refractivity                        
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+015036  ARFR                     MISSING  N UNITS                       Atmospheric refractivity                        
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                        33.0  %                             Percent confidence                              
+
+           (RPSEQ004)   386 REPLICATIONS    [Showing only first 3]
+
+    ++++++  RPSEQ004  REPLICATION #     1  ++++++
+007009  GPHTST                    1498.0  GPM                           Geopotential height                             
+010004  PRES                     85880.0  PA                            Pressure                                        
+012001  TMDBST                     287.1  K                             Temperature/dry-bulb temperature                
+013001  SPFH                     0.00179  KG KG⁻¹                    Specific humidity                               
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+010004  PRES                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/dry-bulb temperature                
+013001  SPFH                     MISSING  KG KG⁻¹                    Specific humidity                               
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                       100.0  %                             Percent confidence                              
+    ++++++  RPSEQ004  REPLICATION #     2  ++++++
+007009  GPHTST                    1597.0  GPM                           Geopotential height                             
+010004  PRES                     84870.0  PA                            Pressure                                        
+012001  TMDBST                     287.9  K                             Temperature/dry-bulb temperature                
+013001  SPFH                     0.00116  KG KG⁻¹                    Specific humidity                               
+008023  FOST                        13.0  CODE TABLE                    First-order statistics                          
+                                     13 = Root-mean-square
+010004  PRES                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/dry-bulb temperature                
+013001  SPFH                     MISSING  KG KG⁻¹                    Specific humidity                               
+008023  FOST                     MISSING  CODE TABLE                    First-order statistics                          
+033007  PCCF                       100.0  %                             Percent confidence                              
