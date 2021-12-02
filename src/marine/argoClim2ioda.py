@@ -205,6 +205,12 @@ def main():
     parser.add_argument(
         '-d', '--date', help='file date', metavar='YYYYMMDDHH',
         type=str, required=True)
+    parser.add_argument(
+        '-b', '--begindate', help='end date for data time window', metavar='YYYYMMDDHH',
+        type=str, required=False, default=None)
+    parser.add_argument(
+        '-e', '--enddate', help='end date for data time window', metavar='YYYYMMDDHH',
+        type=str, required=False, default=None)
 
     args = parser.parse_args()
 
