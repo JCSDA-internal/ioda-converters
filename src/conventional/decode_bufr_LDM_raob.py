@@ -1,19 +1,92 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import struct
+from datetime import datetime, timedelta
+import dateutil.parser
 import os
+from pathlib import Path
 import sys
+
 import numpy as np
+import netCDF4 as nc
 from eccodes import *
+from multiprocessing import Pool
+
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
+
 
 from IPython import embed as shell
 
+
+# set globals ???
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("datetime", "string")
+]
+
 def main(file_name, cdtg):
 
+    filenames = [ file_name ]
     # initialize
     count = [0, 0]
     start_pos = None
+
+    # read / process files in parallel
+    pool = Pool(1)
+    pool_inputs = [(i, count, start_pos) for i in filenames]
+
+    obs = pool.map(read_file, pool_inputs)
+
+    obs_data, loc_data, count, start_pos = obs[0]
+
+    #print ( "number of valid mssg: ", count[0] )
+    #print ( "number of invalid mssg: ", count[1] )
+
+    attr_data = {}
+    # prepare global attributes we want to output in the file,
+    # in addition to the ones already loaded in from the input file
+    dtg = datetime.strptime(cdtg, '%Y%m%d%H')
+    attr_data['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    attr_data['converter'] = os.path.basename(__file__)
+
+    GlobalAttrs = {}
+    VarDims = {
+        'altitude'              :  ['nlocs'],
+        'windDirection'         :  ['nlocs'],
+        'windSpeed'             :  ['nlocs'],
+        'temperatureAir'        :  ['nlocs'],
+        'temperatureDewpoint'   :  ['nlocs'],
+}
+
+    # write them out
+    nlocs = obs_data[('temperatureAir', 'ObsValue')].shape[0]
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('altitude', 'ObsValue')]['units'] = 'Radians'
+    VarAttrs[('altitude', 'ObsError')]['units'] = 'Radians'
+    VarAttrs[('altitude', 'PreQC')]['units']    = 'unitless'
+
+    missing_value = -1.0000e+100
+    int_missing_value = -2147483647
+    VarAttrs[('altitude', 'ObsValue')]['_FillValue'] = missing_value
+    VarAttrs[('altitude', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('altitude', 'PreQC')]['_FillValue'] = int_missing_value
+
+    # final write to IODA file
+    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+
+    sys.exit()
+
+def read_file(file_name, count, start_pos):
 
     f = open(file_name, 'rb')
 
@@ -25,10 +98,8 @@ def main(file_name, cdtg):
             #print ( "start_pos: ", start_pos )
             break
 
-    #print ( "number of valid mssg: ", count[0] )
-    #print ( "number of invalid mssg: ", count[1] )
+    return obs_data, loc_data, count, start_pos
 
-    sys.exit()
 
 def get_meta_data(bufr):
 
