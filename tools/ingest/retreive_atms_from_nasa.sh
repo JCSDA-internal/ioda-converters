@@ -28,16 +28,21 @@ end_dtg=${2:-${dtg}}
 
 get_contents() {
     # get list of potential files to retrieve
-    if [[ -f contents.html ]]; then
-      rm -f contents.html
+    if [[ -f atms_snpp.html ]]; then
+      rm -f atms_snpp.html
     fi
-    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/SNPP_Sounder_Level1/SNPPATMSL1B.3/${yyyy}/${jjj}/contents.html
+    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/SNPP_Sounder_Level1/SNPPATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_snpp.html
+    if [[ -f atms_noaa20.html ]]; then
+      rm -f atms_noaa20.html
+    fi
+    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/hyrax/JPSS1_Sounder_Level1/SNDRJ1ATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_noaa20.html
 }
 
 get_files() {
     # retrieve the files
-    zfiles=$( grep SNDR contents.html | grep nc | grep sameAs | awk '{print $2}' )
-    for afile in ${zfiles[@]}; do
+    for sat in snpp noaa20; do
+      zfiles=$( grep SNDR atms_${sat}.html | grep nc | grep sameAs | awk '{print $2}' )
+      for afile in ${zfiles[@]}; do
         gfile=${afile#?}
         gfile=${gfile%?}
         gfile=$( echo ${gfile} | sed -e 's/html/nc4/' )
@@ -45,6 +50,7 @@ get_files() {
         out_file="${out_file%.*.*}.nc4"
         #echo "wget ${gfile} -O ${out_file}"
         wget -nc ${gfile} -O ${out_file}
+      done
     done
 }
 
