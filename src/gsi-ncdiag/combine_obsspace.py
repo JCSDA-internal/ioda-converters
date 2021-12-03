@@ -29,12 +29,14 @@ loc_vars = [
     'MetaData/datetime',
 ]
 
+
 def combine_obsspace(FileList, OutFile, GeoDir):
     # get lists of all variables
     AllVarNames = []
     LocVarNames = []
     AllVarNames.append('nlocs')
     VarAttrFiles = {}
+    VarTypes = {}
     for f in FileList:
         obsspace = ios.ObsSpace(f)
         for vname in obsspace.variables:
@@ -65,13 +67,17 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     globalAttrs['input_files'] = ';'.join(FileList)
 
     # variable attributes will come from the first file that had said variable
-    for vname in LocVarNames + AllVarNames:
-        iodafile = VarAttrFiles[vname]
+    for fullvname in LocVarNames + AllVarNames:
+        iodafile = VarAttrFiles[fullvname]
         obsspace = ios.ObsSpace(iodafile)
-        _var = obsspace.Variable(vname)
+        _var = obsspace.Variable(fullvname)
+        VarTypes[fullvname] = _var.numpy_dtype()
         for attr in _var.attrs:
             if attr not in ['DIMENSION_LIST']:
-                varAttrs[vname][attr] = _var.read_attr(attr)
+                gname, vname = fullvname.split('/')
+                varAttrs[(vname, gname)][attr] = _var.read_attr(attr)
+        # for now going to assume all are just 'nlocs' dim
+        VarDims[fullvname] = ['nlocs']
         del _var
         del obsspace
 
@@ -108,11 +114,41 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     MetaVarData = np.vstack(MetaVarData)
     MetaVarUnique, idx, inv, cnt = np.unique(MetaVarData, return_index=True,
                                              return_inverse=True, return_counts=True, axis=1)
+    DimDict['nlocs'] = len(idx)
+    for idx2, fullvname in enumerate(LocVarNames):
+        gname, vname = fullvname.split('/')
+        OutData[(vname, gname)] = MetaVarUnique[idx2, ...].astype(VarTypes[fullvname])
 
     # grab the rest of the variables now
+    DataVarData = []
+    for fullvname in AllVarNames:
+        gname, vname = fullvname.split('/')
+        tmpvardata = []
+        for f in FileList:
+            obsspace = ios.ObsSpace(f)
+            if fullvname in obsspace.variables:
+                _var = obsspace.Variable(fullvname)
+                tmpdata = np.array(_var.read_data())
+            else:
+                tmpdata = np.full((obsspace.nlocs), varAttrs[(vname, gname)]['_FillValue'],
+                                  dtype=VarTypes[fullvname])
+            tmpvardata.append(tmpdata)
+        tmpvardata = np.hstack(tmpvardata)
+        DataVarData.append(tmpvardata)
+    DataVarData = np.vstack(DataVarData)
+    DataVarUnique = np.empty((len(DataVarData), len(idx)))
+    for idx2, fullvname in enumerate(AllVarNames):
+        gname, vname = fullvname.split('/')
+        mask = ~(DataVarData[idx2, ...] == varAttrs[(vname, gname)]['_FillValue'])
+        DataVarUnique[idx2, ...] = varAttrs[(vname, gname)]['_FillValue']
+        DataVarUnique[idx2, inv[mask]] = DataVarData[idx2, mask]
+    for idx2, fullvname in enumerate(AllVarNames):
+        gname, vname = fullvname.split('/')
+        OutData[(vname, gname)] = DataVarUnique[idx2, ...].astype(VarTypes[fullvname])
 
     writer = iconv.IodaWriter(OutFile, LocKeyList, DimDict)
     writer.BuildIoda(OutData, VarDims, varAttrs, globalAttrs)
+
 
 ######################################################
 ######################################################
