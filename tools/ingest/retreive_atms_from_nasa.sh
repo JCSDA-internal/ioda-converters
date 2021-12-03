@@ -43,24 +43,32 @@ get_files() {
         gfile=$( echo ${gfile} | sed -e 's/html/nc4/' )
         out_file=${gfile##*/}
         out_file="${out_file%.*.*}.nc4"
-        echo "wget ${gfile} -O ${out_file}"
+        #echo "wget ${gfile} -O ${out_file}"
         wget -nc ${gfile} -O ${out_file}
-        exit 0
     done
 }
 
-while (( dtg <= ${end_dtg} )); do
-    yyyy=${dtg:0:4}
+get_julian_day() {
     if [[ ${macOS} == False ]]; then
       jjj=$( date -u --date="${dtg:0:4}-${dtg:4:2}-${dtg:6:2} 00" +%j )
     else
       jjj=$( date -u -j -f "%Y%m%d" "${dtg}" +%j )
     fi
-    get_contents
-    get_files
+}
+
+advance_date() {
     if [[ ${macOS} == False ]]; then
       dtg=$( date -u --date="+1 day ${dtg:0:4}-${dtg:4:2}-${dtg:6:2} 00" +%Y%m%d )
     else
       dtg=$( date -u -j -v +1d -f "%Y%m%d" "${dtg}" +%Y%m%d )
     fi
+}
+
+
+while (( dtg <= ${end_dtg} )); do
+    yyyy=${dtg:0:4}
+    get_julian_day
+    get_contents
+    get_files
+    advance_date
 done
