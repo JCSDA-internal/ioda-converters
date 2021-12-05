@@ -111,11 +111,15 @@ def read_input(input_args):
         'solar_azimuth_angle',
         'temp_11_0um_nom',
         'temp_12_0um_nom',
-        'temp_3_75um_nom')
+        'temp_3_75um_nom',
+        'temp_11_0um_nom_stddev_3x3')
 
     for v in input_vars:
         if v not in data_in:
             data_in[v] = ncd.variables[v][:].ravel()[mask]
+            scale_factor = ncd.variables[v].scale_factor
+            add_offset = ncd.variables[v].add_offset
+            data_in[v]= scale_factor * data_in[v] + add_offset
     ncd.close()
 
     # Create a mask for optional random thinning
@@ -148,8 +152,8 @@ def read_input(input_args):
     # being better. IODA typically expects 0 to be good, and higher numbers
     # are bad, so the qc flags flipped here.
     # TODO change everything in soca to handle K instead of C ?
-    val_sst_skin = data_in['sea_surface_temperature'] - 273.15
-    val_sst = val_sst_skin - data_in['sses_bias']
+    #val_sst_skin = data_in['sea_surface_temperature'] - 273.15
+    #val_sst = val_sst_skin - data_in['sses_bias']
     err = data_in['sses_standard_deviation']
     qc = data_in['bad_pixel_mask']
 
