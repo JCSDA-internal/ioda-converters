@@ -138,6 +138,12 @@ if( iodaconv_bufr_ENABLED )
     testinput/airep_wmo_multi.bufr
     testinput/amdar_wmoBUFR2ioda.yaml
     testinput/amdar_wmo_single.bufr
+    testinput/gnssro_wmoBUFR2ioda.yaml
+    testinput/gnssro_2020-306-2358C2E6.bufr
+    testinput/satwind_EUMet_wmoBUFR2ioda.yaml
+    testinput/satwind_EUMet_wmo.bufr
+    testinput/satwind_Himawari_wmoBUFR2ioda.yaml
+    testinput/satwind_Himawari_wmo.bufr
   )
 
   list( APPEND test_output
@@ -154,6 +160,9 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005066.nc
     testoutput/airep_multi.nc
     testoutput/amdar_single.nc
+    testoutput/gnssro_2020-306-2358C2E6.nc
+    testoutput/satwind_EUMet.nc
+    testoutput/satwind_Himawari.nc
   )
 endif()
 
@@ -355,6 +364,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_insitu
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_sst
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/hgodas_sst2ioda.py
@@ -395,6 +405,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cryosat_ice2ioda.py
@@ -489,6 +500,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aqua_oc_l2
                           modis_aqua_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l3
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
@@ -792,6 +804,30 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/amdar_wmoBUFR2ioda.yaml"
                     amdar_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_gnssro_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/gnssro_wmoBUFR2ioda.yaml"
+                    gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_EUMet_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_EUMet_wmoBUFR2ioda.yaml"
+                    satwind_EUMet.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_Himawari_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Himawari_wmoBUFR2ioda.yaml"
+                    satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 endif()
 
