@@ -51,10 +51,7 @@ VarDims = {
 
 class AOD(object):
     def __init__(self, filename, method, mask, thin):
-        print('filename= ', filename)
-        print('pwd=', os.getcwd())
         self.filename = filename
-        print('self.filename= ', self.filename)
         self.mask = mask
         self.method = method
         self.thin = thin
@@ -211,7 +208,6 @@ def main():
     # write everything out
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-    print('AttrData=', AttrData)
     writer.BuildIoda(aod.outdata, VarDims, aod.varAttrs, AttrData)
 
 
