@@ -808,11 +808,13 @@ if(iodaconv_bufr_ENABLED)
   ecbuild_add_test( TARGET  test_iodaconv_generic_bufr
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND ${Python3_EXECUTABLE}
-                    ARGS    "${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py"
-                            "-d" "2020121500"
-                            "-i" "testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr"
-                            "-o" "testrun/gnssro_cosmic2_2020121500.nc4")
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf 
+                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py
+                            -d 2020121500
+                            -i testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr
+                            -o testrun/gnssro_cosmic2_2020121500.nc4"
+                            gnssro_cosmic2_2020121500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 endif()
 
