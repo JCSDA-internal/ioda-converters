@@ -1,0 +1,189 @@
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| SATDRWN2 | 310077 | Satellite-derived winds                                  |
+| RPSEQ001 | 354001 | REPLICATION SEQUENCE 001                                 |
+| RPSEQ002 | 354002 | REPLICATION SEQUENCE 002                                 |
+| RPSEQ003 | 354003 | REPLICATION SEQUENCE 003                                 |
+| RPSEQ004 | 354004 | REPLICATION SEQUENCE 004                                 |
+| RPSEQ005 | 354005 | REPLICATION SEQUENCE 005                                 |
+| RPSEQ006 | 354006 | REPLICATION SEQUENCE 006                                 |
+| RPSEQ007 | 354007 | REPLICATION SEQUENCE 007                                 |
+|          |        |                                                          |
+| OGCE     | 001033 | Identification of originating/generating centre          |
+| GSES     | 001034 | Identification of originating/generating sub-centre      |
+| SOFTV    | 025061 | Software identification and version number               |
+| DBID     | 025062 | Database identification                                  |
+| SAID     | 001007 | Satellite identifier                                     |
+| SCCF     | 002153 | Satellite channel centre frequency                       |
+| DOMO     | 001012 | Direction of motion of moving observing platform         |
+| CTRE     | 002026 | Cross-track resolution                                   |
+| ATRE     | 002027 | Along-track resolution                                   |
+| SSNX     | 002028 | Segment size at nadir in x-direction                     |
+| SSNY     | 002029 | Segment size at nadir in y-direction                     |
+| WDPF     | 002161 | Wind processing method                                   |
+| TCMD     | 002164 | Tracer correlation method                                |
+| SWCM     | 002023 | Satellite-derived wind computation method                |
+| LSQL     | 008012 | Land/sea qualifier                                       |
+| DNQL     | 008013 | Day/night qualifier                                      |
+| GPTI     | 001124 | Grid point identifier                                    |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| SECO     | 004006 | Second                                                   |
+| LTDS     | 004086 | Long time period or displacement                         |
+| EHAM     | 002162 | Extended height assignment method                        |
+| PRLC     | 007004 | Pressure                                                 |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| UWND     | 011003 | u-component                                              |
+| VWND     | 011004 | v-component                                              |
+| TMDBST   | 012001 | Temperature/air temperature                              |
+| HOCT     | 020014 | Height of top of cloud                                   |
+| SAZA     | 007024 | Satellite zenith angle                                   |
+| OSQN     | 001023 | Observation sequence number                              |
+| SCLF     | 002020 | Satellite classification                                 |
+| SIID     | 002019 | Satellite instruments                                    |
+| CHNM     | 005042 | Channel number                                           |
+| ORBN     | 005040 | Orbit number                                             |
+| BEARAZ   | 005021 | Bearing or azimuth                                       |
+| TCOV     | 011113 | Tracking correlation of vector                           |
+| CVWD     | 025148 | Coefficient of variation                                 |
+| FOST     | 008023 | First-order statistics                                   |
+| XEEM     | 020111 | x-axis error ellipse major component                     |
+| YEEM     | 020112 | y-axis error ellipse minor component                     |
+| AXEE     | 020114 | Angle of x-axis in error ellipse                         |
+| TSIG     | 008021 | Time significance                                        |
+| UMWV     | 011095 | u-component of the model wind vector                     |
+| VWMV     | 011096 | v-component of the model wind vector                     |
+| VSNWP    | 008086 | Vertical significance for NWP                            |
+| GNAPS    | 001044 | Standard generating application                          |
+| PCCF     | 033007 | Per cent confidence                                      |
+| MUNCEX   | 008092 | Measurement uncertainty expression                       |
+| AMVQ     | 033066 | AMV quality flag                                         |
+| CLDMNT   | 020081 | Cloud amount in segment                                  |
+| CLTP     | 020012 | Cloud type                                               |
+| CLDP     | 020056 | Cloud phase                                              |
+| CDTP     | 020016 | Pressure at top of cloud                                 |
+| VSAT     | 008003 | Vertical significance (satellite observations)           |
+| OECS     | 025149 | Optimal estimation cost                                  |
+| COPT     | 013093 | Cloud optical thickness                                  |
+| ILWP     | 013109 | Ice/liquid water path                                    |
+| COTH     | 040038 | Cloud particle size                                      |
+| METFET   | 008011 | Meteorological feature                                   |
+| EMMI     | 014050 | Emissivity                                               |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | SATDRWN2                                                          |
+|          |                                                                   |
+| SATDRWN2 | OGCE  GSES  SOFTV  DBID  SAID  SCCF  DOMO  201138  CTRE  ATRE     |
+| SATDRWN2 | 201000  SSNX  SSNY  WDPF  TCMD  SWCM  LSQL  DNQL  GPTI  CLATH     |
+| SATDRWN2 | CLONH  YEAR  MNTH  DAYS  HOUR  MINU  SECO  LTDS  EHAM  PRLC  WDIR |
+| SATDRWN2 | WSPD  UWND  VWND  TMDBST  HOCT  SAZA  OSQN  {RPSEQ001}            |
+| SATDRWN2 | {RPSEQ002}  {RPSEQ003}  OGCE  TSIG  PRLC  UMWV  VWMV  TSIG  PRLC  |
+| SATDRWN2 | UMWV  VWMV  TSIG  VSNWP  PRLC  UMWV  VWMV  VSNWP  "RPSEQ006"4     |
+| SATDRWN2 | MUNCEX  PRLC  UWND  VWND  MUNCEX  AMVQ  CLDMNT  CLTP  CLDP        |
+| SATDRWN2 | {RPSEQ007}  FOST                                                  |
+|          |                                                                   |
+| RPSEQ001 | EHAM  PRLC  TMDBST  HOCT                                          |
+|          |                                                                   |
+| RPSEQ002 | LTDS  SCLF  SAID  SIID  CHNM  SCCF  ORBN  SAZA  BEARAZ  EHAM      |
+| RPSEQ002 | PRLC  TMDBST  HOCT                                                |
+|          |                                                                   |
+| RPSEQ003 | LTDS  LTDS  CLATH  CLONH  UWND  VWND  TCOV  CVWD  {RPSEQ004}      |
+| RPSEQ003 | FOST  {RPSEQ005}                                                  |
+|          |                                                                   |
+| RPSEQ004 | FOST  UWND  VWND                                                  |
+|          |                                                                   |
+| RPSEQ005 | XEEM  YEEM  AXEE                                                  |
+|          |                                                                   |
+| RPSEQ006 | GNAPS  PCCF                                                       |
+|          |                                                                   |
+| RPSEQ007 | FOST  CDTP  MUNCEX  VSAT  TMDBST  VSAT  CDTP  MUNCEX  OECS  CDTP  |
+| RPSEQ007 | HOCT  COPT  ILWP  COTH  METFET  EMMI  METFET                      |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| OGCE     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| GSES     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| SOFTV    |    0 |           0 |  96 | CCITT IA5                |-------------|
+| DBID     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| SCCF     |   -8 |           0 |  26 | HZ                       |-------------|
+| DOMO     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| CTRE     |    2 |           0 |  12 | M                        |-------------|
+| ATRE     |    2 |           0 |  12 | M                        |-------------|
+| SSNX     |    0 |           0 |  18 | M                        |-------------|
+| SSNY     |    0 |           0 |  18 | M                        |-------------|
+| WDPF     |    0 |           0 |  16 | FLAG TABLE               |-------------|
+| TCMD     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| SWCM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| LSQL     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| DNQL     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| GPTI     |    0 |           0 |  24 | NUMERIC                  |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | S                        |-------------|
+| LTDS     |    0 |       -8192 |  15 | S                        |-------------|
+| EHAM     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| PRLC     |   -1 |           0 |  14 | PA                       |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| UWND     |    1 |       -4096 |  13 | M S⁻¹                 |-------------|
+| VWND     |    1 |       -4096 |  13 | M S⁻¹                 |-------------|
+| TMDBST   |    1 |           0 |  12 | K                        |-------------|
+| HOCT     |   -1 |         -40 |  11 | M                        |-------------|
+| SAZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| OSQN     |    0 |           0 |   9 | NUMERIC                  |-------------|
+| SCLF     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| SIID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| CHNM     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| ORBN     |    0 |           0 |  24 | NUMERIC                  |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| TCOV     |    3 |       -1000 |  12 | NUMERIC                  |-------------|
+| CVWD     |    2 |      -10000 |  15 | NUMERIC                  |-------------|
+| FOST     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| XEEM     |   -1 |           0 |  17 | M                        |-------------|
+| YEEM     |   -1 |           0 |  17 | M                        |-------------|
+| AXEE     |    2 |      -18000 |  16 | DEGREE                   |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| UMWV     |    1 |       -4096 |  13 | M S⁻¹                 |-------------|
+| VWMV     |    1 |       -4096 |  13 | M S⁻¹                 |-------------|
+| VSNWP    |    0 |           0 |  12 | FLAG TABLE               |-------------|
+| GNAPS    |    0 |           0 |   8 | CODE TABLE               |-------------|
+| PCCF     |    0 |           0 |   7 | %                        |-------------|
+| MUNCEX   |    0 |           0 |   5 | CODE TABLE               |-------------|
+| AMVQ     |    0 |           0 |  24 | FLAG TABLE               |-------------|
+| CLDMNT   |    0 |           0 |   7 | %                        |-------------|
+| CLTP     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| CLDP     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| CDTP     |   -1 |           0 |  14 | PA                       |-------------|
+| VSAT     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| OECS     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| COPT     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| ILWP     |    3 |           0 |  10 | KG M⁻²                |-------------|
+| COTH     |    7 |           0 |  28 | M                        |-------------|
+| METFET   |    0 |           0 |   6 | CODE TABLE               |-------------|
+| EMMI     |    1 |           0 |  10 | %                        |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
