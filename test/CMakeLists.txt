@@ -54,6 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
+  testinput/glider.yaml
 )
 
 list( APPEND test_output
@@ -377,12 +378,14 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_sst
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/glider2ioda.py
                           -i testinput/marineglider_AOML.nc
                           -o testrun/test_glider.nc
-                          -d 2016080412"
+                          -d 2016080412
+                          -y testinput/glider.yaml"
                           test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
