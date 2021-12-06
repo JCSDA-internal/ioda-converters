@@ -10,7 +10,6 @@
 #        -i: input AOD file path
 #        -o: output file path
 
-import netCDF4 as nc
 import numpy as np
 import inspect, sys, os, argparse
 import pandas as pd
@@ -131,15 +130,15 @@ if __name__ == '__main__':
         varDict[key]['valKey'] = key, iconv.OvalName()
         varAttrs[key, iconv.OvalName()]['_FillValue'] = -999.
         varAttrs[key, iconv.OvalName()]['coordinates'] = 'longitude latitude station_elevation'
-        varAttrs[key, iconv.OvalName()]['units'] = 'unitless'
+        varAttrs[key, iconv.OvalName()]['units'] = '1'
         varDict[key]['errKey'] = key, iconv.OerrName()
         varAttrs[key, iconv.OerrName()]['_FillValue'] = -999.
-        varAttrs[key, iconv.OerrName()]['units'] = 'unitless'
+        varAttrs[key, iconv.OerrName()]['units'] = '1'
         varAttrs[key, iconv.OerrName()]['coordinates'] = 'longitude latitude station_elevation'
         varDict[key]['qcKey'] = key, iconv.OqcName()
         varAttrs[key, iconv.OqcName()]['_FillValue'] = -999
         varAttrs[key, iconv.OqcName()]['coordinates'] = 'longitude latitude station_elevation'
-        varAttrs[key, iconv.OqcName()]['units'] = ''
+        varAttrs[key, iconv.OqcName()]['units'] = 'unitless'
 
     for key, value in obsvars.items():
         outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-999.))))
@@ -154,7 +153,7 @@ if __name__ == '__main__':
     outdata[('station_elevation', 'MetaData')] = np.array(np.float32(f3['elevation']))
     varAttrs[('station_elevation', 'MetaData')]['units'] = 'm'
     outdata[('surface_type', 'MetaData')] = np.full((nlocs), 1)
-    varAttrs[('surface_type', 'MetaData')]['units'] = ''
+    varAttrs[('surface_type', 'MetaData')]['units'] = 'unitless'
 
     c = np.empty([nlocs], dtype=object)
     c[:] = np.array(f3.siteid)
@@ -167,10 +166,10 @@ if __name__ == '__main__':
     outdata[('datetime', 'MetaData')] = d
     varAttrs[('datetime', 'MetaData')]['units'] = ''
 
-    outdata[('frequency', 'VarMetaData')] = np.float32(frequency)
-    varAttrs[('frequency', 'VarMetaData')]['units'] = 'Hz'
-    outdata[('sensor_channel', 'VarMetaData')] = np.int32(aod_chan)
-    varAttrs[('sensor_channel', 'VarMetaData')]['units'] = ''
+    outdata[('frequency', 'MetaData')] = np.float32(frequency)
+    varAttrs[('frequency', 'MetaData')]['units'] = 'Hz'
+    outdata[('sensor_channel', 'MetaData')] = np.int32(aod_chan)
+    varAttrs[('sensor_channel', 'MetaData')]['units'] = 'unitless'
 
     # Add global atrributes
     DimDict['nlocs'] = nlocs
@@ -184,5 +183,5 @@ if __name__ == '__main__':
     # Setup the IODA writer
     writer = iconv.IodaWriter(outfile, locationKeyList, DimDict)
 
-    # Write out IODA V1 NC files
+    # Write out IODA NC files
     writer.BuildIoda(outdata, VarDims, varAttrs, AttrData)
