@@ -71,8 +71,8 @@ def read_input(input_args):
 
     # get some of the global attributes that we are interested in
 
-    for v in ('platform', 'sensor', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+    #    for v in ('platform', 'sensor', 'processing_level'):
+    #        GlobalAttrs[v] = ncd.getncattr(v)
 
     # get the QC flags, and calculate a mask from the non-missing values
     # (since L3 files are mostly empty, fields need a mask applied immediately
@@ -85,17 +85,17 @@ def read_input(input_args):
     # Determine the lat/lon grid.
     # If L3, we need to convert 1D lat/lon to 2D lat/lon.
     # If len(time) > 1, also need to repeat the lat/lon vals
-    lons = ncd.variables['lon'][:].ravel()
-    lats = ncd.variables['lat'][:].ravel()
-    if GlobalAttrs['processing_level'][:2] == 'L3':
-        len_grid = len(lons)*len(lats)
-        lons, lats = np.meshgrid(lons, lats, copy=False)
-        lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
-        lats = np.tile(lats.ravel(), len(time_base)).ravel()[mask]
-    else:
-        len_grid = len(lons)
-        lons = np.tile(lons, len(time_base)).ravel()[mask]
-        lats = np.tile(lats, len(time_base)).ravel()[mask]
+    lons = ncd.variables['longitude'][:].ravel()
+    lats = ncd.variables['latitude'][:].ravel()
+    #if GlobalAttrs['processing_level'][:2] == 'L3':
+    len_grid = len(lons)*len(lats)
+    lons, lats = np.meshgrid(lons, lats, copy=False)
+    lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
+    lats = np.tile(lats.ravel(), len(time_base)).ravel()[mask]
+    #else:
+    #    len_grid = len(lons)
+    #    lons = np.tile(lons, len(time_base)).ravel()[mask]
+    #    lats = np.tile(lats, len(time_base)).ravel()[mask]
 
     # calculate the basetime offsets
     time = np.tile(np.atleast_2d(time_base).T, (1, len_grid)).ravel()[mask]
@@ -117,9 +117,10 @@ def read_input(input_args):
     for v in input_vars:
         if v not in data_in:
             data_in[v] = ncd.variables[v][:].ravel()[mask]
-            scale_factor = ncd.variables[v].scale_factor
-            add_offset = ncd.variables[v].add_offset
-            data_in[v]= scale_factor * data_in[v] + add_offset
+            if 'scale_factor' in ncd.variables[v].__dict__:
+                scale_factor = ncd.variables[v].scale_factor
+                add_offset = ncd.variables[v].add_offset
+                data_in[v]= scale_factor * data_in[v] + add_offset
     ncd.close()
 
     # Create a mask for optional random thinning
@@ -144,7 +145,7 @@ def read_input(input_args):
     dates = []
     for i in range(len(lons)):
         obs_date = basetime + \
-            timedelta(seconds=float(time[i]+data_in['sst_dtime'][i]))
+            timedelta(seconds=float(time[i]+3600*data_in['scan_line_time'][i])) #check later
         dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     # calculate output values
@@ -153,37 +154,27 @@ def read_input(input_args):
     # are bad, so the qc flags flipped here.
     # TODO change everything in soca to handle K instead of C ?
     #val_sst_skin = data_in['sea_surface_temperature'] - 273.15
-    #val_sst = val_sst_skin - data_in['sses_bias']
-    err = data_in['sses_standard_deviation']
+    val_sst = data_in['temp_11_0um_nom'] 
+    err = data_in['temp_11_0um_nom_stddev_3x3']
     qc = data_in['bad_pixel_mask']
 
     # allocate space for output depending on which variables are to be saved
 
     obs_dim = (len(lons))
     obs_data = {}
-    if global_config['output_sst']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
 
-    if global_config['output_skin_sst']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim)
+    obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
+    obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
+    obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
 
     obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
     obs_data[('datetime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
 
-    if global_config['output_sst']:
-        obs_data[output_var_names[0], global_config['oval_name']] = val_sst
-        obs_data[output_var_names[0], global_config['oerr_name']] = err
-        obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
-    if global_config['output_skin_sst']:
-        obs_data[output_var_names[1], global_config['oval_name']] = val_sst_skin
-        obs_data[output_var_names[1], global_config['oerr_name']] = err
-        obs_data[output_var_names[1], global_config['opqc_name']] = qc.astype('int32')
+    obs_data[output_var_names[0], global_config['oval_name']] = val_sst
+    obs_data[output_var_names[0], global_config['oerr_name']] = err
+    obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
 
     return (obs_data, GlobalAttrs)
 
