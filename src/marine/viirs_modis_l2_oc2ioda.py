@@ -23,11 +23,24 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 output_var_names = [
     "ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon",
     "mass_concentration_of_chlorophyll_in_sea_water"]
+
+DimDict = {}
+
+VarDims = {}
+
+GlobalAttrs = {}
+VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("datetime", "string"),
+]
 
 
 def read_input(input_args):
@@ -42,7 +55,7 @@ def read_input(input_args):
 
     Returns:
 
-        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
+        A tuple of (obs_data,  GlobalAttrs) needed by the IODA writer.
     """
     input_file = input_args[0]
     global_config = input_args[1]
@@ -51,9 +64,8 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
 
     # get global attributes
-    attr_data = {}
     for v in ('platform', 'instrument', 'processing_level'):
-        attr_data[v] = ncd.getncattr(v)
+        GlobalAttrs[v] = ncd.getncattr(v)
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
@@ -107,48 +119,45 @@ def read_input(input_args):
         dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     # allocate space for output depending on which variables are to be saved
-    num_vars = 0
     obs_dim = (len(lons))
     obs_data = {}
     if global_config['output_poc']:
         obs_data[(output_var_names[0], global_config['oval_name'])] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[(output_var_names[0], global_config['oerr_name'])] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[(output_var_names[0], global_config['opqc_name'])] = \
-            np.zeros(obs_dim),
-        num_vars += 1
+            np.zeros(obs_dim)
     if global_config['output_chl']:
         obs_data[(output_var_names[1], global_config['oval_name'])] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[(output_var_names[1], global_config['oerr_name'])] = \
-            np.zeros(obs_dim),
+            np.zeros(obs_dim)
         obs_data[(output_var_names[1], global_config['opqc_name'])] = \
-            np.zeros(obs_dim),
-        num_vars += 1
+            np.zeros(obs_dim)
 
-    # create the final output structures
-    loc_data = {
-        'latitude': lats,
-        'longitude': lons,
-        'datetime': dates,
-    }
+    # Add the metadata
+    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
+    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('latitude', 'MetaData')] = lats
+    obs_data[('longitude', 'MetaData')] = lons
+
     if global_config['output_poc']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = \
+        obs_data[output_var_names[0], global_config['oval_name']] = \
             data_in['poc']
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = \
+        obs_data[output_var_names[0], global_config['oerr_name']] = \
             data_in['poc']*0.0
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = \
+        obs_data[output_var_names[0], global_config['opqc_name']] = \
             data_in['l2_flags']
     if global_config['output_chl']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = \
+        obs_data[output_var_names[1], global_config['oval_name']] = \
             data_in['chlor_a']
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = \
+        obs_data[output_var_names[1], global_config['oerr_name']] = \
             data_in['chlor_a']*0.0
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = \
+        obs_data[output_var_names[1], global_config['opqc_name']] = \
             data_in['l2_flags']
 
-    return (obs_data, loc_data, attr_data)
+    return (obs_data, GlobalAttrs)
 
 
 def main():
@@ -205,21 +214,20 @@ def main():
         args.chl = True
         args.poc = True
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, [], [])
-
     # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes, and can only take iterable
-    # objects. Rather than using global variables, embed them into
-    # the iterable object together with argument array passed in (args.input)
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
-    global_config['oval_name'] = writer.OvalName()
-    global_config['oerr_name'] = writer.OerrName()
-    global_config['opqc_name'] = writer.OqcName()
+    global_config['oval_name'] = iconv.OvalName()
+    global_config['oerr_name'] = iconv.OerrName()
+    global_config['opqc_name'] = iconv.OqcName()
     global_config['output_poc'] = args.poc
     global_config['output_chl'] = args.chl
+
+    # Note: Pool.map creates separate processes, and can only take iterable
+    # objects. Rather than using global variables, embed them into
+    # the iterable object together with argument array passed in (args.input)
+
     pool_inputs = [(i, global_config) for i in args.input]
 
     # read / process files in parallel
@@ -227,42 +235,56 @@ def main():
     obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, loc_data, attr_data = obs[0]
-    loc_data['datetime'] = writer.FillNcVector(
-        loc_data['datetime'], "datetime")
+    obs_data, GlobalAttrs = obs[0]
     for i in range(1, len(obs)):
-        for k in obs_data:
-            axis = len(obs[i][0][k].shape)-1
-            obs_data[k] = np.concatenate(
-                (obs_data[k], obs[i][0][k]), axis=axis)
-        for k in loc_data:
-            d = obs[i][1][k]
-            if k == 'datetime':
-                d = writer.FillNcVector(d, 'datetime')
-            loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
+        obs_data.update(obs[i][0])
+    # Get the nlocs
+    nlocs = len(obs_data[('longitude', 'MetaData')])
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    attr_data['thinning'] = args.thin
-    attr_data['converter'] = os.path.basename(__file__)
+    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['thinning'] = args.thin
+    GlobalAttrs['converter'] = os.path.basename(__file__)
+    DimDict['nlocs'] = nlocs
+    GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
 
     # determine which variables we are going to output
-    selected_names = []
     if args.poc:
-        selected_names.append(output_var_names[0])
+        VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = \
+            'mg ^m-3'
+        VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
+            'mg ^m-3'
+        VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = \
+            'unitless'
+        VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
+            -32767.
+        VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = \
+            -32767.
+        VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = \
+            -32767
+        VarDims["ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon"] = ['nlocs']
+
     if args.chl:
-        selected_names.append(output_var_names[1])
-    var_data = {writer._var_list_name:
-                writer.FillNcVector(selected_names, "string")}
+        VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
+            'mg ^m-3'
+        VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
+            'mg ^m-3'
+        VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = \
+            'unitless'
+        VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
+            -32767.
+        VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = \
+            -32767.
+        VarAttrs[output_var_names[1], global_config['opqc_name']]['_FillValue'] = \
+            -32767
+        VarDims["mass_concentration_of_chlorophyll_in_sea_water"] = ['nlocs']
 
-    # pass parameters to the IODA writer
-    # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    writer._nvars = len(selected_names)
-    writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    # use the writer class to create the final output file
-    writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
+    # write everything out
+    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
