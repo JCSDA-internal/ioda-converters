@@ -54,6 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
+  testinput/glider.yaml
 )
 
 list( APPEND test_output
@@ -267,6 +268,7 @@ set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l2p
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gds2_sst2ioda.py
@@ -278,6 +280,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l2p
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l3u
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gds2_sst2ioda.py
@@ -375,12 +378,14 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_sst
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/glider2ioda.py
                           -i testinput/marineglider_AOML.nc
                           -o testrun/test_glider.nc
-                          -d 2016080412"
+                          -d 2016080412
+                          -y testinput/glider.yaml"
                           test_glider.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
@@ -477,6 +482,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l2
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_modis_l2_oc2ioda.py
@@ -488,6 +494,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l2
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aqua_oc_l2
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_modis_l2_oc2ioda.py
@@ -660,15 +667,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
                   TYPE    SCRIPT
+		  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
+		          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
                           -i testinput/aeronet_aod.dat
                           -o testrun/aeronet_aod.nc"
                           aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
                   TYPE    SCRIPT
+		  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
 		  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
 		  ARGS    netcdf
 		          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/aeronet_aaod2ioda.py
