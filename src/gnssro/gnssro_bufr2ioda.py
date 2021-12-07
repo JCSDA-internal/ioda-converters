@@ -22,41 +22,93 @@ IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 from eccodes import *
 
-output_var_names = [
-    "bending_angle",
-    "refractivity",
-]
-
+# globals
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string")
 ]
+
 GlobalAttrs = {
 }
 
-DimDict = {
-}
+def main(args):
 
+    args.date = datetime.strptime(args.date, '%Y%m%d%H')
+
+    # Setup the configuration that is passed to each worker process
+    # Note: Pool.map creates separate processes, and can only take iterable
+    # objects. Rather than using global variables, embed them into
+    # the iterable object together with argument array passed in (args.input)
+    global_config = {}
+    global_config['date'] = args.date
+    global_config['oval_name'] = 'ObsValue'
+    global_config['oerr_name'] = 'ObsError'
+    global_config['opqc_name'] = 'PreQC'
+
+    pool_inputs = [(i, global_config) for i in args.input]
+
+    # read / process files in parallel
+    pool = Pool(args.threads)
+    obs = pool.map(read_input, pool_inputs)
+
+    # concatenate the data from the files
+    obs_data, loc_data = obs[0]
+
+    # prepare global attributes we want to output in the file,
+    # in addition to the ones already loaded in from the input file
+    attr_data = {}
+    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    attr_data['converter'] = os.path.basename(__file__)
+
+    # pass parameters to the IODA writer
+    VarDims = {
+        'bending_angle': ['nlocs'],
+        'refractivity': ['nlocs']
+    }
+
+    # write them out
+    nlocs = obs_data[('bending_angle', 'ObsValue')].shape[0]
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('bending_angle', 'ObsValue')]['units'] = 'Radians'
+    VarAttrs[('bending_angle', 'ObsError')]['units'] = 'Radians'
+    VarAttrs[('bending_angle', 'PreQC')]['units']    = 'unitless'
+    VarAttrs[('refractivity', 'ObsValue')]['units']  = 'N'
+    VarAttrs[('refractivity', 'ObsError')]['units']  = 'N'
+    VarAttrs[('refractivity', 'PreQC')]['units']     = 'unitless'
+
+    missing_value = -1.0000e+100
+    int_missing_value = -2147483647
+    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = missing_value
+    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('bending_angle', 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = missing_value
+    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
+
+    # final write to IODA file
+    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 def read_input(input_args):
     """
-    Reads/converts a single input file, performing optional thinning also.
+    Reads/converts input file(s)
 
     Arguments:
 
-        input_args: an input filename
+        input_args: an input filename or names
             input_file: The name of file to read
 
     Returns:
 
-        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
+        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer
     """
     input_file = input_args[0]
 
@@ -70,10 +122,7 @@ def read_input(input_args):
 
     obs_data, loc_data = get_obs_data(bufr, profile_meta_data)
 
-    # nothing to define here
-    attr_data = {}
-
-    return (obs_data, loc_data, attr_data)
+    return (obs_data, loc_data)
 
 def get_meta_data(bufr):
 
@@ -162,8 +211,22 @@ def get_obs_data(bufr, profile_meta_data):
 
     return obs_data, loc_data
 
+def def_meta_data():
 
-def main():
+    meta_data_keys = {
+ "qualityFlag"                             : 'radioOccultationDataQualityFlags',
+ "geoid_height_above_reference_ellipsoid"  : 'geoidUndulation',
+ "earth_radius_of_curvature"               : 'earthLocalRadiusOfCurvature',
+ "occulting_sat_id"                        : 'satelliteIdentifier',
+ "occulting_sat_is"                        : 'satelliteInstruments',
+ "process_center"                          : 'centre',
+ "reference_sat_id"                        : 'platformTransmitterIdNumber',
+ "gnss_sat_class"                          : 'satelliteClassification',
+}
+
+    return meta_data_keys
+
+if __name__ == "__main__":
 
     # Get command line arguments
     parser = argparse.ArgumentParser(
@@ -196,78 +259,5 @@ def main():
         type=int, default=1)
 
     args = parser.parse_args()
-    args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
-    # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes, and can only take iterable
-    # objects. Rather than using global variables, embed them into
-    # the iterable object together with argument array passed in (args.input)
-    global_config = {}
-    global_config['date'] = args.date
-    global_config['oval_name'] = 'ObsValue'
-    global_config['oerr_name'] = 'ObsError'
-    global_config['opqc_name'] = 'PreQC'
-
-    pool_inputs = [(i, global_config) for i in args.input]
-
-    # read / process files in parallel
-    pool = Pool(args.threads)
-    obs = pool.map(read_input, pool_inputs)
-
-    # concatenate the data from the files
-    obs_data, loc_data, attr_data = obs[0]
-
-    # prepare global attributes we want to output in the file,
-    # in addition to the ones already loaded in from the input file
-    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    attr_data['converter'] = os.path.basename(__file__)
-
-    # pass parameters to the IODA writer
-    VarDims = {
-        'bending_angle': ['nlocs'],
-        'refractivity': ['nlocs']
-    }
-
-    # write them out
-    nlocs = obs_data[('bending_angle', 'ObsValue')].shape[0]
-
-    DimDict = {'nlocs': nlocs}
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-
-    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('bending_angle', 'ObsValue')]['units'] = 'Radians'
-    VarAttrs[('bending_angle', 'ObsError')]['units'] = 'Radians'
-    VarAttrs[('bending_angle', 'PreQC')]['units']    = 'unitless'
-    VarAttrs[('refractivity', 'ObsValue')]['units']  = 'N'
-    VarAttrs[('refractivity', 'ObsError')]['units']  = 'N'
-    VarAttrs[('refractivity', 'PreQC')]['units']     = 'unitless'
-
-    missing_value = -1.0000e+100
-    int_missing_value = -2147483647
-    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = missing_value
-    VarAttrs[('bending_angle', 'PreQC')]['_FillValue'] = int_missing_value
-    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
-    VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
-
-    # final write to IODA file
-    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
-
-def def_meta_data():
-
-    meta_data_keys = {
- "qualityFlag"                             : 'radioOccultationDataQualityFlags',
- "geoid_height_above_reference_ellipsoid"  : 'geoidUndulation',
- "earth_radius_of_curvature"               : 'earthLocalRadiusOfCurvature',
- "occulting_sat_id"                        : 'satelliteIdentifier',
- "occulting_sat_is"                        : 'satelliteInstruments',
- "process_center"                          : 'centre',
- "reference_sat_id"                        : 'platformTransmitterIdNumber',
- "gnss_sat_class"                          : 'satelliteClassification',
-}
-
-    return meta_data_keys
-
-if __name__ == '__main__':
-    main()
+    main(args)
