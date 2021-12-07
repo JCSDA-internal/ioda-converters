@@ -16,6 +16,8 @@
 #
 ##################################################################
 
+nasa_gesdisc_address='https://sounder.gesdisc.eosdis.nasa.gov/opendap/'
+
 if (( ${#@} == 0 ))  ||  (( ${#@} > 2 )) || [[ $1 == [hH]elp ]]; then
     echo "usage bash $0 yyyymmdd [end_yyyymmdd]"
     echo "example:  bash $0 20170915 [20171001]"
@@ -45,11 +47,11 @@ get_contents() {
     if [[ -f atms_noaa20.html ]]; then
       rm -f atms_noaa20.html
     fi
-    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/hyrax/JPSS1_Sounder_Level1/SNDRJ1ATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_noaa20.html
+    wget ${nasa_gesdisc_address}/hyrax/JPSS1_Sounder_Level1/SNDRJ1ATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_noaa20.html
     if [[ -f atms_snpp.html ]]; then
       rm -f atms_snpp.html
     fi
-    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/SNPP_Sounder_Level1/SNPPATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_snpp.html
+    wget ${nasa_gesdisc_address}/SNPP_Sounder_Level1/SNPPATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_snpp.html
 }
 
 get_files() {
