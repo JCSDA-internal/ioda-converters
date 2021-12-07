@@ -9,6 +9,7 @@
 from __future__ import print_function
 import sys
 import argparse
+import yaml
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import numpy as np
@@ -20,13 +21,12 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 vName = [
     "sea_water_temperature",
     "sea_water_salinity"]
-
 
 locationKeyList = [
     ("latitude", "float"),
@@ -35,18 +35,28 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
+GlobalAttrs = {
     'odb_version': 1,
 }
 
 
 class Profile(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, yamlfile, date):
+        # read in YAML file on thinning option
+        with open(yamlfile, 'r') as stream:
+            yamlconfig = yaml.safe_load(stream)
         self.filename = filename
+        self.thin = yamlconfig['thin']
+        self.lat_sth_HAT10 = yamlconfig['lat_sth_HAT10']
+        self.lat_nth_HAT10 = yamlconfig['lat_nth_HAT10']
+        self.lon_wth_HAT10 = yamlconfig['lon_wth_HAT10']
+        self.lon_eth_HAT10 = yamlconfig['lon_eth_HAT10']
+        self.mdep = yamlconfig['max_depth']
+        self.dxy = yamlconfig['dxy']
+        self.dz = yamlconfig['dz']
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     def _read(self):
@@ -65,29 +75,41 @@ class Profile(object):
         errs = np.squeeze(errs)
         ncd.close()
         base_date = datetime(1970, 1, 1)
-        for i in range(len(time)-1):
-            for j in [0, 1]:
-                valKey = vName[j], self.writer.OvalName()
-                errKey = vName[j], self.writer.OerrName()
-                qcKey = vName[j], self.writer.OqcName()
-                dt = base_date + timedelta(seconds=int(time[i]))
-                locKey = lats[i], lons[i], dpth[i], dt.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ")
-                if j == 0:
-                    self.data[0][locKey][valKey] = temperature[i]
-                    self.data[0][locKey][errKey] = errs[i]
-                    self.data[0][locKey][qcKey] = Tqcs[i]
-                else:
-                    self.data[0][locKey][valKey] = salinity[i]
-                    self.data[0][locKey][errKey] = errs[i]
-                    self.data[0][locKey][qcKey] = Sqcs[i]
+        ii = int((self.lon_eth_HAT10-self.lon_wth_HAT10)/self.dxy)+10
+        jj = int((self.lat_nth_HAT10-self.lat_sth_HAT10)/self.dxy)+10
+        kk = int((self.mdep)/self.dz)+10
+        box = np.zeros((ii, jj, kk))
+        for i in range(len(lons) - 1):
+            if lats[i] > 2.0 and lats[i] < 45.0 and lons[i] < -8.0 and lons[i] > -98.0:
+                m = int((lons[i] + 98) / self.dxy)
+                n = int((lats[i] - 2) / self.dxy)
+                k = int((dpth[i]) / self.dz)
+                if box[m, n, k] == 0:
+                    if self.thin == 'False':
+                        box[m, n, k] = 0
+                    elif self.thin == 'True':
+                        box[m, n, k] = 1
+                    for j in [0, 1]:
+                        valKey = vName[j], iconv.OvalName()
+                        errKey = vName[j], iconv.OerrName()
+                        qcKey = vName[j], iconv.OqcName()
+                        dt = base_date + timedelta(seconds=int(time[i]))
+                        locKey = lats[i], lons[i], dpth[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        if j == 0:
+                            self.data[locKey][valKey] = temperature[i]
+                            self.data[locKey][errKey] = errs[i]
+                            self.data[locKey][qcKey] = Tqcs[i]
+                        else:
+                            self.data[locKey][valKey] = salinity[i]
+                            self.data[locKey][errKey] = errs[i]
+                            self.data[locKey][qcKey] = Sqcs[i]
 
 
 def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) '
+            'Read NOAA AOML Hurricane Glider Temperature and Salinity profile observation file(s) with thinning option'
         )
     )
 
@@ -104,15 +126,27 @@ def main():
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
+    required.add_argument(
+        '-y', '--yaml', help='path to input YAML file', type=str, required=True)
     args = parser.parse_args()
+    yamlfile = args.yaml
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-
-    writer = iconv.NcWriter(args.output, locationKeyList)
-
-    prof = Profile(args.input, fdate, writer)
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    VarDims = {
+        'sea_water_temperature': ['nlocs'],
+        'sea_water_salinity': ['nlocs']}
+    prof = Profile(args.input, args.yaml, fdate)
+    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
+    ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('sea_water_temperature', 'ObsValue')]['units'] = 'celsius'
+    VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'psu'
+    VarAttrs[('sea_water_temperature', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('sea_water_salinity', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('sea_water_temperature', 'PreQC')]['units'] = ''
+    VarAttrs[('sea_water_salinity', 'ObsError')]['units'] = ''
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
