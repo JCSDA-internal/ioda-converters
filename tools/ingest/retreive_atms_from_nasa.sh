@@ -1,6 +1,20 @@
 #!/bin/sh
 
-# retrieve ATMS data from NASA GES DISC
+##################################################################
+# 
+#  PURPOSE:
+#       retrieve ATMS data from NASA GES DISC for single day
+#         or optionally a range of days
+#         does not clobber so can be re-run 
+#
+#   REQUIREMENTS:
+#       wget
+#       gnu date
+#       NASA EARTHDATA account (https://disc.gsfc.nasa.gov/data-access)
+#         - must have account and add server and user/pass to ~/.netrc
+#         - follow instructions on NASA EARTHDATA access page above
+#
+##################################################################
 
 if (( ${#@} == 0 ))  ||  (( ${#@} > 2 )) || [[ $1 == [hH]elp ]]; then
     echo "usage bash $0 yyyymmdd [end_yyyymmdd]"
@@ -28,14 +42,14 @@ end_dtg=${2:-${dtg}}
 
 get_contents() {
     # get list of potential files to retrieve
-    if [[ -f atms_snpp.html ]]; then
-      rm -f atms_snpp.html
-    fi
-    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/SNPP_Sounder_Level1/SNPPATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_snpp.html
     if [[ -f atms_noaa20.html ]]; then
       rm -f atms_noaa20.html
     fi
     wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/hyrax/JPSS1_Sounder_Level1/SNDRJ1ATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_noaa20.html
+    if [[ -f atms_snpp.html ]]; then
+      rm -f atms_snpp.html
+    fi
+    wget https://sounder.gesdisc.eosdis.nasa.gov/opendap/SNPP_Sounder_Level1/SNPPATMSL1B.3/${yyyy}/${jjj}/contents.html -O atms_snpp.html
 }
 
 get_files() {
