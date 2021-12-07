@@ -16,17 +16,16 @@ import sys
 import h5py
 import numpy as np
 
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 from IPython import embed as shell
 
 # globals
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 ATMS_WMO_sat_ID = 77
 
 GlobalAttrs = {
@@ -148,6 +147,9 @@ def get_data( f, g, obs_data, loc_data ):
 #   'surf_alt', 'surf_alt_sdev', 'utc_tuple', 'utc_tuple_lbl', 'utc_tuple_lbl_len', 'view_ang', 'warm_nedt', 'xtrack'
 
     # dimension ( 180, 96 )
+
+    shell()
+    sys.exit()
     try:
         loc_data['latitude'].append(  g['lat'][:,:].flatten() )
         loc_data['longitude'].append(  g['lon'][:,:].flatten() )
