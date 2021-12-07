@@ -20,7 +20,7 @@ IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-import ioda_conv_engines as iconv
+#import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 from IPython import embed as shell
@@ -49,8 +49,8 @@ def main(input_files, output_dir, threads):
 
     # read / process files in parallel
     pool = Pool(args.threads)
-    obs = pool.map(get_data_from_files, pool_inputs)
-    #obs = get_data_from_files( input_files )
+    #obs = pool.map(get_data_from_files, pool_inputs)
+    obs = get_data_from_files( input_files )
 
     # concatenate the data from the files
     obs_data, loc_data = obs[0]
@@ -111,7 +111,7 @@ def get_data_from_files( zfiles ):
         obs_data, loc_data = get_data( f, g, obs_data, loc_data )
         f.close()
         g.close()
-    return obs
+    return (obs_data, loc_data)
 
 def get_data( f, g, obs_data, loc_data ):
 
@@ -148,40 +148,43 @@ def get_data( f, g, obs_data, loc_data ):
 
     # dimension ( 180, 96 )
 
-    shell()
-    sys.exit()
+    #shell()
+    #sys.exit()
     try:
-        loc_data['latitude'].append(  g['lat'][:,:].flatten() )
-        loc_data['longitude'].append(  g['lon'][:,:].flatten() )
-        loc_data['channelNumber'].append(  g['channel'][:,:].flatten() )
-        loc_data['satelliteId'].append(  ATMS_WMO_sat_ID )
-#       loc_data['satelliteId'].append(  g['obs_id'][:,:].flatten() )
-        loc_data['fieldOfViewNumber'].append(  range(96)+1 )
-        loc_data['solarZenithAngle'].append(  g['sol_zen'][:,:].flatten() )
-        loc_data['solarAzimuthAngle'].append(  g['sol_azi'][:,:].flatten() )
-        loc_data['sensorZenithAngle'].append(  g['sat_zen'][:,:].flatten() )
-        loc_data['sensorAzimuthAngle'].append(  g['sat_azi'][:,:].flatten() )
-        obs_time_utc = g['obs_time_utc'][:,:].flatten() )
+        nscans                          =  np.shape(g['lat'])[0]
+        nbeam_pos                       =  np.shape(g['lat'])[1]
+        loc_data['latitude']            =  g['lat'][:,:].flatten()
+        loc_data['longitude']           =  g['lon'][:,:].flatten()
+        loc_data['channelNumber']       =  g['channel'][:]
+        loc_data['satelliteId']         =  ATMS_WMO_sat_ID
+        loc_data['fieldOfViewNumber']   =  np.tile( np.arange(nbeam_pos)+1, (nscans,1) ).flatten()
+        loc_data['solarZenithAngle']    =  g['sol_zen'][:,:].flatten()
+        loc_data['solarAzimuthAngle']   =  g['sol_azi'][:,:].flatten()
+        loc_data['sensorZenithAngle']   =  g['sat_zen'][:,:].flatten()
+        loc_data['sensorAzimuthAngle']  =  g['sat_azi'][:,:].flatten()
+        obs_time_utc = loc_data['datetime']  = g['obs_time_utc'][:,:].flatten()
+        nchans = len( loc_data['channelNumber'] )
+        nlocs  = len( loc_data['latitude'] )
 #       dtg = ( "%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute) )
 #       loc_data['datetime'] = datetime.strptime( dtg ,"%Y-%m-%dT%H:%M:%SZ")
 
 
     except:
-        loc_data['latitude'].append(  g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:].flatten()  )
-        loc_data['longitude'].append(  g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:].flatten() )
+        loc_data['latitude'].append(  g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:,:].flatten()  )
+        loc_data['longitude'].append(  g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:,:].flatten() )
 
     # dimension ( 180, 96, 22 )
     try:
-        obs_data[('brightnessTemperature', "ObsValue")].append( g['antenna_temp'][:,:,:].flatten() )
-        obs_data[('brightnessTemperature', "ObsError")].append( np.full((nlocs,npos), 5.0, dtype='float32') )
-        obs_data[('brightnessTemperature', "PreQC")].append( np.full((nlocs,npos), 0, dtype='int32') )
+        obs_data[('brightnessTemperature', "ObsValue")]    = np.vstack(g['antenna_temp'])
+        obs_data[('brightnessTemperature', "ObsError")]    = np.full((nlocs,nchans), 5.0, dtype='float32')
+        obs_data[('brightnessTemperature', "PreQC")]       = np.full((nlocs,nchans), 0, dtype='int32')
     except:
-        scaled_data = f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'][:,:,:].flatten()
+        scaled_data = np.vstack( f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'] )
         scale_fac = f['All_Data']['ATMS-SDR_All']['BrightnessTemperatureFactors'][:].flatten()
 
-        obs_data[('brightnessTemperature', "ObsValue")].append( (scaled_data * scale_fac[0]) + scale_fac[1] )
-        obs_data[('brightnessTemperature', "ObsError")].append( np.full((nlocs,npos), 5.0, dtype='float32') )
-        obs_data[('brightnessTemperature', "PreQC")].append( np.full((nlocs,npos), 0, dtype='int32') )
+        obs_data[('brightnessTemperature', "ObsValue")]    = (scaled_data * scale_fac[0]) + scale_fac[1]
+        obs_data[('brightnessTemperature', "ObsError")]    = np.full((nlocs,nchans), 5.0, dtype='float32')
+        obs_data[('brightnessTemperature', "PreQC")]       = np.full((nlocs,nchans), 0, dtype='int32')
 
     return obs_data, loc_data
 
