@@ -205,14 +205,6 @@ def init_obs_loc():
     
     return obs, loc
 
-def def_meta_data():
-
-    meta_data_keys = {
- "satelliteId"                             : 'radioOccultationDataQualityFlags',
-}
-
-    return meta_data_keys
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
