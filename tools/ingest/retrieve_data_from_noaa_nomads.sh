@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ##################################################################
 # 
@@ -31,6 +31,9 @@ elif (( ${#1} != 10 )); then
 fi
 
 
+# set date-time group to ingest data
+dtg=${1}
+
 # files to ingest either default or user specified
 if (( ${#@} == 2 )); then
     data_types=(
@@ -46,14 +49,6 @@ else
         mtiasi
         )
 fi
-
-macOS=False
-if [[ "${OSTYPE}" == "darwin"* ]]; then
-  macOS=True
-fi
-
-dtg=${1}
-end_dtg=${2:-${dtg}}
 
 get_files() {
     # retrieve the files
