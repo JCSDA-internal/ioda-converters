@@ -31,12 +31,12 @@ NOAA20_WMO_sat_ID = 225
 NOAA21_WMO_sat_ID = 226
 
 GlobalAttrs = {
- ("MetaData", "platformCommonName") :  "ATMS",
- ("MetaData", "platformLongDescription") :  "ATMS Brightness Temperature Data",
- ("MetaData", "sensorCentralFrequency") : 
-                 [23.8, 31.4, 50.3, 51.76, 52.8, 53.596, 54.40, 54.94, 55.50,
-                  57.2903, 57.2903, 57.2903, 57.2903, 57.2903, 57.2903,
-                  88.20, 165.5, 183.31, 183.31, 183.31, 183.31, 183.31],
+    "platformCommonName" : "ATMS",
+    "platformLongDescription" : "ATMS Brightness Temperature Data",
+    "sensorCentralFrequency" : [23.8,
+    31.4, 50.3, 51.76, 52.8, 53.596, 54.40, 54.94, 55.50,
+    57.2903, 57.2903, 57.2903, 57.2903, 57.2903, 57.2903,
+    88.20, 165.5, 183.31, 183.31, 183.31, 183.31, 183.31],
 }
 locationKeyList = [
     ("latitude", "float"),
@@ -82,6 +82,8 @@ def main(input_files, output_dir, threads):
     VarAttrs[('brightnessTemperature', 'ObsError')]['_FillValue'] = missing_value
     VarAttrs[('brightnessTemperature', 'PreQC')]['_FillValue'] = int_missing_value
 
+#   there can be more than one input file
+#   GlobalAttrs['converter'] = os.path.basename(__file__)
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
