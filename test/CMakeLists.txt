@@ -54,6 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
+  testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4
 )
 
 list( APPEND test_output
@@ -101,6 +102,7 @@ list( APPEND test_output
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
+  testoutput/atms_obs.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -803,6 +805,13 @@ if(iodaconv_bufr_ENABLED)
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/amdar_wmoBUFR2ioda.yaml"
                     amdar_single.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND ${Python3_EXECUTABLE}
+                    ARGS    "${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py"
+                    "-i" "testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4" )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_gnssro_wmo_bufr
                     TYPE    SCRIPT

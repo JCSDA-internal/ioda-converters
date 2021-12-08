@@ -67,7 +67,7 @@ def main(input_files, output_dir, threads):
     }
 
     DimDict = {'nlocs': nlocs, 'nchans': nchans}
-    output_filename = os.path.join( output_dir, 'atms_ioda.v2.nc4' )
+    output_filename = os.path.join( output_dir, 'atms_obs.nc4' )
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 #   writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
