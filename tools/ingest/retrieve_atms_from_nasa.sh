@@ -16,7 +16,8 @@
 #
 ##################################################################
 
-nasa_gesdisc_address='https://sounder.gesdisc.eosdis.nasa.gov/opendap/'
+nasa_gesdisc_address='https://sounder.gesdisc.eosdis.nasa.gov/opendap'
+noaa_class_address='http://ftp-jpss.avl.class.noaa.gov'   # not implemented yet
 
 if (( ${#@} == 0 ))  ||  (( ${#@} > 2 )) || [[ $1 == [hH]elp ]]; then
     echo "usage bash $0 yyyymmdd [end_yyyymmdd]"
