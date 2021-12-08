@@ -806,13 +806,6 @@ if(iodaconv_bufr_ENABLED)
                     amdar_single.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND ${Python3_EXECUTABLE}
-                    ARGS    "${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py"
-                    "-i" "testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4" )
-
   ecbuild_add_test( TARGET  test_iodaconv_bufr_gnssro_wmo_bufr
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -837,6 +830,19 @@ if(iodaconv_bufr_ENABLED)
                     satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 endif()
+
+
+#==============================================================================
+# PrepBUFR and BUFR tests
+#==============================================================================
+
+# do not know how to run with my own python environment (which has h5py)
+ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND "conda activate py3  && ${Python3_EXECUTABLE}"
+                  ARGS    "${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py"
+                  "-i" "testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4" )
 
 #==============================================================================
 # PrepBUFR and BUFR tests
