@@ -3,6 +3,9 @@
 ```
 Compile: cd obs2ioda-v1/src; make
 ```
+NCEP BUFR library (https://github.com/NOAA-EMC/NCEPLIBS-bufr) is required to compile ``obs2ioda.x``.  
+Edit obs2ioda-v1/src/Makefile to set proper BUFR_LIB before ``make``.
+
 ## Converting PREPBUFR and BUFR files
 ```
 Usage: obs2ioda.x [-i input_dir] [-o output_dir] [bufr_filename(s)_to_convert] [-split]
