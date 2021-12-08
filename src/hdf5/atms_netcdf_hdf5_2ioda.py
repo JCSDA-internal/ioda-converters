@@ -20,13 +20,15 @@ IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-#import ioda_conv_engines as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-from IPython import embed as shell
+#from IPython import embed as shell
 
 # globals
-ATMS_WMO_sat_ID = 77
+SNPP_WMO_sat_ID = 224
+NOAA20_WMO_sat_ID = 225
+NOAA21_WMO_sat_ID = 226
 
 GlobalAttrs = {
  ("MetaData", "platformCommonName") :  "ATMS",
@@ -48,15 +50,16 @@ def main(input_files, output_dir, threads):
     pool_inputs = [( i ) for i in input_files]
 
     # read / process files in parallel
-    pool = Pool(args.threads)
+    #pool = Pool(args.threads)
     #obs = pool.map(get_data_from_files, pool_inputs)
-    obs = get_data_from_files( input_files )
-
+    #obs = get_data_from_files( input_files )
     # concatenate the data from the files
-    obs_data, loc_data = obs[0]
+    #obs_data, loc_data = obs[0]
 
-    nlocs = len(loc_data['lat'])
-    nchans = 22
+    obs_data, loc_data = get_data_from_files( input_files )
+
+    nlocs   = len( loc_data['latitude'] )
+    nchans  = len( loc_data['channelNumber'] )
 
     # pass parameters to the IODA writer
     VarDims = {
@@ -65,8 +68,8 @@ def main(input_files, output_dir, threads):
 
     DimDict = {'nlocs': nlocs, 'nchans': nchans}
     output_filename = os.path.join( output_dir, 'atms_ioda.v2.nc4' )
-#   writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
+#   writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('brightnessTemperature', 'ObsValue')]['units'] = 'K'
@@ -111,7 +114,8 @@ def get_data_from_files( zfiles ):
         obs_data, loc_data = get_data( f, g, obs_data, loc_data )
         f.close()
         g.close()
-    return (obs_data, loc_data)
+
+    return obs_data, loc_data
 
 def get_data( f, g, obs_data, loc_data ):
 
@@ -146,35 +150,32 @@ def get_data( f, g, obs_data, loc_data ):
 #   'spatial_lbl_len', 'subsat_lat', 'subsat_lon', 'sun_glint_dist', 'sun_glint_lat', 'sun_glint_lon', 
 #   'surf_alt', 'surf_alt_sdev', 'utc_tuple', 'utc_tuple_lbl', 'utc_tuple_lbl_len', 'view_ang', 'warm_nedt', 'xtrack'
 
-    # dimension ( 180, 96 )
+    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
 
-    #shell()
-    #sys.exit()
+    # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
     try:
-        nscans                          =  np.shape(g['lat'])[0]
-        nbeam_pos                       =  np.shape(g['lat'])[1]
-        loc_data['latitude']            =  g['lat'][:,:].flatten()
-        loc_data['longitude']           =  g['lon'][:,:].flatten()
-        loc_data['channelNumber']       =  g['channel'][:]
-        loc_data['satelliteId']         =  ATMS_WMO_sat_ID
-        loc_data['fieldOfViewNumber']   =  np.tile( np.arange(nbeam_pos)+1, (nscans,1) ).flatten()
-        loc_data['solarZenithAngle']    =  g['sol_zen'][:,:].flatten()
-        loc_data['solarAzimuthAngle']   =  g['sol_azi'][:,:].flatten()
-        loc_data['sensorZenithAngle']   =  g['sat_zen'][:,:].flatten()
-        loc_data['sensorAzimuthAngle']  =  g['sat_azi'][:,:].flatten()
-        obs_time_utc = loc_data['datetime']  = g['obs_time_utc'][:,:].flatten()
-        nchans = len( loc_data['channelNumber'] )
-        nlocs  = len( loc_data['latitude'] )
-#       dtg = ( "%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute) )
-#       loc_data['datetime'] = datetime.strptime( dtg ,"%Y-%m-%dT%H:%M:%SZ")
-
+        nscans                            =  np.shape(g['lat'])[0]
+        nbeam_pos                         =  np.shape(g['lat'])[1]
+        loc_data['latitude']              =  g['lat'][:,:].flatten()
+        loc_data['longitude']             =  g['lon'][:,:].flatten()
+        loc_data['channelNumber']         =  g['channel'][:]
+        loc_data['fieldOfViewNumber']     =  np.tile( np.arange(nbeam_pos)+1, (nscans,1) ).flatten()
+        loc_data['solarZenithAngle']      =  g['sol_zen'][:,:].flatten()
+        loc_data['solarAzimuthAngle']     =  g['sol_azi'][:,:].flatten()
+        loc_data['sensorZenithAngle']     =  g['sat_zen'][:,:].flatten()
+        loc_data['sensorAzimuthAngle']    =  g['sat_azi'][:,:].flatten()
+        nlocs                             =  len( loc_data['latitude'] )
+        loc_data['satelliteId']           =  np.full((nlocs), WMO_sat_ID, dtype='int32')
+        loc_data['datetime']              =  get_string_dtg(g['obs_time_utc'][:,:,:])
 
     except:
         loc_data['latitude'].append(  g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:,:].flatten()  )
         loc_data['longitude'].append(  g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:,:].flatten() )
 
-    # dimension ( 180, 96, 22 )
+    # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     try:
+        nchans                                             = len( loc_data['channelNumber'] )
+        nlocs                                              = len( loc_data['latitude'] )
         obs_data[('brightnessTemperature', "ObsValue")]    = np.vstack(g['antenna_temp'])
         obs_data[('brightnessTemperature', "ObsError")]    = np.full((nlocs,nchans), 5.0, dtype='float32')
         obs_data[('brightnessTemperature', "PreQC")]       = np.full((nlocs,nchans), 0, dtype='int32')
@@ -188,6 +189,36 @@ def get_data( f, g, obs_data, loc_data ):
 
     return obs_data, loc_data
 
+def get_WMO_satellite_ID(filename):
+
+    afile = os.path.basename(filename)
+    if 'SNPP' in afile or 'npp' in afile:
+        WMO_sat_ID = SNPP_WMO_sat_ID
+    elif 'J1' in afile or 'j01' in afile:
+        WMO_sat_ID = NOAA20_WMO_sat_ID
+    elif 'J2' in afile or 'j02' in afile:
+        WMO_sat_ID = NOAA21_WMO_sat_ID
+    else:
+        WMO_sat_ID = -1
+        print( "could not determine satellite from filename: %s" % afile )
+        sys.exit()
+
+    return WMO_sat_ID
+
+def get_string_dtg(obs_time_utc):
+
+    year   = obs_time_utc[:,:,0].flatten()
+    month  = obs_time_utc[:,:,1].flatten()
+    day    = obs_time_utc[:,:,2].flatten()
+    hour   = obs_time_utc[:,:,3].flatten()
+    minute = obs_time_utc[:,:,4].flatten()
+    dtg    = []
+    for i, yyyy in enumerate(year):
+        cdtg = ( "%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]) )
+        dtg.append( datetime.strptime( cdtg ,"%Y-%m-%dT%H:%M:%SZ") )
+
+    return dtg
+
 def init_obs_loc():
     obs = { 
              ('brightnessTemperature', "ObsValue")  : [], 
@@ -196,16 +227,16 @@ def init_obs_loc():
 }
 
     loc = {
-            'satelliteId'  :  [],
-            'channelNumber'  :  [],
-            'latitude'  :  [],
-            'longitude'  :  [],
-            'datetime'  :  [],
+            'satelliteId'        :  [],
+            'channelNumber'      :  [],
+            'latitude'           :  [],
+            'longitude'          :  [],
+            'datetime'           :  [],
             'fieldOfViewNumber'  :  [],
-            'solarZenithAngle'  :  [],
+            'solarZenithAngle'   :  [],
             'solarAzimuthAngle'  :  [],
             'sensorZenithAngle'  :  [],
-            'sensorAzimuthAngle'  :  [],
+            'sensorAzimuthAngle' :  [],
 }
     
     return obs, loc
