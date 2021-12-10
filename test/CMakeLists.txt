@@ -55,6 +55,7 @@ list( APPEND test_input
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
   testinput/glider.yaml
+  testinput/godae_bgc_argo.nc
 )
 
 list( APPEND test_output
@@ -102,6 +103,7 @@ list( APPEND test_output
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
+  testoutput/godae_bgc_argo.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -524,6 +526,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l3
                           -o testrun/viirs_jpss1_oc_l3.nc
                           -d 2018041512"
                           viirs_jpss1_oc_l3.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_bgc_argo
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_bgc_argo2ioda.py
+                          -i testinput/godae_bgc_argo.nc
+                          -o testrun/godae_bgc_argo.nc
+                          -d 2018041512"
+                          godae_bgc_argo.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
                   TYPE    SCRIPT
