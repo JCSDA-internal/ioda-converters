@@ -34,7 +34,6 @@ locKeyList = [
 ]
 
 GlobalAttrs = {
-    'odb_version': 1,
 }
 
 
