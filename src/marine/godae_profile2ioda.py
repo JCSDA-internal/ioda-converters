@@ -177,13 +177,17 @@ class IODA(object):
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
-            value = self.varDict[key]
+            value = self.varDict[key][0]
+            units = self.varDict[key][1]
             self.keyDict[key]['valKey'] = value, iconv.OvalName()
             self.keyDict[key]['errKey'] = value, iconv.OerrName()
             self.keyDict[key]['qcKey'] = value, iconv.OqcName()
             self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
             self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
+            self.varAttrs[value, iconv.OvalName()]['units'] = units
+            self.varAttrs[value, iconv.OerrName()]['units'] = units
+            self.varAttrs[value, iconv.OqcName()]['units'] = "unitless"
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -221,6 +225,7 @@ class IODA(object):
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'nlocs': nlocs}
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+        self.varAttrs['depth', 'MetaData']['units'] = "???"
         self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
@@ -254,8 +259,9 @@ def main():
         obsList.append(obs)
 
     varDict = {
-        'ob_tmp': 'sea_water_temperature',
-        'ob_sal': 'sea_water_salinity'
+        #              var name,             units
+        'ob_tmp': ['sea_water_temperature', '???'],
+        'ob_sal': ['sea_water_salinity', '???']
     }
 
     varDims = {

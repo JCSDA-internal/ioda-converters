@@ -24,8 +24,9 @@ from orddicts import DefaultOrderedDict
 
 
 vName = {
-    2210: "sea_water_temperature",
-    2220: "sea_water_salinity",
+    #          var name,            units
+    2210: ["sea_water_temperature", "???"],
+    2220: ["sea_water_salinity", "PSU"]
 }
 
 locationKeyList = [
@@ -46,6 +47,9 @@ class Profile(object):
         self.filename = filename
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.floatDefFillVal = iconv.get_default_fill_val('float32')
+        self.intDefFillVal = iconv.get_default_fill_val('int32')
         self._read()
 
     def _read(self):
@@ -63,14 +67,24 @@ class Profile(object):
 
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
+        self.VarAttrs['depth', 'MetaData']['units'] = '???'
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
                 continue
 
-            valKey = vName[obid[i]], iconv.OvalName()
-            errKey = vName[obid[i]], iconv.OerrName()
-            qcKey = vName[obid[i]], iconv.OqcName()
+            varName = vName[obid[i]][0]
+            varUnits = vName[obid[i]][1]
+            self.VarAttrs[varName, iconv.OvalName()]['_FillValue'] = self.floatDefFillVal
+            self.VarAttrs[varName, iconv.OerrName()]['_FillValue'] = self.floatDefFillVal
+            self.VarAttrs[varName, iconv.OqcName()]['_FillValue'] = self.intDefFillVal
+            self.VarAttrs[varName, iconv.OvalName()]['units'] = varUnits
+            self.VarAttrs[varName, iconv.OerrName()]['units'] = varUnits
+            self.VarAttrs[varName, iconv.OqcName()]['units'] = 'unitless'
+
+            valKey = varName, iconv.OvalName()
+            errKey = varName, iconv.OerrName()
+            qcKey = varName, iconv.OqcName()
 
             dt = base_date + timedelta(hours=float(hrs[i]))
             locKey = lats[i], lons[i], dpth[i], dt.strftime(
@@ -118,10 +132,7 @@ def main():
 
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-
-    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'PSU'
-    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
+    writer.BuildIoda(ObsVars, VarDims, prof.VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
