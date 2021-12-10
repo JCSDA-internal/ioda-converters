@@ -14,7 +14,7 @@
 #
 ##################################################################
 
-nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod'
+nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com'
 
 usage='usage bash $0 yyyymmdd [end_yyyymmdd]'
 example=='example:  bash $0 2021091500 [2021100100]'
@@ -51,20 +51,30 @@ else
 fi
 
 get_files() {
-    # retrieve the files
-    gfile=${nomads_address}/gfs.${dtg:0:8}/${dtg:8:2}/atmos/gfs.t${dtg:8:2}z.${atype}.tm00.bufr_d
-    nfile=${nomads_address}/gfs.${dtg:0:8}/${dtg:8:2}/atmos/gfs.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
-    out_file=${gfile##*/}
-    # optional rename
-    #out_file="${out_file%.bufr_d*}.bfr"
-    #echo "wget ${gfile} -O ${out_file}"
-    wget -nc ${gfile} -O ${out_file}
-    if [[ -e ${out_file} && ! -s ${out_file} ]]; then
-        rm ${out_file}
-        out_file=${nfile##*/}
-        wget -nc ${nfile} -O ${out_file}
-        [[ ! -s ${out_file} ]]  && rm -f ${out_file}
-    fi
+
+    # the gdas is the late cut and gfs is early
+    for data_cut in gdas gfs; do
+        # retrieve the files
+        gfile=${nomads_address}/${data_cut}/prod/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d
+        nfile=${nomads_address}/${data_cut}/prod/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
+        out_file=${gfile##*/}
+        # optional rename
+        #out_file="${out_file%.bufr_d*}.bfr"
+        #echo "wget ${gfile} -O ${out_file}"
+        wget -nc ${gfile} -O ${out_file}
+        if [[ -e ${out_file} && ! -s ${out_file} ]]; then
+            rm ${out_file}
+            out_file=${nfile##*/}
+            wget -nc ${nfile} -O ${out_file}
+            if [[ ! -s ${out_file} ]]; then
+                rm -f ${out_file}
+            else
+                return  # successfully pulled a file
+            fi
+        else
+            return  # successfully pulled a file
+        fi
+    done
 }
 
 for atype in ${data_types[@]}; do
