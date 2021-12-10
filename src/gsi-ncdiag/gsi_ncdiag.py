@@ -1523,9 +1523,9 @@ class Ozone(BaseGSI):
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
         VarDims[vname] = ['nlocs']
-        varAttrs[[vname]['valKey']]['units'] = 'mol mol-1'
-        varAttrs[[vname]['errKey']]['units'] = 'mol mol-1'
-        varAttrs[[vname]['qcKey']]['units'] = 'unitless'
+        varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
+        varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
+        varAttrs[varDict[vname]['qcKey']]['units'] = 'unitless'
         varAttrs[varDict[vname]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['errKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['qcKey']]['_FillValue'] = self.INT_FILL

@@ -21,7 +21,7 @@ def run_conv_obs(convfile, outdir, platforms):
     Diag.read()
     Diag.toIODAobs(outdir, platforms=platforms)
     Diag.close()
-    print("Time (OBS) %s[%s]: %.3g sec" % (covfile, ",".join(platforms), time.time() - startt))
+    print("Time (OBS) %s[%s]: %.3g sec" % (convfile, ",".join(platforms), time.time() - startt))
     return 0
 
 
