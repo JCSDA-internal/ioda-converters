@@ -1590,7 +1590,6 @@ class Ozone(BaseGSI):
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
         DimDict['nlocs'] = nlocs
-        DimDict['nchans'] = chanlist
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
