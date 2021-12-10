@@ -55,6 +55,7 @@ list( APPEND test_input
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
   testinput/glider.yaml
+  testinput/godae_bgc_argo.nc
 )
 
 list( APPEND test_output
@@ -102,6 +103,7 @@ list( APPEND test_output
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
+  testoutput/godae_bgc_argo.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -141,6 +143,12 @@ if( iodaconv_bufr_ENABLED )
     testinput/amdar_wmo_single.bufr
     testinput/gnssro_wmoBUFR2ioda.yaml
     testinput/gnssro_2020-306-2358C2E6.bufr
+    testinput/buoy_wmoBUFR2ioda.yaml
+    testinput/buoy_wmo_single.bufr
+    testinput/ship_wmoBUFR2ioda.yaml
+    testinput/ship_wmo_single.bufr
+    testinput/synop_wmoBUFR2ioda.yaml
+    testinput/synop_wmo_single.bufr
     testinput/satwind_EUMet_wmoBUFR2ioda.yaml
     testinput/satwind_EUMet_wmo.bufr
     testinput/satwind_Himawari_wmoBUFR2ioda.yaml
@@ -162,6 +170,9 @@ if( iodaconv_bufr_ENABLED )
     testoutput/airep_multi.nc
     testoutput/amdar_single.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
+    testoutput/buoy_single.nc
+    testoutput/ship_single.nc
+    testoutput/synop_single.nc
     testoutput/satwind_EUMet.nc
     testoutput/satwind_Himawari.nc
   )
@@ -392,6 +403,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_glider
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ndbc_hfradar2ioda.py
@@ -516,6 +528,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l3
                           -o testrun/viirs_jpss1_oc_l3.nc
                           -d 2018041512"
                           viirs_jpss1_oc_l3.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_bgc_argo
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_bgc_argo2ioda.py
+                          -i testinput/godae_bgc_argo.nc
+                          -o testrun/godae_bgc_argo.nc
+                          -d 2018041512"
+                          godae_bgc_argo.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
                   TYPE    SCRIPT
@@ -822,6 +845,29 @@ if(iodaconv_bufr_ENABLED)
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/gnssro_wmoBUFR2ioda.yaml"
                     gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_buoy_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/buoy_wmoBUFR2ioda.yaml"
+                    buoy_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ship_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/ship_wmoBUFR2ioda.yaml"
+                    ship_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_synop_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/synop_wmoBUFR2ioda.yaml"
+                    synop_single.nc ${IODA_CONV_COMP_TOL_ZERO})
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_EUMet_wmo_bufr
                     TYPE    SCRIPT
