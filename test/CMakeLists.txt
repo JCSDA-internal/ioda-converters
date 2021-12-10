@@ -851,7 +851,8 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/synop_wmoBUFR2ioda.yaml"
-                    synop_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    synop_single.nc ${IODA_CONV_COMP_TOL_ZERO})
+
   ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_EUMet_wmo_bufr
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
