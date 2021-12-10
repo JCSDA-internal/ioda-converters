@@ -121,7 +121,6 @@ def main():
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'PSU'
-    VarAttrs[('sea_water_salinity', 'ObsValue')]['_FillValue'] = 123456 # temporary
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
