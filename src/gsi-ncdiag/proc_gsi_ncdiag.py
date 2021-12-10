@@ -155,7 +155,10 @@ if MyArgs.geovals_dir:
     # get list of conv diag files
     convfiles = glob.glob(DiagDir+'/*conv*')
     for convfile in convfiles:
-        run_conv_geo(convfile, GeoDir)
+        try:
+            run_conv_geo(convfile, GeoDir)
+        except (KeyError, IndexError):
+            pass
     # radiances next
     radfiles = glob.glob(DiagDir+'/diag*')
     for radfile in radfiles:
