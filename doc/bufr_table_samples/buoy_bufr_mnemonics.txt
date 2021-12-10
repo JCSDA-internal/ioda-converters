@@ -1,0 +1,192 @@
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| MBUOYOBS | 315008 | Sequence for the representation of data from moored buo  |
+| MBUOYID  | 301126 | Sequence for representation of moored buoy identificati  |
+| YYMMDD   | 301011 | Year, month, day                                         |
+| HHMM     | 301012 | Hour, minute                                             |
+| LTLONH   | 301021 | Latitude/longitude (high accuracy)                       |
+| MBUOYOB2 | 306038 | Sequence for representation of standard surface marine   |
+| ANCMETOB | 302091 | Sequence for representation of ancillary meteorological  |
+| RADNSEQN | 302082 | Radiation data                                           |
+| BASICWAV | 306039 | Sequence for representation of basic wave measurements   |
+| SPCTRWAV | 306040 | Sequence for representation of detailed spectral wave m  |
+| RPSEQ001 | 354001 | REPLICATION SEQUENCE 001                                 |
+| RPSEQ002 | 354002 | REPLICATION SEQUENCE 002                                 |
+| DTMPPFH  | 306041 | Depth and temperature profile (high accuracy/precision)  |
+| RPSEQ003 | 354003 | REPLICATION SEQUENCE 003                                 |
+| RPSEQ004 | 354004 | REPLICATION SEQUENCE 004                                 |
+| IDMSMDBS | 306004 | Depth, temperature, salinity                             |
+| RPSEQ005 | 354005 | REPLICATION SEQUENCE 005                                 |
+| MOCMDBDS | 306005 |                                                          |
+| RPSEQ006 | 354006 | REPLICATION SEQUENCE 006                                 |
+|          |        |                                                          |
+| WMOP     | 001087 | WMO marine observing platform extended identifier        |
+| STSN     | 001015 | Station or site name                                     |
+| BUYT     | 002149 | Type of data buoy                                        |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| PRES     | 010004 | Pressure                                                 |
+| PMSL     | 010051 | Pressure reduced to mean sea level                       |
+| HSAWS    | 007033 | Height of sensor above water surface                     |
+| TMDB     | 012101 | Temperature/air temperature                              |
+| TMDP     | 012103 | Dewpoint temperature                                     |
+| REHU     | 013003 | Relative humidity                                        |
+| TSIG     | 008021 | Time significance                                        |
+| TPMI     | 004025 | Time period or displacement                              |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| MXGS     | 011041 | Maximum wind gust speed                                  |
+| PCAT     | 002005 | Precision of temperature observation                     |
+| DBSSX    | 007063 | Depth below sea/water surface (cm)                       |
+| SST0     | 022049 | Sea-surface temperature                                  |
+| HOVI     | 020001 | Horizontal visibility                                    |
+| TPHR     | 004024 | Time period or displacement                              |
+| TOPC     | 013011 | Total precipitation/total water equivalent               |
+| LWRAD    | 014002 | Long-wave radiation, integrated over period specified    |
+| SWRAD    | 014004 | Short-wave radiation, integrated over period specified   |
+| NRAD     | 014016 | Net radiation, integrated over period specified          |
+| GSORDH   | 014028 | Global solar radiation (high accuracy), integrated over  |
+| DFSORD   | 014029 | Diffuse solar radiation (high accuracy), integrated ove  |
+| DRSORD   | 014030 | Direct solar radiation (high accuracy), integrated over  |
+| DOWR     | 022078 | Duration of wave record                                  |
+| SGWH     | 022070 | Significant wave height                                  |
+| MXWH     | 022073 | Maximum wave height                                      |
+| AVWP     | 022074 | Average wave period                                      |
+| SPWP     | 022071 | Spectral peak wave period                                |
+| DDWC     | 022076 | Direction from which dominant waves are coming           |
+| DSDW     | 022077 | Directional spread of dominant wave                      |
+| MXSWD    | 022082 | Maximum non-directional spectral wave density            |
+| WCFR     | 022080 | Waveband central frequency                               |
+| SWDE     | 022069 | Spectral wave density                                    |
+| MDWC     | 022086 | Mean direction from which waves are coming               |
+| PDWC     | 022087 | Principal direction from which waves are coming          |
+| FNPF     | 022088 | First normalized polar coordinate from Fourier coeffici  |
+| SNPF     | 022089 | Second normalized polar coordinate from Fourier coeffic  |
+| IDGT     | 002032 | Indicator for digitization                               |
+| DBSS     | 007062 | Depth below sea/water surface                            |
+| SST1     | 022043 | Sea/water temperature                                    |
+| MSDM     | 002033 | Method of salinity/depth measurement                     |
+| SALN     | 022062 | Salinity                                                 |
+| DTCC     | 002031 | Duration and time of current measurement                 |
+| DROC     | 022004 | Direction of current                                     |
+| SPOC     | 022031 | Speed of current                                         |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | MBUOYOBS                                                          |
+|          |                                                                   |
+| MBUOYOBS | MBUOYID  MBUOYOB2  <ANCMETOB>  <RADNSEQN>  <BASICWAV>  <SPCTRWAV> |
+| MBUOYOBS | <RPSEQ002>  <RPSEQ004>  <MOCMDBDS>                                |
+|          |                                                                   |
+| MBUOYID  | WMOP  STSN  BUYT  YYMMDD  HHMM  LTLONH                            |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| MBUOYOB2 | PRES  PMSL  HSAWS  TMDB  TMDP  REHU  HSAWS  TSIG  TPMI  WDIR      |
+| MBUOYOB2 | WSPD  TSIG  TPMI  MXGS  TPMI  HSAWS  PCAT  DBSSX  SST0            |
+|          |                                                                   |
+| ANCMETOB | HOVI  TPHR  TOPC                                                  |
+|          |                                                                   |
+| RADNSEQN | TPMI  LWRAD  SWRAD  NRAD  GSORDH  DFSORD  DRSORD                  |
+|          |                                                                   |
+| BASICWAV | DOWR  SGWH  MXWH  AVWP  SPWP  DDWC  DSDW                          |
+|          |                                                                   |
+| SPCTRWAV | DOWR  MXSWD  {RPSEQ001}                                           |
+|          |                                                                   |
+| RPSEQ001 | WCFR  SWDE  MDWC  PDWC  FNPF  SNPF                                |
+|          |                                                                   |
+| RPSEQ002 | PCAT  DTMPPFH                                                     |
+|          |                                                                   |
+| DTMPPFH  | IDGT  {RPSEQ003}                                                  |
+|          |                                                                   |
+| RPSEQ003 | DBSS  SST1                                                        |
+|          |                                                                   |
+| RPSEQ004 | PCAT  IDMSMDBS                                                    |
+|          |                                                                   |
+| IDMSMDBS | IDGT  MSDM  {RPSEQ005}                                            |
+|          |                                                                   |
+| RPSEQ005 | DBSS  SST1  SALN                                                  |
+|          |                                                                   |
+| MOCMDBDS | DTCC  {RPSEQ006}                                                  |
+|          |                                                                   |
+| RPSEQ006 | DBSS  DROC  SPOC                                                  |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| WMOP     |    0 |           0 |  23 | NUMERIC                  |-------------|
+| STSN     |    0 |           0 | 160 | CCITT IA5                |-------------|
+| BUYT     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| PRES     |   -1 |           0 |  14 | PA                       |-------------|
+| PMSL     |   -1 |           0 |  14 | PA                       |-------------|
+| HSAWS    |    1 |           0 |  12 | M                        |-------------|
+| TMDB     |    2 |           0 |  16 | K                        |-------------|
+| TMDP     |    2 |           0 |  16 | K                        |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| MXGS     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| PCAT     |    2 |           0 |   7 | K                        |-------------|
+| DBSSX    |    2 |           0 |  20 | M                        |-------------|
+| SST0     |    2 |           0 |  15 | K                        |-------------|
+| HOVI     |   -1 |           0 |  13 | M                        |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| TOPC     |    1 |          -1 |  14 | KG M⁻²                |-------------|
+| LWRAD    |   -3 |      -65536 |  17 | J M⁻²                 |-------------|
+| SWRAD    |   -3 |      -65536 |  17 | J M⁻²                 |-------------|
+| NRAD     |   -4 |      -16384 |  15 | J M⁻²                 |-------------|
+| GSORDH   |   -2 |           0 |  20 | J M⁻²                 |-------------|
+| DFSORD   |   -2 |           0 |  20 | J M⁻²                 |-------------|
+| DRSORD   |   -2 |           0 |  20 | J M⁻²                 |-------------|
+| DOWR     |    0 |           0 |  12 | S                        |-------------|
+| SGWH     |    2 |           0 |  13 | M                        |-------------|
+| MXWH     |    2 |           0 |  13 | M                        |-------------|
+| AVWP     |    1 |           0 |   9 | S                        |-------------|
+| SPWP     |    1 |           0 |   9 | S                        |-------------|
+| DDWC     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| DSDW     |    0 |           0 |   9 | DEGREE                   |-------------|
+| MXSWD    |    2 |           0 |  20 | M² S                    |-------------|
+| WCFR     |    3 |           0 |  10 | HZ                       |-------------|
+| SWDE     |    3 |           0 |  22 | M² HZ⁻¹              |-------------|
+| MDWC     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| PDWC     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| FNPF     |    2 |           0 |   7 | NUMERIC                  |-------------|
+| SNPF     |    2 |           0 |   7 | NUMERIC                  |-------------|
+| IDGT     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| DBSS     |    1 |           0 |  17 | M                        |-------------|
+| SST1     |    2 |           0 |  15 | K                        |-------------|
+| MSDM     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| SALN     |    2 |           0 |  14 | PART PER THOUS           |-------------|
+| DTCC     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| DROC     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| SPOC     |    2 |           0 |  13 | M S⁻¹                 |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
