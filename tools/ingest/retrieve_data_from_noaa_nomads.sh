@@ -14,7 +14,7 @@
 #
 ##################################################################
 
-nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com'
+nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod'
 
 usage='usage bash $0 yyyymmdd [end_yyyymmdd]'
 example=='example:  bash $0 2021091500 [2021100100]'
@@ -55,8 +55,8 @@ get_files() {
     # the gdas is the late cut and gfs is early
     for data_cut in gdas gfs; do
         # retrieve the files
-        gfile=${nomads_address}/${data_cut}/prod/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d
-        nfile=${nomads_address}/${data_cut}/prod/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
+        gfile=${nomads_address}/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d
+        nfile=${nomads_address}/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
         out_file=${gfile##*/}
         # optional rename
         #out_file="${out_file%.bufr_d*}.bfr"
