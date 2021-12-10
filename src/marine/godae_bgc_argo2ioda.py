@@ -68,8 +68,8 @@ class Profile(object):
             qcKey = vName['CHL'], iconv.OqcName()
 
             dt = base_date + timedelta(days=float(time[1]))
-            locKey = ma.getdata(lats)[1], ma.getdata(lons)[1], 
-            ma.getdata(dpth)[1][i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            locKey = ma.getdata(lats)[1], ma.getdata(lons)[1], \
+                ma.getdata(dpth)[1][i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             self.data[locKey][valKey] = ma.getdata(vals)[1][i]
             self.data[locKey][errKey] = ma.getdata(errs)[1][i]
             self.data[locKey][qcKey] = 0
