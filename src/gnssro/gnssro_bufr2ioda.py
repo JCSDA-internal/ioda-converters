@@ -28,6 +28,11 @@ from orddicts import DefaultOrderedDict
 from eccodes import *
 
 # globals
+ioda_float_type = 'float32'
+ioda_int_type = 'int32'
+float_missing_value = -1.0e+37
+int_missing_value = -2147483647
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
@@ -51,14 +56,15 @@ def main(args):
     global_config['oerr_name'] = 'ObsError'
     global_config['opqc_name'] = 'PreQC'
 
-    pool_inputs = [(i, global_config) for i in args.input]
-
     # read / process files in parallel
-    pool = Pool(args.threads)
-    obs = pool.map(read_input, pool_inputs)
+#   pool_inputs = [(i) for i in args.input]
+#   pool = Pool(args.threads)
+#   obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, loc_data = obs[0]
+#   obs_data, loc_data = obs[0]
+
+    obs_data, loc_data = read_input( args.input )
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -75,6 +81,9 @@ def main(args):
     # write them out
     nlocs = obs_data[('bending_angle', 'ObsValue')].shape[0]
     DimDict = {'nlocs': nlocs}
+    meta_data_types = def_meta_types()
+    for k, v in meta_data_types.items():
+        locationKeyList.append( (k, v) )
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -85,13 +94,11 @@ def main(args):
     VarAttrs[('refractivity', 'ObsError')]['units']  = 'N'
     VarAttrs[('refractivity', 'PreQC')]['units']     = 'unitless'
 
-    missing_value = -1.0000e+100
-    int_missing_value = -2147483647
-    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('bending_angle', 'PreQC')]['_FillValue'] = int_missing_value
-    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
 
     # final write to IODA file
@@ -122,7 +129,7 @@ def read_input(input_args):
 
     obs_data, loc_data = get_obs_data(bufr, profile_meta_data)
 
-    return (obs_data, loc_data)
+    return obs_data, loc_data
 
 def get_meta_data(bufr):
 
@@ -179,9 +186,9 @@ def get_obs_data(bufr, profile_meta_data):
     #len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
     # value, ob_error, qc
-    obs_data[('bending_angle', "ObsValue")] = bang
-    obs_data[('bending_angle', "ObsError")] = bang_err            # this is observation error not estimate from file
-    obs_data[('bending_angle', "PreQC")]    = np.full(krepfac[0], 0, dtype='int32')
+    obs_data[('bending_angle', "ObsValue")] = assign_values(  bang  )
+    obs_data[('bending_angle', "ObsError")] = assign_values( bang_err )
+    obs_data[('bending_angle', "PreQC")]    = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     # get the refractivity
     height      = codes_get_array(bufr, 'height')
@@ -190,17 +197,25 @@ def get_obs_data(bufr, profile_meta_data):
     refrac_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
 
     # value, ob_error, qc
-    obs_data[('refractivity', "ObsValue")] = refrac
-    obs_data[('refractivity', "ObsError")] = refrac_err
-    obs_data[('refractivity', "PreQC")]    = np.full(krepfac[0], 0, dtype='int32')
+    obs_data[('refractivity', "ObsValue")] = assign_values( refrac )
+    obs_data[('refractivity', "ObsError")] = assign_values( refrac_err )
+    obs_data[('refractivity', "PreQC")]    = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
+    meta_data_types = def_meta_types()
 
-    loc_data['latitude']        = lats
-    loc_data['longitude']       = lons
-    loc_data['impactParameter'] = impact
-    loc_data['height']          = height
+    loc_data[('latitude', meta_data_types['latitude'])]     = assign_values( lats )
+    loc_data[('longitude', meta_data_types['longitude'])]   = assign_values( lons )
+    loc_data[('impactParameter', meta_data_types['impactParameter'])] = assign_values( impact )
+    loc_data[('height', meta_data_types['height'])]          = assign_values( height )
     for k, v in profile_meta_data.items():
-        loc_data[k]        = np.repeat(v, krepfac[0])
+        if type(v) is int:
+            loc_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
+        elif type(v) is float:
+            loc_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
+        else:  # something else (datetime for instance)
+            loc_data[(k, meta_data_types[k])]        = np.repeat(v, krepfac[0])
+            # do we need to do this?
+#           loc_data[k]        = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
 
     # get derived profiles
     geop   = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -225,6 +240,35 @@ def def_meta_data():
 }
 
     return meta_data_keys
+
+def def_meta_types():
+
+    meta_data_types = {
+ "latitude"                                : "float",
+ "longitude"                               : "float",
+ "datetime"                                : "string",
+ 'impactParameter'                         : 'float',
+ 'height'                                  : 'float',
+ "qualityFlag"                             : 'integer',
+ "geoid_height_above_reference_ellipsoid"  : 'float',
+ "earth_radius_of_curvature"               : 'float',
+ "occulting_sat_id"                        : 'integer',
+ "occulting_sat_is"                        : 'integer',
+ "process_center"                          : 'string',
+ "reference_sat_id"                        : 'integer',
+ "gnss_sat_class"                          : 'integer',
+}
+
+    return meta_data_types
+
+def assign_values( data ):
+    if data.dtype == float:
+        data[ data > np.abs(float_missing_value) ] = float_missing_value
+        return np.array(data, dtype=ioda_float_type)
+    elif data.dtype == int:
+        data[ data > np.abs(int_missing_value) ] = int_missing_value
+        return np.array(data, dtype=ioda_int_type)
+
 
 if __name__ == "__main__":
 
