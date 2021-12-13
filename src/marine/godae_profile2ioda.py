@@ -259,8 +259,8 @@ def main():
 
     varDict = {
         #              var name,             units
-        'ob_tmp': ['sea_water_temperature', '???'],
-        'ob_sal': ['sea_water_salinity', '???']
+        'ob_tmp': ['sea_water_temperature', 'C'],
+        'ob_sal': ['sea_water_salinity', 'PSU']
     }
 
     varDims = {

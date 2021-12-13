@@ -25,7 +25,7 @@ from orddicts import DefaultOrderedDict
 
 vName = {
     #          var name,            units
-    2210: ["sea_water_temperature", "???"],
+    2210: ["sea_water_temperature", "C"],
     2220: ["sea_water_salinity", "PSU"]
 }
 
