@@ -26,9 +26,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-output_var_names = [
-    "sea_surface_temperature",
-    "sea_surface_skin_temperature"]
+output_var_names = ["brightness_temperature"]
 
 locationKeyList = [
     ("latitude", "float"),
@@ -43,6 +41,8 @@ VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 DimDict = {}
 
 VarDims = {}
+
+chan_number = {3, 4, 5}
 
 
 def read_input(input_args):
@@ -154,25 +154,39 @@ def read_input(input_args):
     # are bad, so the qc flags flipped here.
     # TODO change everything in soca to handle K instead of C ?
     #val_sst_skin = data_in['sea_surface_temperature'] - 273.15
-    val_sst = data_in['temp_11_0um_nom'] 
-    err = data_in['temp_11_0um_nom_stddev_3x3']
-    qc = data_in['bad_pixel_mask']
+    nchans = len(chan_number)
+    obs_dim = (len(lons))
+    val_tb = np.zeros((obs_dim,nchans))
+    val_tb[:,0] = data_in['temp_3_75um_nom']
+    val_tb[:,1] = data_in['temp_11_0um_nom']
+    val_tb[:,2] = data_in['temp_12_0um_nom']
+    print("val_tb.shape", val_tb.shape)
+    #there isn't std for every channels
+    err = np.zeros((obs_dim,nchans))
+    err[:,0] = data_in['temp_11_0um_nom_stddev_3x3']
+    err[:,1] = data_in['temp_11_0um_nom_stddev_3x3']
+    err[:,2] = data_in['temp_11_0um_nom_stddev_3x3']
+    qc = np.zeros((obs_dim,nchans))
+    qc[:,0]= data_in['bad_pixel_mask']
+    qc[:,1]= data_in['bad_pixel_mask']
+    qc[:,2]= data_in['bad_pixel_mask']
 
     # allocate space for output depending on which variables are to be saved
 
-    obs_dim = (len(lons))
     obs_data = {}
-
-    obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
-    obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
-    obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
-
+    
     obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
     obs_data[('datetime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
-
-    obs_data[output_var_names[0], global_config['oval_name']] = val_sst
+    obs_data[('record_number', 'MetaData')] =data_in['scan_line_number']
+    obs_data[('height_above_mean_sea_level', 'MetaData')] = 840*np.ones((obs_dim))
+    obs_data[('sensor_azimuth_angle', 'MetaData')] =data_in['sensor_azimuth_angle']
+    obs_data[('sensor_zenith_angle', 'MetaData')] =data_in['sensor_zenith_angle']
+    obs_data[('solar_zenith_angle', 'MetaData')] =data_in['solar_zenith_angle']
+    obs_data[('solar_azimuth_angle', 'MetaData')] =data_in['solar_azimuth_angle']
+    obs_data[('scan_position', 'MetaData')] =data_in['scan_line_number']
+    obs_data[output_var_names[0], global_config['oval_name']] = val_tb
     obs_data[output_var_names[0], global_config['oerr_name']] = err
     obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
 
@@ -193,7 +207,7 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of GHRSST GDS2.0 SST observation input file(s)",
+        help="path of patmosx avhrr observation input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -216,22 +230,10 @@ def main():
         help='multiple threads can be used to load input files in parallel.'
              ' (default: %(default)s)',
         type=int, default=1)
-    optional.add_argument(
-        '--sst',
-        help='if set, only the bias corrected bulk sst is output.'
-             ' Otherwise, bulk sst, and skin sst are both output.',
-        action='store_true')
-    optional.add_argument(
-        '--skin_sst',
-        help='if set, only the skin or subskin sst is output.'
-             ' Otherwise, bulk sst, and skin sst are both output.',
-        action='store_true')
+
 
     args = parser.parse_args()
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
-    if not args.sst and not args.skin_sst:
-        args.sst = True
-        args.skin_sst = True
 
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
@@ -243,8 +245,8 @@ def main():
     global_config['oval_name'] = iconv.OvalName()
     global_config['oerr_name'] = iconv.OerrName()
     global_config['opqc_name'] = iconv.OqcName()
-    global_config['output_sst'] = args.sst
-    global_config['output_skin_sst'] = args.skin_sst
+
+
     pool_inputs = [(i, global_config) for i in args.input]
 
     # read / process files in parallel
@@ -268,36 +270,29 @@ def main():
 
     # determine which variables we are going to output
     selected_names = []
-    if args.sst:
-        selected_names.append(output_var_names[0])
-    if args.skin_sst:
-        selected_names.append(output_var_names[1])
+    selected_names.append(output_var_names[0])
 
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
     VarDims = {
-        'sea_surface_temperature': ['nlocs'],
-        'sea_surface_skin_temperature': ['nlocs'],
+        'brightness_temperature': ['nlocs', 'nchans']
     }
 
+    nchans = len(chan_number)
     nlocs = len(obs_data[('longitude', 'MetaData')])
-
-    DimDict = {'nlocs': nlocs}
+    DimDict = {
+        'nlocs': nlocs ,
+        'nchans': nchans
+    }
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_temperature', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_temperature', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_temperature', 'PreQC')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('brightness_temperature', 'ObsValue')]['units'] = 'Kelvin'
+    VarAttrs[('brightness_temperature', 'ObsError')]['units'] = 'Kelvin'
+    VarAttrs[('brightness_temperature', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('brightness_temperature', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('brightness_temperature', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('brightness_temperature', 'PreQC')]['_FillValue'] = 999
 
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
