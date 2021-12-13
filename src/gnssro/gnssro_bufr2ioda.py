@@ -62,9 +62,9 @@ def main(args):
 #   obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-#   obs_data, loc_data = obs[0]
+#   obs_data = obs[0]
 
-    obs_data, loc_data = read_input( args.input )
+    obs_data = read_input( args.input )
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -115,7 +115,7 @@ def read_input(input_args):
 
     Returns:
 
-        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer
+        A dictionary holding the variables (obs_data) needed by the IODA writer
     """
     input_file = input_args[0]
 
@@ -127,9 +127,9 @@ def read_input(input_args):
 #   attr_data  = get_meta_data(bufr)
     profile_meta_data  = get_meta_data(bufr)
 
-    obs_data, loc_data = get_obs_data(bufr, profile_meta_data)
+    obs_data = get_obs_data(bufr, profile_meta_data)
 
-    return obs_data, loc_data
+    return obs_data
 
 def get_meta_data(bufr):
 
@@ -165,7 +165,6 @@ def get_obs_data(bufr, profile_meta_data):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
-    loc_data = {}
 
     # replication factors for the datasets, bending angle, refractivity and derived profiles
     krepfac = codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
@@ -203,19 +202,20 @@ def get_obs_data(bufr, profile_meta_data):
 
     meta_data_types = def_meta_types()
 
-    obs_data[('latitude', meta_data_types['latitude'])]     = assign_values( lats )
-    obs_data[('longitude', meta_data_types['longitude'])]   = assign_values( lons )
-    obs_data[('impactParameter', meta_data_types['impactParameter'])] = assign_values( impact )
-    obs_data[('height', meta_data_types['height'])]          = assign_values( height )
+    obs_data[('latitude', 'MetaData')]     = assign_values( lats )
+    obs_data[('longitude', 'MetaData')]   = assign_values( lons )
+    obs_data[('impactParameter', 'MetaData')] = assign_values( impact )
+    obs_data[('height', 'MetaData')]          = assign_values( height )
     for k, v in profile_meta_data.items():
         if type(v) is int:
-            obs_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
+            obs_data[(k, 'MetaData')]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
         elif type(v) is float:
-            obs_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
+            obs_data[(k, 'MetaData')]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
         else:  # something else (datetime for instance)
-#           obs_data[(k, meta_data_types[k])]        = np.repeat(v, krepfac[0])
+            #obs_data[(k, meta_data_types[k])]        = np.repeat(v, krepfac[0])
             # do we need to do this?
-            obs_data[(k, meta_data_types[k])]        = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
+            string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
+            obs_data[(k, 'MetaData')] = string_array.astype(object)
 
     # get derived profiles
     geop   = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -224,7 +224,7 @@ def get_obs_data(bufr, profile_meta_data):
     spchum = codes_get_array(bufr, 'specificHumidity')[0::2]
     prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
 
-    return obs_data, loc_data
+    return obs_data
 
 def def_meta_data():
 
@@ -243,35 +243,20 @@ def def_meta_data():
 
 def def_meta_types():
 
-#   meta_data_types = {
-#"latitude"                                : "float",
-#"longitude"                               : "float",
-#"datetime"                                : "string",
-#'impactParameter'                         : 'float',
-#'height'                                  : 'float',
-#"qualityFlag"                             : 'integer',
-#"geoid_height_above_reference_ellipsoid"  : 'float',
-#"earth_radius_of_curvature"               : 'float',
-#"occulting_sat_id"                        : 'integer',
-#"occulting_sat_is"                        : 'integer',
-#"process_center"                          : 'string',
-#"reference_sat_id"                        : 'integer',
-#"gnss_sat_class"                          : 'integer',
-#}
     meta_data_types = {
- "latitude"                                : "MetaData",
- "longitude"                               : "MetaData",
- "datetime"                                : "MetaData",
- 'impactParameter'                         : 'MetaData',
- 'height'                                  : 'MetaData',
- "qualityFlag"                             : 'MetaData',
- "geoid_height_above_reference_ellipsoid"  : 'MetaData',
- "earth_radius_of_curvature"               : 'MetaData',
- "occulting_sat_id"                        : 'MetaData',
- "occulting_sat_is"                        : 'MetaData',
- "process_center"                          : 'MetaData',
- "reference_sat_id"                        : 'MetaData',
- "gnss_sat_class"                          : 'MetaData',
+"latitude"                                : "float",
+"longitude"                               : "float",
+"datetime"                                : "string",
+'impactParameter'                         : 'float',
+'height'                                  : 'float',
+"qualityFlag"                             : 'integer',
+"geoid_height_above_reference_ellipsoid"  : 'float',
+"earth_radius_of_curvature"               : 'float',
+"occulting_sat_id"                        : 'integer',
+"occulting_sat_is"                        : 'integer',
+"process_center"                          : 'string',
+"reference_sat_id"                        : 'integer',
+"gnss_sat_class"                          : 'integer',
 }
 
     return meta_data_types
