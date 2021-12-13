@@ -13,8 +13,8 @@ import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-import numpy as np
 from multiprocessing import Pool
+import numpy as np
 import os
 from pathlib import Path
 
@@ -203,19 +203,19 @@ def get_obs_data(bufr, profile_meta_data):
 
     meta_data_types = def_meta_types()
 
-    loc_data[('latitude', meta_data_types['latitude'])]     = assign_values( lats )
-    loc_data[('longitude', meta_data_types['longitude'])]   = assign_values( lons )
-    loc_data[('impactParameter', meta_data_types['impactParameter'])] = assign_values( impact )
-    loc_data[('height', meta_data_types['height'])]          = assign_values( height )
+    obs_data[('latitude', meta_data_types['latitude'])]     = assign_values( lats )
+    obs_data[('longitude', meta_data_types['longitude'])]   = assign_values( lons )
+    obs_data[('impactParameter', meta_data_types['impactParameter'])] = assign_values( impact )
+    obs_data[('height', meta_data_types['height'])]          = assign_values( height )
     for k, v in profile_meta_data.items():
         if type(v) is int:
-            loc_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
+            obs_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
         elif type(v) is float:
-            loc_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
+            obs_data[(k, meta_data_types[k])]        = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
         else:  # something else (datetime for instance)
-            loc_data[(k, meta_data_types[k])]        = np.repeat(v, krepfac[0])
+#           obs_data[(k, meta_data_types[k])]        = np.repeat(v, krepfac[0])
             # do we need to do this?
-#           loc_data[k]        = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
+            obs_data[(k, meta_data_types[k])]        = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
 
     # get derived profiles
     geop   = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -243,20 +243,35 @@ def def_meta_data():
 
 def def_meta_types():
 
+#   meta_data_types = {
+#"latitude"                                : "float",
+#"longitude"                               : "float",
+#"datetime"                                : "string",
+#'impactParameter'                         : 'float',
+#'height'                                  : 'float',
+#"qualityFlag"                             : 'integer',
+#"geoid_height_above_reference_ellipsoid"  : 'float',
+#"earth_radius_of_curvature"               : 'float',
+#"occulting_sat_id"                        : 'integer',
+#"occulting_sat_is"                        : 'integer',
+#"process_center"                          : 'string',
+#"reference_sat_id"                        : 'integer',
+#"gnss_sat_class"                          : 'integer',
+#}
     meta_data_types = {
- "latitude"                                : "float",
- "longitude"                               : "float",
- "datetime"                                : "string",
- 'impactParameter'                         : 'float',
- 'height'                                  : 'float',
- "qualityFlag"                             : 'integer',
- "geoid_height_above_reference_ellipsoid"  : 'float',
- "earth_radius_of_curvature"               : 'float',
- "occulting_sat_id"                        : 'integer',
- "occulting_sat_is"                        : 'integer',
- "process_center"                          : 'string',
- "reference_sat_id"                        : 'integer',
- "gnss_sat_class"                          : 'integer',
+ "latitude"                                : "MetaData",
+ "longitude"                               : "MetaData",
+ "datetime"                                : "MetaData",
+ 'impactParameter'                         : 'MetaData',
+ 'height'                                  : 'MetaData',
+ "qualityFlag"                             : 'MetaData',
+ "geoid_height_above_reference_ellipsoid"  : 'MetaData',
+ "earth_radius_of_curvature"               : 'MetaData',
+ "occulting_sat_id"                        : 'MetaData',
+ "occulting_sat_is"                        : 'MetaData',
+ "process_center"                          : 'MetaData',
+ "reference_sat_id"                        : 'MetaData',
+ "gnss_sat_class"                          : 'MetaData',
 }
 
     return meta_data_types
@@ -264,7 +279,9 @@ def def_meta_types():
 def assign_values( data ):
     if data.dtype == float:
         data[ data > np.abs(float_missing_value) ] = float_missing_value
+        # need a Nan Inf check?
         return np.array(data, dtype=ioda_float_type)
+        #  or is that here?
     elif data.dtype == int:
         data[ data > np.abs(int_missing_value) ] = int_missing_value
         return np.array(data, dtype=ioda_int_type)
