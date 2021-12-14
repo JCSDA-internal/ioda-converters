@@ -211,7 +211,7 @@ def get_obs_data(bufr, profile_meta_data):
 
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
-    obs_data[('impactParameter', 'MetaData')] = assign_values(impact)
+    obs_data[('impact_parameter', 'MetaData')] = assign_values(impact)
     obs_data[('height', 'MetaData')] = assign_values(height)
     for k, v in profile_meta_data.items():
         if type(v) is int:
@@ -256,7 +256,7 @@ def def_meta_types():
         "latitude": "float",
         "longitude": "float",
         "datetime": "string",
-        'impactParameter': 'float',
+        'impact_parameter': 'float',
         'height': 'float',
         "qualityFlag": 'integer',
         "geoid_height_above_reference_ellipsoid": 'float',
