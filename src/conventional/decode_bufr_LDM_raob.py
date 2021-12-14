@@ -15,8 +15,7 @@ from multiprocessing import Pool
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-
-from IPython import embed as shell
+#from IPython import embed as shell
 
 
 # set globals ???
@@ -44,7 +43,7 @@ def main(file_name, cdtg):
 
     obs = pool.map(read_file, pool_inputs)
 
-    obs_data, loc_data, count, start_pos = obs[0]
+    obs_data, count, start_pos = obs[0]
 
     #print ( "number of valid mssg: ", count[0] )
     #print ( "number of invalid mssg: ", count[1] )
@@ -92,13 +91,13 @@ def read_file(file_name, count, start_pos):
 
     while True:
         # here is where to send to ecCodes
-        obs_data, loc_data, count, start_pos = read_bufr_message( f, count, start_pos )
+        obs_data, count, start_pos = read_bufr_message( f, count, start_pos )
 
         if start_pos == None:
             #print ( "start_pos: ", start_pos )
             break
 
-    return obs_data, loc_data, count, start_pos
+    return obs_data, count, start_pos
 
 
 def get_meta_data(bufr):
@@ -147,9 +146,8 @@ def def_meta_data():
 def read_bufr_message( f, count, start_pos ):
 
     obs_data = {}
-    loc_data = {}
     if start_pos == f.tell():
-        return obs_data, loc_data, count, None
+        return obs_data, count, None
     start_pos = f.tell()
     print ( "staring pos: ", f.tell() )
 
@@ -187,31 +185,31 @@ def read_bufr_message( f, count, start_pos ):
         obs_data[('temperatureAir', "ObsValue")]       = temp_air
         obs_data[('temperatureDewpoint', "ObsValue")]  = temp_dewpoint
 
-        loc_data['latitude']   =  np.full(num_levels, lat, dtype='float32') + lat_displacement
-        loc_data['longitude']  =  np.full(num_levels, lon, dtype='float32') + lon_displacement
-        loc_data['pressure']   =  pressure
+        obs_data[('latitude', "MetaData")]   =  np.full(num_levels, lat, dtype='float32') + lat_displacement
+        obs_data[('longitude', "MetaData")]  =  np.full(num_levels, lon, dtype='float32') + lon_displacement
+        obs_data[('pressure', "MetaData")]   =  pressure
         for k, v in profile_meta_data.items():
-            loc_data[k]        = np.repeat(v, krepfac[0])
+            obs_data[(k, "MetaData")]        = np.repeat(v, krepfac[0])
 
-        print ( " decoded raob num_lev: ", len(loc_data['latitude']) )
+        print ( " decoded raob num_lev: ", len(obs_data[('latitude',"MetaData")]) )
         print ( "ending pos: ", f.tell() )
         count[0] += 1
 
-        return obs_data, loc_data, count, start_pos
+        return obs_data, count, start_pos
 
     except:
         #print ( "invalid bufr message" )
         count[1] += 1
         #print ( "number of valid mssg: ", count[0] )
         #print ( "number of invalid mssg: ", count[1] )
-        return obs_data, loc_data, count, start_pos
+        return obs_data, count, start_pos
         pass
 
 if __name__ == "__main__":
 
     from optparse import OptionParser
 
-    usage = 'usage: %prog -d date-time -i increment-file'
+    usage = 'usage: %prog -d date-time -i input-file'
     parser = OptionParser(usage)
     parser.add_option('-d', '--date-time', dest='cdtg',
                       action='store', default=None,
@@ -231,6 +229,6 @@ if __name__ == "__main__":
                       received date: %s" % options.cdtg)
 
     if not os.path.isfile(options.file_name):
-        parser.error('File does not exist, please enter valid increment file in -i option.')
+        parser.error('File does not exist, please enter valid input file with the -i option.')
 
     main(options.file_name, options.cdtg)
