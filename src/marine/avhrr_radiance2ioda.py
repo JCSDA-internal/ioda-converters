@@ -148,12 +148,7 @@ def read_input(input_args):
             timedelta(seconds=float(time[i]+3600*data_in['scan_line_time'][i])) #check later
         dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
-    # calculate output values
-    # Note: the qc flags in GDS2.0 run from 0 to 5, with higher numbers
-    # being better. IODA typically expects 0 to be good, and higher numbers
-    # are bad, so the qc flags flipped here.
-    # TODO change everything in soca to handle K instead of C ?
-    #val_sst_skin = data_in['sea_surface_temperature'] - 273.15
+    # output values    
     nchans = len(chan_number)
     obs_dim = (len(lons))
     val_tb = np.zeros((obs_dim,nchans))
@@ -198,10 +193,9 @@ def main():
     # Get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads the sea surface temperature from any GHRRST Data '
-            ' Specification (GDS2.0) formatted L2 or L3 file(s) and converts'
-            ' into IODA formatted output files. Multiple files are'
-            ' concatenated and optional thinning can be performed.')
+            'Reads the brightness temperature from any PATMOSX Data '
+            ' and converts into IODA formatted output files.'
+            ' Multiple files are concatenated ')
     )
 
     required = parser.add_argument_group(title='required arguments')
