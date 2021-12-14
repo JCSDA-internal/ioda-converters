@@ -83,19 +83,13 @@ def read_input(input_args):
     data_in['bad_pixel_mask'] = data_in['bad_pixel_mask'][mask]
 
     # Determine the lat/lon grid.
-    # If L3, we need to convert 1D lat/lon to 2D lat/lon.
-    # If len(time) > 1, also need to repeat the lat/lon vals
     lons = ncd.variables['longitude'][:].ravel()
     lats = ncd.variables['latitude'][:].ravel()
-    #if GlobalAttrs['processing_level'][:2] == 'L3':
+
     len_grid = len(lons)*len(lats)
     lons, lats = np.meshgrid(lons, lats, copy=False)
     lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
     lats = np.tile(lats.ravel(), len(time_base)).ravel()[mask]
-    #else:
-    #    len_grid = len(lons)
-    #    lons = np.tile(lons, len(time_base)).ravel()[mask]
-    #    lats = np.tile(lats, len(time_base)).ravel()[mask]
 
     # calculate the basetime offsets
     time = np.tile(np.atleast_2d(time_base).T, (1, len_grid)).ravel()[mask]
@@ -152,19 +146,18 @@ def read_input(input_args):
     nchans = len(chan_number)
     obs_dim = (len(lons))
     val_tb = np.zeros((obs_dim,nchans))
-    val_tb[:,0] = data_in['temp_3_75um_nom']
-    val_tb[:,1] = data_in['temp_11_0um_nom']
-    val_tb[:,2] = data_in['temp_12_0um_nom']
-    print("val_tb.shape", val_tb.shape)
-    #there isn't std for every channels
+    val_tb[:, 0] = data_in['temp_3_75um_nom']
+    val_tb[:, 1] = data_in['temp_11_0um_nom']
+    val_tb[:, 2] = data_in['temp_12_0um_nom']
+    # there isn't std for every channels we use the same obs error for all chans
     err = np.zeros((obs_dim,nchans))
-    err[:,0] = data_in['temp_11_0um_nom_stddev_3x3']
-    err[:,1] = data_in['temp_11_0um_nom_stddev_3x3']
-    err[:,2] = data_in['temp_11_0um_nom_stddev_3x3']
+    err[:, 0] = data_in['temp_11_0um_nom_stddev_3x3']
+    err[:, 1] = data_in['temp_11_0um_nom_stddev_3x3']
+    err[:, 2] = data_in['temp_11_0um_nom_stddev_3x3']
     qc = np.zeros((obs_dim,nchans))
-    qc[:,0]= data_in['bad_pixel_mask']
-    qc[:,1]= data_in['bad_pixel_mask']
-    qc[:,2]= data_in['bad_pixel_mask']
+    qc[:, 0] = data_in['bad_pixel_mask']
+    qc[:, 1] = data_in['bad_pixel_mask']
+    qc[:, 2] = data_in['bad_pixel_mask']
 
     # allocate space for output depending on which variables are to be saved
 
