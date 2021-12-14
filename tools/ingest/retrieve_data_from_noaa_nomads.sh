@@ -16,8 +16,8 @@
 
 nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod'
 
-usage='usage bash $0 yyyymmdd [end_yyyymmdd]'
-example=='example:  bash $0 2021091500 [2021100100]'
+usage='usage bash $0 yyyymmdd [user_input_data_type]'
+example=='example:  bash $0 2021091500 [adpupa]'
 
 if (( ${#@} == 0 ))  ||  (( ${#@} > 2 )) || [[ $1 == [hH]elp ]]; then
     echo "${usage}"
