@@ -805,7 +805,7 @@ if(iodaconv_bufr_ENABLED)
                     gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_generic_bufr
+  ecbuild_add_test( TARGET  test_iodaconv_generic_gnssro_bufr
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh

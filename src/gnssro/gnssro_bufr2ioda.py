@@ -101,6 +101,9 @@ def main(args):
     VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
 
+    VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
+
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
@@ -263,12 +266,10 @@ def def_meta_types():
 
 def assign_values( data ):
     if data.dtype == float:
-        data[ data > np.abs(float_missing_value) ] = float_missing_value
-        # need a Nan Inf check?
+        data[ np.abs(data) >= np.abs(float_missing_value) ] = float_missing_value
         return np.array(data, dtype=ioda_float_type)
-        #  or is that here?
     elif data.dtype == int:
-        data[ data > np.abs(int_missing_value) ] = int_missing_value
+        data[ np.abs(data) >= np.abs(int_missing_value) ] = int_missing_value
         return np.array(data, dtype=ioda_int_type)
 
 
