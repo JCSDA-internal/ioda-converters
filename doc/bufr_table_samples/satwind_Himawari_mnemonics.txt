@@ -1,0 +1,160 @@
+
+Here is the DX table that was generated:
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| GEOSTWND | 310014 | Satellite - geostationary wind data                      |
+| SIDENSEQ | 301072 | Satellite identification                                 |
+| SIDGRSEQ | 301071 | Satellite identifier/Generating resolution               |
+| YYMMDD   | 301011 |                                                          |
+| HHMMSS   | 301013 |                                                          |
+| LTLONH   | 301021 |                                                          |
+| WINDSEQN | 303041 | Wind sequence                                            |
+| GOESIMIN | 304011 | GOES-I/M info                                            |
+| RPSEQ001 | 354001 | REPLICATION SEQUENCE 001                                 |
+| RPSEQ002 | 354002 | REPLICATION SEQUENCE 002                                 |
+| RPSEQ003 | 354003 | REPLICATION SEQUENCE 003                                 |
+| RPSEQ004 | 354004 | REPLICATION SEQUENCE 004                                 |
+| RPSEQ005 | 354005 | REPLICATION SEQUENCE 005                                 |
+| RPSEQ006 | 354006 | REPLICATION SEQUENCE 006                                 |
+| RPSEQ007 | 354007 | REPLICATION SEQUENCE 007                                 |
+| RPSEQ008 | 354008 | REPLICATION SEQUENCE 008                                 |
+| RPSEQ009 | 354009 | REPLICATION SEQUENCE 009                                 |
+| RPSEQ010 | 354010 | REPLICATION SEQUENCE 010                                 |
+| RPSEQ011 | 354011 | REPLICATION SEQUENCE 011                                 |
+| RPSEQ012 | 354012 | REPLICATION SEQUENCE 012                                 |
+|          |        |                                                          |
+| SAID     | 001007 | Satellite identifier                                     |
+| GCLONG   | 001031 | Identification of originating/generating centre          |
+| SCLF     | 002020 | Satellite classification                                 |
+| SSNX     | 002028 | Segment size at nadir in x-direction                     |
+| SSNY     | 002029 | Segment size at nadir in y-direction                     |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| SECO     | 004006 | Second                                                   |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| SIDP     | 002152 | Satellite instrument used in data processing             |
+| SWCM     | 002023 | Satellite-derived wind computation method                |
+| PRLC     | 007004 | Pressure                                                 |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| SCCF     | 002153 | Satellite channel centre frequency                       |
+| SCBW     | 002154 | Satellite channel band width                             |
+| CCST     | 012071 | Coldest cluster temperature                              |
+| HAMD     | 002163 | Height assignment method                                 |
+| TCMD     | 002164 | Tracer correlation method                                |
+| LSQL     | 008012 | Land/sea qualifier                                       |
+| SAZA     | 007024 | Satellite zenith angle                                   |
+| OFGI     | 002057 | Origin of first-guess information for GOES-I/M sounding  |
+| TSIG     | 008021 | Time significance                                        |
+| TPHR     | 004024 | Time period or displacement                              |
+| TMDBST   | 012001 | Temperature/dry-bulb temperature                         |
+| DPRI     | 031031 | Data present indicator                                   |
+| GNAP     | 001032 | Generating application                                   |
+| PCCF     | 033007 | Percent confidence                                       |
+| MAQC     | 033035 | Manual/automatic quality control                         |
+| NCTH     | 033036 | Nominal confidence threshold                             |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | GEOSTWND  222000  236000  "RPSEQ003"103  GCLONG  GNAP             |
+| MSTTB001 | "RPSEQ004"4  222000  237000  GCLONG  GNAP  "RPSEQ005"4  222000    |
+| MSTTB001 | 237000  GCLONG  GNAP  "RPSEQ006"4  222000  237000  GCLONG  GNAP   |
+| MSTTB001 | "RPSEQ007"4  222000  237000  GCLONG  GNAP  "RPSEQ008"4  222000    |
+| MSTTB001 | 237000  GCLONG  GNAP  "RPSEQ009"4  222000  237000  GCLONG  GNAP   |
+| MSTTB001 | "RPSEQ010"4  222000  237000  GCLONG  GNAP  "RPSEQ011"4  222000    |
+| MSTTB001 | 237000  GCLONG  GNAP  "RPSEQ012"4                                 |
+|          |                                                                   |
+| GEOSTWND | SIDENSEQ  WINDSEQN  GOESIMIN                                      |
+|          |                                                                   |
+| SIDENSEQ | SIDGRSEQ  YYMMDD  HHMMSS  LTLONH                                  |
+|          |                                                                   |
+| SIDGRSEQ | SAID  GCLONG  SCLF  SSNX  SSNY                                    |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| WINDSEQN | SIDP  SWCM  PRLC  WDIR  WSPD  SCCF  SCBW  CCST                    |
+|          |                                                                   |
+| GOESIMIN | HAMD  TCMD  LSQL  SAZA  OFGI  TSIG  YEAR  MNTH  DAYS  HOUR  TSIG  |
+| GOESIMIN | TPHR  "RPSEQ001"4  "RPSEQ002"10                                   |
+|          |                                                                   |
+| RPSEQ001 | TSIG  HOUR  MINU  SECO  TSIG  HOUR  MINU  SECO  WDIR  WSPD        |
+|          |                                                                   |
+| RPSEQ002 | HAMD  PRLC  TMDBST                                                |
+|          |                                                                   |
+| RPSEQ003 | DPRI                                                              |
+|          |                                                                   |
+| RPSEQ004 | PCCF                                                              |
+|          |                                                                   |
+| RPSEQ005 | MAQC                                                              |
+|          |                                                                   |
+| RPSEQ006 | NCTH                                                              |
+|          |                                                                   |
+| RPSEQ007 | PCCF                                                              |
+|          |                                                                   |
+| RPSEQ008 | MAQC                                                              |
+|          |                                                                   |
+| RPSEQ009 | NCTH                                                              |
+|          |                                                                   |
+| RPSEQ010 | PCCF                                                              |
+|          |                                                                   |
+| RPSEQ011 | MAQC                                                              |
+|          |                                                                   |
+| RPSEQ012 | NCTH                                                              |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| GCLONG   |    0 |           0 |  16 | CODE TABLE               |-------------|
+| SCLF     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| SSNX     |    0 |           0 |  18 | M                        |-------------|
+| SSNY     |    0 |           0 |  18 | M                        |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | S                        |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| SIDP     |    0 |           0 |  31 | FLAG TABLE               |-------------|
+| SWCM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| PRLC     |   -1 |           0 |  14 | PA                       |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| SCCF     |   -8 |           0 |  26 | HZ                       |-------------|
+| SCBW     |   -8 |           0 |  26 | HZ                       |-------------|
+| CCST     |    1 |           0 |  12 | K                        |-------------|
+| HAMD     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| TCMD     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| LSQL     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| SAZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| OFGI     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| TMDBST   |    1 |           0 |  12 | K                        |-------------|
+| DPRI     |    0 |           0 |   1 | FLAG TABLE               |-------------|
+| GNAP     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| PCCF     |    0 |           0 |   7 | %                        |-------------|
+| MAQC     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| NCTH     |    0 |           0 |   7 | %                        |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
