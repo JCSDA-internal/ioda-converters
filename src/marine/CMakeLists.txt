@@ -19,6 +19,7 @@ list(APPEND programs
   argoClim2ioda.py
   viirs_modis_l2_oc2ioda.py
   viirs_modis_l3_oc2ioda.py
+  godae_bgc_argo2ioda.py
   avhrr_radiance2ioda.py
 )
 
