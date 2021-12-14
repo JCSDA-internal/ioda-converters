@@ -96,9 +96,9 @@ def read_input(input_args):
 
     # load in all the other data and apply the missing value mask
     input_vars = (
-        'scan_line_number', #"scan line number"
-        'bad_pixel_mask', # quality flaq
-        'scan_line_time', #"time for the scan line in fractional hours" 
+        'scan_line_number',  # "scan line number"
+        'bad_pixel_mask',  # quality flaq
+        'scan_line_time',  # "time for the scan line in fractional hours"
         'solar_zenith_angle',
         'sensor_zenith_angle',
         'sensor_azimuth_angle',
@@ -114,7 +114,8 @@ def read_input(input_args):
             if 'scale_factor' in ncd.variables[v].__dict__:
                 scale_factor = ncd.variables[v].scale_factor
                 add_offset = ncd.variables[v].add_offset
-                data_in[v]= scale_factor * data_in[v] + add_offset
+                data_in[v] = scale_factor * data_in[v] + add_offset
+
     ncd.close()
 
     # Create a mask for optional random thinning
@@ -139,22 +140,22 @@ def read_input(input_args):
     dates = []
     for i in range(len(lons)):
         obs_date = basetime + \
-            timedelta(seconds=float(time[i]+3600*data_in['scan_line_time'][i])) #check later
+            timedelta(seconds=float(time[i]+3600*data_in['scan_line_time'][i]))  # check later
         dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
-    # output values    
+    # output values
     nchans = len(chan_number)
     obs_dim = (len(lons))
-    val_tb = np.zeros((obs_dim,nchans))
+    val_tb = np.zeros((obs_dim, nchans))
     val_tb[:, 0] = data_in['temp_3_75um_nom']
     val_tb[:, 1] = data_in['temp_11_0um_nom']
     val_tb[:, 2] = data_in['temp_12_0um_nom']
     # there isn't std for every channels we use the same obs error for all chans
-    err = np.zeros((obs_dim,nchans))
+    err = np.zeros((obs_dim, nchans))
     err[:, 0] = data_in['temp_11_0um_nom_stddev_3x3']
     err[:, 1] = data_in['temp_11_0um_nom_stddev_3x3']
     err[:, 2] = data_in['temp_11_0um_nom_stddev_3x3']
-    qc = np.zeros((obs_dim,nchans))
+    qc = np.zeros((obs_dim, nchans))
     qc[:, 0] = data_in['bad_pixel_mask']
     qc[:, 1] = data_in['bad_pixel_mask']
     qc[:, 2] = data_in['bad_pixel_mask']
@@ -162,18 +163,17 @@ def read_input(input_args):
     # allocate space for output depending on which variables are to be saved
 
     obs_data = {}
-    
     obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
     obs_data[('datetime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
-    obs_data[('record_number', 'MetaData')] =data_in['scan_line_number']
+    obs_data[('record_number', 'MetaData')] = data_in['scan_line_number']
     obs_data[('height_above_mean_sea_level', 'MetaData')] = 840*np.ones((obs_dim))
-    obs_data[('sensor_azimuth_angle', 'MetaData')] =data_in['sensor_azimuth_angle']
-    obs_data[('sensor_zenith_angle', 'MetaData')] =data_in['sensor_zenith_angle']
-    obs_data[('solar_zenith_angle', 'MetaData')] =data_in['solar_zenith_angle']
-    obs_data[('solar_azimuth_angle', 'MetaData')] =data_in['solar_azimuth_angle']
-    obs_data[('scan_position', 'MetaData')] =data_in['scan_line_number']
+    obs_data[('sensor_azimuth_angle', 'MetaData')] = data_in['sensor_azimuth_angle']
+    obs_data[('sensor_zenith_angle', 'MetaData')] = data_in['sensor_zenith_angle']
+    obs_data[('solar_zenith_angle', 'MetaData')] = data_in['solar_zenith_angle']
+    obs_data[('solar_azimuth_angle', 'MetaData')] = data_in['solar_azimuth_angle']
+    obs_data[('scan_position', 'MetaData')] = data_in['scan_line_number']
     obs_data[output_var_names[0], global_config['oval_name']] = val_tb
     obs_data[output_var_names[0], global_config['oerr_name']] = err
     obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
@@ -218,7 +218,6 @@ def main():
              ' (default: %(default)s)',
         type=int, default=1)
 
-
     args = parser.parse_args()
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
@@ -232,7 +231,6 @@ def main():
     global_config['oval_name'] = iconv.OvalName()
     global_config['oerr_name'] = iconv.OerrName()
     global_config['opqc_name'] = iconv.OqcName()
-
 
     pool_inputs = [(i, global_config) for i in args.input]
 
@@ -268,7 +266,7 @@ def main():
     nchans = len(chan_number)
     nlocs = len(obs_data[('longitude', 'MetaData')])
     DimDict = {
-        'nlocs': nlocs ,
+        'nlocs': nlocs,
         'nchans': nchans
     }
 
