@@ -30,7 +30,7 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-def main(file_name, cdtg):
+def main(file_name, output_file):
 
     filenames = [ file_name ]
     # initialize
@@ -51,8 +51,8 @@ def main(file_name, cdtg):
     attr_data = {}
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    dtg = datetime.strptime(cdtg, '%Y%m%d%H')
-    attr_data['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+#   dtg = datetime.strptime(cdtg, '%Y%m%d%H')
+#   attr_data['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     attr_data['converter'] = os.path.basename(__file__)
 
     GlobalAttrs = {}
@@ -74,7 +74,7 @@ def main(file_name, cdtg):
     VarAttrs[('altitude', 'ObsError')]['units'] = 'Radians'
     VarAttrs[('altitude', 'PreQC')]['units']    = 'unitless'
 
-    missing_value = -1.0000e+100
+    missing_value = -1.0e+38
     int_missing_value = -2147483647
     VarAttrs[('altitude', 'ObsValue')]['_FillValue'] = missing_value
     VarAttrs[('altitude', 'ObsError')]['_FillValue'] = missing_value
@@ -82,8 +82,6 @@ def main(file_name, cdtg):
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
-
-    sys.exit()
 
 def read_file(file_name, count, start_pos):
 
@@ -209,26 +207,17 @@ if __name__ == "__main__":
 
     from optparse import OptionParser
 
-    usage = 'usage: %prog -d date-time -i input-file'
+    usage = 'usage: %prog -i input-file -o output-file'
     parser = OptionParser(usage)
-    parser.add_option('-d', '--date-time', dest='cdtg',
-                      action='store', default=None,
-                      help='10-digit date time group')
     parser.add_option('-i', '--input-file', dest='file_name',
+                      action='store', default=None,
+                      help='input file')
+    parser.add_option('-o', '--output-file', dest='output_file',
                       action='store', default=None,
                       help='input file')
     (options, args) = parser.parse_args()
 
-    # chk date
-    if (options.cdtg):
-        if len(options.cdtg) != 10:
-            parser.error("expecting date in 10 character (yyyymmddhh) format \n \
-                        received date: %s" % options.cdtg)
-    else:
-        parser.error("expecting date in 10 character (yyyymmddhh) format \n \
-                      received date: %s" % options.cdtg)
-
     if not os.path.isfile(options.file_name):
         parser.error('File does not exist, please enter valid input file with the -i option.')
 
-    main(options.file_name, options.cdtg)
+    main(options.file_name, options.output_file)

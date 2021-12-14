@@ -805,6 +805,18 @@ if(iodaconv_bufr_ENABLED)
 endif()
 
 #==============================================================================
+# Generic NRT Ingest tests
+#==============================================================================
+
+ecbuild_add_test( TARGET  test_iodaconv_generic_bufr_raob
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${Python3_EXECUTABLE}
+                  ARGS    "${PROJECT_SOURCE_DIR}/src/conventional/decode_bufr_LDM_raob.py"
+                  "-i" "testinput/2021080100.radiosonde.BUFR"
+                  "-o" "testrun/ioda_raob_2021080100.nc4" )
+
+#==============================================================================
 # PrepBUFR and BUFR tests
 #==============================================================================
 
