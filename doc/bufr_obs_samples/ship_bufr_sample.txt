@@ -1,0 +1,158 @@
+
+Found BUFR message #      1
+  
+        Message length:         176
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          22
+          Master table:           0
+    Originating center:          85 (= Toulouse (RSMC))
+ Originating subcenter:           0
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           1 (= Surface data - sea)
+     Local subcategory:          11
+ Internatl subcategory:           0 (= Synoptic observations (SHIP))
+  Master table version:          14
+   Local table version:           0
+                  Year:        2021
+                 Month:           2
+                   Day:           1
+                  Hour:          12
+                Minute:           0
+                Second:           0
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:           1
+        1: 308009
+
+BUFR message #      1 of type MSTTB001 and date 2021020112 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001011  SMID                        PBIG  ( 9)CCITT IA5                 Ship or mobile land station identifier          
+001012  DOMO                         0.0  DEGREE TRUE                   Direction of motion of moving observing platform
+001013  SMMO                         0.0  M S⁻¹                      Speed of motion of moving observing platform    
+002001  TOST                         1.0  CODE TABLE                    Type of station                                 
+                                      1 = Manned
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        12.0  HOUR                          Hour                                            
+004005  MINU                         0.0  MINUTE                        Minute                                          
+005002  CLAT                       26.40  DEGREE                        Latitude (coarse accuracy)                      
+006002  CLON                     -113.20  DEGREE                        Longitude (coarse accuracy)                     
+007030  HSMSL                    MISSING  M                             Height of station ground above mean sea level   
+007031  HBMSL                    MISSING  M                             Height of barometer above mean sea level        
+010004  PRES                     MISSING  PA                            Pressure                                        
+010051  PMSL                    101450.0  PA                            Pressure reduced to mean sea level              
+010061  3HPC                         0.0  PA                            3-hour pressure change                          
+010063  CHPT                         4.0  CODE TABLE                    Characteristic of pressure tendency             
+                                      4 = Steady; atmospheric pressure the same as 3 hours ago
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+007033  HSAWS                    MISSING  M                             Height of sensor above water surface            
+012101  TMDB                      291.15  K                             Temperature/dry-bulb temperature                
+002039  MWBT                     MISSING  CODE TABLE                    Method of wet-bulb temperature measurement      
+012102  TMWB                     MISSING  K                             Wet-bulb temperature                            
+012103  TMDP                     MISSING  K                             Dew-point temperature                           
+013003  REHU                     MISSING  %                             Relative humidity                               
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+007033  HSAWS                    MISSING  M                             Height of sensor above water surface            
+020001  HOVI                     20000.0  M                             Horizontal visibility                           
+007033  HSAWS                    MISSING  M                             Height of sensor above water surface            
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+013023  TP24                     MISSING  KG M⁻²                     Total precipitation past 24 hours               
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+020010  TOCC                     MISSING  %                             Cloud cover (total)                             
+008002  VSSO                         0.0  CODE TABLE                    Vertical significance (surface observations)    
+                                      0 = Observing rules for base of lowest cloud and cloud types of FM 12 SYNOP and FM 13 SHIP apply
+020011  CLAM                     MISSING  CODE TABLE                    Cloud amount                                    
+020013  HOCB                     MISSING  M                             Height of base of cloud                         
+020012  CLTP                        62.0  CODE TABLE                    Cloud type                                      
+                                     62 = CL clouds invisible owing to darkness, fog, blowing dust or sand, or other similar phenomena
+020012  CLTP                        61.0  CODE TABLE                    Cloud type                                      
+                                     61 = CM clouds Invisible owing to darkness, fog, blowing dust or sand, or other similar phenomena, or because of continuous l
+020012  CLTP                        60.0  CODE TABLE                    Cloud type                                      
+                                     60 = CH clouds Invisible owing to darkness, fog, blowing dust or sand, or other similar phenomena, or because of a continuous
+           {CLOUDSQ1}     0 REPLICATIONS
+008002  VSSO                     MISSING  CODE TABLE                    Vertical significance (surface observations)    
+020031  IDTH                     MISSING  M                             Ice deposit (thickness)                         
+020032  ROIA                     MISSING  CODE TABLE                    Rate of ice accretion                           
+020033  COIA                     MISSING  FLAG TABLE                    Cause of ice accretion                          
+020034  SICE                     MISSING  CODE TABLE                    Sea ice concentration                           
+020035  AICE                     MISSING  CODE TABLE                    Amount and type of ice                          
+020036  ICESI                    MISSING  CODE TABLE                    Ice situation                                   
+020037  ICEDV                    MISSING  CODE TABLE                    Ice development                                 
+020038  BOIE                     MISSING  DEGREE TRUE                   Bearing of ice edge                             
+002038  MSST                     MISSING  CODE TABLE                    Method of water temperature and/or salinity meas
+007063  DBSSX                    MISSING  M                             Depth below sea/water surface (cm)              
+022043  SST1                     MISSING  K                             Sea/water temperature                           
+007063  DBSSX                    MISSING  M                             Depth below sea/water surface (cm)              
+022001  DOWA                     MISSING  DEGREE TRUE                   Direction of waves                              
+022011  POWV                     MISSING  S                             Period of waves                                 
+022021  HOWV                     MISSING  M                             Height of waves                                 
+022002  DOWW                     MISSING  DEGREE TRUE                   Direction of wind waves                         
+022012  POWW                     MISSING  S                             Period of wind waves                            
+022022  HOWW                     MISSING  M                             Height of wind waves                            
+           "DPHGTSWV"     2 REPLICATIONS
+    ++++++  DPHGTSWV  REPLICATION #     1  ++++++
+022003  DOSW                     MISSING  DEGREE TRUE                   Direction of swell waves                        
+022013  POSW                     MISSING  S                             Period of swell waves                           
+022023  HOSW                     MISSING  M                             Height of swell waves                           
+    ++++++  DPHGTSWV  REPLICATION #     2  ++++++
+022003  DOSW                     MISSING  DEGREE TRUE                   Direction of swell waves                        
+022013  POSW                     MISSING  S                             Period of swell waves                           
+022023  HOSW                     MISSING  M                             Height of swell waves                           
+020003  PRWE                         2.0  CODE TABLE                    Present weather                                 
+                                      2 = State of sky on the whole unchanged
+004024  TPHR                        -6.0  HOUR                          Time period or displacement                     
+020004  PSW1                         2.0  CODE TABLE                    Past weather (1)                                
+                                      2 = Cloud covering more than 1/2 of the sky throughout the appropriate period
+020005  PSW2                         2.0  CODE TABLE                    Past weather (2)                                
+                                      2 = Cloud covering more than 1/2 of the sky throughout the appropriate period
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+           "RPSEQ001"     2 REPLICATIONS
+    ++++++  RPSEQ001  REPLICATION #     1  ++++++
+004024  TPHR                     MISSING  HOUR                          Time period or displacement                     
+013011  TOPC                     MISSING  KG M⁻²                     Total precipitation/total water equivalent      
+    ++++++  RPSEQ001  REPLICATION #     2  ++++++
+004024  TPHR                     MISSING  HOUR                          Time period or displacement                     
+013011  TOPC                     MISSING  KG M⁻²                     Total precipitation/total water equivalent      
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+007033  HSAWS                    MISSING  M                             Height of sensor above water surface            
+004024  TPHR                       -12.0  HOUR                          Time period or displacement                     
+004024  TPHR                         0.0  HOUR                          Time period or displacement                     
+012111  MXTM                     MISSING  K                             Maximum temperature, at height and over period s
+004024  TPHR                       -12.0  HOUR                          Time period or displacement                     
+004024  TPHR                         0.0  HOUR                          Time period or displacement                     
+012112  MITM                     MISSING  K                             Minimum temperature, at height and over period s
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+007033  HSAWS                    MISSING  M                             Height of sensor above water surface            
+002002  TIWM                     MISSING  FLAG TABLE                    Type of instrumentation for wind measurement    
+008021  TSIG                         2.0  CODE TABLE                    Time significance                               
+                                      2 = Time averaged
+004025  TPMI                       -10.0  MINUTE                        Time period or displacement                     
+011001  WDIR                       340.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.7  M S⁻¹                      Wind speed                                      
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+           "RPSEQ002"     2 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+004025  TPMI                       -10.0  MINUTE                        Time period or displacement                     
+011043  MXGD                     MISSING  DEGREE TRUE                   Maximum wind gust direction                     
+011041  MXGS                     MISSING  M S⁻¹                      Maximum wind gust speed                         
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+004025  TPMI                     MISSING  MINUTE                        Time period or displacement                     
+011043  MXGD                     MISSING  DEGREE TRUE                   Maximum wind gust direction                     
+011041  MXGS                     MISSING  M S⁻¹                      Maximum wind gust speed                         
+
+ >>> END OF SUBSET <<< 
+
+
+End of BUFR message #      1
+
+------------------------------------------------------------------------------------------------------------------------
+
+Reached end of BUFR file; it contained a total of      1 messages and        1 subsets
