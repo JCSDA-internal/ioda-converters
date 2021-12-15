@@ -212,7 +212,7 @@ def get_obs_data(bufr, profile_meta_data):
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
     obs_data[('impact_parameter', 'MetaData')] = assign_values(impact)
-    obs_data[('height', 'MetaData')] = assign_values(height)
+    obs_data[('altitude', 'MetaData')] = assign_values(height)
     for k, v in profile_meta_data.items():
         if type(v) is int:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
@@ -223,6 +223,9 @@ def get_obs_data(bufr, profile_meta_data):
             # do we need to do this?
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
+    # add rising/setting (ascending/descending) bit
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
+    obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
     # get derived profiles
     geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -239,6 +242,8 @@ def def_meta_data():
     meta_data_keys = {
         "qualityFlag": 'radioOccultationDataQualityFlags',
         "geoid_height_above_reference_ellipsoid": 'geoidUndulation',
+        "sensor_azimuth_angle" : 'bearingOrAzimuth',
+        "time" : 'timeIncrement',
         "earth_radius_of_curvature": 'earthLocalRadiusOfCurvature',
         "occulting_sat_id": 'satelliteIdentifier',
         "occulting_sat_is": 'satelliteInstruments',
@@ -270,6 +275,8 @@ def def_meta_types():
 
     return meta_data_types
 
+def get_normalized_bit(value, bit_index):
+    return (value >> bit_index) & 1
 
 def assign_values(data):
     if data.dtype == float:
