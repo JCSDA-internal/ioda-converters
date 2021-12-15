@@ -242,8 +242,8 @@ def def_meta_data():
     meta_data_keys = {
         "qualityFlag": 'radioOccultationDataQualityFlags',
         "geoid_height_above_reference_ellipsoid": 'geoidUndulation',
-        "sensor_azimuth_angle" : 'bearingOrAzimuth',
-        "time" : 'timeIncrement',
+        "sensor_azimuth_angle": 'bearingOrAzimuth',
+        "time": 'timeIncrement',
         "earth_radius_of_curvature": 'earthLocalRadiusOfCurvature',
         "occulting_sat_id": 'satelliteIdentifier',
         "occulting_sat_is": 'satelliteInstruments',
@@ -275,8 +275,10 @@ def def_meta_types():
 
     return meta_data_types
 
+
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
+
 
 def assign_values(data):
     if data.dtype == float:
