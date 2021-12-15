@@ -46,7 +46,7 @@ locationKeyList = [
 ]
 
 
-def main(input_files, output_dir, threads):
+def main(input_files, output_filename, threads):
 
     pool_inputs = [(i) for i in input_files]
 
@@ -68,7 +68,6 @@ def main(input_files, output_dir, threads):
     }
 
     DimDict = {'nlocs': nlocs, 'nchans': nchans}
-    output_filename = os.path.join(output_dir, 'atms_obs.nc4')
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 #   writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
@@ -272,14 +271,15 @@ if __name__ == "__main__":
              ' (default: %(default)s)',
         type=int, default=1)
     optional.add_argument(
-        '-o', '--output-dir',
-        help='output directory path',
+        '-o', '--output',
+        help='path to output ioda file',
         type=str, default=os.getcwd())
 
     args = parser.parse_args()
 
     # create output directory path if necessary
-    if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
+    output_dir = os.path.dirname(args.output);
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
-    main(args.input, args.output_dir, args.threads)
+    main(args.input, args.output, args.threads)

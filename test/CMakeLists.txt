@@ -54,7 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
-  testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4
+  testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
 )
@@ -897,7 +897,7 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf 
                           "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
-                          -i testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4
+                          -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
                           -o testrun/atms_obs.nc4" atms_obs.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
 #==============================================================================
