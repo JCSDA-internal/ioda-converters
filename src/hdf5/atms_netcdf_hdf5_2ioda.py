@@ -55,19 +55,23 @@ def main(input_files, output_filename, threads):
     # obs = pool.map(get_data_from_files, pool_inputs)
     # obs = get_data_from_files( input_files )
     # concatenate the data from the files
-    # obs_data, loc_data = obs[0]
+    # obs_data = obs[0]
 
-    obs_data, loc_data = get_data_from_files(input_files)
+    obs_data = get_data_from_files(input_files)
 
-    nlocs = len(loc_data['latitude'])
-    nchans = len(loc_data['channelNumber'])
+    nlocs = len(obs_data[('latitude', 'MetaData')])
+    nchans = len(obs_data[('channelNumber', 'MetaData')])
 
     # pass parameters to the IODA writer
     VarDims = {
         'brightnessTemperature': ['nlocs', 'nchans'],
+        'channelNumber': ['nchans'],
     }
 
-    DimDict = {'nlocs': nlocs, 'nchans': nchans}
+    DimDict = {
+        'nlocs': nlocs,
+        'nchans': obs_data[('channelNumber', 'MetaData')],
+    }
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 #   writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
@@ -91,7 +95,7 @@ def main(input_files, output_filename, threads):
 def get_data_from_files(zfiles):
 
     # allocate space for output depending on which variables are to be saved
-    obs_data, loc_data = init_obs_loc()
+    obs_data = init_obs_loc()
 
     for afile in zfiles:
         f = h5py.File(afile, 'r')
@@ -113,14 +117,14 @@ def get_data_from_files(zfiles):
                 print("tried searching geofile: %s" % geo_search)
                 sys.exit()
 
-        obs_data, loc_data = get_data(f, g, obs_data, loc_data)
+        obs_data = get_data(f, g, obs_data)
         f.close()
         g.close()
 
-    return obs_data, loc_data
+    return obs_data
 
 
-def get_data(f, g, obs_data, loc_data):
+def get_data(f, g, obs_data):
 
     # NOAA CLASS h5 SDR-GEO keys
     # 'BeamLatitude', 'BeamLongitude', 'Height', 'Latitude', 'Longitude', 'MidTime', 'PadByte1',
@@ -159,27 +163,27 @@ def get_data(f, g, obs_data, loc_data):
     try:
         nscans = np.shape(g['lat'])[0]
         nbeam_pos = np.shape(g['lat'])[1]
-        loc_data['latitude'] = g['lat'][:, :].flatten()
-        loc_data['longitude'] = g['lon'][:, :].flatten()
-        loc_data['channelNumber'] = g['channel'][:]
-        loc_data['fieldOfViewNumber'] = np.tile(np.arange(nbeam_pos) + 1, (nscans, 1)).flatten()
-        loc_data['solarZenithAngle'] = g['sol_zen'][:, :].flatten()
-        loc_data['solarAzimuthAngle'] = g['sol_azi'][:, :].flatten()
-        loc_data['sensorZenithAngle'] = g['sat_zen'][:, :].flatten()
-        loc_data['sensorAzimuthAngle'] = g['sat_azi'][:, :].flatten()
-        nlocs = len(loc_data['latitude'])
-        loc_data['satelliteId'] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-        loc_data['datetime'] = get_string_dtg(g['obs_time_utc'][:, :, :])
+        obs_data[('latitude', 'MetaData')] = np.array(g['lat'][:, :].flatten(), dtype='float32')
+        obs_data[('longitude', 'MetaData')] = np.array(g['lon'][:, :].flatten(), dtype='float32')
+        obs_data[('channelNumber', 'MetaData')] = np.array(g['channel'][:], dtype='int32')
+        obs_data[('fieldOfViewNumber', 'MetaData')] = np.tile(np.arange(nbeam_pos) + 1, (nscans, 1)).flatten()
+        obs_data[('solarZenithAngle', 'MetaData')] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
+        obs_data[('solarAzimuthAngle', 'MetaData')] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorZenithAngle', 'MetaData')] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorAzimuthAngle', 'MetaData')] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
+        nlocs = len(obs_data[('latitude', 'MetaData')])
+        obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+        obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
 
     # BaseException is a catch-all mechamism
     except BaseException:
-        loc_data['latitude'].append(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten())
-        loc_data['longitude'].append(g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten())
+        obs_data[('latitude', 'MetaData')] = np.append(obs_data[('latitude', 'MetaData')], g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten())
+        obs_data[('longitude', 'MetaData')] = np.append(obs_data[('latitude', 'MetaData')], g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten())
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     try:
-        nchans = len(loc_data['channelNumber'])
-        nlocs = len(loc_data['latitude'])
+        nchans = len(obs_data[('channelNumber', 'MetaData')])
+        nlocs = len(obs_data[('latitude', 'MetaData')])
         obs_data[('brightnessTemperature', "ObsValue")] = np.vstack(g['antenna_temp'])
         obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
         obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
@@ -191,7 +195,7 @@ def get_data(f, g, obs_data, loc_data):
         obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
         obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
-    return obs_data, loc_data
+    return obs_data
 
 
 def get_WMO_satellite_ID(filename):
@@ -221,7 +225,7 @@ def get_string_dtg(obs_time_utc):
     dtg = []
     for i, yyyy in enumerate(year):
         cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        dtg.append(datetime.strptime(cdtg, "%Y-%m-%dT%H:%M:%SZ"))
+        dtg.append(cdtg)
 
     return dtg
 
@@ -231,22 +235,19 @@ def init_obs_loc():
         ('brightnessTemperature', "ObsValue"): [],
         ('brightnessTemperature', "ObsError"): [],
         ('brightnessTemperature', "PreQC"): [],
+        ('satelliteId', 'MetaData'): [],
+        ('channelNumber', 'MetaData'): [],
+        ('latitude', 'MetaData'): [],
+        ('longitude', 'MetaData'): [],
+        ('datetime', 'MetaData'): [],
+        ('fieldOfViewNumber', 'MetaData'): [],
+        ('solarZenithAngle', 'MetaData'): [],
+        ('solarAzimuthAngle', 'MetaData'): [],
+        ('sensorZenithAngle', 'MetaData'): [],
+        ('sensorAzimuthAngle', 'MetaData'): [],
     }
 
-    loc = {
-        'satelliteId': [],
-        'channelNumber': [],
-        'latitude': [],
-        'longitude': [],
-        'datetime': [],
-        'fieldOfViewNumber': [],
-        'solarZenithAngle': [],
-        'solarAzimuthAngle': [],
-        'sensorZenithAngle': [],
-        'sensorAzimuthAngle': [],
-    }
-
-    return obs, loc
+    return obs
 
 
 if __name__ == "__main__":
@@ -278,7 +279,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # create output directory path if necessary
-    output_dir = os.path.dirname(args.output);
+    output_dir = os.path.dirname(args.output)
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
