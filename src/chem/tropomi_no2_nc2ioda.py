@@ -100,13 +100,13 @@ class tropomi(object):
             total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
             trop_airmass = ncd.groups['PRODUCT'].\
                 variables['air_mass_factor_troposphere'][:].ravel()
-            # get info to construct the pressure level array 
+            # get info to construct the pressure level array
             ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
                 variables['surface_pressure'][:]
-            #bottom of layer is vertice 0, very top layer is TOA (0hPa)
-            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:,0]
-            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:,0]
-            # grab the averaging kernel 
+            # bottom of layer is vertice 0, very top layer is TOA (0hPa)
+            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, 0]
+            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, 0]
+            # grab the averaging kernel
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
@@ -147,11 +147,11 @@ class tropomi(object):
                     self.outdata[('averaging_kernel_precision', 'MetaData')], kernel_err_total))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
-                    self.loc_mdata[varname_ak] = np.concatenate((self.loc_mdata[varname_ak],
-                                                              avg_kernel[..., k].ravel()))
+                    self.loc_mdata[varname_ak] = np.concatenate(
+                        (self.loc_mdata[varname_ak], avg_kernel[..., k].ravel()))
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
-                    self.outdata[varname_pr] = np.concatenate((self.loc_mdata[varname_pr],
-                                               ak[k] + bk[k]*ps[...].ravel()))
+                    self.outdata[varname_pr] = np.concatenate(
+                        (self.loc_mdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()))
             for ncvar, iodavar in obsvars.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
