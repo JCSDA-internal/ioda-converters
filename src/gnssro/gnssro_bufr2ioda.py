@@ -71,6 +71,8 @@ def main(args):
     # in addition to the ones already loaded in from the input file
     attr_data = {}
     attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    date_time_int32        = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
+    attr_data['date_time'] = date_time_int32.item()
     attr_data['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
@@ -173,6 +175,9 @@ def get_obs_data(bufr, profile_meta_data):
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
 
+    # set record number (multi file procesing will change this)
+    nrec = 1
+
     # replication factors for the datasets, bending angle, refractivity and derived profiles
     krepfac = codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
     # array([247, 247, 200])
@@ -224,8 +229,17 @@ def get_obs_data(bufr, profile_meta_data):
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
     # add rising/setting (ascending/descending) bit
+    #! Bit 1=Non-nominal quality
+    #! Bit 3=Rising Occulation (1=rising; 0=setting)
+    #! Bit 4=Excess Phase non-nominal
+    #! Bit 5=Bending Angle non-nominal
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
     iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
+    #print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
     obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
+    obs_data[('record_number', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
     # get derived profiles
     geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -242,8 +256,8 @@ def def_meta_data():
     meta_data_keys = {
         "qualityFlag": 'radioOccultationDataQualityFlags',
         "geoid_height_above_reference_ellipsoid": 'geoidUndulation',
-        "sensor_azimuth_angle": 'bearingOrAzimuth',
-        "time": 'timeIncrement',
+        "sensor_azimuth_angle" : 'bearingOrAzimuth',
+        "time" : 'timeIncrement',
         "earth_radius_of_curvature": 'earthLocalRadiusOfCurvature',
         "occulting_sat_id": 'satelliteIdentifier',
         "occulting_sat_is": 'satelliteInstruments',
@@ -275,10 +289,8 @@ def def_meta_types():
 
     return meta_data_types
 
-
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
-
 
 def assign_values(data):
     if data.dtype == float:
