@@ -896,7 +896,7 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf 
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/atms_netcdf_hdf5_2ioda.py
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
                           -i testinput/SNDR.SNPP.ATMS.20211206T0100.m06.g011.L1B.std.v03_15.G.211206074531.nc4
                           -o testrun/atms_obs.nc4" atms_obs.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
