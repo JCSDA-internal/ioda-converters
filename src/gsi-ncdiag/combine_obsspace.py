@@ -149,6 +149,23 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     writer = iconv.IodaWriter(OutFile, LocKeyList, DimDict)
     writer.BuildIoda(OutData, VarDims, varAttrs, globalAttrs)
 
+    # now write out combined GeoVaLs file
+    if GeoDir:
+        GeoFileList = []
+        GeoVarNames2 = []
+        GeoVarTypes = {}
+        GeoVarNames3 = []
+        GeoVarNames31 = []
+        for f in FileList:
+            inob = f.split('/')[-1]
+            ingeo = inob.replace('obs', 'geoval')
+            g = GeoDir+'/'+ingeo
+            GeoFileList.append(g)
+        for f in GeoFileList:
+            obsspace = ios.ObsSpace(f)
+            for vname in obsspace.variables:
+                print(vname.dims)
+
 
 ######################################################
 ######################################################
