@@ -48,10 +48,14 @@ def main(args):
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
     # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes,
-    # and can only take iterable objects.
-    # Rather than using global variables, embed them into
+    # Note: Pool.map creates separate processes, and can only take iterable
+    # objects. Rather than using global variables, embed them into
     # the iterable object together with argument array passed in (args.input)
+    global_config = {}
+    global_config['date'] = args.date
+    global_config['oval_name'] = 'ObsValue'
+    global_config['oerr_name'] = 'ObsError'
+    global_config['opqc_name'] = 'PreQC'
 
     # read / process files in parallel
 #   pool_inputs = [(i) for i in args.input]
