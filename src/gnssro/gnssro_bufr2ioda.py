@@ -69,11 +69,10 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    attr_data = {}
-    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     date_time_int32        = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
-    attr_data['date_time'] = date_time_int32.item()
-    attr_data['converter'] = os.path.basename(__file__)
+    GlobalAttrs['date_time'] = date_time_int32.item()
+    GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
     VarDims = {
