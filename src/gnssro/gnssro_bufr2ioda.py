@@ -201,7 +201,7 @@ def get_obs_data(bufr, profile_meta_data):
     obs_data[('bending_angle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     # (geometric) height is read as integer but expected as float in output
-    height = codes_get_array(bufr, 'height'). astype(float)
+    height = codes_get_array(bufr, 'height').astype(float)
     # get the refractivity
     refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
     refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
@@ -249,7 +249,6 @@ def get_obs_data(bufr, profile_meta_data):
     prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
 
     # Compute impact height
-
     obs_data[('impact_height', 'MetaData')]  = \
     obs_data[('impact_parameter', 'MetaData')] - \
     obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
