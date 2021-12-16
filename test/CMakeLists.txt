@@ -325,6 +325,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_rads_adt
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_profile2ioda.py
@@ -368,6 +369,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_adt
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_insitu
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/hgodas_insitu2ioda.py
