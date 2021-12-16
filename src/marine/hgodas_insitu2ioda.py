@@ -67,7 +67,7 @@ class Profile(object):
 
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
-        self.VarAttrs['depth', 'MetaData']['units'] = '???'
+        self.VarAttrs['depth', 'MetaData']['units'] = 'm'
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:

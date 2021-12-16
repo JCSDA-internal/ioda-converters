@@ -224,7 +224,7 @@ class IODA(object):
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'nlocs': nlocs}
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
-        self.varAttrs['depth', 'MetaData']['units'] = "???"
+        self.varAttrs['depth', 'MetaData']['units'] = "m"
         self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
