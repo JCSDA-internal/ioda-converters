@@ -899,7 +899,7 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                           "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
                           -d 2021120600
                           -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
-                          -o testrun/2021120600_atms_sdr.nc4" 2021120600.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
+                          -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
 #==============================================================================
 # PrepBUFR and BUFR tests
