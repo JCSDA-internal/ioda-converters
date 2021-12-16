@@ -39,8 +39,6 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-GlobalAttrs = {
-}
 
 
 def main(args):
@@ -51,11 +49,6 @@ def main(args):
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
     # the iterable object together with argument array passed in (args.input)
-    global_config = {}
-    global_config['date'] = args.date
-    global_config['oval_name'] = 'ObsValue'
-    global_config['oerr_name'] = 'ObsError'
-    global_config['opqc_name'] = 'PreQC'
 
     # read / process files in parallel
 #   pool_inputs = [(i) for i in args.input]
@@ -69,6 +62,7 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
+    GlobalAttrs = {}
     GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     date_time_int32        = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
     GlobalAttrs['date_time'] = date_time_int32.item()
