@@ -248,6 +248,13 @@ def get_obs_data(bufr, profile_meta_data):
     spchum = codes_get_array(bufr, 'specificHumidity')[0::2]
     prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
 
+    # Compute impact height
+
+    obs_data[('impact_height', 'MetaData')]  = \
+    obs_data[('impact_parameter', 'MetaData')] - \
+    obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
+    obs_data[('earth_radius_of_curvature', 'MetaData')]
+
     return obs_data
 
 
@@ -276,6 +283,7 @@ def def_meta_types():
         "longitude": "float",
         "datetime": "string",
         'impact_parameter': 'float',
+        'impact_height': 'float',
         'height': 'float',
         "qualityFlag": 'integer',
         "geoid_height_above_reference_ellipsoid": 'float',
