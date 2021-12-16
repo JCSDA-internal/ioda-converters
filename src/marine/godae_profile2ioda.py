@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -19,7 +19,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -151,7 +151,7 @@ class profile(object):
 
 class IODA(object):
 
-    def __init__(self, filename, date, varDict, obsList):
+    def __init__(self, filename, date, varDict, varDims, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -169,24 +169,27 @@ class IODA(object):
             ("datetime", "string")
         ]
 
-        self.AttrData = {
+        self.GlobalAttrs = {
             'odb_version': 1,
-            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
         }
 
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
-
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in self.varDict.keys():
-            value = self.varDict[key]
-            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
-            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
-            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
+            value = self.varDict[key][0]
+            units = self.varDict[key][1]
+            self.keyDict[key]['valKey'] = value, iconv.OvalName()
+            self.keyDict[key]['errKey'] = value, iconv.OerrName()
+            self.keyDict[key]['qcKey'] = value, iconv.OqcName()
+            self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
+            self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
+            self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
+            self.varAttrs[value, iconv.OvalName()]['units'] = units
+            self.varAttrs[value, iconv.OerrName()]['units'] = units
+            self.varAttrs[value, iconv.OqcName()]['units'] = "unitless"
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-
-        recKey = 0
 
         for obs in obsList:
 
@@ -214,14 +217,15 @@ class IODA(object):
                         errKey = self.keyDict[key]['errKey']
                         qcKey = self.keyDict[key]['qcKey']
 
-                        self.data[recKey][locKey][valKey] = val
-                        self.data[recKey][locKey][errKey] = err
-                        self.data[recKey][locKey][qcKey] = qc
+                        self.data[locKey][valKey] = val
+                        self.data[locKey][errKey] = err
+                        self.data[locKey][qcKey] = qc
 
-                recKey += 1
-
-        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
+        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
+        DimDict = {'nlocs': nlocs}
+        self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+        self.varAttrs['depth', 'MetaData']['units'] = "m"
+        self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
 
@@ -254,11 +258,17 @@ def main():
         obsList.append(obs)
 
     varDict = {
-        'ob_tmp': 'sea_water_temperature',
-        'ob_sal': 'sea_water_salinity'
+        #              var name,             units
+        'ob_tmp': ['sea_water_temperature', 'C'],
+        'ob_sal': ['sea_water_salinity', 'PSU']
     }
 
-    IODA(foutput, fdate, varDict, obsList)
+    varDims = {
+        'sea_water_temperature': ['nlocs'],
+        'sea_water_salinity': ['nlocs'],
+    }
+
+    IODA(foutput, fdate, varDict, varDims, obsList)
 
 
 if __name__ == '__main__':
