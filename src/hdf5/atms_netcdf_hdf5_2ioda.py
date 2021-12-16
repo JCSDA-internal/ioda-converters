@@ -46,7 +46,11 @@ locationKeyList = [
 ]
 
 
-def main(input_files, output_filename, threads):
+def main(args):
+
+    input_files = args.input
+    output_filename = args.output
+    dtg = datetime.strptime(args.date, '%Y%m%d%H')
 
     pool_inputs = [(i) for i in input_files]
 
@@ -59,8 +63,17 @@ def main(input_files, output_filename, threads):
 
     obs_data = get_data_from_files(input_files)
 
-    nlocs = len(obs_data[('latitude', 'MetaData')])
+    nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='int32')
+    nlocs = nlocs_int32.item()
     nchans = len(obs_data[('channelNumber', 'MetaData')])
+
+    # prepare global attributes we want to output in the file,
+    # in addition to the ones already loaded in from the input file
+    attr_data = {}
+    attr_data['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    date_time_int32        = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
+    attr_data['date_time'] = date_time_int32.item()
+    attr_data['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
     VarDims = {
@@ -73,14 +86,13 @@ def main(input_files, output_filename, threads):
         'nchans': obs_data[('channelNumber', 'MetaData')],
     }
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
-#   writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('brightnessTemperature', 'ObsValue')]['units'] = 'K'
     VarAttrs[('brightnessTemperature', 'ObsError')]['units'] = 'K'
     VarAttrs[('brightnessTemperature', 'PreQC')]['units'] = 'unitless'
 
-    missing_value = -1.0000e+100
+    missing_value = -1.0000e+38
     int_missing_value = -2147483647
     VarAttrs[('brightnessTemperature', 'ObsValue')]['_FillValue'] = missing_value
     VarAttrs[('brightnessTemperature', 'ObsError')]['_FillValue'] = missing_value
@@ -90,7 +102,6 @@ def main(input_files, output_filename, threads):
 #   GlobalAttrs['converter'] = os.path.basename(__file__)
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
-
 
 def get_data_from_files(zfiles):
 
@@ -166,7 +177,7 @@ def get_data(f, g, obs_data):
         obs_data[('latitude', 'MetaData')] = np.array(g['lat'][:, :].flatten(), dtype='float32')
         obs_data[('longitude', 'MetaData')] = np.array(g['lon'][:, :].flatten(), dtype='float32')
         obs_data[('channelNumber', 'MetaData')] = np.array(g['channel'][:], dtype='int32')
-        obs_data[('fieldOfViewNumber', 'MetaData')] = np.tile(np.arange(nbeam_pos) + 1, (nscans, 1)).flatten()
+        obs_data[('fieldOfViewNumber', 'MetaData')] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
         obs_data[('solarZenithAngle', 'MetaData')] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
         obs_data[('solarAzimuthAngle', 'MetaData')] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
         obs_data[('sensorZenithAngle', 'MetaData')] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
@@ -177,21 +188,23 @@ def get_data(f, g, obs_data):
 
     # BaseException is a catch-all mechamism
     except BaseException:
-        obs_data[('latitude', 'MetaData')] = np.append(obs_data[('latitude', 'MetaData')], g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten())
-        obs_data[('longitude', 'MetaData')] = np.append(obs_data[('latitude', 'MetaData')], g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten())
+        # this section is for the NOAA CLASS files and need to be tested
+        obs_data[('latitude', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten(), dtype='float32')
+        obs_data[('longitude', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten(), dtype='float32')
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     try:
         nchans = len(obs_data[('channelNumber', 'MetaData')])
         nlocs = len(obs_data[('latitude', 'MetaData')])
-        obs_data[('brightnessTemperature', "ObsValue")] = np.vstack(g['antenna_temp'])
+        obs_data[('brightnessTemperature', "ObsValue")] = np.array(np.vstack(g['antenna_temp']), dtype='float32')
         obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
         obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
     except BaseException:
+        # this section is for the NOAA CLASS files and need to be tested
         scaled_data = np.vstack(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])
         scale_fac = f['All_Data']['ATMS-SDR_All']['BrightnessTemperatureFactors'][:].flatten()
 
-        obs_data[('brightnessTemperature', "ObsValue")] = (scaled_data * scale_fac[0]) + scale_fac[1]
+        obs_data[('brightnessTemperature', "ObsValue")] = np.array((scaled_data * scale_fac[0]) + scale_fac[1], dtype='float32')
         obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
         obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
@@ -264,6 +277,11 @@ if __name__ == "__main__":
         '-i', '--input',
         help="path of satellite observation input file(s)",
         type=str, nargs='+', required=True)
+    required.add_argument(
+        '-d', '--date',
+        metavar="YYYYMMDDHH",
+        help="base date for the center of the window",
+        type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
@@ -278,9 +296,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # create output directory path if necessary
-    output_dir = os.path.dirname(args.output)
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-
-    main(args.input, args.output, args.threads)
+    main(args)
