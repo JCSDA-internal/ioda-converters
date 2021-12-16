@@ -151,9 +151,13 @@ def combine_obsspace(FileList, OutFile, GeoDir):
 
     # now write out combined GeoVaLs file
     if GeoDir:
+        GeoOutData = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        GeoLocKeyList = ['latitude', 'longitude', 'time']
         GeoFileList = []
         GeoVarNames2 = []
         GeoVarTypes = {}
+        GeoVarDims = {}
+        GeoVarFiles = {}
         GeoVarNames3 = []
         GeoVarNames31 = []
         for f in FileList:
@@ -163,8 +167,86 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             GeoFileList.append(g)
         for f in GeoFileList:
             obsspace = ios.ObsSpace(f)
+            nlevs = obsspace.Variable('nlevs').dimsizes[0]
+            ninterfaces = obsspace.Variable('ninterfaces').dimsizes[0]
             for vname in obsspace.variables:
-                print(vname.dims)
+                if vname not in ['nlocs', 'nlevs', 'ninterfaces'] and 'maxstrlen' not in vname:
+                    _var = obsspace.Variable(vname)
+                    if len(_var.dimsizes) == 1 and vname not in GeoVarNames2:
+                        GeoVarNames2.append(vname)
+                        GeoVarFiles[vname] = f
+                        GeoVarDims[vname] = ['nlocs']
+                    elif len(_var.dimsizes) == 2:
+                        if _var.dimsizes[1] == nlevs and vname not in GeoVarNames3:
+                            GeoVarNames3.append(vname)
+                            GeoVarFiles[vname] = f
+                            GeoVarDims[vname] = ['nlocs', 'nlevs']
+                        elif _var.dimsizes[1] == ninterfaces and vname not in GeoVarNames31:
+                            GeoVarNames31.append(vname)
+                            GeoVarFiles[vname] = f
+                            GeoVarDims[vname] = ['nlocs', 'ninterfaces']
+                    else:
+                        pass
+                    del _var
+            del obsspace
+        # figure out variable type and dims
+        for vname in GeoVarNames2 + GeoVarNames3 + GeoVarNames31:
+            iodafile = GeoVarFiles[vname]
+            obsspace = ios.ObsSpace(iodafile)
+            _var = obsspace.Variable(vname)
+            GeoVarTypes[vname] = _var.numpy_dtype()
+            del _var
+            del obsspace
+
+        # start to extract geovals from files
+        GeoVarData2 = []
+        GeoVarIdx2 = []
+        GeoVarData3 = []
+        GeoVarIdx3 = []
+        GeoVarData31 = []
+        GeoVarIdx31 = []
+        for idx2, v in enumerate(GeoVarNames2):
+            tmpgeodata = []
+            tmpgeoidx = []
+            for f in GeoFileList:
+                obsspace = ios.ObsSpace(f)
+                if v in obsspace.variables:
+                    _var = obsspace.Variable(v)
+                    tmpdata = np.array(_var.read_data())
+                else:
+                    tmpdata = np.full((obsspace.nlocs), ios.get_default_fill_val(GeoVarTypes[v]),
+                                      dtype=GeoVarTypes[v])
+                tmpgeodata.append(tmpdata)
+                tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                del _var
+                del obsspace
+            tmpgeodata = np.hstack(tmpgeodata)
+            tmpgeoidx = np.hstack(tmpgeoidx)
+            GeoVarData2.append(tmpgeodata)
+            GeoVarIdx2.append(tmpgeoidx)
+        GeoVarData2 = np.vstack(GeoVarData2)
+        GeoVarIdx2 = np.vstack(GeoVarIdx2)
+        GeoVarData2 = np.transpose(GeoVarData2)
+        GeoVarIdx2 = np.transpose(GeoVarIdx2)
+        GeoVarUnique2 = np.empty((len(idx), len(GeoVarData2[0])))
+
+        # arrange the output data
+        for ii, jj in np.ndindex(GeoVarData2.shape):
+            j = GeoVarIdx2[ii, jj]
+            i = inv[ii]
+            if GeoVarData2[ii, jj] != iconv.get_default_fill_val('float32'):
+                GeoVarUnique2[i, j] = GeoVarData2[ii, jj]
+        for idx2, v in enumerate(GeoVarNames2):
+            GeoOutData[v] = GeoVarUnique2[:,j].astype(GeoVarTypes[v])
+
+        # write out the file
+        GeoDimDict = {}
+        GeoGlobalAttrs = {}
+        GeoDimDict['nlocs'] = len(GeoVarUnique2)
+        OutGeoFile = OutFile.replace('obs', 'geoval')
+        GeoGlobalAttrs['input_files'] = ';'.join(GeoFileList)
+        gwriter = iconv.IodaWriter(OutGeoFile, GeoLocKeyList, GeoDimDict)
+        gwriter.BuildIoda(GeoOutData, GeoVarDims, {}, GeoGlobalAttrs)
 
 
 ######################################################
