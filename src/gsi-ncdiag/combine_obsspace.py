@@ -248,15 +248,13 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
                 del _var
                 del obsspace
-            tmpgeodata = np.hstack(tmpgeodata)
-            tmpgeoidx = np.hstack(tmpgeoidx)
+            tmpgeodata = np.vstack(tmpgeodata)
+            tmpgeoidx = np.vstack(tmpgeoidx)
             GeoVarData3.append(tmpgeodata)
             GeoVarIdx3.append(tmpgeoidx)
-        GeoVarData3 = np.vstack(GeoVarData3)
-        GeoVarIdx3 = np.vstack(GeoVarIdx3)
-        GeoVarData3 = np.transpose(GeoVarData3)
-        GeoVarIdx3 = np.transpose(GeoVarIdx3)
-        GeoVarUnique3 = np.empty((len(idx), len(GeoVarData3[0], len(GeoVarData3[0, 0, :])))
+        GeoVarData3 = np.dstack(GeoVarData3)
+        GeoVarIdx3 = np.dstack(GeoVarIdx3)
+        GeoVarUnique3 = np.empty((len(idx), len(GeoVarData3[0]), len(GeoVarData3[0, 0, :])))
 
         # 3D fields on half levels
         for idx2, v in enumerate(GeoVarNames31):
@@ -274,15 +272,13 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
                 del _var
                 del obsspace
-            tmpgeodata = np.hstack(tmpgeodata)
-            tmpgeoidx = np.hstack(tmpgeoidx)
+            tmpgeodata = np.vstack(tmpgeodata)
+            tmpgeoidx = np.vstack(tmpgeoidx)
             GeoVarData31.append(tmpgeodata)
             GeoVarIdx31.append(tmpgeoidx)
-        GeoVarData31 = np.vstack(GeoVarData31)
-        GeoVarIdx31 = np.vstack(GeoVarIdx31)
-        GeoVarData31 = np.transpose(GeoVarData31)
-        GeoVarIdx31 = np.transpose(GeoVarIdx31)
-        GeoVarUnique31 = np.empty((len(idx), len(GeoVarData31[0], len(GeoVarData31[0, 0, :])))
+        GeoVarData31 = np.dstack(GeoVarData31)
+        GeoVarIdx31 = np.dstack(GeoVarIdx31)
+        GeoVarUnique31 = np.empty((len(idx), len(GeoVarData31[0]), len(GeoVarData31[0, 0, :])))
 
         # arrange the output data
         for ii, jj in np.ndindex(GeoVarData2.shape):
