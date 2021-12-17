@@ -34,9 +34,8 @@ ioda_int_type = 'int32'
 float_missing_value = -1.0e+38
 int_missing_value = -2147483647
 
-def main(file_name, output_file):
+def main(file_names, output_file):
 
-    filenames = [ file_name ]
     # initialize
     count = [0, 0]
     start_pos = None
@@ -48,7 +47,14 @@ def main(file_name, output_file):
     # obs = pool.map(read_file, pool_inputs)
 
     # obs_data, count, start_pos = obs[0]
-    obs_data, count, start_pos = read_file(file_name, count, start_pos)
+    obs_data = {}
+    for fname in file_names:
+        print("INFO: Reading file: ", fname)
+        file_obs_data, count, start_pos = read_file(fname, count, start_pos)
+        if obs_data:
+            concat_obs_dict(obs_data, file_obs_data)
+        else:
+            obs_data = file_obs_data
 
     # print ( "number of valid mssg: ", count[0] )
     # print ( "number of invalid mssg: ", count[1] )
@@ -262,19 +268,20 @@ def read_bufr_message( f, count, start_pos ):
 
 if __name__ == "__main__":
 
-    from optparse import OptionParser
+    from argparse import ArgumentParser
 
-    usage = 'usage: %prog -i input-file -o output-file'
-    parser = OptionParser(usage)
-    parser.add_option('-i', '--input-file', dest='file_name',
+    usage = 'usage: %prog -i input-files -o output-file'
+    parser = ArgumentParser(usage)
+    parser.add_argument('-i', '--input-files', nargs='+', dest='file_names',
                       action='store', default=None,
-                      help='input file')
-    parser.add_option('-o', '--output-file', dest='output_file',
+                      help='input files')
+    parser.add_argument('-o', '--output-file', dest='output_file',
                       action='store', default=None,
-                      help='input file')
-    (options, args) = parser.parse_args()
+                      help='output file')
+    args = parser.parse_args()
 
-    if not os.path.isfile(options.file_name):
-        parser.error('File does not exist, please enter valid input file with the -i option.')
+    for file_name in args.file_names:
+        if not os.path.isfile(file_name):
+            parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(options.file_name, options.output_file)
+    main(args.file_names, args.output_file)
