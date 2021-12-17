@@ -56,7 +56,7 @@ list( APPEND test_input
   testinput/imsscf_20191215_c48.nc
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
-  testinput/sonde_wmo_single.bufr
+  testinput/sonde_wmo_double.bufr
 )
 
 list( APPEND test_output
@@ -105,7 +105,7 @@ list( APPEND test_output
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
   testoutput/godae_bgc_argo.nc
-  testoutput/wmo_raob_single.nc4
+  testoutput/wmo_raob_double.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -899,9 +899,9 @@ ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob
                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                  ARGS    netcdf
                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
-                         -i testinput/sonde_wmo_single.bufr
-                         -o testrun/wmo_raob_single.nc4"
-                         wmo_raob_single.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+                         -i testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_double.nc4"
+                         wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # PrepBUFR and BUFR tests
