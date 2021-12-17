@@ -56,6 +56,7 @@ list( APPEND test_input
   testinput/imsscf_20191215_c48.nc
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
+  testinput/sonde_wmo_single.bufr
 )
 
 list( APPEND test_output
@@ -104,6 +105,7 @@ list( APPEND test_output
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
   testoutput/godae_bgc_argo.nc
+  testoutput/wmo_raob_single.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -888,13 +890,15 @@ endif()
 # Generic NRT Ingest tests
 #==============================================================================
 
-ecbuild_add_test( TARGET  test_iodaconv_generic_bufr_raob
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND ${Python3_EXECUTABLE}
-                  ARGS    "${PROJECT_SOURCE_DIR}/src/conventional/decode_bufr_LDM_raob.py"
-                  "-i" "testinput/2021080100.radiosonde.BUFR"
-                  "-o" "testrun/ioda_raob_2021080100.nc4" )
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_single.bufr
+                         -o testrun/wmo_raob_single.nc4"
+                         wmo_raob_single.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # PrepBUFR and BUFR tests

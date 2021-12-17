@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
 from datetime import datetime, timedelta
 import dateutil.parser
 import os
@@ -12,23 +11,28 @@ import netCDF4 as nc
 from eccodes import *
 from multiprocessing import Pool
 
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
-
 #from IPython import embed as shell
 
-
-# set globals ???
+# set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+# These modules need the path to lib-python modules
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string")
 ]
+
+ioda_float_type = 'float32'
+ioda_int_type = 'int32'
+float_missing_value = -1.0e+38
+int_missing_value = -2147483647
 
 def main(file_name, output_file):
 
@@ -38,15 +42,16 @@ def main(file_name, output_file):
     start_pos = None
 
     # read / process files in parallel
-    pool = Pool(1)
-    pool_inputs = [(i, count, start_pos) for i in filenames]
+    # pool = Pool(1)
+    # pool_inputs = [(i, count, start_pos) for i in filenames]
 
-    obs = pool.map(read_file, pool_inputs)
+    # obs = pool.map(read_file, pool_inputs)
 
-    obs_data, count, start_pos = obs[0]
+    # obs_data, count, start_pos = obs[0]
+    obs_data, count, start_pos = read_file(file_name, count, start_pos)
 
-    #print ( "number of valid mssg: ", count[0] )
-    #print ( "number of invalid mssg: ", count[1] )
+    # print ( "number of valid mssg: ", count[0] )
+    # print ( "number of invalid mssg: ", count[1] )
 
     attr_data = {}
     # prepare global attributes we want to output in the file,
@@ -65,31 +70,48 @@ def main(file_name, output_file):
 }
 
     # write them out
-    nlocs = obs_data[('temperatureAir', 'ObsValue')].shape[0]
+    nlocs = obs_data[('altitude', 'ObsValue')].shape[0]
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('altitude', 'ObsValue')]['units'] = 'Radians'
-    VarAttrs[('altitude', 'ObsError')]['units'] = 'Radians'
-    VarAttrs[('altitude', 'PreQC')]['units']    = 'unitless'
+    VarAttrs[('altitude', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('wind_direction', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('wind_speed', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('air_temperature', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('dew_point_temperature', "ObsValue")]['_FillValue'] = float_missing_value
 
-    missing_value = -1.0e+38
-    int_missing_value = -2147483647
-    VarAttrs[('altitude', 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[('altitude', 'ObsError')]['_FillValue'] = missing_value
-    VarAttrs[('altitude', 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[('latitude', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('longitude', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('air_pressure', "MetaData")]['_FillValue'] = float_missing_value
+
+    # VarAttrs[('altitude', 'ObsValue')]['units'] = 'Radians'
+    # VarAttrs[('altitude', 'ObsError')]['units'] = 'Radians'
+    # VarAttrs[('altitude', 'PreQC')]['units']    = 'unitless'
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 def read_file(file_name, count, start_pos):
 
+    obs_data = {}
     f = open(file_name, 'rb')
 
     while True:
         # here is where to send to ecCodes
-        obs_data, count, start_pos = read_bufr_message( f, count, start_pos )
+        msg_data, count, start_pos = read_bufr_message( f, count, start_pos )
+
+        # only record msg_data if it is not empty
+        if (msg_data):
+            # If obs_data is empty, simply copy msg_data
+            # Otherwise, append the elements in msg_data to the
+            #    corrsponding elements in obs_data
+            if (obs_data):
+                # Append
+                pass
+            else:
+                # Copy
+                obs_data = msg_data
 
         if start_pos == None:
             #print ( "start_pos: ", start_pos )
@@ -121,7 +143,6 @@ def get_meta_data(bufr):
     profile_meta_data['datetime'] = dtg
     # do not see a different launch time in the BUFR file
     profile_meta_data['sondeLaunchTime'] = dtg
-#   profile_meta_data['sondeLaunchTime'] = datetime.strptime( dtg, "%Y-%m-%dT%H:%M:%SZ")
 
     return profile_meta_data
 
@@ -141,13 +162,25 @@ def def_meta_data():
 
     return meta_data_keys
 
+
+def assign_values(data):
+    if data.dtype == float:
+        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
+        return np.array(data, dtype=ioda_float_type)
+    elif data.dtype == int:
+        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
+        return np.array(data, dtype=ioda_int_type)
+    elif data.dtype.kind in { 'U', 'S' }:
+        return np.array(data, dtype=object)
+
+
 def read_bufr_message( f, count, start_pos ):
 
     obs_data = {}
     if start_pos == f.tell():
         return obs_data, count, None
     start_pos = f.tell()
-    print ( "staring pos: ", f.tell() )
+    print ( "starting pos: ", f.tell() )
 
     try:
         bufr = codes_bufr_new_from_file( f )
@@ -160,34 +193,35 @@ def read_bufr_message( f, count, start_pos ):
         krepfac = codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
         drepfac = codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
 
-        lat = codes_get(bufr, 'latitude')
-        lon = codes_get(bufr, 'longitude')
-        lat_displacement  = codes_get_array(bufr, 'latitudeDisplacement')
-        lon_displacement  = codes_get_array(bufr, 'longitudeDisplacement')
-        time_displacement = codes_get_array(bufr, 'timePeriod')
-        wind_direction    = codes_get_array(bufr, 'windDirection')
-        wind_speed        = codes_get_array(bufr, 'windSpeed')
-        temp_air          = codes_get_array(bufr, 'airTemperature')
-        temp_dewpoint     = codes_get_array(bufr, 'dewpointTemperature')
-        pressure          = codes_get_array(bufr, 'pressure')
-        geop_height       = codes_get_array(bufr, 'nonCoordinateGeopotentialHeight')
+        lat = codes_get(bufr, 'latitude', ktype=float)
+        lon = codes_get(bufr, 'longitude', ktype=float)
+        lat_displacement = codes_get_array(bufr, 'latitudeDisplacement', ktype=float)
+        lon_displacement = codes_get_array(bufr, 'longitudeDisplacement', ktype=float)
+        time_displacement = codes_get_array(bufr, 'timePeriod', ktype=float)
+        wind_direction = codes_get_array(bufr, 'windDirection', ktype=float)
+        wind_speed = codes_get_array(bufr, 'windSpeed', ktype=float)
+        temp_air = codes_get_array(bufr, 'airTemperature', ktype=float)
+        temp_dewpoint = codes_get_array(bufr, 'dewpointTemperature', ktype=float)
+        pressure = codes_get_array(bufr, 'pressure', ktype=float)
+        geop_height = codes_get_array(bufr, 'nonCoordinateGeopotentialHeight', ktype=float)
 
         codes_release( bufr )
 
         num_levels        = len( lat_displacement )
 
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
-        obs_data[('altitude', "ObsValue")]             = geop_height
-        obs_data[('windDirection', "ObsValue")]        = wind_direction
-        obs_data[('windSpeed', "ObsValue")]            = wind_speed
-        obs_data[('temperatureAir', "ObsValue")]       = temp_air
-        obs_data[('temperatureDewpoint', "ObsValue")]  = temp_dewpoint
+        obs_data[('altitude', "ObsValue")] = assign_values(geop_height)
+        obs_data[('wind_direction', "ObsValue")] = assign_values(wind_direction)
+        obs_data[('wind_speed', "ObsValue")] = assign_values(wind_speed)
+        obs_data[('air_temperature', "ObsValue")] = assign_values(temp_air)
+        obs_data[('dew_point_temperature', "ObsValue")] = assign_values(temp_dewpoint)
 
-        obs_data[('latitude', "MetaData")]   =  np.full(num_levels, lat, dtype='float32') + lat_displacement
-        obs_data[('longitude', "MetaData")]  =  np.full(num_levels, lon, dtype='float32') + lon_displacement
-        obs_data[('pressure', "MetaData")]   =  pressure
+        obs_data[('latitude', "MetaData")] = np.full(num_levels, lat, dtype='float32') + assign_values(lat_displacement)
+        obs_data[('longitude', "MetaData")] = np.full(num_levels, lon, dtype='float32') + assign_values(lon_displacement)
+        obs_data[('air_pressure', "MetaData")] = assign_values(pressure)
         for k, v in profile_meta_data.items():
-            obs_data[(k, "MetaData")]        = np.repeat(v, krepfac[0])
+            vals = np.repeat(v, krepfac[0])
+            obs_data[(k, "MetaData")] = assign_values(vals)
 
         print ( " decoded raob num_lev: ", len(obs_data[('latitude',"MetaData")]) )
         print ( "ending pos: ", f.tell() )

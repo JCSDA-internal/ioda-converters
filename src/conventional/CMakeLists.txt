@@ -1,5 +1,6 @@
 list(APPEND programs
   metar_csv2ioda.py
+  decode_bufr_LDM_raob.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
