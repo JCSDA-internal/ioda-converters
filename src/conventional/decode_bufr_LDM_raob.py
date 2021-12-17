@@ -92,6 +92,24 @@ def main(file_name, output_file):
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
+def concat_obs_dict(obs_data, append_obs_data):
+    # For now we are assuming that the obs_data dictionary has the "golden" list
+    # of variables. If one is missing from append_obs_data, the obs_data variable
+    # will be extended using fill values.
+    #
+    # Use the first key in the append_obs_data dictionary to determine how
+    # long to make the fill value vector.
+    append_keys = list(append_obs_data.keys())
+    append_length = len(append_obs_data[append_keys[0]])
+    print("DEBUG: concat: append_length: ", append_length)
+    for gv_key in obs_data.keys():
+        print("DEBUG: concat: gv_key: ", gv_key)
+        if gv_key in append_keys:
+            print("DEBUG:     appending data")
+            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
+        else:
+            print("DEBUG:     appending fill values")
+
 def read_file(file_name, count, start_pos):
 
     obs_data = {}
@@ -108,7 +126,7 @@ def read_file(file_name, count, start_pos):
             #    corrsponding elements in obs_data
             if (obs_data):
                 # Append
-                pass
+                concat_obs_dict(obs_data, msg_data)
             else:
                 # Copy
                 obs_data = msg_data
