@@ -101,14 +101,19 @@ def concat_obs_dict(obs_data, append_obs_data):
     # long to make the fill value vector.
     append_keys = list(append_obs_data.keys())
     append_length = len(append_obs_data[append_keys[0]])
-    print("DEBUG: concat: append_length: ", append_length)
     for gv_key in obs_data.keys():
-        print("DEBUG: concat: gv_key: ", gv_key)
         if gv_key in append_keys:
-            print("DEBUG:     appending data")
             obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
         else:
-            print("DEBUG:     appending fill values")
+            if obs_data[gv_key].dtype == float:
+               fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
+            elif obs_data[gv_key].dtype == int:
+               fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
+            elif obs_data[gv_key].dtype == object:
+               # string type, extend with empty strings
+               fill_data = np.repeat("", append_length, dtype=object)
+            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
+ 
 
 def read_file(file_name, count, start_pos):
 
@@ -132,7 +137,7 @@ def read_file(file_name, count, start_pos):
                 obs_data = msg_data
 
         if start_pos == None:
-            #print ( "start_pos: ", start_pos )
+            # print ( "start_pos: ", start_pos )
             break
 
     return obs_data, count, start_pos
@@ -198,7 +203,7 @@ def read_bufr_message( f, count, start_pos ):
     if start_pos == f.tell():
         return obs_data, count, None
     start_pos = f.tell()
-    print ( "starting pos: ", f.tell() )
+    # print ( "starting pos: ", f.tell() )
 
     try:
         bufr = codes_bufr_new_from_file( f )
@@ -241,17 +246,17 @@ def read_bufr_message( f, count, start_pos ):
             vals = np.repeat(v, krepfac[0])
             obs_data[(k, "MetaData")] = assign_values(vals)
 
-        print ( " decoded raob num_lev: ", len(obs_data[('latitude',"MetaData")]) )
-        print ( "ending pos: ", f.tell() )
+        # print ( " decoded raob num_lev: ", len(obs_data[('latitude',"MetaData")]) )
+        # print ( "ending pos: ", f.tell() )
         count[0] += 1
 
         return obs_data, count, start_pos
 
     except:
-        #print ( "invalid bufr message" )
+        # print ( "invalid bufr message" )
         count[1] += 1
-        #print ( "number of valid mssg: ", count[0] )
-        #print ( "number of invalid mssg: ", count[1] )
+        # print ( "number of valid mssg: ", count[0] )
+        # print ( "number of invalid mssg: ", count[1] )
         return obs_data, count, start_pos
         pass
 
