@@ -7,45 +7,37 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
-      mnemonicSets:
-        - mnemonics: [OGCE, GNAP, PCCF]
-          channels: 1-12
 
       exports:
         variables:
           originating_generating_center:
-            mnemonic: OGCE
+            query: "*/QCPRMS/OGCE[1]"
           generating_application:
-            mnemonic: GNAP
+            query: "*/QCPRMS/GNAP[1]"
           percent_confidence:
-            mnemonic: PCCF
+            query: "*/QCPRMS/PCCF[1]"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_read_2_dim_blocks.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/percent_confidence.nrows
-        - name: "ncols_conf"
-          size: variables/percent_confidence.ncols
+        - name: "ncols"
+          path: "*/QCPRMS"
 
       variables:
         - name: "originating_generating_center@MetaData"
           source: variables/originating_generating_center
-          dimensions: [ "nlocs" ]
           longName: "Originating/Generating Center"
           units: "id"
 
         - name: "generating_application@MetaData"
           source: variables/generating_application
-          dimensions: [ "nlocs" , "ncols_conf"]
           longName: "Generating Application"
           units: "id"
 
         - name: "percent_confidence@ObsValue"
           coordinates: "longitude latitude"
           source: variables/percent_confidence
-          dimensions: [ "nlocs", "ncols_conf"]
           longName: "Percent Confidence"
           units: "percent"

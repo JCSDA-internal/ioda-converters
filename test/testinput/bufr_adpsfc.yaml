@@ -43,8 +43,7 @@ observations:
           hourofreceipt:
             query: "[*/RCHR, */RCPTIM/RCHR]"
           minuteofreceipt:
-            query: "*/RCMI"
-
+            query: "[*/RCMI, */RCPTIM/RCMI]"
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t06z.adpsfc.tm00.nc"
@@ -77,55 +76,55 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-#        - name: "stationElevation@MetaData"
-#          coordinates: "longitude latitude"
-#          source: variables/stationElevation
-#          longName: "HEIGHT OF STATION"
-#          units: "Meter"
-#
-#        - name: "pressureAir@ObsValue"
-#          coordinates: "longitude latitude"
-#          source: variables/pressureAir
-#          longName: "PRESSURE"
-#          units: "Pa"
-#
-#        - name: "pressureMeanSeaLevel@ObsValue"
-#          coordinates: "longitude latitude"
-#          source: variables/pressureMeanSeaLevel
-#          longName: "PRESSURE REDUCED TO MSL"
-#          units: "Pa"
-#
-#        - name: "temperatureAir@ObsValue"
-#          source: variables/temperatureAir
-#          longName: "TEMPERATURE/DRY BULB TEMPERATURE"
-#          units: "K"
-#
-#        - name: "temperatureDewpoint@ObsValue"
-#          coordinates: "longitude latitude"
-#          source: variables/temperatureDewpoint
-#          longName: "DEW POINT TEMPERATURE"
-#          units: "K"
-#
-#        - name: "windDirection@ObsValue"
-#          coordinates: "longitude latitude"
-#          source: variables/windDirection
-#          longName: "WIND DIRECTION"
-#          units: "Degrees True"
-#
-#        - name: "windSpeed@ObsValue"
-#          coordinates: "longitude latitude"
-#          source: variables/windSpeed
-#          longName: "WIND SPEED"
-#          units: "METERS/SECOND"
-#
-#        - name: "hourofreceipt@MetaData"
-#          coordinates: "longitude latitude"
-#          source: variables/hourofreceipt
-#          longName: "HOUR   - TIME OF RECEIPT"
-#          units: "HOUR"
+        - name: "stationElevation@MetaData"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "HEIGHT OF STATION"
+          units: "Meter"
 
-#        - name: "minuteofreceipt@MetaData"
-#          coordinates: "longitude latitude"
-#          source: variables/minuteofreceipt
-#          longName: "MINUTE  - TIME OF RECEIPT"
-#          units: "MINUTE"
+        - name: "pressureAir@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/pressureAir
+          longName: "PRESSURE"
+          units: "Pa"
+
+        - name: "pressureMeanSeaLevel@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/pressureMeanSeaLevel
+          longName: "PRESSURE REDUCED TO MSL"
+          units: "Pa"
+
+        - name: "temperatureAir@ObsValue"
+          source: variables/temperatureAir
+          longName: "TEMPERATURE/DRY BULB TEMPERATURE"
+          units: "K"
+
+        - name: "temperatureDewpoint@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/temperatureDewpoint
+          longName: "DEW POINT TEMPERATURE"
+          units: "K"
+
+        - name: "windDirection@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "WIND DIRECTION"
+          units: "Degrees True"
+
+        - name: "windSpeed@ObsValue"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "WIND SPEED"
+          units: "METERS/SECOND"
+
+        - name: "hourofreceipt@MetaData"
+          coordinates: "longitude latitude"
+          source: variables/hourofreceipt
+          longName: "HOUR   - TIME OF RECEIPT"
+          units: "HOUR"
+
+        - name: "minuteofreceipt@MetaData"
+          coordinates: "longitude latitude"
+          source: variables/minuteofreceipt
+          longName: "MINUTE  - TIME OF RECEIPT"
+          units: "MINUTE"
