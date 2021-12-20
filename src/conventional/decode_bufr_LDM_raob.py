@@ -68,7 +68,7 @@ def main(file_names, output_file):
 
     GlobalAttrs = {}
     VarDims = {
-        'altitude'              :  ['nlocs'],
+        'geopotential_height'              :  ['nlocs'],
         'windDirection'         :  ['nlocs'],
         'windSpeed'             :  ['nlocs'],
         'temperatureAir'        :  ['nlocs'],
@@ -76,12 +76,12 @@ def main(file_names, output_file):
 }
 
     # write them out
-    nlocs = obs_data[('altitude', 'ObsValue')].shape[0]
+    nlocs = obs_data[('geopotential_height', 'ObsValue')].shape[0]
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('altitude', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('geopotential_height', "ObsValue")]['_FillValue'] = float_missing_value
     VarAttrs[('wind_direction', "ObsValue")]['_FillValue'] = float_missing_value
     VarAttrs[('wind_speed', "ObsValue")]['_FillValue'] = float_missing_value
     VarAttrs[('air_temperature', "ObsValue")]['_FillValue'] = float_missing_value
@@ -91,9 +91,9 @@ def main(file_names, output_file):
     VarAttrs[('longitude', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('air_pressure', "MetaData")]['_FillValue'] = float_missing_value
 
-    # VarAttrs[('altitude', 'ObsValue')]['units'] = 'Radians'
-    # VarAttrs[('altitude', 'ObsError')]['units'] = 'Radians'
-    # VarAttrs[('altitude', 'PreQC')]['units']    = 'unitless'
+    # VarAttrs[('geopotential_height', 'ObsValue')]['units'] = 'Radians'
+    # VarAttrs[('geopotential_height', 'ObsError')]['units'] = 'Radians'
+    # VarAttrs[('geopotential_height', 'PreQC')]['units']    = 'unitless'
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -176,7 +176,7 @@ def get_meta_data(bufr):
     dtg = ( "%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute) )
     profile_meta_data['datetime'] = dtg
     # do not see a different launch time in the BUFR file
-    profile_meta_data['sondeLaunchTime'] = dtg
+    profile_meta_data['LaunchTime'] = dtg
 
     return profile_meta_data
 
@@ -187,7 +187,7 @@ def def_meta_data():
  "stationIdWMOstation"                   : 'stationNumber',
  "stationLongName"                       : 'shipOrMobileLandStationIdentifier',
  "instrumentType"                        : 'radiosondeType',
- "stationElevation"                      : 'heightOfBarometerAboveMeanSeaLevel',
+ "station_elevation"                     : 'heightOfBarometerAboveMeanSeaLevel',
  "instrumentSerialNum"                   : 'radiosondeSerialNumber',
  "instrumentSoftwareVersion"             : 'softwareVersionNumber',
  "instrumentHumidityCorrectionInfo"      : 'correctionAlgorithmsForHumidityMeasurements',
@@ -244,7 +244,7 @@ def read_bufr_message( f, count, start_pos ):
         num_levels        = len( lat_displacement )
 
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
-        obs_data[('altitude', "ObsValue")] = assign_values(geop_height)
+        obs_data[('geopotential_height', "ObsValue")] = assign_values(geop_height)
         obs_data[('wind_direction', "ObsValue")] = assign_values(wind_direction)
         obs_data[('wind_speed', "ObsValue")] = assign_values(wind_speed)
         obs_data[('air_temperature', "ObsValue")] = assign_values(temp_air)
