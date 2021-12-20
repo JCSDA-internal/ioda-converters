@@ -158,6 +158,11 @@ def get_meta_data(bufr):
     profile_meta_data = {}
     for k, v in meta_data_keys.items():
         profile_meta_data[k] = codes_get(bufr, v)
+        if (k == "stationIdWMOblock"):
+          wmo_block_id = profile_meta_data[k]
+        if (k == "stationIdWMOstation"):
+          wmo_station_id = profile_meta_data[k]
+    profile_meta_data['station_id'] = '{0:02}'.format(wmo_block_id) + '{0:03}'.format(wmo_station_id)
 
     # do the hokey time structure to time structure
     year  = codes_get(bufr, 'year')
@@ -248,6 +253,9 @@ def read_bufr_message( f, count, start_pos ):
         obs_data[('latitude', "MetaData")] = np.full(num_levels, lat, dtype='float32') + assign_values(lat_displacement)
         obs_data[('longitude', "MetaData")] = np.full(num_levels, lon, dtype='float32') + assign_values(lon_displacement)
         obs_data[('air_pressure', "MetaData")] = assign_values(pressure)
+
+        # fake surface pressure for now from the first entry of air_pressure
+        profile_meta_data['surface_pressure'] = pressure[0]
         for k, v in profile_meta_data.items():
             vals = np.repeat(v, krepfac[0])
             obs_data[(k, "MetaData")] = assign_values(vals)
