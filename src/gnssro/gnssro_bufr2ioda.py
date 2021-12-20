@@ -319,7 +319,7 @@ if __name__ == "__main__":
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
-        help="path of IODA output file",
+        help="full path and name of IODA output file",
         type=str, required=True)
     required.add_argument(
         '-d', '--date',
