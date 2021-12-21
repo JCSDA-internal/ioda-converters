@@ -191,15 +191,20 @@ def get_station_id(profile_meta_data):
 def get_station_elevation(bufr, profile_meta_data):
 
     # try to progressively get more detailed height of instrument
+    #   prefer: heightOfStationGroundAboveMeanSeaLevel
+    #   then:   heightOfBarometerAboveMeanSeaLevel
+    #   then:   height
     k = 'station_elevation'
 
     station_height = codes_get(bufr, 'heightOfStationGroundAboveMeanSeaLevel')
-    if station_height != abs(int_missing_value):
+    if abs(station_height) <= abs(float_missing_value):
         profile_meta_data[k] = station_height
     else:
         station_height = codes_get(bufr, 'heightOfBarometerAboveMeanSeaLevel')
-        if station_height != abs(int_missing_value):
+        if abs(station_height) <= abs(float_missing_value):
             profile_meta_data[k] = station_height
+        else:
+            profile_meta_data[k] = codes_get(bufr, 'height', ktype=float)
 
     return profile_meta_data
 
@@ -210,7 +215,6 @@ def def_meta_data():
  "stationIdWMOstation"                   : 'stationNumber',
  "stationLongName"                       : 'shipOrMobileLandStationIdentifier',
  "instrumentType"                        : 'radiosondeType',
- "station_elevation"                     : 'height',
  "instrumentSerialNum"                   : 'radiosondeSerialNumber',
  "instrumentSoftwareVersion"             : 'softwareVersionNumber',
  "instrumentHumidityCorrectionInfo"      : 'correctionAlgorithmsForHumidityMeasurements',
