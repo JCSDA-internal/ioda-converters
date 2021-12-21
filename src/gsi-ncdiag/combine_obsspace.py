@@ -290,21 +290,21 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             if GeoVarData2[ii, jj] != iconv.get_default_fill_val('float32'):
                 GeoVarUnique2[i, j] = GeoVarData2[ii, jj]
         for idx2, v in enumerate(GeoVarNames2):
-            GeoOutData[v] = GeoVarUnique2[:,idx2].astype(GeoVarTypes[v])
+            GeoOutData[v] = GeoVarUnique2[:, idx2].astype(GeoVarTypes[v])
         for ii, kk, jj in np.ndindex(GeoVarData3.shape):
             j = GeoVarIdx3[ii, kk, jj]
             i = inv[ii]
             if GeoVarData3[ii, kk, jj] != iconv.get_default_fill_val('float32'):
                 GeoVarUnique3[i, kk, j] = GeoVarData3[ii, kk, jj]
         for idx2, v in enumerate(GeoVarNames3):
-            GeoOutData[v] = GeoVarUnique3[...,idx2].astype(GeoVarTypes[v])
+            GeoOutData[v] = GeoVarUnique3[..., idx2].astype(GeoVarTypes[v])
         for ii, kk, jj in np.ndindex(GeoVarData31.shape):
             j = GeoVarIdx31[ii, kk, jj]
             i = inv[ii]
             if GeoVarData31[ii, kk, jj] != iconv.get_default_fill_val('float32'):
                 GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
         for idx2, v in enumerate(GeoVarNames31):
-            GeoOutData[v] = GeoVarUnique31[...,idx2].astype(GeoVarTypes[v])
+            GeoOutData[v] = GeoVarUnique31[..., idx2].astype(GeoVarTypes[v])
 
         # write out the file
         GeoDimDict = {}
