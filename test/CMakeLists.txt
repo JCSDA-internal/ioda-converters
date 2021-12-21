@@ -104,7 +104,7 @@ list( APPEND test_output
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
-  testoutput/atms_obs.nc4
+  testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
 )
 
