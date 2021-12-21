@@ -27,17 +27,17 @@ observations:
           satellite_wind_calculation_method:
             query: "*/SWCM"
           satellite_zenith_angle:
-            query: "*/AMVIII/SAZA"
+            query: "*/SAZA"
           satellite_channel_center_frequency:
-            query: "*/AMVIII/SCCF"
+            query: "*/SCCF"
           originating_generating_center:
             query: "*/OGCE[1]"
           satellite_wind_quality_mark:
-            query: "*/AMVIII/SWQM"
+            query: "*/SWQM"
           extended_height_assignment_method:
-            query: "*/AMVIII/EHAM"
+            query: "*/EHAM"
           pressure:
-            query: "*/AMVIII/PRLC"
+            query: "*/PRLC[1]"
           wind_direction:
             query: "*/WDIR"
           wind_speed:
