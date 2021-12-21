@@ -31,8 +31,12 @@ locationKeyList = [
 
 ioda_float_type = 'float32'
 ioda_int_type = 'int32'
+ioda_long_type = 'int64'
 float_missing_value = -1.0e+38
 int_missing_value = -2147483647
+long_missing_value = -9223372036854775806
+
+ioda_datetime_epoch = datetime(1970, 1, 1, 0, 0, 0)  # Jan 1, 1970 00Z
 
 def main(file_names, output_file):
 
@@ -68,7 +72,7 @@ def main(file_names, output_file):
 
     GlobalAttrs = {}
     VarDims = {
-        'geopotential_height'              :  ['nlocs'],
+        'geopotential_height'   :  ['nlocs'],
         'windDirection'         :  ['nlocs'],
         'windSpeed'             :  ['nlocs'],
         'temperatureAir'        :  ['nlocs'],
@@ -91,9 +95,9 @@ def main(file_names, output_file):
     VarAttrs[('longitude', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('air_pressure', "MetaData")]['_FillValue'] = float_missing_value
 
-    # VarAttrs[('geopotential_height', 'ObsValue')]['units'] = 'Radians'
-    # VarAttrs[('geopotential_height', 'ObsError')]['units'] = 'Radians'
-    # VarAttrs[('geopotential_height', 'PreQC')]['units']    = 'unitless'
+    epoch_units = "seconds since {0}Z".format(ioda_datetime_epoch.isoformat('T'))
+    VarAttrs[('dateTime', "MetaData")]['units'] = epoch_units
+    VarAttrs[('LaunchTime', "MetaData")]['units'] = epoch_units
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -162,21 +166,6 @@ def get_meta_data(bufr):
     profile_meta_data = get_station_elevation(bufr, profile_meta_data)
     profile_meta_data = get_station_id(profile_meta_data)
 
-
-    # do the hokey time structure to time structure
-    year  = codes_get(bufr, 'year')
-    month = codes_get(bufr, 'month')
-    day   = codes_get(bufr, 'day')
-    hour  = codes_get(bufr, 'hour')
-    minute = codes_get(bufr, 'minute')
-    second = codes_get(bufr, 'second')  #  non-integer value
-
-    # should really add seconds
-    dtg = ( "%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute) )
-    profile_meta_data['datetime'] = dtg
-    # do not see a different launch time in the BUFR file
-    profile_meta_data['LaunchTime'] = dtg
-
     return profile_meta_data
 
 def get_station_id(profile_meta_data):
@@ -196,11 +185,11 @@ def get_station_elevation(bufr, profile_meta_data):
     #   then:   height
     k = 'station_elevation'
 
-    station_height = codes_get(bufr, 'heightOfStationGroundAboveMeanSeaLevel')
+    station_height = codes_get(bufr, 'heightOfStationGroundAboveMeanSeaLevel', ktype=float)
     if abs(station_height) <= abs(float_missing_value):
         profile_meta_data[k] = station_height
     else:
-        station_height = codes_get(bufr, 'heightOfBarometerAboveMeanSeaLevel')
+        station_height = codes_get(bufr, 'heightOfBarometerAboveMeanSeaLevel', ktype=float)
         if abs(station_height) <= abs(float_missing_value):
             profile_meta_data[k] = station_height
         else:
@@ -248,19 +237,33 @@ def def_significance_table():
 
     return significance_table
 
+
+def get_dtime_offsets(epoch, msg_ref, time_offset):
+    nlocs = len(time_offset)
+    ref_offset = (msg_ref - epoch).total_seconds()
+    obs_dtime = np.full(nlocs, ref_offset, dtype='int64') + time_offset.astype('int64')
+    obs_launch_time = np.repeat(ref_offset, nlocs).astype('int64')
+    return obs_dtime, obs_launch_time
+
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
 
-def assign_values(data):
+def assign_values(data, allow_long=False):
     if data.dtype == float:
+        # test above matches any precision float
+        # force to ioda_float_type (which is 32-bit for now)
         data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
         return np.array(data, dtype=ioda_float_type)
     elif data.dtype == int:
-        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
-        return np.array(data, dtype=ioda_int_type)
+        # test above matches any precision integer
+        if (data.dtype == 'int64') and (allow_long):
+            data[np.abs(data) >= np.abs(long_missing_value)] = long_missing_value
+            return np.array(data, dtype=ioda_long_type)
+        else:
+            data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
+            return np.array(data, dtype=ioda_int_type)
     elif data.dtype.kind in { 'U', 'S' }:
         return np.array(data, dtype=object)
-
 
 def read_bufr_message( f, count, start_pos ):
 
@@ -282,11 +285,22 @@ def read_bufr_message( f, count, start_pos ):
         krepfac = codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
         drepfac = codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
 
+        # get the message reference values
         lat = codes_get(bufr, 'latitude', ktype=float)
         lon = codes_get(bufr, 'longitude', ktype=float)
+        year  = codes_get(bufr, 'year')
+        month = codes_get(bufr, 'month')
+        day   = codes_get(bufr, 'day')
+        hour  = codes_get(bufr, 'hour')
+        minute = codes_get(bufr, 'minute')
+        second = codes_get(bufr, 'second')  #  non-integer value
+        msg_datetime_ref = datetime(year, month, day, hour, minute, second)
+
+        # get the message displacements
         lat_displacement = codes_get_array(bufr, 'latitudeDisplacement', ktype=float)
         lon_displacement = codes_get_array(bufr, 'longitudeDisplacement', ktype=float)
-        time_displacement = codes_get_array(bufr, 'timePeriod', ktype=float)
+        time_displacement = codes_get_array(bufr, 'timePeriod', ktype=int)
+
         wind_direction = codes_get_array(bufr, 'windDirection', ktype=float)
         wind_speed = codes_get_array(bufr, 'windSpeed', ktype=float)
         temp_air = codes_get_array(bufr, 'airTemperature', ktype=float)
@@ -391,6 +405,14 @@ def read_bufr_message( f, count, start_pos ):
         obs_data[('latitude', "MetaData")] = np.full(num_levels, lat, dtype='float32') + assign_values(lat_displacement)
         obs_data[('longitude', "MetaData")] = np.full(num_levels, lon, dtype='float32') + assign_values(lon_displacement)
         obs_data[('air_pressure', "MetaData")] = assign_values(pressure)
+
+        # get the datetime variables in the new epoch style representation
+        obs_dtime, obs_launch_time = get_dtime_offsets(ioda_datetime_epoch, msg_datetime_ref, time_displacement)
+        # second argument to assign_values (which is False by default) tells
+        # assign_values if it's okay to keep the incoming integer datatype
+        # at 64 bits.
+        obs_data[('dateTime', "MetaData")] = assign_values(obs_dtime, True)
+        obs_data[('LaunchTime', "MetaData")] = assign_values(obs_launch_time, True)
 
         # fake surface pressure for now from the first entry of air_pressure
 #       profile_meta_data['surface_pressure'] = pressure[0]  # should go to obs value
