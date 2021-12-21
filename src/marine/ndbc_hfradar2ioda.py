@@ -18,32 +18,32 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 vName = ["sea_water_meridional_current",
-         "sea_water_zonal_current"]
+         "sea_water_zonal_current",
+         "DOPX",
+         "DOPY"]
 
-
-locationKeyList = [
+locKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string")
 ]
 
-AttrData = {
-    'odb_version': 1,
+GlobalAttrs = {
 }
 
 
 class Observation(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, date):
 
         self.filename = filename
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
         self._read()
 
     def _read(self):
@@ -54,6 +54,8 @@ class Observation(object):
         lats = ncd.variables['lat'][:]
         vals_u = ncd.variables['u'][:]
         vals_v = ncd.variables['v'][:]
+        dopx = ncd.variables['dopx'][:]
+        dopy = ncd.variables['dopy'][:]
         units = '1970-01-01 00:00:00'
         reftime = dateutil.parser.parse(units)
         ncd.close()
@@ -62,63 +64,75 @@ class Observation(object):
         lats = lats.flatten()
         vals_u = vals_u.flatten()
         vals_v = vals_v.flatten()
+        dopx = dopx.flatten()
+        dopy = dopy.flatten()
         time = np.matlib.repmat(time, len(lons), 1)
         count = 0
         for i in range(len(lons)):
             for j in [0, 1]:
-                valKey = vName[j], self.writer.OvalName()
-                errKey = vName[j], self.writer.OerrName()
-                qcKey = vName[j], self.writer.OqcName()
+                valKey = vName[j], iconv.OvalName()
+                errKey = vName[j], iconv.OerrName()
+                qcKey = vName[j], iconv.OqcName()
                 if vals_u[i] != '--':
                     count += 1
                     obs_date = reftime + timedelta(seconds=int(time[i]))
                     locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
                     if j == 0:
-                        self.data[0][locKey][valKey] = vals_u[i]
-                        self.data[0][locKey][errKey] = 0.1
-                        self.data[0][locKey][qcKey] = 0
+                        self.data[locKey][valKey] = vals_u[i]
+                        self.data[locKey][errKey] = 0.1
+                        if dopx[i] <= 0.5:
+                            self.data[locKey][qcKey] = 0
+                        else:
+                            self.data[locKey][qcKey] = 11
                     else:
-                        self.data[0][locKey][valKey] = vals_v[i]
-                        self.data[0][locKey][errKey] = 0.1
-                        self.data[0][locKey][qcKey] = 0
+                        self.data[locKey][valKey] = vals_v[i]
+                        self.data[locKey][errKey] = 0.1
+                        if dopy[i] <= 0.5:
+                            self.data[locKey][qcKey] = 0
+                        else:
+                            self.data[locKey][qcKey] = 11
 
 
 def main():
 
-    # Get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads marine HF radar radial velocity from archiving'
-            'and converts into IODA formatted'
-            'output files')
+            'HF radar converter to v2'
+        )
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="Radar observation input file(s)",
-        type=str, nargs='+', required=True)
+        help="path of radar input file",
+        type=str, required=True)
     required.add_argument(
         '-o', '--output',
-        help="path of ioda output file",
+        help="path of ioda v2 output",
         type=str, required=True)
     required.add_argument(
         '-d', '--date',
         help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
-
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    VarDims = {
+        'sea_water_meridional_current': ['nlocs'],
+        'sea_water_zonal_current': ['nlocs']}
+    radar = Observation(args.input, fdate)
+    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Read in the altimeter
-    altim = Observation(args.input, fdate, writer)
-
-    # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(altim.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    ObsVars, nlocs = iconv.ExtractObsData(radar.data, locKeyList)
+    DimDict = {'nlocs': nlocs}
+    writer = iconv.IodaWriter(args.output, locKeyList, DimDict)
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
+    VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
+    VarAttrs[('sea_water_meridional_current', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('sea_water_zonal_current', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
+    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
