@@ -102,7 +102,9 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 _var = obsspace.Variable(vname)
                 tmpdata = np.array(_var.read_data())
                 if vname == 'MetaData/datetime':
-                    tmpdata = tmpdata.astype("<U22")
+                    tmpdata = tmpdata.astype('<U22')
+                    tmpdata = [x.replace(' ', 'T') + 'Z' for x in tmpdata]
+                    tmpdata = np.array(tmpdata).astype('<U22')
                 tmpvardata.append(tmpdata)
                 del _var
                 del obsspace
@@ -130,7 +132,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 _var = obsspace.Variable(fullvname)
                 tmpdata = np.array(_var.read_data())
             else:
-                tmpdata = np.full((obsspace.nlocs), varAttrs[(vname, gname)]['_FillValue'],
+                tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
                                   dtype=VarTypes[fullvname])
             tmpvardata.append(tmpdata)
         tmpvardata = np.hstack(tmpvardata)
@@ -139,8 +141,9 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     DataVarUnique = np.empty((len(DataVarData), len(idx)))
     for idx2, fullvname in enumerate(AllVarNames):
         gname, vname = fullvname.split('/')
-        mask = ~(DataVarData[idx2, ...] == varAttrs[(vname, gname)]['_FillValue'])
-        DataVarUnique[idx2, ...] = varAttrs[(vname, gname)]['_FillValue']
+        fillval = iconv.get_default_fill_val(VarTypes[fullvname])
+        mask = ~(DataVarData[idx2, ...] == fillval)
+        DataVarUnique[idx2, ...] = fillval
         DataVarUnique[idx2, inv[mask]] = DataVarData[idx2, mask]
     for idx2, fullvname in enumerate(AllVarNames):
         gname, vname = fullvname.split('/')
@@ -216,7 +219,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                     _var = obsspace.Variable(v)
                     tmpdata = np.array(_var.read_data())
                 else:
-                    tmpdata = np.full((obsspace.nlocs), ios.get_default_fill_val(GeoVarTypes[v]),
+                    tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(GeoVarTypes[v]),
                                       dtype=GeoVarTypes[v])
                 tmpgeodata.append(tmpdata)
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
@@ -242,7 +245,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                     _var = obsspace.Variable(v)
                     tmpdata = np.array(_var.read_data())
                 else:
-                    tmpdata = np.full((obsspace.nlocs, nlevs), ios.get_default_fill_val(GeoVarTypes[v]),
+                    tmpdata = np.full((obsspace.nlocs, nlevs), iconv.get_default_fill_val(GeoVarTypes[v]),
                                       dtype=GeoVarTypes[v])
                 tmpgeodata.append(tmpdata)
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
@@ -266,7 +269,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                     _var = obsspace.Variable(v)
                     tmpdata = np.array(_var.read_data())
                 else:
-                    tmpdata = np.full((obsspace.nlocs, ninterfaces), ios.get_default_fill_val(GeoVarTypes[v]),
+                    tmpdata = np.full((obsspace.nlocs, ninterfaces), iconv.get_default_fill_val(GeoVarTypes[v]),
                                       dtype=GeoVarTypes[v])
                 tmpgeodata.append(tmpdata)
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
