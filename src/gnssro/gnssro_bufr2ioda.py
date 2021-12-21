@@ -40,7 +40,6 @@ locationKeyList = [
 ]
 
 
-
 def main(args):
 
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
@@ -64,7 +63,7 @@ def main(args):
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
     GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    date_time_int32        = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
+    date_time_int32 = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
     GlobalAttrs['date_time'] = date_time_int32.item()
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
@@ -99,6 +98,7 @@ def main(args):
 
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('altitude', 'MetaData')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -195,7 +195,7 @@ def get_obs_data(bufr, profile_meta_data):
     obs_data[('bending_angle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     # (geometric) height is read as integer but expected as float in output
-    height = codes_get_array(bufr, 'height').astype(float)
+    height = codes_get_array(bufr, 'height', ktype=float)
     # get the refractivity
     refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
     refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
@@ -223,15 +223,15 @@ def get_obs_data(bufr, profile_meta_data):
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
     # add rising/setting (ascending/descending) bit
-    #! Bit 1=Non-nominal quality
-    #! Bit 3=Rising Occulation (1=rising; 0=setting)
-    #! Bit 4=Excess Phase non-nominal
-    #! Bit 5=Bending Angle non-nominal
+    # ! Bit 1=Non-nominal quality
+    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
+    # ! Bit 4=Excess Phase non-nominal
+    # ! Bit 5=Bending Angle non-nominal
     i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
     i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
     i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
     iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
-    #print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
+    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
     obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
     obs_data[('record_number', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
@@ -243,10 +243,10 @@ def get_obs_data(bufr, profile_meta_data):
     prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
 
     # Compute impact height
-    obs_data[('impact_height', 'MetaData')]  = \
-    obs_data[('impact_parameter', 'MetaData')] - \
-    obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
-    obs_data[('earth_radius_of_curvature', 'MetaData')]
+    obs_data[('impact_height', 'MetaData')] = \
+        obs_data[('impact_parameter', 'MetaData')] - \
+        obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
+        obs_data[('earth_radius_of_curvature', 'MetaData')]
 
     return obs_data
 
@@ -256,8 +256,8 @@ def def_meta_data():
     meta_data_keys = {
         "qualityFlag": 'radioOccultationDataQualityFlags',
         "geoid_height_above_reference_ellipsoid": 'geoidUndulation',
-        "sensor_azimuth_angle" : 'bearingOrAzimuth',
-        "time" : 'timeIncrement',
+        "sensor_azimuth_angle": 'bearingOrAzimuth',
+        "time": 'timeIncrement',
         "earth_radius_of_curvature": 'earthLocalRadiusOfCurvature',
         "occulting_sat_id": 'satelliteIdentifier',
         "occulting_sat_is": 'satelliteInstruments',
@@ -290,8 +290,10 @@ def def_meta_types():
 
     return meta_data_types
 
+
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
+
 
 def assign_values(data):
     if data.dtype == float:
