@@ -38,6 +38,7 @@ long_missing_value = -9223372036854775806
 
 ioda_datetime_epoch = datetime(1970, 1, 1, 0, 0, 0)  # Jan 1, 1970 00Z
 
+
 def main(file_names, output_file):
 
     # initialize
@@ -60,6 +61,10 @@ def main(file_names, output_file):
         else:
             obs_data = file_obs_data
 
+    if not obs_data:
+        print("WARNING: no message data has been captured, stopping execution.")
+        sys.exit()
+
     # print ( "number of valid mssg: ", count[0] )
     # print ( "number of invalid mssg: ", count[1] )
 
@@ -80,6 +85,7 @@ def main(file_names, output_file):
 }
 
     # write them out
+    print("INFO: Writing file: ", output_file)
     nlocs = obs_data[('geopotential_height', 'ObsValue')].shape[0]
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
@@ -101,6 +107,7 @@ def main(file_names, output_file):
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+
 
 def concat_obs_dict(obs_data, append_obs_data):
     # For now we are assuming that the obs_data dictionary has the "golden" list
@@ -168,6 +175,7 @@ def get_meta_data(bufr):
 
     return profile_meta_data
 
+
 def get_station_id(profile_meta_data):
 
     k = 'station_id'
@@ -176,6 +184,7 @@ def get_station_id(profile_meta_data):
     profile_meta_data[k] = '{0:02}'.format(wmo_block_id) + '{0:03}'.format(wmo_station_id)
 
     return profile_meta_data
+
 
 def get_station_elevation(bufr, profile_meta_data):
 
@@ -196,6 +205,7 @@ def get_station_elevation(bufr, profile_meta_data):
             profile_meta_data[k] = codes_get(bufr, 'height', ktype=float)
 
     return profile_meta_data
+
 
 def def_meta_data():
 
@@ -245,8 +255,10 @@ def get_dtime_offsets(epoch, msg_ref, time_offset):
     obs_launch_time = np.repeat(ref_offset, nlocs).astype('int64')
     return obs_dtime, obs_launch_time
 
+
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
+
 
 def assign_values(data, allow_long=False):
     if data.dtype == float:
@@ -264,6 +276,7 @@ def assign_values(data, allow_long=False):
             return np.array(data, dtype=ioda_int_type)
     elif data.dtype.kind in { 'U', 'S' }:
         return np.array(data, dtype=object)
+
 
 def read_bufr_message( f, count, start_pos ):
 
@@ -394,6 +407,23 @@ def read_bufr_message( f, count, start_pos ):
             call_fail = True
             sys.exit()
 
+        # Check to make sure all variables have the proper length. For now, skip
+        # this message if this check fails.
+        var_length_check = True
+        var_length_check = var_length_check and (len(lat_displacement) == num_levels)
+        var_length_check = var_length_check and (len(lon_displacement) == num_levels)
+        var_length_check = var_length_check and (len(time_displacement) == num_levels)
+        var_length_check = var_length_check and (len(wind_direction) == num_levels)
+        var_length_check = var_length_check and (len(wind_speed) == num_levels)
+        var_length_check = var_length_check and (len(temp_air) == num_levels)
+        var_length_check = var_length_check and (len(temp_dewpoint) == num_levels)
+        var_length_check = var_length_check and (len(pressure) == num_levels)
+        var_length_check = var_length_check and (len(geop_height) == num_levels)
+        var_length_check = var_length_check and (len(sounding_significance) == num_levels)
+        if (not var_length_check):
+            print('ERROR: BUFR message variable lengths do not match')
+            raise BaseException
+
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
         obs_data[('surface_pressure', "ObsValue")] = np.full(num_levels, surface_pressure, dtype='float32')
         obs_data[('geopotential_height', "ObsValue")] = assign_values(geop_height)
@@ -426,7 +456,7 @@ def read_bufr_message( f, count, start_pos ):
 
         return obs_data, count, start_pos
 
-    except:
+    except BaseException:
         # print ( "invalid bufr message" )
         if call_fail:
             sys.exit()
