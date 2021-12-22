@@ -11,7 +11,7 @@ import netCDF4 as nc
 from eccodes import *
 from multiprocessing import Pool
 
-#from IPython import embed as shell
+# from IPython import embed as shell
 
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -77,12 +77,12 @@ def main(file_names, output_file):
 
     GlobalAttrs = {}
     VarDims = {
-        'geopotential_height'   :  ['nlocs'],
-        'windDirection'         :  ['nlocs'],
-        'windSpeed'             :  ['nlocs'],
-        'temperatureAir'        :  ['nlocs'],
-        'temperatureDewpoint'   :  ['nlocs'],
-}
+        'geopotential_height': ['nlocs'],
+        'windDirection': ['nlocs'],
+        'windSpeed': ['nlocs'],
+        'temperatureAir': ['nlocs'],
+        'temperatureDewpoint': ['nlocs'],
+    }
 
     # write them out
     print("INFO: Writing file: ", output_file)
@@ -123,14 +123,14 @@ def concat_obs_dict(obs_data, append_obs_data):
             obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
         else:
             if obs_data[gv_key].dtype == float:
-               fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
+                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
             elif obs_data[gv_key].dtype == int:
-               fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
+                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
             elif obs_data[gv_key].dtype == object:
-               # string type, extend with empty strings
-               fill_data = np.repeat("", append_length, dtype=object)
+                # string type, extend with empty strings
+                fill_data = np.repeat("", append_length, dtype=object)
             obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
- 
+
 
 def read_file(file_name, count, start_pos):
 
@@ -139,7 +139,7 @@ def read_file(file_name, count, start_pos):
 
     while True:
         # here is where to send to ecCodes
-        msg_data, count, start_pos = read_bufr_message( f, count, start_pos )
+        msg_data, count, start_pos = read_bufr_message(f, count, start_pos)
 
         # only record msg_data if it is not empty
         if (msg_data):
@@ -153,8 +153,8 @@ def read_file(file_name, count, start_pos):
                 # Copy
                 obs_data = msg_data
 
-        if start_pos == None:
-            # print ( "start_pos: ", start_pos )
+        if start_pos is None:
+            # print("start_pos: ", start_pos)
             break
 
     return obs_data, count, start_pos
@@ -210,15 +210,15 @@ def get_station_elevation(bufr, profile_meta_data):
 def def_meta_data():
 
     meta_data_keys = {
- "stationIdWMOblock"                     : 'blockNumber',
- "stationIdWMOstation"                   : 'stationNumber',
- "stationLongName"                       : 'shipOrMobileLandStationIdentifier',
- "instrumentType"                        : 'radiosondeType',
- "instrumentSerialNum"                   : 'radiosondeSerialNumber',
- "instrumentSoftwareVersion"             : 'softwareVersionNumber',
- "instrumentHumidityCorrectionInfo"      : 'correctionAlgorithmsForHumidityMeasurements',
- "instrumentRadiationCorrectionInfo"     : 'solarAndInfraredRadiationCorrection',
-}
+        "stationIdWMOblock": 'blockNumber',
+        "stationIdWMOstation": 'stationNumber',
+        "stationLongName": 'shipOrMobileLandStationIdentifier',
+        "instrumentType": 'radiosondeType',
+        "instrumentSerialNum": 'radiosondeSerialNumber',
+        "instrumentSoftwareVersion": 'softwareVersionNumber',
+        "instrumentHumidityCorrectionInfo": 'correctionAlgorithmsForHumidityMeasurements',
+        "instrumentRadiationCorrectionInfo": 'solarAndInfraredRadiationCorrection',
+    }
 
     return meta_data_keys
 
@@ -226,24 +226,24 @@ def def_meta_data():
 def def_significance_table():
 
     significance_table = {
-     "pressure level originally indicated by height as the veritcal coordinate" : 1,
-     "freezing level" : 2,
-     "level determined by regional decision" : 3,
-     "top of wind sounding" : 4,
-     "end of missing wind data" : 5,
-     "beginning of missing wind data" : 6,
-     "end of missing humidity data" : 7,
-     "beginning of missing humidity data" : 8,
-     "end of missing temperature data" : 9,
-     "beginning of missing temperature data" : 10,
-     "significant wind level" : 11,
-     "significant humidity level" : 12,
-     "significant temperature level" : 13,
-     "maximum wind level" : 14,
-     "tropopause level" : 15,
-     "standard level" : 16,
-     "surface" : 17,
-}
+        "pressure level originally indicated by height as the veritcal coordinate": 1,
+        "freezing level": 2,
+        "level determined by regional decision": 3,
+        "top of wind sounding": 4,
+        "end of missing wind data": 5,
+        "beginning of missing wind data": 6,
+        "end of missing humidity data": 7,
+        "beginning of missing humidity data": 8,
+        "end of missing temperature data": 9,
+        "beginning of missing temperature data": 10,
+        "significant wind level": 11,
+        "significant humidity level": 12,
+        "significant temperature level": 13,
+        "maximum wind level": 14,
+        "tropopause level": 15,
+        "standard level": 16,
+        "surface": 17,
+    }
 
     return significance_table
 
@@ -274,11 +274,11 @@ def assign_values(data, allow_long=False):
         else:
             data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
             return np.array(data, dtype=ioda_int_type)
-    elif data.dtype.kind in { 'U', 'S' }:
+    elif data.dtype.kind in {'U', 'S'}:
         return np.array(data, dtype=object)
 
 
-def read_bufr_message( f, count, start_pos ):
+def read_bufr_message(f, count, start_pos):
 
     obs_data = {}
     call_fail = False
@@ -288,7 +288,7 @@ def read_bufr_message( f, count, start_pos ):
     # print ( "starting pos: ", f.tell() )
 
     try:
-        bufr = codes_bufr_new_from_file( f )
+        bufr = codes_bufr_new_from_file(f)
 
         codes_set(bufr, 'unpack', 1)
 
@@ -301,12 +301,12 @@ def read_bufr_message( f, count, start_pos ):
         # get the message reference values
         lat = codes_get(bufr, 'latitude', ktype=float)
         lon = codes_get(bufr, 'longitude', ktype=float)
-        year  = codes_get(bufr, 'year')
+        year = codes_get(bufr, 'year')
         month = codes_get(bufr, 'month')
-        day   = codes_get(bufr, 'day')
-        hour  = codes_get(bufr, 'hour')
+        day = codes_get(bufr, 'day')
+        hour = codes_get(bufr, 'hour')
         minute = codes_get(bufr, 'minute')
-        second = codes_get(bufr, 'second')  #  non-integer value
+        second = codes_get(bufr, 'second')  # non-integer value
         msg_datetime_ref = datetime(year, month, day, hour, minute, second)
 
         # get the message displacements
@@ -330,22 +330,22 @@ def read_bufr_message( f, count, start_pos ):
         if np.any(sounding_significance & 2**significance_table["surface"]):
 
             if np.sum(np.any(sounding_significance & 2**significance_table["surface"])) > 1:
-                print ( " need more error handling too many surface levels" )
+                print(" need more error handling too many surface levels")
                 call_fail = True
-                print ( "starting position: %i" % start_pos )
-                print ( "length pressure: %i" % len(pressure) )
-                print ( "length temperature: %i" % len(temp_air) )
-                print ( "length dewpoint: %i" % len(temp_dewpoint) )
-                print ( "length geop_height: %i" % len(geop_height) )
-                print ( "length sound_sig: %i" % len(sounding_significance) )
-                print ( "length wind_dir: %i" % len(wind_direction) )
-                print ( "length wind_speed: %i" % len(wind_speed) )
-                print ( "length lat_displacement: %i" % len(lat_displacement) )
-                print ( "length lon_displacement: %i" % len(lon_displacement) )
-                print ( "length time_displacement: %i" % len(time_displacement) )
-                print ( "========" )
+                print("starting position: %i" % start_pos)
+                print("length pressure: %i" % len(pressure))
+                print("length temperature: %i" % len(temp_air))
+                print("length dewpoint: %i" % len(temp_dewpoint))
+                print("length geop_height: %i" % len(geop_height))
+                print("length sound_sig: %i" % len(sounding_significance))
+                print("length wind_dir: %i" % len(wind_direction))
+                print("length wind_speed: %i" % len(wind_speed))
+                print("length lat_displacement: %i" % len(lat_displacement))
+                print("length lon_displacement: %i" % len(lon_displacement))
+                print("length time_displacement: %i" % len(time_displacement))
+                print("========")
             surface_level = np.where(sounding_significance & 2**significance_table["surface"])[0][0]
-            surface_pressure = pressure[ surface_level ]
+            surface_pressure = pressure[surface_level]
             if len(pressure) == len(temp_air):
                 pass
                 # if surface_level > 0 need to throw away data ????
@@ -366,44 +366,43 @@ def read_bufr_message( f, count, start_pos ):
                     lat_displacement = lat_displacement[surface_level:len(pressure)+surface_level-1]
                     lon_displacement = lon_displacement[surface_level:len(pressure)+surface_level-1]
 
-
-        if len( pressure ) != len( temp_air ):
-            print ( " need more error handling mis-matched pressure to air temperature" )
+        if len(pressure) != len(temp_air):
+            print(" need more error handling mis-matched pressure to air temperature")
             call_fail = True
-            print ( "starting position: %i" % start_pos )
-            print ( "length pressure: %i" % len(pressure) )
-            print ( "length temperature: %i" % len(temp_air) )
-            print ( "length dewpoint: %i" % len(temp_dewpoint) )
-            print ( "length geop_height: %i" % len(geop_height) )
-            print ( "length sound_sig: %i" % len(sounding_significance) )
-            print ( "length wind_dir: %i" % len(wind_direction) )
-            print ( "length wind_speed: %i" % len(wind_speed) )
-            print ( "length lat_displacement: %i" % len(lat_displacement) )
-            print ( "length lon_displacement: %i" % len(lon_displacement) )
-            print ( "length time_displacement: %i" % len(time_displacement) )
-            print ( "========" )
-            #shell()
-            #sys.exit()
+            print("starting position: %i" % start_pos)
+            print("length pressure: %i" % len(pressure))
+            print("length temperature: %i" % len(temp_air))
+            print("length dewpoint: %i" % len(temp_dewpoint))
+            print("length geop_height: %i" % len(geop_height))
+            print("length sound_sig: %i" % len(sounding_significance))
+            print("length wind_dir: %i" % len(wind_direction))
+            print("length wind_speed: %i" % len(wind_speed))
+            print("length lat_displacement: %i" % len(lat_displacement))
+            print("length lon_displacement: %i" % len(lon_displacement))
+            print("length time_displacement: %i" % len(time_displacement))
+            print("========")
+            # shell()
+            # sys.exit()
 
         # skip records with bad sounding significance values
-        if np.any( sounding_significance == np.abs( int_missing_value ) ):     #2147483647
-            valid_level = np.where( sounding_significance != np.abs( int_missing_value ) )
-            lat_displacement = lat_displacement[ valid_level ]
-            lon_displacement = lon_displacement[ valid_level ]
-            time_displacement = time_displacement[ valid_level ]
-            wind_direction = wind_direction[ valid_level ]
-            wind_speed = wind_speed[ valid_level ]
-            temp_air = temp_air[ valid_level ]
-            temp_dewpoint = temp_dewpoint[ valid_level ]
-            pressure = pressure[ valid_level ]
-            geop_height = geop_height[ valid_level ]
-            sounding_significance = sounding_significance[ valid_level ]
+        if np.any(sounding_significance == np.abs(int_missing_value)):     # 2147483647
+            valid_level = np.where(sounding_significance != np.abs(int_missing_value))
+            lat_displacement = lat_displacement[valid_level]
+            lon_displacement = lon_displacement[valid_level]
+            time_displacement = time_displacement[valid_level]
+            wind_direction = wind_direction[valid_level]
+            wind_speed = wind_speed[valid_level]
+            temp_air = temp_air[valid_level]
+            temp_dewpoint = temp_dewpoint[valid_level]
+            pressure = pressure[valid_level]
+            geop_height = geop_height[valid_level]
+            sounding_significance = sounding_significance[valid_level]
 
-        codes_release( bufr )
+        codes_release(bufr)
 
-        num_levels        = len( lat_displacement )
-        if ( len( lat_displacement ) != len( time_displacement ) ):
-            print ( "this should never happen lat and time have different displacements lengths")
+        num_levels = len(lat_displacement)
+        if (len(lat_displacement) != len(time_displacement)):
+            print("this should never happen lat and time have different displacements lengths")
             call_fail = True
             sys.exit()
 
@@ -466,6 +465,7 @@ def read_bufr_message( f, count, start_pos ):
         return obs_data, count, start_pos
         pass
 
+
 if __name__ == "__main__":
 
     from argparse import ArgumentParser
@@ -473,15 +473,15 @@ if __name__ == "__main__":
     parser = ArgumentParser(
         description=(
             'Read a raob BUFR file and convert into IODA output file')
-)
+    )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
-                      action='store', default=None, required=True,
-                      help='input files')
+                          action='store', default=None, required=True,
+                          help='input files')
     required.add_argument('-o', '--output-file', dest='output_file',
-                      action='store', default=None, required=True,
-                      help='output file')
+                          action='store', default=None, required=True,
+                          help='output file')
     args = parser.parse_args()
 
     for file_name in args.file_names:
