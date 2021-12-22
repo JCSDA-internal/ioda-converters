@@ -33,7 +33,7 @@ namespace Ingester
         /// \brief Get the split name
         inline std::string getName() const { return name_; }
 
-    private:
+     private:
         /// \brief The name of the split as defined by the key in the YAML file.
         const std::string name_;
     };

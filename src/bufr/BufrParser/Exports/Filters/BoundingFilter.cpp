@@ -62,7 +62,8 @@ namespace Ingester
                 extraDims *= dims[dimIdx];
             }
 
-            auto rawData = var->getRawData(); // Make local copy otherwise you get weird memory corruption issue.
+            // Make local copy otherwise you get weird memory corruption issue.
+            auto rawData = var->getRawData();
             auto array = Eigen::Map<EigArray> (rawData.data(), dims[0], extraDims);
 
             for (std::size_t rowIdx = 0; rowIdx < dims[0]; rowIdx++)

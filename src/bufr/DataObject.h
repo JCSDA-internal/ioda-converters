@@ -30,9 +30,10 @@ namespace Ingester
     /// IodaEncoder.
     class DataObjectBase
     {
-    public:
+     public:
         static std::shared_ptr<DataObjectBase>
-            fromResult(const std::shared_ptr<bufr::ResultBase>& resultBase, const std::string& query);
+            fromResult(const std::shared_ptr<bufr::ResultBase>& resultBase,
+                       const std::string& query);
 
         explicit DataObjectBase(const std::string& fieldName,
                                 const std::string& groupByFieldName,
@@ -76,7 +77,7 @@ namespace Ingester
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
         /// \return Slice of the data object.
-        virtual std::shared_ptr<DataObjectBase> 
+        virtual std::shared_ptr<DataObjectBase>
             slice(const std::vector<std::size_t>& rows) const = 0;
 
      protected:
@@ -150,7 +151,7 @@ namespace Ingester
                 dim_prod *= dims_[dim_idx];
             }
 
-            //Compute the index into the data array
+            // Compute the index into the data array
             size_t index = 0;
             for (int dim_idx = loc.size() - 1; dim_idx >= 0; --dim_idx)
             {
@@ -226,13 +227,13 @@ namespace Ingester
             {
                 result[dataIdx] = std::stof(data_[dataIdx]);
             }
-            
+
             return result;
         }
 
         std::shared_ptr<DataObjectBase> slice(const std::vector<std::size_t>& rows) const final
         {
-            //Compute product of extra dimensions)
+            // Compute product of extra dimensions)
             std::size_t extraDims = 1;
             for (std::size_t i = 1; i < dims_.size(); ++i)
             {

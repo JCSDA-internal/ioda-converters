@@ -10,7 +10,7 @@
 #include <map>
 #include <ostream>
 #include <iostream>
-#include <chrono>
+#include <chrono>  // NOLINT
 
 #include "eckit/exception/Exceptions.h"
 
@@ -78,8 +78,10 @@ namespace Ingester
         auto exportedData = exportData(srcData);
 
         auto timeElapsed = std::chrono::steady_clock::now() - startTime;
+        auto timeElapsedDuration  = std::chrono::duration_cast<std::chrono::milliseconds>
+                                        (timeElapsed);
         std::cout << "Finished "
-                  << "[" << std::chrono::duration_cast<std::chrono::milliseconds>(timeElapsed).count()/1000.0 << "s]"
+                  << "[" << timeElapsedDuration.count()/1000.0 << "s]"
                   << std::endl;
 
         return exportedData;
