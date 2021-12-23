@@ -7,7 +7,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-from __future__ import print_function
 import sys
 import argparse
 import netCDF4 as nc
@@ -267,7 +266,7 @@ def main():
     nlocs = len(obs_data[('longitude', 'MetaData')])
     DimDict = {
         'nlocs': nlocs,
-        'nchans': nchans
+        'nchans': list(chan_number)
     }
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
