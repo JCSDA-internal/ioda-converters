@@ -1,4 +1,5 @@
-# (C) Copyright 2021 UCAR
+# (C) Copyright 2021 UCAR1:wq
+
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,47 +8,41 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/gdas.t00z.sevcsr.tm00.bufr_d"
-      mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
-        - mnemonics: [SAID, SAZA, SOZA]
-        - mnemonics: [CLDMNT, TMBRST, SDTB]
-          channels: 1-7
 
       exports:
         variables:
           timestamp:
             datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
           latitude:
-            mnemonic: CLATH
+            query: "*/CLATH"
           longitude:
-            mnemonic: CLONH
-          satelliteId:
-            mnemonic: SAID
+            query: "*/CLONH"
+          satelliteIdentifier:
+            query: "*/SAID"
           solarZenithAngle:
-            mnemonic: SOZA
+            query: "*/SOZA"
           sensorZenithAngle:
-            mnemonic: SAZA
+            query: "*/SAZA"
           cloudAmount:
-            mnemonic: CLDMNT
+            query: "*/RPSEQ7/CLDMNT"
           brightnessTemperature:
-            mnemonic: TMBRST
+            query: "*/RPSEQ7/TMBRST"
           brightnessTemperatureStdDev:
-            mnemonic: SDTB
+            query: "*/RPSEQ7/SDTB"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t00z.sevcsr.tm00.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/brightnessTemperature.nrows
         - name: "nchans"
-          size: variables/brightnessTemperature.ncols
+          paths:
+            - "*/RPSEQ7"
 
       globals:
         - name: "MetaData/platformCommonName"
@@ -59,42 +54,36 @@ observations:
           value: "MTYP 021-043 PROC. MSG SEVIRI CLEAR SKY RADIANCES (CSR)"
 
       variables:
-        - name: "MetaData/satelliteId"
-          source: variables/satelliteId
-          dimensions: ["nlocs"]
-          longName: "Satellite identification"
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          longName: "Satellite identifier"
           units: ""
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
         - name: "MetaData/datetime"
           source: variables/timestamp
-          dimensions: ["nlocs"]
           longName: "Datetime"
           units: "datetime"
 
         - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
-          dimensions: ["nlocs"]
           longName: "Solar zenith angle"
           units: "degrees"
           range: [0, 180]
 
         - name: "MetaData/sensorZenithAngle"
           source: variables/sensorZenithAngle
-          dimensions: ["nlocs"]
           longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
@@ -102,8 +91,7 @@ observations:
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude nchans"
           source: variables/cloudAmount
-          dimensions: ["nlocs", "nchans"]
-          longName: "cloud fraction"
+          longName: "Amount of cloud coverage"
           units: "%"
           range: [0, 100]
           chunks: [1000, 15]
@@ -111,7 +99,6 @@ observations:
         - name: "ObsValue/brightnessTemperature"
           coordinates: "longitude latitude nchans"
           source: variables/brightnessTemperature
-          dimensions: ["nlocs", "nchans"]
           longName: "Brightness temperature"
           units: "K"
           range: [150, 350]
@@ -120,7 +107,6 @@ observations:
         - name: "ObsValue/brightnessTemperatureStdDev"
           coordinates: "longitude latitude nchans"
           source: variables/brightnessTemperatureStdDev
-          dimensions: ["nlocs", "nchans"]
           longName: "Brightness temperature standard deviation"
           units: "K"
           chunks: [1000, 15]
