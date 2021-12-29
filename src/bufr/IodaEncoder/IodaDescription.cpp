@@ -92,7 +92,7 @@ namespace Ingester
                 throw eckit::BadParameter(errStr.str());
             }
 
-            for (const auto &dimConf: dimConfs) {
+            for (const auto &dimConf : dimConfs) {
                 DimensionDescription dim;
                 dim.name = dimConf.getString(ConfKeys::Dimension::Name);
 

@@ -43,9 +43,9 @@ observations:
           wind_speed:
             query: "*/WSPD"
           generating_application:
-            query: "[*/GQCPRMS/GNAP[1], */QCPRMS/GNAP[1]]"
+            query: "*/QCPRMS/GNAP[1]"
           percent_confidence:
-            query: "[*/GQCPRMS/PCCF[1], */QCPRMS/PCCF[1]]"
+            query: "*/QCPRMS/PCCF[1]"
 
         filters:
           - bounding:
@@ -57,11 +57,6 @@ observations:
       backend: netcdf
       obsdataout: "./testrun/NC005066.nc"
 
-      dimensions:
-        - name: "nlocs"
-          size: variables/wind_speed.nrows
-        - name: "ncols_conf"
-          size: variables/percent_confidence.ncols
 
       variables:
         - name: "satellite@MetaData"

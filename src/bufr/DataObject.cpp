@@ -1,3 +1,9 @@
+/*
+ * (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "DataObject.h"
 
@@ -6,10 +12,10 @@
 #include "eckit/exception/Exceptions.h"
 
 
-namespace Ingester 
+namespace Ingester
 {
     std::shared_ptr<DataObjectBase>
-        DataObjectBase::fromResult(const std::shared_ptr<bufr::ResultBase>& resultBase, 
+        DataObjectBase::fromResult(const std::shared_ptr<bufr::ResultBase>& resultBase,
                                    const std::string& query)
     {
         std::shared_ptr<DataObjectBase> dataObject = nullptr;
@@ -19,7 +25,7 @@ namespace Ingester
             dataObject = std::make_shared<DataObject<float>> (result->data,
                                                               result->field_name,
                                                               result->group_by_field_name,
-                                                              result->dims, 
+                                                              result->dims,
                                                               query,
                                                               result->dimPaths);
         }

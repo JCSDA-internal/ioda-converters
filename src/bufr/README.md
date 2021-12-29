@@ -137,28 +137,25 @@ ioda encoder. It has the following sections:
       obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.{splits/satId}.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: "variables/radiance.nrows"
-        - name: "nchans"
-          size: "variables/radiance.ncols"
+        - name: nchans
+          paths:
+            - "*/BRIT"
+            - "*/BRITCSTC"
 
       variables:
         - name: "datetime@MetaData"
           source: "variables/timestamp"
-          dimensions: [ "nlocs" ]
           longName: "Datetime"
           units: "datetime"
 
         - name: "latitude@MetaData"
           source: "variables/latitude"
-          dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
         - name: "longitude@MetaData"
           source: "variables/longitude"
-          dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
@@ -166,7 +163,6 @@ ioda encoder. It has the following sections:
         - name: "radiance@ObsValue"
           coordinates: "longitude latitude nchans"
           source: "variables/radiance"
-          dimensions: ["nlocs", "nchans"]
           longName: "Radiance"
           units: "K"
           range: [120, 500]
@@ -182,15 +178,14 @@ The `ioda` section defines the ObsGroup objects that will be created.
   replaced with the relevant split category ID for that file to form a unique name for every file.
 * `dimensions` used to define dimension information in variables
     * `name` arbitrary name for the dimension
-    * `size` can be either a integer or a reference to exported data ex: 
-      **variables/radiance.nrows**
+    * `paths` - list of subqueries for that dimension (different paths for different BUFR subsets only) **or** `path` Single subquery for that dimension ex:
+       **\*/BRITCSTC**
 * `variables` List of output variable objects to create.
   * `name` standardized pathname **var_name**@**group**. 
     * **var_name** name for the variable
     * **group** group name to which this variable belongs.
   * `source` reference to exported data ex: **variables/radiance**
   * `coordinates` (optional):
-  * `dimensions` list of ids defined in dimensions section
   * `longName`any arbitrary string.
   * `units` tring representing units (arbitrary).
   * _(optional)_ `range` Possible range of values (list of 2 ints).
