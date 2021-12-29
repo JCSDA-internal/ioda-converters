@@ -10,6 +10,7 @@
 #include <map>
 #include <ostream>
 #include <iostream>
+#include <chrono>  // NOLINT
 
 #include "eckit/exception/Exceptions.h"
 
@@ -47,10 +48,10 @@ namespace Ingester
 
     std::shared_ptr <DataContainer> BufrParser::parse(const std::size_t maxMsgsToParse)
     {
+        auto startTime = std::chrono::steady_clock::now();
+
         std::cout << "Start" << std::endl;
-
         auto querySet = bufr::QuerySet();
-
         for (const auto& var : description_.getExport().getVariables())
         {
             for (const auto& queryPair : var->getQueryList())
@@ -59,14 +60,11 @@ namespace Ingester
             }
         }
 
-        std::cout << "Built Query Parser" << std::endl;
-
+        std::cout << "Executing Queries" << std::endl;
         auto result_set = file_.execute(querySet, maxMsgsToParse);
 
-        std::cout << "Executed Queries" << std::endl;
-
+        std::cout << "Building Bufr Data" << std::endl;
         auto srcData = BufrDataMap();
-
         for (const auto& var : description_.getExport().getVariables())
         {
             for (const auto& queryInfo : var->getQueryList())
@@ -76,10 +74,17 @@ namespace Ingester
             }
         }
 
-        std::cout << "Built Bufr Data" << std::endl;
-
         std::cout << "Exporting Data" << std::endl;
-        return exportData(srcData);
+        auto exportedData = exportData(srcData);
+
+        auto timeElapsed = std::chrono::steady_clock::now() - startTime;
+        auto timeElapsedDuration  = std::chrono::duration_cast<std::chrono::milliseconds>
+                                        (timeElapsed);
+        std::cout << "Finished "
+                  << "[" << timeElapsedDuration.count()/1000.0 << "s]"
+                  << std::endl;
+
+        return exportedData;
     }
 
     std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)

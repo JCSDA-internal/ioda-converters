@@ -34,7 +34,7 @@ namespace
 
 namespace Ingester
 {
-    DatetimeVariable::DatetimeVariable(const std::string& exportName, 
+    DatetimeVariable::DatetimeVariable(const std::string& exportName,
                                        const eckit::Configuration &conf) :
       Variable(exportName),
       yearQuery_(conf.getString(ConfKeys::Year)),
@@ -105,7 +105,7 @@ namespace Ingester
             datetimeStr << "Z";
             datetimes[idx] = datetimeStr.str();
         }
-        
+
         Dimensions dims = {datetimes.size()};
         return std::make_shared<DataObject<std::string>>(
             datetimes,
@@ -195,7 +195,7 @@ namespace Ingester
             queries.push_back(info);
         }
 
-        if (!secondQuery_.empty()) // Second
+        if (!secondQuery_.empty())  // Second
         {
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Second);
