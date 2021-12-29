@@ -20,25 +20,29 @@ observations:
               minute: "[NC000007/MINU[1], */MINU]"
 
           longitude:
-            query: "*/CLON"
+            query: "[*/CLON, */CLONH]"
 
           latitude:
-            query: "*/CLAT"
+            query:  "[*/CLAT, */CLATH]"
 
-          pressureAir:
+          stationPressure:
             query: "[*/PRES]"
 
           stationElevation:
-            query: "*/SELV"
+            query: "[*/SELV, */HSMSL]"
 
-          temperatureAir:
+          stationIdentification:
+            query: "*/RPID"
+
+          airTemperature:
             query: "*/TMDB"
 
-          temperatureDewpoint:
+          dewpointTemperature:
             query: "*/TMDP"
         
           totalSnowDepth:
-            query: "[*/SNWSQ1/TOSD, */MTRPR3/MTRMSC/TOSD]"
+            query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD, */STGDSNDM/TOSD]"
+
 
     ioda:
       backend: netcdf
@@ -49,6 +53,12 @@ observations:
           source: variables/timestamp
           longName: "Datetime"
           units: "datetime"
+
+        - name: "stationIdentification@MetaData"
+          source: variables/stationIdentification
+          dimensions: ["nlocs"]
+          longName: "Report Number"
+          units: "string"
 
         - name: "latitude@MetaData"
           source: variables/latitude
@@ -68,23 +78,23 @@ observations:
           longName: "Height of Station"
           units: "m"
 
-        - name: "pressureAir@ObsValue"
+        - name: "stationPressure@ObsValue"
           coordinates: "longitude latitude"
-          source: variables/pressureAir
-          longName: "Pressure"
+          source: variables/stationPressure
+          longName: "Station Pressure"
           units: "Pa"
           range: [90000, 105000]
 
-        - name: "temperatureAir@ObsValue"
-          source: variables/temperatureAir
-          longName: "Temperature"
+        - name: "airTemperature@ObsValue"
+          source: variables/airTemperature
+          longName: "Temperature of Air"
           units: "K"
           range: [230, 315]
 
-        - name: "temperatureDewpoint@ObsValue"
+        - name: "dewpointTemperature@ObsValue"
           coordinates: "longitude latitude"
-          source: variables/temperatureDewpoint
-          longName: "Dew Point Temperature"
+          source: variables/dewpointTemperature
+          longName: "Dewpoint Temperature"
           units: "K"
           range: [200, 315]
       
