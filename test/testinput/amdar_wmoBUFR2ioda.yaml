@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/amdar_wmo_single.bufr"
+      obsdatain: "./testinput/amdar_wmo_multi.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -60,7 +60,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/amdar_single.nc"
+      obsdataout: "./testrun/amdar_multi.nc"
 
       dimensions:
         - name: "nlocs"

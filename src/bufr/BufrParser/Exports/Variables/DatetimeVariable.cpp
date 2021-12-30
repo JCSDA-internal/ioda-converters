@@ -82,7 +82,14 @@ namespace Ingester
 
             if (!secondKey_.empty())
             {
-                datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
+                if (map.at(secondKey_)(idx) >= 0 && map.at(secondKey_)(idx) < 60)
+                {
+                    datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
+                }
+                else
+                }
+                    datetimeStr << std::setw(2) << 0;
+                }
             }
             else
             {
