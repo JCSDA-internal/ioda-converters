@@ -11,7 +11,7 @@ import netCDF4 as nc
 from eccodes import *
 from multiprocessing import Pool
 
-# from IPython import embed as shell
+#from IPython import embed as shell
 
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -21,6 +21,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 # These modules need the path to lib-python modules
 import ioda_conv_engines as iconv
+import meteo_utils
 from orddicts import DefaultOrderedDict
 
 locationKeyList = [
@@ -78,10 +79,15 @@ def main(file_names, output_file):
     GlobalAttrs = {}
     VarDims = {
         'geopotential_height': ['nlocs'],
-        'windDirection': ['nlocs'],
-        'windSpeed': ['nlocs'],
-        'temperatureAir': ['nlocs'],
-        'temperatureDewpoint': ['nlocs'],
+        'air_temperature': ['nlocs'],
+        'eastward_wind': ['nlocs'],
+        'northward_wind': ['nlocs'],
+        'specific_humidity': ['nlocs'],
+        'surface_pressure': ['nlocs'],
+#V2     'windDirection': ['nlocs'],
+#V2     'windSpeed': ['nlocs'],
+#V2     'temperatureAir': ['nlocs'],
+#V2     'temperatureDewpoint': ['nlocs'],
     }
 
     # write them out
@@ -92,10 +98,11 @@ def main(file_names, output_file):
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('geopotential_height', "ObsValue")]['_FillValue'] = float_missing_value
-    VarAttrs[('wind_direction', "ObsValue")]['_FillValue'] = float_missing_value
-    VarAttrs[('wind_speed', "ObsValue")]['_FillValue'] = float_missing_value
     VarAttrs[('air_temperature', "ObsValue")]['_FillValue'] = float_missing_value
-    VarAttrs[('dew_point_temperature', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('eastward_wind', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('northward_wind', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('specific_humidity', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('surface_pressure', "ObsValue")]['_FillValue'] = float_missing_value
 
     VarAttrs[('latitude', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', "MetaData")]['_FillValue'] = float_missing_value
@@ -206,6 +213,29 @@ def get_station_elevation(bufr, profile_meta_data):
 
     return profile_meta_data
 
+def def_data_keys():
+
+    data_keys = {
+    'nonCoordinateGeopotentialHeight' : 'geopotential_height',
+    'windDirection'                   : 'wind_direction',
+    'windSpeed'                       : 'wind_speed',
+    'airTemperature'                  : 'air_temperature',
+    'dewpointTemperature'             : 'dew_point_temperature',
+}
+
+# these are all dervied fields
+#   ('air_pressure', "MetaData")
+#   ('surface_pressure', "ObsValue")
+#   ('eastward_wind', "ObsValue")
+#   ('northward_wind', "ObsValue")
+#   ('specific_humidity', "ObsValue")
+
+#   ('latitude', "MetaData")
+#   ('longitude', "MetaData")
+
+
+    return data_keys
+
 
 def def_meta_data():
 
@@ -287,6 +317,8 @@ def read_bufr_message(f, count, start_pos):
     start_pos = f.tell()
     # print ( "starting pos: ", f.tell() )
 
+    met_utils = meteo_utils.meteo_utils()
+
     try:
         bufr = codes_bufr_new_from_file(f)
 
@@ -324,13 +356,14 @@ def read_bufr_message(f, count, start_pos):
 
         significance_table = def_significance_table()
 
-        # set a default if first record labeled surface set surface pressure
-        # could set this to None and skip if never gets set
+        # set a default surface pressure as the first level
         surface_pressure = pressure[0]
+
+        #  is there a labled surface pressure via the sounding significance table
         if np.any(sounding_significance & 2**significance_table["surface"]):
 
             if np.sum(np.any(sounding_significance & 2**significance_table["surface"])) > 1:
-                print(" need more error handling too many surface levels")
+                print(" ERROR too many surface levels in single BUFR mssg")
                 call_fail = True
                 print("starting position: %i" % start_pos)
                 print("length pressure: %i" % len(pressure))
@@ -344,29 +377,78 @@ def read_bufr_message(f, count, start_pos):
                 print("length lon_displacement: %i" % len(lon_displacement))
                 print("length time_displacement: %i" % len(time_displacement))
                 print("========")
+
+            # index for surface pressure record
             surface_level = np.where(sounding_significance & 2**significance_table["surface"])[0][0]
             surface_pressure = pressure[surface_level]
-            if len(pressure) == len(temp_air):
+
+            # if these lengths all match no need to do anything
+            if len(pressure) == len(temp_air) == len(lat_displacement):
                 pass
-                # if surface_level > 0 need to throw away data ????
-            elif len(pressure) == len(temp_air)+1:
-                if surface_level != 0:
+
+            # typical case first record is surface pressure
+            elif len(pressure) > len(temp_air):
+                if ( len(pressure) != len(lat_displacement) ):
+                    print (' ERROR handling geolocation displacement does not match P ', len(lat_displacement), len(pressure) )
+                    call_fail = True
+                    sys.exit()
+                    raise BaseException
+                elif surface_level != 0:
                     # surface level not first record
                     pressure = pressure[surface_level:]
+                    lat_displacement = lat_displacement[surface_level:]
+                    lon_displacement = lon_displacement[surface_level:]
+                    time_displacement = time_displacement[surface_level:]
                     sounding_significance = sounding_significance[surface_level:]
                 elif surface_level == 0:
-                    # surface level first record
+                    # surface level is first record
                     pressure = pressure[1:]
+                    lat_displacement = lat_displacement[1:]
+                    lon_displacement = lon_displacement[1:]
+                    time_displacement = time_displacement[1:]
                     sounding_significance = sounding_significance[1:]
-            elif len(pressure) > len(temp_air) + 1:
-                if len(pressure) == len(lat_dispalcement):
-                    # the only case we know
-                    pressure = pressure[surface_level:len(pressure)+surface_level-1]
-                    sounding_significance = sounding_significance[surface_level:len(pressure)+surface_level-1]
-                    lat_displacement = lat_displacement[surface_level:len(pressure)+surface_level-1]
-                    lon_displacement = lon_displacement[surface_level:len(pressure)+surface_level-1]
 
-        if len(pressure) != len(temp_air):
+            if len(pressure) > len(temp_air):
+                if (  ( len(temp_air)
+                      == len(temp_dewpoint)
+                      == len(geop_height)
+                      == len(wind_direction)
+                      == len(wind_speed) )  and
+                      ( len(sounding_significance)
+                      == len(lat_displacement)
+                      == len(lon_displacement)
+                      == len(time_displacement) ) ):
+                      new_length
+                      pressure = pressure[:new_length]
+                      lat_displacement = lat_displacement[:new_length]
+                      lon_displacement = lon_displacement[:new_length]
+                      time_displacement = time_displacement[:new_length]
+                      sounding_significance = sounding_significance[:new_length]
+                else:
+                    print ('  ERROR variables have too random a distribution of lengths ' )
+                    print("starting position: %i" % start_pos)
+                    print("length pressure: %i" % len(pressure))
+                    print("length temperature: %i" % len(temp_air))
+                    print("length dewpoint: %i" % len(temp_dewpoint))
+                    print("length geop_height: %i" % len(geop_height))
+                    print("length sound_sig: %i" % len(sounding_significance))
+                    print("length wind_dir: %i" % len(wind_direction))
+                    print("length wind_speed: %i" % len(wind_speed))
+                    print("length lat_displacement: %i" % len(lat_displacement))
+                    print("length lon_displacement: %i" % len(lon_displacement))
+                    print("length time_displacement: %i" % len(time_displacement))
+                    print("========")
+                    call_fail = True
+                    sys.exit()
+                    raise BaseException
+
+#  ===========================================================================================
+#  ===========================================================================================
+#  ============    at this point assume arrays have been aligned and all have nlocs    =======
+#  ===========================================================================================
+#  ===========================================================================================
+
+        if len(lat_displacement) != len(temp_air) != len(pressure):
             print(" need more error handling mis-matched pressure to air temperature")
             call_fail = True
             print("starting position: %i" % start_pos)
@@ -381,8 +463,7 @@ def read_bufr_message(f, count, start_pos):
             print("length lon_displacement: %i" % len(lon_displacement))
             print("length time_displacement: %i" % len(time_displacement))
             print("========")
-            # shell()
-            # sys.exit()
+            sys.exit()
 
         # skip records with bad sounding significance values
         if np.any(sounding_significance == np.abs(int_missing_value)):     # 2147483647
@@ -412,24 +493,51 @@ def read_bufr_message(f, count, start_pos):
         var_length_check = var_length_check and (len(lat_displacement) == num_levels)
         var_length_check = var_length_check and (len(lon_displacement) == num_levels)
         var_length_check = var_length_check and (len(time_displacement) == num_levels)
-        var_length_check = var_length_check and (len(wind_direction) == num_levels)
-        var_length_check = var_length_check and (len(wind_speed) == num_levels)
         var_length_check = var_length_check and (len(temp_air) == num_levels)
         var_length_check = var_length_check and (len(temp_dewpoint) == num_levels)
         var_length_check = var_length_check and (len(pressure) == num_levels)
         var_length_check = var_length_check and (len(geop_height) == num_levels)
         var_length_check = var_length_check and (len(sounding_significance) == num_levels)
+        var_length_check = var_length_check and (len(wind_direction) == num_levels)
+        var_length_check = var_length_check and (len(wind_speed) == num_levels)
         if (not var_length_check):
             print('ERROR: BUFR message variable lengths do not match')
             raise BaseException
 
+        #  need help using these utilities in class definitions
+        # derive variables should add a switch
+#       specific_humidity = met_utils.specific_humidity(
+#                               temp_dewpoint,
+#                               np.full(num_levels, surface_pressure, dtype='float32')
+#                               )
+        c = [610.5851, 44.40316, 1.430341, 0.2641412e-1, 0.2995057e-3, 0.2031998e-5, 0.6936113e-8, 0.2564861e-11, -0.3704404e-13]
+        x = temp_dewpoint-met_utils.C_2_K
+        x[x < -80] = -80
+        es = c[0]+x*(c[1]+x*(c[2]+x*(c[3]+x*(c[4]+x*(c[5]+x*(c[6]+x*(c[7]+x*c[8])))))))
+        es[es > surface_pressure*0.15] = surface_pressure*0.15
+        r  = 0.622*es/(surface_pressure-es)
+        specific_humidity = r / (1.0 + r)
+
+        # and compute wind
+#       eastward_wind, northward_wind = met_utils.dir_speed_2_uv(
+#                               wind_direction,
+#                               wind_speed
+#                               )
+        DEG_2_RAD = np.pi/180.
+        eastward_wind = -wind_speed * np.sin(wind_direction*DEG_2_RAD)
+        northward_wind = -wind_speed * np.cos(wind_direction*DEG_2_RAD)
+
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
         obs_data[('surface_pressure', "ObsValue")] = np.full(num_levels, surface_pressure, dtype='float32')
         obs_data[('geopotential_height', "ObsValue")] = assign_values(geop_height)
-        obs_data[('wind_direction', "ObsValue")] = assign_values(wind_direction)
-        obs_data[('wind_speed', "ObsValue")] = assign_values(wind_speed)
         obs_data[('air_temperature', "ObsValue")] = assign_values(temp_air)
-        obs_data[('dew_point_temperature', "ObsValue")] = assign_values(temp_dewpoint)
+        obs_data[('eastward_wind', "ObsValue")] = assign_values(eastward_wind)
+        obs_data[('northward_wind', "ObsValue")] = assign_values(northward_wind)
+        obs_data[('specific_humidity', "ObsValue")] = assign_values(specific_humidity)
+
+#V2     obs_data[('wind_direction', "ObsValue")] = assign_values(wind_direction)
+#V2     obs_data[('wind_speed', "ObsValue")] = assign_values(wind_speed)
+#V2     obs_data[('dew_point_temperature', "ObsValue")] = assign_values(temp_dewpoint)
 
         obs_data[('latitude', "MetaData")] = np.full(num_levels, lat, dtype='float32') + assign_values(lat_displacement)
         obs_data[('longitude', "MetaData")] = np.full(num_levels, lon, dtype='float32') + assign_values(lon_displacement)
@@ -443,10 +551,9 @@ def read_bufr_message(f, count, start_pos):
         obs_data[('dateTime', "MetaData")] = assign_values(obs_dtime, True)
         obs_data[('LaunchTime', "MetaData")] = assign_values(obs_launch_time, True)
 
-        # fake surface pressure for now from the first entry of air_pressure
-#       profile_meta_data['surface_pressure'] = pressure[0]  # should go to obs value
+        # put all the other MetaData repeating nlocs times
         for k, v in profile_meta_data.items():
-            vals = np.repeat(v, krepfac[0])
+            vals = np.repeat(v, num_levels)
             obs_data[(k, "MetaData")] = assign_values(vals)
 
         # print ( " decoded raob num_lev: ", len(obs_data[('latitude',"MetaData")]) )
@@ -462,8 +569,9 @@ def read_bufr_message(f, count, start_pos):
         count[1] += 1
         # print ( "number of valid mssg: ", count[0] )
         # print ( "number of invalid mssg: ", count[1] )
+        #shell()
+        #sys.exit()
         return obs_data, count, start_pos
-        pass
 
 
 if __name__ == "__main__":
