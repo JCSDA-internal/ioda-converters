@@ -87,7 +87,7 @@ namespace Ingester
                     datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
                 }
                 else
-                }
+                {
                     datetimeStr << std::setw(2) << 0;
                 }
             }
