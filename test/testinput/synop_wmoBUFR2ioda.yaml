@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/synop_wmo_many.bufr"
+      obsdatain: "./testinput/synop_wmo_multi.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -50,7 +50,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/synop_many.nc"
+      obsdataout: "./testrun/synop_wmo_multi.nc"
 
       dimensions:
         - name: "nlocs"
@@ -79,13 +79,13 @@ observations:
           source: variables/stationIdWMOblock
           dimensions: [ "nlocs" ]
           longName: "Station Identification WMO block number"
-          units: ""
+          units: "none"
 
         - name: "MetaData/stationIdWMOstation"
           source: variables/stationIdWMOstation
           dimensions: [ "nlocs" ]
           longName: "Station Identification WMO station number"
-          units: ""
+          units: "none"
 
         - name: "MetaData/station_elevation"
           source: variables/stationElevation

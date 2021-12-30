@@ -11,9 +11,13 @@ observations:
       tablepath: "./testinput/bufr_tables"
 
       mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLATH, CLONH, GNSA, FLVLST]
-        - mnemonics: [ACRN, ACID, ACTN, OSQN, DPOF, TASP, ACTH, ROLQ]
-        - mnemonics: [TMDB, TMDP, WDIR, WSPD, PRES]
+        - mnemonics: [ACRN, OSQN, ACID, ACTN]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [GNSA, FLVLST, GNSA, DPOF]
+        - mnemonics: [WDIR, WSPD]
+        - mnemonics: [ROLQ, TASP, ACTH]
+        - mnemonics: [TMDB, MIXR]
 
       exports:
         variables:
@@ -29,8 +33,6 @@ observations:
             mnemonic: CLATH
           longitude:
             mnemonic: CLONH
-          altitude:
-            mnemonic: GNSA
           pressureAltitude:
             mnemonic: FLVLST
           aircraftRegistrationNum:
@@ -51,8 +53,8 @@ observations:
             mnemonic: ROLQ
           temperatureAir:
             mnemonic: TMDB
-          temperatureDewpoint:
-            mnemonic: TMDP
+          waterVaporMixingRatio:
+            mnemonic: MIXR
           windDirection:
             mnemonic: WDIR
           windSpeed:
@@ -60,7 +62,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/amdar_multi.nc"
+      obsdataout: "./testrun/amdar_wmo_multi.nc"
 
       dimensions:
         - name: "nlocs"
@@ -85,13 +87,7 @@ observations:
           longName: "Longitude"
           units: "degrees_east"
 
-        - name: "MetaData/altitude"
-          source: variables/altitude
-          dimensions: [ "nlocs" ]
-          longName: "Altitude"
-          units: "m"
-
-        - name: "MetaData/pressureAltitude"
+        - name: "MetaData/height"
           source: variables/pressureAltitude
           dimensions: [ "nlocs" ]
           longName: "Pressure altitude"
@@ -101,31 +97,31 @@ observations:
           source: variables/aircraftRegistrationNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft registration number or other ID"
-          units: ""
+          units: "none"
 
         - name: "MetaData/aircraftFlightNum"
           source: variables/aircraftFlightNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight number"
-          units: ""
+          units: "none"
 
         - name: "MetaData/aircraftTailNum"
           source: variables/aircraftTailNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft tail number"
-          units: ""
+          units: "none"
 
         - name: "MetaData/observationSequenceNum"
           source: variables/observationSequenceNum
           dimensions: [ "nlocs" ]
           longName: "Observation sequence number"
-          units: ""
+          units: "none"
 
         - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight phase (ascending/descending/level)"
-          units: ""
+          units: "none"
 
         - name: "MetaData/aircraftTrueAirspeed"
           source: variables/aircraftTrueAirspeed
@@ -143,32 +139,32 @@ observations:
           source: variables/aircraftRollAngle
           dimensions: [ "nlocs" ]
           longName: "Aircraft roll angle quality"
-          units: ""
+          units: "none"
 
-        - name: "ObsValue/temperatureAir"
+        - name: "ObsValue/air_temperature"
           coordinates: "longitude latitude"
           source: variables/temperatureAir
           dimensions: [ "nlocs" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/temperatureDewpoint"
+        - name: "ObsValue/specific_humidity"
           coordinates: "longitude latitude"
-          source: variables/temperatureDewpoint
+          source: variables/waterVaporMixingRatio
           dimensions: [ "nlocs" ]
           longName: "Dewpoint Temperature"
-          units: "K"
+          units: "kg kg-1"
 
-        - name: "ObsValue/windDirection"
+        - name: "ObsValue/wind_direction"
           coordinates: "longitude latitude"
           source: variables/windDirection
           dimensions: [ "nlocs" ]
           longName: "Wind Direction"
-          units: "degrees true"
+          units: "degrees"
 
-        - name: "ObsValue/windSpeed"
+        - name: "ObsValue/wind_speed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           dimensions: [ "nlocs" ]
           longName: "Wind Speed"
-          units: "m/s"
+          units: "m s-1"
