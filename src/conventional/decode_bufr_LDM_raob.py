@@ -5,6 +5,7 @@ import dateutil.parser
 import os
 from pathlib import Path
 import sys
+import time
 
 import numpy as np
 import netCDF4 as nc
@@ -45,6 +46,7 @@ def main(file_names, output_file):
     # initialize
     count = [0, 0]
     start_pos = None
+    start_time = time.time()
 
     # read / process files in parallel
     # pool = Pool(1)
@@ -66,6 +68,7 @@ def main(file_names, output_file):
         print("WARNING: no message data has been captured, stopping execution.")
         sys.exit()
 
+    print("--- %s BUFR read seconds ---" % (time.time() - start_time))
     # print ( "number of valid mssg: ", count[0] )
     # print ( "number of invalid mssg: ", count[1] )
 
@@ -115,6 +118,7 @@ def main(file_names, output_file):
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
+    print("--- %s total seconds ---" % (time.time() - start_time))
 
 def concat_obs_dict(obs_data, append_obs_data):
     # For now we are assuming that the obs_data dictionary has the "golden" list
@@ -504,28 +508,20 @@ def read_bufr_message(f, count, start_pos):
             print('ERROR: BUFR message variable lengths do not match')
             raise BaseException
 
-        #  need help using these utilities in class definitions
-        # derive variables should add a switch
-#       specific_humidity = met_utils.specific_humidity(
-#                               temp_dewpoint,
-#                               np.full(num_levels, surface_pressure, dtype='float32')
-#                               )
-        c = [610.5851, 44.40316, 1.430341, 0.2641412e-1, 0.2995057e-3, 0.2031998e-5, 0.6936113e-8, 0.2564861e-11, -0.3704404e-13]
-        x = temp_dewpoint-met_utils.C_2_K
-        x[x < -80] = -80
-        es = c[0]+x*(c[1]+x*(c[2]+x*(c[3]+x*(c[4]+x*(c[5]+x*(c[6]+x*(c[7]+x*c[8])))))))
-        es[es > surface_pressure*0.15] = surface_pressure*0.15
-        r  = 0.622*es/(surface_pressure-es)
-        specific_humidity = r / (1.0 + r)
+        #  compute derived variables
+        #   ... specific humidity
+        specific_humidity = map(lambda td, p: met_utils.specific_humidity(td, p), zip(temp_dewpoint, pressure))
 
-        # and compute wind
-#       eastward_wind, northward_wind = met_utils.dir_speed_2_uv(
-#                               wind_direction,
-#                               wind_speed
-#                               )
-        DEG_2_RAD = np.pi/180.
-        eastward_wind = -wind_speed * np.sin(wind_direction*DEG_2_RAD)
-        northward_wind = -wind_speed * np.cos(wind_direction*DEG_2_RAD)
+        #   ... and zonal and meridional wind
+        #   trouble with 2 returns from lambda function
+#       try:
+#           eastward_wind, northward_wind = map(lambda wd, ws: met_utils.dir_speed_2_uv(wd, ws), zip(wind_direction, wind_speed))
+#       except Exception as e:
+#           print(e)
+#           call_fail = True
+#           sys.exit()
+        eastward_wind = -wind_speed * np.sin(wind_direction*met_utils.DEG_2_RAD)
+        northward_wind = -wind_speed * np.cos(wind_direction*met_utils.DEG_2_RAD)
 
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
         obs_data[('surface_pressure', "ObsValue")] = np.full(num_levels, surface_pressure, dtype='float32')
@@ -569,8 +565,6 @@ def read_bufr_message(f, count, start_pos):
         count[1] += 1
         # print ( "number of valid mssg: ", count[0] )
         # print ( "number of invalid mssg: ", count[1] )
-        #shell()
-        #sys.exit()
         return obs_data, count, start_pos
 
 
