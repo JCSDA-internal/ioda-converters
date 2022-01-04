@@ -510,7 +510,7 @@ def read_bufr_message(f, count, start_pos):
 
         #  compute derived variables
         #   ... specific humidity
-        specific_humidity = map(met_utils.specific_humidity, temp_dewpoint, pressure)
+        specific_humidity = map(lambda td, p: met_utils.specific_humidity(td, p), zip(temp_dewpoint, pressure))
 
         #   ... and zonal and meridional wind
         wind = np.array(list(map(met_utils.dir_speed_2_uv, wind_direction, wind_speed)))
