@@ -510,18 +510,12 @@ def read_bufr_message(f, count, start_pos):
 
         #  compute derived variables
         #   ... specific humidity
-        specific_humidity = map(lambda td, p: met_utils.specific_humidity(td, p), zip(temp_dewpoint, pressure))
+        specific_humidity = map(met_utils.specific_humidity, temp_dewpoint, pressure)
 
         #   ... and zonal and meridional wind
-        #   trouble with 2 returns from lambda function
-#       try:
-#           eastward_wind, northward_wind = map(lambda wd, ws: met_utils.dir_speed_2_uv(wd, ws), zip(wind_direction, wind_speed))
-#       except Exception as e:
-#           print(e)
-#           call_fail = True
-#           sys.exit()
-        eastward_wind = -wind_speed * np.sin(wind_direction*met_utils.DEG_2_RAD)
-        northward_wind = -wind_speed * np.cos(wind_direction*met_utils.DEG_2_RAD)
+        wind = np.array(list(map(met_utils.dir_speed_2_uv, wind_direction, wind_speed)))
+        eastward_wind  = wind[:,0]
+        northward_wind = wind[:,1]
 
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
         obs_data[('surface_pressure', "ObsValue")] = np.full(num_levels, surface_pressure, dtype='float32')
