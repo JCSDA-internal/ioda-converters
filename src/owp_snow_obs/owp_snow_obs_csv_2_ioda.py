@@ -56,9 +56,9 @@ arg_parse_description = (
     """Reads snow OWP observations in CSV files and converts
     to IODA output files. """)
 
-output_var_names = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
-output_type_names = {'snow_depth_mm': 'output_depth', 'snow_water_equivalent_mm': 'output_swe'}
-output_var_units = {'snow_depth': 'm', 'swe': 'm'}
+output_var_names = {'snow_depth_m': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
+output_type_names = {'snow_depth_m': 'output_depth', 'snow_water_equivalent_mm': 'output_swe'}
+output_var_units = {'snow_depth_m': 'm', 'snow_water_equivalent_mm': 'mm'}
 
 locationKeyList = [
     ("latitude", "float"),
@@ -93,7 +93,7 @@ def read_input(input_file, global_config):
     Returns:
         A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
     """
-
+ 
     # Get the input data and massage it.
     print("Reading ", input_file)
     obs_df = pd.read_csv(input_file, header=0)
@@ -171,7 +171,7 @@ def read_input(input_file, global_config):
         opqc_name = global_config['opqc_name']
         obs_data = {}
         var_name = output_var_names[vv]  # shorten
-        obs_data[(var_name, oval_name)] = variable_dict[vv]['values']  # / 1000.  # mm to m
+        obs_data[(var_name, oval_name)] = variable_dict[vv]['values']
         obs_data[(var_name, oerr_name)] = variable_dict[vv]['err']
         obs_data[(var_name, opqc_name)] = variable_dict[vv]['qc']
 
@@ -277,7 +277,7 @@ def owp_snow_obs_csv_2_ioda(args):
         varUnits = {}
 
         varMdata[var_list_name]['coordinates'] = 'longitude latitude'
-        varUnits[var_list_name] = 'mm'  # output_var_units
+        varUnits[var_list_name] = output_var_units[var_name]
 
         # use the writer class to create the final output file
         # writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data, VarUnits=output_var_units)

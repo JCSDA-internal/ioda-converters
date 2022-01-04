@@ -39,10 +39,11 @@ arg_parse_description = (
     to IODA output files. """)
 
 # obs file name -> ioda file name
-output_var_dict = {'snow_depth_mm': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
+output_var_dict = {'snow_depth_m': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
 # ioda file_name -> ioda file units
 output_var_unit_dict = {'snow_depth': 'm', 'swe': 'mm'}
-output_conversion_factor = {'snow_depth': 1./1000., 'swe': 1.00000000000000}
+one = 1.00000000000000
+output_conversion_factor = {'snow_depth': one, 'swe': one}
 
 location_key_list = [
     ("latitude", "float"),
@@ -72,11 +73,12 @@ def mask_nans(arr):
 
 
 class OwpSnowObs(object):
-    def __init__(self, file_in, file_out, thin_swe, thin_depth):
+    def __init__(self, file_in, file_out, thin_swe, thin_depth, thin_random_seed):
         self.file_in = file_in
         self.file_out = file_out
         self.thin_swe = thin_swe
         self.thin_depth = thin_depth
+        self.thin_random_seed = thin_random_seed
 
         self.var_dict = defaultdict(lambda: defaultdict(dict))
         self.meta_dict = defaultdict(lambda: defaultdict(dict))
@@ -92,12 +94,27 @@ class OwpSnowObs(object):
         self.attr_data['obs_file'] = str(self.file_in.split('/')[-1])
         # use pandas to get the data lined up
         obs_df = pd.read_csv(self.file_in, header=0, index_col=False)
+
+        #n_obs = len(obs_df)
+        # obs_df = obs_df.drop_duplicates()
+        #asdf
+        #n_obs2 = len(obs_df)
+        #if n_obs2 != n_obs:
+        #    print(
+        #        f"Warning: {n_obs - n_obs2} duplicate rows removed "
+        #        f"from {self.file_in}")
+
         # TODO: drop rows where PreQC != 0 ?
         data_cols = set(['ObsValue', 'ObsError', 'PreQC'])
         index_cols = list(
             set(obs_df.columns.values.tolist()).difference(data_cols))
         index_cols2 = sorted(set(index_cols).difference(set(['variable_name'])))
+
         obs_df = obs_df.reset_index().set_index(index_cols).drop(columns='index')
+
+        # obs_df = obs_df.set_index(index_cols).drop_duplicates()
+        # obs_df = obs_df.reset_index().set_index(index_cols) #.drop(columns='index')
+        
         obs_df = obs_df.unstack('variable_name').reset_index()
         obs_df.columns = [' '.join(col).strip() for col in obs_df.columns.values]
         # Unstack is not reproducible, must sort after
@@ -119,21 +136,31 @@ class OwpSnowObs(object):
         self.attr_data['thin_depth'] = self.thin_depth
         thin_dict = {
             'snow_water_equivalent_mm': self.thin_swe,
-            'snow_depth_mm': self.thin_depth}
-        # Set a seed for each day - reproducibly random
-        time_datum = pd.Timestamp('1979-01-01 00:00:00', tz='UTC')
-        time_diff = pd.Timestamp(self.attr_data['ref_date_time']) - time_datum
-        np.random.seed(int(time_diff.total_seconds()))
+            'snow_depth_m': self.thin_depth}
+        # to make it reproducible if a seed is not passed
+        if self.thin_random_seed is None:
+            # Set a seed for each day - reproducibly random
+            time_datum = pd.Timestamp('1979-01-01 00:00:00', tz='UTC')
+            time_diff = pd.Timestamp(self.attr_data['ref_date_time']) - time_datum
+            self.thin_random_seed = int(time_diff.total_seconds())
+        np.random.seed(self.thin_random_seed)
         for var, thin in thin_dict.items():
+            print(f'{var}: {thin}')
             if thin > 0.0:
                 wh_var = np.where(~np.isnan(obs_df[f'ObsValue {var}']))[0]  # 1-D
                 randoms = np.random.uniform(size=len(wh_var))
                 thin_quantile = np.quantile(randoms, thin)
                 thin_inds = np.where(randoms <= thin_quantile)[0]
-                obs_df = obs_df.drop(wh_var[thin_inds])
-                if all(np.isnan(obs_df['ObsValue snow_water_equivalent_mm'])):
-                    # If there's no data, drop the variable from the output
-                    del output_var_dict[var]
+                for cc in data_cols:
+                    obs_df.loc[wh_var[thin_inds], f'{cc} {var}'] = np.nan
+                if all(np.isnan(obs_df[f'ObsValue {var}'])):
+                    # If there's no data, drop the variable(s) from the output list
+                    del output_var_dict[f'{var}']
+                    # Also can then remove nans in the remaining other var (since we only have 2 vars)
+                    var_other = list(output_var_dict.keys())[0]
+                    wh_not_var_other = np.where(np.isnan(obs_df[f'ObsValue {var_other}']))[0]  # 1-D
+                    obs_df = obs_df.drop(wh_not_var_other).reset_index()
+                    # does this work when both variables are thinned by some amount?
 
         self.data[('datetime', 'MetaData')] = obs_df.datetime.values
         self.data[('latitude', 'MetaData')] = obs_df.latitude.values
@@ -194,6 +221,11 @@ def parse_arguments():
         help="percentage of random thinning for snow depth, from 0.0 to 1.0. Zero indicates"
              " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
+    optional.add_argument(
+        '--thin_random_seed',
+        help="A random seed for reproducible random thinning. Default is total # seconds from "
+             "1970-01-01 to the day of the data provided.",
+        type=int, default=None)
 
     args = parser.parse_args()
     return args
@@ -202,6 +234,6 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     owp_snow_obs = OwpSnowObs(
-        args.input, args.output, args.thin_swe, args.thin_depth)
+        args.input, args.output, args.thin_swe, args.thin_depth, args.thin_random_seed)
     result = owp_snow_obs.write()
     sys.exit(result)
