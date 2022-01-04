@@ -82,53 +82,6 @@ At this time, only the output variables of air_temperature, surface_pressure (co
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 ```
 
-
-## odbapi2nc
-
-Python script, `odbapi2nc.py`, for converting Met Office or ECMWF ODB2 files to netCDF4 files formatted for use by IODA.
-```
-Usage: odbapi2nc.py [-h] [-c] [-q] [-t] [-v] [-b] input_odb2 definition_yaml output_netcdf
-```
-Definition YAML files currently created and tested:
-* Met Office Radiosonde
-* Met Office Aircraft
-* Met Office AMSU-A from atovs report
-* ECMWF Radiosonde
-* ECMWF Aircraft
-
-The current ODB library (called ODB API) only supports Python 2.7.
-ECMWF will be releasing a new ODB library (called ODC) soon, that will support Python 3.
-Our expectation is that ODC will show up in the next few weeks.
-
-Until ODC arrives, we have to use python 2.7 for the ODB test and file conversion.
-
-The ODB file conversion test will be disabled by default so that developers can continue to work in Python 3.
-The ODB coding norms test will always be enabled.
-
-When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7.
-To enable the ODB file conversion test, add the ENABLE_ODB_API option to ecbuild as follows:
-~~~~~~~~
-ecbuild -DENABLE_ODB_API=1 <other_ecbuild_options> <path_to_source_directory>
-~~~~~~~~
-
-## odbapi2json
-
-Python script, `odbapi2json.py`, for converting Met Office ODB2 files to JSON files which can be used to load the data
-to MongoDB.
-
-This script used to work, but is currently not being maintained and no longer does. The code is being kept as a starting point if we want to update it later.
-```
-Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
-```
-
-## owp\_snow\_obs
-(OWP = NOAA's Office of Water Prediction)
-Python3 script `owp_snow_obs\_pkl\_2\_ioda.py` converts OWP snow obs pkl files to netcdf IODA files.
-
-Example usage:
-```
-ipython3 --pdb -c "%run /jedi/tools/bin/owp_snow_obs_pkl_2_ioda.py -i ../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523.pkl -o ../../data/owp_snow_obs/wdb0_obs_snow_depth_2019021500_to_2019021523_TEST_OUTPUT.nc -d 2019021502 "
-```
 ## chem
 
 The chem converters include all converter scripts for aerosols and related chemistry variables.

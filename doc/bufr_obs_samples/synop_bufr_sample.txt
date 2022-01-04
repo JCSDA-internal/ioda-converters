@@ -1,0 +1,190 @@
+
+Found BUFR message #      1
+  
+        Message length:         227
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          22
+          Master table:           0
+    Originating center:          74 (= UK Meteorological Office, Exeter (RSMC))
+ Originating subcenter:           0 (= No sub-centre)
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           0 (= Surface data - land)
+     Local subcategory:           0
+ Internatl subcategory:           2 (= Main synoptic observations from fixed-land stations (SYNOP))
+  Master table version:          22
+   Local table version:           0
+                  Year:        2021
+                 Month:           2
+                   Day:           1
+                  Hour:          12
+                Minute:           0
+                Second:           0
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:           1
+        1: 307080
+
+BUFR message #      1 of type MSTTB001 and date 2021020112 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001001  WMOB                        17.0  NUMERIC                       WMO block number                                
+001002  WMOS                       601.0  NUMERIC                       WMO station number                              
+001015  STSN                    AKROTIRI  (20)CCITT IA5                 Station or site name                            
+002001  TOST                         1.0  CODE TABLE                    Type of station                                 
+                                      1 = Manned
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        12.0  HOUR                          Hour                                            
+004005  MINU                         0.0  MINUTE                        Minute                                          
+005001  CLATH                   34.58000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                   32.98000  DEGREE                        Longitude (high accuracy)                       
+007030  HSMSL                       23.0  M                             Height of station ground above mean sea level   
+007031  HBMSL                    MISSING  M                             Height of barometer above mean sea level        
+010004  PRES                    101650.0  PA                            Pressure                                        
+010051  PMSL                    101960.0  PA                            Pressure reduced to mean sea level              
+010061  3HPC                       -90.0  PA                            3-hour pressure change                          
+010063  CHPT                         7.0  CODE TABLE                    Characteristic of pressure tendency             
+                                      7 = Decreasing (steadily or unsteadily); atmospheric pressure now lower than 3 hours ago
+010062  24PC                     MISSING  PA                            24-hour pressure change                         
+007004  PRLC                     MISSING  PA                            Pressure                                        
+010009  GPH10                    MISSING  GPM                           Geopotential height                             
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+012101  TMDB                      292.35  K                             Temperature/air temperature                     
+012103  TMDP                      285.85  K                             Dewpoint temperature                            
+013003  REHU                     MISSING  %                             Relative humidity                               
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+020001  HOVI                     25000.0  M                             Horizontal visibility                           
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+013023  TP24                     MISSING  KG M⁻²                     Total precipitation past 24 hours               
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+020010  TOCC                        13.0  %                             Cloud cover (total)                             
+008002  VSSO                         7.0  CODE TABLE                    Vertical significance (surface observations)    
+                                      7 = Low cloud
+020011  CLAM                         1.0  CODE TABLE                    Cloud amount                                    
+                                      1 = 1 okta or less, but not zero
+020013  HOCB                      1200.0  M                             Height of base of cloud                         
+020012  CLTP                        31.0  CODE TABLE                    Cloud type                                      
+                                     31 = Cumulus humilis or Cumulus fractus other than of bad weather, or both
+020012  CLTP                        20.0  CODE TABLE                    Cloud type                                      
+                                     20 = No CM clouds
+020012  CLTP                        10.0  CODE TABLE                    Cloud type                                      
+                                     10 = No CH clouds
+           {CLOUDSQ1}     1 REPLICATIONS
+008002  VSSO                         1.0  CODE TABLE                    Vertical significance (surface observations)    
+                                      1 = First non - Cb significant layer
+020011  CLAM                         1.0  CODE TABLE                    Cloud amount                                    
+                                      1 = 1 okta or less, but not zero
+020012  CLTP                         8.0  CODE TABLE                    Cloud type                                      
+                                      8 = Cumulus (Cu)
+020013  HOCB                      1200.0  M                             Height of base of cloud                         
+           {RPSEQ001}     0 REPLICATIONS
+           "RPSEQ002"     3 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+008002  VSSO                         7.0  CODE TABLE                    Vertical significance (surface observations)    
+                                      7 = Low cloud
+020054  TDCM                     MISSING  DEGREE TRUE                   True direction from which a phenomenon or clouds
+    ++++++  RPSEQ002  REPLICATION #     2  ++++++
+008002  VSSO                         8.0  CODE TABLE                    Vertical significance (surface observations)    
+                                      8 = Middle cloud
+020054  TDCM                     MISSING  DEGREE TRUE                   True direction from which a phenomenon or clouds
+    ++++++  RPSEQ002  REPLICATION #     3  ++++++
+008002  VSSO                         9.0  CODE TABLE                    Vertical significance (surface observations)    
+                                      9 = High cloud
+020054  TDCM                     MISSING  DEGREE TRUE                   True direction from which a phenomenon or clouds
+008002  VSSO                     MISSING  CODE TABLE                    Vertical significance (surface observations)    
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+007021  ELEV                     MISSING  DEGREE                        Elevation                                       
+020012  CLTP                     MISSING  CODE TABLE                    Cloud type                                      
+005021  BEARAZ                   MISSING  DEGREE TRUE                   Bearing or azimuth                              
+007021  ELEV                     MISSING  DEGREE                        Elevation                                       
+020062  SOGR                     MISSING  CODE TABLE                    State of the ground (with or without snow)      
+013013  TOSD                     MISSING  M                             Total snow depth                                
+012113  GMITH                    MISSING  K                             Ground minimum temperature, past 12 hours       
+020003  PRWE                       508.0  CODE TABLE                    Present weather                                 
+                                    508 = No significant phenomenon to report, present and past weather omitted
+004024  TPHR                        -6.0  HOUR                          Time period or displacement                     
+020004  PSW1                        10.0  CODE TABLE                    Past weather (1)                                
+                                     10 = No significant weather observed
+020005  PSW2                        10.0  CODE TABLE                    Past weather (2)                                
+                                     10 = No significant weather observed
+           "SUNSHIDA"     2 REPLICATIONS
+    ++++++  SUNSHIDA  REPLICATION #     1  ++++++
+004024  TPHR                       -24.0  HOUR                          Time period or displacement                     
+014031  TOSS                     MISSING  MINUTE                        Total sunshine                                  
+    ++++++  SUNSHIDA  REPLICATION #     2  ++++++
+004024  TPHR                        -1.0  HOUR                          Time period or displacement                     
+014031  TOSS                        60.0  MINUTE                        Total sunshine                                  
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+           "RPSEQ003"     2 REPLICATIONS
+    ++++++  RPSEQ003  REPLICATION #     1  ++++++
+004024  TPHR                        -6.0  HOUR                          Time period or displacement                     
+013011  TOPC                         0.0  KG M⁻²                     Total precipitation/total water equivalent      
+    ++++++  RPSEQ003  REPLICATION #     2  ++++++
+004024  TPHR                        -1.0  HOUR                          Time period or displacement                     
+013011  TOPC                     MISSING  KG M⁻²                     Total precipitation/total water equivalent      
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+004024  TPHR                       -12.0  HOUR                          Time period or displacement                     
+004024  TPHR                         0.0  HOUR                          Time period or displacement                     
+012111  MXTM                     MISSING  K                             Maximum temperature, at height and over period s
+004024  TPHR                       -12.0  HOUR                          Time period or displacement                     
+004024  TPHR                         0.0  HOUR                          Time period or displacement                     
+012112  MITM                     MISSING  K                             Minimum temperature, at height and over period s
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+002002  TIWM                        12.0  FLAG TABLE(1,2)               Type of instrumentation for wind measurement    
+                                      1 = Certified Instruments
+                                      2 = Originally measured in knots
+008021  TSIG                         2.0  CODE TABLE                    Time significance                               
+                                      2 = Time averaged
+004025  TPMI                       -10.0  MINUTE                        Time period or displacement                     
+011001  WDIR                        70.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.3  M S⁻¹                      Wind speed                                      
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+           "RPSEQ004"     2 REPLICATIONS
+    ++++++  RPSEQ004  REPLICATION #     1  ++++++
+004025  TPMI                       -10.0  MINUTE                        Time period or displacement                     
+011043  MXGD                     MISSING  DEGREE TRUE                   Maximum wind gust direction                     
+011041  MXGS                     MISSING  M S⁻¹                      Maximum wind gust speed                         
+    ++++++  RPSEQ004  REPLICATION #     2  ++++++
+004025  TPMI                      -360.0  MINUTE                        Time period or displacement                     
+011043  MXGD                     MISSING  DEGREE TRUE                   Maximum wind gust direction                     
+011041  MXGS                     MISSING  M S⁻¹                      Maximum wind gust speed                         
+007032  HSALG                    MISSING  M                             Height of sensor above local ground (or deck of 
+004024  TPHR                       -24.0  HOUR                          Time period or displacement                     
+002004  TIEM                     MISSING  CODE TABLE                    Type of instrumentation for evaporation measurem
+013033  EVAP1                    MISSING  KG M⁻²                     Evaporation/evapotranspiration                  
+           "RADNDATA"     2 REPLICATIONS
+    ++++++  RADNDATA  REPLICATION #     1  ++++++
+004024  TPHR                        -1.0  HOUR                          Time period or displacement                     
+014002  LWRAD                    MISSING  J M⁻²                      Long-wave radiation, integrated over period spec
+014004  SWRAD                    MISSING  J M⁻²                      Short-wave radiation, integrated over period spe
+014016  NRAD                     MISSING  J M⁻²                      Net radiation, integrated over period specified 
+014028  GSORDH                   MISSING  J M⁻²                      Global solar radiation (high accuracy), integrat
+014029  DFSORD                   MISSING  J M⁻²                      Diffuse solar radiation (high accuracy), integra
+014030  DRSORD                   MISSING  J M⁻²                      Direct solar radiation (high accuracy), integrat
+    ++++++  RADNDATA  REPLICATION #     2  ++++++
+004024  TPHR                       -24.0  HOUR                          Time period or displacement                     
+014002  LWRAD                    MISSING  J M⁻²                      Long-wave radiation, integrated over period spec
+014004  SWRAD                    MISSING  J M⁻²                      Short-wave radiation, integrated over period spe
+014016  NRAD                     MISSING  J M⁻²                      Net radiation, integrated over period specified 
+014028  GSORDH                   MISSING  J M⁻²                      Global solar radiation (high accuracy), integrat
+014029  DFSORD                   MISSING  J M⁻²                      Diffuse solar radiation (high accuracy), integra
+014030  DRSORD                   MISSING  J M⁻²                      Direct solar radiation (high accuracy), integrat
+004024  TPHR                     MISSING  HOUR                          Time period or displacement                     
+004024  TPHR                     MISSING  HOUR                          Time period or displacement                     
+012049  TCPS                     MISSING  K                             Temperature change over specified period        
+
+ >>> END OF SUBSET <<< 
+
+
+End of BUFR message #      1
+
+------------------------------------------------------------------------------------------------------------------------
+
+Reached end of BUFR file; it contained a total of      1 messages and        1 subsets
