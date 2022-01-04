@@ -1,5 +1,4 @@
 list(APPEND programs
-  owp_snow_obs_csv_2_ioda.py
   owp_snow_obs_csv_class.py
 )
 

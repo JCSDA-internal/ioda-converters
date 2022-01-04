@@ -22,8 +22,10 @@ import numpy as np
 import os
 import pandas as pd
 import pathlib
-import sys
 from pathlib import Path
+import sys
+import warnings
+
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -61,7 +63,6 @@ attr_data = {
     'converter_version': 0.3,
     'nvars': np.int32(len(var_dims)), }
 
-
 fill_value = 9.96921e+36
 
 
@@ -90,31 +91,25 @@ class OwpSnowObs(object):
         self._read()
 
     def _read(self):
-        print(f"Reading: {self.file_in}")
+        # print(f"Reading: {self.file_in}")
         self.attr_data['obs_file'] = str(self.file_in.split('/')[-1])
         # use pandas to get the data lined up
         obs_df = pd.read_csv(self.file_in, header=0, index_col=False)
 
-        #n_obs = len(obs_df)
-        # obs_df = obs_df.drop_duplicates()
-        #asdf
-        #n_obs2 = len(obs_df)
-        #if n_obs2 != n_obs:
-        #    print(
-        #        f"Warning: {n_obs - n_obs2} duplicate rows removed "
-        #        f"from {self.file_in}")
+        # Deal with duplicates.
+        n_obs = len(obs_df)
+        obs_df = obs_df.drop_duplicates().reset_index().drop(columns='index')
+        n_obs2 = len(obs_df)
+        if n_obs2 != n_obs:
+            warnings.warn(
+                f"{n_obs - n_obs2} duplicate rows removed from {self.file_in}")
 
         # TODO: drop rows where PreQC != 0 ?
         data_cols = set(['ObsValue', 'ObsError', 'PreQC'])
         index_cols = list(
             set(obs_df.columns.values.tolist()).difference(data_cols))
         index_cols2 = sorted(set(index_cols).difference(set(['variable_name'])))
-
         obs_df = obs_df.reset_index().set_index(index_cols).drop(columns='index')
-
-        # obs_df = obs_df.set_index(index_cols).drop_duplicates()
-        # obs_df = obs_df.reset_index().set_index(index_cols) #.drop(columns='index')
-        
         obs_df = obs_df.unstack('variable_name').reset_index()
         obs_df.columns = [' '.join(col).strip() for col in obs_df.columns.values]
         # Unstack is not reproducible, must sort after
@@ -145,7 +140,6 @@ class OwpSnowObs(object):
             self.thin_random_seed = int(time_diff.total_seconds())
         np.random.seed(self.thin_random_seed)
         for var, thin in thin_dict.items():
-            print(f'{var}: {thin}')
             if thin > 0.0:
                 wh_var = np.where(~np.isnan(obs_df[f'ObsValue {var}']))[0]  # 1-D
                 randoms = np.random.uniform(size=len(wh_var))
