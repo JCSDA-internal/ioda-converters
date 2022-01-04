@@ -14,7 +14,7 @@
 
 # Example testing usage:
 # ipython --pdb -c"%run
-#     owp_snow_obs_csv_class.py
+#     owp_snow_obs.py
 #     -i $test_input/owp_snow_obs.csv -o $here/owp_snow_obs_csv.nc --thin_swe 1"
 
 from datetime import datetime
@@ -66,6 +66,11 @@ attr_data = {
 fill_value = 9.96921e+36
 
 
+def dummy_err(obs_values, var_name):
+    obs_errs = 0.5 * obs_values
+    return obs_errs
+
+
 def mask_nans(arr):
     arr2 = arr.astype('float32')
     arr2 = np.nan_to_num(arr2, nan=fill_value)
@@ -74,12 +79,18 @@ def mask_nans(arr):
 
 
 class OwpSnowObs(object):
-    def __init__(self, file_in, file_out, thin_swe, thin_depth, thin_random_seed):
+    def __init__(
+            self,
+            file_in, file_out,
+            thin_swe, thin_depth, thin_random_seed,
+            err_fn):
+
         self.file_in = file_in
         self.file_out = file_out
         self.thin_swe = thin_swe
         self.thin_depth = thin_depth
         self.thin_random_seed = thin_random_seed
+        self.err_fn = err_fn
 
         self.var_dict = defaultdict(lambda: defaultdict(dict))
         self.meta_dict = defaultdict(lambda: defaultdict(dict))
@@ -172,8 +183,12 @@ class OwpSnowObs(object):
             conv_fact = output_conversion_factor[ioda_var]
             self.data[self.var_dict[ioda_var]['valKey']] = (
                 mask_nans(obs_df[f'ObsValue {obs_var}'].values * conv_fact))
-            self.data[self.var_dict[ioda_var]['errKey']] = (
-                mask_nans(obs_df[f'ObsError {obs_var}'].values * conv_fact))
+            if self.err_fn is None:
+                self.data[self.var_dict[ioda_var]['errKey']] = (
+                    mask_nans(obs_df[f'ObsError {obs_var}'].values * conv_fact))
+            else:
+                self.data[self.var_dict[ioda_var]['errKey']] = (
+                    mask_nans(globals()[self.err_fn](obs_df[f'ObsValue {obs_var}'].values * conv_fact, obs_var)))
             self.data[self.var_dict[ioda_var]['qcKey']] = (
                 mask_nans(obs_df[f'PreQC {obs_var}'].values * conv_fact))
 
@@ -220,6 +235,11 @@ def parse_arguments():
         help="A random seed for reproducible random thinning. Default is total # seconds from "
              "1970-01-01 to the day of the data provided.",
         type=int, default=None)
+    optional.add_argument(
+        '--err_fn',
+        help="Name of error function to apply. The options are hardcoded in the module, currently:"
+             "[dummy_error]",
+        type=str, default=None)
 
     args = parser.parse_args()
     return args
@@ -228,6 +248,8 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     owp_snow_obs = OwpSnowObs(
-        args.input, args.output, args.thin_swe, args.thin_depth, args.thin_random_seed)
+        args.input, args.output,
+        args.thin_swe, args.thin_depth, args.thin_random_seed,
+        args.err_fn)
     result = owp_snow_obs.write()
     sys.exit(result)
