@@ -12,7 +12,7 @@ import netCDF4 as nc
 from eccodes import *
 from multiprocessing import Pool
 
-#from IPython import embed as shell
+from IPython import embed as shell
 
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -510,7 +510,7 @@ def read_bufr_message(f, count, start_pos):
 
         #  compute derived variables
         #   ... specific humidity
-        specific_humidity = map(lambda td, p: met_utils.specific_humidity(td, p), zip(temp_dewpoint, pressure))
+        specific_humidity = np.array(list(map(met_utils.specific_humidity, temp_dewpoint, pressure)))
 
         #   ... and zonal and meridional wind
         wind = np.array(list(map(met_utils.dir_speed_2_uv, wind_direction, wind_speed)))
