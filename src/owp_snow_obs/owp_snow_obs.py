@@ -223,22 +223,22 @@ def parse_arguments():
     optional.add_argument(
         '--thin_swe',
         help="percentage of random thinning for SWE, from 0.0 to 1.0. Zero indicates"
-             " no thinning is performed. (default: %(default)s)",
+             " no thinning is performed. (type: float, default: %(default)s)",
         type=float, default=0.0)
     optional.add_argument(
         '--thin_depth',
         help="percentage of random thinning for snow depth, from 0.0 to 1.0. Zero indicates"
-             " no thinning is performed. (default: %(default)s)",
+             " no thinning is performed. (type: float, default: %(default)s)",
         type=float, default=0.0)
     optional.add_argument(
         '--thin_random_seed',
         help="A random seed for reproducible random thinning. Default is total # seconds from "
-             "1970-01-01 to the day of the data provided.",
+             "1970-01-01 to the day of the data provided. (type: int, default: %(default)s)",
         type=int, default=None)
     optional.add_argument(
         '--err_fn',
         help="Name of error function to apply. The options are hardcoded in the module, currently:"
-             "[dummy_error]",
+             "['dummy_error']. (type: str, default: %(default)s)",
         type=str, default=None)
 
     args = parser.parse_args()
