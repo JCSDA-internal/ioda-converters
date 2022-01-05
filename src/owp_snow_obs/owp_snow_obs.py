@@ -120,8 +120,8 @@ class OwpSnowObs(object):
         index_cols = list(
             set(obs_df.columns.values.tolist()).difference(data_cols))
         index_cols2 = sorted(set(index_cols).difference(set(['variable_name'])))
-        obs_df = obs_df.reset_index().set_index(index_cols).drop(columns='index')
-        obs_df = obs_df.unstack('variable_name').reset_index()
+        obs_df = obs_df.reset_index().set_index(index_cols + ['index'])
+        obs_df = obs_df.unstack('variable_name').reset_index().drop(columns='index')
         obs_df.columns = [' '.join(col).strip() for col in obs_df.columns.values]
         # Unstack is not reproducible, must sort after
         obs_df = (
