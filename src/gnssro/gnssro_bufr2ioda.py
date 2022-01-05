@@ -57,7 +57,7 @@ def main(args):
     # concatenate the data from the files
 #   obs_data = obs[0]
 
-    obs_data = read_input(args.input)
+    obs_data = read_input(args.input, record_number=args.recordnumber)
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -104,7 +104,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_args):
+def read_input(input_args, record_number=None):
     """
     Reads/converts input file(s)
 
@@ -127,7 +127,7 @@ def read_input(input_args):
 #   attr_data  = get_meta_data(bufr)
     profile_meta_data = get_meta_data(bufr)
 
-    obs_data = get_obs_data(bufr, profile_meta_data)
+    obs_data = get_obs_data(bufr, profile_meta_data, record_number=record_number)
 
     return obs_data
 
@@ -163,13 +163,10 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data):
+def get_obs_data(bufr, profile_meta_data, record_number=None):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
-
-    # set record number (multi file procesing will change this)
-    nrec = 1
 
     # replication factors for the datasets, bending angle, refractivity and derived profiles
     krepfac = codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
@@ -233,6 +230,13 @@ def get_obs_data(bufr, profile_meta_data):
     iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
     # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
     obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
+
+    # set record number (multi file procesing will change this)
+    if record_number is None:
+        nrec = 1
+        #nrec = get_record_number( lat.[0], lons[0], 
+    else:
+        nrec = record_number
     obs_data[('record_number', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
     # get derived profiles
@@ -331,10 +335,14 @@ if __name__ == "__main__":
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '--threads',
+        '-j', '--threads',
         help='multiple threads can be used to load input files in parallel.'
              ' (default: %(default)s)',
         type=int, default=1)
+    optional.add_argument(
+        '-r', '--recordnumber',
+        help=' optional record number to associate with profile ',
+        type=int, default=None)
 
     args = parser.parse_args()
 
