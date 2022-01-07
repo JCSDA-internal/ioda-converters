@@ -593,6 +593,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_giirs_lw
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv_uv
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
@@ -604,6 +605,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv_uv
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/test_gsidiag.py
@@ -614,6 +616,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv
                           sfc_tv_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_rad
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
