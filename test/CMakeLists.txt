@@ -140,15 +140,15 @@ if( iodaconv_bufr_ENABLED )
     testinput/airep_wmoBUFR2ioda.yaml
     testinput/airep_wmo_multi.bufr
     testinput/amdar_wmoBUFR2ioda.yaml
-    testinput/amdar_wmo_single.bufr
+    testinput/amdar_wmo_multi.bufr
     testinput/gnssro_wmoBUFR2ioda.yaml
     testinput/gnssro_2020-306-2358C2E6.bufr
     testinput/buoy_wmoBUFR2ioda.yaml
-    testinput/buoy_wmo_single.bufr
+    testinput/buoy_wmo_multi.bufr
     testinput/ship_wmoBUFR2ioda.yaml
-    testinput/ship_wmo_single.bufr
+    testinput/ship_wmo_multi.bufr
     testinput/synop_wmoBUFR2ioda.yaml
-    testinput/synop_wmo_single.bufr
+    testinput/synop_wmo_multi.bufr
     testinput/satwind_EUMet_wmoBUFR2ioda.yaml
     testinput/satwind_EUMet_wmo.bufr
     testinput/satwind_Himawari_wmoBUFR2ioda.yaml
@@ -168,11 +168,11 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005031.nc
     testoutput/NC005066.nc
     testoutput/airep_multi.nc
-    testoutput/amdar_single.nc
+    testoutput/amdar_wmo_multi.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
-    testoutput/buoy_single.nc
-    testoutput/ship_single.nc
-    testoutput/synop_single.nc
+    testoutput/buoy_wmo_multi.nc
+    testoutput/ship_wmo_multi.nc
+    testoutput/synop_wmo_multi.nc
     testoutput/satwind_EUMet.nc
     testoutput/satwind_Himawari.nc
   )
@@ -839,7 +839,7 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/amdar_wmoBUFR2ioda.yaml"
-                    amdar_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    amdar_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_gnssro_wmo_bufr
@@ -855,7 +855,7 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/buoy_wmoBUFR2ioda.yaml"
-                    buoy_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    buoy_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ship_wmo_bufr
@@ -863,7 +863,7 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/ship_wmoBUFR2ioda.yaml"
-                    ship_single.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    ship_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_synop_wmo_bufr
@@ -871,7 +871,7 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/synop_wmoBUFR2ioda.yaml"
-                    synop_single.nc ${IODA_CONV_COMP_TOL_ZERO})
+                    synop_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO})
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_EUMet_wmo_bufr
                     TYPE    SCRIPT
