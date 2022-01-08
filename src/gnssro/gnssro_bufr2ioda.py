@@ -124,7 +124,6 @@ def read_input(input_args, record_number=None):
     bufr = codes_bufr_new_from_file(f)
     codes_set(bufr, 'unpack', 1)
 
-#   attr_data  = get_meta_data(bufr)
     profile_meta_data = get_meta_data(bufr)
 
     obs_data = get_obs_data(bufr, profile_meta_data, record_number=record_number)
@@ -150,15 +149,9 @@ def get_meta_data(bufr):
     minute = codes_get(bufr, 'minute')
     second = codes_get(bufr, 'second')  # non-integer value
 
-    # thought this string conversion was gone ???
     # should really add seconds
     dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute))
-#   profile_meta_data['datetime'] = dtg
     profile_meta_data['datetime'] = datetime.strptime(dtg, "%Y-%m-%dT%H:%M:%SZ")
-
-    # these are derived but also single per profile
-    # profile_meta_data["ascending_flag"] = bit decomposition of ro_quality_word
-    # profile_meta_data["record_number"]  = # do not know how this works (one per profile or occultation point)
 
     return profile_meta_data
 
@@ -215,8 +208,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
         elif type(v) is float:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
         else:  # something else (datetime for instance)
-            # obs_data[(k, meta_data_types[k])] = np.repeat(v, krepfac[0])
-            # do we need to do this?
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
     # add rising/setting (ascending/descending) bit
@@ -234,7 +225,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     # set record number (multi file procesing will change this)
     if record_number is None:
         nrec = 1
-        #nrec = get_record_number( lat.[0], lons[0], 
     else:
         nrec = record_number
     obs_data[('record_number', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
