@@ -47,9 +47,23 @@ output_var_unit_dict = {'snow_depth': 'm', 'swe': 'mm'}
 one = 1.00000000000000
 output_conversion_factor = {'snow_depth': one, 'swe': one}
 
+col_types = {
+    'StnObjID': np.int32,
+    'StnID': str,
+    'ObsValue': np.float32,
+    'ObsError': np.float32,
+    'PreQC': np.int32,
+    'dem_elev_m': np.int32,
+    'rec_elev_m': np.int32,
+    'latitude': np.float64,
+    'longitude': np.float64,
+    'datetime': str,
+    'variable_name': str}
+
 location_key_list = [
     ("latitude", "float"),
     ("longitude", "float"),
+    ("height", "integer"),
     ("datetime", "string"), ]
 
 dim_dict = {}
@@ -105,7 +119,7 @@ class OwpSnowObs(object):
         # print(f"Reading: {self.file_in}")
         self.attr_data['obs_file'] = str(self.file_in.split('/')[-1])
         # use pandas to get the data lined up
-        obs_df = pd.read_csv(self.file_in, header=0, index_col=False)
+        obs_df = pd.read_csv(self.file_in, header=0, index_col=False, dtype=col_types)
 
         # Deal with duplicates.
         n_obs = len(obs_df)
@@ -121,7 +135,7 @@ class OwpSnowObs(object):
             set(obs_df.columns.values.tolist()).difference(data_cols))
         index_cols2 = sorted(set(index_cols).difference(set(['variable_name'])))
         obs_df = obs_df.reset_index().set_index(index_cols + ['index'])
-        obs_df = obs_df.unstack('variable_name').reset_index().drop(columns='index')
+        obs_df = obs_df.unstack('variable_name').reset_index()
         obs_df.columns = [' '.join(col).strip() for col in obs_df.columns.values]
         # Unstack is not reproducible, must sort after
         obs_df = (
@@ -143,6 +157,8 @@ class OwpSnowObs(object):
         thin_dict = {
             'snow_water_equivalent_mm': self.thin_swe,
             'snow_depth_m': self.thin_depth}
+        # Sort it by value in case one of the values is 1.
+        thin_dict = dict(sorted(thin_dict.items(), key=lambda x: x[1]))
         # to make it reproducible if a seed is not passed
         if self.thin_random_seed is None:
             # Set a seed for each day - reproducibly random
@@ -165,11 +181,15 @@ class OwpSnowObs(object):
                     var_other = list(output_var_dict.keys())[0]
                     wh_not_var_other = np.where(np.isnan(obs_df[f'ObsValue {var_other}']))[0]  # 1-D
                     obs_df = obs_df.drop(wh_not_var_other).reset_index()
-                    # does this work when both variables are thinned by some amount?
 
         self.data[('datetime', 'MetaData')] = obs_df.datetime.values
         self.data[('latitude', 'MetaData')] = obs_df.latitude.values
         self.data[('longitude', 'MetaData')] = obs_df.longitude.values
+
+        self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values
+        self.data[('station_id', 'MetaData')] = obs_df.StnID.values
+        self.var_metadata[('height', 'MetaData')]['units'] = 'm'
+        self.var_metadata[('station_id', 'MetaData')]['units'] = 'unitless'
 
         for obs_var, ioda_var in output_var_dict.items():
             # define the ioda variable
@@ -177,8 +197,11 @@ class OwpSnowObs(object):
             self.var_dict[ioda_var]['errKey'] = ioda_var, iconv.OerrName()
             self.var_dict[ioda_var]['qcKey'] = ioda_var, iconv.OqcName()
             # define ioda meta/ancillary
-            self.units[ioda_var] = output_var_unit_dict[ioda_var]
-            self.var_metadata[ioda_var]['coordinates'] = 'longitude latitude'
+            for name in [iconv.OvalName(), iconv.OerrName(), iconv.OqcName()]:
+                self.var_metadata[ioda_var, name]['coordinates'] = 'longitude latitude'
+                self.var_metadata[ioda_var, name]['units'] = output_var_unit_dict[ioda_var]  # not really for Oqc... but
+            # just kidding for OqcName... a lazy tag along above, fix now (less code to overwrite)
+            self.var_metadata[ioda_var, iconv.OqcName()]['units'] = 'unitless'
             # the data
             conv_fact = output_conversion_factor[ioda_var]
             self.data[self.var_dict[ioda_var]['valKey']] = (
@@ -238,7 +261,7 @@ def parse_arguments():
     optional.add_argument(
         '--err_fn',
         help="Name of error function to apply. The options are hardcoded in the module, currently:"
-             "['dummy_error']. (type: str, default: %(default)s)",
+        "['dummy_error']. Default (none) uses ObsError column in the input file. (type: str, default: %(default)s)",
         type=str, default=None)
 
     args = parser.parse_args()
