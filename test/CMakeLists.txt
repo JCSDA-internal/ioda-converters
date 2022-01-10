@@ -625,9 +625,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
                           -i testinput/viirs_aod.nc
                           -o testrun/viirs_aod.nc
+                          -t 2018041506 
                           -m nesdis
                           -k maskout
-                          -t 0.0"
+                          -n 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
