@@ -6,16 +6,7 @@
 
 # Purpose: Convert OWP snow observations from CSV format to IODA netcdf format.
 # Author:
-# 2020-11-17, 2021-10-18: James McCreight
-
-# Conceptual Figure:
-# TODO: this is probably out of date... a
-# https://jointcenterforsatellitedataassimilation-jedi-docs.readthedocs-hosted.com/en/latest/_images/IODA_InMemorySchematic.png
-
-# Example testing usage:
-# ipython --pdb -c"%run
-#     owp_snow_obs.py
-#     -i $test_input/owp_snow_obs.csv -o $here/owp_snow_obs_csv.nc --thin_swe 1"
+# 2020-11-17, 2021-10-18, 2022-01-09: James McCreight
 
 from datetime import datetime
 import numpy as np
