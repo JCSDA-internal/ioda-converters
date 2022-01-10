@@ -12,8 +12,6 @@ import netCDF4 as nc
 from eccodes import *
 from multiprocessing import Pool
 
-from IPython import embed as shell
-
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
