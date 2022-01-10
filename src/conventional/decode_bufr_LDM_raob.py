@@ -78,6 +78,10 @@ def main(file_names, output_file):
     attr_data['converter'] = os.path.basename(__file__)
 
     GlobalAttrs = {}
+# V2 'windDirection': ['nlocs'],
+# V2 'windSpeed': ['nlocs'],
+# V2 'temperatureAir': ['nlocs'],
+# V2 'temperatureDewpoint': ['nlocs'],
     VarDims = {
         'geopotential_height': ['nlocs'],
         'air_temperature': ['nlocs'],
@@ -85,10 +89,6 @@ def main(file_names, output_file):
         'northward_wind': ['nlocs'],
         'specific_humidity': ['nlocs'],
         'surface_pressure': ['nlocs'],
-#V2     'windDirection': ['nlocs'],
-#V2     'windSpeed': ['nlocs'],
-#V2     'temperatureAir': ['nlocs'],
-#V2     'temperatureDewpoint': ['nlocs'],
     }
 
     # write them out
@@ -117,6 +117,7 @@ def main(file_names, output_file):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
     print("--- %s total seconds ---" % (time.time() - start_time))
+
 
 def concat_obs_dict(obs_data, append_obs_data):
     # For now we are assuming that the obs_data dictionary has the "golden" list
@@ -215,15 +216,16 @@ def get_station_elevation(bufr, profile_meta_data):
 
     return profile_meta_data
 
+
 def def_data_keys():
 
     data_keys = {
-    'nonCoordinateGeopotentialHeight' : 'geopotential_height',
-    'windDirection'                   : 'wind_direction',
-    'windSpeed'                       : 'wind_speed',
-    'airTemperature'                  : 'air_temperature',
-    'dewpointTemperature'             : 'dew_point_temperature',
-}
+        'nonCoordinateGeopotentialHeight': 'geopotential_height',
+        'windDirection': 'wind_direction',
+        'windSpeed': 'wind_speed',
+        'airTemperature': 'air_temperature',
+        'dewpointTemperature': 'dew_point_temperature',
+    }
 
 # these are all dervied fields
 #   ('air_pressure', "MetaData")
@@ -234,7 +236,6 @@ def def_data_keys():
 
 #   ('latitude', "MetaData")
 #   ('longitude', "MetaData")
-
 
     return data_keys
 
@@ -390,8 +391,8 @@ def read_bufr_message(f, count, start_pos):
 
             # typical case first record is surface pressure
             elif len(pressure) > len(temp_air):
-                if ( len(pressure) != len(lat_displacement) ):
-                    print (' ERROR handling geolocation displacement does not match P ', len(lat_displacement), len(pressure) )
+                if (len(pressure) != len(lat_displacement)):
+                    print(' ERROR handling geolocation displacement does not match P ', len(lat_displacement), len(pressure))
                     call_fail = True
                     sys.exit()
                     raise BaseException
@@ -411,23 +412,17 @@ def read_bufr_message(f, count, start_pos):
                     sounding_significance = sounding_significance[1:]
 
             if len(pressure) > len(temp_air):
-                if (  ( len(temp_air)
-                      == len(temp_dewpoint)
-                      == len(geop_height)
-                      == len(wind_direction)
-                      == len(wind_speed) )  and
-                      ( len(sounding_significance)
-                      == len(lat_displacement)
-                      == len(lon_displacement)
-                      == len(time_displacement) ) ):
-                      new_length
-                      pressure = pressure[:new_length]
-                      lat_displacement = lat_displacement[:new_length]
-                      lon_displacement = lon_displacement[:new_length]
-                      time_displacement = time_displacement[:new_length]
-                      sounding_significance = sounding_significance[:new_length]
+                var_length_check = True
+                var_length_check = var_length_check and (len(temp_air) == len(temp_dewpoint) == len(geop_height) == len(wind_direction) == len(wind_speed))
+                var_length_check = var_length_check and (len(sounding_significance) == len(lat_displacement) == len(lon_displacement) == len(time_displacement))
+                if (var_length_check):
+                    pressure = pressure[:new_length]
+                    lat_displacement = lat_displacement[:new_length]
+                    lon_displacement = lon_displacement[:new_length]
+                    time_displacement = time_displacement[:new_length]
+                    sounding_significance = sounding_significance[:new_length]
                 else:
-                    print ('  ERROR variables have too random a distribution of lengths ' )
+                    print(' ERROR variables have too random a distribution of lengths ')
                     print("starting position: %i" % start_pos)
                     print("length pressure: %i" % len(pressure))
                     print("length temperature: %i" % len(temp_air))
@@ -503,7 +498,7 @@ def read_bufr_message(f, count, start_pos):
         var_length_check = var_length_check and (len(wind_direction) == num_levels)
         var_length_check = var_length_check and (len(wind_speed) == num_levels)
         if (not var_length_check):
-            print('ERROR: BUFR message variable lengths do not match')
+            print(' ERROR: BUFR message variable lengths do not match')
             raise BaseException
 
         #  compute derived variables
@@ -512,8 +507,8 @@ def read_bufr_message(f, count, start_pos):
 
         #   ... and zonal and meridional wind
         wind = np.array(list(map(met_utils.dir_speed_2_uv, wind_direction, wind_speed)))
-        eastward_wind  = wind[:,0]
-        northward_wind = wind[:,1]
+        eastward_wind = wind[:, 0]
+        northward_wind = wind[:, 1]
 
         # what to do for "ObsError" set to 1? and "PreQC" all zero?
         obs_data[('surface_pressure', "ObsValue")] = np.full(num_levels, surface_pressure, dtype='float32')
@@ -523,9 +518,9 @@ def read_bufr_message(f, count, start_pos):
         obs_data[('northward_wind', "ObsValue")] = assign_values(northward_wind)
         obs_data[('specific_humidity', "ObsValue")] = assign_values(specific_humidity)
 
-#V2     obs_data[('wind_direction', "ObsValue")] = assign_values(wind_direction)
-#V2     obs_data[('wind_speed', "ObsValue")] = assign_values(wind_speed)
-#V2     obs_data[('dew_point_temperature', "ObsValue")] = assign_values(temp_dewpoint)
+# V2    obs_data[('wind_direction', "ObsValue")] = assign_values(wind_direction)
+# V2    obs_data[('wind_speed', "ObsValue")] = assign_values(wind_speed)
+# V2    obs_data[('dew_point_temperature', "ObsValue")] = assign_values(temp_dewpoint)
 
         obs_data[('latitude', "MetaData")] = np.full(num_levels, lat, dtype='float32') + assign_values(lat_displacement)
         obs_data[('longitude', "MetaData")] = np.full(num_levels, lon, dtype='float32') + assign_values(lon_displacement)
