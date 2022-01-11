@@ -54,6 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
+  testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
 )
@@ -103,6 +104,7 @@ list( APPEND test_output
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
+  testoutput/gnssro_cosmic2_2020121500.nc4
   testoutput/godae_bgc_argo.nc
 )
 
@@ -849,6 +851,17 @@ if(iodaconv_bufr_ENABLED)
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/gnssro_wmoBUFR2ioda.yaml"
                     gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_generic_gnssro_bufr
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf 
+                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py
+                            -d 2020121500
+                            -i testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr
+                            -o testrun/gnssro_cosmic2_2020121500.nc4"
+                            gnssro_cosmic2_2020121500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_buoy_wmo_bufr
                     TYPE    SCRIPT
