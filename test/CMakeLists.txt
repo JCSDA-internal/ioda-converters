@@ -54,6 +54,7 @@ list( APPEND test_input
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
+  testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr
   testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
@@ -104,6 +105,7 @@ list( APPEND test_output
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
+  testoutput/gnssro_cosmic2_2020121500.nc4
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
 )
