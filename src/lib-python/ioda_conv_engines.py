@@ -78,6 +78,30 @@ class IodaWriter(object):
         # open IODA obs backend
         self.obsspace = ioda_os.ObsSpace(Fname, mode='w', dim_dict=DimDict)
 
+    def WriteGeoVars(self, GeoVars, GeoVarDims, GeoVarAttrs):
+        # this method will write out geovals using IODA
+        for VarName, Vvals in GeoVars.items():
+            # get variable and group names
+            # create variable
+            if VarName in GeoVarDims.keys():
+                dims = GeoVarDims[VarName]
+            else:
+                # assume it is just nlocs
+                dims = ['nlocs']
+            fillval = get_default_fill_val(Vvals.dtype)
+            # get fill value
+            if VarName in GeoVarAttrs.keys():
+                if '_FillValue' in GeoVarAttrs[VarName].keys():
+                    fillval = GeoVarAttrs[VarName]['_FillValue']
+            self.obsspace.create_var(VarName,
+                                     dtype=Vvals.dtype,
+                                     dim_list=dims,
+                                     fillval=fillval,
+                                     )
+            # write the data to the file
+            tmpVar = self.obsspace.Variable(VarName)
+            tmpVar.write_data(Vvals)
+
     def WriteObsVars(self, ObsVars, VarDims, VarAttrs):
         # this method will create variables in the ouput obs group and
         # fill them with the provided data and metadata
@@ -86,7 +110,9 @@ class IodaWriter(object):
             (Vname, Gname) = VarKey
             VarName = "{0:s}/{1:s}".format(Gname, Vname)
             # create variable
-            if Vname in VarDims.keys():
+            if VarKey in VarDims.keys():
+                dims = VarDims[VarKey]
+            elif Vname in VarDims.keys():
                 dims = VarDims[Vname]
             else:
                 # assume it is just nlocs
@@ -124,8 +150,11 @@ class IodaWriter(object):
             self.obsspace.write_attr(AttrKey, AttrVal)
 
     def BuildIoda(self, ObsVars, VarDims, VarAttrs, GlobalAttrs,
-                  TestData=None):
-        self.WriteObsVars(ObsVars, VarDims, VarAttrs)
+                  TestData=None, geovals=False):
+        if geovals:
+            self.WriteGeoVars(ObsVars, VarDims, VarAttrs)
+        else:
+            self.WriteObsVars(ObsVars, VarDims, VarAttrs)
         self.WriteGlobalAttrs(GlobalAttrs)
 
 

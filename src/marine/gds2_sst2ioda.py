@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -23,11 +23,26 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 output_var_names = [
     "sea_surface_temperature",
     "sea_surface_skin_temperature"]
+
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("datetime", "string")
+]
+
+GlobalAttrs = {}
+
+VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+DimDict = {}
+
+VarDims = {}
 
 
 def read_input(input_args):
@@ -42,7 +57,7 @@ def read_input(input_args):
 
     Returns:
 
-        A tuple of (obs_data, loc_data, attr_data) needed by the IODA writer.
+        A tuple of (obs_data, GlobalAttrs) needed by the IODA writer.
     """
     input_file = input_args[0]
     global_config = input_args[1]
@@ -55,9 +70,9 @@ def read_input(input_args):
     basetime = dateutil.parser.parse(ncd.variables['time'].units[-20:])
 
     # get some of the global attributes that we are interested in
-    attr_data = {}
+
     for v in ('platform', 'sensor', 'processing_level'):
-        attr_data[v] = ncd.getncattr(v)
+        GlobalAttrs[v] = ncd.getncattr(v)
 
     # get the QC flags, and calculate a mask from the non-missing values
     # (since L3 files are mostly empty, fields need a mask applied immediately
@@ -72,7 +87,7 @@ def read_input(input_args):
     # If len(time) > 1, also need to repeat the lat/lon vals
     lons = ncd.variables['lon'][:].ravel()
     lats = ncd.variables['lat'][:].ravel()
-    if attr_data['processing_level'][:2] == 'L3':
+    if GlobalAttrs['processing_level'][:2] == 'L3':
         len_grid = len(lons)*len(lats)
         lons, lats = np.meshgrid(lons, lats, copy=False)
         lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
@@ -133,36 +148,34 @@ def read_input(input_args):
     qc = 5 - data_in['quality_level']
 
     # allocate space for output depending on which variables are to be saved
-    num_vars = 0
+
     obs_dim = (len(lons))
     obs_data = {}
     if global_config['output_sst']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim),
-        num_vars += 1
-    if global_config['output_skin_sst']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim),
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim),
-        num_vars += 1
+        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
 
-    # create the final output structures
-    loc_data = {
-        'latitude': lats,
-        'longitude': lons,
-        'datetime': dates,
-    }
+    if global_config['output_skin_sst']:
+        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim)
+
+    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
+    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('latitude', 'MetaData')] = lats
+    obs_data[('longitude', 'MetaData')] = lons
+
     if global_config['output_sst']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = val_sst
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = err
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = qc
+        obs_data[output_var_names[0], global_config['oval_name']] = val_sst
+        obs_data[output_var_names[0], global_config['oerr_name']] = err
+        obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
     if global_config['output_skin_sst']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = val_sst_skin
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = err
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = qc
+        obs_data[output_var_names[1], global_config['oval_name']] = val_sst_skin
+        obs_data[output_var_names[1], global_config['oerr_name']] = err
+        obs_data[output_var_names[1], global_config['opqc_name']] = qc.astype('int32')
 
-    return (obs_data, loc_data, attr_data)
+    return (obs_data, GlobalAttrs)
 
 
 def main():
@@ -219,9 +232,6 @@ def main():
         args.sst = True
         args.skin_sst = True
 
-    # setup the IODA writer
-    writer = iconv.NcWriter(args.output, [], [])
-
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
@@ -229,9 +239,9 @@ def main():
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
-    global_config['oval_name'] = writer.OvalName()
-    global_config['oerr_name'] = writer.OerrName()
-    global_config['opqc_name'] = writer.OqcName()
+    global_config['oval_name'] = iconv.OvalName()
+    global_config['oerr_name'] = iconv.OerrName()
+    global_config['opqc_name'] = iconv.OqcName()
     global_config['output_sst'] = args.sst
     global_config['output_skin_sst'] = args.skin_sst
     pool_inputs = [(i, global_config) for i in args.input]
@@ -241,25 +251,19 @@ def main():
     obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, loc_data, attr_data = obs[0]
-    loc_data['datetime'] = writer.FillNcVector(
-        loc_data['datetime'], "datetime")
+    obs_data, GlobalAttrs = obs[0]
+
     for i in range(1, len(obs)):
         for k in obs_data:
             axis = len(obs[i][0][k].shape)-1
             obs_data[k] = np.concatenate(
                 (obs_data[k], obs[i][0][k]), axis=axis)
-        for k in loc_data:
-            d = obs[i][1][k]
-            if k == 'datetime':
-                d = writer.FillNcVector(d, 'datetime')
-            loc_data[k] = np.concatenate((loc_data[k], d), axis=0)
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    attr_data['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    attr_data['thinning'] = args.thin
-    attr_data['converter'] = os.path.basename(__file__)
+    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['thinning'] = args.thin
+    GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # determine which variables we are going to output
     selected_names = []
@@ -267,16 +271,34 @@ def main():
         selected_names.append(output_var_names[0])
     if args.skin_sst:
         selected_names.append(output_var_names[1])
-    var_data = {writer._var_list_name: writer.FillNcVector(
-        selected_names, "string")}
 
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    writer._nvars = len(selected_names)
-    writer._nlocs = obs_data[(selected_names[0], 'ObsValue')].shape[0]
+    VarDims = {
+        'sea_surface_temperature': ['nlocs'],
+        'sea_surface_skin_temperature': ['nlocs'],
+    }
 
-    # use the writer class to create the final output file
-    writer.BuildNetcdf(obs_data, loc_data, var_data, attr_data)
+    nlocs = len(obs_data[('longitude', 'MetaData')])
+
+    DimDict = {'nlocs': nlocs}
+
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+
+    VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['units'] = 'celsius'
+    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('sea_surface_temperature', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_temperature', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_temperature', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
+
+    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
