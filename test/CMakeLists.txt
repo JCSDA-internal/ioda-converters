@@ -58,6 +58,7 @@ list( APPEND test_input
   testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
+  testinput/avhrr_radiance.nc
 )
 
 list( APPEND test_output
@@ -108,6 +109,7 @@ list( APPEND test_output
   testoutput/gnssro_cosmic2_2020121500.nc4
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
+  testoutput/avhrr_radiance.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -478,6 +480,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
                           -i testinput/global_vavh_l3_rt_s3a_20210930T18.nc
                           -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
                           ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/avhrr_radiance2ioda.py    
+                          -i testinput/avhrr_radiance.nc
+                          -o testrun/avhrr_radiance.nc                               
+                          -d 2015010100"
+                          avhrr_radiance.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 
 #===============================================================================
 # Conventional data, surface Obs - METAR converter
