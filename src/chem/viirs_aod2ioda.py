@@ -100,6 +100,9 @@ class AOD(object):
             errs = ncd.variables['Residual'][:].ravel()
             qcpath = ncd.variables['QCPath'][:].ravel()
             qcall = ncd.variables['QCAll'][:].ravel()
+            obs_time = np.empty_like(qcall, dtype=object)   
+            for t in range(len(obs_time)): 
+                obs_time[t] = base_datetime 
             if self.mask == "maskout":
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
@@ -108,6 +111,7 @@ class AOD(object):
                 errs = errs[mask]
                 qcpath = qcpath[mask]
                 qcall = qcall[mask]
+                obs_time = obs_time[mask] 
 
             ncd.close()
 
@@ -121,6 +125,7 @@ class AOD(object):
                 errs = errs[mask_thin]
                 qcpath = qcpath[mask_thin]
                 qcall = qcall[mask_thin]
+                obs_time = obs_time[mask_thin] 
 
             # defined surface type and uncertainty
             sfctyp = 0*qcall
@@ -168,9 +173,11 @@ class AOD(object):
             if first: 
                 self.outdata[('latitude', 'MetaData')] = lats
                 self.outdata[('longitude', 'MetaData')] = lons
+                self.outdata[('datetime', 'MetaData')] = obs_time
             else:
-                self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))              
-                self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons)) 
+                self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))
+                self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons))
+                self.outdata[('datetime', 'MetaData')] = np.concatenate((self.outdata[('datetime', 'MetaData')], obs_time))
  
             first = False 
 
