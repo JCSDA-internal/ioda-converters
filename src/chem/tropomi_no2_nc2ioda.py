@@ -147,11 +147,11 @@ class tropomi(object):
                     self.outdata[('averaging_kernel_precision', 'MetaData')], kernel_err_total))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
-                    self.loc_mdata[varname_ak] = np.concatenate(
-                        (self.loc_mdata[varname_ak], avg_kernel[..., k].ravel()))
+                    self.outdata[varname_ak] = np.concatenate(
+                        (self.outdata[varname_ak], avg_kernel[..., k].ravel()))
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_pr] = np.concatenate(
-                        (self.loc_mdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()))
+                        (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()))
             for ncvar, iodavar in obsvars.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
