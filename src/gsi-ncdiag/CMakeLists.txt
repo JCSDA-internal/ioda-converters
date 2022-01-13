@@ -1,12 +1,11 @@
 list(APPEND libs
   gsi_ncdiag.py
-  combine_files.py)
+  combine_obsspace.py)
 
 list( APPEND programs
   proc_gsi_ncdiag.py
   test_gsidiag.py
-  combine_files.py
-  subset_files.py)
+  combine_obsspace.py)
 
 set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
