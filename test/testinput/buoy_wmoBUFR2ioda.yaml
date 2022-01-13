@@ -6,13 +6,15 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/buoy_wmo_single.bufr"
+      obsdatain: "./testinput/buoy_wmo_multi.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
       mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH, WMOP, STSN, HSAWS]
-        - mnemonics: [TMDB, TMDP, WDIR, WSPD, PRES, SST0]
+        - mnemonics: [WMOP, STSN, BUYT]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU]
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [PRES, PMSL, HSAWS, TMDB, TMDP, WDIR, WSPD, SST0]
 
       exports:
         variables:
@@ -27,6 +29,8 @@ observations:
             mnemonic: WMOP
           stationLongName:
             mnemonic: STSN
+          buoyType:
+            mnemonic: BUYT
           latitude:
             mnemonic: CLATH
           longitude:
@@ -48,7 +52,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/buoy_single.nc"
+      obsdataout: "./testrun/buoy_wmo_multi.nc"
 
       dimensions:
         - name: "nlocs"
@@ -73,60 +77,60 @@ observations:
           longName: "Longitude"
           units: "degrees_east"
 
-        - name: "MetaData/stationIdentification"
+        - name: "MetaData/station_id"
           source: variables/stationIdentification
           dimensions: [ "nlocs" ]
           longName: "Station Identification"
-          units: ""
+          units: "none"
 
         - name: "MetaData/stationLongName"
           source: variables/stationLongName
           dimensions: [ "nlocs" ]
           longName: "Station long name"
-          units: ""
+          units: "none"
 
-        - name: "MetaData/stationElevation"
+        - name: "MetaData/station_elevation"
           source: variables/stationElevation
           dimensions: [ "nlocs" ]
           longName: "Station Elevation"
           units: "m"
 
-        - name: "ObsValue/temperatureAir"
+        - name: "ObsValue/air_temperature"
           coordinates: "longitude latitude"
           source: variables/temperatureAir
           dimensions: [ "nlocs" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/temperatureDewpoint"
+        - name: "ObsValue/dewpoint_temperature"
           coordinates: "longitude latitude"
           source: variables/temperatureDewpoint
           dimensions: [ "nlocs" ]
           longName: "Dewpoint Temperature"
           units: "K"
 
-        - name: "ObsValue/windDirection"
+        - name: "ObsValue/wind_direction"
           coordinates: "longitude latitude"
           source: variables/windDirection
           dimensions: [ "nlocs" ]
           longName: "Wind Direction"
           units: "degrees"
 
-        - name: "ObsValue/windSpeed"
+        - name: "ObsValue/wind_speed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           dimensions: [ "nlocs" ]
           longName: "Wind Speed"
           units: "m s-1"
 
-        - name: "ObsValue/pressureStation"
+        - name: "ObsValue/surface_pressure"
           coordinates: "longitude latitude"
           source: variables/pressureStation
           dimensions: [ "nlocs" ]
           longName: "Surface Pressure"
           units: "Pa"
 
-        - name: "ObsValue/temperatureSeaSurface"
+        - name: "ObsValue/sea_surface_temperature"
           coordinates: "longitude latitude"
           source: variables/temperatureSeaSurface
           dimensions: [ "nlocs" ]
