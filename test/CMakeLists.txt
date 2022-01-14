@@ -55,8 +55,10 @@ list( APPEND test_input
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
   testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr
+  testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
+  testinput/avhrr_radiance.nc
 )
 
 list( APPEND test_output
@@ -105,7 +107,9 @@ list( APPEND test_output
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
   testoutput/gnssro_cosmic2_2020121500.nc4
+  testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
+  testoutput/avhrr_radiance.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -476,6 +480,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
                           -i testinput/global_vavh_l3_rt_s3a_20210930T18.nc
                           -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
                           ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/avhrr_radiance2ioda.py    
+                          -i testinput/avhrr_radiance.nc
+                          -o testrun/avhrr_radiance.nc                               
+                          -d 2015010100"
+                          avhrr_radiance.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 
 #===============================================================================
 # Conventional data, surface Obs - METAR converter
@@ -904,6 +920,21 @@ if(iodaconv_bufr_ENABLED)
                     satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 endif()
+
+
+#==============================================================================
+# Converters for NRT ingest
+#==============================================================================
+
+ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf 
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
+                          -d 2021120600
+                          -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
+                          -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
 #==============================================================================
 # PrepBUFR and BUFR tests
