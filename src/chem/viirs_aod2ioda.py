@@ -76,7 +76,7 @@ class AOD(object):
             self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # loop through input filenamess
-        first = True 
+        first = True
         for f in self.filenames:
             ncd = nc.Dataset(self.filenames)
             ncd_str = str(ncd)
@@ -100,9 +100,9 @@ class AOD(object):
             errs = ncd.variables['Residual'][:].ravel()
             qcpath = ncd.variables['QCPath'][:].ravel()
             qcall = ncd.variables['QCAll'][:].ravel()
-            obs_time = np.empty_like(qcall, dtype=object)   
-            for t in range(len(obs_time)): 
-                obs_time[t] = base_datetime 
+            obs_time = np.empty_like(qcall, dtype=object)
+            for t in range(len(obs_time)):
+                obs_time[t] = base_datetime
             if self.mask == "maskout":
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
@@ -111,10 +111,9 @@ class AOD(object):
                 errs = errs[mask]
                 qcpath = qcpath[mask]
                 qcall = qcall[mask]
-                obs_time = obs_time[mask] 
+                obs_time = obs_time[mask]
 
             ncd.close()
-
 
             # apply thinning mask
             if self.thin > 0.0:
@@ -125,7 +124,7 @@ class AOD(object):
                 errs = errs[mask_thin]
                 qcpath = qcpath[mask_thin]
                 qcall = qcall[mask_thin]
-                obs_time = obs_time[mask_thin] 
+                obs_time = obs_time[mask_thin]
 
             # defined surface type and uncertainty
             sfctyp = 0*qcall
@@ -134,16 +133,16 @@ class AOD(object):
             uncertainty2 = 0.0*errs
 
             if self.method == "nesdis":
-            # Case of water high quality
+                # Case of water high quality
                 uncertainty = 0.00784394 + 0.219923*vals
-            # case of bright land high quality
+                # case of bright land high quality
                 uncertainty1 = 0.0550472 + 0.299558*vals
-            # case of dark land high quality
+                # case of dark land high quality
                 uncertainty2 = 0.111431 + 0.128699*vals
 
             for i in range(len(lons)):
 
-            # convert byte to integer
+                # convert byte to integer
                 sfctyp[i] = int.from_bytes(qcpath[i], byteorder='big')
                 if self.method == "nesdis":
                     if sfctyp[i] == 1:   # case of bright land high quality
@@ -156,7 +155,7 @@ class AOD(object):
 
             #  Values
 
-            if first: 
+            if first:
                 self.outdata[self.varDict[iodavar]['valKey']] = vals
                 self.outdata[self.varDict[iodavar]['errKey']] = errs
                 self.outdata[self.varDict[iodavar]['qcKey']] = qcall
@@ -170,7 +169,7 @@ class AOD(object):
 
             #  Add Meta data
 
-            if first: 
+            if first:
                 self.outdata[('latitude', 'MetaData')] = lats
                 self.outdata[('longitude', 'MetaData')] = lons
                 self.outdata[('datetime', 'MetaData')] = obs_time
@@ -178,8 +177,8 @@ class AOD(object):
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons))
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((self.outdata[('datetime', 'MetaData')], obs_time))
- 
-            first = False 
+
+            first = False
 
         DimDict['nlocs'] = len(self.outdata[('latitude', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
@@ -222,7 +221,7 @@ def main():
         '-n', '--thin',
         help="percentage of random thinging fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
-        type=float, default=0.0) 
+        type=float, default=0.0)
 
     args = parser.parse_args()
 
