@@ -7,7 +7,6 @@ use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
    read_iasi, read_cris, radiance_to_temperature
 use ncio_mod, only: write_obs
-use gnssro_bufr2ioda, only: read_write_gnssro
 use ahi_hsd_mod, only: read_hsd, subsample
 use satwnd_mod, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
 use utils_mod, only: da_advance_time
@@ -17,10 +16,9 @@ implicit none
 integer(i_kind), parameter :: NameLen   = 64
 integer(i_kind), parameter :: DateLen   = 10
 integer(i_kind), parameter :: DateLen14 = 14
-integer(i_kind), parameter :: nfile_all = 8
+integer(i_kind), parameter :: nfile_all = 7
 integer(i_kind), parameter :: ftype_unknown  = -1
 integer(i_kind), parameter :: ftype_prepbufr =  1
-integer(i_kind), parameter :: ftype_gnssro   =  2
 integer(i_kind), parameter :: ftype_amsua    =  3
 integer(i_kind), parameter :: ftype_mhs      =  4
 integer(i_kind), parameter :: ftype_airs     =  5
@@ -31,7 +29,6 @@ integer(i_kind), parameter :: ftype_cris     =  8
 integer(i_kind)            :: ftype(nfile_all)
 character(len=NameLen)     :: flist_all(nfile_all) = &
    (/                    &
-      "gnssro.bufr    ", &
       "prepbufr.bufr  ", &
       "satwnd.bufr    ", &
       "amsua.bufr     ", &
@@ -77,16 +74,6 @@ end if
 do ifile = 1, nfile
 
    filename = flist(ifile)
-
-   if ( ftype(ifile) == ftype_gnssro ) then
-      inquire(file=trim(inpdir)//trim(filename), exist=fexist)
-      if ( .not. fexist ) then
-         write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
-      else
-         write(*,*) '--- processing gnssro.bufr ---'
-         call read_write_gnssro(trim(inpdir)//trim(filename), trim(outdir))
-      end if
-   end if
 
    if ( ftype(ifile) == ftype_satwnd ) then
       inquire(file=trim(inpdir)//trim(filename), exist=fexist)
@@ -287,6 +274,10 @@ inpdir = '.'
 outdir = '.'
 cdatetime = ''
 flist(:) = 'null'
+iarg_inpdir = -1
+iarg_outdir = -1
+iarg_datetime = -1
+iarg_subsample = -1
 if ( narg > 0 ) then
    do iarg = 1, narg
       call get_command_argument(number=iarg, value=strtmp)
@@ -331,7 +322,7 @@ if ( narg > 0 ) then
    if ( ifile == 0 ) then
       nfile = nfile_all
       flist(:) = flist_all(:)
-      ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd,  &
+      ftype(:) = (/ ftype_prepbufr, ftype_satwnd,  &
                     ftype_amsua, ftype_airs, ftype_mhs,  &
                     ftype_iasi, ftype_cris /)
    else
@@ -342,7 +333,7 @@ else
    outdir = '.'
    nfile = nfile_all
    flist(:) = flist_all(:)
-   ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd,  &
+   ftype(:) = (/ ftype_prepbufr, ftype_satwnd,  &
                  ftype_amsua, ftype_airs, ftype_mhs,  &
                  ftype_iasi, ftype_cris /)
 end if
@@ -371,8 +362,6 @@ fileloop: do ifile = 1, nfile
    select case ( trim(subset) )
    case (  'ADPUPA', 'ADPSFC' )
       ftype(ifile) = ftype_prepbufr
-   case ( 'NC003010' )
-      ftype(ifile) = ftype_gnssro
    case ( 'NC021023' )
       ftype(ifile) = ftype_amsua
    case ( 'NC021027' )

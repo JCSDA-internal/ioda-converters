@@ -14,17 +14,21 @@ module ahi_HSD_mod
 
 !https://www.jstage.jst.go.jp/article/jmsj/94/2/94_2016-009/_pdf/-char/en
 
-use kinds, only: i_byte, i_short, i_long, i_kind, r_single, r_double, r_kind
+use kinds, only: i_byte, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
 use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, strlen
 use ufo_vars_mod, only: ufo_vars_getindex
-use netcdf, only: nf90_float, nf90_int, nf90_char
+use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
+use utils_mod, only: get_julian_time
 
 implicit none
 
 integer(i_kind) :: mmday(12) = (/31,28,31,30,31,30,31,31,30,31,30,31/)
 character(len=ndatetime)  :: datetime   ! ccyy-mm-ddThh:mm:ssZ
+real(r_double)   :: gstime
+integer(i_llong) :: epochtime
+integer(i_kind)  :: iyear, imonth, iday, ihour, imin, isec
 
 integer(i_kind) :: subsample
 
@@ -501,6 +505,9 @@ if ( nvars > 0 ) then
 end if
 
 datetime = ccyy//'-'//mm//'-'//dd//'T'//hh//':'//nn//':00Z'
+read (ccyymmddhhnn,'(i4,4i2)') iyear, imonth, iday, ihour, imin
+isec = 0
+call get_julian_time(iyear, imonth, iday, ihour, imin, isec, gstime, epochtime)
 
 iloc = 0
 do jj = 1, nline, subsample
@@ -525,6 +532,10 @@ do jj = 1, nline, subsample
                xdata(1,1)%xinfo_char(iloc,i) = datetime
             else if ( trim(name_var_info(i)) == 'station_id' ) then
                xdata(1,1)%xinfo_char(iloc,i) = 'ahi_himawari8'
+            end if
+         else if ( type_var_info(i) == nf90_int64 ) then
+            if ( trim(name_var_info(i)) == 'dateTime' ) then
+               xdata(1,1)%xinfo_int64(iloc,i) = epochtime
             end if
          end if
       end do

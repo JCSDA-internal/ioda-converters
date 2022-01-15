@@ -10,7 +10,7 @@ private
 ! public subroutines
 public :: open_netcdf, close_netcdf, get_netcdf_dims, get_netcdf_var_1d
 public :: open_netcdf_for_write
-public :: def_netcdf_dims, def_netcdf_var, def_netcdf_end
+public :: def_netcdf_dims, def_netcdf_grp, def_netcdf_var, def_netcdf_end
 public :: put_netcdf_var
 
 ! variables visible to this module only
@@ -24,7 +24,9 @@ end interface
 
 interface put_netcdf_var
    module procedure put_netcdf_var_real
+   module procedure put_netcdf_var_real_2d
    module procedure put_netcdf_var_integer
+   module procedure put_netcdf_var_integer64
    module procedure put_netcdf_var_char
 end interface
 
@@ -75,6 +77,28 @@ subroutine get_netcdf_dims(fileid,variable,output)
    return
 
 end subroutine get_netcdf_dims
+
+subroutine def_netcdf_grp(fileid,variable,output)
+   integer, intent(in) :: fileid
+   character(len=*), intent(in)  :: variable  ! name of this group
+   integer,          intent(out) :: output    ! ncid of this group
+
+   integer :: ncgrpid, ierr
+
+   ierr = 0
+   ncstatus = nf90_def_grp(fileid,trim(adjustl(variable)),ncgrpid)
+   ierr = ierr + ncstatus
+
+   if ( ierr /= 0 ) then
+      write(0,*) 'Error defining group for '//trim(adjustl(variable))
+      write(0,*) 'ncstatus = ', ierr
+      stop
+   endif
+
+   output = ncgrpid
+
+   return
+end subroutine def_netcdf_grp
 
 subroutine get_netcdf_var_1d_real(fileid,variable,dim1,output)
 
@@ -262,6 +286,29 @@ subroutine put_netcdf_var_real(fileid,variable,input)
    return
 end subroutine put_netcdf_var_real
 
+subroutine put_netcdf_var_real_2d(fileid,variable,input)
+
+   integer,            intent(in) :: fileid
+   character(len=*),   intent(in) :: variable
+   real, dimension(:,:), intent(in) :: input
+
+   integer :: ncvarid, ierr
+
+   ierr = 0
+   ncstatus = nf90_inq_varid(fileid,trim(adjustl(variable)),ncvarid)
+   ierr = ierr + ncstatus
+   ncstatus = nf90_put_var(fileid,ncvarid,input)
+   ierr = ierr + ncstatus
+
+   if ( ierr /= 0 ) then
+      write(0,*) 'Error writing data for '//trim(adjustl(variable))
+      write(0,*) 'ierr = ',ierr
+      stop
+   endif
+
+   return
+end subroutine put_netcdf_var_real_2d
+
 subroutine put_netcdf_var_integer(fileid,variable,input)
 
    integer,               intent(in) :: fileid
@@ -284,6 +331,29 @@ subroutine put_netcdf_var_integer(fileid,variable,input)
 
    return
 end subroutine put_netcdf_var_integer
+
+subroutine put_netcdf_var_integer64(fileid,variable,input)
+
+   integer,               intent(in) :: fileid
+   character(len=*),      intent(in) :: variable
+   integer*8, dimension(:), intent(in) :: input
+
+   integer :: ncvarid, ierr
+
+   ierr = 0
+   ncstatus = nf90_inq_varid(fileid,trim(adjustl(variable)),ncvarid)
+   ierr = ierr + ncstatus
+   ncstatus = nf90_put_var(fileid,ncvarid,input)
+   ierr = ierr + ncstatus
+
+   if ( ierr /= 0 ) then
+      write(0,*) 'Error writing data for '//trim(adjustl(variable))
+      write(0,*) 'ierr = ',ierr
+      stop
+   endif
+
+   return
+end subroutine put_netcdf_var_integer64
 
 subroutine put_netcdf_var_char(fileid,variable,input)
 

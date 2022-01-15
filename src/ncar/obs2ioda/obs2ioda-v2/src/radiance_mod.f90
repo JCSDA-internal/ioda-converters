@@ -1,12 +1,12 @@
 module radiance_mod
 
-use kinds, only: r_kind,i_kind,r_double
+use kinds, only: r_kind,i_kind,r_double,i_llong
 use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, &
    dtime_min, dtime_max, strlen
 use ufo_vars_mod, only: ufo_vars_getindex
-use netcdf, only: nf90_float, nf90_int, nf90_char
+use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
 use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
 
 implicit none
@@ -32,6 +32,7 @@ type datalink_radiance
    real(r_kind)              :: elv        ! elevation in m
    real(r_kind)              :: dhr        ! obs time minus analysis time in hour
    real(r_double)            :: gstime
+   integer(i_llong)          :: epochtime
    integer(i_kind)           :: ifgat
    integer(i_kind)           :: inst_idx   ! index of inst in inst_list
    integer(i_kind)           :: landsea
@@ -149,7 +150,7 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
    write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
    write(unit=filedate, fmt='(i10)') idate
    read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
-   call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
+   call get_julian_time (iyear,imonth,iday,ihour,0,0,ref_time)
 
    if ( .not. associated(rhead) ) then
       nullify ( rhead )
@@ -189,7 +190,7 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
               isec   >=   0 .and. isec   <   60 ) then
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-            call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+            call get_julian_time (iyear,imonth,iday,ihour,imin,isec,obs_time,rlink%epochtime)
             rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
             rlink%gstime = obs_time
          else
@@ -383,7 +384,7 @@ subroutine read_airs_colocate_amsua (filename, filedate)
   write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
   write(unit=filedate, fmt='(i10)') idate
   read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
-  call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
+  call get_julian_time (iyear,imonth,iday,ihour,0,0,ref_time)
 
   if ( .not. associated(rhead) ) then
      nullify ( rhead )
@@ -464,7 +465,7 @@ subroutine read_airs_colocate_amsua (filename, filedate)
                 isec   >=   0 .and. isec   <   60 ) then
               write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-              call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+              call get_julian_time (iyear,imonth,iday,ihour,imin,isec,obs_time,rlink%epochtime)
               rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
               rlink%gstime = obs_time
            else
@@ -620,7 +621,7 @@ subroutine read_iasi (filename, filedate)
    write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
    write(unit=filedate, fmt='(i10)') idate
    read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
-   call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
+   call get_julian_time (iyear,imonth,iday,ihour,0,0,ref_time)
 
    if ( .not. associated(rhead) ) then
       nullify ( rhead )
@@ -660,7 +661,7 @@ subroutine read_iasi (filename, filedate)
               isec   >=   0 .and. isec   <   60 ) then
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-            call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+            call get_julian_time (iyear,imonth,iday,ihour,imin,isec,obs_time,rlink%epochtime)
             rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
             rlink%gstime = obs_time
          else
@@ -856,7 +857,7 @@ subroutine read_cris (filename, filedate)
    write(unit=*,fmt='(1x,a,i10)') trim(filename)//' file date is: ', idate
    write(unit=filedate, fmt='(i10)') idate
    read (filedate(1:10),'(i4,3i2)') iyear, imonth, iday, ihour
-   call get_julian_time (iyear,imonth,iday,ihour,0,ref_time)
+   call get_julian_time (iyear,imonth,iday,ihour,0,0,ref_time)
 
    if ( .not. associated(rhead) ) then
       nullify ( rhead )
@@ -896,7 +897,7 @@ subroutine read_cris (filename, filedate)
               isec   >=   0 .and. isec   <   60 ) then
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-            call get_julian_time (iyear,imonth,iday,ihour,imin,obs_time)
+            call get_julian_time (iyear,imonth,iday,ihour,imin,isec,obs_time,rlink%epochtime)
             rlink%dhr = (obs_time + (isec/60.0) - ref_time)/60.0
             rlink%gstime = obs_time
          else
@@ -1054,11 +1055,13 @@ subroutine sort_obs_radiance(filedate, nfgat)
       if ( nlocs(i,ii) > 0 ) then
          allocate (xdata(i,ii)%xinfo_float(nlocs(i,ii), nvar_info))
          allocate (xdata(i,ii)%xinfo_int  (nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_int64(nlocs(i,ii), nvar_info))
          allocate (xdata(i,ii)%xinfo_char (nlocs(i,ii), nvar_info))
          allocate (xdata(i,ii)%xseninfo_float(nlocs(i,ii), nsen_info))
          allocate (xdata(i,ii)%xseninfo_int  (nvars(i), nsen_info))
          xdata(i,ii)%xinfo_float   (:,:) = missing_r
          xdata(i,ii)%xinfo_int     (:,:) = missing_i
+         xdata(i,ii)%xinfo_int64   (:,:) = 0
          xdata(i,ii)%xinfo_char    (:,:) = ''
          xdata(i,ii)%xseninfo_float(:,:) = missing_r
          xdata(i,ii)%xseninfo_int  (:,:) = missing_i
@@ -1117,6 +1120,10 @@ subroutine sort_obs_radiance(filedate, nfgat)
                xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%datetime
             else if ( trim(name_var_info(i)) == 'station_id' ) then
                xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%inst
+            end if
+         else if ( type_var_info(i) == nf90_int64 ) then
+            if ( trim(name_var_info(i)) == 'dateTime' ) then
+               xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) = rlink%epochtime
             end if
          end if
       end do

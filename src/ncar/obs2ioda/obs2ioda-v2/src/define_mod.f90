@@ -1,8 +1,8 @@
 module define_mod
 
-use kinds, only: r_kind, i_kind
+use kinds, only: r_kind, i_kind, i_llong
 use ufo_vars_mod, only: var_ps, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_tb
-use netcdf, only: nf90_float, nf90_int, nf90_char
+use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
 
 implicit none
 
@@ -16,9 +16,10 @@ integer(i_kind), parameter :: ifalse            = 0
 integer(i_kind), parameter :: nstring           = 50
 integer(i_kind), parameter :: ndatetime         = 20
 integer(i_kind), parameter :: nobtype           = 7  ! number of ob types
-integer(i_kind), parameter :: n_ncdim           = 4 !5  ! total numner of nc dimensions
+integer(i_kind), parameter :: n_ncdim           = 4  ! total numner of nc dimensions
+integer(i_kind), parameter :: n_ncgrp           = 5  ! total numner of nc groups
 integer(i_kind), parameter :: nvar_met          = 6
-integer(i_kind), parameter :: nvar_info         = 8 !9  ! number of metadata
+integer(i_kind), parameter :: nvar_info         = 9  ! number of metadata
 integer(i_kind), parameter :: nsen_info         = 7  ! number of sensor metadata
 integer(i_kind), parameter :: ninst_geo         = 1
 integer(i_kind), parameter :: ninst             = 17
@@ -104,9 +105,16 @@ character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
    (/               &
       'nvars     ', &
       'nlocs     ', &
-!      'nrec      ', &
       'nstring   ', &
       'ndatetime '  &
+   /)
+character(len=nstring), dimension(n_ncgrp) :: name_ncgrp = &
+   (/               &
+      'MetaData  ', &
+      'ObsValue  ', &
+      'ObsError  ', &
+      'PreQC     ', &
+      'ObsType   '  &
    /)
 character(len=nstring), dimension(nvar_info) :: name_var_info = &
    (/                      &
@@ -115,30 +123,30 @@ character(len=nstring), dimension(nvar_info) :: name_var_info = &
       'station_elevation', &
       'latitude         ', &
       'longitude        ', &
-!      'record_number    ', &
+      'dateTime         ', &
       'datetime         ', &
       'station_id       ', &
       'variable_names   '  &
    /)
 
 ! conv info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, datetime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
 integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
    (/ &
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sonde
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! aircraft
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sfc
-      itrue, itrue,  ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwind
-      itrue, ifalse, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwnd
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! profiler
-      itrue, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue   & ! ascat
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sonde
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! aircraft
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sfc
+      itrue, itrue,  ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwind
+      itrue, ifalse, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwnd
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! profiler
+      itrue, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue   & ! ascat
    /), (/nvar_info,nobtype/) )
 
 ! radiance info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, datetime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
 integer(i_kind), dimension(nvar_info) :: iflag_radiance = &
    (/ &
-      ifalse, ifalse, ifalse, itrue, itrue, itrue, ifalse, itrue &
+      ifalse, ifalse, ifalse, itrue, itrue, itrue, itrue, ifalse, ifalse &
    /)
 
 integer(i_kind), dimension(nvar_info) :: type_var_info = &
@@ -148,7 +156,7 @@ integer(i_kind), dimension(nvar_info) :: type_var_info = &
       nf90_float, &
       nf90_float, &
       nf90_float, &
-!      nf90_int,   &
+      nf90_int64, &
       nf90_char,  &
       nf90_char,  &
       nf90_char   &
@@ -160,7 +168,7 @@ character(len=nstring), dimension(2,nvar_info) :: dim_var_info = reshape ( &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
-!      'nlocs     ', 'null      ', &
+      'nlocs     ', 'null      ', &
       'ndatetime ', 'nlocs     ', &
       'nstring   ', 'nlocs     ', &
       'nstring   ', 'nvars     '  &
@@ -211,7 +219,8 @@ type xdata_type
    integer(i_kind),        allocatable, dimension(:)   :: var_idx
    type (xfield_type),     allocatable, dimension(:,:) :: xfield
    real(r_kind),           allocatable, dimension(:,:) :: xinfo_float
-   integer(i_kind),        allocatable, dimension(:,:) :: xinfo_int
+   integer(i_llong),       allocatable, dimension(:,:) :: xinfo_int
+   integer(i_kind),        allocatable, dimension(:,:) :: xinfo_int64
    character(len=nstring), allocatable, dimension(:,:) :: xinfo_char
    real(r_kind),           allocatable, dimension(:,:) :: xseninfo_float
    integer(i_kind),        allocatable, dimension(:,:) :: xseninfo_int

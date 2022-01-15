@@ -2,7 +2,7 @@ module utils_mod
 
 ! adapated from WRFDA/var/da/da_tools/da_advance_time.inc
 
-use kinds, only: r_kind,i_kind,r_double
+use kinds, only: r_kind,i_kind,r_double, i_llong
 
 implicit none
 private
@@ -270,9 +270,9 @@ end function validdate
 
 end subroutine da_advance_time
 
-subroutine get_julian_time(year,month,day,hour,minute,gstime)
+subroutine get_julian_time(year,month,day,hour,minute,second,gstime,epoch)
 
-! taken from WRFDA/var/da/da_tools/da_get_julian_time.inc
+! from WRFDA/var/da/da_tools/da_get_julian_time.inc
 
    implicit none
 
@@ -281,7 +281,9 @@ subroutine get_julian_time(year,month,day,hour,minute,gstime)
    integer(i_kind), intent(in)  :: day
    integer(i_kind), intent(in)  :: hour
    integer(i_kind), intent(in)  :: minute
+   integer(i_kind), intent(in)  :: second
    real(r_double),  intent(out) :: gstime
+   integer(i_llong), intent(out), optional :: epoch
 
    integer(i_kind) :: iw3jdn, ndays
 
@@ -292,6 +294,13 @@ subroutine get_julian_time(year,month,day,hour,minute,gstime)
    ndays = iw3jdn - 2443510
 
    gstime = ndays*1440.0 + hour*60.0 + minute*1.0
+
+   if ( present(epoch) ) then
+     ! since 1978-01-01
+     epoch = (ndays*1440 + hour*60 + minute)*60 + second
+     ! since 1970-01-01
+     epoch = epoch + 252460800
+   end if
 
 end subroutine get_julian_time
 
@@ -314,8 +323,8 @@ subroutine da_get_time_slots(nt,tmin,tmax,time_slots)
    read(unit=tmin,fmt='(i4,5i2)') min_yyyy, min_mm, min_dd, min_hh, min_mn, min_ss
    read(unit=tmax,fmt='(i4,5i2)') max_yyyy, max_mm, max_dd, max_hh, max_mn, max_ss
 
-   call get_julian_time(min_yyyy,min_mm,min_dd,min_hh,min_mn,time_slots(0))
-   call get_julian_time(max_yyyy,max_mm,max_dd,max_hh,max_mn,time_slots(nt))
+   call get_julian_time(min_yyyy,min_mm,min_dd,min_hh,min_mn,min_ss,time_slots(0))
+   call get_julian_time(max_yyyy,max_mm,max_dd,max_hh,max_mn,max_ss,time_slots(nt))
 
    ! dt/2 between time_slots 0 and 1
    ! dt/2 between time_slots nt-1 and nt

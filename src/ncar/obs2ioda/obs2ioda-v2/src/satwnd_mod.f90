@@ -1,13 +1,13 @@
 module satwnd_mod
 
-use kinds, only: r_kind, i_kind, r_double
+use kinds, only: r_kind, i_kind, r_double, i_llong
 use define_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
    missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime,  &
    dtime_min, dtime_max
 use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v
 use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
-use netcdf, only: nf90_int, nf90_float, nf90_char
+use netcdf, only: nf90_int, nf90_float, nf90_char, nf90_int64
 
 implicit none
 private
@@ -26,6 +26,7 @@ type datalink_satwnd
    integer(i_kind)           :: ifgat
    integer(i_kind)           :: qm         ! quality marker
    real(r_double)            :: gstime
+   integer(i_llong)          :: epochtime
    real(r_kind)              :: err        ! ob error
    real(r_kind)              :: lat        ! latitude in degree
    real(r_kind)              :: lon        ! longitude in degree
@@ -217,7 +218,7 @@ subroutine read_satwnd(filename, filedate)
               isec   >=   0 .and. isec   <   60 ) then
             write(unit=rlink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
                iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-            call get_julian_time(iyear, imonth, iday, ihour, imin, rlink%gstime)
+            call get_julian_time(iyear, imonth, iday, ihour, imin, isec, rlink%gstime, rlink%epochtime)
          else
             cycle subset_loop
          end if
@@ -431,9 +432,11 @@ subroutine sort_obs_satwnd(filedate, nfgat)
       if ( nlocs(i,ii) > 0 ) then
 
          allocate (xdata(i,ii)%xinfo_int  (nlocs(i,ii), nvar_info))
+         allocate (xdata(i,ii)%xinfo_int64(nlocs(i,ii), nvar_info))
          allocate (xdata(i,ii)%xinfo_float(nlocs(i,ii), nvar_info))
          allocate (xdata(i,ii)%xinfo_char (nlocs(i,ii), nvar_info))
          xdata(i,ii)%xinfo_int  (:,:) = missing_i
+         xdata(i,ii)%xinfo_int64(:,:) = 0
          xdata(i,ii)%xinfo_float(:,:) = missing_r
          xdata(i,ii)%xinfo_char (:,:) = ''
 
@@ -488,6 +491,10 @@ subroutine sort_obs_satwnd(filedate, nfgat)
                   xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%datetime
                else if ( trim(name_var_info(i)) == 'station_id' ) then
                   xdata(ityp,itim)%xinfo_char(iloc(ityp,itim),i) = rlink%stid
+               end if
+            else if ( type_var_info(i) == nf90_int64 ) then
+               if ( trim(name_var_info(i)) == 'dateTime' ) then
+                  xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) = rlink%epochtime
                end if
             end if ! type_var_info
          end do
