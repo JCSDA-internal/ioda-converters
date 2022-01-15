@@ -50,7 +50,7 @@ logical                 :: do_radiance_hyperIR
 logical                 :: do_ahi
 logical                 :: apply_gsi_qc
 logical                 :: time_split
-integer(i_kind)         :: nfgat
+integer(i_kind)         :: nfgat, hour_fgat
 integer(i_kind)         :: nfile, ifile
 integer(i_kind)         :: itmp
 integer(i_kind)         :: itime
@@ -67,8 +67,9 @@ time_split = .false.
 call parse_files_to_convert
 
 if ( time_split ) then
+   hour_fgat = 1  ! can also be 3 or 2
    ! corresponding to dtime_min='-3h' and dtime_max='+3h'
-   nfgat = 7
+   nfgat = (6/hour_fgat) + 1
 else
    nfgat = 1
 end if
@@ -107,7 +108,7 @@ do ifile = 1, nfile
          if ( nfgat > 1 ) then
             do itime = 1, nfgat
                ! corresponding to dtime_min='-3h' and dtime_max='+3h'
-               write(dtime,'(i2,a)')  itime-4, 'h'
+               write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
                call da_advance_time(filedate, trim(dtime), datetmp)
                filedate_out = datetmp(1:10)
                call write_obs(filedate_out, write_nc_conv, outdir, itime)
@@ -139,7 +140,7 @@ do ifile = 1, nfile
          if ( nfgat > 1 ) then
             do itime = 1, nfgat
                ! corresponding to dtime_min='-3h' and dtime_max='+3h'
-               write(dtime,'(i2,a)')  itime-4, 'h'
+               write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
                call da_advance_time(filedate, trim(dtime), datetmp)
                filedate_out = datetmp(1:10)
                call write_obs(filedate_out, write_nc_conv, outdir, itime)
@@ -194,7 +195,7 @@ if ( do_radiance ) then
    if ( nfgat > 1 ) then
       do itime = 1, nfgat
          ! corresponding to dtime_min='-3h' and dtime_max='+3h'
-         write(dtime,'(i2,a)')  itime-4, 'h'
+         write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
          call da_advance_time(filedate, trim(dtime), datetmp)
          filedate_out = datetmp(1:10)
          call write_obs(filedate_out, write_nc_radiance, outdir, itime)
@@ -243,7 +244,7 @@ if ( do_radiance_hyperIR ) then
    if ( nfgat > 1 ) then
       do itime = 1, nfgat
          ! corresponding to dtime_min='-3h' and dtime_max='+3h'
-         write(dtime,'(i2,a)')  itime-4, 'h'
+         write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
          call da_advance_time(filedate, trim(dtime), datetmp)
          filedate_out = datetmp(1:10)
          call write_obs(filedate_out, write_nc_radiance, outdir, itime)
