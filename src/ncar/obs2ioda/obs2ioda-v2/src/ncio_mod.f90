@@ -101,7 +101,9 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          ncname = 'nchans'
       end if
       call def_netcdf_dims(ncfileid,trim(ncname),val_ncdim(1),ncid_ncdim(1))
-      !call def_netcdf_var(ncfileid,trim(ncname),(/ncid_ncdim(1)/),NF90_INT)
+      if ( trim(ncname) == 'nchans' ) then
+         call def_netcdf_var(ncfileid,trim(ncname),(/ncid_ncdim(1)/),NF90_INT)
+      end if
       do i = 2, n_ncdim
          call def_netcdf_dims(ncfileid,trim(name_ncdim(i)),val_ncdim(i),ncid_ncdim(i))
          !call def_netcdf_var(ncfileid,trim(name_ncdim(i)),(/ncid_ncdim(i)/),NF90_INT)
@@ -127,7 +129,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             igrp = ufo_vars_getindex(name_ncgrp, 'ObsValue')
             call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units',unit_var_met(ivar))
             igrp = ufo_vars_getindex(name_ncgrp, 'ObsError')
-            call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/ncid_ncdim(2)/),NF90_FLOAT)
+            call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/ncid_ncdim(2)/),NF90_FLOAT,'units',unit_var_met(ivar))
             igrp = ufo_vars_getindex(name_ncgrp, 'PreQC')
             call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/ncid_ncdim(2)/),NF90_INT)
             igrp = ufo_vars_getindex(name_ncgrp, 'ObsType')
@@ -142,7 +144,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          igrp = ufo_vars_getindex(name_ncgrp, 'ObsValue')
          call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1,dim2/),NF90_FLOAT,'units','K')
          igrp = ufo_vars_getindex(name_ncgrp, 'ObsError')
-         call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1,dim2/),NF90_FLOAT)
+         call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1,dim2/),NF90_FLOAT,'units','K')
          igrp = ufo_vars_getindex(name_ncgrp, 'PreQC')
          call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1,dim2/),NF90_INT)
       end if
@@ -165,7 +167,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          else
             if ( ncname == 'dateTime' ) then
                call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1/),type_var_info(i), &
-                  'unit', 'seconds since 1970-01-01T00:00:00Z')
+                  'units', 'seconds since 1970-01-01T00:00:00Z')
             else
                call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1/),type_var_info(i))
             end if
@@ -210,6 +212,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             end if
          end do var_loop
       else if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
+         ncname = "nchans"
+         call put_netcdf_var(ncfileid,ncname,ichan(:))
          allocate(rtmp2d(xdata(ityp,itim)%nvars, xdata(ityp,itim)%nlocs))
          ncname = trim(var_tb)
          igrp = ufo_vars_getindex(name_ncgrp, 'ObsValue')
