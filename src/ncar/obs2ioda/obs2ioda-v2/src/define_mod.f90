@@ -16,7 +16,7 @@ integer(i_kind), parameter :: ifalse            = 0
 integer(i_kind), parameter :: nstring           = 50
 integer(i_kind), parameter :: ndatetime         = 20
 integer(i_kind), parameter :: nobtype           = 7  ! number of ob types
-integer(i_kind), parameter :: n_ncdim           = 4  ! total numner of nc dimensions
+integer(i_kind), parameter :: n_ncdim           = 3  ! total numner of nc dimensions
 integer(i_kind), parameter :: n_ncgrp           = 5  ! total numner of nc groups
 integer(i_kind), parameter :: nvar_met          = 6
 integer(i_kind), parameter :: nvar_info         = 9  ! number of metadata
@@ -103,10 +103,10 @@ character(len=nstring), dimension(ninst_geo) :: geoinst_list = &
 ! variables for outputing netcdf files
 character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
    (/               &
-      'nvars     ', &
-      'nlocs     ', &
-      'nstring   ', &
-      'ndatetime '  &
+      'nvars     '  &
+    , 'nlocs     '  &
+    , 'nstring   '  &
+!    , 'ndatetime '  &
    /)
 character(len=nstring), dimension(n_ncgrp) :: name_ncgrp = &
    (/               &
@@ -133,20 +133,20 @@ character(len=nstring), dimension(nvar_info) :: name_var_info = &
 ! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
 integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
    (/ &
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sonde
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! aircraft
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! sfc
-      itrue, itrue,  ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwind
-      itrue, ifalse, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! satwnd
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  & ! profiler
-      itrue, ifalse, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,  itrue   & ! ascat
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! sonde
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! aircraft
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! sfc
+      itrue, itrue,  ifalse, itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! satwind
+      itrue, ifalse, ifalse, itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! satwnd
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! profiler
+      itrue, ifalse, itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue   & ! ascat
    /), (/nvar_info,nobtype/) )
 
 ! radiance info flags for name_var_info
 ! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
 integer(i_kind), dimension(nvar_info) :: iflag_radiance = &
    (/ &
-      ifalse, ifalse, ifalse, itrue, itrue, itrue, itrue, ifalse, ifalse &
+      ifalse, ifalse, ifalse, itrue, itrue, itrue, ifalse, ifalse, ifalse &
    /)
 
 integer(i_kind), dimension(nvar_info) :: type_var_info = &
@@ -216,6 +216,8 @@ type xdata_type
    integer(i_kind)                                     :: nvars
    integer(i_kind)                                     :: nrecs
    integer(i_kind)                                     :: nlocs
+   character(len=ndatetime)                            :: min_datetime
+   character(len=ndatetime)                            :: max_datetime
    integer(i_kind),        allocatable, dimension(:)   :: var_idx
    type (xfield_type),     allocatable, dimension(:,:) :: xfield
    real(r_kind),           allocatable, dimension(:,:) :: xinfo_float

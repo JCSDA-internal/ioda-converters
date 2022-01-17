@@ -44,6 +44,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    integer(i_kind)                       :: iflag
    integer(i_kind), allocatable :: ichan(:)
    real(r_kind),    allocatable :: rtmp2d(:,:)
+   integer(i_kind) :: imin_datetime(1), imax_datetime(1)
+   integer(i_kind) :: ncstatus
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
@@ -57,13 +59,20 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    end if
 
    iv = ufo_vars_getindex(name_ncdim, 'nstring')
-   val_ncdim(iv) = nstring
+   if ( iv > 0 ) val_ncdim(iv) = nstring
    iv = ufo_vars_getindex(name_ncdim, 'ndatetime')
-   val_ncdim(iv) = ndatetime
+   if ( iv > 0 ) val_ncdim(iv) = ndatetime
 
    obtype_loop: do ityp = 1, ntype
 
       if ( xdata(ityp,itim)%nlocs == 0 ) cycle obtype_loop
+
+      iv = ufo_vars_getindex(name_var_info, 'dateTime')
+      imin_datetime = minloc(xdata(ityp,itim)%xinfo_int64(:,iv))
+      imax_datetime = maxloc(xdata(ityp,itim)%xinfo_int64(:,iv))
+      iv = ufo_vars_getindex(name_var_info, 'datetime')
+      xdata(ityp,itim)%min_datetime = xdata(ityp,itim)%xinfo_char(imin_datetime(1),iv)
+      xdata(ityp,itim)%max_datetime = xdata(ityp,itim)%xinfo_char(imax_datetime(1),iv)
 
       if ( write_opt == write_nc_conv ) then
          ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.h5'
@@ -97,6 +106,10 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          call def_netcdf_dims(ncfileid,trim(name_ncdim(i)),val_ncdim(i),ncid_ncdim(i))
          !call def_netcdf_var(ncfileid,trim(name_ncdim(i)),(/ncid_ncdim(i)/),NF90_INT)
       end do
+
+      ! define global attributes
+      ncstatus = nf90_put_att(ncfileid, NF90_GLOBAL, 'min_datetime', xdata(ityp,itim)%min_datetime)
+      ncstatus = nf90_put_att(ncfileid, NF90_GLOBAL, 'max_datetime', xdata(ityp,itim)%max_datetime)
 
       ! define netcdf groups
       do i = 1, n_ncgrp

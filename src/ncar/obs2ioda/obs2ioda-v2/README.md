@@ -6,6 +6,14 @@ Compile: cd obs2ioda-v2/src; make
 NCEP BUFR library (https://github.com/NOAA-EMC/NCEPLIBS-bufr) is required to compile ``obs2ioda-v2.x``.  
 Edit obs2ioda-v2/src/Makefile to set proper BUFR_LIB before ``make``.
 
+## caveate
+NetCDF-Fortran interface does not allow reading/writing NF90_STRING, so ``station_id`` and ``variable_names`` are still written out as  
+``char station_id(nlocs, nstring)``  
+``char variable_names(nvars, nstring)``  
+rather than  
+``string station_id(nlocs)``  
+``string variable_names(nvars)``
+
 ## Converting PREPBUFR and BUFR files
 ```
 Usage: obs2ioda-v2.x [-i input_dir] [-o output_dir] [bufr_filename(s)_to_convert] [-split]
