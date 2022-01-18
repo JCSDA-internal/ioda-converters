@@ -6,7 +6,8 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/amdar_wmo_multi.bufr"
+#     obsdatain: "./testinput/amdar_wmo_multi.bufr"
+      obsdatain: "/home/gthompsn/2021_07_31T18_00_00Z.P6H.amdar.BUFR"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -62,7 +63,8 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/amdar_wmo_multi.nc"
+#     obsdataout: "./testrun/amdar_wmo_multi.nc"
+      obsdataout: "./testrun/2021_07_31T18_00_00Z.P6H.amdar.nc"
 
       dimensions:
         - name: "nlocs"
@@ -152,7 +154,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/waterVaporMixingRatio
           dimensions: [ "nlocs" ]
-          longName: "Dewpoint Temperature"
+          longName: "specific humidity"
           units: "kg kg-1"
 
         - name: "ObsValue/wind_direction"
