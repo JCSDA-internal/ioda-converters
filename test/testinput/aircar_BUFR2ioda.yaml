@@ -1,4 +1,4 @@
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,8 +6,7 @@
 observations:
   - obs space:
       name: bufr
-#     obsdatain: "./testinput/amdar_wmo_multi.bufr"
-      obsdatain: "/home/gthompsn/src/gdas.aircar.t00z.20210801.bufr"
+      obsdatain: "./testinput/gdas.aircar.t00z.20210801.bufr"
 #     isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -56,7 +55,6 @@ observations:
 
     ioda:
       backend: netcdf
-#     obsdataout: "./testrun/amdar_wmo_multi.nc"
       obsdataout: "./testrun/gdas.aircar.t00z.20210801.nc"
 
       dimensions:
