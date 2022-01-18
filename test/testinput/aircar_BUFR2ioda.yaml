@@ -12,11 +12,11 @@ observations:
 
       mnemonicSets:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
-        - mnemonics: [ACRN, ACID]
+        - mnemonics: [ACID, ACRN]
         - mnemonics: [CLAT, CLON]
-        - mnemonics: [IALT, DPOF]
-        - mnemonics: [TMDB, WDIR, WSPD]
-        - mnemonics: [ROLQ, TASP, ACTH]
+        - mnemonics: [IALT, DPOF, ROLQ]
+        - mnemonics: [MIXR, TMDB, WDIR, WSPD]
+        - mnemonics: [TASP, ACTH]
 
       exports:
         variables:
@@ -34,10 +34,10 @@ observations:
             mnemonic: CLON
           height:
             mnemonic: IALT
-          aircraftRegistrationNum:
-            mnemonic: ACRN
           aircraftFlightNum:
             mnemonic: ACID
+          aircraftRegistrationNum:
+            mnemonic: ACRN
           aircraftFlightPhase:
             mnemonic: DPOF
           aircraftTrueAirspeed:
@@ -48,6 +48,8 @@ observations:
             mnemonic: ROLQ
           temperatureAir:
             mnemonic: TMDB
+          waterVaporMixingRatio:
+            mnemonic: MIXR
           windDirection:
             mnemonic: WDIR
           windSpeed:
@@ -128,6 +130,13 @@ observations:
           dimensions: [ "nlocs" ]
           longName: "Air Temperature"
           units: "K"
+
+        - name: "ObsValue/specific_humidity"
+          coordinates: "longitude latitude"
+          source: variables/waterVaporMixingRatio
+          dimensions: [ "nlocs" ]
+          longName: "specific humidity"
+          units: "kg kg-1"
 
         - name: "ObsValue/wind_direction"
           coordinates: "longitude latitude"
