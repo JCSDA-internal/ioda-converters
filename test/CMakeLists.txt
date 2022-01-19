@@ -58,6 +58,7 @@ list( APPEND test_input
   testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
+  testinput/sonde_wmo_double.bufr
   testinput/avhrr_radiance.nc
 )
 
@@ -109,6 +110,8 @@ list( APPEND test_output
   testoutput/gnssro_cosmic2_2020121500.nc4
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
+  testoutput/wmo_raob_double.nc4
+  testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
 )
 
@@ -933,6 +936,30 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                           -d 2021120600
                           -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
                           -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
+
+#==============================================================================
+# Generic NRT Ingest tests
+#==============================================================================
+
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_double.nc4"
+                         wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob_multi_files
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_double.bufr testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_quadruple.nc4"
+                         wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # PrepBUFR and BUFR tests
