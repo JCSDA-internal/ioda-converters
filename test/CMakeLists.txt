@@ -1,4 +1,4 @@
-# (C) Copyright 2019-2021 UCAR.
+# (C) Copyright 2019-2022 UCAR.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -280,7 +280,6 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-
 
 #===============================================================================
 # Marine converters
@@ -1128,4 +1127,28 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                             -i testinput/imsscf_20191215_c48.nc
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+
+
+#######################################################
+# Auto-generated tests for ioda file validation
+#  For these tests we check the testoutput directory
+#  since it already exists with valid data.
+
+file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
+
+foreach ( f ${TESTOUTPUT_IODA_FILES} )
+	get_filename_component(filename ${f} NAME)
+
+	# Note: IODA_YAML_ROOT is provided by find_package(ioda).
+	# The ObsSpace.yaml file is *not* a test file. It always exists.
+	ecbuild_add_test(
+		TARGET ${PROJECT_NAME}_validate_testoutput_${filename}
+		COMMAND ioda-validate.x
+		LABELS ${PROJECT_NAME}_validate
+		ENVIRONMENT "ECKIT_COLOUR_OUTPUT=1"
+		ARGS "${IODA_YAML_ROOT}/validation/ObsSpace.yaml" "${f}"
+		)
+endforeach()
+
 
