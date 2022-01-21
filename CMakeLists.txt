@@ -145,3 +145,4 @@ add_subdirectory( doc )
 ecbuild_install_project( NAME ${PROJECT_NAME} )
 
 ecbuild_print_summary()
+
