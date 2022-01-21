@@ -425,12 +425,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/argoClim2ioda.py
                           -i testinput/argoclim_test.nc
                           -o testrun/argoclim.nc
-                          -d 2019101600"
+                          -d 2004010200"
                           argoclim.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
