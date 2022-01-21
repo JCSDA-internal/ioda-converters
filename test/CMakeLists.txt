@@ -146,6 +146,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
+    testinput/aircar_BUFR2ioda.yaml
+    testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
     testinput/airep_wmo_multi.bufr
     testinput/amdar_wmoBUFR2ioda.yaml
@@ -176,6 +178,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
     testoutput/NC005066.nc
+    testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
@@ -844,6 +847,14 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_satwnd_new_format.yaml"
                     NC005031.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/aircar_BUFR2ioda.yaml"
+                    gdas.aircar.t00z.20210801.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_airep_wmo_bufr

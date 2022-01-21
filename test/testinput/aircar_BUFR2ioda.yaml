@@ -1,4 +1,4 @@
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,18 +6,17 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/amdar_wmo_multi.bufr"
-      isWmoFormat: true
+      obsdatain: "./testinput/gdas.aircar.t00z.20210801.bufr"
+#     isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
       mnemonicSets:
-        - mnemonics: [ACRN, OSQN, ACID, ACTN]
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
-        - mnemonics: [CLATH, CLONH]
-        - mnemonics: [GNSA, FLVLST, GNSA, DPOF]
-        - mnemonics: [WDIR, WSPD]
-        - mnemonics: [ROLQ, TASP, ACTH]
-        - mnemonics: [TMDB, MIXR]
+        - mnemonics: [ACID, ACRN]
+        - mnemonics: [CLAT, CLON]
+        - mnemonics: [IALT, DPOF, ROLQ]
+        - mnemonics: [MIXR, TMDB, WDIR, WSPD]
+        - mnemonics: [TASP, ACTH]
 
       exports:
         variables:
@@ -30,19 +29,15 @@ observations:
               minute: MINU
               second: SECO
           latitude:
-            mnemonic: CLATH
+            mnemonic: CLAT
           longitude:
-            mnemonic: CLONH
-          pressureAltitude:
-            mnemonic: FLVLST
-          aircraftRegistrationNum:
-            mnemonic: ACRN
+            mnemonic: CLON
+          height:
+            mnemonic: IALT
           aircraftFlightNum:
             mnemonic: ACID
-          aircraftTailNum:
-            mnemonic: ACTN
-          observationSequenceNum:
-            mnemonic: OSQN
+          aircraftRegistrationNum:
+            mnemonic: ACRN
           aircraftFlightPhase:
             mnemonic: DPOF
           aircraftTrueAirspeed:
@@ -62,7 +57,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/amdar_wmo_multi.nc"
+      obsdataout: "./testrun/gdas.aircar.t00z.20210801.nc"
 
       dimensions:
         - name: "nlocs"
@@ -88,7 +83,7 @@ observations:
           units: "degrees_east"
 
         - name: "MetaData/height"
-          source: variables/pressureAltitude
+          source: variables/height
           dimensions: [ "nlocs" ]
           longName: "Pressure altitude"
           units: "m"
@@ -103,18 +98,6 @@ observations:
           source: variables/aircraftFlightNum
           dimensions: [ "nlocs" ]
           longName: "Aircraft flight number"
-          units: "none"
-
-        - name: "MetaData/aircraftTailNum"
-          source: variables/aircraftTailNum
-          dimensions: [ "nlocs" ]
-          longName: "Aircraft tail number"
-          units: "none"
-
-        - name: "MetaData/observationSequenceNum"
-          source: variables/observationSequenceNum
-          dimensions: [ "nlocs" ]
-          longName: "Observation sequence number"
           units: "none"
 
         - name: "MetaData/aircraftFlightPhase"
