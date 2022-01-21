@@ -1,4 +1,4 @@
-# (C) Copyright 2019-2021 UCAR.
+# (C) Copyright 2019-2022 UCAR.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -58,6 +58,7 @@ list( APPEND test_input
   testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
+  testinput/sonde_wmo_double.bufr
   testinput/avhrr_radiance.nc
 )
 
@@ -109,6 +110,8 @@ list( APPEND test_output
   testoutput/gnssro_cosmic2_2020121500.nc4
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
+  testoutput/wmo_raob_double.nc4
+  testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
 )
 
@@ -280,7 +283,6 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-
 
 #===============================================================================
 # Marine converters
@@ -946,6 +948,30 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                           -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
 #==============================================================================
+# Generic NRT Ingest tests
+#==============================================================================
+
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_double.nc4"
+                         wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob_multi_files
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_double.bufr testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_quadruple.nc4"
+                         wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+
+#==============================================================================
 # PrepBUFR and BUFR tests
 #==============================================================================
 
@@ -1112,4 +1138,28 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                             -i testinput/imsscf_20191215_c48.nc
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+
+
+#######################################################
+# Auto-generated tests for ioda file validation
+#  For these tests we check the testoutput directory
+#  since it already exists with valid data.
+
+file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
+
+foreach ( f ${TESTOUTPUT_IODA_FILES} )
+	get_filename_component(filename ${f} NAME)
+
+	# Note: IODA_YAML_ROOT is provided by find_package(ioda).
+	# The ObsSpace.yaml file is *not* a test file. It always exists.
+	ecbuild_add_test(
+		TARGET ${PROJECT_NAME}_validate_testoutput_${filename}
+		COMMAND ioda-validate.x
+		LABELS ${PROJECT_NAME}_validate
+		ENVIRONMENT "ECKIT_COLOUR_OUTPUT=1"
+		ARGS "${IODA_YAML_ROOT}/validation/ObsSpace.yaml" "${f}"
+		)
+endforeach()
+
 
