@@ -14,7 +14,7 @@ import numpy as np
 from datetime import datetime, date, timedelta
 import os
 from pathlib import Path
-
+sys.stdout.flush()
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -78,7 +78,7 @@ class AOD(object):
         # loop through input filenamess
         first = True
         for f in self.filenames:
-            ncd = nc.Dataset(self.filenames)
+            ncd = nc.Dataset(f)
             ncd_str = str(ncd)
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
             base_datetime = gatts["time_coverage_end"]
@@ -199,7 +199,7 @@ def main():
     parser.add_argument(
         '-i', '--input',
         help="path of viirs aod input file(s)",
-        type=str, required=True)
+        type=str, nargs='+',required=True)
     parser.add_argument(
         '-o', '--output',
         help="name of ioda-v2 output file",
@@ -228,6 +228,7 @@ def main():
     # setup the IODA writer
 
     # Read in the AOD data
+    print('Before AOD') 
     aod = AOD(args.input, args.time, args.method, args.mask, args.thin)
 
     # Get the obs time
