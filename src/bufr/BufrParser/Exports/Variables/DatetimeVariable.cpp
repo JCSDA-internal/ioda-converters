@@ -99,11 +99,16 @@ namespace Ingester
             }
 
             this_time = std::mktime(&tm);
-            timeOffsets.push_back(static_cast<std::int64_t>(difftime(this_time,epochDt)));
-        }
+            diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt));
 
-        return timeOffsets;
-//      return std::make_shared<StrVecDataObject>(datetimes);
+            if (!hoursFromUtc_.empty())
+            {
+                diff_time = diff_time + map.at(hoursFromUtc_)(idx)*3600;
+            }
+
+            timeOffsets.push_back(diff_time);
+        }
+        return std::make_shared<Int64VecDataObject>(timeOffsets);
     }
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)
