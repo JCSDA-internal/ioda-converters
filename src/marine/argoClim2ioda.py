@@ -22,7 +22,7 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
@@ -141,20 +141,17 @@ class IODA(object):
             ("datetime", "string")
         ]
 
-        self.AttrData = {
-            'odb_version': 1,
-            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-        }
+        self.GlobalAttrs = {
 
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
+        }
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        recKey = 0
-        valKey = argo.varname, self.writer.OvalName()
-        errKey = argo.varname, self.writer.OerrName()
-        qcKey = argo.varname, self.writer.OqcName()
+        valKey = argo.varname, iconv.OvalName()
+        errKey = argo.varname, iconv.OerrName()
+        qcKey = argo.varname, iconv.OqcName()
 
         # There has to be a better way than explicitly looping over 4! dimensions
         for t, time in enumerate(argo.data['time']):
@@ -168,14 +165,27 @@ class IODA(object):
                         err = 0.
                         qc = 1
 
-                        self.data[recKey][locKey][valKey] = val
-                        self.data[recKey][locKey][errKey] = err
-                        self.data[recKey][locKey][qcKey] = qc
+                        self.data[locKey][valKey] = val
+                        self.data[locKey][errKey] = err
+                        self.data[locKey][qcKey] = qc
 
-                    recKey += 1
+        self.varAttrs[argo.varname, iconv.OvalName()]['_FillValue'] = -999.
+        self.varAttrs[argo.varname, iconv.OerrName()]['_FillValue'] = -999.
+        self.varAttrs[argo.varname, iconv.OqcName()]['_FillValue'] = -999
+        self.varAttrs[argo.varname, iconv.OvalName()]['units'] = 'degree_C'
+        self.varAttrs[argo.varname, iconv.OerrName()]['units'] = 'degree_C'
+        self.varAttrs[argo.varname, iconv.OqcName()]['units'] = 'unitless'
 
-        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
+        # Extract obs
+        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
+        DimDict = {'nlocs': nlocs}
+        varDims = {
+            'TEMPERATURE': ['nlocs']
+        }
+        # Set up IODA writer
+        self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+        # Write out observations
+        self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
 
@@ -211,6 +221,14 @@ def main():
     edate = None if args.enddate is None else datetime.strptime(args.enddate, '%Y%m%d%H')
 
     argo = argoClim(filename, begindate=bdate, enddate=edate)
+
+    varDict = {
+        'ob_tem': 'temperature',
+    }
+
+    varDims = {
+        'TEMPERATURE': ['nlocs']
+    }
 
     IODA(foutput, fdate, argo)
 

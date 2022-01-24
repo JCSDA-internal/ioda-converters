@@ -57,7 +57,21 @@ def main(args):
     # concatenate the data from the files
 #   obs_data = obs[0]
 
+#   obs_data = {}
+#   for fname in args.input:
+#       record_number = args.recordnumber
+#       print("INFO: Reading file: ", fname)
+#       file_obs_data = read_input(fname, record_number=record_number)
+#       if obs_data:
+#           concat_obs_dict(obs_data, file_obs_data)
+#       else:
+#           obs_data = file_obs_data
+#       record_number += 1
+
     obs_data = read_input(args.input, record_number=args.recordnumber)
+    if not obs_data:
+        print("INFO: non-nominal file skipping")
+        return
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -179,6 +193,20 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
+    # ! Bit 1=Non-nominal quality
+    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
+    # ! Bit 4=Excess Phase non-nominal
+    # ! Bit 5=Bending Angle non-nominal
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
+    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
+
+    # exit if non-nominal profile
+    if i_non_nominal != 0 or i_phase_non_nominal != 0 or i_bang_non_nominal != 0:
+        return {}
+
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
     obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
@@ -211,15 +239,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
     # add rising/setting (ascending/descending) bit
-    # ! Bit 1=Non-nominal quality
-    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
-    # ! Bit 4=Excess Phase non-nominal
-    # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
-    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
     obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
     # set record number (multi file procesing will change this)
@@ -296,6 +315,29 @@ def assign_values(data):
     elif data.dtype == int:
         data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
         return np.array(data, dtype=ioda_int_type)
+
+
+def concat_obs_dict(obs_data, append_obs_data):
+    # For now we are assuming that the obs_data dictionary has the "golden" list
+    # of variables. If one is missing from append_obs_data, the obs_data variable
+    # will be extended using fill values.
+    #
+    # Use the first key in the append_obs_data dictionary to determine how
+    # long to make the fill value vector.
+    append_keys = list(append_obs_data.keys())
+    append_length = len(append_obs_data[append_keys[0]])
+    for gv_key in obs_data.keys():
+        if gv_key in append_keys:
+            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
+        else:
+            if obs_data[gv_key].dtype == float:
+                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
+            elif obs_data[gv_key].dtype == int:
+                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
+            elif obs_data[gv_key].dtype == object:
+                # string type, extend with empty strings
+                fill_data = np.repeat("", append_length, dtype=object)
+            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
 
 
 if __name__ == "__main__":
