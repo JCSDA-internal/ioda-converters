@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iomanip>
 #include <ostream>
+#include <time.h>
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
@@ -66,42 +67,43 @@ namespace Ingester
     {
         checkKeys(map);
 
-        auto datetimes = std::vector<std::string>();
+        std::vector<int64_t> timeOffsets(map.at(yearKey_).size());
 
-        datetimes.reserve(map.at(yearKey_).size());
+        std::tm tm{};                // zero initialise
+        tm.tm_year = 1970-1900;      // 1970
+        tm.tm_mon = 0;               // Jan=0, Feb=1, ...
+        tm.tm_mday = 1;              // 1st
+        tm.tm_hour = 0;              // midnight
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
+        tm.tm_isdst = 0;             // Not daylight saving
+        std::time_t epochDt = std::mktime(&tm);
+        std::time_t this_time = std::mktime(&tm);
+
         for (unsigned int idx = 0; idx < map.at(yearKey_).size(); idx++)
         {
-            // YYYY-MM-DDThh:mm:ssZ
-            std::ostringstream datetimeStr;
-            datetimeStr << std::setfill('0')
-                        << std::setw(4) << map.at(yearKey_)(idx) << "-" \
-                        << std::setw(2) << map.at(monthKey_)(idx) << "-" \
-                        << std::setw(2) << map.at(dayKey_)(idx) << "T" \
-                        << std::setw(2) << map.at(hourKey_)(idx) - hoursFromUtc_ << ":" \
-                        << std::setw(2) << map.at(minuteKey_)(idx) << ":";
+            tm.tm_year = map.at(yearKey_)(idx) - 1900;
+            tm.tm_mon = map.at(monthKey_)(idx) - 1;
+            tm.tm_mday = map.at(dayKey_)(idx);
+            tm.tm_hour = map.at(hourKey_)(idx);
+            tm.tm_min = map.at(minuteKey_)(idx);
+            tm.tm_sec = 0;
+            tm.tm_isdst = 0;
 
             if (!secondKey_.empty())
             {
                 if (map.at(secondKey_)(idx) >= 0 && map.at(secondKey_)(idx) < 60)
                 {
-                    datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
-                }
-                else
-                {
-                    datetimeStr << std::setw(2) << 0;
+                    tm.tm_sec = map.at(secondKey_)(idx);
                 }
             }
-            else
-            {
-                datetimeStr << std::setw(2) << 0;
-            }
 
-            datetimeStr << "Z";
-
-            datetimes.push_back(datetimeStr.str());
+            this_time = std::mktime(&tm);
+            timeOffsets.push_back(static_cast<std::int64_t>(difftime(this_time,epochDt)));
         }
 
-        return std::make_shared<StrVecDataObject>(datetimes);
+        return timeOffsets;
+//      return std::make_shared<StrVecDataObject>(datetimes);
     }
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)
