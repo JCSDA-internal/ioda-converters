@@ -31,7 +31,10 @@ namespace Ingester
 
     void Int64VecDataObject::print() const
     {
-        std::cout << int64Vector_ << std::endl;
+        for (const auto& val : int64Vector_)
+        {
+            std::cout << "Value: " << val << std::endl;
+        }
     }
 
     size_t Int64VecDataObject::nrows() const

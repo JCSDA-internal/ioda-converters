@@ -79,6 +79,7 @@ namespace Ingester
         tm.tm_isdst = 0;             // Not daylight saving
         std::time_t epochDt = std::mktime(&tm);
         std::time_t this_time = std::mktime(&tm);
+        int64_t diff_time;
 
         for (unsigned int idx = 0; idx < map.at(yearKey_).size(); idx++)
         {
@@ -99,13 +100,7 @@ namespace Ingester
             }
 
             this_time = std::mktime(&tm);
-            diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt));
-
-            if (!hoursFromUtc_.empty())
-            {
-                diff_time = diff_time + map.at(hoursFromUtc_)(idx)*3600;
-            }
-
+            diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt) + hoursFromUtc_ * 3600);
             timeOffsets.push_back(diff_time);
         }
         return std::make_shared<Int64VecDataObject>(timeOffsets);
