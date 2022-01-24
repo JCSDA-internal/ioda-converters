@@ -10,6 +10,7 @@
 import sys
 import argparse
 import netCDF4 as nc
+import glob 
 import numpy as np
 from datetime import datetime, date, timedelta
 import os
@@ -77,9 +78,22 @@ class AOD(object):
 
         # loop through input filenamess
         first = True
-        for f in self.filenames:
+        file_string = ''.join(self.filenames)
+        file_list = glob.glob(file_string+'*.nc')
+        original_stdout = sys.stdout
+        with open('/scratch1/NCEPDEV/da/Andrew.Tangborn/JEDI/viirs_codesprint/build/file_string.txt','w') as ff: 
+            sys.stdout = ff
+            print('self.filenames[0]=',file_string) 
+        ff.closed 
+        sys.stdout = original_stdout 
+        with open('/scratch1/NCEPDEV/da/Andrew.Tangborn/JEDI/viirs_codesprint/build/file_list.txt','w') as ff:
+            sys.stdout = ff  
+            print('file_list=',file_list[0])
+        ff.closed
+        sys.stdout = original_stdout 
+#        for f in self.filenames:
+        for f in file_list:
             ncd = nc.Dataset(f)
-            ncd_str = str(ncd)
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
             base_datetime = gatts["time_coverage_end"]
             self.satellite = gatts["satellite_name"]
@@ -199,7 +213,7 @@ def main():
     parser.add_argument(
         '-i', '--input',
         help="path of viirs aod input file(s)",
-        type=str, nargs='+',required=True)
+        type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output',
         help="name of ioda-v2 output file",
