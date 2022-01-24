@@ -81,17 +81,6 @@ class AOD(object):
         file_string = ''.join(self.filenames)
         file_list = glob.glob(file_string+'*.nc')
         original_stdout = sys.stdout
-        with open('/scratch1/NCEPDEV/da/Andrew.Tangborn/JEDI/viirs_codesprint/build/file_string.txt','w') as ff: 
-            sys.stdout = ff
-            print('self.filenames[0]=',file_string) 
-        ff.closed 
-        sys.stdout = original_stdout 
-        with open('/scratch1/NCEPDEV/da/Andrew.Tangborn/JEDI/viirs_codesprint/build/file_list.txt','w') as ff:
-            sys.stdout = ff  
-            print('file_list=',file_list[0])
-        ff.closed
-        sys.stdout = original_stdout 
-#        for f in self.filenames:
         for f in file_list:
             ncd = nc.Dataset(f)
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
