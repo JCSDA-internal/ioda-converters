@@ -100,7 +100,8 @@ namespace Ingester
             }
 
             this_time = std::mktime(&tm);
-            diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt) + hoursFromUtc_ * 3600);
+            diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt)
+                                                  + hoursFromUtc_*3600);
             timeOffsets.push_back(diff_time);
         }
         return std::make_shared<Int64VecDataObject>(timeOffsets);

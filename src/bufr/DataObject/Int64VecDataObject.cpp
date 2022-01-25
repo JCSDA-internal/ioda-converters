@@ -24,7 +24,7 @@ namespace Ingester
                                                     int compressionLevel)
     {
         auto params = makeCreationParams(chunks, compressionLevel);
-        auto var = obsGroup.vars.createWithScales<std::string>(name, dimensions, params);
+        auto var = obsGroup.vars.createWithScales<int64_t>(name, dimensions, params);
         var.write(int64Vector_);
         return var;
     }
