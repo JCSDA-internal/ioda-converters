@@ -1129,9 +1129,9 @@ subroutine sort_obs_radiance(filedate, nfgat)
                xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%satzen
             else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
                xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%satazi
-            else if ( trim(name_sen_info(i)) == 'solar_azimuth_angle' ) then
+            else if ( trim(name_sen_info(i)) == 'solar_zenith_angle' ) then
                xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%solzen
-            else if ( trim(name_sen_info(i)) == 'sensor_azimuth_angle' ) then
+            else if ( trim(name_sen_info(i)) == 'solar_azimuth_angle' ) then
                xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i) = rlink%solazi
             else if ( trim(name_sen_info(i)) == 'sensor_view_angle' ) then
                call calc_sensor_view_angle(trim(rlink%inst), rlink%scanpos, xdata(ityp,itim)%xseninfo_float(iloc(ityp,itim),i))
