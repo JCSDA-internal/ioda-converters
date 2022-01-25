@@ -78,10 +78,10 @@ class AOD(object):
 
         # loop through input filenamess
         first = True
-        file_string = ''.join(self.filenames)
-        file_list = glob.glob(file_string+'*.nc')
+#        file_string = ''.join(self.filenames)
+#        file_list = glob.glob(file_string+'*.nc')
         original_stdout = sys.stdout
-        for f in file_list:
+        for f in self.filenames:
             ncd = nc.Dataset(f)
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
             base_datetime = gatts["time_coverage_end"]

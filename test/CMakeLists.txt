@@ -691,7 +691,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
-                          -i testinput/viirs_aod
+                          -i testinput/viirs_aod.nc 
                           -o testrun/viirs_aod.nc
                           -t 2018041506 
                           -m nesdis
