@@ -30,7 +30,7 @@ namespace
 
         namespace Variable
         {
-            const char* Datetime = "datetime";
+            const char* Datetime = "dateTime";
             const char* Mnemonic = "mnemonic";
         }  // namespace Variable
 
