@@ -67,7 +67,8 @@ namespace Ingester
     {
         checkKeys(map);
 
-        std::vector<int64_t> timeOffsets(map.at(yearKey_).size());
+        std::vector<int64_t> timeOffsets;
+        timeOffsets.reserve(map.at(yearKey_).size());
 
         std::tm tm{};                // zero initialise
         tm.tm_year = 1970-1900;      // 1970
