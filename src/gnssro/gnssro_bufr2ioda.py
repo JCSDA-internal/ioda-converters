@@ -13,7 +13,7 @@ import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, wait
 import numpy as np
 import os
 from pathlib import Path
@@ -44,34 +44,30 @@ def main(args):
 
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
-    # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes, and can only take iterable
-    # objects. Rather than using global variables, embed them into
-    # the iterable object together with argument array passed in (args.input)
-
     # read / process files in parallel
-#   pool_inputs = [(i) for i in args.input]
-#   pool = Pool(args.threads)
-#   obs = pool.map(read_input, pool_inputs)
+    pool_inputs = [(i, j) for i, j in zip(args.input, np.arange(len(args.input))+args.recordnumber ]
+    shell()
+    sys.exit()
+    # create a thread pool
+    executor = ThreadPoolExecutor(max_workers=args.threads)
+    obs_data = {}
+    for file_obs_data in executor.map(read_input, pool_inputs):
+        print("INFO: Reading file: ", fname)
+        if not file_obs_data:
+            print("INFO: non-nominal file skipping")
+            continue
+        if obs_data:
+            concat_obs_dict(obs_data, file_obs_data)
+        else:
+            obs_data = file_obs_data
+    #shutdown the thread pool
+    executor.shutdown()
 
-    # concatenate the data from the files
-#   obs_data = obs[0]
-
-#   obs_data = {}
-#   for fname in args.input:
-#       record_number = args.recordnumber
-#       print("INFO: Reading file: ", fname)
-#       file_obs_data = read_input(fname, record_number=record_number)
-#       if obs_data:
-#           concat_obs_dict(obs_data, file_obs_data)
-#       else:
-#           obs_data = file_obs_data
-#       record_number += 1
-
-    obs_data = read_input(args.input, record_number=args.recordnumber)
-    if not obs_data:
-        print("INFO: non-nominal file skipping")
-        return
+#   serial processing
+#   obs_data = read_input(args.input, record_number=args.recordnumber)
+#   if not obs_data:
+#       print("INFO: non-nominal file skipping")
+#       return
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -374,7 +370,7 @@ if __name__ == "__main__":
     optional.add_argument(
         '-r', '--recordnumber',
         help=' optional record number to associate with profile ',
-        type=int, default=None)
+        type=int, default=1)
 
     args = parser.parse_args()
 
