@@ -7,7 +7,7 @@ use define_mod, only: nobtype, nvar_info, n_ncdim, n_ncgrp, nstring, ndatetime, 
    xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
    write_nc_radiance_geo, ninst_geo, geoinst_list, &
    var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
-   unit_var_met, iflag_conv, iflag_radiance
+   unit_var_met, iflag_conv, iflag_radiance, set_brit_obserr
 use netcdf_mod, only: open_netcdf_for_write, close_netcdf, &
    def_netcdf_dims, def_netcdf_grp, def_netcdf_var, def_netcdf_end, &
    put_netcdf_var, get_netcdf_dims
@@ -44,6 +44,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    integer(i_kind)                       :: iflag
    integer(i_kind), allocatable :: ichan(:)
    real(r_kind),    allocatable :: rtmp2d(:,:)
+   real(r_kind),    allocatable :: obserr(:)
    integer(i_kind) :: imin_datetime(1), imax_datetime(1)
    integer(i_kind) :: ncstatus
 
@@ -85,6 +86,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
          allocate (ichan(xdata(ityp,itim)%nvars))
          ichan(:) = xdata(ityp,itim)%xseninfo_int(:,iv)
+         allocate (obserr(xdata(ityp,itim)%nvars))
+         call set_brit_obserr(inst_list(ityp), xdata(ityp,itim)%nvars, obserr)
       end if
       write(*,*) '--- writing ', trim(ncfname)
       call open_netcdf_for_write(trim(ncfname),ncfileid)
@@ -224,10 +227,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          end do
          call put_netcdf_var(ncid_ncgrp(igrp),ncname,rtmp2d(:,:))
          igrp = ufo_vars_getindex(name_ncgrp, 'ObsError')
-         do jj = 1, xdata(ityp,itim)%nvars
-            do ii = 1, xdata(ityp,itim)%nlocs
-               rtmp2d(jj,ii) = xdata(ityp,itim)%xfield(ii,jj)%err
-            end do
+         do ii = 1, xdata(ityp,itim)%nlocs
+            rtmp2d(:,ii) = obserr(:)
          end do
          call put_netcdf_var(ncid_ncgrp(igrp),ncname,rtmp2d(:,:))
          igrp = ufo_vars_getindex(name_ncgrp, 'PreQC')
@@ -290,6 +291,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             end if
          end do
          deallocate (ichan)
+         deallocate (obserr)
       end if ! write_nc_radiance
 
       call close_netcdf(trim(ncfname),ncfileid)

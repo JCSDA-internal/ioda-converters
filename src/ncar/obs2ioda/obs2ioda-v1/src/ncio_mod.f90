@@ -7,7 +7,7 @@ use define_mod, only: nobtype, nvar_info, n_ncdim, nstring, ndatetime, &
    xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
    write_nc_radiance_geo, ninst_geo, geoinst_list, &
    var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
-   unit_var_met, iflag_conv, iflag_radiance
+   unit_var_met, iflag_conv, iflag_radiance, set_brit_obserr
 use netcdf_mod, only: open_netcdf_for_write, close_netcdf, &
    def_netcdf_dims, def_netcdf_var, def_netcdf_end, &
    put_netcdf_var, get_netcdf_dims
@@ -44,6 +44,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    character(len=4)                      :: c4
    integer(i_kind)                       :: iflag
    integer(i_kind), allocatable :: ichan(:)
+   real(r_kind),    allocatable :: obserr(:)
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
@@ -75,6 +76,11 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
          allocate (ichan(xdata(ityp,itim)%nvars))
          ichan(:) = xdata(ityp,itim)%xseninfo_int(:,iv)
+         allocate (obserr(xdata(ityp,itim)%nvars))
+         call set_brit_obserr(inst_list(ityp), xdata(ityp,itim)%nvars, obserr)
+         do i = 1, xdata(ityp,itim) % nlocs
+            xdata(ityp,itim)%xfield(i,:)%err = obserr(:)
+         end do
       end if
       write(*,*) '--- writing ', trim(ncfname)
       call open_netcdf_for_write(trim(ncfname),ncfileid)
@@ -234,6 +240,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             end if
          end do
          deallocate (ichan)
+         deallocate (obserr)
          deallocate (name_var_tb)
       end if ! write_nc_radiance
 
