@@ -13,7 +13,7 @@ import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, wait
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import os
 from pathlib import Path
@@ -45,14 +45,12 @@ def main(args):
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
     # read / process files in parallel
-    pool_inputs = [(i, j) for i, j in zip(args.input, np.arange(len(args.input))+args.recordnumber ]
-    shell()
-    sys.exit()
+    pool_input_01 = args.input
+    pool_input_02 = np.arange(len(args.input))+args.recordnumber
     # create a thread pool
-    executor = ThreadPoolExecutor(max_workers=args.threads)
+    executor = ProcessPoolExecutor(max_workers=args.threads)
     obs_data = {}
-    for file_obs_data in executor.map(read_input, pool_inputs):
-        print("INFO: Reading file: ", fname)
+    for file_obs_data in executor.map(read_input, pool_input_01, pool_input_02):
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
@@ -62,12 +60,6 @@ def main(args):
             obs_data = file_obs_data
     #shutdown the thread pool
     executor.shutdown()
-
-#   serial processing
-#   obs_data = read_input(args.input, record_number=args.recordnumber)
-#   if not obs_data:
-#       print("INFO: non-nominal file skipping")
-#       return
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -114,7 +106,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_args, record_number=None):
+def read_input(input_file, record_number=1):
     """
     Reads/converts input file(s)
 
@@ -127,9 +119,7 @@ def read_input(input_args, record_number=None):
 
         A dictionary holding the variables (obs_data) needed by the IODA writer
     """
-    input_file = input_args[0]
-
-    print("Reading ", input_file)
+    print("Reading: %s" % input_file)
     f = open(input_file, 'rb')
     bufr = codes_bufr_new_from_file(f)
     codes_set(bufr, 'unpack', 1)
