@@ -221,8 +221,8 @@ type xdata_type
    integer(i_kind),        allocatable, dimension(:)   :: var_idx
    type (xfield_type),     allocatable, dimension(:,:) :: xfield
    real(r_kind),           allocatable, dimension(:,:) :: xinfo_float
-   integer(i_llong),       allocatable, dimension(:,:) :: xinfo_int
-   integer(i_kind),        allocatable, dimension(:,:) :: xinfo_int64
+   integer(i_kind),        allocatable, dimension(:,:) :: xinfo_int
+   integer(i_llong),       allocatable, dimension(:,:) :: xinfo_int64
    character(len=nstring), allocatable, dimension(:,:) :: xinfo_char
    real(r_kind),           allocatable, dimension(:,:) :: xseninfo_float
    integer(i_kind),        allocatable, dimension(:,:) :: xseninfo_int
