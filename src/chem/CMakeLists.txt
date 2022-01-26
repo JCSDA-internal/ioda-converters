@@ -1,6 +1,7 @@
 list(APPEND programs
   viirs_aod2ioda.py
   tropomi_no2_nc2ioda.py
+  mopitt_co_nc2ioda.py
   airnow2ioda-nc.py
   modis_aod2ioda.py
   aeronet_aod2ioda.py
