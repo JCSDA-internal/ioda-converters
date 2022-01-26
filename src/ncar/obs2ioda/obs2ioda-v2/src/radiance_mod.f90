@@ -1065,6 +1065,10 @@ subroutine sort_obs_radiance(filedate, nfgat)
          xdata(i,ii)%xinfo_char    (:,:) = ''
          xdata(i,ii)%xseninfo_float(:,:) = missing_r
          xdata(i,ii)%xseninfo_int  (:,:) = missing_i
+         if ( index(inst_list(i), 'iasi') > 0 .or. &
+              index(inst_list(i), 'cris') > 0 ) then
+            allocate (xdata(i,ii)%wavenumber(nvars(i)))
+         end if
          if ( nvars(i) > 0 ) then
             allocate (xdata(i,ii)%xfield(nlocs(i,ii), nvars(i)))
             xdata(i,ii)%xfield(:,:)%val = missing_r
@@ -1259,6 +1263,7 @@ real(r_double), allocatable :: planck_c1(:)
 real(r_double), allocatable :: planck_c2(:)
 real(r_double), allocatable :: band_c1(:)
 real(r_double), allocatable :: band_c2(:)
+real(r_double), allocatable :: wavenumber(:)
 integer(i_kind) :: ierr
 integer(i_kind) :: i, ii, iloc, ichan, nchan, nlocs
 real(r_double) :: radiance
@@ -1286,13 +1291,15 @@ fgat_loop: do ii = 1, nfgat
     allocate(planck_c2(nchan))
     allocate(band_c1(nchan))
     allocate(band_c2(nchan))
+    allocate(wavenumber(nchan))
 
-    call read_spc(trim(inst_list(i)), nchan, planck_c1, planck_c2, band_c1, band_c2, ierr)
+    call read_spc(trim(inst_list(i)), nchan, planck_c1, planck_c2, band_c1, band_c2, wavenumber, ierr)
     if ( ierr /= 0 ) then
       deallocate(planck_c1)
       deallocate(planck_c2)
       deallocate(band_c1)
       deallocate(band_c2)
+      deallocate(wavenumber)
       cycle inst_loop
     end if
 
@@ -1309,17 +1316,22 @@ fgat_loop: do ii = 1, nfgat
       end do
     end do
 
+    if ( allocated(xdata(i,ii)%wavenumber) ) then
+       xdata(i,ii)%wavenumber(1:nchan) = wavenumber(1:nchan)
+    end if
+
     deallocate(planck_c1)
     deallocate(planck_c2)
     deallocate(band_c1)
     deallocate(band_c2)
+    deallocate(wavenumber)
 
   end do inst_loop
 end do fgat_loop
 
 end subroutine radiance_to_temperature
 
-subroutine read_spc(inst_id, nchan, planck_c1, planck_c2, band_c1, band_c2, iret)
+subroutine read_spc(inst_id, nchan, planck_c1, planck_c2, band_c1, band_c2, wavenumber, iret)
 
 implicit none
 

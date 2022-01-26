@@ -227,6 +227,7 @@ type xdata_type
    real(r_kind),           allocatable, dimension(:,:) :: xseninfo_float
    integer(i_kind),        allocatable, dimension(:,:) :: xseninfo_int
    character(len=nstring), allocatable, dimension(:,:) :: xseninfo_char
+   real(r_kind),           allocatable, dimension(:)   :: wavenumber
 end type xdata_type
 
 type(xdata_type), allocatable, dimension(:,:) :: xdata  ! dim 1: number of ob types

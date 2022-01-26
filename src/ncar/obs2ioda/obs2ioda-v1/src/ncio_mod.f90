@@ -45,6 +45,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    integer(i_kind)                       :: iflag
    integer(i_kind), allocatable :: ichan(:)
    real(r_kind),    allocatable :: obserr(:)
+   integer(i_kind) :: has_wavenumber
+   integer(i_kind) :: ncid_ncgrp_wn
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
@@ -92,6 +94,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
       do i = 1, n_ncdim
          call def_netcdf_dims(ncfileid,trim(name_ncdim(i)),val_ncdim(i),ncid_ncdim(i))
       end do
+
+      if ( allocated(xdata(ityp,itim)%wavenumber) ) then
+         has_wavenumber = itrue
+      else
+         has_wavenumber = ifalse
+      end if
 
       ! define netcdf variables
       do i = 1, xdata(ityp,itim) % nvars
@@ -156,6 +164,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
                call def_netcdf_var(ncfileid,ncname,(/dim1/),type_sen_info(i))
             end if
          end do ! nsen_info
+         if ( has_wavenumber == itrue ) then
+            idim = ufo_vars_getindex(name_ncdim, 'nvars')
+            dim1 = ncid_ncdim(idim)
+            call def_netcdf_var(ncfileid,'sensor_band_central_radiation_wavenumber@VarMetaData', &
+                                (/dim1/),NF90_FLOAT)
+         end if
       end if ! write_nc_radiance
 
       call def_netcdf_end(ncfileid)
@@ -239,6 +253,10 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
                call put_netcdf_var(ncfileid,ncname,xdata(ityp,itim)%xseninfo_char(:,i))
             end if
          end do
+         if ( has_wavenumber == itrue ) then
+            call put_netcdf_var(ncfileid, 'sensor_band_central_radiation_wavenumber@VarMetaData', &
+                                xdata(ityp,itim)%wavenumber(:))
+         end if
          deallocate (ichan)
          deallocate (obserr)
          deallocate (name_var_tb)
@@ -258,6 +276,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
       if ( allocated(xdata(i,itim)%xseninfo_int) )   deallocate(xdata(i,itim)%xseninfo_int)
       if ( allocated(xdata(i,itim)%xseninfo_float) ) deallocate(xdata(i,itim)%xseninfo_float)
       if ( allocated(xdata(i,itim)%xseninfo_char) )  deallocate(xdata(i,itim)%xseninfo_char)
+      if ( allocated(xdata(i,itim)%wavenumber) )     deallocate(xdata(i,itim)%wavenumber)
    end do
 !   deallocate(xdata) ! moved to main.f90
 

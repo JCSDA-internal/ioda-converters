@@ -47,6 +47,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    real(r_kind),    allocatable :: obserr(:)
    integer(i_kind) :: imin_datetime(1), imax_datetime(1)
    integer(i_kind) :: ncstatus
+   integer(i_kind) :: has_wavenumber
+   integer(i_kind) :: ncid_ncgrp_wn
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
@@ -116,6 +118,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
       ncstatus = nf90_put_att(ncfileid, NF90_GLOBAL, 'min_datetime', xdata(ityp,itim)%min_datetime)
       ncstatus = nf90_put_att(ncfileid, NF90_GLOBAL, 'max_datetime', xdata(ityp,itim)%max_datetime)
 
+      if ( allocated(xdata(ityp,itim)%wavenumber) ) then
+         has_wavenumber = itrue
+      else
+         has_wavenumber = ifalse
+      end if
+
       ! define netcdf groups
       do i = 1, n_ncgrp
          if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
@@ -123,6 +131,10 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          end if
          call def_netcdf_grp(ncfileid,trim(name_ncgrp(i)),ncid_ncgrp(i))
       end do
+      if ( has_wavenumber == itrue ) then
+         ! use deprecated VarMetaData group for wavenumber before related code in UFO is updated
+         call def_netcdf_grp(ncfileid,'VarMetaData',ncid_ncgrp_wn)
+      end if
 
       ! define netcdf variables
       if ( write_opt == write_nc_conv ) then
@@ -191,6 +203,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
                call def_netcdf_var(ncid_ncgrp(igrp),ncname,(/dim1/),type_sen_info(i))
             end if
          end do ! nsen_info
+         if ( has_wavenumber == itrue ) then
+            idim = ufo_vars_getindex(name_ncdim, 'nvars')
+            dim1 = ncid_ncdim(idim)
+            call def_netcdf_var(ncid_ncgrp_wn,'sensor_band_central_radiation_wavenumber', &
+                                (/dim1/),NF90_FLOAT)
+         end if
       end if ! write_nc_radiance
 
       call def_netcdf_end(ncfileid)
@@ -290,6 +308,10 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
                call put_netcdf_var(ncid_ncgrp(igrp),ncname,xdata(ityp,itim)%xseninfo_char(:,i))
             end if
          end do
+         if ( has_wavenumber == itrue ) then
+            call put_netcdf_var(ncid_ncgrp_wn, 'sensor_band_central_radiation_wavenumber', &
+                                xdata(ityp,itim)%wavenumber(:))
+         end if
          deallocate (ichan)
          deallocate (obserr)
       end if ! write_nc_radiance
@@ -309,6 +331,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
       if ( allocated(xdata(i,itim)%xseninfo_int) )   deallocate(xdata(i,itim)%xseninfo_int)
       if ( allocated(xdata(i,itim)%xseninfo_float) ) deallocate(xdata(i,itim)%xseninfo_float)
       if ( allocated(xdata(i,itim)%xseninfo_char) )  deallocate(xdata(i,itim)%xseninfo_char)
+      if ( allocated(xdata(i,itim)%wavenumber) )     deallocate(xdata(i,itim)%wavenumber)
    end do
 !   deallocate(xdata) ! moved to main.f90
 
