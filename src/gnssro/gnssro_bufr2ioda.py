@@ -131,6 +131,7 @@ def read_input(input_file_and_record):
 
     return obs_data
 
+
 def get_meta_data(bufr):
 
     # get some of the global attributes that we are interested in
