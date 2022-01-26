@@ -34,6 +34,7 @@ namespace
             const char* Dimensions = "dimensions";
             const char* LongName = "longName";
             const char* Units = "units";
+            const char* FillValue = "fillValue";
             const char* Range = "range";
             const char* Coords = "coordinates";
             const char* Chunks = "chunks";
@@ -116,6 +117,12 @@ namespace Ingester
             variable.dimensions = varConf.getStringVector(ConfKeys::Variable::Dimensions);
             variable.longName = varConf.getString(ConfKeys::Variable::LongName);
             variable.units = varConf.getString(ConfKeys::Variable::Units);
+
+            variable.fillValue = nullptr;
+            if (varConf.has(ConfKeys::Variable::FillValue))
+            {
+                variable.fillValue = varConf.getFloat(ConfKeys::Variable::FillValue);
+            }
 
             if (varConf.has(ConfKeys::Variable::Coords))
             {

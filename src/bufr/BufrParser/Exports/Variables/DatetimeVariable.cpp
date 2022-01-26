@@ -5,6 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
+#include <climits>
 #include <iostream>
 #include <iomanip>
 #include <ostream>
@@ -66,6 +67,8 @@ namespace Ingester
     std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
+        static const float missing = 1.e+11;
+        static const int64_t missing_int = INT_MIN;
 
         std::vector<int64_t> timeOffsets;
         timeOffsets.reserve(map.at(yearKey_).size());
@@ -84,25 +87,40 @@ namespace Ingester
 
         for (unsigned int idx = 0; idx < map.at(yearKey_).size(); idx++)
         {
-            tm.tm_year = map.at(yearKey_)(idx) - 1900;
-            tm.tm_mon = map.at(monthKey_)(idx) - 1;
-            tm.tm_mday = map.at(dayKey_)(idx);
-            tm.tm_hour = map.at(hourKey_)(idx);
-            tm.tm_min = map.at(minuteKey_)(idx);
-            tm.tm_sec = 0;
-            tm.tm_isdst = 0;
-
-            if (!secondKey_.empty())
+            diff_time = missing_int;
+            if (map.at(yearKey_)(idx) != missing
+                           && map.at(monthKey_)(idx) != missing
+                           && map.at(dayKey_)(idx) !=missing
+                           && map.at(hourKey_)(idx) !=missing
+                           && map.at(minuteKey_)(idx) !=missing)
             {
-                if (map.at(secondKey_)(idx) >= 0 && map.at(secondKey_)(idx) < 60)
-                {
-                    tm.tm_sec = map.at(secondKey_)(idx);
-                }
-            }
+                tm.tm_year = map.at(yearKey_)(idx) - 1900;
+                tm.tm_mon = map.at(monthKey_)(idx) - 1;
+                tm.tm_mday = map.at(dayKey_)(idx);
+                tm.tm_hour = map.at(hourKey_)(idx);
+                tm.tm_min = map.at(minuteKey_)(idx);
+                tm.tm_sec = 0;
+                tm.tm_isdst = 0;
 
-            this_time = std::mktime(&tm);
-            diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt)
-                                                  + hoursFromUtc_*3600);
+                if (!secondKey_.empty())
+                {
+                    if (map.at(secondKey_)(idx) >= 0 && map.at(secondKey_)(idx) < 60)
+                    {
+                        tm.tm_sec = map.at(secondKey_)(idx);
+                    }
+                }
+
+                this_time = std::mktime(&tm);
+                if (this_time < 0)
+                {
+                    std::cout << "Caution, date suspicious date (year, month, day): "
+                              << map.at(yearKey_)(idx) << ", "
+                              << map.at(monthKey_)(idx) << ", "
+                              << map.at(dayKey_)(idx) << std::endl;
+                }
+                diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt)
+                                                      + hoursFromUtc_*3600);
+            }
             timeOffsets.push_back(diff_time);
         }
         return std::make_shared<Int64VecDataObject>(timeOffsets);
