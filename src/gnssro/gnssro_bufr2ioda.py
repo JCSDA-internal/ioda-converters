@@ -48,19 +48,17 @@ def main(args):
     pool_input_01 = args.input
     pool_input_02 = np.arange(len(args.input))+args.recordnumber
     pool_inputs = [[i, j] for i, j in zip(pool_input_01, pool_input_02)]
-    # create a thread pool
-    executor = ProcessPoolExecutor(max_workers=args.threads)
     obs_data = {}
-    for file_obs_data in executor.map(read_input, pool_inputs):
-        if not file_obs_data:
-            print("INFO: non-nominal file skipping")
-            continue
-        if obs_data:
-            concat_obs_dict(obs_data, file_obs_data)
-        else:
-            obs_data = file_obs_data
-    # shutdown the thread pool
-    executor.shutdown()
+    # create a thread pool
+    with ProcessPoolExecutor(max_workers=args.threads) as executor:
+        for file_obs_data in executor.map(read_input, pool_inputs):
+            if not file_obs_data:
+                print("INFO: non-nominal file skipping")
+                continue
+            if obs_data:
+                concat_obs_dict(obs_data, file_obs_data)
+            else:
+                obs_data = file_obs_data
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -107,7 +105,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input( input_file_and_record ):
+def read_input(input_file_and_record):
     """
     Reads/converts input file(s)
 
@@ -132,7 +130,6 @@ def read_input( input_file_and_record ):
     obs_data = get_obs_data(bufr, profile_meta_data, record_number=record_number)
 
     return obs_data
-
 
 def get_meta_data(bufr):
 
