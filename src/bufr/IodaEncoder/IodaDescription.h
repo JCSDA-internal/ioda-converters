@@ -37,7 +37,6 @@ namespace Ingester
         std::vector<std::string> dimensions;
         std::string longName;
         std::string units;
-        std::string fillValue;   // Optional
         std::shared_ptr<std::string> coordinates;  // Optional
         std::shared_ptr<Range> range;  // Optional
         std::vector<ioda::Dimensions_t> chunks;  // Optional
