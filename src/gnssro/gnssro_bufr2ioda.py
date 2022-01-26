@@ -47,10 +47,11 @@ def main(args):
     # read / process files in parallel
     pool_input_01 = args.input
     pool_input_02 = np.arange(len(args.input))+args.recordnumber
+    pool_inputs = [[i, j] for i, j in zip(pool_input_01, pool_input_02)]
     # create a thread pool
     executor = ProcessPoolExecutor(max_workers=args.threads)
     obs_data = {}
-    for file_obs_data in executor.map(read_input, pool_input_01, pool_input_02):
+    for file_obs_data in executor.map(read_input, pool_inputs):
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
@@ -58,7 +59,7 @@ def main(args):
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
-    #shutdown the thread pool
+    # shutdown the thread pool
     executor.shutdown()
 
     # prepare global attributes we want to output in the file,
@@ -106,7 +107,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_file, record_number=1):
+def read_input( input_file_and_record ):
     """
     Reads/converts input file(s)
 
@@ -119,6 +120,8 @@ def read_input(input_file, record_number=1):
 
         A dictionary holding the variables (obs_data) needed by the IODA writer
     """
+    input_file = input_file_and_record[0]
+    record_number = input_file_and_record[1]
     print("Reading: %s" % input_file)
     f = open(input_file, 'rb')
     bufr = codes_bufr_new_from_file(f)
