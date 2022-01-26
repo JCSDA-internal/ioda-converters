@@ -61,7 +61,6 @@ observations:
           source: variables/timestamp
           dimensions: [ "nlocs" ]
           longName: "dateTime"
-          _FillValue: -2147483648
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
