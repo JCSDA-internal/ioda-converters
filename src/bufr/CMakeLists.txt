@@ -14,6 +14,8 @@ list(APPEND _ingester_srcs
   DataObject/StrVecDataObject.cpp
   DataObject/ArrayDataObject.h
   DataObject/ArrayDataObject.cpp
+  DataObject/Int64VecDataObject.h
+  DataObject/Int64VecDataObject.cpp
   BufrParser/BufrParser.h
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h

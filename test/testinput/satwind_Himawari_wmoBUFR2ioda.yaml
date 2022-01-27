@@ -29,7 +29,7 @@ observations:
               lowerBound: -180
               upperBound: 180
         variables:
-          datetime:
+          timestamp:
             datetime:
               year: YEAR
               month: MNTH
@@ -105,11 +105,11 @@ observations:
           units: "degrees"
           range: [-180, 180]
 
-        - name: "MetaData/datetime"
-          source: variables/datetime
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
           dimensions: ["nlocs"]
-          longName: "DateTime"
-          units: "datetime"
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/dataProviderOrigin"
           source: variables/dataProviderOrigin
