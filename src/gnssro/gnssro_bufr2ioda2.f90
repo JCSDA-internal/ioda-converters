@@ -1,14 +1,14 @@
 !!!--------  README --------------------------------------------------------------------
-!  this is a temporary routine to generate netcdf2 file
+!  this is a temporary routine to generate netcdf4 file
 !  for jedi/ufo/gnssro/ operator test
 !  IODA VERSION 2
 !  Copyright UCAR 2022
-!  Authors: Hailing Zhang
+!  Author: Hailing Zhang
 
 !!!---------  to run   -----------------------------------------------------------------
 !  ./gnssro_bufr2ioda2 yyyymmddhh $bufrfile_input $netcdffile_output
 !
-! Return codes: 
+! Return codes:
 !  0 - Success.
 !  1 - Unrecoverable system or logical error.
 !  2 - All provided observations are invalid.  Cannot create NetCDF IODA2 file.
@@ -18,15 +18,15 @@ program gnssro_bufr2ioda2
 use netcdf
 implicit none
 
-integer, parameter :: i_short = selected_int_kind(4)  !2
-integer, parameter :: i_kind  = selected_int_kind(8)
-integer, parameter :: r_double = selected_real_kind(15) !8
-integer, parameter :: r_kind   = selected_real_kind(15) !8
+integer, parameter :: i_kind  = selected_int_kind(8)    !4
+integer, parameter :: i_64    = selected_int_kind(10)   !8
+integer, parameter :: r_kind  = selected_real_kind(15)  !8
 
 ! output obs data stucture
 integer   :: ncid
 integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid,ndatetime_dimid
-integer   :: varid_lat,varid_lon,varid_time,varid_datetime
+integer   :: varid_lat,varid_lon, varid_epochtime
+integer   :: varid_time,varid_datetime
 integer   :: varid_said,varid_siid,varid_ptid,varid_sclf,varid_asce,varid_ogce
 integer   :: varid_recn
 integer   :: varid_geoid, varid_rfict
@@ -46,6 +46,8 @@ integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
 integer(i_kind)           :: anatime_i
 integer(i_kind)           :: idate5(6), idate,iadate5(6)
 integer(i_kind)           :: mincy,minobs
+integer(i_64)             :: epochtime
+
 logical                   :: good,outside
 integer                   :: refflag, bendflag
 integer(i_kind),parameter :: mxib=31
@@ -62,32 +64,33 @@ type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
       integer(i_kind), allocatable, dimension(:)    :: ogce
-      real(r_double), allocatable, dimension(:)     :: time
+      real(r_kind), allocatable, dimension(:)       :: time
       character(len=20), allocatable, dimension(:)  :: datetime
-      real(r_double), allocatable, dimension(:)     :: lat
-      real(r_double), allocatable, dimension(:)     :: lon
-      real(r_double), allocatable, dimension(:)     :: rfict
-      real(r_double), allocatable, dimension(:)     :: azim
-      real(r_double), allocatable, dimension(:)     :: geoid
-      real(r_double), allocatable, dimension(:)     :: msl_alt
-      real(r_double), allocatable, dimension(:)     :: ref
-      real(r_double), allocatable, dimension(:)     :: refoe_gsi
-      real(r_double), allocatable, dimension(:)     :: bend_ang
-      real(r_double), allocatable, dimension(:)     :: impact_para
-      real(r_double), allocatable, dimension(:)     :: bndoe_gsi
+      integer(i_64),allocatable, dimension(:)     :: epochtime
+      real(r_kind), allocatable, dimension(:)     :: lat
+      real(r_kind), allocatable, dimension(:)     :: lon
+      real(r_kind), allocatable, dimension(:)     :: rfict
+      real(r_kind), allocatable, dimension(:)     :: azim
+      real(r_kind), allocatable, dimension(:)     :: geoid
+      real(r_kind), allocatable, dimension(:)     :: msl_alt
+      real(r_kind), allocatable, dimension(:)     :: ref
+      real(r_kind), allocatable, dimension(:)     :: refoe_gsi
+      real(r_kind), allocatable, dimension(:)     :: bend_ang
+      real(r_kind), allocatable, dimension(:)     :: impact_para
+      real(r_kind), allocatable, dimension(:)     :: bndoe_gsi
 end type gpsro_type
 
 type(gpsro_type) :: gpsro_data
 
-real(r_double),dimension(n1ahdr)     :: bfr1ahdr
-real(r_double),dimension(50,maxlevs) :: data1b
-real(r_double),dimension(50,maxlevs) :: data2a
-real(r_double),dimension(maxlevs)  :: nreps_this_ROSEQ2
-integer(i_kind)           :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
-real(r_double) :: pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
-real(r_double) :: height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
-real(r_double) :: obsErr
-real(r_double),   parameter :: missingvalue=-9.9e10
+real(r_kind),dimension(n1ahdr)     :: bfr1ahdr
+real(r_kind),dimension(50,maxlevs) :: data1b
+real(r_kind),dimension(50,maxlevs) :: data2a
+real(r_kind),dimension(maxlevs)    :: nreps_this_ROSEQ2
+integer(i_kind)                    :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
+real(r_kind) :: pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
+real(r_kind) :: height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
+real(r_kind) :: obsErr
+real(r_kind),   parameter :: missingvalue=-9.9e10
 logical,        parameter :: GlobalModel = .true. ! temporary
 
 character(10) nemo
@@ -139,6 +142,7 @@ allocate(gpsro_data%asce(maxobs))
 allocate(gpsro_data%ogce(maxobs))
 allocate(gpsro_data%time(maxobs))
 allocate(gpsro_data%datetime(maxobs))
+allocate(gpsro_data%epochtime(maxobs))
 allocate(gpsro_data%lat(maxobs))
 allocate(gpsro_data%lon(maxobs))
 allocate(gpsro_data%rfict(maxobs))
@@ -183,6 +187,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') &
         idate5(1),idate5(2),idate5(3),idate5(4),idate5(5),idate5(6)
      timeo=real(minobs-mincy,r_kind)/60.0
+     call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
      if( roc>6450000.0_r_kind .or. roc<6250000.0_r_kind  .or.       &
          geoid>200_r_kind .or. geoid<-200._r_kind ) then
@@ -287,6 +292,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gpsro_data%lon(ndata)      = rlon
        gpsro_data%time(ndata)     = timeo
        gpsro_data%datetime(ndata) = datetime
+       gpsro_data%epochtime(ndata)= epochtime
        gpsro_data%said(ndata)     = said
        gpsro_data%siid(ndata)     = siid
        gpsro_data%sclf(ndata)     = sclf
@@ -338,6 +344,8 @@ call check( nf90_def_var(grpid_metadata, "time",          NF90_FLOAT, nlocs_dimi
 call check( nf90_put_att(grpid_metadata, varid_time, "longname", "time offset to analysis time" ))
 call check( nf90_put_att(grpid_metadata, varid_time, "units", "hour" ))
 call check( nf90_def_var(grpid_metadata, "datetime",     NF90_CHAR, (/ ndatetime_dimid, nlocs_dimid /), varid_datetime) )
+call check( nf90_def_var(grpid_metadata, "dateTime",     NF90_INT64, nlocs_dimid, varid_epochtime) )
+call check( nf90_put_att(grpid_metadata, varid_epochtime, "units","seconds since 1970-01-01T00:00:00Z" ))
 call check( nf90_def_var(grpid_metadata, "record_number",   NF90_INT, nlocs_dimid, varid_recn))
 call check( nf90_put_att(grpid_metadata, varid_recn, "longname", "GNSS RO profile identifier" ))
 call check( nf90_def_var(grpid_metadata, "gnss_sat_class",  NF90_INT, nlocs_dimid, varid_sclf))
@@ -406,6 +414,7 @@ call check( nf90_put_var(grpid_metadata, varid_lat, gpsro_data%lat(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_lon, gpsro_data%lon(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_time, gpsro_data%time(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_datetime, gpsro_data%datetime(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_epochtime,gpsro_data%epochtime(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_recn, gpsro_data%recn(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_said, gpsro_data%said(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_siid, gpsro_data%siid(1:ndata)) )
@@ -430,6 +439,7 @@ deallocate(gpsro_data%asce)
 deallocate(gpsro_data%ogce)
 deallocate(gpsro_data%time)
 deallocate(gpsro_data%datetime)
+deallocate(gpsro_data%epochtime)
 deallocate(gpsro_data%lat)
 deallocate(gpsro_data%lon)
 deallocate(gpsro_data%rfict)
@@ -455,10 +465,10 @@ contains
 
 
 subroutine  refractivity_err_gsi(obsLat, obsZ, GlobalModel, obsErr)
-real(r_double), intent(in)   :: obsLat,  obsZ
-real(r_double),  intent(out) :: obsErr
-logical,         intent(in)  :: GlobalModel
-real(r_double)               :: obsZ_km
+real(r_kind),  intent(in)  :: obsLat,  obsZ
+real(r_kind),  intent(out) :: obsErr
+logical,       intent(in)  :: GlobalModel
+real(r_kind)               :: obsZ_km
 
 obsZ_km  = obsZ / 1000.0
 
@@ -495,10 +505,10 @@ endif
 end subroutine refractivity_err_gsi
 
 subroutine  bendingangle_err_gsi(obsLat, obsZ,  obsErr, ogce)
-real(r_double), intent(in)   :: obsLat,  obsZ
-integer,        intent(in)   :: ogce
-real(r_double), intent(out)  :: obsErr
-real(r_double)               :: obsZ_km
+real(r_kind), intent(in)   :: obsLat,  obsZ
+integer,        intent(in) :: ogce
+real(r_kind), intent(out)  :: obsErr
+real(r_kind)               :: obsZ_km
 
 obsZ_km  = obsZ / 1000.0
 if((said==41).or.(said==722).or.(said==723).or.(said==42).or.&
@@ -572,5 +582,37 @@ SUBROUTINE W3FS21(IDATE, NMIN)
     NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
     RETURN
 END SUBROUTINE W3FS21
+
+!-------------------------------------------------------------
+! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
+! calculating epoch time since January 1, 1970
+SUBROUTINE epochtimecalculator(IDATE, EPOCHTIME)
+    INTEGER    IDATE(5)
+    INTEGER    NMIN
+    INTEGER    IYEAR, NDAYS, IJDN
+    INTEGER(8) epochtime
+    INTEGER    JDN1970
+    DATA  JDN1970 / 2440588 /
+
+    NMIN  = 0
+    IYEAR = IDATE(1)
+    IF (IYEAR.LE.99) THEN
+        IF (IYEAR.LT.78) THEN
+            IYEAR = IYEAR + 2000
+        ELSE
+            IYEAR = IYEAR + 1900
+        ENDIF
+    ENDIF
+!   COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
+    IJDN  = IDATE(3) - 32075      &
+             + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
+             + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
+             - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
+!   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1978 TO GET THE
+!   NUMBER OF DAYS BETWEEN DATES
+    NDAYS = IJDN - JDN1970
+    NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
+    EPOCHTIME = NMIN * 60 + IDATE(6)
+END SUBROUTINE epochtimecalculator
 
 end program
