@@ -262,7 +262,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         bend_pccf=data1b((6*nreps_ROSEQ2_int)+4,k)  ! percent confidence for this ROSEQ1 replication
         good=.true. 
 
-        if (  height<0._r_kind   .or. height>60000._r_kind .or.           &
+        if (  height<0._r_kind   .or. height>100000._r_kind .or.           &
            abs(rlat)>90._r_kind  .or. abs(rlon)>360._r_kind ) then
            good=.false.
            write(6,*)'READ_GNSSRO: obs fails georeality check, said=',said,'ptid=',ptid
