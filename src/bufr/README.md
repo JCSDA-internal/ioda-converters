@@ -89,7 +89,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               day: DAYS
               hour: HOUR
               minute: MINU
-              second: SECO
+              second: SECO     # default assumed zero if skipped or found as missing.
               hoursFromUtc: 0  # optional
           longitude:
             mnemonic: CLON
@@ -109,9 +109,10 @@ ioda encoder. It has the following sections:
   * **values** (One of these types):
     * `mnemonic` Associate **key** with data for mnemonic listed in mnemonic set. _(optional)_ Can 
       apply a list of `tranforms` to the data. Possible transforms are `offset` and `scale`.
-    * `datetime` Associate **key** with datetime formatted strings. Supply mnemonics for `year`, 
-      `month`, `day`, `hour`, `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must
-      be an **integer**).
+    * `dateTime` Associate **key** with data for mnemonics for `year`, `month`, `day`, `hour`,
+      `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must be an **integer**).
+      Internally, the value stored is number of seconds elapsed since a reference epoch, currently
+      set to 1970-01-01T00:00:00Z.
       
 
 * _(optional)_ `splits` List of key value pair (splits) that define how to split the data into 
@@ -152,27 +153,27 @@ ioda encoder. It has the following sections:
           size: "variables/radiance.ncols"
 
       variables:
-        - name: "datetime@MetaData"
+        - name: "MetaData/dateTime"
           source: "variables/timestamp"
           dimensions: [ "nlocs" ]
-          longName: "Datetime"
-          units: "datetime"
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: "variables/latitude"
           dimensions: ["nlocs"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: "variables/longitude"
           dimensions: ["nlocs"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "radiance@ObsValue"
+        - name: "ObsValue/radiance"
           coordinates: "longitude latitude nchans"
           source: "variables/radiance"
           dimensions: ["nlocs", "nchans"]
@@ -194,14 +195,14 @@ The `ioda` section defines the ObsGroup objects that will be created.
     * `size` can be either a integer or a reference to exported data ex: 
       **variables/radiance.nrows**
 * `variables` List of output variable objects to create.
-  * `name` standardized pathname **var_name**@**group**. 
+  * `name` standardized pathname **group**/**var_name**. 
     * **var_name** name for the variable
     * **group** group name to which this variable belongs.
   * `source` reference to exported data ex: **variables/radiance**
   * `coordinates` (optional):
   * `dimensions` list of ids defined in dimensions section
   * `longName`any arbitrary string.
-  * `units` tring representing units (arbitrary).
+  * `units` string representing units (arbitrary but following udunits).
   * _(optional)_ `range` Possible range of values (list of 2 ints).
   * _(optional)_ `chunks`Size of chunked data elements ex: `[1000, 1000]`.
   * _(optional)_ `compressionLevel` GZip compression level (0-9).
