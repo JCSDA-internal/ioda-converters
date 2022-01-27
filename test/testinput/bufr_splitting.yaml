@@ -28,7 +28,7 @@ observations:
 
         variables:
           timestamp:
-            dateTime:
+            datetime:
               year: YEAR
               month: MNTH
               day: DAYS
