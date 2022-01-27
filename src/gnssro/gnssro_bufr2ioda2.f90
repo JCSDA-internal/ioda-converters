@@ -24,9 +24,8 @@ integer, parameter :: r_kind  = selected_real_kind(15)  !8
 
 ! output obs data stucture
 integer   :: ncid
-integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid,ndatetime_dimid
-integer   :: varid_lat,varid_lon, varid_epochtime
-integer   :: varid_time,varid_datetime
+integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid
+integer   :: varid_lat,varid_lon,varid_time,varid_epochtime
 integer   :: varid_said,varid_siid,varid_ptid,varid_sclf,varid_asce,varid_ogce
 integer   :: varid_recn
 integer   :: varid_geoid, varid_rfict
@@ -38,8 +37,6 @@ integer   :: grpid_metadata,grpid_obserror,grpid_obsvalue
 character(len=256)        :: infile, outfile
 character,dimension(8)    :: subset
 character(len=10)         :: anatime
-integer(i_kind)           :: ndatetime = 20
-character(len=20)         :: datetime
 integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,siid,ptid,sclf,asce,ogce
 integer(i_kind)           :: lnbufr    = 10
 integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
@@ -65,7 +62,6 @@ type gpsro_type
       integer(i_kind), allocatable, dimension(:)    :: asce
       integer(i_kind), allocatable, dimension(:)    :: ogce
       real(r_kind), allocatable, dimension(:)       :: time
-      character(len=20), allocatable, dimension(:)  :: datetime
       integer(i_64),allocatable, dimension(:)     :: epochtime
       real(r_kind), allocatable, dimension(:)     :: lat
       real(r_kind), allocatable, dimension(:)     :: lon
@@ -141,7 +137,6 @@ allocate(gpsro_data%recn(maxobs))
 allocate(gpsro_data%asce(maxobs))
 allocate(gpsro_data%ogce(maxobs))
 allocate(gpsro_data%time(maxobs))
-allocate(gpsro_data%datetime(maxobs))
 allocate(gpsro_data%epochtime(maxobs))
 allocate(gpsro_data%lat(maxobs))
 allocate(gpsro_data%lon(maxobs))
@@ -184,8 +179,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      ogce = bfr1ahdr(13)       ! Identification of originating/generating centre
 
      call w3fs21(idate5,minobs)
-     write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') &
-        idate5(1),idate5(2),idate5(3),idate5(4),idate5(5),idate5(6)
      timeo=real(minobs-mincy,r_kind)/60.0
      call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
@@ -291,7 +284,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gpsro_data%lat(ndata)      = rlat
        gpsro_data%lon(ndata)      = rlon
        gpsro_data%time(ndata)     = timeo
-       gpsro_data%datetime(ndata) = datetime
        gpsro_data%epochtime(ndata)= epochtime
        gpsro_data%said(ndata)     = said
        gpsro_data%siid(ndata)     = siid
@@ -332,7 +324,6 @@ endif
 
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
 call check( nf90_def_dim(ncid, 'nlocs', ndata,   nlocs_dimid) )
-call check( nf90_def_dim(ncid, 'ndatetime', ndatetime,   ndatetime_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda2 file') )
 call check( nf90_def_grp(ncid, 'MetaData', grpid_metadata) )
@@ -343,7 +334,6 @@ call check( nf90_def_var(grpid_metadata, "longitude",     NF90_FLOAT, nlocs_dimi
 call check( nf90_def_var(grpid_metadata, "time",          NF90_FLOAT, nlocs_dimid, varid_time) )
 call check( nf90_put_att(grpid_metadata, varid_time, "longname", "time offset to analysis time" ))
 call check( nf90_put_att(grpid_metadata, varid_time, "units", "hour" ))
-call check( nf90_def_var(grpid_metadata, "datetime",     NF90_CHAR, (/ ndatetime_dimid, nlocs_dimid /), varid_datetime) )
 call check( nf90_def_var(grpid_metadata, "dateTime",     NF90_INT64, nlocs_dimid, varid_epochtime) )
 call check( nf90_put_att(grpid_metadata, varid_epochtime, "units","seconds since 1970-01-01T00:00:00Z" ))
 call check( nf90_def_var(grpid_metadata, "record_number",   NF90_INT, nlocs_dimid, varid_recn))
@@ -413,7 +403,6 @@ call check( nf90_put_var(grpid_obserror,varid_bndoe,gpsro_data%bndoe_gsi(1:ndata
 call check( nf90_put_var(grpid_metadata, varid_lat, gpsro_data%lat(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_lon, gpsro_data%lon(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_time, gpsro_data%time(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_datetime, gpsro_data%datetime(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_epochtime,gpsro_data%epochtime(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_recn, gpsro_data%recn(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_said, gpsro_data%said(1:ndata)) )
@@ -440,7 +429,6 @@ deallocate(gpsro_data%recn)
 deallocate(gpsro_data%asce)
 deallocate(gpsro_data%ogce)
 deallocate(gpsro_data%time)
-deallocate(gpsro_data%datetime)
 deallocate(gpsro_data%epochtime)
 deallocate(gpsro_data%lat)
 deallocate(gpsro_data%lon)
