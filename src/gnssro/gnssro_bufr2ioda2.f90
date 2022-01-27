@@ -424,7 +424,9 @@ call check( nf90_put_var(grpid_metadata, varid_asce, gpsro_data%asce(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_ogce, gpsro_data%ogce(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_msl, gpsro_data%msl_alt(1:ndata)))
 call check( nf90_put_var(grpid_metadata, varid_impp,gpsro_data%impact_para(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_imph,gpsro_data%impact_para(1:ndata)-gpsro_data%rfict(1:ndata)-gpsro_data%geoid(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_imph,gpsro_data%impact_para(1:ndata)   &
+                                         - gpsro_data%rfict(1:ndata)                  &
+                                         - gpsro_data%geoid(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_azim, gpsro_data%azim(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_geoid, gpsro_data%geoid(1:ndata)))
 call check( nf90_put_var(grpid_metadata, varid_rfict, gpsro_data%rfict(1:ndata)))
