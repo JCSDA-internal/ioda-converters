@@ -301,7 +301,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gpsro_data%rfict(ndata) = roc
        gpsro_data%geoid(ndata) = geoid
        gpsro_data%azim(ndata)  = azim
-       CALL bendingangle_err_gsi(rlat,impact-roc, obsErr)
+       CALL bendingangle_err_gsi(rlat,impact-roc, obsErr, ogce)
        gpsro_data%bndoe_gsi(ndata) = obsErr
        if ( ref > missingvalue)  then
           CALL refractivity_err_gsi(rlat,height, GlobalModel, obsErr)
@@ -453,7 +453,7 @@ contains
 subroutine  refractivity_err_gsi(obsLat, obsZ, GlobalModel, obsErr)
 real(r_double), intent(in)   :: obsLat,  obsZ
 real(r_double),  intent(out) :: obsErr
-logical,         intent(in)   :: GlobalModel
+logical,         intent(in)  :: GlobalModel
 real(r_double)               :: obsZ_km
 
 obsZ_km  = obsZ / 1000.0
@@ -490,14 +490,17 @@ endif
 
 end subroutine refractivity_err_gsi
 
-subroutine  bendingangle_err_gsi(obsLat, obsZ,  obsErr)
+subroutine  bendingangle_err_gsi(obsLat, obsZ,  obsErr, ogce)
 real(r_double), intent(in)   :: obsLat,  obsZ
-real(r_double),  intent(out) :: obsErr
+integer,        intent(in)   :: ogce
+real(r_double), intent(out)  :: obsErr
 real(r_double)               :: obsZ_km
 
 obsZ_km  = obsZ / 1000.0
-if((said==41).or.(said==722).or.(said==723).or.(said==4).or.(said==42).or.&
-                 (said==3).or.(said==821.or.(said==421)).or.(said==440).or.(said==43)) then
+if((said==41).or.(said==722).or.(said==723).or.(said==42).or.&
+                 (said>=3.and.said<=5).or.(said==821.or.(said==421)).or.(said==440).or.(said==43) .or. &
+                 (ogce/=60) ) then
+
      if( abs(obsLat)>= 40.00 ) then
 
         if(obsZ_km>12.) then
