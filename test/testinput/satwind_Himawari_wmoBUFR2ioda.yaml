@@ -30,7 +30,7 @@ observations:
               upperBound: 180
         variables:
           timestamp:
-            dateTime:
+            datetime:
               year: YEAR
               month: MNTH
               day: DAYS

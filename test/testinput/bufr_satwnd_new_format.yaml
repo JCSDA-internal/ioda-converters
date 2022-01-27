@@ -24,7 +24,7 @@ observations:
           satellite:
             mnemonic: SAID
           timestamp:
-            dateTime:
+            datetime:
               year: YEAR
               month: MNTH
               day: DAYS
