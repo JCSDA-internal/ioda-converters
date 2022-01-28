@@ -40,7 +40,6 @@ character(len=10)         :: anatime
 integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,siid,ptid,sclf,asce,ogce
 integer(i_kind)           :: lnbufr    = 10
 integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
-integer(i_kind)           :: anatime_i
 integer(i_kind)           :: idate5(6), idate,iadate5(6)
 integer(i_kind)           :: mincy,minobs
 integer(i_64)             :: epochtime
@@ -111,7 +110,6 @@ call getarg(1,anatime)
 call getarg(2,infile)
 call getarg(3,outfile)
 
-read(anatime,'(i10)') anatime_i
 read(anatime(1:4),'(i4)')  iadate5(1) 
 read(anatime(5:6),'(i4)')  iadate5(2)
 read(anatime(7:8),'(i4)')  iadate5(3)
