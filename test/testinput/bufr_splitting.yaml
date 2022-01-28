@@ -42,7 +42,7 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.{splits/hour}.{splits/minute}.split.nc"
 
       dimensions:
-        - name: "nchans"
+        - name: "Channel"
           path: "*/BRITCSTC"
 
       variables:
@@ -64,7 +64,7 @@ observations:
           range: [-180, 180]
 
         - name: "radiance@ObsValue"
-          coordinates: "longitude latitude nchans"
+          coordinates: "longitude latitude Channel"
           source: variables/radiance
           longName: "Radiance"
           units: "K"
