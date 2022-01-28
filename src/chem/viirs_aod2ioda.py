@@ -230,12 +230,11 @@ def main():
 
     # setup the IODA writer
 
-    # Read in the AOD data
-    print('Before AOD') 
-    aod = AOD(args.input, args.time, args.method, args.mask, args.thin)
-
     # Get the obs time
     obs_time = args.time
+
+    # Read in the AOD data
+    aod = AOD(args.input, args.time, args.method, args.mask, args.thin)
 
     # write everything out
 
