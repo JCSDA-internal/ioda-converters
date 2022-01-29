@@ -653,7 +653,7 @@ SUBROUTINE epochtimecalculator(IDATE, EPOCHTIME)
              + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
              + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
              - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
-!   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1978 TO GET THE
+!   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1970 TO GET THE
 !   NUMBER OF DAYS BETWEEN DATES
     NDAYS = IJDN - JDN1970
     NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
