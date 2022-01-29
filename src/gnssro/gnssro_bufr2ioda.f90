@@ -338,11 +338,11 @@ call check( nf90_def_grp(ncid, 'ObsError', grpid_obserror) )
 
 call check( nf90_def_var(grpid_metadata, "latitude",      NF90_FLOAT, nlocs_dimid, varid_lat) )
 call check( nf90_put_att(grpid_metadata, varid_lat, "_FillValue",real(r_missing) ))
-call check( nf90_put_att(grpid_metadata, varid_lat, "units",  "degree" ))
+call check( nf90_put_att(grpid_metadata, varid_lat, "units",  "degree_north" ))
 
 call check( nf90_def_var(grpid_metadata, "longitude",     NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_put_att(grpid_metadata, varid_lon, "_FillValue",real(r_missing)))
-call check( nf90_put_att(grpid_metadata, varid_lon, "units",  "degree" ))
+call check( nf90_put_att(grpid_metadata, varid_lon, "units",  "degree_east" ))
 
 call check( nf90_def_var(grpid_metadata, "time",          NF90_FLOAT, nlocs_dimid, varid_time) )
 call check( nf90_put_att(grpid_metadata, varid_time, "longname", "time offset to analysis time" ))
