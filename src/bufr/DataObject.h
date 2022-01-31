@@ -12,6 +12,7 @@
 #include <memory>
 #include <type_traits>
 #include <iostream>
+#include <numeric>
 
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
@@ -58,8 +59,9 @@ namespace Ingester
         virtual void print() const = 0;
         virtual int getAsInt(const Location& loc) const = 0;
         virtual float getAsFloat(const Location& loc) const = 0;
+        virtual float getAsFloat(size_t idx) const = 0;
         virtual std::string getAsString(const Location& loc) const = 0;
-        virtual std::vector<float> getAsFloatVector() const = 0;
+        virtual size_t size() const = 0;
 
         /// \brief Makes an ioda::Variable and ads it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
@@ -162,10 +164,11 @@ namespace Ingester
             return data_[index];
         };
 
+        size_t size() const { return data_.size(); }
         int getAsInt(const Location& loc) const final { return _getAsInt(loc); }
         float getAsFloat(const Location& loc) const final { return _getAsFloat(loc); }
         std::string getAsString(const Location& loc) const final { return _getAsString(loc); }
-        std::vector<float> getAsFloatVector() const final { return _getAsFloatVector(); }
+        float getAsFloat(size_t idx) const final { return _getAsFloat(idx); }
 
         template<typename U = void>
         float _getAsFloat(const Location& loc,
@@ -210,25 +213,18 @@ namespace Ingester
         }
 
         template<typename U = void>
-        std::vector<float> _getAsFloatVector(
+        float _getAsFloat(size_t idx,
             typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
-            return data_;
+            return static_cast<float>(data_[idx]);
         }
 
         template<typename U = void>
-        std::vector<float> _getAsFloatVector(
-            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
+        float _getAsFloat(size_t idx,
+                typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
-            std::vector<float> result;
-
-            result.resize(data_.size());
-            for (size_t dataIdx; dataIdx < data_.size(); ++dataIdx)
-            {
-                result[dataIdx] = std::stof(data_[dataIdx]);
-            }
-
-            return result;
+            throw std::runtime_error("The stored value was is not a number");
+            return 0.0f;
         }
 
         std::shared_ptr<DataObjectBase> slice(const std::vector<std::size_t>& rows) const final

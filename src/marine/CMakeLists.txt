@@ -1,4 +1,6 @@
 list(APPEND programs
+  copernicus_l4adt2ioda.py
+  copernicus_l3swh2ioda.py
   cryosat_ice2ioda.py
   emc_ice2ioda.py
   gds2_sst2ioda.py
@@ -17,6 +19,8 @@ list(APPEND programs
   argoClim2ioda.py
   viirs_modis_l2_oc2ioda.py
   viirs_modis_l3_oc2ioda.py
+  godae_bgc_argo2ioda.py
+  avhrr_radiance2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

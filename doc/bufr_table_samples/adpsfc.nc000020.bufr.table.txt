@@ -1,0 +1,89 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC000020 | A56250 | MTYP 000-020 WIND ENERGY NACELLE, RESTRICTED             |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMMSS   | 301013 | TIME -- HOUR, MINUTE, SECOND                             |
+| LTLONH   | 301021 | LOCATION -- LATITUDE, LONGITUDE (HIGH ACCURACY)          |
+| FILENAME | 352004 | FILE NAME SEQUENCE                                       |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+|          |        |                                                          |
+| STSN     | 001015 | STATION OR SITE NAME                                     |
+| WEPRV    | 001220 | WIND ENERGY PROVIDER                                     |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTES                                                  |
+| SECO     | 004006 | SECOND                                                   |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| HSMSL    | 007030 | HEIGHT OF STATION GROUND ABOVE MSL                       |
+| HSALG    | 007032 | HEIGHT OF SENSOR ABOVE LOCAL GROUND                      |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| SDWD     | 011049 | STANDARD DEVIATION OF WIND DIRECTION                     |
+| SDHS     | 011050 | STANDARD DEVIATION OF HORIZONTAL WIND SPEED              |
+| RSRD     | 035200 | RESTRICTIONS ON REDISTRIBUTION                           |
+| EXPRSRD  | 035201 | EXPIRATION OF RESTRICTIONS ON REDISTRIBUTION             |
+| FNSTG    | 050002 | FILE NAME STRING                                         |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC000020 | YYMMDD  HHMMSS  RCPTIM  208024  STSN  208000  WEPRV  LTLONH       |
+| NC000020 | 207001  HSMSL  HSALG  WDIR  WSPD  SDWD  SDHS  207000  {FILENAME}  |
+| NC000020 | RSRD  EXPRSRD                                                     |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| FILENAME | FNSTG                                                             |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| STSN     |    0 |           0 | 160 | CCITT IA5                |-------------|
+| WEPRV    |    0 |           0 | 128 | CCITT IA5                |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE(N+,S-)            |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE(E+,W-)            |-------------|
+| HSMSL    |    1 |       -4000 |  17 | METERS                   |-------------|
+| HSALG    |    2 |           0 |  16 | M                        |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| SDWD     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| SDHS     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| RSRD     |    0 |           0 |   9 | FLAG TABLE               |-------------|
+| EXPRSRD  |    0 |           0 |   8 | HOURS                    |-------------|
+| FNSTG    |    0 |           0 |  64 | CCITT IA5                |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
