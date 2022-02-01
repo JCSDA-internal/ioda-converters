@@ -20,4 +20,4 @@ b) write obs only
 2.-------------------------------------------------------------
 The converter implemented by gnssro_bufr2ioda.f90
 reads in the GNSSRO bufr files in NCEP operational bufr format.
-It  converts the bufr file to IODA(1) file.
+It  converts the bufr file to IODA(2) file.

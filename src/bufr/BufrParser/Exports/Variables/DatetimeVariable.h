@@ -14,7 +14,7 @@
 #include "eckit/config/LocalConfiguration.h"
 
 #include "BufrParser/BufrTypes.h"
-#include "DataObject/StrVecDataObject.h"
+#include "DataObject/Int64VecDataObject.h"
 #include "Variable.h"
 
 
