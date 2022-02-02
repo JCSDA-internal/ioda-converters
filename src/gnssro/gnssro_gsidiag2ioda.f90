@@ -42,8 +42,6 @@ integer   :: varid_geo_virtemp,varid_geo_airtemp,varid_geo_pres,varid_geo_shum,v
 integer   :: varid_geo_pres1, varid_geo_geop1
 integer   :: varid_geo_geop_sfc
 integer   :: istart(2), icount(2)
-real(r_single)            :: zero_single
-real(r_single), parameter :: huge_single = huge(zero_single) -1
 character(len=10)         :: anatime
 character(len=1)          :: geovalwrite
 integer(i_kind)           :: anatime_i
@@ -184,13 +182,13 @@ call check(NF90_GET_VAR(ncid_in, varid_meta, gpsro_data%bnd_gsihofx, (/1/),(/nob
 where(gpsro_data%bnd_obserr_adjust>0.0 )
   gpsro_data%bnd_obserr_adjust = 1.0/gpsro_data%bnd_obserr_adjust
 elsewhere
-  gpsro_data%bnd_obserr_adjust = huge_single
+  gpsro_data%bnd_obserr_adjust = r_missing
 endwhere
 
 where(gpsro_data%bnd_obserr_final>0.0 )
   gpsro_data%bnd_obserr_final  = 1.0/gpsro_data%bnd_obserr_final
 elsewhere
-  gpsro_data%bnd_obserr_final  = huge_single
+  gpsro_data%bnd_obserr_final  = r_missing
 endwhere
 gpsro_data%bnd_obserr   = gpsro_data%bnd_obserr_adjust
 
