@@ -18,7 +18,6 @@
 
 #include "ResultSet.h"
 
-
 namespace Ingester
 {
     typedef std::vector<size_t> Dimensions;

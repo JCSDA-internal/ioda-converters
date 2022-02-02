@@ -16,15 +16,13 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
-#include "File.h"
+#include "Query/File.h"
 #include "ResultSet.h"
 #include "Parser.h"
 #include "BufrDescription.h"
 
 
-namespace Ingester
-{
-    class BufrMnemonicSet;
+namespace Ingester {
     class DataContainer;
 
     /// \brief Uses a BufrDescription and helper classes to parse the contents of a BUFR file.

@@ -36,6 +36,19 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
   BufrParser/Exports/Variables/Transforms/TransformBuilder.h
   BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
+  BufrParser/Query/BufrDataManager.h
+  BufrParser/Query/BufrDataManager.cpp
+  BufrParser/Query/File.h
+  BufrParser/Query/File.cpp
+  BufrParser/Query/VectorMath.h
+  BufrParser/Query/QuerySet.h
+  BufrParser/Query/QuerySet.cpp
+  BufrParser/Query/Query.h
+  BufrParser/Query/Query.cpp
+  BufrParser/Query/QueryParser.h
+  BufrParser/Query/QueryParser.cpp
+  BufrParser/Query/ResultSet.h
+  BufrParser/Query/ResultSet.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp
