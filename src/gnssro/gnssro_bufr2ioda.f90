@@ -52,7 +52,7 @@ integer(i_kind),parameter :: maxlevs=500
 integer(i_kind),parameter :: n1ahdr=13
 integer(i_kind)           :: maxobs
 real(r_kind) :: timeo
-type gpsro_type
+type gnssro_type
       integer(i_kind), allocatable, dimension(:)    :: said
       integer(i_kind), allocatable, dimension(:)    :: siid
       integer(i_kind), allocatable, dimension(:)    :: sclf
@@ -73,9 +73,9 @@ type gpsro_type
       real(r_kind), allocatable, dimension(:)     :: bend_ang
       real(r_kind), allocatable, dimension(:)     :: impact_para
       real(r_kind), allocatable, dimension(:)     :: bndoe_gsi
-end type gpsro_type
+end type gnssro_type
 
-type(gpsro_type) :: gpsro_data
+type(gnssro_type) :: gnssro_data
 
 real(r_kind),dimension(n1ahdr)     :: bfr1ahdr
 real(r_kind),dimension(50,maxlevs) :: data1b
@@ -135,26 +135,26 @@ do while(ireadmg(lnbufr,subset,idate)==0)
   enddo read_loop_countmaxobs
 end do
 
-allocate(gpsro_data%said(maxobs))
-allocate(gpsro_data%siid(maxobs))
-allocate(gpsro_data%sclf(maxobs))
-allocate(gpsro_data%ptid(maxobs))
-allocate(gpsro_data%recn(maxobs))
-allocate(gpsro_data%asce(maxobs))
-allocate(gpsro_data%ogce(maxobs))
-allocate(gpsro_data%time(maxobs))
-allocate(gpsro_data%epochtime(maxobs))
-allocate(gpsro_data%lat(maxobs))
-allocate(gpsro_data%lon(maxobs))
-allocate(gpsro_data%rfict(maxobs))
-allocate(gpsro_data%azim(maxobs))
-allocate(gpsro_data%geoid(maxobs))
-allocate(gpsro_data%msl_alt(maxobs))
-allocate(gpsro_data%ref(maxobs))
-allocate(gpsro_data%refoe_gsi(maxobs))
-allocate(gpsro_data%bend_ang(maxobs))
-allocate(gpsro_data%impact_para(maxobs))
-allocate(gpsro_data%bndoe_gsi(maxobs))
+allocate(gnssro_data%said(maxobs))
+allocate(gnssro_data%siid(maxobs))
+allocate(gnssro_data%sclf(maxobs))
+allocate(gnssro_data%ptid(maxobs))
+allocate(gnssro_data%recn(maxobs))
+allocate(gnssro_data%asce(maxobs))
+allocate(gnssro_data%ogce(maxobs))
+allocate(gnssro_data%time(maxobs))
+allocate(gnssro_data%epochtime(maxobs))
+allocate(gnssro_data%lat(maxobs))
+allocate(gnssro_data%lon(maxobs))
+allocate(gnssro_data%rfict(maxobs))
+allocate(gnssro_data%azim(maxobs))
+allocate(gnssro_data%geoid(maxobs))
+allocate(gnssro_data%msl_alt(maxobs))
+allocate(gnssro_data%ref(maxobs))
+allocate(gnssro_data%refoe_gsi(maxobs))
+allocate(gnssro_data%bend_ang(maxobs))
+allocate(gnssro_data%impact_para(maxobs))
+allocate(gnssro_data%bndoe_gsi(maxobs))
 
 !rewind lnbufr
 call closbf(lnbufr)
@@ -286,32 +286,32 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 
     if(good) then
        ndata  = ndata +1 
-       gpsro_data%recn(ndata)     = nrec
-       gpsro_data%lat(ndata)      = rlat
-       gpsro_data%lon(ndata)      = rlon
-       gpsro_data%time(ndata)     = timeo
-       gpsro_data%epochtime(ndata)= epochtime
-       gpsro_data%said(ndata)     = said
-       gpsro_data%siid(ndata)     = siid
-       gpsro_data%sclf(ndata)     = sclf
-       gpsro_data%asce(ndata)     = asce
-       gpsro_data%ptid(ndata)     = ptid
-       gpsro_data%ogce(ndata)     = ogce
-       gpsro_data%ref(ndata)      = ref
-       gpsro_data%msl_alt(ndata)  = height
-       gpsro_data%bend_ang(ndata)     = bend
-       gpsro_data%bndoe_gsi(ndata)    = bend_error
-       gpsro_data%impact_para(ndata)  = impact! 
-       gpsro_data%rfict(ndata) = roc
-       gpsro_data%geoid(ndata) = geoid
-       gpsro_data%azim(ndata)  = azim
+       gnssro_data%recn(ndata)     = nrec
+       gnssro_data%lat(ndata)      = rlat
+       gnssro_data%lon(ndata)      = rlon
+       gnssro_data%time(ndata)     = timeo
+       gnssro_data%epochtime(ndata)= epochtime
+       gnssro_data%said(ndata)     = said
+       gnssro_data%siid(ndata)     = siid
+       gnssro_data%sclf(ndata)     = sclf
+       gnssro_data%asce(ndata)     = asce
+       gnssro_data%ptid(ndata)     = ptid
+       gnssro_data%ogce(ndata)     = ogce
+       gnssro_data%ref(ndata)      = ref
+       gnssro_data%msl_alt(ndata)  = height
+       gnssro_data%bend_ang(ndata)     = bend
+       gnssro_data%bndoe_gsi(ndata)    = bend_error
+       gnssro_data%impact_para(ndata)  = impact! 
+       gnssro_data%rfict(ndata) = roc
+       gnssro_data%geoid(ndata) = geoid
+       gnssro_data%azim(ndata)  = azim
        CALL bendingangle_err_gsi(rlat,impact-roc, obsErr, ogce)
-       gpsro_data%bndoe_gsi(ndata) = obsErr
+       gnssro_data%bndoe_gsi(ndata) = obsErr
        if ( ref > r_missing)  then
           CALL refractivity_err_gsi(rlat,height, GlobalModel, obsErr)
-          gpsro_data%refoe_gsi(ndata) = obsErr
+          gnssro_data%refoe_gsi(ndata) = obsErr
        else
-          gpsro_data%refoe_gsi(ndata) = r_missing
+          gnssro_data%refoe_gsi(ndata) = r_missing
        end if
      end if
 
@@ -452,51 +452,51 @@ call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", "6200 - 660
 call check( nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing) ))
 call check( nf90_enddef(ncid) )
 
-call check( nf90_put_var(grpid_obsvalue, varid_ref, gpsro_data%ref(1:ndata)) )
-call check( nf90_put_var(grpid_obserror, varid_refoe,gpsro_data%refoe_gsi(1:ndata)) )
-call check( nf90_put_var(grpid_obsvalue, varid_bnd,gpsro_data%bend_ang(1:ndata)))
-call check( nf90_put_var(grpid_obserror, varid_bndoe,gpsro_data%bndoe_gsi(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_lat, gpsro_data%lat(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_lon, gpsro_data%lon(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_time, gpsro_data%time(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_epochtime,gpsro_data%epochtime(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_recn, gpsro_data%recn(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_said, gpsro_data%said(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_siid, gpsro_data%siid(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_ptid, gpsro_data%ptid(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_sclf, gpsro_data%sclf(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_asce, gpsro_data%asce(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_ogce, gpsro_data%ogce(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_msl,  gpsro_data%msl_alt(1:ndata)))
-call check( nf90_put_var(grpid_metadata, varid_impp, gpsro_data%impact_para(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_imph, gpsro_data%impact_para(1:ndata)   &
-                                                   - gpsro_data%rfict(1:ndata)         &
-                                                   - gpsro_data%geoid(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_azim, gpsro_data%azim(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_geoid,gpsro_data%geoid(1:ndata)))
-call check( nf90_put_var(grpid_metadata, varid_rfict,gpsro_data%rfict(1:ndata)))
+call check( nf90_put_var(grpid_obsvalue, varid_ref, gnssro_data%ref(1:ndata)) )
+call check( nf90_put_var(grpid_obserror, varid_refoe,gnssro_data%refoe_gsi(1:ndata)) )
+call check( nf90_put_var(grpid_obsvalue, varid_bnd,gnssro_data%bend_ang(1:ndata)))
+call check( nf90_put_var(grpid_obserror, varid_bndoe,gnssro_data%bndoe_gsi(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_time, gnssro_data%time(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_epochtime,gnssro_data%epochtime(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_siid, gnssro_data%siid(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_ptid, gnssro_data%ptid(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_sclf, gnssro_data%sclf(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_asce, gnssro_data%asce(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_ogce, gnssro_data%ogce(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_msl,  gnssro_data%msl_alt(1:ndata)))
+call check( nf90_put_var(grpid_metadata, varid_impp, gnssro_data%impact_para(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_imph, gnssro_data%impact_para(1:ndata)   &
+                                                   - gnssro_data%rfict(1:ndata)         &
+                                                   - gnssro_data%geoid(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_azim, gnssro_data%azim(1:ndata)) )
+call check( nf90_put_var(grpid_metadata, varid_geoid,gnssro_data%geoid(1:ndata)))
+call check( nf90_put_var(grpid_metadata, varid_rfict,gnssro_data%rfict(1:ndata)))
 call check( nf90_close(ncid) )
 
-deallocate(gpsro_data%said)
-deallocate(gpsro_data%siid)
-deallocate(gpsro_data%sclf)
-deallocate(gpsro_data%ptid)
-deallocate(gpsro_data%recn)
-deallocate(gpsro_data%asce)
-deallocate(gpsro_data%ogce)
-deallocate(gpsro_data%time)
-deallocate(gpsro_data%epochtime)
-deallocate(gpsro_data%lat)
-deallocate(gpsro_data%lon)
-deallocate(gpsro_data%rfict)
-deallocate(gpsro_data%azim)
-deallocate(gpsro_data%geoid)
-deallocate(gpsro_data%msl_alt)
-deallocate(gpsro_data%ref)
-deallocate(gpsro_data%refoe_gsi)
-deallocate(gpsro_data%bend_ang)
-deallocate(gpsro_data%impact_para)
-deallocate(gpsro_data%bndoe_gsi)
+deallocate(gnssro_data%said)
+deallocate(gnssro_data%siid)
+deallocate(gnssro_data%sclf)
+deallocate(gnssro_data%ptid)
+deallocate(gnssro_data%recn)
+deallocate(gnssro_data%asce)
+deallocate(gnssro_data%ogce)
+deallocate(gnssro_data%time)
+deallocate(gnssro_data%epochtime)
+deallocate(gnssro_data%lat)
+deallocate(gnssro_data%lon)
+deallocate(gnssro_data%rfict)
+deallocate(gnssro_data%azim)
+deallocate(gnssro_data%geoid)
+deallocate(gnssro_data%msl_alt)
+deallocate(gnssro_data%ref)
+deallocate(gnssro_data%refoe_gsi)
+deallocate(gnssro_data%bend_ang)
+deallocate(gnssro_data%impact_para)
+deallocate(gnssro_data%bndoe_gsi)
 
 contains
  subroutine check(status)
