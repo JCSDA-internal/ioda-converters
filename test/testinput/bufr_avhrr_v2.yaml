@@ -91,11 +91,11 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "MetaData/datetime"
+        - name: "MetaData/dateTime"
           source: variables/timestamp
           dimensions: ["nlocs"]
-          longName: "Datetime"
-          units: "datetime"
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/fieldOfViewNumber"
           source: variables/fieldOfViewNumber
