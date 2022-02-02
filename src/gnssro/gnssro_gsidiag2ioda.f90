@@ -1,3 +1,5 @@
+!--- Hailing Zhang 2022-02-02
+!    update to IODA2 version
 !--- Hailing Zhang 2021-05-20
 !--- This is to further process the GSI Diag netcdf file
 !    from the JCSDA GSI branch feature/jedi_gdas
@@ -18,6 +20,7 @@ program gnssro_gsidiag_full2small
 use netcdf
 implicit none
 integer, parameter :: i_kind   = selected_int_kind(8)
+integer, parameter :: i_64     = selected_int_kind(10)   !8
 integer, parameter :: r_single = selected_real_kind(4) 
 
 character(len=256)   :: filename_in, obsname_out, geoname_out
@@ -25,9 +28,12 @@ integer   :: ncid_in, ncid_out, ncid_out2
 integer   :: nobs_dimid, nlevs_dimid, nlevs1_dimid
 integer   :: nlevs, nlevs1, nobs, nlocs, nrecs
 integer   :: nlocs_dimid,nvars_dimid,nrecs_dimid, nlocs_dimid2
+integer   :: grpid_metadata,grpid_obserror,grpid_obsvalue
+integer   :: grpid_gsihofx, grpid_gsipreqc, grpid_gsiadjerr, grpid_gsifnlerr
 integer   :: varid_meta,varid_geoval_nlevs,varid_geoval_nlevs1  
 integer   :: varid_lat, varid_lon, varid_time
 integer   :: varid_lat2,varid_lon2,varid_time2 
+integer   :: varid_epochtime
 integer   :: varid_geoid, varid_rfict
 integer   :: varid_rec, varid_said,varid_siid,varid_ogce,varid_ptid,varid_sclf,varid_asce
 integer   :: varid_imph,varid_impp, varid_azim 
@@ -41,6 +47,7 @@ real(r_single), parameter :: huge_single = huge(zero_single) -1
 character(len=10)         :: anatime
 character(len=1)          :: geovalwrite
 integer(i_kind)           :: anatime_i
+integer(i_64)             :: epochtime
 
 type gpsro_type
       integer,  allocatable  :: said(:)
@@ -54,6 +61,7 @@ type gpsro_type
       real(r_single), allocatable  :: lat(:)
       real(r_single), allocatable  :: lon(:)
       real(r_single), allocatable  :: time(:)
+      integer(i_64),   allocatable :: epochtime(:)
       real(r_single), allocatable  :: geoid(:)
       real(r_single), allocatable  :: rfict(:)
       real(r_single), allocatable  :: azim(:)
@@ -80,6 +88,14 @@ type(gpsro_type) :: gpsro_subset
 type(gpsro_type) :: gpsro_reorder
 integer          :: nsub, i, j, k,substart, subend,narg
 
+real(r_single)    :: r_missing
+integer(i_kind) :: i_missing
+integer(i_64)   :: i64_missing
+
+i_missing=huge(i_missing)
+i64_missing=huge(i64_missing)
+r_missing=huge(i_missing)
+
 narg=command_argument_count()
 call getarg(1,anatime)
 call getarg(2,filename_in)
@@ -104,6 +120,7 @@ call check(nf90_inquire_dimension(ncid_in, nlevs1_dimid, len=nlevs1))
 allocate(gpsro_data%lat(nobs))
 allocate(gpsro_data%lon(nobs))
 allocate(gpsro_data%time(nobs))
+allocate(gpsro_data%epochtime(nobs))
 allocate(gpsro_data%asce(nobs))
 allocate(gpsro_data%azim(nobs))
 allocate(gpsro_data%geoid(nobs))
@@ -187,8 +204,8 @@ if ( geovalwrite == "1" )  then
    allocate(gpsro_data%air_pressure(nlevs,nobs))
    allocate(gpsro_data%air_pressure_levels(nlevs1,nobs))
    allocate(gpsro_data%surface_geopotential_height(nobs))
-   call check(NF90_INQ_VARID(ncid_in, 'surface_geopotential_height', varid_meta))
-   call check(NF90_GET_VAR(ncid_in, varid_meta,gpsro_data%surface_geopotential_height, (/1/), (/nobs/)))
+!   call check(NF90_INQ_VARID(ncid_in, 'surface_geopotential_height', varid_meta))
+!   call check(NF90_GET_VAR(ncid_in, varid_meta,gpsro_data%surface_geopotential_height, (/1/), (/nobs/)))
    call check(NF90_INQ_VARID(ncid_in, 'air_temperature', varid_geoval_nlevs)) 
    call check(NF90_GET_VAR(ncid_in, varid_geoval_nlevs,gpsro_data%air_temperature, start=(/1,1/), count=(/nlevs,nobs/))) 
    call check(NF90_INQ_VARID(ncid_in, 'virtual_temperature', varid_geoval_nlevs))   
@@ -219,6 +236,7 @@ end if
 allocate(gpsro_subset%lat(nobs))
 allocate(gpsro_subset%lon(nobs))
 allocate(gpsro_subset%time(nobs))
+allocate(gpsro_subset%epochtime(nobs))
 allocate(gpsro_subset%asce(nobs))
 allocate(gpsro_subset%azim(nobs))
 allocate(gpsro_subset%geoid(nobs))
@@ -247,8 +265,8 @@ do j = 1,  maxval(gpsro_data%record_number(:))
         nsub=nsub+1
         gpsro_subset%lat(nsub) = gpsro_data%lat(i)
         gpsro_subset%lon(nsub) = gpsro_data%lon(i)
-        gpsro_subset%time(nsub) = gpsro_data%time(i)
-        if (gpsro_subset%time(nsub) .eq. -3.00) gpsro_subset%time(nsub) = -2.999
+        gpsro_subset%time(nsub)= gpsro_data%time(i)
+!       gpsro_subset%epochtime(nsub)        = gpsro_data%epochtime(i)
         gpsro_subset%impact_height(nsub)    = gpsro_data%impact_height(i)
         gpsro_subset%impact_parameter(nsub) = gpsro_data%impact_parameter(i)
         gpsro_subset%geoid(nsub) = gpsro_data%geoid(i)
@@ -285,63 +303,128 @@ end do
 call check( nf90_create(trim(obsname_out), NF90_CLOBBER + NF90_NETCDF4,ncid_out))
 call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_dim(ncid_out, 'nlocs', nsub,  nlocs_dimid) )
-call check( nf90_def_var(ncid_out, "latitude@MetaData",        NF90_FLOAT, nlocs_dimid, varid_lat) )
-call check( nf90_def_var(ncid_out, "longitude@MetaData",       NF90_FLOAT, nlocs_dimid, varid_lon) )
-call check( nf90_def_var(ncid_out, "time@MetaData",            NF90_FLOAT, nlocs_dimid, varid_time) )
-call check( nf90_def_var(ncid_out, "impact_height@MetaData",   NF90_FLOAT, nlocs_dimid, varid_imph))
-call check( nf90_put_att(ncid_out, varid_imph, "longname", "distance from mean sea level" ))
-call check( nf90_put_att(ncid_out, varid_imph, "units", "Meters" ))
-call check( nf90_put_att(ncid_out, varid_imph, "valid_range", "0 - 200 km" ))
-call check( nf90_def_var(ncid_out, "impact_parameter@MetaData",NF90_FLOAT, nlocs_dimid, varid_impp))
-call check( nf90_put_att(ncid_out, varid_impp, "longname", "distance from centre of curvature" ))
-call check( nf90_put_att(ncid_out, varid_impp, "units", "Meters" ))
-call check( nf90_put_att(ncid_out, varid_impp, "valid_range", "6200 - 6600 km" ))
-call check( nf90_def_var(ncid_out, "geoid_height_above_reference_ellipsoid@MetaData",    NF90_FLOAT, nlocs_dimid, varid_geoid))
-call check( nf90_put_att(ncid_out, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
-call check( nf90_put_att(ncid_out, varid_geoid, "units", "Meters" ))
-call check( nf90_put_att(ncid_out, varid_geoid, "valid_range", "-200 - 200 m" ))
-call check( nf90_def_var(ncid_out, "earth_radius_of_curvature@MetaData", NF90_FLOAT, nlocs_dimid, varid_rfict))
-call check( nf90_put_att(ncid_out, varid_rfict, "longname", "Earth’s local radius of curvature" ))
-call check( nf90_put_att(ncid_out, varid_rfict, "units", "Meters" ))
-call check( nf90_put_att(ncid_out, varid_rfict, "valid_range", "6200 - 6600 km" ))
-call check( nf90_def_var(ncid_out, "sensor_azimuth_angle@MetaData",NF90_FLOAT, nlocs_dimid, varid_azim))
-call check( nf90_put_att(ncid_out, varid_azim, "longname", "GNSS->LEO line of sight" ))
-call check( nf90_put_att(ncid_out, varid_azim, "units", "Degree" ))
-call check( nf90_put_att(ncid_out, varid_azim, "valid_range", "0 - 360 degree" ))
-call check( nf90_def_var(ncid_out, "record_number@MetaData",    NF90_INT,nlocs_dimid, varid_rec))
-call check( nf90_put_att(ncid_out, varid_rec, "longname", "GNSS RO profile identifier" ))
-call check( nf90_def_var(ncid_out, "occulting_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_said))
-call check( nf90_put_att(ncid_out, varid_said, "longname", "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755" ))
-call check( nf90_def_var(ncid_out, "occulting_sat_is@MetaData", NF90_INT, nlocs_dimid, varid_siid))
-call check( nf90_put_att(ncid_out, varid_siid, "longname", "satellite instrument" ))
-call check( nf90_def_var(ncid_out, "process_center@MetaData", NF90_INT, nlocs_dimid, varid_ogce))
-call check( nf90_put_att(ncid_out, varid_ogce, "longname", "originally data processing_center,   e.g., 60 for UCAR, 94 for DMI" ))
-call check( nf90_def_var(ncid_out, "reference_sat_id@MetaData", NF90_INT, nlocs_dimid, varid_ptid))
-call check( nf90_put_att(ncid_out, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)" ))
-call check( nf90_def_var(ncid_out, "gnss_sat_class@MetaData",   NF90_INT, nlocs_dimid, varid_sclf))
-call check( nf90_put_att(ncid_out, varid_sclf, "longname", "GNSS satellite classification, e.g, 401=GPS, 402=GLONASS" ))
-call check( nf90_def_var(ncid_out, "ascending_flag@MetaData",   NF90_INT, nlocs_dimid, varid_asce))
-call check( nf90_put_att(ncid_out, varid_asce, "longname", "the original occultation ascending/descending flag" ))
-call check( nf90_def_var(ncid_out, "bending_angle@ObsValue",    NF90_FLOAT, nlocs_dimid, varid_bnd))
-call check( nf90_put_att(ncid_out, varid_bnd, "longname",  "Bending Angle" ))
-call check( nf90_put_att(ncid_out, varid_bnd, "units", "Radians" )) 
-call check( nf90_put_att(ncid_out, varid_bnd, "valid_range", "-0.001 - 0.08 Radians" ))
-call check( nf90_def_var(ncid_out, "bending_angle@ObsError",    NF90_FLOAT, nlocs_dimid, varid_obserr))
-call check( nf90_put_att(ncid_out, varid_obserr, "longname", "GSI final observation error" ))
-call check( nf90_put_att(ncid_out, varid_obserr, "units", "Radians" ))
-call check( nf90_put_att(ncid_out, varid_obserr, "valid_range", "0 - 0.008 Radians" ))
-call check( nf90_def_var(ncid_out, "bending_angle@GsiAdjustObsError", NF90_FLOAT, nlocs_dimid, varid_obserr_adjust))
-call check( nf90_put_att(ncid_out, varid_obserr_adjust, "longname", "GSI adjust observation error" ))
-call check( nf90_put_att(ncid_out, varid_obserr_adjust, "units", "Radians" ))
-call check( nf90_put_att(ncid_out, varid_obserr_adjust, "valid_range", "0 - 0.008 Radians" ))
-call check( nf90_def_var(ncid_out, "bending_angle@GsiFinalObsError", NF90_FLOAT, nlocs_dimid, varid_obserr_final))
-call check( nf90_put_att(ncid_out, varid_obserr_final, "longname", "GSI final observation error (inflated)" ))
-call check( nf90_put_att(ncid_out, varid_obserr_final, "units", "Radians" ))
-call check( nf90_put_att(ncid_out, varid_obserr_final, "valid_range", "0 - 0.008 Radians" ))
-call check( nf90_def_var(ncid_out, "bending_angle@PreQC",              NF90_INT,nlocs_dimid, varid_preqc))
-call check( nf90_put_att(ncid_out, varid_preqc, "longname", "GSI output QC flags" ))
-call check( nf90_put_att(ncid_out, varid_preqc, "valid_range", "1 - 5" ))
-call check( nf90_def_var(ncid_out, "bending_angle@GsiHofX", NF90_FLOAT, nlocs_dimid, varid_gsihofx))
+call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'ioda_version', 'Fortran generated ioda2 file from GSI diag file') )
+call check( nf90_def_grp(ncid_out, 'MetaData', grpid_metadata) )
+call check( nf90_def_grp(ncid_out, 'ObsValue', grpid_obsvalue) )
+call check( nf90_def_grp(ncid_out, 'ObsError', grpid_obserror) )
+call check( nf90_def_grp(ncid_out, 'GsiHofX',  grpid_gsihofx) )
+call check( nf90_def_grp(ncid_out, 'GsiAdjustObsError', grpid_gsiadjerr) )
+call check( nf90_def_grp(ncid_out, 'GsiFinalObsError',  grpid_gsifnlerr) )
+call check( nf90_def_grp(ncid_out, 'GsiPreQC',          grpid_gsipreqc) )
+
+call check( nf90_def_var(grpid_metadata, "latitude",        NF90_FLOAT, nlocs_dimid, varid_lat) )
+call check( nf90_put_att(grpid_metadata, varid_lat, "units",  "degree_north" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_lat, 0, real(r_missing)))
+
+call check( nf90_def_var(grpid_metadata, "longitude",       NF90_FLOAT, nlocs_dimid, varid_lon) )
+call check( nf90_put_att(grpid_metadata, varid_lon, "units",  "degree_east" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_lon, 0, real(r_missing)))
+
+call check( nf90_def_var(grpid_metadata, "time",            NF90_FLOAT, nlocs_dimid, varid_time) )
+call check( nf90_put_att(grpid_metadata, varid_time, "longname", "time offset to analysis time" ))
+call check( nf90_put_att(grpid_metadata, varid_time, "units", "hour" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_time, 0, real(r_missing)))
+
+call check( nf90_def_var(grpid_metadata, "impact_height",   NF90_FLOAT, nlocs_dimid, varid_imph))
+call check( nf90_put_att(grpid_metadata, varid_imph, "longname", "distance from mean sea level" ))
+call check( nf90_put_att(grpid_metadata, varid_imph, "units", "m" ))
+call check( nf90_put_att(grpid_metadata, varid_imph, "valid_range", "0 - 200 km"))
+call check( nf90_def_var_fill(grpid_metadata, varid_imph, 0, real(r_missing)))
+
+call check( nf90_def_var(grpid_metadata, "impact_parameter",NF90_FLOAT, nlocs_dimid, varid_impp))
+call check( nf90_put_att(grpid_metadata, varid_impp, "longname", "distance from centre of curvature" ))
+call check( nf90_put_att(grpid_metadata, varid_impp, "units", "m" ))
+call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", "6200 - 6600 km" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_impp, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_metadata, "geoid_height_above_reference_ellipsoid",   &
+                                          NF90_FLOAT, nlocs_dimid, varid_geoid))
+call check( nf90_put_att(grpid_metadata, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
+call check( nf90_put_att(grpid_metadata, varid_geoid, "units", "m" ))
+call check( nf90_put_att(grpid_metadata, varid_geoid, "valid_range", "-200 - 200 m" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_geoid, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_metadata, "earth_radius_of_curvature", NF90_FLOAT, nlocs_dimid, varid_rfict))
+call check( nf90_put_att(grpid_metadata, varid_rfict, "longname", "Earth’s local radius of curvature" ))
+call check( nf90_put_att(grpid_metadata, varid_rfict, "units", "m" ))
+call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", "6200 - 6600 km" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_metadata, "sensor_azimuth_angle",NF90_FLOAT, nlocs_dimid, varid_azim))
+call check( nf90_put_att(grpid_metadata, varid_azim, "longname", "GNSS->LEO line of sight" ))
+call check( nf90_put_att(grpid_metadata, varid_azim, "units", "degree" ))
+call check( nf90_put_att(grpid_metadata, varid_azim, "valid_range", "0 - 360 degree" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_azim, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_metadata, "record_number", NF90_INT,nlocs_dimid, varid_rec))
+call check( nf90_put_att(grpid_metadata, varid_rec, "longname", "GNSS RO profile identifier" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_rec, 0, i_missing ))
+
+call check( nf90_def_var(grpid_metadata, "occulting_sat_id", NF90_INT, nlocs_dimid, varid_said))
+call check( nf90_put_att(grpid_metadata, varid_said, "longname",   &
+                                         "Low EarthOrbit satellite identifier, e.g., COSMIC2=750-755" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_said, 0, i_missing ))
+
+call check( nf90_def_var(grpid_metadata, "occulting_sat_is", NF90_INT, nlocs_dimid, varid_siid))
+call check( nf90_put_att(grpid_metadata, varid_siid, "longname", "satellite instrument" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_siid, 0, i_missing ))
+
+call check( nf90_def_var(grpid_metadata, "process_center", NF90_INT, nlocs_dimid, varid_ogce))
+call check( nf90_put_att(grpid_metadata, varid_ogce, "longname", "originally data processing_center,   &
+                                                      e.g., 60 for UCAR, 94 for DMI, 78 for GFZ" ))
+call check( nf90_put_att(grpid_metadata, varid_ogce, "units",  "1" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing ))
+
+call check( nf90_def_var(grpid_metadata, "reference_sat_id", NF90_INT, nlocs_dimid, varid_ptid))
+call check( nf90_put_att(grpid_metadata, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_ptid, 0, i_missing ))
+                                                      
+call check( nf90_def_var(grpid_metadata, "gnss_sat_class",   NF90_INT, nlocs_dimid, varid_sclf))
+call check( nf90_put_att(grpid_metadata, varid_sclf, "longname", "GNSS satellite classification,  &
+                                                      e.g, 401=GPS, 402=GLONASS" ))
+call check( nf90_put_att(grpid_metadata, varid_sclf, "units",  "1" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_sclf, 0, i_missing ))
+
+call check( nf90_def_var(grpid_metadata, "ascending_flag",   NF90_INT, nlocs_dimid, varid_asce))
+call check( nf90_put_att(grpid_metadata, varid_asce, "longname", "the original occultation ascending/descending flag" ))
+call check( nf90_put_att(grpid_metadata, varid_asce, "units",  "1" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing ))
+
+call check( nf90_def_var(grpid_obsvalue, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_bnd) )
+call check( nf90_put_att(grpid_obsvalue, varid_bnd, "longname", "Bending Angle" ))
+call check( nf90_put_att(grpid_obsvalue, varid_bnd, "units", "radian" ))
+call check( nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", "-0.001 - 0.08 Radians" ))
+call check( nf90_def_var_fill(grpid_obsvalue, varid_bnd, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_obserror, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_obserr) )
+call check( nf90_put_att(grpid_obserror, varid_obserr, "longname", "GSI final observation error" ))
+call check( nf90_put_att(grpid_obserror, varid_obserr, "units", "radian" ))
+call check( nf90_put_att(grpid_obserror, varid_obserr, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_def_var_fill(grpid_obserror, varid_obserr, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_gsiadjerr, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_obserr_adjust))
+call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "longname", "GSI adjust observation error" ))
+call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "units", "radian" ))
+call check( nf90_def_var_fill(grpid_gsiadjerr, varid_obserr_adjust, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_gsifnlerr, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_obserr_final))
+call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "longname", "GSI final observation error (inflated)" ))
+call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "units", "radian" ))
+call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_def_var_fill(grpid_gsifnlerr, varid_obserr_final, 0, real(r_missing) ))
+
+call check( nf90_def_var(grpid_gsipreqc, "bending_angle", NF90_INT,nlocs_dimid, varid_preqc))
+call check( nf90_put_att(grpid_gsipreqc, varid_preqc, "longname", "GSI output QC flags" ))
+call check( nf90_put_att(grpid_gsipreqc, varid_preqc, "valid_range", "1 - 5" ))
+call check( nf90_put_att(grpid_gsipreqc, varid_preqc, "units", "1" ))
+call check( nf90_def_var_fill(grpid_gsipreqc, varid_preqc, 0, i_missing ))
+
+call check( nf90_def_var(grpid_gsihofx, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_gsihofx))
+call check( nf90_put_att(grpid_gsihofx, varid_gsihofx, "valid_range", "0 - 0.008 radian" ))
+call check( nf90_put_att(grpid_gsihofx, varid_gsihofx, "units", "radian" ))
+call check( nf90_def_var_fill(grpid_gsihofx, varid_gsihofx, 0, real(r_missing) ))
+
 call check( nf90_enddef(ncid_out) )
 
 if ( geovalwrite =="1" ) then
@@ -364,27 +447,27 @@ call check( nf90_def_var(ncid_out2, "geopotential_height_levels",  NF90_FLOAT, (
 call check( nf90_enddef(ncid_out2) )
 end if
 
-call check( nf90_put_var(ncid_out, varid_lat,   gpsro_subset%lat(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_lon,   gpsro_subset%lon(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_time,  gpsro_subset%time(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_imph,  gpsro_subset%impact_height(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_impp,  gpsro_subset%impact_parameter(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_geoid, gpsro_subset%geoid(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_rfict, gpsro_subset%rfict(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_azim,  gpsro_subset%azim(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_rec,   gpsro_subset%record_number(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_said,  gpsro_subset%said(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_siid,  gpsro_subset%siid(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_ogce,  gpsro_subset%ogce(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_ptid,  gpsro_subset%ptid(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_sclf,  gpsro_subset%sclf(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_asce,  gpsro_subset%asce(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_bnd,   gpsro_subset%bnd_obs(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_preqc, gpsro_subset%bnd_preqc(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_obserr,        gpsro_subset%bnd_obserr(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_obserr_final,  gpsro_subset%bnd_obserr_final(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_obserr_adjust, gpsro_subset%bnd_obserr_adjust(1:nsub)) )
-call check( nf90_put_var(ncid_out, varid_gsihofx,gpsro_subset%bnd_gsihofx(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_lat,   gpsro_subset%lat(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_lon,   gpsro_subset%lon(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_time,  gpsro_subset%time(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_imph,  gpsro_subset%impact_height(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_impp,  gpsro_subset%impact_parameter(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_geoid, gpsro_subset%geoid(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_rfict, gpsro_subset%rfict(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_azim,  gpsro_subset%azim(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_rec,   gpsro_subset%record_number(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_said,  gpsro_subset%said(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_siid,  gpsro_subset%siid(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_ogce,  gpsro_subset%ogce(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_ptid,  gpsro_subset%ptid(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_sclf,  gpsro_subset%sclf(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_asce,  gpsro_subset%asce(1:nsub)) )
+call check( nf90_put_var(grpid_obsvalue, varid_bnd,   gpsro_subset%bnd_obs(1:nsub)) )
+call check( nf90_put_var(grpid_obserror, varid_obserr,gpsro_subset%bnd_obserr(1:nsub)) )
+call check( nf90_put_var(grpid_gsipreqc, varid_preqc, gpsro_subset%bnd_preqc(1:nsub)) )
+call check( nf90_put_var(grpid_gsifnlerr, varid_obserr_final,  gpsro_subset%bnd_obserr_final(1:nsub)) )
+call check( nf90_put_var(grpid_gsiadjerr, varid_obserr_adjust, gpsro_subset%bnd_obserr_adjust(1:nsub)) )
+call check( nf90_put_var(grpid_gsihofx,   varid_gsihofx,       gpsro_subset%bnd_gsihofx(1:nsub)) )
 call check( nf90_close(ncid_out) )
 
 if ( geovalwrite == "1" ) then
@@ -405,6 +488,7 @@ end if
 deallocate(gpsro_data%lat)
 deallocate(gpsro_data%lon)
 deallocate(gpsro_data%time)
+deallocate(gpsro_data%epochtime)
 deallocate(gpsro_data%asce)
 deallocate(gpsro_data%azim)
 deallocate(gpsro_data%geoid)
@@ -427,6 +511,7 @@ deallocate(gpsro_data%bnd_gsihofx)
 deallocate(gpsro_subset%lat)
 deallocate(gpsro_subset%lon)
 deallocate(gpsro_subset%time)
+deallocate(gpsro_subset%epochtime)
 deallocate(gpsro_subset%asce)
 deallocate(gpsro_subset%azim)
 deallocate(gpsro_subset%geoid)
