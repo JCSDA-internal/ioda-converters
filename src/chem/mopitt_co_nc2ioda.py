@@ -65,6 +65,7 @@ class mopitt(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mol m-2'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol m-2'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -87,7 +88,7 @@ class mopitt(object):
             pr_sf = pr_sf[...,np.newaxis]
             pr_gd = np.tile(dat.variables['PressureGrid'][:],(len(lats),1))
             pr_gd = np.concatenate((pr_sf,pr_gd),axis=1)
-            pr_gd = np.concatenate((pr_gd,np.zeros(len(lats))[...,np.newaxis]),axis=1)
+            pr_gd = np.concatenate((pr_gd,np.zeros(len(lats))[...,np.newaxis]),axis=1).astype('float32')
 
             #if one of the flags (channels first 4 or avk no 5) is set to one the data should be flaged
             qa = dat.variables['RetrievalAnomalyDiagnostic'][:].sum(axis=1)
@@ -127,11 +128,12 @@ class mopitt(object):
                xa_gd[:,lev+1][zlev<0]=xa_gd[:,lev][zlev<0]
                ak_tc_dimless[:,lev][zlev<0]=0
 
-            #now calculate the apriori term to pass to UFO
+            #now calculate the apriori term to pass to UFO and ensure single precision
             ap_tc=np.zeros(len(lats))
             for lev in range(nlevs):
                ap_tc = ap_tc + ak_tc_dimless[:,lev]*(pr_gd[:,lev]-pr_gd[:,lev+1])*xa_gd[:,lev]
             ap_tc = xa_tc - ap_tc
+            ap_tc = ap_tc.astype('float32')
             flg = qa == 0
 
             if first:
