@@ -19,7 +19,7 @@ rather than
 Usage: obs2ioda-v2.x [-i input_dir] [-o output_dir] [bufr_filename(s)_to_convert] [-split]
 ```
 If [-i input_dir] [-o output_dir] are not specified in the command line, the default is the current working directory.  
-If [bufr_filename(s)_to_convert] is not specified in the command line, the code looks for file name, **prepbufr.bufr** (also **satwnd.bufr**, **amsua.bufr**, **airs.bufr**, **mhs.bufr**, **iasi.bufr**, **cris.bufr**), in the input/working directory. If the file exists, do the conversion, otherwise skip it.  
+If [bufr_filename(s)_to_convert] is not specified in the command line, the code looks for file name, **prepbufr.bufr** (also **satwnd.bufr**, **gnssro.bufr**, **amsua.bufr**, **airs.bufr**, **mhs.bufr**, **iasi.bufr**, **cris.bufr**), in the input/working directory. If the file exists, do the conversion, otherwise skip it.  
 If specify ``-split``, the converted file will contain hourly data.
 
 > obs2ioda-v2.x -i input_dir -o output_dir prepbufr.gdas.YYYYMMDD.tHHz.nr
@@ -85,6 +85,10 @@ Example output files:
   cris_npp_obs_YYYYMMDDHH.h5  
   cris_n20_obs_YYYYMMDDHH.h5  
 
+> obs2ioda-v2.x -i input_dir -o output_dir gdas.gpsro.tHHz.YYYYMMDD.bufr
+
+Example output files:  
+  gnssro_obs_YYYYMMDDHH.h5  
 
 ## Converting Himawari Standard Data (HSD) FLDK files
 ```
