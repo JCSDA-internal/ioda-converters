@@ -118,7 +118,6 @@ call check(nf90_inquire_dimension(ncid_in, nlevs1_dimid, len=nlevs1))
 allocate(gpsro_data%lat(nobs))
 allocate(gpsro_data%lon(nobs))
 allocate(gpsro_data%time(nobs))
-allocate(gpsro_data%epochtime(nobs))
 allocate(gpsro_data%asce(nobs))
 allocate(gpsro_data%azim(nobs))
 allocate(gpsro_data%geoid(nobs))
@@ -264,7 +263,7 @@ do j = 1,  maxval(gpsro_data%record_number(:))
         gpsro_subset%lat(nsub) = gpsro_data%lat(i)
         gpsro_subset%lon(nsub) = gpsro_data%lon(i)
         gpsro_subset%time(nsub)= gpsro_data%time(i)
-!       gpsro_subset%epochtime(nsub)        = gpsro_data%epochtime(i)
+        call toepochtime(anatime, gpsro_data%time(i),gpsro_subset%epochtime(nsub))
         gpsro_subset%impact_height(nsub)    = gpsro_data%impact_height(i)
         gpsro_subset%impact_parameter(nsub) = gpsro_data%impact_parameter(i)
         gpsro_subset%geoid(nsub) = gpsro_data%geoid(i)
@@ -299,8 +298,8 @@ do j = 1,  maxval(gpsro_data%record_number(:))
 end do
 
 call check( nf90_create(trim(obsname_out), NF90_CLOBBER + NF90_NETCDF4,ncid_out))
-call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'date_time', anatime_i) )
 call check( nf90_def_dim(ncid_out, 'nlocs', nsub,  nlocs_dimid) )
+call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'date_time', anatime) )
 call check( nf90_put_att(ncid_out, NF90_GLOBAL, 'ioda_version', 'Fortran generated ioda2 file from GSI diag file') )
 call check( nf90_def_grp(ncid_out, 'MetaData', grpid_metadata) )
 call check( nf90_def_grp(ncid_out, 'ObsValue', grpid_obsvalue) )
@@ -322,6 +321,10 @@ call check( nf90_def_var(grpid_metadata, "time",            NF90_FLOAT, nlocs_di
 call check( nf90_put_att(grpid_metadata, varid_time, "longname", "time offset to analysis time" ))
 call check( nf90_put_att(grpid_metadata, varid_time, "units", "hour" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_time, 0, real(r_missing)))
+
+call check( nf90_def_var(grpid_metadata, "dateTime",        NF90_INT64, nlocs_dimid, varid_epochtime) )
+call check( nf90_put_att(grpid_metadata, varid_epochtime, "units","seconds since 1970-01-01T00:00:00Z" ))
+call check( nf90_def_var_fill(grpid_metadata, varid_epochtime, 0, i64_missing ))
 
 call check( nf90_def_var(grpid_metadata, "impact_height",   NF90_FLOAT, nlocs_dimid, varid_imph))
 call check( nf90_put_att(grpid_metadata, varid_imph, "longname", "distance from mean sea level" ))
@@ -427,7 +430,7 @@ call check( nf90_enddef(ncid_out) )
 
 if ( geovalwrite =="1" ) then
 call check( nf90_create(trim(geoname_out), NF90_CLOBBER + NF90_NETCDF4, ncid_out2))
-call check( nf90_put_att(ncid_out2, NF90_GLOBAL, 'date_time', anatime_i) )
+call check( nf90_put_att(ncid_out2, NF90_GLOBAL, 'date_time', anatime) )
 call check( nf90_def_dim(ncid_out2, 'nlocs',  nsub,     nlocs_dimid2) )
 call check( nf90_def_dim(ncid_out2, 'nlevs',  nlevs,    nlevs_dimid) )
 call check( nf90_def_dim(ncid_out2, 'nlevs1', nlevs1,   nlevs1_dimid) )
@@ -448,6 +451,7 @@ end if
 call check( nf90_put_var(grpid_metadata, varid_lat,   gpsro_subset%lat(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_lon,   gpsro_subset%lon(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_time,  gpsro_subset%time(1:nsub)) )
+call check( nf90_put_var(grpid_metadata, varid_epochtime, gpsro_subset%epochtime(1:nsub)) ) 
 call check( nf90_put_var(grpid_metadata, varid_imph,  gpsro_subset%impact_height(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_impp,  gpsro_subset%impact_parameter(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_geoid, gpsro_subset%geoid(1:nsub)) )
@@ -486,7 +490,6 @@ end if
 deallocate(gpsro_data%lat)
 deallocate(gpsro_data%lon)
 deallocate(gpsro_data%time)
-deallocate(gpsro_data%epochtime)
 deallocate(gpsro_data%asce)
 deallocate(gpsro_data%azim)
 deallocate(gpsro_data%geoid)
@@ -559,5 +562,41 @@ contains
 
   end subroutine check
 
+!-------------------------------------------------------------
+! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
+! calculating epoch time using anatime and time offset 
+! - since January 1, 1970
+SUBROUTINE toepochtime(ANATIME, TIMEOFFSET, EPOCHTIME)
+    character(len=10)  ANATIME
+    REAL(r_single)    TIMEOFFSET  !unit: hour
+    INTEGER    IDATE(4)
+    INTEGER    NMIN
+    INTEGER    IYEAR, NDAYS, IJDN
+    INTEGER(8) EPOCHTIME
+    INTEGER    JDN1970
+    DATA  JDN1970 / 2440588 /
+
+    READ(ANATIME,'(I4,I2,I2,I2)') IDATE(1),IDATE(2),IDATE(3),IDATE(4)
+    
+    NMIN  = 0
+    IYEAR = IDATE(1)
+    IF (IYEAR.LE.99) THEN
+        IF (IYEAR.LT.78) THEN
+            IYEAR = IYEAR + 2000
+        ELSE
+            IYEAR = IYEAR + 1900
+        ENDIF
+    ENDIF
+!   COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
+    IJDN  = IDATE(3) - 32075      &
+             + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
+             + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
+             - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
+!   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1970 TO GET THE
+!   NUMBER OF DAYS BETWEEN DATES
+    NDAYS = IJDN - JDN1970
+    NMIN = NDAYS * 1440 + IDATE(4) * 60 
+    EPOCHTIME = NMIN * 60 + int(TIMEOFFSET * 3600)
+END SUBROUTINE toepochtime
 
 end program  gnssro_gsidiag_full2small
