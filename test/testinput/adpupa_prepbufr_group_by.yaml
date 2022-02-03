@@ -182,20 +182,20 @@ observations:
 
       variables:
 
-        - name: "stationIdentification@MetaData"
+        - name: "stationIdentification@Metadata"
           coordinates: "longitude latitude"
           source: variables/stationIdentification
           longName: "Station ID"
           units: "CCITT IA5"
 
-        - name: "longitude@MetaData"
+        - name: "longitude@Metadata"
           coordinates: "longitude latitude"
           source: variables/longitude
           longName: "Longitude"
           units: "degrees_east"
           range: [0, 360]
 
-        - name: "latitude@MetaData"
+        - name: "latitude@Metadata"
           coordinates: "longitude latitude"
           source: variables/latitude
           longName: "Latitude"
@@ -208,25 +208,25 @@ observations:
           longName: "Observation Time Minus Cycle Time"
           units: "Hours"
 
-        - name: "stationElevation@MetaData"
+        - name: "stationElevation@Metadata"
           coordinates: "longitude latitude"
           source: variables/stationElevation
           longName: "Height of Station"
           units: "Meter"
 
-        - name: "prepbufrReportType@MetaData"
+        - name: "prepbufrReportType@Metadata"
           coordinates: "longitude latitude"
           source: variables/prepbufrReportType
           longName: "Prepbufr Report Type"
           units: "CODE TABLE"
 
-        - name: "dumpReportType@MetaData"
+        - name: "dumpReportType@Metadata"
           coordinates: "longitude latitude"
           source: variables/dumpReportType
           longName: "Data Dump Report Type"
           units: "CODE TABLE"
 
-        - name: "prepbufrDataLvlCat@MetaData"
+        - name: "prepbufrDataLvlCat@Metadata"
           coordinates: "longitude latitude"
           source: variables/prepbufrDataLvlCat
           longName: "Prepbufr Data Level Category"
@@ -238,7 +238,7 @@ observations:
           longName: "Method of Sea Surface Measurement"
           units: "CODE TABLE"
 
-        - name: "presentWeather@MetaData"
+        - name: "presentWeather@Metadata"
           coordinates: "longitude latitude"
           source: variables/presentWeather
           longName: "Present Weather"
@@ -256,7 +256,7 @@ observations:
           longName: "Cloud Amount"
           units: "CODE TABLE"
 
-        - name: "cloudType@MetaData"
+        - name: "cloudType@Metadata"
           coordinates: "longitude latitude"
           source: variables/cloudType
           longName: "Cloud Type"
@@ -388,14 +388,14 @@ observations:
           longName: "East and Northward wind error"
           units: "Meter Second-1"
 
-        - name: "lonProfileLevel@MetaData"
+        - name: "lonProfileLevel@Metadata"
           coordinates: "longitude latitude"
           source: variables/lonProfileLevel
           longName: "Longitude Profile Level"
           units: "degrees_east"
           range: [0, 360]
 
-        - name: "latProfileLevel@MetaData"
+        - name: "latProfileLevel@Metadata"
           coordinates: "longitude latitude"
           source: variables/latProfileLevel
           longName: "Latitude Profile Level"
