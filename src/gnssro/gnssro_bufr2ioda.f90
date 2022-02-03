@@ -426,7 +426,6 @@ call check( nf90_put_att(grpid_metadata, varid_impp, "units", "m" ))
 call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", "6200 - 6600 km" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_impp, 0, real(r_missing) ))
 
-
 call check( nf90_def_var(grpid_metadata, "impact_height", NF90_FLOAT, nlocs_dimid, varid_imph))
 call check( nf90_put_att(grpid_metadata, varid_imph, "longname", "distance from mean sea level" ))
 call check( nf90_put_att(grpid_metadata, varid_imph, "units", "m" ))

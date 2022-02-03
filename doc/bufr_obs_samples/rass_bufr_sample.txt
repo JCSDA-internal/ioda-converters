@@ -1,0 +1,332 @@
+
+Found BUFR message #      1
+  
+        Message length:         292
+      Section 0 length:           8
+          BUFR edition:           3
+  
+      Section 1 length:          18
+          Master table:           0
+    Originating center:          59 (= NOAA Forecast Systems Laboratory, Boulder, CO, USA)
+ Originating subcenter:           0
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           2 (= Vertical soundings (other than satellite))
+     Local subcategory:           3
+ Internatl subcategory:          -1
+  Master table version:           9
+   Local table version:           0
+                  Year:        2021
+                 Month:           7
+                   Day:          31
+                  Hour:          18
+                Minute:          29
+                Second:          -1
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:          11
+        1: 301032
+        2: 321021
+        3: 025020
+        4: 025021
+        5: 025093
+        6: 008021
+        7: 004025
+        8: 010004
+        9: 101000
+       10: 031001
+       11: 321024
+
+BUFR message #      1 of type MSTTB001 and date 2021073118 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001001  WMOB                        10.0  NUMERIC                       WMO block number                                
+001002  WMOS                       678.0  NUMERIC                       WMO station number                              
+002001  TOST                         2.0  CODE TABLE                    Type of station                                 
+                                      2 = Hybrid: both manned and automatic
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         7.0  MONTH                         Month                                           
+004003  DAYS                        31.0  DAY                           Day                                             
+004004  HOUR                        18.0  HOUR                          Hour                                            
+004005  MINU                        29.0  MINUTE                        Minute                                          
+005002  CLAT                       49.98  DEGREE                        Latitude (coarse accuracy)                      
+006002  CLON                       11.68  DEGREE                        Longitude (coarse accuracy)                     
+007001  SELV                       514.0  M                             Height of station                               
+002003  A4ME                         8.0  CODE TABLE                    Type of measuring equipment used                
+                                      8 = Radio-acoustic Sounding System (RASS)
+002101  ANTYP                        5.0  CODE TABLE                    Type of antenna                                 
+                                      5 = Coaxial collinear array
+002106  BEAMW                        2.7  DEGREE                        3-dB beamwidth                                  
+002121  MEFR                 482000000.0  HZ                            Mean frequency                                  
+025001  RAGL                       135.0  M                             Range-gate length                               
+025020  MSPE                         0.0  CODE TABLE                    Mean speed estimation                           
+                                      0 = FFT (fast Fourier transform)
+025021  WICE                        64.0  FLAG TABLE(2)                 Wind computation enhancement                    
+                                      2 = Consensus average
+025093  RACC                         2.0  FLAG TABLE(7)                 RASS computation correction                     
+                                      7 = All corrections
+008021  TSIG                         2.0  CODE TABLE                    Time significance                               
+                                      2 = Time averaged
+004025  TPMI                         2.0  MINUTE                        Time period or displacement                     
+010004  PRES                         0.0  PA                            Pressure                                        
+           {RASSPROC}    28 REPLICATIONS
+    ++++++  RASSPROC  REPLICATION #     1  ++++++
+007007  HEIT                      1256.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     288.5  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                        0.02  M S⁻¹                      w-component                                     
+021030  STNR                        15.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     2  ++++++
+007007  HEIT                      1391.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     286.7  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.01  M S⁻¹                      w-component                                     
+021030  STNR                         6.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     3  ++++++
+007007  HEIT                      1526.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     285.4  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.13  M S⁻¹                      w-component                                     
+021030  STNR                         1.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     4  ++++++
+007007  HEIT                      1660.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     284.2  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.37  M S⁻¹                      w-component                                     
+021030  STNR                        -6.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     5  ++++++
+007007  HEIT                      1795.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     281.9  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.47  M S⁻¹                      w-component                                     
+021030  STNR                        -8.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     6  ++++++
+007007  HEIT                      1930.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     280.7  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.49  M S⁻¹                      w-component                                     
+021030  STNR                        -8.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     7  ++++++
+007007  HEIT                      2065.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     279.7  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.49  M S⁻¹                      w-component                                     
+021030  STNR                        -9.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     8  ++++++
+007007  HEIT                      2200.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     278.7  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.48  M S⁻¹                      w-component                                     
+021030  STNR                       -11.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #     9  ++++++
+007007  HEIT                      2335.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     277.6  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.42  M S⁻¹                      w-component                                     
+021030  STNR                       -14.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    10  ++++++
+007007  HEIT                      2470.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     276.4  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.37  M S⁻¹                      w-component                                     
+021030  STNR                       -15.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    11  ++++++
+007007  HEIT                      2604.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     276.3  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.25  M S⁻¹                      w-component                                     
+021030  STNR                       -16.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    12  ++++++
+007007  HEIT                      2739.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     276.6  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.26  M S⁻¹                      w-component                                     
+021030  STNR                       -20.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    13  ++++++
+007007  HEIT                      2874.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     276.5  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.45  M S⁻¹                      w-component                                     
+021030  STNR                       -23.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    14  ++++++
+007007  HEIT                      3009.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                     276.3  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.46  M S⁻¹                      w-component                                     
+021030  STNR                       -30.0  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    15  ++++++
+007007  HEIT                      3144.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.45  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    16  ++++++
+007007  HEIT                      3279.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.45  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    17  ++++++
+007007  HEIT                      3414.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.28  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    18  ++++++
+007007  HEIT                      3549.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.23  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    19  ++++++
+007007  HEIT                      3683.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.36  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    20  ++++++
+007007  HEIT                      3818.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.45  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    21  ++++++
+007007  HEIT                      3953.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.46  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    22  ++++++
+007007  HEIT                      4088.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.47  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    23  ++++++
+007007  HEIT                      4223.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.47  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    24  ++++++
+007007  HEIT                      4358.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.39  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    25  ++++++
+007007  HEIT                      4493.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.24  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    26  ++++++
+007007  HEIT                      4627.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                       -0.02  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    27  ++++++
+007007  HEIT                      4762.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                        0.05  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+    ++++++  RASSPROC  REPLICATION #    28  ++++++
+007007  HEIT                      4897.0  M                             Height                                          
+031021  AFSI                         1.0  CODE TABLE                    Associated field significance                   
+                                      1 = 1 bit indicator of quality (0 = good, 1 = suspect or bad)
+054001  204001                   MISSING  NUMERIC                       Associated field of   1 bits                    
+012007  TMVRST                   MISSING  K                             Virtual temperature                             
+054001  204001                       0.0  NUMERIC                       Associated field of   1 bits                    
+011006  WCMP                        0.09  M S⁻¹                      w-component                                     
+021030  STNR                     MISSING  DB                            Signal to noise ratio                           
+
+ >>> END OF SUBSET <<< 
+
+
+End of BUFR message #      1
