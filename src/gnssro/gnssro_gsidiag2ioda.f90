@@ -44,7 +44,6 @@ integer   :: varid_geo_geop_sfc
 integer   :: istart(2), icount(2)
 character(len=10)         :: anatime
 character(len=1)          :: geovalwrite
-integer(i_kind)           :: anatime_i
 integer(i_64)             :: epochtime
 
 type gpsro_type
@@ -103,7 +102,6 @@ if (narg == 3) then
 else
   geovalwrite="1"
 end if
-read(anatime,'(i10)') anatime_i
 
 obsname_out = './gnssro_obs_'//trim(anatime)//'.nc4'
 
