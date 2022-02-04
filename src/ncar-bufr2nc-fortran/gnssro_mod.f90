@@ -90,8 +90,8 @@ logical,        parameter :: GlobalModel = .true. ! temporary
 character(10) nemo
 character(80) hdr1a
 
-data hdr1a / 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU SCLF' / 
-data nemo /'QFRO'/ 
+data hdr1a / 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID PTID GEODU SCLF' /
+data nemo /'QFRO'/
 nrec =0
 ndata=0
 nvars=2
@@ -169,7 +169,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      said = bfr1ahdr(8)        ! Satellite identifier
      ptid = bfr1ahdr(9)        ! Platform transmitter ID number
      geoid= bfr1ahdr(10)      ! Geoid undulation
-     sclf = bfr1ahdr(11) 
+     sclf = bfr1ahdr(11)
 
      call w3fs21(idate5,minobs)
      write(datetime,'(I4,"-",I2.2,"-",I2.2,"T",I2.2,":",I2.2,":",I2.2,"Z")') &
@@ -195,8 +195,8 @@ do while(ireadmg(lnbufr,subset,idate)==0)
 
      bendflag = 0
      refflag  = 0
-!    profile check:  (2) GRAS SAF processing - metopa-c, oceansat2, megha-tropiques, sacd 
-     if ( (said >= 3 .and.said <= 5).or.(said == 421).or.(said == 440).or. (said == 821) ) then 
+!    profile check:  (2) GRAS SAF processing - metopa-c, oceansat2, megha-tropiques, sacd
+     if ( (said >= 3 .and.said <= 5).or.(said == 421).or.(said == 440).or. (said == 821) ) then
           call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
           if(nib > 0) then
             do i = 1, nib
@@ -211,10 +211,10 @@ do while(ireadmg(lnbufr,subset,idate)==0)
                   exit
                endif
            enddo
-         endif 
+         endif
      endif
 
-     asce = 0 
+     asce = 0
      call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
      if ( nib > 0) then
         do i = 1, nib
@@ -226,7 +226,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      end if
 
      call ufbint(lnbufr,nreps_this_ROSEQ2,1,maxlevs,nreps_ROSEQ1,'{ROSEQ2}')
-     call ufbseq(lnbufr,data1b,50,maxlevs,levs,'ROSEQ1') 
+     call ufbseq(lnbufr,data1b,50,maxlevs,levs,'ROSEQ1')
      call ufbseq(lnbufr,data2a,50,maxlevs,levsr,'ROSEQ3') ! refractivity
 
      nrec=nrec+1
@@ -254,7 +254,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         enddo
 
         bend_pccf=data1b((6*nreps_ROSEQ2_int)+4,k)  ! percent confidence for this ROSEQ1 replication
-        good=.true. 
+        good=.true.
 
         if (  height<0._r_kind   .or. height>60000._r_kind .or.           &
            abs(rlat)>90._r_kind  .or. abs(rlon)>360._r_kind ) then
@@ -269,13 +269,13 @@ do while(ireadmg(lnbufr,subset,idate)==0)
         if ( ref>=1.e+9_r_kind .or. ref<=0._r_kind .or. refflag == 1 ) then
              ref = missingvalue
         endif
-    
+
         if ( abs(azim)>360._r_kind  .or. azim<0._r_kind ) then
              azim = missingvalue
         endif
 
     if(good) then
-       ndata  = ndata +1 
+       ndata  = ndata +1
        gpsro_data%recn(ndata)     = nrec
        gpsro_data%lat(ndata)      = rlat
        gpsro_data%lon(ndata)      = rlon
@@ -289,7 +289,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gpsro_data%msl_alt(ndata)  = height
        gpsro_data%bend_ang(ndata)     = bend
        gpsro_data%bndoe_gsi(ndata)    = bend_error
-       gpsro_data%impact_para(ndata)  = impact! 
+       gpsro_data%impact_para(ndata)  = impact!
        gpsro_data%rfict(ndata) = roc
        gpsro_data%geoid(ndata) = geoid
        gpsro_data%azim(ndata)  = azim
@@ -339,49 +339,49 @@ call check( nf90_def_var(ncid, "occulting_sat_id@MetaData", NF90_INT, nlocs_dimi
 call check( nf90_put_att(ncid, varid_said, "longname", "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755" ))
 call check( nf90_def_var(ncid, "ascending_flag@MetaData",  NF90_INT, nlocs_dimid, varid_asce))
 call check( nf90_put_att(ncid, varid_asce, "longname", "the original occultation ascending/descending flag" ))
-call check( nf90_put_att(ncid, varid_asce, "valid_range", "0/descending or 1/ascending" ))
+call check( nf90_put_att(ncid, varid_asce, "valid_range", int((/ 0, 1 /))) )
 call check( nf90_def_var(ncid, "refractivity@ObsValue", NF90_FLOAT, nlocs_dimid, varid_ref) )
 call check( nf90_put_att(ncid, varid_ref, "longname", "Atmospheric refractivity" ))
 call check( nf90_put_att(ncid, varid_ref, "_FillValue", real(missingvalue) ))
 call check( nf90_put_att(ncid, varid_ref, "units", "N" ))
-call check( nf90_put_att(ncid, varid_ref, "valid_range", "0 - 500 N" ))
+call check( nf90_put_att(ncid, varid_ref, "valid_range", real((/ 0, 500 /))) )
 call check( nf90_def_var(ncid, "refractivity@ObsError", NF90_FLOAT, nlocs_dimid, varid_refoe))
 call check( nf90_put_att(ncid, varid_refoe, "longname", "Input error in atmospheric refractivity" ))
 call check( nf90_put_att(ncid, varid_refoe, "_FillValue", real(missingvalue) ))
 call check( nf90_put_att(ncid, varid_refoe, "units", "N" ))
-call check( nf90_put_att(ncid, varid_refoe, "valid_range", "0 - 10 N" ))
+call check( nf90_put_att(ncid, varid_refoe, "valid_range", real((/ 0, 10 /))))
 call check( nf90_def_var(ncid, "altitude@MetaData", NF90_FLOAT, nlocs_dimid, varid_msl) )
 call check( nf90_put_att(ncid, varid_msl, "longname", "Geometric altitude" ))
 call check( nf90_put_att(ncid, varid_msl, "units", "Meters" ))
 call check( nf90_def_var(ncid, "bending_angle@ObsValue", NF90_FLOAT, nlocs_dimid, varid_bnd) )
 call check( nf90_put_att(ncid, varid_bnd, "longname", "Bending Angle" ))
 call check( nf90_put_att(ncid, varid_bnd, "units", "Radians" ))
-call check( nf90_put_att(ncid, varid_bnd, "valid_range", "-0.001 - 0.08 Radians" ))
+call check( nf90_put_att(ncid, varid_bnd, "valid_range", real((/ -0.001, 0.08 /))) )
 call check( nf90_def_var(ncid, "bending_angle@ObsError", NF90_FLOAT, nlocs_dimid, varid_bndoe) )
 call check( nf90_put_att(ncid, varid_bndoe, "longname", "Input error in Bending Angle" ))
 call check( nf90_put_att(ncid, varid_bndoe, "units", "Radians" ))
-call check( nf90_put_att(ncid, varid_bndoe, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_put_att(ncid, varid_bndoe, "valid_range", real((/ 0, 0.008 /))) )
 call check( nf90_def_var(ncid, "impact_parameter@MetaData", NF90_FLOAT, nlocs_dimid, varid_impp))
 call check( nf90_put_att(ncid, varid_impp, "longname", "distance from centre of curvature" ))
 call check( nf90_put_att(ncid, varid_impp, "units", "Meters" ))
-call check( nf90_put_att(ncid, varid_impp, "valid_range", "6200 - 6600 km" ))
+call check( nf90_put_att(ncid, varid_impp, "valid_range", real((/ 6200000, 6600000 /))) )
 call check( nf90_def_var(ncid, "impact_height@MetaData", NF90_FLOAT, nlocs_dimid, varid_imph))
 call check( nf90_put_att(ncid, varid_imph, "longname", "distance from mean sea level" ))
 call check( nf90_put_att(ncid, varid_imph, "units", "Meters" ))
-call check( nf90_put_att(ncid, varid_imph, "valid_range", "0 - 200 km" ))
+call check( nf90_put_att(ncid, varid_imph, "valid_range", real((/ 0, 200000 /))) )
 call check( nf90_def_var(ncid, "sensor_azimuth_angle@MetaData", NF90_FLOAT, nlocs_dimid, varid_azim))
 call check( nf90_put_att(ncid, varid_azim, "longname", "GNSS->LEO line of sight" ))
 call check( nf90_put_att(ncid, varid_azim, "_FillValue", real(missingvalue) ))
 call check( nf90_put_att(ncid, varid_azim, "units", "Degree" ))
-call check( nf90_put_att(ncid, varid_azim, "valid_range", "0 - 360 degree" ))
+call check( nf90_put_att(ncid, varid_azim, "valid_range", real((/ 0, 360 /))) )
 call check( nf90_def_var(ncid, "geoid_height_above_reference_ellipsoid@MetaData",NF90_FLOAT, nlocs_dimid, varid_geoid))
 call check( nf90_put_att(ncid, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
 call check( nf90_put_att(ncid, varid_geoid, "units", "Meters" ))
-call check( nf90_put_att(ncid, varid_geoid, "valid_range", "-200 - 200 m" ))
+call check( nf90_put_att(ncid, varid_geoid, "valid_range", real((/ -200, 200 /))) )
 call check( nf90_def_var(ncid, "earth_radius_of_curvature@MetaData",NF90_FLOAT, nlocs_dimid, varid_rfict))
 call check( nf90_put_att(ncid, varid_rfict, "longname", "Earth’s local radius of curvature" ))
 call check( nf90_put_att(ncid, varid_rfict, "units", "Meters" ))
-call check( nf90_put_att(ncid, varid_rfict, "valid_range", "6200 - 6600 km" ))
+call check( nf90_put_att(ncid, varid_rfict, "valid_range", real((/ 6200000, 6600000 /))) )
 call check( nf90_enddef(ncid) )
 
 call check( nf90_put_var(ncid, varid_lat, gpsro_data%lat(1:ndata)) )
@@ -403,7 +403,7 @@ call check( nf90_put_var(ncid, varid_imph, gpsro_data%impact_para(1:ndata)-gpsro
 call check( nf90_put_var(ncid, varid_azim, gpsro_data%azim(1:ndata)) )
 call check( nf90_put_var(ncid, varid_geoid, gpsro_data%geoid(1:ndata)) )
 call check( nf90_put_var(ncid, varid_rfict, gpsro_data%rfict(1:ndata)) )
-call check( nf90_close(ncid) ) 
+call check( nf90_close(ncid) )
 
 deallocate(gpsro_data%said)
 deallocate(gpsro_data%sclf)
@@ -429,13 +429,13 @@ end subroutine read_write_gnssro
 !contains
  subroutine check(status)
     integer, intent ( in) :: status
-    
-    if(status /= nf90_noerr) then 
+
+    if(status /= nf90_noerr) then
      print *, trim(nf90_strerror(status))
       stop "Stopped"
     end if
 
-  end subroutine check  
+  end subroutine check
 
 
 subroutine  refractivity_err_gsi(obsLat, obsZ, GlobalModel, obsErr)
@@ -459,7 +459,7 @@ if( GlobalModel ) then ! for global
      endif
      obsErr = 1.0_r_kind/abs(exp(obsErr))
 
-else ! for regional 
+else ! for regional
      if( obsLat >= 20.0 .or.obsLat <= -20.0 ) then
          if (obsZ_km > 10.00) then
              obsErr =-1.321_r_kind+0.341_r_kind*obsZ_km-0.005_r_kind*obsZ_km**2
@@ -521,7 +521,7 @@ if((said==41).or.(said==722).or.(said==723).or.(said==4).or.(said==42).or.&
 endif
 
 end subroutine bendingangle_err_gsi
-!!!!!!________________________________________________________  
+!!!!!!________________________________________________________
 
 !!!!!! SUBROUTINE W3FS21 was copied from GSI/src/libs/w3nco_v2.0.6/w3fs21.f and iw3jdn.f
 SUBROUTINE W3FS21(IDATE, NMIN)

@@ -21,7 +21,7 @@ use netcdf
 implicit none
 integer, parameter :: i_kind   = selected_int_kind(8)
 integer, parameter :: i_64     = selected_int_kind(10)   !8
-integer, parameter :: r_single = selected_real_kind(4) 
+integer, parameter :: r_single = selected_real_kind(4)
 
 character(len=256)   :: filename_in, obsname_out, geoname_out
 integer   :: ncid_in, ncid_out, ncid_out2
@@ -30,13 +30,13 @@ integer   :: nlevs, nlevs1, nobs, nlocs, nrecs
 integer   :: nlocs_dimid,nvars_dimid,nrecs_dimid, nlocs_dimid2
 integer   :: grpid_metadata,grpid_obserror,grpid_obsvalue
 integer   :: grpid_gsihofx, grpid_gsieffqc, grpid_gsiadjerr, grpid_gsifnlerr
-integer   :: varid_meta,varid_geoval_nlevs,varid_geoval_nlevs1  
+integer   :: varid_meta,varid_geoval_nlevs,varid_geoval_nlevs1
 integer   :: varid_lat, varid_lon, varid_time
-integer   :: varid_lat2,varid_lon2,varid_time2 
+integer   :: varid_lat2,varid_lon2,varid_time2
 integer   :: varid_epochtime
 integer   :: varid_geoid, varid_rfict
 integer   :: varid_rec, varid_said,varid_siid,varid_ogce,varid_ptid,varid_sclf,varid_asce
-integer   :: varid_imph,varid_impp, varid_azim 
+integer   :: varid_imph,varid_impp, varid_azim
 integer   :: varid_bnd,varid_effqc, varid_gsihofx,varid_obserr,varid_obserr_adjust,varid_obserr_final
 integer   :: varid_geo_virtemp,varid_geo_airtemp,varid_geo_pres,varid_geo_shum,varid_geo_geop
 integer   :: varid_geo_pres1, varid_geo_geop1
@@ -201,10 +201,10 @@ if ( geovalwrite == "1" )  then
    allocate(gnssro_data%surface_geopotential_height(nobs))
    call check(NF90_INQ_VARID(ncid_in, 'surface_geopotential_height', varid_meta))
    call check(NF90_GET_VAR(ncid_in, varid_meta,gnssro_data%surface_geopotential_height, (/1/), (/nobs/)))
-   call check(NF90_INQ_VARID(ncid_in, 'air_temperature', varid_geoval_nlevs)) 
-   call check(NF90_GET_VAR(ncid_in, varid_geoval_nlevs,gnssro_data%air_temperature, start=(/1,1/), count=(/nlevs,nobs/))) 
-   call check(NF90_INQ_VARID(ncid_in, 'virtual_temperature', varid_geoval_nlevs))   
-   call check(NF90_GET_VAR(ncid_in,varid_geoval_nlevs,gnssro_data%virtual_temperature, start=(/1,1/),count=(/nlevs,nobs/)))  
+   call check(NF90_INQ_VARID(ncid_in, 'air_temperature', varid_geoval_nlevs))
+   call check(NF90_GET_VAR(ncid_in, varid_geoval_nlevs,gnssro_data%air_temperature, start=(/1,1/), count=(/nlevs,nobs/)))
+   call check(NF90_INQ_VARID(ncid_in, 'virtual_temperature', varid_geoval_nlevs))
+   call check(NF90_GET_VAR(ncid_in,varid_geoval_nlevs,gnssro_data%virtual_temperature, start=(/1,1/),count=(/nlevs,nobs/)))
    call check(NF90_INQ_VARID(ncid_in, 'specific_humidity', varid_meta))
    call check(NF90_GET_VAR(ncid_in, varid_meta,  gnssro_data%specific_humidity,start=(/1,1/), count=(/nlevs,nobs/)))
    call check(NF90_INQ_VARID(ncid_in, 'air_pressure', varid_geoval_nlevs))
@@ -327,32 +327,32 @@ call check( nf90_def_var_fill(grpid_metadata, varid_epochtime, 0, i64_missing ))
 call check( nf90_def_var(grpid_metadata, "impact_height",   NF90_FLOAT, nlocs_dimid, varid_imph))
 call check( nf90_put_att(grpid_metadata, varid_imph, "longname", "distance from mean sea level" ))
 call check( nf90_put_att(grpid_metadata, varid_imph, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_imph, "valid_range", "0 - 200 km"))
+call check( nf90_put_att(grpid_metadata, varid_imph, "valid_range", real((/ 0, 200000 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_imph, 0, real(r_missing)))
 
 call check( nf90_def_var(grpid_metadata, "impact_parameter",NF90_FLOAT, nlocs_dimid, varid_impp))
 call check( nf90_put_att(grpid_metadata, varid_impp, "longname", "distance from centre of curvature" ))
 call check( nf90_put_att(grpid_metadata, varid_impp, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", "6200 - 6600 km" ))
+call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", real((/ 6200000, 6600000 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_impp, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "geoid_height_above_reference_ellipsoid",   &
                                           NF90_FLOAT, nlocs_dimid, varid_geoid))
 call check( nf90_put_att(grpid_metadata, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
 call check( nf90_put_att(grpid_metadata, varid_geoid, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_geoid, "valid_range", "-200 - 200 m" ))
+call check( nf90_put_att(grpid_metadata, varid_geoid, "valid_range", real((/ -200, 200 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_geoid, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "earth_radius_of_curvature", NF90_FLOAT, nlocs_dimid, varid_rfict))
 call check( nf90_put_att(grpid_metadata, varid_rfict, "longname", "Earth’s local radius of curvature" ))
 call check( nf90_put_att(grpid_metadata, varid_rfict, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", "6200 - 6600 km" ))
+call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", real((/ 6200000, 6600000 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "sensor_azimuth_angle",NF90_FLOAT, nlocs_dimid, varid_azim))
 call check( nf90_put_att(grpid_metadata, varid_azim, "longname", "GNSS->LEO line of sight" ))
 call check( nf90_put_att(grpid_metadata, varid_azim, "units", "degree" ))
-call check( nf90_put_att(grpid_metadata, varid_azim, "valid_range", "0 - 360 degree" ))
+call check( nf90_put_att(grpid_metadata, varid_azim, "valid_range", real((/ 0, 360 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_azim, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "record_number", NF90_INT,nlocs_dimid, varid_rec))
@@ -377,7 +377,7 @@ call check( nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing ))
 call check( nf90_def_var(grpid_metadata, "reference_sat_id", NF90_INT, nlocs_dimid, varid_ptid))
 call check( nf90_put_att(grpid_metadata, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_ptid, 0, i_missing ))
-                                                      
+
 call check( nf90_def_var(grpid_metadata, "gnss_sat_class",   NF90_INT, nlocs_dimid, varid_sclf))
 call check( nf90_put_att(grpid_metadata, varid_sclf, "longname", "GNSS satellite classification,  &
                                                       e.g, 401=GPS, 402=GLONASS" ))
@@ -392,35 +392,35 @@ call check( nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing ))
 call check( nf90_def_var(grpid_obsvalue, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_bnd) )
 call check( nf90_put_att(grpid_obsvalue, varid_bnd, "longname", "Bending Angle" ))
 call check( nf90_put_att(grpid_obsvalue, varid_bnd, "units", "radian" ))
-call check( nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", "-0.001 - 0.08 Radians" ))
+call check( nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", real((/ -0.001, 0.08 /))) )
 call check( nf90_def_var_fill(grpid_obsvalue, varid_bnd, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_obserror, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_obserr) )
 call check( nf90_put_att(grpid_obserror, varid_obserr, "longname", "GSI final observation error" ))
 call check( nf90_put_att(grpid_obserror, varid_obserr, "units", "radian" ))
-call check( nf90_put_att(grpid_obserror, varid_obserr, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_put_att(grpid_obserror, varid_obserr, "valid_range", real((/ 0, 0.008 /))) )
 call check( nf90_def_var_fill(grpid_obserror, varid_obserr, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_gsiadjerr, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_obserr_adjust))
 call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "longname", "GSI adjust observation error" ))
-call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "valid_range", real((/ 0, 0.008 /))) )
 call check( nf90_put_att(grpid_gsiadjerr, varid_obserr_adjust, "units", "radian" ))
 call check( nf90_def_var_fill(grpid_gsiadjerr, varid_obserr_adjust, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_gsifnlerr, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_obserr_final))
 call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "longname", "GSI final observation error (inflated)" ))
 call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "units", "radian" ))
-call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "valid_range", "0 - 0.008 Radians" ))
+call check( nf90_put_att(grpid_gsifnlerr, varid_obserr_final, "valid_range", real((/ 0, 0.008 /))) )
 call check( nf90_def_var_fill(grpid_gsifnlerr, varid_obserr_final, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_gsieffqc, "bending_angle", NF90_INT,nlocs_dimid, varid_effqc))
 call check( nf90_put_att(grpid_gsieffqc, varid_effqc, "longname", "GSI output QC flags (Effective QC)" ))
-call check( nf90_put_att(grpid_gsieffqc, varid_effqc, "valid_range", "1 - 5" ))
+call check( nf90_put_att(grpid_gsieffqc, varid_effqc, "valid_range", int((/ 1, 5 /))) )
 call check( nf90_put_att(grpid_gsieffqc, varid_effqc, "units", "1" ))
 call check( nf90_def_var_fill(grpid_gsieffqc, varid_effqc, 0, i_missing ))
 
 call check( nf90_def_var(grpid_gsihofx, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_gsihofx))
-call check( nf90_put_att(grpid_gsihofx, varid_gsihofx, "valid_range", "0 - 0.008 radian" ))
+call check( nf90_put_att(grpid_gsihofx, varid_gsihofx, "valid_range", real((/ 0, 0.008 /))) )
 call check( nf90_put_att(grpid_gsihofx, varid_gsihofx, "units", "radian" ))
 call check( nf90_def_var_fill(grpid_gsihofx, varid_gsihofx, 0, real(r_missing) ))
 
@@ -449,7 +449,7 @@ end if
 call check( nf90_put_var(grpid_metadata, varid_lat,   gnssro_subset%lat(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_lon,   gnssro_subset%lon(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_time,  gnssro_subset%time(1:nsub)) )
-call check( nf90_put_var(grpid_metadata, varid_epochtime, gnssro_subset%epochtime(1:nsub)) ) 
+call check( nf90_put_var(grpid_metadata, varid_epochtime, gnssro_subset%epochtime(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_imph,  gnssro_subset%impact_height(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_impp,  gnssro_subset%impact_parameter(1:nsub)) )
 call check( nf90_put_var(grpid_metadata, varid_geoid, gnssro_subset%geoid(1:nsub)) )
@@ -562,7 +562,7 @@ contains
 
 !-------------------------------------------------------------
 ! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
-! calculating epoch time using anatime and time offset 
+! calculating epoch time using anatime and time offset
 ! - since January 1, 1970
 SUBROUTINE toepochtime(ANATIME, TIMEOFFSET, EPOCHTIME)
     character(len=10)  ANATIME
@@ -575,7 +575,7 @@ SUBROUTINE toepochtime(ANATIME, TIMEOFFSET, EPOCHTIME)
     DATA  JDN1970 / 2440588 /
 
     READ(ANATIME,'(I4,I2,I2,I2)') IDATE(1),IDATE(2),IDATE(3),IDATE(4)
-    
+
     NMIN  = 0
     IYEAR = IDATE(1)
     IF (IYEAR.LE.99) THEN
@@ -593,7 +593,7 @@ SUBROUTINE toepochtime(ANATIME, TIMEOFFSET, EPOCHTIME)
 !   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1970 TO GET THE
 !   NUMBER OF DAYS BETWEEN DATES
     NDAYS = IJDN - JDN1970
-    NMIN = NDAYS * 1440 + IDATE(4) * 60 
+    NMIN = NDAYS * 1440 + IDATE(4) * 60
     EPOCHTIME = NMIN * 60 + int(TIMEOFFSET * 3600)
 END SUBROUTINE toepochtime
 
