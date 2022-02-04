@@ -46,6 +46,10 @@ VarDims = {
     'carbon_monoxide_in_total_column': ['nlocs'],
 }
 
+#constants
+avogadro=6.02214076E23
+scm2sm=1E4
+
 class mopitt(object):
     def __init__(self, filenames):
         self.filenames = filenames
@@ -136,20 +140,23 @@ class mopitt(object):
             ap_tc = ap_tc.astype('float32')
             flg = qa == 0
 
+            #unit conversion from molecules/cm2 to mol/m2
+            u_conv = avogadro / scm2sm
+
             if first:
                 # add metadata variables
                 self.outdata[('datetime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg]
+                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg]/u_conv
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_ak] = ak_tc_dimless[:,k][flg]
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_pr] = pr_gd[:,k][flg]
 
-                self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]
-                self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]
+                self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]/u_conv
+                self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]/u_conv
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa[flg]
 
             else:
@@ -160,7 +167,7 @@ class mopitt(object):
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('apriori_term', 'MetaData')] = np.concatenate((
-                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg]))
+                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg]/u_conv))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_ak] = np.concatenate(
@@ -170,9 +177,9 @@ class mopitt(object):
                           (self.outdata[varname_pr], pr_gd[:,k][flg]))
 
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]))
+                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]/u_conv))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]))
+                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]/u_conv))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
             first = False
