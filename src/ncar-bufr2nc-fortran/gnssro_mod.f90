@@ -81,7 +81,7 @@ real(r_double),dimension(50,maxlevs) :: data1b
 real(r_double),dimension(50,maxlevs) :: data2a
 real(r_double),dimension(maxlevs)  :: nreps_this_ROSEQ2
 integer(i_kind)           :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
-real(r_double) :: pcc,qfro,usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
+real(r_double) :: pcc,qfro(1),usage,dlat,dlat_earth,dlon,dlon_earth,freq_chk,freq,azim
 real(r_double) :: height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
 real(r_double) :: obsErr
 real(r_double),   parameter :: missingvalue=-9.9e10
