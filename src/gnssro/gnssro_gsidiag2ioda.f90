@@ -386,6 +386,9 @@ call check( nf90_def_var_fill(grpid_metadata, varid_sclf, 0, i_missing ))
 
 call check( nf90_def_var(grpid_metadata, "ascending_flag",   NF90_INT, nlocs_dimid, varid_asce))
 call check( nf90_put_att(grpid_metadata, varid_asce, "longname", "the original occultation ascending/descending flag" ))
+call check( nf90_put_att(grpid_metadata, varid_asce, "valid_range", int((/ 0, 1 /))) )
+call check( nf90_put_att(grpid_metadata, varid_asce, "flag_values", int((/ 0, 1 /))) )
+call check( nf90_put_att(grpid_metadata, varid_asce, "flag_meanings", "descending ascending") )
 call check( nf90_put_att(grpid_metadata, varid_asce, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing ))
 

@@ -340,6 +340,8 @@ call check( nf90_put_att(ncid, varid_said, "longname", "Low Earth Orbit satellit
 call check( nf90_def_var(ncid, "ascending_flag@MetaData",  NF90_INT, nlocs_dimid, varid_asce))
 call check( nf90_put_att(ncid, varid_asce, "longname", "the original occultation ascending/descending flag" ))
 call check( nf90_put_att(ncid, varid_asce, "valid_range", int((/ 0, 1 /))) )
+call check( nf90_put_att(ncid, varid_asce, "flag_values", int((/ 0, 1 /))) )
+call check( nf90_put_att(ncid, varid_asce, "flag_meanings", "descending ascending") )
 call check( nf90_def_var(ncid, "refractivity@ObsValue", NF90_FLOAT, nlocs_dimid, varid_ref) )
 call check( nf90_put_att(ncid, varid_ref, "longname", "Atmospheric refractivity" ))
 call check( nf90_put_att(ncid, varid_ref, "_FillValue", real(missingvalue) ))
