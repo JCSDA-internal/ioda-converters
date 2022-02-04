@@ -394,13 +394,13 @@ call check( nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing ))
 call check( nf90_def_var(grpid_obsvalue, "refractivity", NF90_FLOAT, nlocs_dimid, varid_ref) )
 call check( nf90_put_att(grpid_obsvalue, varid_ref, "longname", "Atmospheric refractivity" ))
 call check( nf90_put_att(grpid_obsvalue, varid_ref, "units", "N" ))
-call check( nf90_put_att(grpid_obsvalue, varid_ref, "valid_range", real((/ 0, 500 /))) )
+call check( nf90_put_att(grpid_obsvalue, varid_ref, "valid_range", real((/ 0.0, 500.0 /))) )
 call check( nf90_def_var_fill(grpid_obsvalue, varid_ref, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_obserror, "refractivity", NF90_FLOAT, nlocs_dimid, varid_refoe))
 call check( nf90_put_att(grpid_obserror, varid_refoe, "longname", "Input error in atmospheric refractivity" ))
 call check( nf90_put_att(grpid_obserror, varid_refoe, "units", "N" ))
-call check( nf90_put_att(grpid_obserror, varid_refoe, "valid_range", real((/ 0, 10 /))) )
+call check( nf90_put_att(grpid_obserror, varid_refoe, "valid_range", real((/ 0.0, 10.0 /))) )
 call check( nf90_def_var_fill(grpid_obserror, varid_refoe, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "altitude", NF90_FLOAT, nlocs_dimid, varid_msl) )
@@ -417,37 +417,37 @@ call check( nf90_def_var_fill(grpid_obsvalue, varid_bnd, 0, real(r_missing) ))
 call check( nf90_def_var(grpid_obserror, "bending_angle", NF90_FLOAT, nlocs_dimid, varid_bndoe) )
 call check( nf90_put_att(grpid_obserror, varid_bndoe, "longname", "Input error in Bending Angle" ))
 call check( nf90_put_att(grpid_obserror, varid_bndoe, "units", "radian" ))
-call check( nf90_put_att(grpid_obserror, varid_bndoe, "valid_range", real((/ 0, 0.008 /))) )
+call check( nf90_put_att(grpid_obserror, varid_bndoe, "valid_range", real((/ 0.0, 0.008 /))) )
 call check( nf90_def_var_fill(grpid_obserror, varid_bndoe, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "impact_parameter", NF90_FLOAT, nlocs_dimid, varid_impp))
 call check( nf90_put_att(grpid_metadata, varid_impp, "longname", "distance from centre of curvature" ))
 call check( nf90_put_att(grpid_metadata, varid_impp, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", real((/ 6200000, 6600000 /))) )
+call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", real((/ 6200000.0, 6600000.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_impp, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "impact_height", NF90_FLOAT, nlocs_dimid, varid_imph))
 call check( nf90_put_att(grpid_metadata, varid_imph, "longname", "distance from mean sea level" ))
 call check( nf90_put_att(grpid_metadata, varid_imph, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_imph, "valid_range", real((/ 0, 200000 /))) )
+call check( nf90_put_att(grpid_metadata, varid_imph, "valid_range", real((/ 0.0, 200000.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_imph, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "sensor_azimuth_angle", NF90_FLOAT, nlocs_dimid, varid_azim))
 call check( nf90_put_att(grpid_metadata, varid_azim, "longname", "GNSS->LEO line of sight" ))
 call check( nf90_put_att(grpid_metadata, varid_azim, "units", "degree" ))
-call check( nf90_put_att(grpid_metadata, varid_azim, "valid_range", real((/ 0, 360 /))) )
+call check( nf90_put_att(grpid_metadata, varid_azim, "valid_range", real((/ 0.0, 360.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_azim, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "geoid_height_above_reference_ellipsoid", NF90_FLOAT, nlocs_dimid, varid_geoid))
 call check( nf90_put_att(grpid_metadata, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
 call check( nf90_put_att(grpid_metadata, varid_geoid, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_geoid, "valid_range", real((/ -200, 200 /))) )
+call check( nf90_put_att(grpid_metadata, varid_geoid, "valid_range", real((/ -200.0, 200.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_geoid, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "earth_radius_of_curvature", NF90_FLOAT, nlocs_dimid, varid_rfict))
 call check( nf90_put_att(grpid_metadata, varid_rfict, "longname", "Earth’s local radius of curvature" ))
 call check( nf90_put_att(grpid_metadata, varid_rfict, "units", "m" ))
-call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", real((/ 6200000, 6600000 /))) )
+call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", real((/ 6200000.0, 6600000.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing) ))
 call check( nf90_enddef(ncid) )
 
@@ -632,7 +632,7 @@ END SUBROUTINE W3FS21
 ! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
 ! calculating epoch time since January 1, 1970
 SUBROUTINE epochtimecalculator(IDATE, EPOCHTIME)
-    INTEGER    IDATE(5)
+    INTEGER    IDATE(6)
     INTEGER    NMIN
     INTEGER    IYEAR, NDAYS, IJDN
     INTEGER(8) epochtime
