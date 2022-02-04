@@ -301,7 +301,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gnssro_data%msl_alt(ndata)  = height
        gnssro_data%bend_ang(ndata)     = bend
        gnssro_data%bndoe_gsi(ndata)    = bend_error
-       gnssro_data%impact_para(ndata)  = impact!
+       gnssro_data%impact_para(ndata)  = impact
        gnssro_data%rfict(ndata) = roc
        gnssro_data%geoid(ndata) = geoid
        gnssro_data%azim(ndata)  = azim
