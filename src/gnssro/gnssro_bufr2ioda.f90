@@ -359,8 +359,8 @@ call check( nf90_put_att(grpid_metadata, varid_recn, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_recn, 0, i_missing ))
 
 call check( nf90_def_var(grpid_metadata, "gnss_sat_class",  NF90_INT, nlocs_dimid, varid_sclf))
-call check( nf90_put_att(grpid_metadata, varid_sclf, "longname", "GNSS satellite classification,  &
-                                                      e.g, 401=GPS, 402=GLONASS" ))
+call check( nf90_put_att(grpid_metadata, varid_sclf, "longname", "GNSS satellite classification, &
+                                                     &e.g., 401=GPS, 402=GLONASS" ))
 call check( nf90_put_att(grpid_metadata, varid_sclf, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_sclf, 0, i_missing ))
 
@@ -388,8 +388,8 @@ call check( nf90_put_att(grpid_metadata, varid_asce, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing ))
 
 call check( nf90_def_var(grpid_metadata, "process_center",NF90_INT,nlocs_dimid, varid_ogce))
-call check( nf90_put_att(grpid_metadata, varid_ogce, "longname", "originally data processing_center,   &
-                                                      e.g., 60 for UCAR, 94 for DMI, 78 for GFZ" ))
+call check( nf90_put_att(grpid_metadata, varid_ogce, "longname", "originally data processing_center, &
+                                                     &e.g., 60 for UCAR, 94 for DMI, 78 for GFZ" ))
 call check( nf90_put_att(grpid_metadata, varid_ogce, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing ))
 
