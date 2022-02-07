@@ -1109,7 +1109,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
-                          "${CMAKE_BINARY_DIR}/bin/owp_snow_obs.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/owp_snow_obs.py
                           -i testinput/owp_snow_obs.csv
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc
 			  --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
