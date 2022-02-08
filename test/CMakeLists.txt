@@ -166,6 +166,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/satwind_EUMet_wmo.bufr
     testinput/satwind_Himawari_wmoBUFR2ioda.yaml
     testinput/satwind_Himawari_wmo.bufr
+    testinput/satwind_Insat_wmoBUFR2ioda.yaml
+    testinput/satwind_Insat_wmo.bufr
     testinput/vadwinds_wmoBUFR2ioda.yaml
     testinput/vadwinds_wmo_multi.bufr
   )
@@ -192,6 +194,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/synop_wmo_multi.nc
     testoutput/satwind_EUMet.nc
     testoutput/satwind_Himawari.nc
+    testoutput/satwind_Insat.nc
     testoutput/vadwinds_wmo_multi.nc
   )
 endif()
@@ -1004,6 +1007,14 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Himawari_wmoBUFR2ioda.yaml"
                     satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_Insat_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Insat_wmoBUFR2ioda.yaml"
+                    satwind_Insat.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_vadwinds_wmo_bufr
