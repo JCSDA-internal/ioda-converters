@@ -965,8 +965,9 @@ if(iodaconv_bufr_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_rass_wmo_bufr
                     TYPE    SCRIPT
-                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                    ARGS    netcdf
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/rass_wmoBUFR2ioda.yaml"
                     rass_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
@@ -1008,8 +1009,9 @@ if(iodaconv_bufr_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_vadwinds_wmo_bufr
                     TYPE    SCRIPT
-                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                    ARGS    netcdf
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/vadwinds_wmoBUFR2ioda.yaml"
                     vadwinds_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
