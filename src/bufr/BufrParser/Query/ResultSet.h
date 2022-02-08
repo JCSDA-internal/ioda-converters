@@ -15,6 +15,8 @@
 
 namespace Ingester {
 namespace bufr {
+    const double MissingValue = 10e10;
+
     struct DataField
     {
         std::string name;
@@ -23,18 +25,21 @@ namespace bufr {
         bool missing = false;
         std::vector<double> data;
         std::vector<size_t> seqPath;
-        std::vector<std::vector<size_t>> seqCounts;
+        std::vector<std::vector<int>> seqCounts;
         std::vector<std::string> dimPaths;
-        std::vector<size_t> exportDims;
+        std::vector<int> exportDims;
     };
 
     class DataFrame
     {
      public:
-        DataFrame() = default;
+        DataFrame(int fieldCnt)
+        {
+            fields_.resize(fieldCnt);
+        }
 
-        const DataField& fieldAtIdx(int idx) { return fields_[idx]; }
-        const DataField& fieldForNodeNamed(const std::string& name) { return fields_[fieldIdxMap_[name]]; }
+        inline DataField& fieldAtIdx(size_t idx) { return fields_[idx]; }
+        inline DataField& fieldForNodeNamed(const std::string& name) { return fields_[fieldIdxMap_[name]]; }
         int fieldIndexForNodeNamed(const std::string& name) { return fieldIdxMap_[name]; }
 
      private:
@@ -73,7 +78,7 @@ namespace bufr {
     class ResultSet
     {
      public:
-        ResultSet();
+        ResultSet(const std::vector<std::string>& names);
         ~ResultSet();
 
         std::shared_ptr<ResultBase> get(const std::string& field_name, 
@@ -83,7 +88,7 @@ namespace bufr {
 
      private:
         std::vector<DataFrame> dataFrames_;
-        std::vector<std::string> names;
+        std::vector<std::string> names_;
         std::vector<int> fieldWidths;
 
         void getRawValues(const std::string& fieldName,

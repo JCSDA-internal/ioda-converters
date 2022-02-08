@@ -52,7 +52,7 @@ namespace Ingester {
         auto querySet = bufr::QuerySet();
         for (const auto &var: description_.getExport().getVariables()) {
             for (const auto &queryPair: var->getQueryList()) {
-                querySet.add(queryPair.query, queryPair.name);
+                querySet.add(queryPair.name, queryPair.query);
             }
         }
 

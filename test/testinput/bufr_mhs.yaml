@@ -10,36 +10,36 @@ observations:
 
       exports:
         variables:
-          timestamp:
-            datetime:
-              year: "*/YEAR"
-              month: "*/MNTH"
-              day: "*/DAYS"
-              hour: "*/HOUR"
-              minute: "*/MINU"
-              second: "*/SECO"
-          height:
-            query: "*/HMSL"
-          hols:
-            query: "*/HOLS"
-          fovn:
-            query: "*/FOVN"
-          lsql:
-            query: "*/LSQL"
-          longitude:
-            query: "*/CLON"
-            transforms:
-              - offset: 50
-          latitude:
-            query: "*/CLAT"
-          sza:
-            query: "*/SOZA"
-          saz:
-            query: "*/SOLAZI"
-          vza:
-            query: "*/SAZA"
-          vaz:
-            query: "*/BEARAZ"
+#          timestamp:
+#            datetime:
+#              year: "*/YEAR"
+#              month: "*/MNTH"
+#              day: "*/DAYS"
+#              hour: "*/HOUR"
+#              minute: "*/MINU"
+#              second: "*/SECO"
+#          height:
+#            query: "*/HMSL"
+#          hols:
+#            query: "*/HOLS"
+#          fovn:
+#            query: "*/FOVN"
+#          lsql:
+#            query: "*/LSQL"
+#          longitude:
+#            query: "*/CLON"
+#            transforms:
+#              - offset: 50
+#          latitude:
+#            query: "*/CLAT"
+#          sza:
+#            query: "*/SOZA"
+#          saz:
+#            query: "*/SOLAZI"
+#          vza:
+#            query: "*/SAZA"
+#          vaz:
+#            query: "*/BEARAZ"
           radiance:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
     

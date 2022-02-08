@@ -9,13 +9,8 @@
 
 #include "Query.h"
 #include "QuerySet.h"
-#include "BufrDataManager.h"
+#include "DataProvider.h"
 
-
-extern "C"
-{
-    void __query_interface_MOD_execute_c(int, bufr::Address, int, bufr::Address);
-}
 
 namespace Ingester {
 namespace bufr {
@@ -36,21 +31,27 @@ namespace bufr {
         open();
     }
 
-    void File::open() {
+    void File::open()
+    {
         open_f(fileUnit_, filename_.c_str());
 
-        if (!isWmoFormat_) {
+        if (!isWmoFormat_)
+        {
             openbf_f(fileUnit_, "IN", fileUnit_);
-        } else {
+        }
+        else
+        {
             openbf_f(fileUnit_, "SEC3", fileUnit_);
 
-            if (!wmoTablePath_.empty()) {
+            if (!wmoTablePath_.empty())
+            {
                 mtinfo_f(wmoTablePath_.c_str(), fileUnitTable1_, fileUnitTable2_);
             }
         }
     }
 
-    void File::close() {
+    void File::close()
+    {
         closbf_f(fileUnit_);
         close_f(fileUnit_);
     }
@@ -62,30 +63,38 @@ namespace bufr {
 
     ResultSet File::execute(const QuerySet &querySet, int next)
     {
+        static int SubsetLen = 9;
         unsigned int messageNum = 0;
-        char subset[10];
-        int subsetLen = 10;
+        char subset[SubsetLen];
         int iddate;
 
-        BufrDataManager bufrDataManager;
+        auto dataProvider = DataProvider::instance();
+        dataProvider->loadTableInfo();
 
-        auto query = Query(querySet);
-        auto resultSet = ResultSet();
-        while (ireadmg_f(fileUnit_, subset, &iddate, subsetLen) == 0)
+        auto resultSet = ResultSet(querySet.names());
+        auto query = Query(querySet, resultSet);
+
+        while (ireadmg_f(fileUnit_, subset, &iddate, SubsetLen) == 0)
         {
             while (ireadsb_f(fileUnit_) == 0)
             {
-                query.query();
-                return resultSet;
+                int bufrLoc;
+                int il, im; // throw away
+                status_f(fileUnit_, &bufrLoc, &il, &im);
+                dataProvider->loadDataInfo(bufrLoc);
+                query.query(std::string(subset), bufrLoc);
             }
 
             if (next > 0 && ++messageNum >= next) break;
         }
 
+        dataProvider->deleteTableInfo();
+
         return resultSet;
     }
 
-    int File::nextFileUnit() {
+    int File::nextFileUnit()
+    {
         static int lastFileUnit = 11; //  Numbers 12 and above are valid.
         return ++lastFileUnit;
     }

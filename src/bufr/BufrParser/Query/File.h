@@ -27,7 +27,6 @@ namespace bufr {
         void rewind();
 
     private:
-        bool isOpen_;
         bool isWmoFormat_;
         int fileUnit_;
         int fileUnitTable1_;

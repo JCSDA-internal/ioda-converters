@@ -11,471 +11,418 @@
 
 #include "QueryParser.h"
 
-
-namespace
-{
-    const char* Subset = "SUB";
-    const char* DelayedRep = "DRP";
-    const char* FixedRep = "REP";
-    const char* DelayedRepStacked = "DRS";
-    const char* DelayedBinary = "DRB";
-    const char* Sequence = "SEQ";
-    const char* Repeat = "RPC";
-    const char* StackedRepeat = "RPS";
-}
-
 namespace Ingester {
 namespace bufr {
+
+    struct NodeData
+    {
+        std::vector<double> values;
+        std::vector<int> counts;
+    };
+
     //constructor
-    Query::Query(const QuerySet& querySet) :
-        querySet_(querySet)
+    Query::Query(const QuerySet& querySet, ResultSet& resultSet) :
+        querySet_(querySet),
+        resultSet_(resultSet)
     {
     }
 
-    void Query::query()
+    void Query::query(const std::string& subset, int bufrLoc)
     {
-        std::string subset;
-        std::vector<std::string> mnemonics;
-        int index = 0;
+        bufrLoc_ = bufrLoc;
 
-        mnemonics = QueryParser::splitMultiquery("[*/ABC[1], */XYZ[3]]");
+        std::vector<__details::Target> targets;
+        __details::ProcessingMasks masks;
 
-//        QueryParser::splitQueryStr("*/ABC/XYZ", subset, mnemonics, index);
+        findTargets(subset, targets, masks);
+        return collectData(targets, masks, resultSet_);
+    }
 
-        std::cout << "subset: " << subset << std::endl;
-
-        for (auto mnemonic : mnemonics)
+    void Query::findTargets(const std::string& subset,
+                            std::vector<__details::Target>& targets,
+                            __details::ProcessingMasks& masks)
+    {
+        // Check if the target list for this subset is cached in the targetMap_
+        if (targetCache_.find(subset) != targetCache_.end())
         {
-            std::cout << "mnemonic: " << mnemonic << std::endl;
+            targets = targetCache_.at(subset);
+            masks = maskCache_.at(subset);
+            return;
         }
 
-        std::cout << "index: " << index << std::endl;
+        auto bufrInfo = DataProvider::instance();
 
-//        return collectData(findTargets(subset));
+        size_t numNodes = bufrInfo->getIsc(bufrInfo->getInode());
+
+        masks.valueNodeMask.resize(numNodes, false);
+        masks.pathNodeMask.resize(numNodes, false);
+
+        for (size_t targetIdx = 0; targetIdx < querySet_.size(); ++targetIdx)
+        {
+            auto queryName = querySet_.nameAt(targetIdx);
+            auto queryStr = querySet_.queryAt(targetIdx);
+
+            auto subQueries = QueryParser::splitMultiquery(queryStr);
+
+            bool foundTarget = false;
+            __details::Target target;
+            for (size_t subQueryIdx = 0; subQueryIdx < subQueries.size(); ++subQueryIdx)
+            {
+                const std::string& subQuery = subQueries[subQueryIdx];
+
+                target = findTarget(subset, queryName, subQuery);
+
+                if (target.nodeIds.size() > 0)
+                {
+                    // Collect mask data
+                    masks.valueNodeMask[target.nodeIds[0]] = true;
+                    for (size_t pathIdx = 0; pathIdx < target.seqPath.size(); ++pathIdx)
+                    {
+                        masks.pathNodeMask[target.seqPath[pathIdx]] = true;
+                    }
+
+                    targets.push_back(target);
+
+                    foundTarget = true;
+                }
+            }
+
+            if (!foundTarget)
+            {
+                // Add the last missing target to the list
+                targets.push_back(target);
+                std::cout << "Warning: Query String " << queryStr << " didn't apply to subset " << subset << std::endl;
+            }
+        }
+
+        targetCache_.insert({subset, targets});
+        maskCache_.insert({subset, masks});
     }
-//
-//    void Query::findTargets(const std::string& subset,
-//                            std::vector<Target>& targets,
-//                            std::vector<ProcessingMasks>& masks) const
-//    {
-//        // Check if the target list for this subset is cached in the targetMap_
-//        if (targetCache_.find(subset) != targetCache_.end())
-//        {
-//            targets = targetCache_.at(subset);
-//            masks = maskCache_.at(subset);
-//            return;
-//        }
-//
-//        size_t numNodes = bufrTable_.isc[bufrTable_.inode[bufrLoc_]];
-//
-//        ProcessingMasks newMasks;
-//        newMasks.value_node_mask.resize(numNodes, false);
-//        newMasks.path_node_mask.resize(numNodes, false);
-//
-//        for (int targetIdx = 0, targetIdx < querySet_.size(); ++targetIdx)
-//        {
-//            const std::string& queryName = querySet_.getQueryName(targetIdx);
-//            const std::string& queryStr = querySet_.getQueryStr(targetIdx);
-//
-//            std::vector<std::string> subQueries = splitIntoSubQueries(queryStr);
-//
-//            for (size_t subQueryIdx = 0, subQueryIdx < subQueries.size(); ++subQueryIdx)
-//            {
-//                const std::string& subQuery = subQueries[subQueryIdx];
-//
-//                Target target = findTarget(bufrLoc_, subset, queryName, subQuery);
-//
-//                if (target.nodeIds.size() > 0)
-//                {
-//                    // Collect mask data
-//                    newMasks.value_node_mask[target.nodeIds[0]] = true;
-//                    for (size_t pathIdx = 0, pathIdx < target.seqPath.size(); ++pathIdx)
-//                    {
-//                        newMasks.path_node_mask[target.seqPath[pathIdx]] = true;
-//                    }
-//
-//                    foundTarget = true;
-//                }
-//            }
-//
-//            if (!foundTarget)
-//            {
-//                // Add the last missing target to the list
-//                targets.push_back(target);
-//                masks.push_back(newMasks);
-//
-//                cerr << "Warning: Query String " << queryStr << " didn't apply to subset " << subset << endl;
-//            }
-//        }
-//
-//        targetCache_.insert({subset, targets});
-//        maskCache_.insert({subset, masks});
-//    }
-//
-//    Target Query::findTarget(const std::string& subset, const std::string& targetName, const std::string query) const
-//    {
-//        std::string querySubset;
-//        std::vector<std::string> mnemonics;
-//        int index;
-//
-//        QueryParser::splitQueryStr(query, querySubset, mnemonics, index);
-//
-//        std::vector<int> branches;
-//        bool isString = false;
-//        std::vector<int> targetNodes;
-//        std::vector<int> seqPath;
-//        std::vector<std::string> dimPaths;
-//        std::vector<int> dimIdxs;
-//
-//        bufrTable_.update();
-//
-//        bool targetMissing = (subset != "*" && querySubset != subset);
-//        if (!targetMissing)
-//        {
-//            branches.resize(mnemonics.size() - 1);
-//
-//            seqPath.push_back(bufrTable_.inode[bufrLoc_]);
-//
-//            int tableCursor = 0;
-//            int mnemonicCursor = 0;
-//
-//            for (auto nodeIdx = bufrTable_.inode[bufrLoc_];
-//                 nodeIdx != bufrTable_.isc[bufrTable_.inode[bufrLoc_]];
-//                 nodeIdx++)
-//            {
-//                if (bufrTable_.typ[nodeIdx] == Sequence ||
-//                    bufrTable_.typ[nodeIdx] == Repeat ||
-//                    bufrTable_.typ[nodeIdx] == StackedRepeat)
-//                {
-//                    if (isQueryNode(nodeIdx - 1))
-//                    {
-//                        if (bufrTable_.tag[nodeIdx] == mnemonics[mnemonicCursor + 1] &&
-//                            tableCursor == mnemonicCursor)
-//                        {
-//                            mnemonicCursor++;
-//                            branches[mnemonicCursor] = nodeIdx - 1;
-//                        }
-//                        tableCursor++;
-//                    }
-//                    seqPath.push_back(nodeIdx);
-//                }
-//                else if (mnemonicCursor == mnemonics.size() - 1 &&
-//                         tableCursor == mnemonicCursor &&
-//                         bufrTable_.tag[nodeIdx] == mnemonics[mnemonics.size()])
-//                {
-//                    // We found a target
-//                    targetNodes.push_back(nodeIdx);
-//                    isString = (bufrTable_.itp[nodeIdx] == 3);
-//
-//                    getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
-//                }
-//
-//                if (seqPath.size() > 1)
-//                {
-//                    // Peak ahead to see if the next node is inside one of the containing sequences
-//                    // then go back up the approptiate number of sequences. You may have to exit several
-//                    // sequences in a row if the current sequence is the last element in the containing
-//                    // sequence.
-//                    for (int pathIdx = seqPath.size() - 1; pathIdx > 0; pathIdx--)
-//                    {
-//                        if (seqPath[pathIdx] == bufrTable_.jmpb[nodeIdx + 1])
-//                        {
-//                            for (int rewindIdx = seqPath.size() - 1; rewindIdx >= pathIdx; rewindIdx--)
-//                            {
-//                                // Exit the sequence
-//                                if (isQueryNode(seqPath[rewindIdx] - 1))
-//                                {
-//                                    if (mnemonicCursor > 0 && tableCursor == mnemonicCursor)
-//                                    {
-//                                        if (bufrTable_.link[branches[mnemonicCursor]] == nodeIdx)
-//                                        {
-//                                            mnemonicCursor--;
-//                                        }
-//                                    }
-//                                    tableCursor--;
-//                                }
-//                                // Pop out of the current sequence
-//                                seqPath.pop_back();
-//                            }
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        auto target = Target();
-//        target.name = targetName;
-//        target.is_string = isString;
-//        target.seq_path = seqPath;
-//        target.node_ids = targetNodes;
-//        target.dim_paths = dimPaths;
-//        target.export_dim_idxs = dimIdxs;
-//
-//        return target;
-//    }
-//
-//    bool Query::isQueryNode(int nodeIdx) const
-//    {
-//        return (bufrTable_.typ[nodeIdx] == DelayedRep ||
-//                bufrTable_.typ[nodeIdx] == FixedRep ||
-//                bufrTable_.typ[nodeIdx] == DelayedRepStacked ||
-//                bufrTable_.typ[nodeIdx] == DelayedBinary);
-//    }
-//
-//    void Query::getDimInfo(const std::vector<int>& branches,
-//                           int mnemonicCursor,
-//                           std::vector<std::string>& dimPaths,
-//                           std::vector<int>& dimIdxs) const
-//    {
-//        std::string currentDimPath;
-//        std::string mnemonicStr;
-//
-//        // Allocate enough memory to hold all the dim paths
-//        dimPaths.reserve(branches.size() + 1);
-//
-//        int dimIdx = 1;
-//        currentDimPath = "*";
-//        dimPaths[dimIdx].assign(currentDimPath.begin(), currentDimPath.end());
-//        dimIdxs.push_back(1);
-//
-//        // Split the branches into node idxs for each additional dimension
-//        if (mnemonicCursor > 0) {
-//            for (int branchIdx = 0; branchIdx < mnemonicCursor; branchIdx++) {
-//                int nodeIdx = branches[branchIdx];
-//                mnemonicStr = bufrTable_.tag[nodeIdx];
-//
-//                std::ostringstream path;
-//                path << currentDimPath << "/" << mnemonicStr.substr(2, mnemonicStr.size() - 3);
-//                currentDimPath = path.str();
-//
-//                if (bufrTable_.typ[nodeIdx] == DelayedRep ||
-//                    bufrTable_.typ[nodeIdx] == FixedRep ||
-//                    bufrTable_.typ[nodeIdx] == DelayedRepStacked)
-//                {
-//                    dimIdx = dimIdx + 1;
-//                    dimIdxs.push_back(branchIdx + 1);
-//                    dimPaths.push_back(currentDimPath);
-//                }
-//            }
-//        }
-//    }
-//
-//// Convert Fortran to C++
-////    subroutine collect_data(lun, targets, masks, result_set)
-////        integer, intent(in) :: lun
-////                type(Target), target, intent(in) :: targets(:)
-////        type(ProcessingMasks), intent(in) :: masks
-////                type(ResultSet), intent(inout) :: result_set
-////
-////                integer :: path_idx, target_idx
-////        integer :: node_idx, seq_node_idx, tmp_return_node_idx
-////                integer :: data_cursor
-////        integer :: return_node_idx
-////                type(DataField), pointer :: data_field
-////        type(DataFrame), pointer :: data_frame
-////        type(Target), pointer :: targ
-////        type(NodeValueTable) :: node_value_table
-////                type(RealList), pointer :: real_list
-////        type(IntList), pointer :: count_list, rep_list
-////        integer :: last_non_zero_return_idx
-////                type(IntList) :: current_path, current_path_returns
-////
-////
-////                current_path = IntList()
-////        current_path_returns = IntList()
-////
-////        data_frame => result_set%next_data_frame()
-////        return_node_idx = -1
-////
-////        ! Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all the data a bunch of
-////        ! times)
-////        node_value_table = NodeValueTable(inode(lun), isc(inode(lun)))
-////        do data_cursor = 1, nval(lun)
-////        node_idx = inv(data_cursor, lun)
-////        real_list => node_value_table%values_for_node(node_idx)
-////
-////        if (masks%value_node_mask(node_idx)) then
-////                call real_list%push(val(data_cursor, lun))
-////        end if
-////
-////        count_list => node_value_table%counts_for_node(node_idx)
-////
-////        ! Unfortuantely the fixed replicated sequences do not store their counts as values for the Fixed Replication
-////        ! nodes. It's therefore necessary to discover this information by manually tracing the nested sequences and
-////        ! counting everything manually. Since we have to do it for fixed reps anyways, its easier just to do it for all
-////        ! the squences.
-////
-////        if (jmpb(node_idx) > 0) then
-////        if (masks%path_node_mask(jmpb(node_idx))) then
-////        if ((typ(node_idx) == Sequence .and. &
-////        (typ(jmpb(node_idx)) == DelayedBinary .or. typ(jmpb(node_idx)) == FixedRep)) .or. &
-////        typ(node_idx) == Repeat .or. &
-////        typ(node_idx) == StackedRepeat) then
-////
-////        ! Add to the count of the currently active sequence
-////                count_list%at(count_list%length()) = count_list%at(count_list%length()) + 1
-////        end if
-////        end if
-////        end if
-////
-////        if (current_path%length() >= 1) then
-////        if (node_idx == return_node_idx .or. &
-////        data_cursor == nval(lun) .or. &
-////        (current_path%length() > 1 .and. node_idx == current_path%at(current_path%length() - 1) + 1)) then
-////        ! Look for the first path return idx that is not 0 and check if its this node idx. Exit the sequence if its
-////        ! appropriate. A return idx of 0 indicates a sequence that occurs as the last element of another sequence.
-////
-////        do path_idx = current_path_returns%length(), last_non_zero_return_idx, -1
-////        call current_path_returns%pop()
-////        call current_path%pop(seq_node_idx)
-////
-////        ! Delayed and Stacked Reps are inconsistent with other sequence types and add an extra replication
-////        ! per sequence. We need to account for this here.
-////        if (typ(seq_node_idx) == DelayedRep .or. &
-////        typ(seq_node_idx) == DelayedRepStacked) then
-////                rep_list => node_value_table%counts_for_node(seq_node_idx + 1)
-////        rep_list%at(rep_list%length()) = rep_list%at(rep_list%length()) - 1
-////        end if
-////        end do
-////
-////        last_non_zero_return_idx = current_path_returns%length()
-////        return_node_idx = current_path_returns%at(last_non_zero_return_idx)
-////        end if
-////        end if
-////
-////        if (masks%path_node_mask(node_idx) .and. is_query_node(node_idx)) then
-////        if (typ(node_idx) == DelayedBinary .and. val(data_cursor, lun) == 0) then
-////        ! Ignore the node if it is a delayed binary and the value is 0
-////        else
-////        call current_path%push(node_idx)
-////        tmp_return_node_idx = link(node_idx)
-////
-////        call current_path_returns%push(tmp_return_node_idx)
-////
-////        if (tmp_return_node_idx /= 0) then
-////                last_non_zero_return_idx = current_path_returns%length()
-////        return_node_idx = tmp_return_node_idx
-////        else
-////        last_non_zero_return_idx = 1
-////        return_node_idx = 0
-////
-////        if (data_cursor /= nval(lun)) then
-////        do path_idx = current_path%length(), 1, -1
-////        return_node_idx = link(jmpb(current_path%at(path_idx)))
-////        last_non_zero_return_idx = current_path_returns%length() - path_idx + 1
-////
-////        if (return_node_idx /= 0) exit
-////                end do
-////        end if
-////        end if
-////        end if
-////
-////        count_list => node_value_table%counts_for_node(node_idx + 1)
-////        call count_list%push(0)
-////        end if
-////        end do
-////
-////        ! Uncomment to print the node value table
-////        !    do node_idx = inode(lun), isc(inode(lun))
-////        !      real_list = node_value_table%values_for_node(node_idx)
-////        !      print *, tag(node_idx), real_list%array()
-////        !    end do
-////
-////
-////        ! Uncomment to print he sequnce counts table
-////        !    do node_idx = inode(lun), isc(inode(lun))
-////        !      if (jmpb(node_idx) > 0) then
-////        !        if (masks%path_node_mask(jmpb(node_idx))) then
-////        !          count_list => node_value_table%counts_for_node(node_idx)
-////        !          print *, " ",  tag(node_idx), "  size: ", count_list%length(), "  counts: ",  count_list%array()
-////        !        end if
-////        !      end if
-////        !    end do
-////
-////        do target_idx = 1, size(targets)
-////        targ => targets(target_idx)
-////
-////        data_field => data_frame%data_fields(target_idx)
-////        data_field%name = String(targ%name)
-////        data_field%query_str = String(targ%query_str)
-////        data_field%is_string = targ%is_string
-////        allocate(data_field%dim_paths, source=targ%dim_paths)
-////        allocate(data_field%seq_path(size(targ%seq_path) + 1))
-////        data_field%seq_path(1) = 1
-////        data_field%seq_path(2:size(targ%seq_path)+1) = targ%seq_path
-////                allocate(data_field%export_dim_idxs, source=targ%export_dim_idxs)
-////
-////        if (size(targ%node_ids) == 0) then
-////        ! Ignore targets where the required nodes could not be found in this subset
-////                allocate(data_field%data(1))
-////        data_field%data(1) = MissingValue
-////                data_field%missing = .true.
-////        allocate(data_field%seq_counts(1))
-////        data_field%seq_counts(1)%counts = [1]
-////        else
-////        allocate(data_field%seq_counts(size(targ%seq_path) + 1))
-////        data_field%seq_counts(1)%counts = [1]
-////        do path_idx = 1, size(targ%seq_path)
-////        count_list => node_value_table%counts_for_node(targ%seq_path(path_idx) + 1)
-////        allocate(data_field%seq_counts(path_idx + 1)%counts, source=count_list%array())
-////        end do
-////
-////        real_list => node_value_table%values_for_node(targ%node_ids(1))
-////        allocate(data_field%data, source=real_list%array())
-////
-////        if (size(data_field%data) == 0) data_field%missing = .true.
-////        end if
-////        end do
-////
-////        call node_value_table%delete()
-////    end subroutine
-//
-//    void Query::collectData(const std::vector<Target>& targets,
-//                            const std::vector<ProcessingMasks>& masks,
-//                            ResultSet& resultSet) const
-//    {
-//        std::vector<int> currentPath;
-//        std::vector<int> currentPathReturns;
-//
-//        auto dataFrame = resultSet.nextDataFrame();
-//        int returnNodeIdx = -1;
-//
-//        // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all the data a bunch of
-//        // times)
-//
-//        struct NodeData
-//        {
-//            std::vector<double> values;
-//            std::vector<int> counts;
-//        };
-//
-//        std::vector<int, NodeData> nodeDataTable;
-//        nodeDataTable.reserve( bufrTable_.isc[bufrTable_.inode[bufrLoc_]] - bufrTable_.inode[bufrLoc_]);
-//
-//        for (size_t dataCursor = 0; dataCursor < bufrData_.nval; ++dataCursor)
-//        {
-//            int nodeIdx = bufrData_.inv[dataCursor][bufrLoc_];
-//            int nodeIdxInTable = bufrTable_.inode[bufrLoc_] + nodeIdx - 1;
-//
-//            if (nodeIdxInTable >= nodeDataTable.size())
-//            {
-//                nodeDataTable.resize(nodeIdxInTable + 1);
-//            }
-//
-//            auto& nodeData = nodeDataTable[nodeIdxInTable];
-//
-//            if (nodeData.values.empty())
-//            {
-//                nodeData.values.resize(bufrTable_.nval[nodeIdxInTable]);
-//                nodeData.counts.resize(bufrTable_.nval[nodeIdxInTable]);
-//            }
-//
-//            nodeData.values[bufrData_.val[dataCursor]] += 1;
-//            nodeData.counts[bufrData_.val[dataCursor]] += 1;
-//        }
-//
-//   }
 
+    __details::Target Query::findTarget(const std::string& subset,
+                                        const std::string& targetName,
+                                        const std::string& query) const
+    {
+        std::string querySubset;
+        std::vector<std::string> mnemonics;
+        int index;
+
+        auto bufrInfo = DataProvider::instance();
+
+        QueryParser::splitQueryStr(query, querySubset, mnemonics, index);
+
+        std::vector<int> branches;
+        bool isString = false;
+        std::vector<int> targetNodes;
+        std::vector<int> seqPath;
+        std::vector<std::string> dimPaths;
+        std::vector<int> dimIdxs;
+
+        bool targetMissing = !(querySubset == "*" || querySubset == subset);
+        if (!targetMissing)
+        {
+            branches.resize(mnemonics.size() - 1);
+
+            seqPath.push_back(bufrInfo->getInode());
+
+            int tableCursor = -1;
+            int mnemonicCursor = -1;
+
+            for (auto nodeIdx = bufrInfo->getInode();
+                 nodeIdx != bufrInfo->getIsc(bufrInfo->getInode());
+                 nodeIdx++)
+            {
+//                std::cout << bufrInfo->getTag(nodeIdx) << " " << bufrInfo->getTyp(nodeIdx) << std::endl;
+                if (bufrInfo->getTyp(nodeIdx) == Typ::Sequence ||
+                    bufrInfo->getTyp(nodeIdx) == Typ::Repeat ||
+                    bufrInfo->getTyp(nodeIdx) == Typ::StackedRepeat)
+                {
+                    if (isQueryNode(nodeIdx - 1))
+                    {
+                        if (bufrInfo->getTag(nodeIdx) == mnemonics[mnemonicCursor + 1] &&
+                            tableCursor == mnemonicCursor)
+                        {
+                            mnemonicCursor++;
+                            branches[mnemonicCursor] = nodeIdx - 1;
+                        }
+                        tableCursor++;
+                    }
+                    seqPath.push_back(nodeIdx);
+                }
+                else if (mnemonicCursor == mnemonics.size() - 2 &&
+                         tableCursor == mnemonicCursor &&
+                        bufrInfo->getTag(nodeIdx) == mnemonics.back())
+                {
+                    // We found a target
+                    targetNodes.push_back(nodeIdx);
+                    isString = (bufrInfo->getItp(nodeIdx) == 3);
+
+                    getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
+                }
+
+                // Step back up the tree (unfortunately this is finicky)
+                if (seqPath.size() > 1)
+                {
+                    // Peak ahead to see if the next node is inside one of the containing sequences
+                    // then go back up the approptiate number of sequences. You may have to exit several
+                    // sequences in a row if the current sequence is the last element in the containing
+                    // sequence.
+                    for (int pathIdx = seqPath.size() - 2; pathIdx > 0; pathIdx--)
+                    {
+                        if (seqPath[pathIdx] == bufrInfo->getJmpb(nodeIdx + 1))
+                        {
+                            for (int rewindIdx = seqPath.size() - 1; rewindIdx >= pathIdx; rewindIdx--)
+                            {
+                                // Exit the sequence
+                                if (isQueryNode(seqPath[rewindIdx] - 1))
+                                {
+                                    if (mnemonicCursor > -1 && tableCursor == mnemonicCursor)
+                                    {
+                                        if (bufrInfo->getLink(branches[mnemonicCursor]) == nodeIdx)
+                                        {
+                                            mnemonicCursor--;
+                                        }
+                                    }
+                                    tableCursor--;
+                                }
+                                // Pop out of the current sequence
+                                seqPath.pop_back();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        auto target = __details::Target();
+        target.name = targetName;
+        target.queryStr = query;
+        target.isString = isString;
+        target.seqPath = branches;
+        target.nodeIds = targetNodes;
+
+        if (targetNodes.size() > 0)
+        {
+            target.dimPaths = dimPaths;
+            target.exportDimIdxs = dimIdxs;
+        }
+        else
+        {
+            target.dimPaths = {"*"};
+            target.exportDimIdxs = {0};
+        }
+
+        return target;
+    }
+
+    bool Query::isQueryNode(int nodeIdx) const
+    {
+        auto bufrInfo = DataProvider::instance();
+
+        return (bufrInfo->getTyp(nodeIdx) == Typ::DelayedRep ||
+                bufrInfo->getTyp(nodeIdx) == Typ::FixedRep ||
+                bufrInfo->getTyp(nodeIdx) == Typ::DelayedRepStacked ||
+                bufrInfo->getTyp(nodeIdx) == Typ::DelayedBinary);
+    }
+
+    void Query::getDimInfo(const std::vector<int>& branches,
+                           int mnemonicCursor,
+                           std::vector<std::string>& dimPaths,
+                           std::vector<int>& dimIdxs) const
+    {
+        auto bufrInfo = DataProvider::instance();
+
+        std::string currentDimPath;
+        std::string mnemonicStr;
+
+        // Allocate enough memory to hold all the dim paths
+        dimPaths.reserve(branches.size() + 1);
+
+        currentDimPath = "*";
+        dimPaths.push_back(currentDimPath);
+        dimIdxs.push_back(1);
+
+        // Split the branches into node idxs for each additional dimension
+        if (mnemonicCursor >= 0)
+        {
+            int dimIdx = 1;
+            for (int branchIdx = 0; branchIdx <= mnemonicCursor; branchIdx++)
+            {
+                int nodeIdx = branches[branchIdx];
+                mnemonicStr = bufrInfo->getTag(nodeIdx);
+
+                std::ostringstream path;
+                path << currentDimPath << "/" << mnemonicStr;
+                currentDimPath = path.str();
+
+                if (bufrInfo->getTyp(nodeIdx)  == Typ::DelayedRep ||
+                    bufrInfo->getTyp(nodeIdx)  == Typ::FixedRep ||
+                    bufrInfo->getTyp(nodeIdx)  == Typ::DelayedRepStacked)
+                {
+                    dimIdx = dimIdx + 1;
+                    dimIdxs.push_back(branchIdx + 1);  // +1 to account for the root dimension
+                    dimPaths.push_back(currentDimPath);
+                }
+            }
+        }
+    }
+
+    void Query::collectData(const std::vector<__details::Target>& targets,
+                            const __details::ProcessingMasks& masks,
+                            ResultSet& resultSet) const
+    {
+
+        auto bufrInfo = DataProvider::instance();
+
+        std::vector<int> currentPath;
+        std::vector<int> currentPathReturns;
+
+        auto& dataFrame = resultSet.nextDataFrame();
+        int returnNodeIdx = -1;
+
+        // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all the data a bunch of
+        // times)
+        auto dataTable = std::map<int, NodeData>();
+
+        for (size_t dataCursor = 1; dataCursor < bufrInfo->getNVal(); ++dataCursor)
+        {
+            int nodeIdx = bufrInfo->getInv(dataCursor);
+
+            if (masks.valueNodeMask[nodeIdx])
+            {
+                auto& values = dataTable[nodeIdx].values;
+                values.push_back(bufrInfo->getVal(dataCursor));
+            }
+
+            auto& counts = dataTable[nodeIdx].counts;
+
+            if (counts.size() == 0)
+            {
+                counts.resize(bufrInfo->getIsc(bufrInfo->getInode())
+                                       - bufrInfo->getInode() + 1, 0);
+            }
+
+
+            // Unfortuantely the fixed replicated sequences do not store their counts as values for the Fixed Replication
+            // nodes. It's therefore necessary to discover this information by manually tracing the nested sequences and
+            // counting everything manually. Since we have to do it for fixed reps anyways, its easier just to do it for all
+            // the squences.
+
+            if (bufrInfo->getJmpb(nodeIdx) > 0 &&
+                masks.pathNodeMask[bufrInfo->getJmpb(nodeIdx)])
+            {
+                const auto typ = bufrInfo->getTyp(nodeIdx);
+                const auto jmpbTyp = bufrInfo->getTyp(bufrInfo->getJmpb(nodeIdx));
+                if ((typ == Typ::Sequence && (jmpbTyp == Typ::Sequence ||
+                                              jmpbTyp == Typ::DelayedBinary ||
+                                              jmpbTyp == Typ::FixedRep)) ||
+                    typ == Typ::Repeat ||
+                    typ == Typ::StackedRepeat)
+                {
+                    counts.back()++;
+                }
+            }
+
+            size_t lastNonZeroReturnIdx = 0;
+            if (currentPath.size() >= 1)
+            {
+                if (nodeIdx == returnNodeIdx ||
+                    dataCursor == bufrInfo->getNVal() ||
+                    (currentPath.size() > 1 && nodeIdx == *(currentPath.end() - 1) + 1))
+                {
+                    // Look for the first path return idx that is not 0 and check if its this node idx. Exit the sequence if its
+                    // appropriate. A return idx of 0 indicates a sequence that occurs as the last element of another sequence.
+
+                    for (size_t pathIdx = currentPathReturns.size() - 1; pathIdx >= lastNonZeroReturnIdx; --pathIdx)
+                    {
+                        currentPathReturns.pop_back();
+                        auto seqNodeIdx = currentPath.back();
+                        currentPath.pop_back();
+
+                        const auto typSeqNode = bufrInfo->getTyp(seqNodeIdx);
+                        if (typSeqNode == Typ::DelayedRep || typSeqNode == Typ::DelayedRepStacked)
+                        {
+                            auto& repList = dataTable[seqNodeIdx].counts;
+                            repList.back()--;
+                        }
+                    }
+
+                    lastNonZeroReturnIdx = currentPathReturns.size();
+                    returnNodeIdx = currentPathReturns[lastNonZeroReturnIdx - 1];
+                }
+            }
+
+            if (masks.pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
+            {
+                if (bufrInfo->getTyp(nodeIdx) == Typ::DelayedRep &&
+                    bufrInfo->getVal(dataCursor) == 0)
+                {
+                    // Ignore the node if it is a delayed binary and the value is 0
+                }
+                else
+                {
+                    currentPath.push_back(nodeIdx);
+                    const auto tmpReturnNodeIdx = bufrInfo->getLink(nodeIdx);
+                    currentPathReturns.push_back(tmpReturnNodeIdx);
+
+                    if (tmpReturnNodeIdx != 0)
+                    {
+                        lastNonZeroReturnIdx = currentPathReturns.size();
+                        returnNodeIdx = tmpReturnNodeIdx;
+                    }
+                    else
+                    {
+                        lastNonZeroReturnIdx = 1;
+                        returnNodeIdx = 0;
+                    }
+
+                    if (dataCursor != bufrInfo->getNVal())
+                    {
+                        for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
+                        {
+                            returnNodeIdx = bufrInfo->getLink(bufrInfo->getJmpb(currentPath[pathIdx]));
+                            lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx + 1;
+
+                            if (returnNodeIdx != 0) break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++)
+        {
+            auto& targ = targets[targetIdx];
+            auto& dataField = dataFrame.fieldAtIdx(targetIdx);
+            dataField.name = targ.name;
+            dataField.queryStr = targ.queryStr;
+            dataField.isString = targ.isString;
+            dataField.dimPaths = targ.dimPaths;
+            dataField.seqPath.resize(targ.seqPath.size() + 1);
+            dataField.seqPath[0] = 1;
+            std::copy(targ.seqPath.begin(), targ.seqPath.end(), dataField.seqPath.begin() + 1);
+            dataField.exportDims = targ.exportDimIdxs;
+
+            if (targ.nodeIds.size() == 0)
+            {
+                dataField.data = {MissingValue};
+                dataField.missing = true;
+                dataField.seqCounts = {{1}};
+            }
+            else
+            {
+                dataField.seqCounts.resize(targ.seqPath.size() + 1);
+                dataField.seqCounts[0] = {1};
+                for (size_t pathIdx = 0; pathIdx < targ.seqPath.size(); pathIdx++)
+                {
+                    dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx]].counts;
+                }
+
+                dataField.data = dataTable[targ.nodeIds[0]].values;
+                if (dataField.data.size() == 0) dataField.missing = true;
+            }
+        }
+   }
 }  // namespace bufr
 }  // namespace Ingester

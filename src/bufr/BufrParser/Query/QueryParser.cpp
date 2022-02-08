@@ -25,12 +25,12 @@ namespace bufr {
 
             working_str = working_str.substr(1, working_str.length() - 2);
 
-            std::vector<int> comma_positions;
+            std::vector<size_t> comma_positions;
 
-            size_t comma_idx = 0;
             size_t last_pos = 0;
-            while ((comma_idx = working_str.find(",", last_pos)) != std::string::npos)
+            while (working_str.find(',', last_pos) != std::string::npos)
             {
+                auto comma_idx = working_str.find(',', last_pos);
                 comma_positions.push_back(comma_idx);
                 last_pos = comma_idx + 1;
             }
@@ -42,13 +42,12 @@ namespace bufr {
                 if (commaIdx < comma_positions.size())
                 {
                     subqueries.push_back(working_str.substr(last_pos, comma_positions[commaIdx] - last_pos));
+                    last_pos = comma_positions[commaIdx] + 1;
                 }
                 else
                 {
                     subqueries.push_back(working_str.substr(last_pos, working_str.length() - last_pos));
                 }
-
-                last_pos = comma_positions[commaIdx] + 1;
             }
         }
         else
@@ -60,10 +59,10 @@ namespace bufr {
     }
 
 
-    void QueryParser::splitQueryStr(const std::string &query,
-                                    std::string &subset,
-                                    std::vector<std::string> &mnemonics,
-                                    int &index) {
+    void QueryParser::splitQueryStr(const std::string& query,
+                                    std::string& subset,
+                                    std::vector<std::string>& mnemonics,
+                                    int& index) {
         // Find positions of slashes
         std::vector<size_t> slashPositions;
         size_t slashIdx = 0;
@@ -83,10 +82,11 @@ namespace bufr {
         // Capture the subset string
         subset = query.substr(0, slashPositions[0]);
 
+        std::vector<std::string> mnemonicStrings(slashPositions.size());
+
         // Capture the sequence mnemonic strings
-        mnemonics.resize(slashPositions.size());
-        for (size_t mnemonicIdx = 0; mnemonicIdx < mnemonics.size() - 1; ++mnemonicIdx) {
-            mnemonics[mnemonicIdx] = query.substr(slashPositions[mnemonicIdx] + 1,
+        for (size_t mnemonicIdx = 0; mnemonicIdx < mnemonicStrings.size() - 1; ++mnemonicIdx) {
+            mnemonicStrings[mnemonicIdx] = query.substr(slashPositions[mnemonicIdx] + 1,
                                                   slashPositions[mnemonicIdx + 1] - slashPositions[mnemonicIdx] -
                                                   1);
         }
@@ -100,15 +100,17 @@ namespace bufr {
         size_t endSubscript = lastElement.find_first_of("]");
         if (startSubscript != std::string::npos && endSubscript != std::string::npos) {
             index = std::stoi(lastElement.substr(startSubscript + 1, endSubscript - startSubscript - 1));
-            mnemonics[mnemonics.size()] = lastElement.substr(0, startSubscript);
+            mnemonicStrings[mnemonicStrings.size()] = lastElement.substr(0, startSubscript);
         } else {
             if (endSubscript != std::string::npos || startSubscript != std::string::npos) {
                 std::cerr << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
                 exit(1);
             }
 
-            mnemonics.back() = lastElement;
+            mnemonicStrings.back() = lastElement;
         }
+
+        mnemonics = mnemonicStrings;
     }
 }  // namespace bufr
 }  // namespace Ingester

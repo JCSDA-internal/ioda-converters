@@ -16,8 +16,10 @@
 
 namespace Ingester {
 namespace bufr {
-    ResultSet::ResultSet()
+    ResultSet::ResultSet(const std::vector<std::string>& names) :
+      names_(names)
     {
+        fieldWidths.resize(names.size());
     }
 
     ResultSet::~ResultSet()
@@ -100,7 +102,7 @@ namespace bufr {
 
     DataFrame& ResultSet::nextDataFrame()
     {
-        dataFrames_.push_back(DataFrame());
+        dataFrames_.push_back(DataFrame(names_.size()));
         return dataFrames_.back();
     }
 
@@ -250,7 +252,7 @@ namespace bufr {
 
     void getRowsForField(const DataField& targetField,
                          std::vector<double>& data,
-                         const std::vector<size_t>& dims,
+                         const std::vector<int>& dims,
                          size_t groupbyIdx)
     {
 //        size_t maxCounts = 0;

@@ -6,86 +6,86 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <map>
 
 #include "QuerySet.h"
 #include "ResultSet.h"
-#include "BufrDataManager.h"
+#include "DataProvider.h"
 
 namespace Ingester {
-    namespace bufr
+namespace bufr {
+    namespace __details
     {
-        namespace __details
+        struct Target {
+            std::string name;
+            std::string queryStr;
+            bool isString;
+            std::vector<int> seqPath;
+            std::vector<int> nodeIds;
+            std::vector<std::string> dimPaths;
+            std::vector<int> exportDimIdxs;
+        };
+
+        template <typename T>
+        class OffsetArray
         {
-            struct Target {
-                std::string name;
-                std::string query_str;
-                bool is_string;
-                std::vector<int> seq_path;
-                std::vector<int> node_ids;
-                std::vector<std::string> dim_paths;
-                std::vector<int> export_dim_idxs;
-            };
+         public:
+            OffsetArray(size_t startIdx, size_t endIdx)
+                : offset_(startIdx)
+            {
+                data_.resize(endIdx - startIdx + 1);
+            }
 
-            struct ProcessingMasks {
-                std::vector<bool> value_node_mask;
-                std::vector<bool> path_node_mask;
-            };
+            T& operator[](int idx) const { return data_[idx - offset_]; }
+            const T& operator[](int idx) { return data_[idx - offset_]; }
 
-            struct BufrTableInfo {
-                std::vector<int> inode;
-                std::vector<int> isc;
-                std::vector<int> link;
-                std::vector<int> itp;
-                std::vector<std::string> typ;
-                std::vector<std::string> tag;
-                std::vector<int> jmpb;
+         private:
+            std::vector<T> data_;
+            size_t offset_;
+        };
 
-                BufrTableInfo() = default;
-
-                void update() const;
-            };
-
-            struct BufrData {
-                std::vector<int> nval;
-                std::vector<double> val;
-                std::vector<std::vector<int>> inv;
-
-                BufrData() = default;
-
-                void update() const;
-            };
-        }  // namespace __details
+        struct ProcessingMasks {
+            std::vector<bool> valueNodeMask;
+            std::vector<bool> pathNodeMask;
+        };
+    }  // namespace __details
 
     class Query
     {
      public:
-        Query(const QuerySet& querySet);
-        void query();
+        Query(const QuerySet& querySet, ResultSet& resultSet);
+        void query(const std::string& subset, int bufrLoc);
 
-    private:
+     private:
         const QuerySet querySet_;
         std::map<std::string, std::vector<__details::Target>> targetCache_;
-        std::map<std::string, std::vector<__details::ProcessingMasks>> maskCache_;
+        std::map<std::string, __details::ProcessingMasks> maskCache_;
 
         int fortranFileUnit_;
         int bufrLoc_;
-        BufrDataManager bufrDataManager_;
-        ResultSet resultSet_;
+        ResultSet& resultSet_;
 
-//        void findTargets(const std::string& subset,
-//                         std::vector<Target>& targets,
-//                         std::vector<ProcessingMasks>& masks) const;
-//        Target findTarget(const std::string& subset, const std::string& targetName, const std::string query) const;
-//        void collectData(const std::vector<Target>& targets,
-//                         const std::vector<ProcessingMasks>& masks,
-//                         ResultSet& resultSet) const;
-//        void getDimInfo(const std::vector<int>& branches,
-//                        int mnemonicCursor,
-//                        std::vector<std::string>& dimPaths,
-//                    // namespace Ingester      std::vector<int>& dimIdxs) const;
-//        bool isQueryNode(int nodeIdx) const;
+        void findTargets(const std::string& subset,
+                         std::vector<__details::Target>& targets,
+                         __details::ProcessingMasks& masks);
+
+        __details::Target findTarget(const std::string& subset,
+                                     const std::string& targetName,
+                                     const std::string& query
+                                     ) const;
+
+        bool isQueryNode(int nodeIdx) const;
+
+        void getDimInfo(const std::vector<int>& branches,
+                        int mnemonicCursor,
+                        std::vector<std::string>& dimPaths,
+                        std::vector<int>& dimIdxs) const;
+
+        void collectData(const std::vector<__details::Target>& targets,
+                                const __details::ProcessingMasks& masks,
+                                ResultSet& resultSet) const;
         };
-    }  // namespace bufr
+}  // namespace bufr
 }  // namespace Ingester
 
