@@ -13,7 +13,7 @@ import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import os
 from pathlib import Path
@@ -44,20 +44,21 @@ def main(args):
 
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
 
-    # Setup the configuration that is passed to each worker process
-    # Note: Pool.map creates separate processes, and can only take iterable
-    # objects. Rather than using global variables, embed them into
-    # the iterable object together with argument array passed in (args.input)
-
     # read / process files in parallel
-#   pool_inputs = [(i) for i in args.input]
-#   pool = Pool(args.threads)
-#   obs = pool.map(read_input, pool_inputs)
-
-    # concatenate the data from the files
-#   obs_data = obs[0]
-
-    obs_data = read_input(args.input, record_number=args.recordnumber)
+    pool_input_01 = args.input
+    pool_input_02 = np.arange(len(args.input))+args.recordnumber
+    pool_inputs = [[i, j] for i, j in zip(pool_input_01, pool_input_02)]
+    obs_data = {}
+    # create a thread pool
+    with ProcessPoolExecutor(max_workers=args.threads) as executor:
+        for file_obs_data in executor.map(read_input, pool_inputs):
+            if not file_obs_data:
+                print("INFO: non-nominal file skipping")
+                continue
+            if obs_data:
+                concat_obs_dict(obs_data, file_obs_data)
+            else:
+                obs_data = file_obs_data
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -104,7 +105,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_args, record_number=None):
+def read_input(input_file_and_record):
     """
     Reads/converts input file(s)
 
@@ -117,9 +118,9 @@ def read_input(input_args, record_number=None):
 
         A dictionary holding the variables (obs_data) needed by the IODA writer
     """
-    input_file = input_args[0]
-
-    print("Reading ", input_file)
+    input_file = input_file_and_record[0]
+    record_number = input_file_and_record[1]
+    print("Reading: %s" % input_file)
     f = open(input_file, 'rb')
     bufr = codes_bufr_new_from_file(f)
     codes_set(bufr, 'unpack', 1)
@@ -179,6 +180,20 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
+    # ! Bit 1=Non-nominal quality
+    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
+    # ! Bit 4=Excess Phase non-nominal
+    # ! Bit 5=Bending Angle non-nominal
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
+    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
+
+    # exit if non-nominal profile
+    if i_non_nominal != 0 or i_phase_non_nominal != 0 or i_bang_non_nominal != 0:
+        return {}
+
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
     obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
@@ -211,15 +226,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
     # add rising/setting (ascending/descending) bit
-    # ! Bit 1=Non-nominal quality
-    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
-    # ! Bit 4=Excess Phase non-nominal
-    # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
-    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
     obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
     # set record number (multi file procesing will change this)
@@ -298,6 +304,29 @@ def assign_values(data):
         return np.array(data, dtype=ioda_int_type)
 
 
+def concat_obs_dict(obs_data, append_obs_data):
+    # For now we are assuming that the obs_data dictionary has the "golden" list
+    # of variables. If one is missing from append_obs_data, the obs_data variable
+    # will be extended using fill values.
+    #
+    # Use the first key in the append_obs_data dictionary to determine how
+    # long to make the fill value vector.
+    append_keys = list(append_obs_data.keys())
+    append_length = len(append_obs_data[append_keys[0]])
+    for gv_key in obs_data.keys():
+        if gv_key in append_keys:
+            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
+        else:
+            if obs_data[gv_key].dtype == float:
+                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
+            elif obs_data[gv_key].dtype == int:
+                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
+            elif obs_data[gv_key].dtype == object:
+                # string type, extend with empty strings
+                fill_data = np.repeat("", append_length, dtype=object)
+            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
+
+
 if __name__ == "__main__":
 
     # Get command line arguments
@@ -332,7 +361,7 @@ if __name__ == "__main__":
     optional.add_argument(
         '-r', '--recordnumber',
         help=' optional record number to associate with profile ',
-        type=int, default=None)
+        type=int, default=1)
 
     args = parser.parse_args()
 

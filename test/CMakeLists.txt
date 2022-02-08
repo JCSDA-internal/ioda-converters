@@ -1,4 +1,4 @@
-# (C) Copyright 2019-2021 UCAR.
+# (C) Copyright 2019-2022 UCAR.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -59,6 +59,7 @@ list( APPEND test_input
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
   testinput/owp_snow_obs.csv
+  testinput/sonde_wmo_double.bufr
   testinput/avhrr_radiance.nc
 )
 
@@ -111,6 +112,8 @@ list( APPEND test_output
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
   testoutput/owp_snow_obs_dup_thin_err_fn.nc
+  testoutput/wmo_raob_double.nc4
+  testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
 )
 
@@ -145,6 +148,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
+    testinput/aircar_BUFR2ioda.yaml
+    testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
     testinput/airep_wmo_multi.bufr
     testinput/amdar_wmoBUFR2ioda.yaml
@@ -153,6 +158,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/gnssro_2020-306-2358C2E6.bufr
     testinput/buoy_wmoBUFR2ioda.yaml
     testinput/buoy_wmo_multi.bufr
+    testinput/rass_wmoBUFR2ioda.yaml
+    testinput/rass_wmo_multi.bufr
     testinput/ship_wmoBUFR2ioda.yaml
     testinput/ship_wmo_multi.bufr
     testinput/synop_wmoBUFR2ioda.yaml
@@ -161,6 +168,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/satwind_EUMet_wmo.bufr
     testinput/satwind_Himawari_wmoBUFR2ioda.yaml
     testinput/satwind_Himawari_wmo.bufr
+    testinput/vadwinds_wmoBUFR2ioda.yaml
+    testinput/vadwinds_wmo_multi.bufr
   )
 
   list( APPEND test_output
@@ -175,14 +184,17 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
     testoutput/NC005066.nc
+    testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
     testoutput/buoy_wmo_multi.nc
+    testoutput/rass_wmo_multi.nc
     testoutput/ship_wmo_multi.nc
     testoutput/synop_wmo_multi.nc
     testoutput/satwind_EUMet.nc
     testoutput/satwind_Himawari.nc
+    testoutput/vadwinds_wmo_multi.nc
   )
 endif()
 
@@ -279,7 +291,6 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-
 
 #===============================================================================
 # Marine converters
@@ -422,12 +433,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hfradar
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_argoclim
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                   ARGS    netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/argoClim2ioda.py
                           -i testinput/argoclim_test.nc
                           -o testrun/argoclim.nc
-                          -d 2019101600"
+                          -d 2004010200"
                           argoclim.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cryosat2
@@ -846,6 +858,14 @@ if(iodaconv_bufr_ENABLED)
                     NC005031.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/aircar_BUFR2ioda.yaml"
+                    gdas.aircar.t00z.20210801.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
   ecbuild_add_test( TARGET  test_iodaconv_bufr_airep_wmo_bufr
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -889,6 +909,14 @@ if(iodaconv_bufr_ENABLED)
                     buoy_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_rass_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/rass_wmoBUFR2ioda.yaml"
+                    rass_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ship_wmo_bufr
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -919,6 +947,14 @@ if(iodaconv_bufr_ENABLED)
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Himawari_wmoBUFR2ioda.yaml"
                     satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_vadwinds_wmo_bufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/vadwinds_wmoBUFR2ioda.yaml"
+                    vadwinds_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 endif()
 
 
@@ -935,6 +971,30 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                           -d 2021120600
                           -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
                           -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
+
+#==============================================================================
+# Generic NRT Ingest tests
+#==============================================================================
+
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_double.nc4"
+                         wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob_multi_files
+                 TYPE    SCRIPT
+                 ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                 COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                 ARGS    netcdf
+                         "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                         -i testinput/sonde_wmo_double.bufr testinput/sonde_wmo_double.bufr
+                         -o testrun/wmo_raob_quadruple.nc4"
+                         wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # PrepBUFR and BUFR tests
@@ -1114,3 +1174,27 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc
 			  --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
                           owp_snow_obs_dup_thin_err_fn.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+
+#######################################################
+# Auto-generated tests for ioda file validation
+#  For these tests we check the testoutput directory
+#  since it already exists with valid data.
+
+file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
+
+foreach ( f ${TESTOUTPUT_IODA_FILES} )
+	get_filename_component(filename ${f} NAME)
+
+	# Note: IODA_YAML_ROOT is provided by find_package(ioda).
+	# The ObsSpace.yaml file is *not* a test file. It always exists.
+	ecbuild_add_test(
+		TARGET ${PROJECT_NAME}_validate_testoutput_${filename}
+		COMMAND ioda-validate.x
+		LABELS ${PROJECT_NAME}_validate
+		ENVIRONMENT "ECKIT_COLOUR_OUTPUT=1"
+		ARGS "${IODA_YAML_ROOT}/validation/ObsSpace.yaml" "${f}"
+		)
+endforeach()
+
+

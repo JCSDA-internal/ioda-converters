@@ -14,6 +14,8 @@ list(APPEND _ingester_srcs
   DataObject/StrVecDataObject.cpp
   DataObject/ArrayDataObject.h
   DataObject/ArrayDataObject.cpp
+  DataObject/Int64VecDataObject.h
+  DataObject/Int64VecDataObject.cpp
   BufrParser/BufrParser.h
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h
@@ -86,7 +88,7 @@ ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp
                         LIBS    ingester )
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_bufr_coding_norms
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
                   ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}

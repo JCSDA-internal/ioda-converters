@@ -5,9 +5,11 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
+#include <climits>
 #include <iostream>
 #include <iomanip>
 #include <ostream>
+#include <time.h>
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
@@ -65,43 +67,63 @@ namespace Ingester
     std::shared_ptr<DataObject> DatetimeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
+        static const float missing = 1.e+11;
+        static const int64_t missing_int = INT_MIN;
 
-        auto datetimes = std::vector<std::string>();
+        std::vector<int64_t> timeOffsets;
+        timeOffsets.reserve(map.at(yearKey_).size());
 
-        datetimes.reserve(map.at(yearKey_).size());
+        std::tm tm{};                // zero initialise
+        tm.tm_year = 1970-1900;      // 1970
+        tm.tm_mon = 0;               // Jan=0, Feb=1, ...
+        tm.tm_mday = 1;              // 1st
+        tm.tm_hour = 0;              // midnight
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
+        tm.tm_isdst = 0;             // Not daylight saving
+        std::time_t epochDt = std::mktime(&tm);
+        std::time_t this_time = std::mktime(&tm);
+        int64_t diff_time;
+
         for (unsigned int idx = 0; idx < map.at(yearKey_).size(); idx++)
         {
-            // YYYY-MM-DDThh:mm:ssZ
-            std::ostringstream datetimeStr;
-            datetimeStr << std::setfill('0')
-                        << std::setw(4) << map.at(yearKey_)(idx) << "-" \
-                        << std::setw(2) << map.at(monthKey_)(idx) << "-" \
-                        << std::setw(2) << map.at(dayKey_)(idx) << "T" \
-                        << std::setw(2) << map.at(hourKey_)(idx) - hoursFromUtc_ << ":" \
-                        << std::setw(2) << map.at(minuteKey_)(idx) << ":";
-
-            if (!secondKey_.empty())
+            diff_time = missing_int;
+            if (map.at(yearKey_)(idx) != missing
+                           && map.at(monthKey_)(idx) != missing
+                           && map.at(dayKey_)(idx) !=missing
+                           && map.at(hourKey_)(idx) !=missing
+                           && map.at(minuteKey_)(idx) !=missing)
             {
-                if (map.at(secondKey_)(idx) >= 0 && map.at(secondKey_)(idx) < 60)
-                {
-                    datetimeStr << std::setw(2) << map.at(secondKey_)(idx);
-                }
-                else
-                {
-                    datetimeStr << std::setw(2) << 0;
-                }
-            }
-            else
-            {
-                datetimeStr << std::setw(2) << 0;
-            }
+                tm.tm_year = map.at(yearKey_)(idx) - 1900;
+                tm.tm_mon = map.at(monthKey_)(idx) - 1;
+                tm.tm_mday = map.at(dayKey_)(idx);
+                tm.tm_hour = map.at(hourKey_)(idx);
+                tm.tm_min = map.at(minuteKey_)(idx);
+                tm.tm_sec = 0;
+                tm.tm_isdst = 0;
 
-            datetimeStr << "Z";
+                if (!secondKey_.empty())
+                {
+                    if (map.at(secondKey_)(idx) >= 0 && map.at(secondKey_)(idx) < 60)
+                    {
+                        tm.tm_sec = map.at(secondKey_)(idx);
+                    }
+                }
 
-            datetimes.push_back(datetimeStr.str());
+                this_time = std::mktime(&tm);
+                if (this_time < 0)
+                {
+                    std::cout << "Caution, date suspicious date (year, month, day): "
+                              << map.at(yearKey_)(idx) << ", "
+                              << map.at(monthKey_)(idx) << ", "
+                              << map.at(dayKey_)(idx) << std::endl;
+                }
+                diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt)
+                                                      + hoursFromUtc_*3600);
+            }
+            timeOffsets.push_back(diff_time);
         }
-
-        return std::make_shared<StrVecDataObject>(datetimes);
+        return std::make_shared<Int64VecDataObject>(timeOffsets);
     }
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)
