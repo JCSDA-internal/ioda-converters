@@ -91,10 +91,10 @@ class AOD(object):
             AttrData["satellite"] = self.satellite
             AttrData["sensor"] = self.sensor
 
-            if AttrData['sensor'] == 'NPP':
-                AttrData['sensor'] = "suomi_npp"
-            if AttrData['satellite'] == 'VIIRS':
-                AttrData['satellite'] = "v.viirs-m_npp"
+            if AttrData['sensor'] == 'VIIRS':
+                AttrData['sensor'] = "v.viirs-m_npp"
+            if AttrData['satellite'] == 'NPP':
+                AttrData['satellite'] = "suomi_npp"
             AttrData['date_time_string'] = base_datetime
 
             lons = ncd.variables['Longitude'][:].ravel()
