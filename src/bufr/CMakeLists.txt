@@ -36,8 +36,8 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
   BufrParser/Exports/Variables/Transforms/TransformBuilder.h
   BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
-        BufrParser/Query/DataProvider.h
-        BufrParser/Query/DataProvider.cpp
+  BufrParser/Query/DataProvider.h
+  BufrParser/Query/DataProvider.cpp
   BufrParser/Query/File.h
   BufrParser/Query/File.cpp
   BufrParser/Query/VectorMath.h

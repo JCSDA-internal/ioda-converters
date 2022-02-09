@@ -16,11 +16,11 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
-#include "ResultSet.h"
+#include "BufrParser/Query/ResultSet.h"
 
 namespace Ingester
 {
-    typedef std::vector<size_t> Dimensions;
+    typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
 
     const float MissingValue = 10e10;

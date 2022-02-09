@@ -6,8 +6,8 @@
 
 #include <vector>
 
-namespace Ingester
-{
+namespace Ingester {
+namespace bufr {
     template<typename T>
     T product(std::vector<T> vec)
     {
@@ -46,32 +46,32 @@ namespace Ingester
         return result;
     }
 
-    template<typename T>
-    std::vector<T> slice(std::vector<T> vec, std::vector<size_t> indices)
+    template<typename T, typename U>
+    std::vector<T> slice(const std::vector<T>& vec, const std::vector<U>& indices)
     {
-        std::vector<T> result;
-        for (auto i : indices)
+        std::vector<T> result(indices.size());
+        for (size_t i = 0; i < indices.size(); ++i)
         {
-            result.push_back(vec[i]);
+            result[i] = vec[indices[i]];
         }
 
         return result;
     }
 
     template<typename T, typename U>
-    std::vector<T> operator*(std::vector<T> vec, U scalar)
+    std::vector<T> operator*(const std::vector<T>& vec, const U& scalar)
     {
-        std::vector<T> result(vec.size());
+        std::vector<T> result(vec.size(), 1);
         for (size_t i = 0; i < vec.size(); i++)
         {
-            result[i] *= static_cast<T>(scalar);
+            result[i] = vec[i] * static_cast<T>(scalar);
         }
 
         return result;
     }
 
     template<typename U, typename T>
-    std::vector<T> operator-(U scalar, std::vector<T> vec)
+    std::vector<T> operator-(const U& scalar, const std::vector<T>& vec)
     {
         std::vector<T> result(vec.size());
         for (size_t i = 0; i < vec.size(); i++)
@@ -81,4 +81,5 @@ namespace Ingester
 
         return result;
     }
-}
+}  // namespace bufr
+}  // namespace Ingester

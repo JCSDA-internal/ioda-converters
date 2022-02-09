@@ -283,7 +283,8 @@ namespace bufr {
 
         // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all the data a bunch of
         // times)
-        auto dataTable = std::map<int, NodeData>();
+        auto dataTable = __details::OffsetArray<NodeData>(bufrInfo->getInode(),
+                                                          bufrInfo->getIsc(bufrInfo->getInode()));
 
         for (size_t dataCursor = 1; dataCursor < bufrInfo->getNVal(); ++dataCursor)
         {
@@ -294,15 +295,6 @@ namespace bufr {
                 auto& values = dataTable[nodeIdx].values;
                 values.push_back(bufrInfo->getVal(dataCursor));
             }
-
-            auto& counts = dataTable[nodeIdx].counts;
-
-            if (counts.size() == 0)
-            {
-                counts.resize(bufrInfo->getIsc(bufrInfo->getInode())
-                                       - bufrInfo->getInode() + 1, 0);
-            }
-
 
             // Unfortuantely the fixed replicated sequences do not store their counts as values for the Fixed Replication
             // nodes. It's therefore necessary to discover this information by manually tracing the nested sequences and
@@ -320,7 +312,7 @@ namespace bufr {
                     typ == Typ::Repeat ||
                     typ == Typ::StackedRepeat)
                 {
-                    counts.back()++;
+                    dataTable[nodeIdx].counts.back()++;
                 }
             }
 
@@ -343,8 +335,7 @@ namespace bufr {
                         const auto typSeqNode = bufrInfo->getTyp(seqNodeIdx);
                         if (typSeqNode == Typ::DelayedRep || typSeqNode == Typ::DelayedRepStacked)
                         {
-                            auto& repList = dataTable[seqNodeIdx].counts;
-                            repList.back()--;
+                            dataTable[seqNodeIdx].counts.back()--;
                         }
                     }
 
@@ -388,6 +379,8 @@ namespace bufr {
                         }
                     }
                 }
+
+                dataTable[nodeIdx + 1].counts.push_back(0);
             }
         }
 
@@ -416,7 +409,7 @@ namespace bufr {
                 dataField.seqCounts[0] = {1};
                 for (size_t pathIdx = 0; pathIdx < targ.seqPath.size(); pathIdx++)
                 {
-                    dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx]].counts;
+                    dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
                 }
 
                 dataField.data = dataTable[targ.nodeIds[0]].values;

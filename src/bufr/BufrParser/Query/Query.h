@@ -37,8 +37,7 @@ namespace bufr {
                 data_.resize(endIdx - startIdx + 1);
             }
 
-            T& operator[](int idx) const { return data_[idx - offset_]; }
-            const T& operator[](int idx) { return data_[idx - offset_]; }
+            T& operator[](size_t idx) { return data_[idx - offset_]; }
 
          private:
             std::vector<T> data_;

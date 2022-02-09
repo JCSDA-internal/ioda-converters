@@ -56,25 +56,22 @@ namespace Ingester {
             }
         }
 
-        file_.execute(querySet, maxMsgsToParse);
+        std::cout << "Executing Queries" << std::endl;
+        const auto resultSet = file_.execute(querySet, maxMsgsToParse);
 
-//        std::cout << "Executing Queries" << std::endl;
-//        auto result_set = file_.execute(querySet, maxMsgsToParse);
-//
-//        std::cout << "Building Bufr Data" << std::endl;
-//        auto srcData = BufrDataMap();
-//        for (const auto& var : description_.getExport().getVariables())
-//        {
-//            for (const auto& queryInfo : var->getQueryList())
-//            {
-//                auto resultBase = result_set.get(queryInfo.name, queryInfo.groupByField);
-//                srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase, queryInfo.query);
-//            }
-//        }
-//
-//        std::cout << "Exporting Data" << std::endl;
-//        auto exportedData = exportData(srcData);
-//
+        std::cout << "Building Bufr Data" << std::endl;
+        auto srcData = BufrDataMap();
+        for (const auto& var : description_.getExport().getVariables())
+        {
+            for (const auto& queryInfo : var->getQueryList())
+            {
+                auto resultBase = resultSet.get(queryInfo.name, queryInfo.groupByField);
+                srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase, queryInfo.query);
+            }
+        }
+
+        std::cout << "Exporting Data" << std::endl;
+        auto exportedData = exportData(srcData);
 
         auto timeElapsed = std::chrono::steady_clock::now() - startTime;
         auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::milliseconds>
@@ -82,10 +79,8 @@ namespace Ingester {
         std::cout << "Finished "
                   << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
                   << std::endl;
-//
-//        return exportedData;
 
-        return nullptr;
+        return exportedData;
     }
 
     std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap &srcData) {
