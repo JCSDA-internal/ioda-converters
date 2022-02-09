@@ -46,11 +46,12 @@ VarDims = {
     'carbon_monoxide_in_total_column': ['nlocs'],
 }
 
-#constants
-avogadro=6.02214076E23
-scm2sm=1E4
-vmr2col = 2.12e13 #following Deeter 2009 MOPITT documentation
+# constants
+avogadro = 6.02214076E23
+scm2sm = 1E4
+vmr2col = 2.12e13  # following Deeter 2009 MOPITT documentation
 hPa2Pa = 1E2
+
 
 class mopitt(object):
     def __init__(self, filenames):
@@ -78,7 +79,7 @@ class mopitt(object):
 
             ncd = nc.Dataset(f, 'r')
 
-            #AttrData['date_time_string']
+            # AttrData['date_time_string']
             StartDateTime = str(ncd.groups['HDFEOS'].groups['ADDITIONAL'].groups['FILE_ATTRIBUTES'].StartDateTime)
             AttrData['sensor'] = 'MOPITT'
             AttrData['platform'] = 'Terra'
@@ -89,55 +90,56 @@ class mopitt(object):
             nlevs = ncd.groups['HDFEOS'].groups['SWATHS'].groups['MOP02'].dimensions['nPrs2'].size
             dat = ncd.groups['HDFEOS'].groups['SWATHS'].groups['MOP02'].groups['Data Fields']
 
-            #get and concatenate pressure grid
+            # get and concatenate pressure grid
             pr_sf = dat.variables['SurfacePressure'][:]
-            pr_sf = pr_sf[...,np.newaxis]
-            pr_gd = np.tile(dat.variables['PressureGrid'][:],(len(lats),1))
-            pr_gd = np.concatenate((pr_sf,pr_gd),axis=1)
-            pr_gd = np.concatenate((pr_gd,np.zeros(len(lats))[...,np.newaxis]),axis=1).astype('float32')
+            pr_sf = pr_sf[..., np.newaxis]
+            pr_gd = np.tile(dat.variables['PressureGrid'][:], (len(lats),1))
+            pr_gd = np.concatenate((pr_sf, pr_gd), axis=1)
+            pr_gd = np.concatenate((pr_gd, np.zeros(len(lats))[...,np.newaxis]), axis=1).astype('float32')
 
-            #if one of the flags (channels first 4 or avk no 5) is set to one the data should be flaged
+            # if one of the flags (channels first 4 or avk no 5) is set to one the data should be flaged
             qa = dat.variables['RetrievalAnomalyDiagnostic'][:].sum(axis=1)
 
-            #time data, we don't need precision beyond the second
-            inittime = datetime.strptime(StartDateTime,"%Y-%m-%dT%H:%M:%S.%fZ")
+            # time data, we don't need precision beyond the second
+            inittime = datetime.strptime(StartDateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
             times = np.array([datetime.strftime(inittime + timedelta(seconds=int(i)) \
-                 - timedelta(seconds=int(secd[0])),"%Y-%m-%dT%H:%M:%S")+"Z" \
-                 for i in secd],dtype=object)
-            AttrData['date_time_string']=times[0]
+                 - timedelta(seconds=int(secd[0])), "%Y-%m-%dT%H:%M:%S")+"Z" \
+                 for i in secd], dtype=object)
+            AttrData['date_time_string'] = times[0]
 
-            #get ak
+            # get ak
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
-            #ak to be applied on surface density molecules/m2
+            # ak to be applied on surface density molecules/m2
             ak_tc_dimless = dat.variables['TotalColumnAveragingKernelDimless'][:]
 
-            #get apriori quantities, profile is needed to compute (I-A)x_a
+            # get apriori quantities, profile is needed to compute (I-A)x_a
             xa_tc = dat.variables['APrioriCOTotalColumn'][:]
-            xa_sf = dat.variables['APrioriCOSurfaceMixingRatio'][:][:,0]
-            xa_sf = xa_sf[...,np.newaxis]
-            xa_gd = dat.variables['APrioriCOMixingRatioProfile'][:][:,:,0]
-            xa_gd = np.concatenate((xa_sf,xa_gd),axis=1)
+            xa_sf = dat.variables['APrioriCOSurfaceMixingRatio'][:][:, 0]
+            xa_sf = xa_sf[..., np.newaxis]
+            xa_gd = dat.variables['APrioriCOMixingRatioProfile'][:][:, :, 0]
+            xa_gd = np.concatenate((xa_sf, xa_gd), axis=1)
 
-            #get the retrieved values
-            xr_tc = dat.variables['RetrievedCOTotalColumn'][:,0]
+            # get the retrieved values
+            xr_tc = dat.variables['RetrievedCOTotalColumn'][:, 0]
 
-            #sum smoothing and measurement error
+            # sum smoothing and measurement error
             er_tc = dat.variables['RetrievedCOTotalColumnDiagnostics'][:].sum(axis=1)
-            #mopitt number of levels is dependent on surface pressure, for data points with sp<900hPa
+            # mopitt number of levels is dependent on surface pressure, for data points with sp<900hPa
             # nlevs<10. IODA and UFO cannot handle variable nlayers_kernel for a given instrument
-            #make layers of 0 thickness for surface pressure above those fixed MOPITT layers and
+            # make layers of 0 thickness for surface pressure above those fixed MOPITT layers and
             # move the surface xa values (and xr if profile da) up
             idty = np.ones(len(lats))
             for lev in range(nlevs-1):
-               zlev=pr_gd[:,lev]-pr_gd[:,lev+1]
-               pr_gd[:,lev+1][zlev<0]=pr_gd[:,lev][zlev<0]
-               xa_gd[:,lev+1][zlev<0]=xa_gd[:,lev][zlev<0]
-               ak_tc_dimless[:,lev][zlev<0]=0
+                zlev = pr_gd[:, lev]-pr_gd[:, lev+1]
+                pr_gd[:, lev+1][zlev<0] = pr_gd[:, lev][zlev<0]
+                xa_gd[:, lev+1][zlev<0] = xa_gd[:, lev][zlev<0]
+                ak_tc_dimless[:, lev][zlev<0] = 0
 
-            #now calculate the apriori term to pass to UFO and ensure single precision
-            ap_tc=np.zeros(len(lats))
+            # now calculate the apriori term to pass to UFO and ensure single precision
+            ap_tc = np.zeros(len(lats))
             for lev in range(nlevs):
-               ap_tc = ap_tc + vmr2col*ak_tc_dimless[:,lev]*(pr_gd[:,lev]-pr_gd[:,lev+1])*xa_gd[:,lev]
+                ap_tc = ap_tc + vmr2col * ak_tc_dimless[:, lev] * \
+                     (pr_gd[:, lev]-pr_gd[:, lev+1]) * xa_gd[:, lev]
             ap_tc = xa_tc - ap_tc
             ap_tc = ap_tc.astype('float32')
             flg = qa == 0
@@ -150,15 +152,15 @@ class mopitt(object):
                 self.outdata[('datetime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg]/u_conv
+                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg] / u_conv
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
-                    self.outdata[varname_ak] = ak_tc_dimless[:,k][flg]
+                    self.outdata[varname_ak] = ak_tc_dimless[:, k][flg]
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
-                    self.outdata[varname_pr] = hPa2Pa*pr_gd[:,k][flg]
+                    self.outdata[varname_pr] = hPa2Pa * pr_gd[:, k][flg]
 
-                self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]/u_conv
-                self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]/u_conv
+                self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg] / u_conv
+                self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg] / u_conv
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa[flg]
 
             else:
@@ -169,19 +171,19 @@ class mopitt(object):
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('apriori_term', 'MetaData')] = np.concatenate((
-                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg]/u_conv))
+                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg] / u_conv))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_ak] = np.concatenate(
-                        (self.outdata[varname_ak], ak_tc_dimless[:,k][flg]))
+                        (self.outdata[varname_ak], ak_tc_dimless[:, k][flg]))
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_pr] = np.concatenate(
-                          (self.outdata[varname_pr], hPa2Pa*pr_gd[:,k][flg]))
+                          (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]/u_conv))
+                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg] / u_conv))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]/u_conv))
+                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg] / u_conv))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
             first = False
