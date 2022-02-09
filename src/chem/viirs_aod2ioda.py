@@ -10,7 +10,7 @@
 import sys
 import argparse
 import netCDF4 as nc
-import glob 
+import glob
 import numpy as np
 from datetime import datetime, date, timedelta
 import os
