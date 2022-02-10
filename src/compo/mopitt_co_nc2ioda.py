@@ -93,18 +93,18 @@ class mopitt(object):
             # get and concatenate pressure grid
             pr_sf = dat.variables['SurfacePressure'][:]
             pr_sf = pr_sf[..., np.newaxis]
-            pr_gd = np.tile(dat.variables['PressureGrid'][:], (len(lats),1))
+            pr_gd = np.tile(dat.variables['PressureGrid'][:], (len(lats), 1))
             pr_gd = np.concatenate((pr_sf, pr_gd), axis=1)
-            pr_gd = np.concatenate((pr_gd, np.zeros(len(lats))[...,np.newaxis]), axis=1).astype('float32')
+            pr_gd = np.concatenate((pr_gd, np.zeros(len(lats))[..., np.newaxis]), axis=1).astype('float32')
 
             # if one of the flags (channels first 4 or avk no 5) is set to one the data should be flaged
             qa = dat.variables['RetrievalAnomalyDiagnostic'][:].sum(axis=1)
 
             # time data, we don't need precision beyond the second
             inittime = datetime.strptime(StartDateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-            times = np.array([datetime.strftime(inittime + timedelta(seconds=int(i)) \
-                 - timedelta(seconds=int(secd[0])), "%Y-%m-%dT%H:%M:%S")+"Z" \
-                 for i in secd], dtype=object)
+            times = np.array([datetime.strftime(inittime + timedelta(seconds=int(i)) 
+                - timedelta(seconds=int(secd[0])), "%Y-%m-%dT%H:%M:%S")+"Z" for i in secd]
+                , dtype=object)
             AttrData['date_time_string'] = times[0]
 
             # get ak
@@ -131,20 +131,20 @@ class mopitt(object):
             idty = np.ones(len(lats))
             for lev in range(nlevs-1):
                 zlev = pr_gd[:, lev]-pr_gd[:, lev+1]
-                pr_gd[:, lev+1][zlev<0] = pr_gd[:, lev][zlev<0]
-                xa_gd[:, lev+1][zlev<0] = xa_gd[:, lev][zlev<0]
-                ak_tc_dimless[:, lev][zlev<0] = 0
+                pr_gd[:, lev+1][zlev < 0] = pr_gd[:, lev][zlev < 0]
+                xa_gd[:, lev+1][zlev < 0] = xa_gd[:, lev][zlev < 0]
+                ak_tc_dimless[:, lev][zlev < 0] = 0
 
             # now calculate the apriori term to pass to UFO and ensure single precision
             ap_tc = np.zeros(len(lats))
             for lev in range(nlevs):
                 ap_tc = ap_tc + vmr2col * ak_tc_dimless[:, lev] * \
-                     (pr_gd[:, lev]-pr_gd[:, lev+1]) * xa_gd[:, lev]
+                    (pr_gd[:, lev]-pr_gd[:, lev+1]) * xa_gd[:, lev]
             ap_tc = xa_tc - ap_tc
             ap_tc = ap_tc.astype('float32')
             flg = qa == 0
 
-            #unit conversion from molecules/cm2 to mol/m2
+            # unit conversion from molecules/cm2 to mol/m2
             u_conv = avogadro / scm2sm
 
             if first:
@@ -178,7 +178,7 @@ class mopitt(object):
                         (self.outdata[varname_ak], ak_tc_dimless[:, k][flg]))
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_pr] = np.concatenate(
-                          (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
+                        (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg] / u_conv))
@@ -196,6 +196,7 @@ class mopitt(object):
             vkey = (varname, 'MetaData')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
             self.varAttrs[vkey]['units'] = ''
+
 
 def main():
 
@@ -231,4 +232,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
