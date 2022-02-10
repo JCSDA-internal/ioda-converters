@@ -77,7 +77,7 @@ class mopitt(object):
         first = True
         for f in self.filenames:
 
-            ncd = nc.Data:wset(f, 'r')
+            ncd = nc.Dataset(f, 'r')
 
             # AttrData['date_time_string']
             StartDateTime = str(ncd.groups['HDFEOS'].groups['ADDITIONAL'].groups['FILE_ATTRIBUTES'].StartDateTime)
@@ -103,7 +103,7 @@ class mopitt(object):
             # time data, we don't need precision beyond the second
             inittime = datetime.strptime(StartDateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
             times = np.array([datetime.strftime(
-                inittime + timedelta(seconds=int(i)) - timedelta(seconds=int(secd[0])), 
+                inittime + timedelta(seconds=int(i)) - timedelta(seconds=int(secd[0])),
                 "%Y-%m-%dT%H:%M:%S")+"Z" for i in secd], dtype=object)
             AttrData['date_time_string'] = times[0]
 
