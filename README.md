@@ -82,45 +82,6 @@ At this time, only the output variables of air_temperature, surface_pressure (co
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 ```
 
-
-## odbapi2nc
-
-Python script, `odbapi2nc.py`, for converting Met Office or ECMWF ODB2 files to netCDF4 files formatted for use by IODA.
-```
-Usage: odbapi2nc.py [-h] [-c] [-q] [-t] [-v] [-b] input_odb2 definition_yaml output_netcdf
-```
-Definition YAML files currently created and tested:
-* Met Office Radiosonde
-* Met Office Aircraft
-* Met Office AMSU-A from atovs report
-* ECMWF Radiosonde
-* ECMWF Aircraft
-
-The current ODB library (called ODB API) only supports Python 2.7.
-ECMWF will be releasing a new ODB library (called ODC) soon, that will support Python 3.
-Our expectation is that ODC will show up in the next few weeks.
-
-Until ODC arrives, we have to use python 2.7 for the ODB test and file conversion.
-
-The ODB file conversion test will be disabled by default so that developers can continue to work in Python 3.
-The ODB coding norms test will always be enabled.
-
-When developing the ODB code, you will need to work inside the container (Singularity or CharlieCloud) and with Python 2.7.
-To enable the ODB file conversion test, add the ENABLE_ODB_API option to ecbuild as follows:
-~~~~~~~~
-ecbuild -DENABLE_ODB_API=1 <other_ecbuild_options> <path_to_source_directory>
-~~~~~~~~
-
-## odbapi2json
-
-Python script, `odbapi2json.py`, for converting Met Office ODB2 files to JSON files which can be used to load the data
-to MongoDB.
-
-This script used to work, but is currently not being maintained and no longer does. The code is being kept as a starting point if we want to update it later.
-```
-Usage: odbapi2json.py [-h] [-c] [-q] input_odbapi output_temp > output.json
-```
-
 ## chem
 
 The chem converters include all converter scripts for aerosols and related chemistry variables.
@@ -191,11 +152,18 @@ For -i you can specify an input file and the converter will write it to one outp
 The GOES converter classes generate two IODAv2 data files from a group of raw data files for all 16 channels of GOES-16 or GOES-17 
 LB1 products. The final result of this class is two IODAv2 formatted data files - one for Reflectance Factor (RF, ABI channels 1-6) 
 and one for Brightness Temperature (BT, ABI channels 7-16). Since GOES-16 and GOES-17 are in a geostationary orbit, auxiliary files 
-containing relevant variables and attributes for latitude, longitude, scan angle, and elevation angle is accessed (or created if
+containing relevant variables and attributes for latitude, longitude, and various angles are accessed (or created if
 it does not exist) through the latlon_file_path input argument for each satellite. This converter checks to see if the 
-nadir for each satellite has changed and will create a new latlon file if a nadir change has occurred.
+nadir for each satellite has changed and will create a new latlon file if a nadir change has occurred.  
 
 ```
-Usage goes_converter = GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt)
-      goes_converter.convert()
+Usage   goes_converter = GoesConverter(input_file_paths, latlon_file_path, output_file_path_rf, output_file_path_bt, include_rf, resolution)
+        goes_converter.convert()
+
+Where   input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
+        latlon_file_path - The path to an existing GoesLatLon file or if it does not exist the path to write the file
+        output_file_path_rf - The path to write the IODAv2 reflectance factor data file
+        output_file_path_bt - The path to write the IODAv2 brightness temperature data file
+        include_rf - Boolean value indicating whether to create the reflectance factor output data file: False (default)
+        resolution - The resolution in km: 2 (default), 4, 8, 16, 32, 64
 ```

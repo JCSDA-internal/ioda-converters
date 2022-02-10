@@ -60,6 +60,8 @@
 | TPMO     | 004022 | TIME PERIOD OR DISPLACEMENT                              |
 | TPHR     | 004024 | TIME PERIOD OR DISPLACEMENT                              |
 | TPMI     | 004025 | TIME PERIOD OR DISPLACEMENT                              |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
 | RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
 | RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
 | RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
@@ -70,6 +72,7 @@
 | HSMSL    | 007030 | HEIGHT OF STATION GROUND ABOVE MSL                       |
 | DBLS     | 007061 | DEPTH BELOW LAND SURFACE                                 |
 | RSHM     | 007198 | RIVER STAGE HEIGHT                                       |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
 | RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
 | PRES     | 010004 | PRESSURE                                                 |
 | PMSL     | 010051 | PRESSURE REDUCED TO MSL                                  |
@@ -226,6 +229,8 @@
 | TPMO     |    0 |       -1024 |  11 | MONTH                    |-------------|
 | TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
 | TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
 | RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
 | RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
 | RCDY     |    0 |           0 |   6 | DAY                      |-------------|
@@ -236,6 +241,7 @@
 | HSMSL    |    1 |       -4000 |  17 | METERS                   |-------------|
 | DBLS     |    2 |           0 |  14 | METERS                   |-------------|
 | RSHM     |    3 |           0 |  15 | METERS                   |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
 | RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
 | PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | PMSL     |   -1 |           0 |  14 | PASCALS                  |-------------|
