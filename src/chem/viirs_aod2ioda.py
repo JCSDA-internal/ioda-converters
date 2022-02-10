@@ -15,7 +15,6 @@ import numpy as np
 from datetime import datetime, date, timedelta
 import os
 from pathlib import Path
-sys.stdout.flush()
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -51,9 +50,8 @@ VarDims = {
 
 
 class AOD(object):
-    def __init__(self, filenames, obs_time, method, mask, thin):
+    def __init__(self, filenames, method, mask, thin):
         self.filenames = filenames
-        self.obs_time = obs_time
         self.mask = mask
         self.method = method
         self.thin = thin
@@ -78,8 +76,6 @@ class AOD(object):
 
         # loop through input filenamess
         first = True
-#        file_string = ''.join(self.filenames)
-#        file_list = glob.glob(file_string+'*.nc')
         original_stdout = sys.stdout
         for f in self.filenames:
             ncd = nc.Dataset(f)
@@ -207,10 +203,6 @@ def main():
         '-o', '--output',
         help="name of ioda-v2 output file",
         type=str, required=True)
-    parser.add_argument(
-        '-t', '--time',
-        help="Observation time in global attributes (YYYYMMDDHH)",
-        type=int, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-m', '--method',
@@ -222,7 +214,7 @@ def main():
         type=str, required=True)
     optional.add_argument(
         '-n', '--thin',
-        help="percentage of random thinging fro 0.0 to 1.0. Zero indicates"
+        help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
 
@@ -230,11 +222,8 @@ def main():
 
     # setup the IODA writer
 
-    # Get the obs time
-    obs_time = args.time
-
     # Read in the AOD data
-    aod = AOD(args.input, args.time, args.method, args.mask, args.thin)
+    aod = AOD(args.input, args.method, args.mask, args.thin)
 
     # write everything out
 
