@@ -6,7 +6,8 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/buoy_wmo_multi.bufr"
+#     obsdatain: "./testinput/buoy_wmo_multi.bufr"
+      obsdatain: "/home/gthompsn/src/ioda-converters/2021_07_31T18_00_00Z.P6H.buoy.BUFR"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -54,7 +55,8 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/buoy_wmo_multi.nc"
+#     obsdataout: "./testrun/buoy_wmo_multi.nc"
+      obsdataout: "./testrun/2021_07_31T18_00_00Z.P6H.buoy.nc"
 
       dimensions:
         - name: "nlocs"
@@ -95,6 +97,12 @@ observations:
           source: variables/stationElevation
           dimensions: [ "nlocs" ]
           longName: "Station Elevation"
+          units: "m"
+
+        - name: "MetaData/height"
+          source: variables/stationElevation
+          dimensions: [ "nlocs" ]
+          longName: "Height"
           units: "m"
 
         - name: "ObsValue/air_temperature"
