@@ -58,21 +58,20 @@ namespace bufr {
 
      private:
         const QuerySet querySet_;
-        std::map<std::string, std::vector<__details::Target>> targetCache_;
-        std::map<std::string, __details::ProcessingMasks> maskCache_;
+        std::map<std::string, std::shared_ptr<std::vector<__details::Target>>> targetCache_;
+        std::map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
 
         int fortranFileUnit_;
         int bufrLoc_;
         ResultSet& resultSet_;
 
         void findTargets(const std::string& subset,
-                         std::vector<__details::Target>& targets,
-                         __details::ProcessingMasks& masks);
+                         std::shared_ptr<std::vector<__details::Target>>& targets,
+                         std::shared_ptr<__details::ProcessingMasks>& masks);
 
         __details::Target findTarget(const std::string& subset,
                                      const std::string& targetName,
-                                     const std::string& query
-                                     ) const;
+                                     const std::string& query) const;
 
         bool isQueryNode(int nodeIdx) const;
 
@@ -81,9 +80,9 @@ namespace bufr {
                         std::vector<std::string>& dimPaths,
                         std::vector<int>& dimIdxs) const;
 
-        void collectData(const std::vector<__details::Target>& targets,
-                                const __details::ProcessingMasks& masks,
-                                ResultSet& resultSet) const;
+        void collectData(std::shared_ptr<std::vector<__details::Target>> targets,
+                         std::shared_ptr<__details::ProcessingMasks> masks,
+                         ResultSet& resultSet) const;
         };
 }  // namespace bufr
 }  // namespace Ingester

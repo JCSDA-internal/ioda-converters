@@ -74,6 +74,8 @@ namespace bufr {
         auto resultSet = ResultSet(querySet.names());
         auto query = Query(querySet, resultSet);
 
+        int subsetCnt = 0;
+
         while (ireadmg_f(fileUnit_, subset, &iddate, SubsetLen) == 0)
         {
             while (ireadsb_f(fileUnit_) == 0)
@@ -83,10 +85,14 @@ namespace bufr {
                 status_f(fileUnit_, &bufrLoc, &il, &im);
                 dataProvider->loadDataInfo(bufrLoc);
                 query.query(std::string(subset), bufrLoc);
+
+                subsetCnt++;
             }
 
             if (next > 0 && ++messageNum >= next) break;
         }
+
+        std::cout << "Subset count: " << subsetCnt << std::endl;
 
         dataProvider->deleteTableInfo();
 

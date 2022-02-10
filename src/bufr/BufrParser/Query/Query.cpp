@@ -31,16 +31,16 @@ namespace bufr {
     {
         bufrLoc_ = bufrLoc;
 
-        std::vector<__details::Target> targets;
-        __details::ProcessingMasks masks;
+        std::shared_ptr<std::vector<__details::Target>> targets;
+        std::shared_ptr<__details::ProcessingMasks> masks;
 
         findTargets(subset, targets, masks);
         return collectData(targets, masks, resultSet_);
     }
 
     void Query::findTargets(const std::string& subset,
-                            std::vector<__details::Target>& targets,
-                            __details::ProcessingMasks& masks)
+                            std::shared_ptr<std::vector<__details::Target>>& targets,
+                            std::shared_ptr<__details::ProcessingMasks>& masks)
     {
         // Check if the target list for this subset is cached in the targetMap_
         if (targetCache_.find(subset) != targetCache_.end())
@@ -50,12 +50,15 @@ namespace bufr {
             return;
         }
 
+        masks = std::make_shared<__details::ProcessingMasks>();
+        targets = std::make_shared<std::vector<__details::Target>>();
+
         auto bufrInfo = DataProvider::instance();
 
         size_t numNodes = bufrInfo->getIsc(bufrInfo->getInode());
 
-        masks.valueNodeMask.resize(numNodes, false);
-        masks.pathNodeMask.resize(numNodes, false);
+        masks->valueNodeMask.resize(numNodes, false);
+        masks->pathNodeMask.resize(numNodes, false);
 
         for (size_t targetIdx = 0; targetIdx < querySet_.size(); ++targetIdx)
         {
@@ -75,13 +78,13 @@ namespace bufr {
                 if (target.nodeIds.size() > 0)
                 {
                     // Collect mask data
-                    masks.valueNodeMask[target.nodeIds[0]] = true;
+                    masks->valueNodeMask[target.nodeIds[0]] = true;
                     for (size_t pathIdx = 0; pathIdx < target.seqPath.size(); ++pathIdx)
                     {
-                        masks.pathNodeMask[target.seqPath[pathIdx]] = true;
+                        masks->pathNodeMask[target.seqPath[pathIdx]] = true;
                     }
 
-                    targets.push_back(target);
+                    targets->push_back(target);
 
                     foundTarget = true;
                 }
@@ -90,7 +93,7 @@ namespace bufr {
             if (!foundTarget)
             {
                 // Add the last missing target to the list
-                targets.push_back(target);
+                targets->push_back(target);
                 std::cout << "Warning: Query String " << queryStr << " didn't apply to subset " << subset << std::endl;
             }
         }
@@ -132,7 +135,6 @@ namespace bufr {
                  nodeIdx != bufrInfo->getIsc(bufrInfo->getInode());
                  nodeIdx++)
             {
-//                std::cout << bufrInfo->getTag(nodeIdx) << " " << bufrInfo->getTyp(nodeIdx) << std::endl;
                 if (bufrInfo->getTyp(nodeIdx) == Typ::Sequence ||
                     bufrInfo->getTyp(nodeIdx) == Typ::Repeat ||
                     bufrInfo->getTyp(nodeIdx) == Typ::StackedRepeat)
@@ -268,8 +270,8 @@ namespace bufr {
         }
     }
 
-    void Query::collectData(const std::vector<__details::Target>& targets,
-                            const __details::ProcessingMasks& masks,
+    void Query::collectData(std::shared_ptr<std::vector<__details::Target>> targets,
+                            std::shared_ptr<__details::ProcessingMasks> masks,
                             ResultSet& resultSet) const
     {
 
@@ -290,7 +292,7 @@ namespace bufr {
         {
             int nodeIdx = bufrInfo->getInv(dataCursor);
 
-            if (masks.valueNodeMask[nodeIdx])
+            if (masks->valueNodeMask[nodeIdx])
             {
                 auto& values = dataTable[nodeIdx].values;
                 values.push_back(bufrInfo->getVal(dataCursor));
@@ -302,7 +304,7 @@ namespace bufr {
             // the squences.
 
             if (bufrInfo->getJmpb(nodeIdx) > 0 &&
-                masks.pathNodeMask[bufrInfo->getJmpb(nodeIdx)])
+                masks->pathNodeMask[bufrInfo->getJmpb(nodeIdx)])
             {
                 const auto typ = bufrInfo->getTyp(nodeIdx);
                 const auto jmpbTyp = bufrInfo->getTyp(bufrInfo->getJmpb(nodeIdx));
@@ -344,7 +346,7 @@ namespace bufr {
                 }
             }
 
-            if (masks.pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
+            if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
             {
                 if (bufrInfo->getTyp(nodeIdx) == Typ::DelayedRep &&
                     bufrInfo->getVal(dataCursor) == 0)
@@ -384,9 +386,9 @@ namespace bufr {
             }
         }
 
-        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++)
+        for (size_t targetIdx = 0; targetIdx < targets->size(); targetIdx++)
         {
-            auto& targ = targets[targetIdx];
+            const auto& targ = targets->at(targetIdx);
             auto& dataField = dataFrame.fieldAtIdx(targetIdx);
             dataField.name = targ.name;
             dataField.queryStr = targ.queryStr;
