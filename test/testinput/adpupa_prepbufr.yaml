@@ -7,7 +7,8 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/ADPUPA.prepbufr"
+      obsdatain: "./ADPUPA.prepbufr"
+#     obsdatain: "./testinput/ADPUPA.prepbufr"
 
       exports:
         variables:
@@ -124,10 +125,11 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "./testrun/adpupa_prepbufr.nc"
+      obsdataout: "../testoutput/adpupa_prepbufr.nc"
 
       dimensions:
-        - name: prslevel_Dim
+#       - name: prslevel_Dim
+        - name: Level
           path: "*/PRSLEVEL"
         - name: cloudseq_Dim
           path: "*/CLOUDSEQ"
@@ -268,7 +270,7 @@ observations:
           units: "Pa"
 #         range: [20000, 110000]
 
-        - name: "pressureQM@ObsQualityMark"
+        - name: "pressureQM@QualityMarker"
           coordinates: "longitude latitude"
           source: variables/pressureQM
           longName: "Pressure QM"
@@ -280,7 +282,7 @@ observations:
           longName: "Specific Humidity"
           units: "Kilogram Kilogram-1"
 
-        - name: "specificHumidityQM@ObsQualityMark"
+        - name: "specificHumidityQM@QualityMarker"
           coordinates: "longitude latitude"
           source: variables/specificHumidityQM
           longName: "Specific Humidity QM"
@@ -293,7 +295,7 @@ observations:
           units: "Kelvin"
 #         range: [193, 325]
 
-        - name: "airTemperatureQM@ObsQualityMark"
+        - name: "airTemperatureQM@QualityMarker"
           coordinates: "longitude latitude"
           source: variables/airTemperatureQM
           longName: "Temperature QM"
@@ -305,7 +307,7 @@ observations:
           longName: "Height of Observation"
           units: "Meter"
 
-        - name: "heightQM@ObsQualityMark"
+        - name: "heightQM@QualityMarker"
           coordinates: "longitude latitude"
           source: variables/heightQM
           longName: "Height QM"
@@ -325,7 +327,7 @@ observations:
           units: "Meter Second-1"
 #         range: [-50, 50]
 
-        - name: "windQM@ObsQualityMark"
+        - name: "windQM@QualityMarker"
           coordinates: "longitude latitude"
           source: variables/windQM
           longName: "U, V-Component of Wind QM"
@@ -381,7 +383,7 @@ observations:
 #          longName: "Sea Surface Temperature"
 #          units: "Kelvin"
 #
-#        - name: "seaSurfaceTemperatureQM@ObsQualityMark"
+#        - name: "seaSurfaceTemperatureQM@QualityMarker"
 #          coordinates: "longitude latitude"
 #          source: variables/seaSurfaceTemperatureQM
 #          longName: "Sea Surface Temperature QM"
