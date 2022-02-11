@@ -79,6 +79,7 @@ phases:
       - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
       - ls /jcsda/ioda-bundle/
       - ls -lt /jcsda/ioda-bundle/iodaconv/test/testoutput
+      - ncdump /jcsda/ioda-bundle/iodaconv/test/testoutput/mopitt_co.nc
   build:
     on-failure: CONTINUE
     commands:
@@ -112,13 +113,16 @@ phases:
       # run ctest
       - cd /build_container/iodaconv
       - ls -lt test/testoutput
+      - ncdump test/testoutput/mopitt_co.nc
       - ls -lt test/testrun
       - ctest -C RelWithDebInfo -D ExperimentalTest
-      - ls -lt test/testrun
 
     finally:
       - cd /build_container/iodaconv
       - ctest -C RelWithDebInfo -D ExperimentalSubmit -M Continuous -- --track Continuous --group Continuous
+      - ls -lt test/testrun
+      - ncdump test/testoutput/mopitt_co.nc
+      - ncdump test/testrun/mopitt_co.nc
 
   post_build:
     commands:
