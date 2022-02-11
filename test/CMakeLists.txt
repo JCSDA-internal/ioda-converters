@@ -60,6 +60,7 @@ list( APPEND test_input
   testinput/godae_bgc_argo.nc
   testinput/sonde_wmo_double.bufr
   testinput/avhrr_radiance.nc
+  testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
 )
 
 list( APPEND test_output
@@ -113,6 +114,7 @@ list( APPEND test_output
   testoutput/wmo_raob_double.nc4
   testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
+  testoutput/smap9km_ssm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1252,6 +1254,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap9km_ssm2ioda.py
+                            -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
+                            -o testrun/smap9km_ssm.nc
+                            -m maskout"
+                            smap9km_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 
 #######################################################
