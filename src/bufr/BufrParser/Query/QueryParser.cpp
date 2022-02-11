@@ -98,11 +98,15 @@ namespace bufr {
         index = -1;
         size_t startSubscript = lastElement.find_first_of("[");
         size_t endSubscript = lastElement.find_first_of("]");
-        if (startSubscript != std::string::npos && endSubscript != std::string::npos) {
+        if (startSubscript != std::string::npos && endSubscript != std::string::npos)
+        {
             index = std::stoi(lastElement.substr(startSubscript + 1, endSubscript - startSubscript - 1));
-            mnemonicStrings[mnemonicStrings.size()] = lastElement.substr(0, startSubscript);
-        } else {
-            if (endSubscript != std::string::npos || startSubscript != std::string::npos) {
+            mnemonicStrings[mnemonicStrings.size() - 1] = lastElement.substr(0, startSubscript);
+        }
+        else
+        {
+            if (endSubscript != std::string::npos || startSubscript != std::string::npos)
+            {
                 std::cerr << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
                 exit(1);
             }

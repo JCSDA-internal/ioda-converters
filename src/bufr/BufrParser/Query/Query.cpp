@@ -85,8 +85,8 @@ namespace bufr {
                     }
 
                     targets->push_back(target);
-
                     foundTarget = true;
+                    break;
                 }
             }
 
@@ -132,7 +132,7 @@ namespace bufr {
             int mnemonicCursor = -1;
 
             for (auto nodeIdx = bufrInfo->getInode();
-                 nodeIdx != bufrInfo->getIsc(bufrInfo->getInode());
+                 nodeIdx <= bufrInfo->getIsc(bufrInfo->getInode());
                  nodeIdx++)
             {
                 if (bufrInfo->getTyp(nodeIdx) == Typ::Sequence ||
@@ -243,7 +243,7 @@ namespace bufr {
 
         currentDimPath = "*";
         dimPaths.push_back(currentDimPath);
-        dimIdxs.push_back(1);
+        dimIdxs.push_back(0);
 
         // Split the branches into node idxs for each additional dimension
         if (mnemonicCursor >= 0)
@@ -255,7 +255,7 @@ namespace bufr {
                 mnemonicStr = bufrInfo->getTag(nodeIdx);
 
                 std::ostringstream path;
-                path << currentDimPath << "/" << mnemonicStr;
+                path << currentDimPath << "/" << mnemonicStr.substr(1, mnemonicStr.size() - 2);
                 currentDimPath = path.str();
 
                 if (bufrInfo->getTyp(nodeIdx)  == Typ::DelayedRep ||
