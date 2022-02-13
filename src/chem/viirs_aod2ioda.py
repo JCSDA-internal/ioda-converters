@@ -76,7 +76,6 @@ class AOD(object):
 
         # loop through input filenamess
         first = True
-        original_stdout = sys.stdout
         for f in self.filenames:
             ncd = nc.Dataset(f)
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
@@ -98,7 +97,7 @@ class AOD(object):
             vals = ncd.variables['AOD550'][:].ravel()
             errs = ncd.variables['Residual'][:].ravel()
             qcpath = ncd.variables['QCPath'][:].ravel()
-            qcall = ncd.variables['QCAll'][:].ravel()
+            qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
             obs_time = np.empty_like(qcall, dtype=object)
             for t in range(len(obs_time)):
                 obs_time[t] = base_datetime
