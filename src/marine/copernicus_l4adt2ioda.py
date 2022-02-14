@@ -87,7 +87,7 @@ class copernicus_l4adt2ioda(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar = 'obs_absolute_dynamic_topography'
+        iodavar = 'absolute_dynamic_topography'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
