@@ -149,7 +149,7 @@ class mopitt(object):
             ap_tc = xa_tc - ap_tc
             ap_tc = ap_tc.astype('float32')
 
-            # set flag: rule out all anomalous data  
+            # set flag: rule out all anomalous data 
             flg = qa == 0
 
             if first:
