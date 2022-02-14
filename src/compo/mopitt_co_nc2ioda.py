@@ -49,7 +49,7 @@ VarDims = {
 # constants
 avogadro = 6.02214076E23
 scm2sm = 1E4
-vmr2col = 2.12e13  # following Deeter 2009 MOPITT documentation
+vmr2col = 2.12E13  # following Deeter 2009 MOPITT documentation
 hPa2Pa = 1E2
 
 
@@ -110,7 +110,7 @@ class mopitt(object):
             # get ak
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
             # ak to be applied on surface density molecules/m2
-            ak_tc_dimless = dat.variables['TotalColumnAveragingKernelDimless'][:]
+            ak_tc_dimless = dat.variables['TotalColumnAveragingKernelDimless'][:].astype('float32')
 
             # get apriori quantities, profile is needed to compute (I-A)x_a
             xa_tc = dat.variables['APrioriCOTotalColumn'][:]
@@ -124,11 +124,18 @@ class mopitt(object):
 
             # sum smoothing and measurement error
             er_tc = dat.variables['RetrievedCOTotalColumnDiagnostics'][:].sum(axis=1)
+
+            # convert all concentrations and column to correct units to avoid single precision issues
+            u_conv = avogadro / scm2sm
+            xa_gd = xa_gd * vmr2col / u_conv
+            xa_tc = xa_tc / u_conv
+            xr_tc = xr_tc / u_conv
+            er_tc = er_tc / u_conv
+
             # mopitt number of levels is dependent on surface pressure, for data points with sp<900hPa
             # nlevs<10. IODA and UFO cannot handle variable nlayers_kernel for a given instrument
             # make layers of 0 thickness for surface pressure above those fixed MOPITT layers and
             # move the surface xa values (and xr if profile da) up
-            idty = np.ones(len(lats))
             for lev in range(nlevs-1):
                 zlev = pr_gd[:, lev]-pr_gd[:, lev+1]
                 pr_gd[:, lev+1][zlev < 0] = pr_gd[:, lev][zlev < 0]
@@ -138,29 +145,27 @@ class mopitt(object):
             # now calculate the apriori term to pass to UFO and ensure single precision
             ap_tc = np.zeros(len(lats))
             for lev in range(nlevs):
-                ap_tc = ap_tc + vmr2col * ak_tc_dimless[:, lev] * \
-                    (pr_gd[:, lev]-pr_gd[:, lev+1]) * xa_gd[:, lev]
+                ap_tc = ap_tc + ak_tc_dimless[:, lev] * (pr_gd[:, lev] - pr_gd[:, lev+1]) * xa_gd[:, lev]
             ap_tc = xa_tc - ap_tc
             ap_tc = ap_tc.astype('float32')
-            flg = qa == 0
 
-            # unit conversion from molecules/cm2 to mol/m2
-            u_conv = avogadro / scm2sm
+            # set flag: rule out all anomalous data
+            flg = qa == 0
 
             if first:
                 # add metadata variables
                 self.outdata[('datetime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg] / u_conv
+                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg]
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_ak] = ak_tc_dimless[:, k][flg]
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_pr] = hPa2Pa * pr_gd[:, k][flg]
 
-                self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg] / u_conv
-                self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg] / u_conv
+                self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]
+                self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa[flg]
 
             else:
@@ -171,7 +176,7 @@ class mopitt(object):
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('apriori_term', 'MetaData')] = np.concatenate((
-                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg] / u_conv))
+                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg]))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
                     self.outdata[varname_ak] = np.concatenate(
@@ -181,9 +186,9 @@ class mopitt(object):
                         (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg] / u_conv))
+                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg] / u_conv))
+                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
             first = False
