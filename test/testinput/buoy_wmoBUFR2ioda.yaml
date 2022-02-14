@@ -6,8 +6,7 @@
 observations:
   - obs space:
       name: bufr
-#     obsdatain: "./testinput/buoy_wmo_multi.bufr"
-      obsdatain: "/home/gthompsn/src/ioda-converters/2021_07_31T18_00_00Z.P6H.buoy.BUFR"
+      obsdatain: "./testinput/buoy_wmo_multi.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
@@ -55,8 +54,7 @@ observations:
 
     ioda:
       backend: netcdf
-#     obsdataout: "./testrun/buoy_wmo_multi.nc"
-      obsdataout: "./testrun/2021_07_31T18_00_00Z.P6H.buoy.nc"
+      obsdataout: "./testrun/buoy_wmo_multi.nc"
 
       dimensions:
         - name: "nlocs"
