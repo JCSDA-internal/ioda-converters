@@ -20,7 +20,7 @@ file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_IN
 conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
-                   install_bin__scripts_deps)
+                   install_bin_compo_scripts_deps)
 
 install( PROGRAMS ${install_bin_compo_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
