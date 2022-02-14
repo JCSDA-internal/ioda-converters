@@ -58,6 +58,7 @@ list( APPEND test_input
   testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
+  testinput/owp_snow_obs.csv
   testinput/sonde_wmo_double.bufr
   testinput/avhrr_radiance.nc
 )
@@ -110,6 +111,7 @@ list( APPEND test_output
   testoutput/gnssro_cosmic2_2020121500.nc4
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
+  testoutput/owp_snow_obs_dup_thin_err_fn.nc
   testoutput/wmo_raob_double.nc4
   testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
@@ -1252,6 +1254,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  ARGS    netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/owp_snow_obs.py
+                          -i testinput/owp_snow_obs.csv
+                          -o testrun/owp_snow_obs_dup_thin_err_fn.nc
+			  --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
+                          owp_snow_obs_dup_thin_err_fn.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 
 #######################################################
