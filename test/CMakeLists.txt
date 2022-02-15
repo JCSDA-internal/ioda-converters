@@ -759,8 +759,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                  ARGS    netcdf
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
                           -i testinput/mopitt_co.he5
                           -o testrun/mopitt_co.nc"
