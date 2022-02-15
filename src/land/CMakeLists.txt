@@ -7,6 +7,7 @@ list(APPEND programs
   ascat_ssm2ioda.py
   imsfv3_scf2ioda.py
   smap9km_ssm2ioda.py
+  owp_snow_obs.py  
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
