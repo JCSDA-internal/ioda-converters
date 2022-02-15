@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 #
 # (C) Copyright 2020 UCAR
 #
@@ -10,20 +11,17 @@ import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
+import os
 from pathlib import Path
-
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
-
-vName = {
-    'A': "aerosol_optical_depth_4",
-}
 
 locationKeyList = [
     ("latitude", "float"),
@@ -31,167 +29,204 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {}
+
+obsvars = {
+    'A': "aerosol_optical_depth_4",
+}
+
+AttrData = {
+    'converter': os.path.basename(__file__),
+    'nvars': np.int32(len(obsvars)),
+}
+
+
+DimDict = {
+}
+
+VarDims = {
+    'aerosol_optical_depth_4': ['nlocs']
+}
 
 
 class AOD(object):
-
-    def __init__(self, filename, method, mask, thin, writer):
-        self.filename = filename
-        self.method = method
+    def __init__(self, filenames, method, mask, thin):
+        self.filenames = filenames
         self.mask = mask
+        self.method = method
         self.thin = thin
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
+        self.varDict = defaultdict(lambda: defaultdict(dict))
+        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
-        ncd = nc.Dataset(self.filename)
-        lons = ncd.variables['Longitude'][:].ravel()
-        lats = ncd.variables['Latitude'][:].ravel()
-        vals = ncd.variables['AOD550'][:].ravel()
-        errs = ncd.variables['Residual'][:].ravel()
-        qcpath = ncd.variables['QCPath'][:].ravel()
-        qcall = ncd.variables['QCAll'][:].ravel()
-        if self.mask == "maskout":
-            mask = np.logical_not(vals.mask)
-            vals = vals[mask]
-            lons = lons[mask]
-            lats = lats[mask]
-            errs = errs[mask]
-            qcpath = qcpath[mask]
-            qcall = qcall[mask]
-        # get global attributes
-        gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
-        base_datetime = gatts["time_coverage_end"]
-        self.satellite = gatts["satellite_name"]
-        self.sensor = gatts["instrument_name"]
-        ncd.close()
+        # set up variable names for IODA
+        for ncvar, iodavar in obsvars.items():
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
 
-        valKey = vName['A'], self.writer.OvalName()
-        errKey = vName['A'], self.writer.OerrName()
-        qcKey = vName['A'], self.writer.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
-        # apply thinning mask
-        if self.thin > 0.0:
-            mask_thin = np.random.uniform(size=len(lons)) > self.thin
-            lons = lons[mask_thin]
-            lats = lats[mask_thin]
-            vals = vals[mask_thin]
-            errs = errs[mask_thin]
-            qcpath = qcpath[mask_thin]
-            qcall = qcall[mask_thin]
-
-        # set variable keys
-        sfcKey = "surface_type", "MetaData"
-        szaKey = "sol_zenith_angle", "MetaData"
-        saaKey = "sol_azimuth_angle", "MetaData"
-        mduKey = "modis_deep_blue_flag", "MetaData"
-        biaKey = "aerosol_optical_depth_4", "KnownObsBias"
-
-        # defined surface type, uncertainty, and bias array
-        sfctyp = 0*qcall
-        uncertainty = 0.0*errs
-        uncertainty1 = 0.0*errs
-        uncertainty2 = 0.0*errs
-        bias = 0.0*errs
-        bias1 = 0.0*errs
-        bias2 = 0.0*errs
-
-        if self.method == "nesdis":
-            # Case of water high quality
-            uncertainty = 0.00784394 + 0.219923*vals
-            bias = 0.0151799 + 0.0767385*vals
-            # case of bright land high quality
-            uncertainty1 = 0.0550472 + 0.299558*vals
-            bias1 = -0.0107621 + 0.150480*vals
-            # case of dark land high quality
-            uncertainty2 = 0.111431 + 0.128699*vals
-            bias2 = -0.0138969 + 0.157877*vals
-
-        for i in range(len(lons)):
-
-            # convert byte to integer
-            sfctyp[i] = int.from_bytes(qcpath[i], byteorder='big')
-            if self.method == "nesdis":
-                if sfctyp[i] == 1:   # case of bright land high quality
-                    bias[i] = bias1[i]
-                    uncertainty[i] = uncertainty1[i]
-                else:   # case of dark land high quality
-                    bias[i] = bias2[i]
-                    uncertainty[i] = uncertainty2[i]
-                errs[i] = uncertainty[i]
-
-            locKey = lats[i], lons[i], base_datetime
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
-            self.data[0][locKey][qcKey] = qcall[i]
-            self.data[0][locKey][biaKey] = bias[i]
-
-            # solar zenith angle (sza) is set all 0 for test
-            # solar azimuth angle (saa) is set  all 0 for test
-            # modis_deep_blue_flag (mdu)is set all 0 for test
-            self.data[0][locKey][szaKey] = 0.0
-            self.data[0][locKey][saaKey] = 0.0
-            self.data[0][locKey][sfcKey] = sfctyp[i]
-            self.data[0][locKey][mduKey] = 0
-
-            # write global attributes out
-            if self.satellite == 'NPP':
-                self.satellite = "suomi_npp"
-            if self.sensor == 'VIIRS':
-                self.sensor = "v.viirs-m_npp"
-
+        # loop through input filenamess
+        first = True
+        for f in self.filenames:
+            ncd = nc.Dataset(f)
+            gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
+            base_datetime = gatts["time_coverage_end"]
+            self.satellite = gatts["satellite_name"]
+            self.sensor = gatts["instrument_name"]
             AttrData["observation_type"] = "AOD"
             AttrData["satellite"] = self.satellite
             AttrData["sensor"] = self.sensor
+
+            if AttrData['sensor'] == 'VIIRS':
+                AttrData['sensor'] = "v.viirs-m_npp"
+            if AttrData['satellite'] == 'NPP':
+                AttrData['satellite'] = "suomi_npp"
             AttrData['date_time_string'] = base_datetime
+
+            lons = ncd.variables['Longitude'][:].ravel()
+            lats = ncd.variables['Latitude'][:].ravel()
+            vals = ncd.variables['AOD550'][:].ravel()
+            errs = ncd.variables['Residual'][:].ravel()
+            qcpath = ncd.variables['QCPath'][:].ravel()
+            qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
+            obs_time = np.empty_like(qcall, dtype=object)
+            for t in range(len(obs_time)):
+                obs_time[t] = base_datetime
+            if self.mask == "maskout":
+                mask = np.logical_not(vals.mask)
+                vals = vals[mask]
+                lons = lons[mask]
+                lats = lats[mask]
+                errs = errs[mask]
+                qcpath = qcpath[mask]
+                qcall = qcall[mask]
+                obs_time = obs_time[mask]
+
+            ncd.close()
+
+            # apply thinning mask
+            if self.thin > 0.0:
+                mask_thin = np.random.uniform(size=len(lons)) > self.thin
+                lons = lons[mask_thin]
+                lats = lats[mask_thin]
+                vals = vals[mask_thin]
+                errs = errs[mask_thin]
+                qcpath = qcpath[mask_thin]
+                qcall = qcall[mask_thin]
+                obs_time = obs_time[mask_thin]
+
+            # defined surface type and uncertainty
+            sfctyp = 0*qcall
+            uncertainty = 0.0*errs
+            uncertainty1 = 0.0*errs
+            uncertainty2 = 0.0*errs
+
+            if self.method == "nesdis":
+                # Case of water high quality
+                uncertainty = 0.00784394 + 0.219923*vals
+                # case of bright land high quality
+                uncertainty1 = 0.0550472 + 0.299558*vals
+                # case of dark land high quality
+                uncertainty2 = 0.111431 + 0.128699*vals
+
+            for i in range(len(lons)):
+
+                # convert byte to integer
+                sfctyp[i] = int.from_bytes(qcpath[i], byteorder='big')
+                if self.method == "nesdis":
+                    if sfctyp[i] == 1:   # case of bright land high quality
+                        uncertainty[i] = uncertainty1[i]
+                    else:   # case of dark land high quality
+                        uncertainty[i] = uncertainty2[i]
+                    errs[i] = uncertainty[i]
+
+            #  Write out data
+
+            #  Values
+
+            if first:
+                self.outdata[self.varDict[iodavar]['valKey']] = vals
+                self.outdata[self.varDict[iodavar]['errKey']] = errs
+                self.outdata[self.varDict[iodavar]['qcKey']] = qcall
+            else:
+                self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['valKey']], vals))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['errKey']], errs))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['qcKey']], qcall))
+
+            #  Add Meta data
+
+            if first:
+                self.outdata[('latitude', 'MetaData')] = lats
+                self.outdata[('longitude', 'MetaData')] = lons
+                self.outdata[('datetime', 'MetaData')] = obs_time
+            else:
+                self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))
+                self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons))
+                self.outdata[('datetime', 'MetaData')] = np.concatenate((self.outdata[('datetime', 'MetaData')], obs_time))
+
+            first = False
+
+        DimDict['nlocs'] = len(self.outdata[('latitude', 'MetaData')])
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
 def main():
 
+    # get command line arguments
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -t Analysis_time /path/to/obs/2021060823.nc
+    # -o /path/to/ioda/20210608.nc
+    # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
+    # analysis window.
     parser = argparse.ArgumentParser(
         description=('Read VIIRS aerosol optical depth file(s) and Converter'
                      ' of native NetCDF format for observations of optical'
-                     ' depth from VIIRS AOD550 to IODA netCDF format.')
+                     ' depth from VIIRS AOD550 to IODA-V2 netCDF format.')
     )
-    parser.add_argument('-i', '--input',
-                        help="name of viirs aod input file(s)",
-                        type=str, required=True)
-    parser.add_argument('-o', '--output',
-                        help="name of ioda output file",
-                        type=str, required=True)
+    parser.add_argument(
+        '-i', '--input',
+        help="path of viirs aod input file(s)",
+        type=str, nargs='+', required=True)
+    parser.add_argument(
+        '-o', '--output',
+        help="name of ioda-v2 output file",
+        type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-m', '--method',
-        help="calculation bias/error method: nesdis/default, default=none",
+        help="calculation error method: nesdis/default, default=none",
         type=str, required=True)
     optional.add_argument(
         '-k', '--mask',
         help="maskout missing values: maskout/default, default=none",
         type=str, required=True)
     optional.add_argument(
-        '-t', '--thin',
-        help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
-             " no thinning is performed. (default: %(default)s)",
+        '-n', '--thin',
+        help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
+        " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
 
     args = parser.parse_args()
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    # setup the IODA writer
 
-    # Read in the profiles
-    aod = AOD(args.input, args.method, args.mask, args.thin, writer)
+    # Read in the AOD data
+    aod = AOD(args.input, args.method, args.mask, args.thin)
 
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(aod.data)
+    # write everything out
 
-    # set constants for the four variables
-    VarMdata['frequency'] = np.full(1, 5.401666e+14, dtype='f4')
-    VarMdata['polarization'] = np.full(1, 1, dtype='i4')
-    VarMdata['wavenumber'] = np.full(1, 18161.61, dtype='f4')
-    VarMdata['sensor_channel'] = np.full(1, 4, dtype='i4')
-
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    writer.BuildIoda(aod.outdata, VarDims, aod.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
