@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2021 EMC/NCEP/NWS/NOAA
+# (C) Copyright 2022 EMC/NCEP/NWS/NOAA
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -25,7 +25,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string")
+    ("datetime", "string")
 ]
 
 obsvars = {
@@ -33,6 +33,7 @@ obsvars = {
 }
 
 AttrData = {
+    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
@@ -64,19 +65,20 @@ class smap(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'm3 m-3'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
         self.satellite = "SMAP"
         self.sensor = "radar and radiometer"
-        AttrData["platform"] = self.satellite
+        AttrData["satellite"] = self.satellite
         AttrData["sensor"] = self.sensor
 
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
         _FillValue = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('_FillValue')
+        self.varAttrs['soilMoistureVolumetric', iconv.OvalName()]['_FillValue'] = _FillValue
         valid_max = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_max')
         valid_min = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_min')
 
@@ -113,15 +115,15 @@ class smap(object):
         qflg = qflg.astype('int32')
         sflg = sflg.astype('int32')
         vegop = vegop.astype('int32')
+        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(lons)):
             times[i] = base_datetime
             errs[i] = 0.04
         # add metadata variables
-        self.outdata[('dateTime', 'MetaData')] = times
+        self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.varAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 2021-12-21'
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('surfaceFlag', 'MetaData')] = sflg
@@ -134,7 +136,7 @@ class smap(object):
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['nlocs'] = len(self.outdata[('dateTime', 'MetaData')])
+        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
 
