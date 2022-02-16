@@ -36,6 +36,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
+  testinput/mopitt_co.he5
   testinput/modis_aod.nc
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
@@ -93,6 +94,7 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/tropomi_no2.nc
+  testoutput/mopitt_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
@@ -755,6 +757,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2.nc"
                           tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
+                          -i testinput/mopitt_co.he5
+                          -o testrun/mopitt_co.nc"
+                          mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
