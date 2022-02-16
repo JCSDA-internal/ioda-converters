@@ -1,5 +1,5 @@
 
-add_subdirectory(chem)
+add_subdirectory(compo)
 add_subdirectory(gsi-ncdiag)
 add_subdirectory(goes)
 add_subdirectory(hdf5)
