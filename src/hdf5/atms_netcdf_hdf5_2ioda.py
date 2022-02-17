@@ -7,7 +7,7 @@ Python code to ingest netCDF4 or HDF5 ATMS data
 import argparse
 from datetime import datetime, timedelta
 import glob
-from multiprocessing import Pool
+#from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 import os.path
 from os import getcwd
@@ -48,20 +48,32 @@ locationKeyList = [
 
 def main(args):
 
-    input_files = args.input
     output_filename = args.output
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
 
-    pool_inputs = [(i) for i in input_files]
-
+    input_files = [(i) for i in args.input]
     # read / process files in parallel
-    # pool = Pool(args.threads)
-    # obs = pool.map(get_data_from_files, pool_inputs)
-    # obs = get_data_from_files( input_files )
-    # concatenate the data from the files
-    # obs_data = obs[0]
+    obs_data = {}
+    # create a thread pool
+#   with ProcessPoolExecutor(max_workers=args.threads) as executor:
+#       for file_obs_data in executor.map(get_data_from_files, input_files):
+#           if not file_obs_data:
+#               print("INFO: non-nominal file skipping")
+#               continue
+#           if obs_data:
+#               concat_obs_dict(obs_data, file_obs_data)
+#           else:
+#               obs_data = file_obs_data
 
-    obs_data = get_data_from_files(input_files)
+    for afile in input_files:
+        file_obs_data = get_data_from_files(afile)
+        if not file_obs_data:
+            print("INFO: non-nominal file skipping")
+            continue
+        if obs_data:
+            concat_obs_dict(obs_data, file_obs_data)
+        else:
+            obs_data = file_obs_data
 
 # V2 nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='int32')
     nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='float32')  # this is float32 in old convention
@@ -116,7 +128,9 @@ def get_data_from_files(zfiles):
     # allocate space for output depending on which variables are to be saved
     obs_data = init_obs_loc()
 
-    for afile in zfiles:
+    #for afile in zfiles:
+    afile = zfiles
+    if True:
         f = h5py.File(afile, 'r')
 
         path, file = os.path.split(afile)
@@ -287,6 +301,29 @@ def init_obs_loc():
     }
 
     return obs
+
+
+def concat_obs_dict(obs_data, append_obs_data):
+    # For now we are assuming that the obs_data dictionary has the "golden" list
+    # of variables. If one is missing from append_obs_data, the obs_data variable
+    # will be extended using fill values.
+    #
+    # Use the first key in the append_obs_data dictionary to determine how
+    # long to make the fill value vector.
+    append_keys = list(append_obs_data.keys())
+    append_length = len(append_obs_data[append_keys[0]])
+    for gv_key in obs_data.keys():
+        if gv_key in append_keys:
+            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
+        else:
+            if obs_data[gv_key].dtype == float:
+                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
+            elif obs_data[gv_key].dtype == int:
+                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
+            elif obs_data[gv_key].dtype == object:
+                # string type, extend with empty strings
+                fill_data = np.repeat("", append_length, dtype=object)
+            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
 
 
 if __name__ == "__main__":
