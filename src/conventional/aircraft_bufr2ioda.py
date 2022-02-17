@@ -19,9 +19,10 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 # These modules need the path to lib-python modules
+from collections import defaultdict, OrderedDict
+from orddicts import DefaultOrderedDict
 import ioda_conv_engines as iconv
 import meteo_utils
-from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
@@ -59,7 +60,6 @@ metaDataKeyList = {
     'latitude': ['latitude'],
     'longitude': ['longitude'],
     'height': ['Constructed', 'globalNavigationSatelliteSystemAltitude', 'height', 'flightLevel'],
-    'presure': ['Constructed'],
     'dateTime': ['Constructed'],
 }
 
@@ -105,7 +105,7 @@ bufr_missing_float = 1.E11
 bufr_missing_int = 1.E11
 bufr_missing_string = '???'
 
-ioda_datetime_epoch = datetime(1970, 1, 1, 0, 0, 0)  # Jan 1, 1970 00Z
+epoch = datetime(1970, 1, 1, 0, 0, 0)  # Jan 1, 1970 00Z
 
 
 def main(file_names, output_file):
@@ -235,11 +235,12 @@ def read_bufr_message(f, count, start_pos):
 
     meta_data = {}
     obs_data = {}
+    vals = {}
     call_fail = False
     if start_pos == f.tell():
         return obs_data, count, None
     start_pos = f.tell()
-    # print ( "starting pos: ", f.tell() )
+    # print ( "starting pos: ", start_pos )
 
     met_utils = meteo_utils.meteo_utils()
 
@@ -247,104 +248,147 @@ def read_bufr_message(f, count, start_pos):
 
     try:
         bufr = codes_bufr_new_from_file(f)
+    except:
+        print ( "ABORT, cannot properly open file " + f + " using codes_bufr_new_from_file")
+        sys.exit()
 
+    try:
         codes_set(bufr, 'unpack', 1)
+    except:
+        print ( "ABORT, failure unpacking BUFR")
+        sys.exit()
 
-        # First, get the MetaData we are interested in (list is in metaDataKeyList)
-        for k, v in metaDataKeyList.items():
-            if (v.len() > 1):
-                for var in v:
-                    if (var != 'Constructed'):
-                        meta_data[k] = codes_get(bufr, v)
-                        if (meta_data[k] != bufr_missing_float):
-                            break
-            else:
-                if (v[0] != 'Constructed'):
+    # First, get the MetaData we are interested in (list is in metaDataKeyList)
+    meta_data['latitude'] = float_missing_value
+    meta_data['longitude'] = float_missing_value
+    for k, v in metaDataKeyList.items():
+        if (len(v) > 1):
+            for var in v:
+                if (var != 'Constructed'):
+                    try:
+                        meta_data[k] = codes_get(bufr, var)
+                    except KeyValueNotFoundError:
+                        print ("CAUTION, unable to find requested BUFR key: " + var)
+                        meta_data[k] = bufr_missing_float
+                        continue
+                    if (meta_data[k] != bufr_missing_float):
+                        break
+        else:
+            if (v[0] != 'Constructed'):
+                try:
                     meta_data[k] = codes_get(bufr, v[0])
+                except KeyValueNotFoundError:
+                    print ("Caution, unable to find requested BUFR key: " + v[0])
+                    meta_data[k] = bufr_missing_float
+                    continue
 
-        # Replace BUFR missing value indicators with IODA missings.
-        for k, v in metaDataKeyList.items():
-            if (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "string"):
-                meta_data[k] = string_missing_value
-            elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "integer"):
-                meta_data[k] = int_missing_value
-            elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "long"):
-                meta_data[k] = long_missing_value
-            elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "float"):
-                meta_data[k] = float_missing_value
-
-        # Plus, to construct a dateTIme, we always need its components.
+    # Plus, to construct a dateTime, we always need its components.
+    try:
         year = codes_get(bufr, 'year')
+    except KeyValueNotFoundError:
+        print ("Caution, no data for year")
+
+    try:
         month = codes_get(bufr, 'month')
+    except KeyValueNotFoundError:
+        print ("Caution, no data for month")
+
+    try:
         day = codes_get(bufr, 'day')
+    except KeyValueNotFoundError:
+        print ("Caution, no data for day")
+
+    try:
         hour = codes_get(bufr, 'hour')
+    except KeyValueNotFoundError:
+        print ("Caution, no data for hour")
+
+    try:
         minute = codes_get(bufr, 'minute')
+    except KeyValueNotFoundError:
+        print ("Caution, no data for minute")
+
+    try:
         second = codes_get(bufr, 'second')    # non-integer value, optional
         if (second >= 0 and second <= 59):
             second = round(second)
         else:
             second = 0
-        meta_data['dateTime'] = long_missing_value
-        if (year>1900 and year<2199 and month>=1 and month<=12 and day>=1 and day<=31
-            and hour>=0 and hour<=23 and minute>=0 and minute<=59 and second>=0 and second<=59):
-            this_datetime = datetime(year, month, day, hour, minute, second)
-            time_offset = (this_datetime - epoch).total_seconds()
-            meta_data['dateTime'] = time_offset.astype('int64')
-        else:
-            count[1] += 1
+    except KeyValueNotFoundError:
+        second = 0
 
-        # Always need lat, lon or else the observation is useless, so let us double-check.
-        meta_data['latitude'] = float_missing_value
-        meta_data['longitude'] = float_missing_value
-        if (meta_data['latitude'] >= -90 and meta_data['latitude'] <= 90
-            and meta_data['longitude'] >= -180 and meta_data['longitude'] <= 360):
-            if (meta_data['longitude'] > 180):
-                meta_data['longitude'] = 360.0 - meta_data['longitude']
-        else:
-            count[1] += 1
+    meta_data['dateTime'] = bufr_missing_float
+    if (year>1900 and year<2199 and month>=1 and month<=12 and day>=1 and day<=31
+        and hour>=0 and hour<=23 and minute>=0 and minute<=59 and second>=0 and second<=59):
+        this_datetime = datetime(year, month, day, hour, minute, second)
+        time_offset = (this_datetime - epoch).total_seconds()
+        meta_data['dateTime'] = round(time_offset)
+    else:
+        print ("Warning, useless date information: ")
+        print("Warning, useless date info, {:4d}".format(year) + "-{:02d}".format(month)
+            + "-{:02d}".format(day) + "T{:02d}".format(hour) + ":{:02d}".format(minute)
+            + ":{:02d}".format(second))
+        count[1] += 1
 
-        # Next, get the raw observed weather variables we want.
-        for variable in raw_obsvars:           #  ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
+    # Replace BUFR missing value indicators with IODA missings.
+    for k, v in metaDataKeyList.items():
+        if (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "string"):
+            meta_data[k] = string_missing_value
+        elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "integer"):
+            meta_data[k] = int_missing_value
+        elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "long"):
+            meta_data[k] = long_missing_value
+        elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "float"):
+            meta_data[k] = float_missing_value
+
+    # Always need lat, lon or else the observation is useless, so let us double-check.
+    if (meta_data['latitude'] >= -90 and meta_data['latitude'] <= 90
+        and meta_data['longitude'] >= -180 and meta_data['longitude'] <= 360):
+        if (meta_data['longitude'] > 180):
+            meta_data['longitude'] = 360.0 - meta_data['longitude']
+    else:
+        print ("Warning, either or both of lat/lon are mising in this BUFR msg."
+            + " Lat, Lon = {:.3}".format(meta_data['latitude']) + ", {:.3}".format(meta_data['longitude']))
+        count[1] += 1
+
+    # Next, get the raw observed weather variables we want.
+    for variable in raw_obsvars:           #  ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
+        try:
             vals[variable] = codes_get(bufr, variable)
             if (vals[variable] == bufr_missing_float):
                 vals[variable] = float_missing_value
+        except KeyValueNotFoundError:
+            print ("Caution, unable to find requested BUFR variable: " + variable)
+            vals[variable] = float_missing_value
 
-        # Be done with this BUFR message.
-        codes_release(bufr)
+    # Be done with this BUFR message.
+    codes_release(bufr)
 
-        # Need to transform some variables to others (wind speed/direction to components for example).
-        if (vals['windDirection'] != float_missing_value and vals['windSpeed'] != float_missing_value):
-            uwnd, vwnd = met_utils.dir_speed_2_uv(vals['windDirection'], vals['windSpeed'])
-        else:
-            uwnd = float_missing_value
-            vwnd = float_missing_value
+    # Need to transform some variables to others (wind speed/direction to components for example).
+    if (vals['windDirection'] != float_missing_value and vals['windSpeed'] != float_missing_value):
+        uwnd, vwnd = met_utils.dir_speed_2_uv(vals['windDirection'], vals['windSpeed'])
+    else:
+        uwnd = float_missing_value
+        vwnd = float_missing_value
 
-        if (vals['mixingRatio'] != float_missing_value):
-            spfh = vals['mixingRatio'] / (1.0 + vals['mixingRatio'])
-        else:
-            spfh = float_missing_value
+    if (vals['mixingRatio'] != float_missing_value):
+        spfh = vals['mixingRatio'] / (1.0 + vals['mixingRatio'])
+    else:
+        spfh = float_missing_value
 
-        # Move everything into the final obs_data dictionary, including metadata.
-        obs_data['eastward_wind'] = uwnd
-        obs_data['northward_wind'] = vwnd
-        obs_data['specific_humidity'] = spfh
-        obs_data['air_temperature'] = vals['airTemperature']
-        for key in meta_keys:
-            obs_data[k] = meta_data[k]
+    # Move everything into the final obs_data dictionary, including metadata.
+    obs_data['ob_uwnd'] = uwnd
+    obs_data['ob_vwnd'] = vwnd
+    obs_data['ob_spfh'] = spfh
+    obs_data['ob_temp'] = vals['airTemperature']
+    for key in meta_keys:
+        obs_data[key] = meta_data[key]
 
-        # print ( "ending pos: ", f.tell() )
-        count[0] += 1
+    # print ( "ending pos: ", f.tell() )
 
-        return obs_data, count, start_pos
-
-    except BaseException:
-        # print ( "invalid bufr message" )
-        if call_fail:
-            sys.exit()
-        count[1] += 1
-        print ( "number of total msgs: ", count[0] )
-        print ( "number of invalid or useless msgs: ", count[1] )
-        return obs_data, count, start_pos
+    print ( "number of total msgs: ", count[0] )
+    print ( "number of invalid or useless msgs: ", count[1] )
+    return obs_data, count, start_pos
 
 
 if __name__ == "__main__":
