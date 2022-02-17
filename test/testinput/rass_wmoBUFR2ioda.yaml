@@ -6,15 +6,16 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/synop_wmo_multi.bufr"
+      obsdatain: "./testinput/rass_wmo_multi.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
       mnemonicSets:
-        - mnemonics: [WMOB, WMOS, STSN]
+        - mnemonics: [WMOB, WMOS]
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU]
-        - mnemonics: [CLATH, CLONH, HSMSL]
-        - mnemonics: [PRES, TMDB, TMDP, WDIR, WSPD]
+        - mnemonics: [CLAT, CLON, SELV]
+        - mnemonics: [HEIT, AFSI, TMVRST]
+        - mnemonics: [STNR]
 
       exports:
         variables:
@@ -29,28 +30,24 @@ observations:
             mnemonic: WMOB
           stationIdWMOstation:
             mnemonic: WMOS
-          stationLongName:
-            mnemonic: STSN
           latitude:
-            mnemonic: CLATH
+            mnemonic: CLAT
           longitude:
-            mnemonic: CLONH
+            mnemonic: CLON
           stationElevation:
-            mnemonic: HSMSL
-          temperatureAir:
-            mnemonic: TMDB
-          temperatureDewpoint:
-            mnemonic: TMDP
-          windDirection:
-            mnemonic: WDIR
-          windSpeed:
-            mnemonic: WSPD
-          pressureStation:
-            mnemonic: PRES
+            mnemonic: SELV
+          height:
+            mnemonic: HEIT
+          qualityIndicator:
+            mnemonic: AFSI
+          virtualTemperature:
+            mnemonic: TMVRST
+          signalToNoiseRatio:
+            mnemonic: STNR
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/synop_wmo_multi.nc"
+      obsdataout: "./testrun/rass_wmo_multi.nc"
 
       dimensions:
         - name: "nlocs"
@@ -94,42 +91,27 @@ observations:
           units: "m"
 
         - name: "MetaData/height"
-          source: variables/stationElevation
+          source: variables/height
           dimensions: [ "nlocs" ]
           longName: "Height"
           units: "m"
 
-        - name: "ObsValue/air_temperature"
-          coordinates: "longitude latitude"
-          source: variables/temperatureAir
+        # ADD this in later
+        # - name: "MetaData/qualityIndicator"
+        #   source: variables/qualityIndicator
+        #   dimensions: [ "nlocs" ]
+        #   longName: "Quality Indicator (0=good, 1=no-good)"
+        #   units: "unitless"
+
+        - name: "MetaData/signalToNoiseRatio"
+          source: variables/signalToNoiseRatio
           dimensions: [ "nlocs" ]
-          longName: "Air Temperature"
+          longName: "Signal-to-noise Ratio"
+          units: "unitless"
+
+        - name: "ObsValue/virtual_temperature"
+          coordinates: "longitude latitude"
+          source: variables/virtualTemperature
+          dimensions: [ "nlocs" ]
+          longName: "Virtual Temperature"
           units: "K"
-
-        - name: "ObsValue/dewpoint_temperature"
-          coordinates: "longitude latitude"
-          source: variables/temperatureDewpoint
-          dimensions: [ "nlocs" ]
-          longName: "Dewpoint Temperature"
-          units: "K"
-
-        - name: "ObsValue/wind_direction"
-          coordinates: "longitude latitude"
-          source: variables/windDirection
-          dimensions: [ "nlocs" ]
-          longName: "Wind Direction"
-          units: "degrees"
-
-        - name: "ObsValue/wind_speed"
-          coordinates: "longitude latitude"
-          source: variables/windSpeed
-          dimensions: [ "nlocs" ]
-          longName: "Wind Speed"
-          units: "m s-1"
-
-        - name: "ObsValue/surface_pressure"
-          coordinates: "longitude latitude"
-          source: variables/pressureStation
-          dimensions: [ "nlocs" ]
-          longName: "Surface Pressure"
-          units: "Pa"

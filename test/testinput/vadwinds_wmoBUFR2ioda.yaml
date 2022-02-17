@@ -1,4 +1,4 @@
-# (C) Copyright 2021 UCAR
+# (C) Copyright 2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,15 +6,15 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/synop_wmo_multi.bufr"
+      obsdatain: "./testinput/vadwinds_wmo_multi.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
       mnemonicSets:
-        - mnemonics: [WMOB, WMOS, STSN]
+        - mnemonics: [WMOB, WMOS]
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU]
-        - mnemonics: [CLATH, CLONH, HSMSL]
-        - mnemonics: [PRES, TMDB, TMDP, WDIR, WSPD]
+        - mnemonics: [CLAT, CLON, SELV]
+        - mnemonics: [HEIT, WDIR, WSPD, QMRK]
 
       exports:
         variables:
@@ -29,28 +29,24 @@ observations:
             mnemonic: WMOB
           stationIdWMOstation:
             mnemonic: WMOS
-          stationLongName:
-            mnemonic: STSN
           latitude:
-            mnemonic: CLATH
+            mnemonic: CLAT
           longitude:
-            mnemonic: CLONH
+            mnemonic: CLON
           stationElevation:
-            mnemonic: HSMSL
-          temperatureAir:
-            mnemonic: TMDB
-          temperatureDewpoint:
-            mnemonic: TMDP
+            mnemonic: SELV
+          height:
+            mnemonic: HEIT
+          qualityIndicator:
+            mnemonic: QMRK
           windDirection:
             mnemonic: WDIR
           windSpeed:
             mnemonic: WSPD
-          pressureStation:
-            mnemonic: PRES
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/synop_wmo_multi.nc"
+      obsdataout: "./testrun/vadwinds_wmo_multi.nc"
 
       dimensions:
         - name: "nlocs"
@@ -94,24 +90,17 @@ observations:
           units: "m"
 
         - name: "MetaData/height"
-          source: variables/stationElevation
+          source: variables/height
           dimensions: [ "nlocs" ]
           longName: "Height"
           units: "m"
 
-        - name: "ObsValue/air_temperature"
-          coordinates: "longitude latitude"
-          source: variables/temperatureAir
-          dimensions: [ "nlocs" ]
-          longName: "Air Temperature"
-          units: "K"
-
-        - name: "ObsValue/dewpoint_temperature"
-          coordinates: "longitude latitude"
-          source: variables/temperatureDewpoint
-          dimensions: [ "nlocs" ]
-          longName: "Dewpoint Temperature"
-          units: "K"
+        # ADD this in later
+        # - name: "MetaData/qualityIndicator"
+        #   source: variables/qualityIndicator
+        #   dimensions: [ "nlocs" ]
+        #   longName: "Quality Indicator"
+        #   units: "unitless"
 
         - name: "ObsValue/wind_direction"
           coordinates: "longitude latitude"
@@ -126,10 +115,3 @@ observations:
           dimensions: [ "nlocs" ]
           longName: "Wind Speed"
           units: "m s-1"
-
-        - name: "ObsValue/surface_pressure"
-          coordinates: "longitude latitude"
-          source: variables/pressureStation
-          dimensions: [ "nlocs" ]
-          longName: "Surface Pressure"
-          units: "Pa"
