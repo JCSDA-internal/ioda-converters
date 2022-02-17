@@ -62,23 +62,23 @@ get_files() {
         # retrieve the files
         gfile=${nomads_address}/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d
         nfile=${nomads_address}/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
-        out_file=${gfile##*/}
-        # optional rename
-        #out_file="${out_file%.bufr_d*}.bfr"
-        #echo "wget ${gfile} -O ${out_file}"
-        wget -nc ${gfile} -O ${out_file}
-        if [[ -e ${out_file} && ! -s ${out_file} ]]; then
-            rm ${out_file}
-            out_file=${nfile##*/}
-            wget -nc ${nfile} -O ${out_file}
-            if [[ ! -s ${out_file} ]]; then
-                rm -f ${out_file}
+        # check both "normal" name and one with restricted data stripped ( appended with "nr" )
+        for afile in ${gfile} ${nfile}; do
+            out_file=${afile##*/}
+            # optional rename
+            # out_file="${out_file%.bufr_d*}.bfr"
+            # does the file exist on the server
+            if curl --output /dev/null --silent --head --fail "${afile}"; then
+                wget -nc ${afile} -O ${out_file}
+                echo " ... wget exit status: ${?}"
+                # remove if file is zero length
+                if [[ -e ${out_file} && ! -s ${out_file} ]]; then
+                    rm ${out_file}
+                fi
             else
-                return  # successfully pulled a file
+                echo "  .. file does not exist on server: ${afile}"
             fi
-        else
-            return  # successfully pulled a file
-        fi
+        done
     done
 }
 
