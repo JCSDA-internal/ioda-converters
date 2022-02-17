@@ -12,8 +12,6 @@ import netCDF4 as nc
 from eccodes import *
 from multiprocessing import Pool
 
-#from IPython import embed as shell
-
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -405,7 +403,7 @@ def read_bufr_message(f, count, start_pos):
                     # surface level not first record
                     surface_not_first = True
                     first_level = surface_level
-                    if ( len(temp_air) == len(pressure) ):
+                    if (len(temp_air) == len(pressure)):
                         temp_air = temp_air[first_level:]
                         temp_dewpoint = temp_dewpoint[first_level:]
                         geop_height = geop_height[first_level:]
@@ -427,9 +425,10 @@ def read_bufr_message(f, count, start_pos):
             if len(pressure) != len(temp_air):
                 var_length_check = True
                 var_length_check = var_length_check and (len(temp_air) == len(temp_dewpoint) == len(geop_height) == len(wind_direction) == len(wind_speed))
-                var_length_check = var_length_check and (len(pressure) == len(sounding_significance) == len(lat_displacement) == len(lon_displacement) == len(time_displacement))
+                var_length_check = var_length_check and \
+                    (len(pressure) == len(sounding_significance) == len(lat_displacement) == len(lon_displacement) == len(time_displacement))
                 if (var_length_check):
-                    new_length = min( [len(pressure), len(temp_air)] )
+                    new_length = min([len(pressure), len(temp_air)])
                     pressure = pressure[:new_length]
                     lat_displacement = lat_displacement[:new_length]
                     lon_displacement = lon_displacement[:new_length]
@@ -456,7 +455,6 @@ def read_bufr_message(f, count, start_pos):
                     print("length time_displacement: %i" % len(time_displacement))
                     print("========")
 #                   call_fail = True
-#                   shell()
                     raise BaseException
 
 #  ===========================================================================================
@@ -600,7 +598,7 @@ if __name__ == "__main__":
     apath, afile = os.path.split(args.output_file)
     # create output directory path if necessary
     if not os.path.exists(apath):
-        print( "creating output directory: ", apath )
-        os.makedirs( apath )
+        print("creating output directory: ", apath)
+        os.makedirs(apath)
 
     main(args.file_names, args.output_file)
