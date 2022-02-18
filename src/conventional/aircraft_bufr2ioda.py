@@ -67,20 +67,21 @@ metaDataKeyList = {
 raw_obsvars = ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
 
 # The outgoing IODA variables and their units.
-obsvars = {
-    'ob_temp': 'air_temperature',
-    'ob_spfh': 'specific_humidity',
-    'ob_uwnd': 'eastward_wind',
-    'ob_vwnd': 'northward_wind',
-}
+obsvars = ['air_temperature', 'specific_humidity', 'eastward_wind', 'northward_wind']
 obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
 
 VarDims = {
-    'ob_temp': ['nlocs'],
-    'ob_spfh': ['nlocs'],
-    'ob_uwnd': ['nlocs'],
-    'ob_vwnd': ['nlocs'],
+    'air_temperature': ['nlocs'],
+    'specific_humidity': ['nlocs'],
+    'eastward_wind': ['nlocs'],
+    'northward_wind': ['nlocs'],
 }
+
+metaDataName = 'MetaData'
+#metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
 AttrData = {
     'converter': os.path.basename(__file__),
@@ -101,73 +102,104 @@ int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
-bufr_missing_float = 1.E11
-bufr_missing_int = 1.E11
-bufr_missing_string = '???'
+bufr_missing_float = -2147483647
 
-epoch = datetime(1970, 1, 1, 0, 0, 0)  # Jan 1, 1970 00Z
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 def main(file_names, output_file):
 
     # initialize
-    obs_data = {}
     count = [0, 0]
     start_pos = None
     start_time = time.time()
 
+    obs_data = {}          # The final outputs.
+    data = {}              # Before assigning the output types into the above.
+    data['eastward_wind'] = []
+    data['northward_wind'] = []
+    data['specific_humidity'] = []
+    data['air_temperature'] = []
+    for key in meta_keys:
+        data[key] = []
+
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
-    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
     for fname in file_names:
         print("INFO: Reading file: ", fname)
-
         AttrData['source_files'] += ", " + fname
 
-        file_obs_data, count, start_pos = read_file(fname, count, start_pos)
-        if obs_data:
-            concat_obs_dict(obs_data, file_obs_data)
-        else:
-            obs_data = file_obs_data
+        data, count, start_pos = read_file(fname, count, start_pos, data)
 
     AttrData['source_files'] = AttrData['source_files'][2:]
     print("INFO: All source files: ", AttrData['source_files'])
 
-    if not obs_data:
+    if not data:
         print("WARNING: no message data was captured, stopping execution.")
         sys.exit()
 
     print("--- %s BUFR read seconds ---" % (time.time() - start_time))
 
-    nlocs = obs_data[('dateTime', 'MetaData')].shape[0]
+    nlocs = len(data['dateTime'])
     DimDict = {'nlocs': nlocs}
     AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
     # Set coordinates and units of the ObsValues.
     n = 0
-    for iodavar in obsvars.values():
-        varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-        varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-        varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-        varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-        varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-        varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        varAttrs[iodavar, iconv.OvalName()]['units'] = obsvars_units[n]
-        varAttrs[iodavar, iconv.OerrName()]['units'] = obsvars_units[n]
-        varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+    for iodavar in obsvars:
+        varDict[iodavar]['valKey'] = iodavar, obsValName
+        varDict[iodavar]['errKey'] = iodavar, obsErrName
+        varDict[iodavar]['qcKey'] = iodavar, qcName
+        varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
+        varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
+        varAttrs[iodavar, qcName]['units'] = 'unitless'
         n += 1
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
-        varAttrs[(key, "MetaData")]['units'] = locationKeyList[meta_keys.index(key)][2]
+        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         if (locationKeyList[meta_keys.index(key)][1] == "string"):
-            VarAttrs[(key, "MetaData")]['_FillValue'] = string_missing_value
+            varAttrs[(key, metaDataName)]['_FillValue'] = string_missing_value
         elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
-            VarAttrs[(key, "MetaData")]['_FillValue'] = int_missing_value
+            varAttrs[(key, metaDataName)]['_FillValue'] = int_missing_value
         elif (locationKeyList[meta_keys.index(key)][1] == "long"):
-            VarAttrs[(key, "MetaData")]['_FillValue'] = long_missing_value
+            varAttrs[(key, metaDataName)]['_FillValue'] = long_missing_value
         elif (locationKeyList[meta_keys.index(key)][1] == "float"):
-            VarAttrs[(key, "MetaData")]['_FillValue'] = float_missing_value
+            varAttrs[(key, metaDataName)]['_FillValue'] = float_missing_value
+
+    # Transfer from the 1-D data vectors and ensure output data (obs_data) types using numpy.
+    iodavar = 'air_temperature'
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
+    obs_data[(iodavar, obsErrName)] = np.full((nlocs), 0.2, dtype=np.float32)
+    obs_data[(iodavar, qcName)] = np.full((nlocs), 2, dtype=np.int32)
+    iodavar = 'specific_humidity'
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
+    obs_data[(iodavar, obsErrName)] = np.full((nlocs), 0.75E-3, dtype=np.float32)
+    obs_data[(iodavar, qcName)] = np.full((nlocs), 2, dtype=np.int32)
+    iodavar = 'eastward_wind'
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
+    obs_data[(iodavar, obsErrName)] = np.full((nlocs), 1.7, dtype=np.float32)
+    obs_data[(iodavar, qcName)] = np.full((nlocs), 2, dtype=np.int32)
+    iodavar = 'northward_wind'
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
+    obs_data[(iodavar, obsErrName)] = np.full((nlocs), 1.7, dtype=np.float32)
+    obs_data[(iodavar, qcName)] = np.full((nlocs), 2, dtype=np.int32)
+
+    for key in meta_keys:
+        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        if (locationKeyList[meta_keys.index(key)][1] == "string"):
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=object)
+        elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.int32)
+        elif (locationKeyList[meta_keys.index(key)][1] == "long"):
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.int64)
+        elif (locationKeyList[meta_keys.index(key)][1] == "float"):
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.float32)
 
     print("INFO: Writing file: ", output_file)
 
@@ -180,67 +212,70 @@ def main(file_names, output_file):
     print("--- %s total seconds ---" % (time.time() - start_time))
 
 
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, the obs_data variable
-    # will be extended using fill values.
-    #
-    # Use the first key in the append_obs_data dictionary to determine how
-    # long to make the fill value vector.
-    append_keys = list(append_obs_data.keys())
-    append_length = len(append_obs_data[append_keys[0]])
-    for gv_key in obs_data.keys():
-        if gv_key in append_keys:
-            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
-        else:
-            if obs_data[gv_key].dtype == float:
-                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
-            elif obs_data[gv_key].dtype == int:
-                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
-            elif obs_data[gv_key].dtype == object:
-                # string type, extend with empty strings
-                fill_data = np.repeat("", append_length, dtype=object)
-            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
+# Replace BUFR missing value indicators with IODA missings.
+def assign_value(data, key):
+
+    if type(data) == str:
+        return string_missing_value if (data.find('?') >= 0 or data == "") else data
+    elif type(data) == float:
+        return float_missing_value if (np.abs(data) >= np.abs(bufr_missing_float)) else data
+    elif type(data) == int:
+        return int_missing_value if (np.abs(data) >= np.abs(int_missing_value)) else data
+
+    return float_missing_value
 
 
-def read_file(file_name, count, start_pos):
+def assign_missing_meta(key):
 
-    obs_data = {}
+    if (locationKeyList[meta_keys.index(key)][1] == "string"):
+        return string_missing_value
+    elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
+        return int_missing_value
+    elif (locationKeyList[meta_keys.index(key)][1] == "long"):
+        return long_missing_value
+    elif (locationKeyList[meta_keys.index(key)][1] == "float"):
+        return float_missing_value
+
+    return float_missing_value
+
+
+def is_not_missing(data, key):
+
+    if (locationKeyList[meta_keys.index(key)][1] == "string"):
+        if data != string_missing_value: return True
+    elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
+        if data != int_missing_value: return True
+    elif (locationKeyList[meta_keys.index(key)][1] == "long"):
+        if data != long_missing_value: return True
+    elif (locationKeyList[meta_keys.index(key)][1] == "float"):
+        if data != float_missing_value: return True
+
+    return False
+
+
+def read_file(file_name, count, start_pos, data):
+
     f = open(file_name, 'rb')
 
     while True:
-        # here is where to send to ecCodes
-        msg_data, count, start_pos = read_bufr_message(f, count, start_pos)
-
-        # only record msg_data if it is not empty
-        if (msg_data):
-            # If obs_data is empty, simply copy msg_data
-            # Otherwise, append the elements in msg_data to the
-            #    corrsponding elements in obs_data
-            if (obs_data):
-                # Append
-                concat_obs_dict(obs_data, msg_data)
-            else:
-                # Copy
-                obs_data = msg_data
+        # Use eccodes to decode each bufr message in the file
+        data, count, start_pos = read_bufr_message(f, count, start_pos, data)
 
         if start_pos is None:
             # print("start_pos: ", start_pos)
             break
 
-    return obs_data, count, start_pos
+    return data, count, start_pos
 
 
-def read_bufr_message(f, count, start_pos):
+def read_bufr_message(f, count, start_pos, data):
 
     meta_data = {}
-    obs_data = {}
     vals = {}
     call_fail = False
     if start_pos == f.tell():
-        return obs_data, count, None
+        return data, count, None
     start_pos = f.tell()
-    # print ( "starting pos: ", start_pos )
 
     met_utils = meteo_utils.meteo_utils()
 
@@ -255,31 +290,32 @@ def read_bufr_message(f, count, start_pos):
     try:
         codes_set(bufr, 'unpack', 1)
     except:
-        print ( "ABORT, failure unpacking BUFR")
-        sys.exit()
+        print ("INFO: finished unpacking BUFR")
+        start_pos = None
+        return data, count, start_pos
 
     # First, get the MetaData we are interested in (list is in metaDataKeyList)
-    meta_data['latitude'] = float_missing_value
-    meta_data['longitude'] = float_missing_value
     for k, v in metaDataKeyList.items():
         if (len(v) > 1):
             for var in v:
                 if (var != 'Constructed'):
+                    meta_data[k] = assign_missing_meta(k)
                     try:
-                        meta_data[k] = codes_get(bufr, var)
+                        meta_data[k] = assign_value(codes_get(bufr, var), k)
                     except KeyValueNotFoundError:
-                        print ("CAUTION, unable to find requested BUFR key: " + var)
-                        meta_data[k] = bufr_missing_float
+                        print ("Caution: unable to find requested BUFR key: " + var)
+                        meta_data[k] = assign_missing_meta(k)
                         continue
-                    if (meta_data[k] != bufr_missing_float):
+                    if (is_not_missing(meta_data[k], k)):
+                        print ("INFO: non-missing element " + var)
                         break
         else:
             if (v[0] != 'Constructed'):
                 try:
-                    meta_data[k] = codes_get(bufr, v[0])
+                    meta_data[k] = assign_value(codes_get(bufr, v[0]), k)
                 except KeyValueNotFoundError:
                     print ("Caution, unable to find requested BUFR key: " + v[0])
-                    meta_data[k] = bufr_missing_float
+                    meta_data[k] = assign_missing_meta(k)
                     continue
 
     # Plus, to construct a dateTime, we always need its components.
@@ -287,26 +323,32 @@ def read_bufr_message(f, count, start_pos):
         year = codes_get(bufr, 'year')
     except KeyValueNotFoundError:
         print ("Caution, no data for year")
+        year = -1
 
     try:
         month = codes_get(bufr, 'month')
     except KeyValueNotFoundError:
         print ("Caution, no data for month")
+        month = -1
 
     try:
         day = codes_get(bufr, 'day')
     except KeyValueNotFoundError:
         print ("Caution, no data for day")
+        day = -1
+
 
     try:
         hour = codes_get(bufr, 'hour')
     except KeyValueNotFoundError:
         print ("Caution, no data for hour")
+        hour = -1
 
     try:
         minute = codes_get(bufr, 'minute')
     except KeyValueNotFoundError:
         print ("Caution, no data for minute")
+        minute = -1
 
     try:
         second = codes_get(bufr, 'second')    # non-integer value, optional
@@ -317,7 +359,7 @@ def read_bufr_message(f, count, start_pos):
     except KeyValueNotFoundError:
         second = 0
 
-    meta_data['dateTime'] = bufr_missing_float
+    meta_data['dateTime'] = int_missing_value
     if (year>1900 and year<2199 and month>=1 and month<=12 and day>=1 and day<=31
         and hour>=0 and hour<=23 and minute>=0 and minute<=59 and second>=0 and second<=59):
         this_datetime = datetime(year, month, day, hour, minute, second)
@@ -329,17 +371,6 @@ def read_bufr_message(f, count, start_pos):
             + "-{:02d}".format(day) + "T{:02d}".format(hour) + ":{:02d}".format(minute)
             + ":{:02d}".format(second))
         count[1] += 1
-
-    # Replace BUFR missing value indicators with IODA missings.
-    for k, v in metaDataKeyList.items():
-        if (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "string"):
-            meta_data[k] = string_missing_value
-        elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "integer"):
-            meta_data[k] = int_missing_value
-        elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "long"):
-            meta_data[k] = long_missing_value
-        elif (meta_data[k] == bufr_missing_float and locationKeyList[meta_keys.index(k)][1] == "float"):
-            meta_data[k] = float_missing_value
 
     # Always need lat, lon or else the observation is useless, so let us double-check.
     if (meta_data['latitude'] >= -90 and meta_data['latitude'] <= 90
@@ -354,9 +385,7 @@ def read_bufr_message(f, count, start_pos):
     # Next, get the raw observed weather variables we want.
     for variable in raw_obsvars:           #  ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
         try:
-            vals[variable] = codes_get(bufr, variable)
-            if (vals[variable] == bufr_missing_float):
-                vals[variable] = float_missing_value
+            vals[variable] = assign_value(codes_get(bufr, variable), variable)
         except KeyValueNotFoundError:
             print ("Caution, unable to find requested BUFR variable: " + variable)
             vals[variable] = float_missing_value
@@ -376,19 +405,19 @@ def read_bufr_message(f, count, start_pos):
     else:
         spfh = float_missing_value
 
-    # Move everything into the final obs_data dictionary, including metadata.
-    obs_data['ob_uwnd'] = uwnd
-    obs_data['ob_vwnd'] = vwnd
-    obs_data['ob_spfh'] = spfh
-    obs_data['ob_temp'] = vals['airTemperature']
+    # Move everything into the final data dictionary, including metadata.
+    data['eastward_wind'].append(uwnd)
+    data['northward_wind'].append(vwnd)
+    data['specific_humidity'].append(spfh)
+    data['air_temperature'].append(vals['airTemperature'])
     for key in meta_keys:
-        obs_data[key] = meta_data[key]
+        data[key].append(meta_data[key])
 
     # print ( "ending pos: ", f.tell() )
 
     print ( "number of total msgs: ", count[0] )
     print ( "number of invalid or useless msgs: ", count[1] )
-    return obs_data, count, start_pos
+    return data, count, start_pos
 
 
 if __name__ == "__main__":
