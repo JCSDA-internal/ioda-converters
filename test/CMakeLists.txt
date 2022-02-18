@@ -62,6 +62,7 @@ list( APPEND test_input
   testinput/owp_snow_obs.csv
   testinput/sonde_wmo_double.bufr
   testinput/avhrr_radiance.nc
+  testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
 )
 
 list( APPEND test_output
@@ -117,6 +118,7 @@ list( APPEND test_output
   testoutput/wmo_raob_double.nc4
   testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
+  testoutput/smap9km_ssm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1268,6 +1270,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap9km_ssm2ioda.py
+                            -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
+                            -o testrun/smap9km_ssm.nc
+                            -m maskout"
+                            smap9km_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1278,7 +1292,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc
 			  --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
                           owp_snow_obs_dup_thin_err_fn.nc ${IODA_CONV_COMP_TOL_ZERO})
-
 
 #######################################################
 # Auto-generated tests for ioda file validation
