@@ -77,8 +77,7 @@ VarDims = {
     'northward_wind': ['nlocs'],
 }
 
-metaDataName = 'MetaData'
-#metaDataName = iconv.MetaDataName()
+metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
@@ -102,13 +101,13 @@ int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
-bufr_missing_float = -2147483647
+bufr_missing_value =  int_missing_value   # -2147483647
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
-def main(file_names, output_file):
+def main(file_names, output_file, debug, verbose):
 
     # initialize
     count = [0, 0]
@@ -128,19 +127,19 @@ def main(file_names, output_file):
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
     for fname in file_names:
-        print("INFO: Reading file: ", fname)
+        if debug: print("INFO: Reading file: ", fname)
         AttrData['source_files'] += ", " + fname
 
         data, count, start_pos = read_file(fname, count, start_pos, data)
 
     AttrData['source_files'] = AttrData['source_files'][2:]
-    print("INFO: All source files: ", AttrData['source_files'])
+    if verbose: print("INFO: All source files: ", AttrData['source_files'])
 
     if not data:
         print("WARNING: no message data was captured, stopping execution.")
         sys.exit()
 
-    print("--- %s BUFR read seconds ---" % (time.time() - start_time))
+    if debug: print("--- %s BUFR read seconds ---" % (time.time() - start_time))
 
     nlocs = len(data['dateTime'])
     DimDict = {'nlocs': nlocs}
@@ -175,7 +174,7 @@ def main(file_names, output_file):
     # Transfer from the 1-D data vectors and ensure output data (obs_data) types using numpy.
     iodavar = 'air_temperature'
     obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
-    obs_data[(iodavar, obsErrName)] = np.full((nlocs), 0.2, dtype=np.float32)
+    obs_data[(iodavar, obsErrName)] = np.full((nlocs), 1.2, dtype=np.float32)
     obs_data[(iodavar, qcName)] = np.full((nlocs), 2, dtype=np.int32)
     iodavar = 'specific_humidity'
     obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
@@ -201,7 +200,7 @@ def main(file_names, output_file):
         elif (locationKeyList[meta_keys.index(key)][1] == "float"):
             obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.float32)
 
-    print("INFO: Writing file: ", output_file)
+    if debug: print("INFO: Writing file: ", output_file)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
@@ -209,7 +208,7 @@ def main(file_names, output_file):
     # write everything out
     writer.BuildIoda(obs_data, VarDims, varAttrs, AttrData)
 
-    print("--- %s total seconds ---" % (time.time() - start_time))
+    if debug: print("--- %s total seconds ---" % (time.time() - start_time))
 
 
 # Replace BUFR missing value indicators with IODA missings.
@@ -218,13 +217,14 @@ def assign_value(data, key):
     if type(data) == str:
         return string_missing_value if (data.find('?') >= 0 or data == "") else data
     elif type(data) == float:
-        return float_missing_value if (np.abs(data) >= np.abs(bufr_missing_float)) else data
+        return float_missing_value if (np.abs(data) >= np.abs(bufr_missing_value)) else data
     elif type(data) == int:
-        return int_missing_value if (np.abs(data) >= np.abs(int_missing_value)) else data
+        return int_missing_value if (np.abs(data) >= np.abs(bufr_missing_value)) else data
 
     return float_missing_value
 
 
+# Assign the correct IODA missing value to MetaData element.
 def assign_missing_meta(key):
 
     if (locationKeyList[meta_keys.index(key)][1] == "string"):
@@ -239,16 +239,17 @@ def assign_missing_meta(key):
     return float_missing_value
 
 
-def is_not_missing(data, key):
+# Determine if the BUFR data of MetaData element is missing or not.
+def is_missing(data, key):
 
-    if (locationKeyList[meta_keys.index(key)][1] == "string"):
-        if data != string_missing_value: return True
-    elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
-        if data != int_missing_value: return True
-    elif (locationKeyList[meta_keys.index(key)][1] == "long"):
-        if data != long_missing_value: return True
-    elif (locationKeyList[meta_keys.index(key)][1] == "float"):
-        if data != float_missing_value: return True
+    if (locationKeyList[meta_keys.index(key)][1] == "string" and
+        (data.find('?') >= 0 or data == "")): return True
+    elif (locationKeyList[meta_keys.index(key)][1] == "integer" and
+        data == bufr_missing_value): return True
+    elif (locationKeyList[meta_keys.index(key)][1] == "long" and
+        data == bufr_missing_value): return True
+    elif (locationKeyList[meta_keys.index(key)][1] == "float" and
+        data == bufr_missing_value): return True
 
     return False
 
@@ -262,7 +263,6 @@ def read_file(file_name, count, start_pos, data):
         data, count, start_pos = read_bufr_message(f, count, start_pos, data)
 
         if start_pos is None:
-            # print("start_pos: ", start_pos)
             break
 
     return data, count, start_pos
@@ -284,13 +284,13 @@ def read_bufr_message(f, count, start_pos, data):
     try:
         bufr = codes_bufr_new_from_file(f)
     except:
-        print ( "ABORT, cannot properly open file " + f + " using codes_bufr_new_from_file")
+        print ("ABORT, failue when attempting to call:  codes_bufr_new_from_file")
         sys.exit()
 
     try:
         codes_set(bufr, 'unpack', 1)
     except:
-        print ("INFO: finished unpacking BUFR")
+        if debug: print ("INFO: finished unpacking BUFR file")
         start_pos = None
         return data, count, start_pos
 
@@ -299,55 +299,59 @@ def read_bufr_message(f, count, start_pos, data):
         if (len(v) > 1):
             for var in v:
                 if (var != 'Constructed'):
-                    meta_data[k] = assign_missing_meta(k)
                     try:
                         meta_data[k] = assign_value(codes_get(bufr, var), k)
                     except KeyValueNotFoundError:
-                        print ("Caution: unable to find requested BUFR key: " + var)
+                        if verbose: print ("Caution: unable to find requested BUFR key: " + var)
                         meta_data[k] = assign_missing_meta(k)
                         continue
-                    if (is_not_missing(meta_data[k], k)):
-                        print ("INFO: non-missing element " + var)
+                    if (is_missing(meta_data[k], k)):
+                        if verbose: print ("INFO: " + var + " is present but missing data")
+                        meta_data[k] = assign_missing_meta(k)
+                    else:
                         break
         else:
             if (v[0] != 'Constructed'):
                 try:
                     meta_data[k] = assign_value(codes_get(bufr, v[0]), k)
                 except KeyValueNotFoundError:
-                    print ("Caution, unable to find requested BUFR key: " + v[0])
+                    if verbose: print ("Caution, unable to find requested BUFR key: " + v[0])
                     meta_data[k] = assign_missing_meta(k)
                     continue
+                if (is_missing(meta_data[k], k)):
+                    if verbose: print ("INFO: " + v[0] + " is present but missing data")
+                    meta_data[k] = assign_missing_meta(k)
 
     # Plus, to construct a dateTime, we always need its components.
     try:
         year = codes_get(bufr, 'year')
     except KeyValueNotFoundError:
-        print ("Caution, no data for year")
+        if verbose: print ("Caution, no data for year")
         year = -1
 
     try:
         month = codes_get(bufr, 'month')
     except KeyValueNotFoundError:
-        print ("Caution, no data for month")
+        if verbose: print ("Caution, no data for month")
         month = -1
 
     try:
         day = codes_get(bufr, 'day')
     except KeyValueNotFoundError:
-        print ("Caution, no data for day")
+        if verbose: print ("Caution, no data for day")
         day = -1
 
 
     try:
         hour = codes_get(bufr, 'hour')
     except KeyValueNotFoundError:
-        print ("Caution, no data for hour")
+        if verbose: print ("Caution, no data for hour")
         hour = -1
 
     try:
         minute = codes_get(bufr, 'minute')
     except KeyValueNotFoundError:
-        print ("Caution, no data for minute")
+        if verbose: print ("Caution, no data for minute")
         minute = -1
 
     try:
@@ -366,8 +370,7 @@ def read_bufr_message(f, count, start_pos, data):
         time_offset = (this_datetime - epoch).total_seconds()
         meta_data['dateTime'] = round(time_offset)
     else:
-        print ("Warning, useless date information: ")
-        print("Warning, useless date info, {:4d}".format(year) + "-{:02d}".format(month)
+        if verbose: print("Warning, useless date info, {:4d}".format(year) + "-{:02d}".format(month)
             + "-{:02d}".format(day) + "T{:02d}".format(hour) + ":{:02d}".format(minute)
             + ":{:02d}".format(second))
         count[1] += 1
@@ -378,16 +381,22 @@ def read_bufr_message(f, count, start_pos, data):
         if (meta_data['longitude'] > 180):
             meta_data['longitude'] = 360.0 - meta_data['longitude']
     else:
-        print ("Warning, either or both of lat/lon are mising in this BUFR msg."
+        if verbose: print ("Warning, either or both of lat/lon are mising in this BUFR msg."
             + " Lat, Lon = {:.3}".format(meta_data['latitude']) + ", {:.3}".format(meta_data['longitude']))
         count[1] += 1
 
+    # If the height/altitude is unreasonable, then it is useless.
+    if (meta_data['height'] < -425 or meta_data['height'] > 90000):
+        if verbose: print ("Warning, height information really bad: {:.1}".format(meta_data['height']))
+        count[1] += 1
+
     # Next, get the raw observed weather variables we want.
+    # TO-DO: currently all missing are set to float type, probably need different assignment for integers.
     for variable in raw_obsvars:           #  ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
         try:
             vals[variable] = assign_value(codes_get(bufr, variable), variable)
         except KeyValueNotFoundError:
-            print ("Caution, unable to find requested BUFR variable: " + variable)
+            if verbose: print ("Caution, unable to find requested BUFR variable: " + variable)
             vals[variable] = float_missing_value
 
     # Be done with this BUFR message.
@@ -413,18 +422,16 @@ def read_bufr_message(f, count, start_pos, data):
     for key in meta_keys:
         data[key].append(meta_data[key])
 
-    # print ( "ending pos: ", f.tell() )
-
-    print ( "number of total msgs: ", count[0] )
-    print ( "number of invalid or useless msgs: ", count[1] )
+    if debug: print ( "number of total msgs: ", count[0] )
+    if debug: print ( "number of invalid or useless msgs: ", count[1] )
     return data, count, start_pos
 
 
 if __name__ == "__main__":
 
-    from argparse import ArgumentParser
+    import argparse
 
-    parser = ArgumentParser(
+    parser = argparse.ArgumentParser(
         description=(
             'Read aircraft (AMDAR/TAMDAR/ACAR/etc.) BUFR file and convert into IODA output file')
     )
@@ -436,10 +443,21 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output-file', dest='output_file',
                           action='store', default=None, required=True,
                           help='output file')
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument('--debug', action=argparse.BooleanOptionalAction,
+                          help='enable debug messages')
+    optional.add_argument('--verbose', action=argparse.BooleanOptionalAction,
+                          help='enable verbose debug messages')
+
     args = parser.parse_args()
+
+    debug = True if args.debug else False
+    verbose = True if args.verbose else False
+    if verbose: debug = True
 
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file)
+    main(args.file_names, args.output_file, debug, verbose)
