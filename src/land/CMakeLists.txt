@@ -6,6 +6,7 @@ list(APPEND programs
   smos_ssm2ioda.py
   ascat_ssm2ioda.py
   imsfv3_scf2ioda.py
+  smap9km_ssm2ioda.py
   owp_snow_obs.py  
 )
 
