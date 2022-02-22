@@ -14,6 +14,10 @@ _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
 
 
+def MetaDataName():
+    return _metagroup
+
+
 def OvalName():
     return _oval_name
 
