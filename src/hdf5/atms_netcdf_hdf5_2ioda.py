@@ -23,8 +23,6 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-# from IPython import embed as shell
-
 # globals
 SNPP_WMO_sat_ID = 224
 NOAA20_WMO_sat_ID = 225
