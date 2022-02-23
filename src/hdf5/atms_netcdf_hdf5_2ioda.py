@@ -7,7 +7,7 @@ Python code to ingest netCDF4 or HDF5 ATMS data
 import argparse
 from datetime import datetime, timedelta
 import glob
-#from concurrent.futures import ProcessPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 import os.path
 from os import getcwd
@@ -126,7 +126,7 @@ def get_data_from_files(zfiles):
     # allocate space for output depending on which variables are to be saved
     obs_data = init_obs_loc()
 
-    #for afile in zfiles:
+    # for afile in zfiles:
     afile = zfiles
     if True:
         f = h5py.File(afile, 'r')
