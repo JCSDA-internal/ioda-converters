@@ -397,7 +397,6 @@ def read_bufr_message(f, count, start_pos):
                 if (len(pressure) != len(lat_displacement)):
                     print(' ERROR handling geolocation displacement does not match P ', len(lat_displacement), len(pressure))
                     call_fail = True
-                    sys.exit()
                     raise BaseException
                 elif surface_level != 0:
                     # surface level not first record
@@ -478,7 +477,6 @@ def read_bufr_message(f, count, start_pos):
             print("length lon_displacement: %i" % len(lon_displacement))
             print("length time_displacement: %i" % len(time_displacement))
             print("========")
-            sys.exit()
 
         # skip records with bad sounding significance values
         if np.any(sounding_significance == np.abs(int_missing_value)):     # 2147483647
@@ -500,7 +498,6 @@ def read_bufr_message(f, count, start_pos):
         if (len(lat_displacement) != len(time_displacement)):
             print("this should never happen lat and time have different displacements lengths")
             call_fail = True
-            sys.exit()
 
         # Check to make sure all variables have the proper length. For now, skip
         # this message if this check fails.
@@ -566,7 +563,8 @@ def read_bufr_message(f, count, start_pos):
     except BaseException:
         # print ( "invalid bufr message" )
         if call_fail:
-            sys.exit()
+            #sys.exit()
+            pass
         count[1] += 1
         # print ( "number of valid mssg: ", count[0] )
         # print ( "number of invalid mssg: ", count[1] )
