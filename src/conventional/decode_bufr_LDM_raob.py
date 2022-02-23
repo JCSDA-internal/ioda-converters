@@ -593,6 +593,7 @@ if __name__ == "__main__":
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
+    args.output_file = os.path.abspath(args.output_file)
     apath, afile = os.path.split(args.output_file)
     # create output directory path if necessary
     if not os.path.exists(apath):
