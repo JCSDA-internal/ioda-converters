@@ -563,7 +563,7 @@ def read_bufr_message(f, count, start_pos):
     except BaseException:
         # print ( "invalid bufr message" )
         if call_fail:
-            #sys.exit()
+            # sys.exit()
             pass
         count[1] += 1
         # print ( "number of valid mssg: ", count[0] )
