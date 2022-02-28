@@ -550,6 +550,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
                           2020100106_metars_small.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
+# Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amdar
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/amdar_bufr2ioda.py
+                          -i testinput/amdar_wmo_multi.bufr
+                          -o testrun/amdar_wmo_multi2.nc"
+                          amdar_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
 # MISC converters
 #===============================================================================
 
