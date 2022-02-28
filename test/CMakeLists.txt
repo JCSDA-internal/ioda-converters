@@ -193,6 +193,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
+    testoutput/amdar_wmo_multi2.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
     testoutput/buoy_wmo_multi.nc
     testoutput/rass_wmo_multi.nc
