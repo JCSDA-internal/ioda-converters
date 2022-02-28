@@ -37,7 +37,7 @@ locationKeyList = [
     ("roll_angle", "float", "degrees"),
     ("roll_angle_quality", "integer", ""),
     ("aircraft_speed", "float", "m s-1"),
-    ("aircraft_heading", "float", "degrees"),
+    ("aircraft_heading", "integer", "degrees"),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("height", "integer", "m"),
@@ -93,15 +93,12 @@ AttrData = {
 DimDict = {
 }
 
-ioda_float_type = 'float32'
-ioda_int_type = 'int32'
-ioda_long_type = 'int64'
 float_missing_value = nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
-bufr_missing_value =  int_missing_value   # -2147483647
+bufr_missing_value =  CODES_MISSING_LONG
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -164,34 +161,37 @@ def main(file_names, output_file, debug, verbose):
         varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         if (locationKeyList[meta_keys.index(key)][1] == "string"):
             varAttrs[(key, metaDataName)]['_FillValue'] = string_missing_value
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=object)
         elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
             varAttrs[(key, metaDataName)]['_FillValue'] = int_missing_value
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.int32)
         elif (locationKeyList[meta_keys.index(key)][1] == "long"):
             varAttrs[(key, metaDataName)]['_FillValue'] = long_missing_value
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.int64)
         elif (locationKeyList[meta_keys.index(key)][1] == "float"):
             varAttrs[(key, metaDataName)]['_FillValue'] = float_missing_value
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.float32)
+        elif (locationKeyList[meta_keys.index(key)][1] == "double"):
+            varAttrs[(key, metaDataName)]['_FillValue'] = double_missing_value
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=np.float64)
 
     # Transfer from the 1-D data vectors and ensure output data (obs_data) types using numpy.
     iodavar = 'air_temperature'
-    obs_data[(iodavar, obsValName)] = data[iodavar]
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
     obs_data[(iodavar, obsErrName)] = np.full(nlocs, 1.2, dtype=np.float32)
     obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
     iodavar = 'specific_humidity'
-    obs_data[(iodavar, obsValName)] = data[iodavar]
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
     obs_data[(iodavar, obsErrName)] = np.full(nlocs, 0.75E-3, dtype=np.float32)
     obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
     iodavar = 'eastward_wind'
-    obs_data[(iodavar, obsValName)] = data[iodavar]
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
     obs_data[(iodavar, obsErrName)] = np.full(nlocs, 1.7, dtype=np.float32)
     obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
     iodavar = 'northward_wind'
-    obs_data[(iodavar, obsValName)] = data[iodavar]
+    obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
     obs_data[(iodavar, obsErrName)] = np.full(nlocs, 1.7, dtype=np.float32)
     obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
-
-    for key in meta_keys:
-        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-        obs_data[(key, metaDataName)] = data[key]
 
     if debug: print("INFO: Writing file: ", output_file)
 
@@ -225,7 +225,7 @@ def assign_values(data, key):
             data[np.abs(data) >= np.abs(bufr_missing_value)] = int_missing_value
             return np.array(data, dtype=np.int32)
     elif type(data[0]) == str:
-        data[data == ""] = string_missing_value
+        #data[data == ""] = string_missing_value
         return np.array(data, dtype=object)
     else:
         if data.dtype == float:
@@ -235,7 +235,7 @@ def assign_values(data, key):
             data[np.abs(data) >= np.abs(bufr_missing_value)] = int_missing_value
             return np.array(data, dtype=np.int32)
         elif data.dtype.kind in {'U', 'S'}:
-            data[data == ""] = string_missing_value
+            #data[data == ""] = string_missing_value
             return np.array(data, dtype=object)
     print ("ABORT, no matching datatype found for key: " + key)
     sys.exit()
