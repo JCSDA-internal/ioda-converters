@@ -136,7 +136,7 @@ def main(file_names, output_file):
     if not data:
         logging.critical("ABORT: no message data was captured, stopping execution.")
 
-    logging.info("--- {:10.4f} BUFR read seconds ---".format(time.time() - start_time))
+    logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = len(data['dateTime'])
     DimDict = {'nlocs': nlocs}
@@ -201,7 +201,7 @@ def main(file_names, output_file):
     # write everything out
     writer.BuildIoda(obs_data, VarDims, varAttrs, AttrData)
 
-    logging.info("--- {:10.4f} total seconds ---".format(time.time() - start_time))
+    logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
 
 
 # Replace BUFR missing value indicators with IODA missings.
@@ -494,9 +494,9 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.INFO)
     elif args.verbose:
-        logging.basicConfig(level=logging.WARNING)
-    else:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
 
 
     for file_name in args.file_names:
