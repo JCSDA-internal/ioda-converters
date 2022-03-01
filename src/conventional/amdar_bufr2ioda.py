@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sys
 import time
+import logging
 
 import numpy as np
 import netCDF4 as nc
@@ -104,7 +105,7 @@ iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
-def main(file_names, output_file, debug, verbose):
+def main(file_names, output_file):
 
     # initialize
     count = [0, 0, 0]
@@ -124,19 +125,18 @@ def main(file_names, output_file, debug, verbose):
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
     for fname in file_names:
-        if debug: print("INFO: Reading file: ", fname)
+        logging.debug("INFO: Reading file: " + fname)
         AttrData['source_files'] += ", " + fname
 
         data, count, start_pos = read_file(fname, count, start_pos, data)
 
     AttrData['source_files'] = AttrData['source_files'][2:]
-    if verbose: print("INFO: All source files: ", AttrData['source_files'])
+    logging.debug("INFO: All source files: " + AttrData['source_files'])
 
     if not data:
-        print("WARNING: no message data was captured, stopping execution.")
-        sys.exit()
+        logging.critical("ABORT: no message data was captured, stopping execution.")
 
-    if debug: print("--- %s BUFR read seconds ---" % (time.time() - start_time))
+    logging.info("--- {:10.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = len(data['dateTime'])
     DimDict = {'nlocs': nlocs}
@@ -193,7 +193,7 @@ def main(file_names, output_file, debug, verbose):
     obs_data[(iodavar, obsErrName)] = np.full(nlocs, 1.7, dtype=np.float32)
     obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
 
-    if debug: print("INFO: Writing file: ", output_file)
+    logging.debug("INFO: Writing file: " + output_file)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
@@ -201,7 +201,7 @@ def main(file_names, output_file, debug, verbose):
     # write everything out
     writer.BuildIoda(obs_data, VarDims, varAttrs, AttrData)
 
-    if debug: print("--- %s total seconds ---" % (time.time() - start_time))
+    logging.info("--- {:10.4f} total seconds ---".format(time.time() - start_time))
 
 
 # Replace BUFR missing value indicators with IODA missings.
@@ -237,8 +237,7 @@ def assign_values(data, key):
         elif data.dtype.kind in {'U', 'S'}:
             #data[data == ""] = string_missing_value
             return np.array(data, dtype=object)
-    print ("ABORT, no matching datatype found for key: " + key)
-    sys.exit()
+    logging.critical("ABORT, no matching datatype found for key: " + key)
 
 
 # Assign the correct IODA missing value to MetaData element.
@@ -255,8 +254,7 @@ def assign_missing_meta(key, mimic):
     elif (locationKeyList[meta_keys.index(key)][1] == "double"):
         return np.full(len(mimic), double_missing_value, dtype=np.float64)
     else:
-        print ("ABORT, no matching datatype found for key: " + key)
-        sys.exit()
+        logging.critical("ABORT, no matching datatype found for key: " + key)
 
 
 # Return True if all elements in the array are missing, otherwise False.
@@ -272,7 +270,7 @@ def is_all_missing(data):
     elif data.dtype.kind in {'U', 'S'}:
         return all(x==string_missing_value for x in data)
 
-    print ("data type not determined, returning False")
+    logging.warning("data type not determined, returning False")
     return False
 
 
@@ -306,14 +304,13 @@ def read_bufr_message(f, count, start_pos, data):
     try:
         bufr = codes_bufr_new_from_file(f)
     except:
-        print ("ABORT, failue when attempting to call:  codes_bufr_new_from_file")
-        sys.exit()
+        logging.critical("ABORT, failue when attempting to call:  codes_bufr_new_from_file")
 
     try:
         codes_set(bufr, 'skipExtraKeyAttributes', 1)   # Supposedly this is ~25 percent faster
         codes_set(bufr, 'unpack', 1)
     except:
-        if debug: print ("INFO: finished unpacking BUFR file")
+        logging.info("INFO: finished unpacking BUFR file")
         start_pos = None
         return data, count, start_pos
 
@@ -328,14 +325,14 @@ def read_bufr_message(f, count, start_pos, data):
                         meta_data[k] = assign_values(avals, k)
                         if not is_all_missing(meta_data[k]): break
                     except KeyValueNotFoundError:
-                        if verbose: print ("Caution: unable to find requested BUFR key: " + var)
+                        logging.warning("Caution: unable to find requested BUFR key: " + var)
         else:
             if (v[0] != 'Constructed'):
                 try:
                     avals = codes_get_array(bufr, v[0])
                     meta_data[k] = assign_values(avals, k)
                 except KeyValueNotFoundError:
-                    if verbose: print ("Caution, unable to find requested BUFR key: " + v[0])
+                    logging.warning("Caution, unable to find requested BUFR key: " + v[0])
 
     # Plus, to construct a dateTime, we always need its components.
     try:
@@ -343,7 +340,7 @@ def read_bufr_message(f, count, start_pos, data):
         year[year < 1900] = 1900
         year[year > 2399] = 1900
     except KeyValueNotFoundError:
-        if verbose: print ("Caution, no data for year")
+        logging.warning("Caution, no data for year")
         year[0] = 1900
 
     try:
@@ -351,7 +348,7 @@ def read_bufr_message(f, count, start_pos, data):
         year[np.logical_or(month<1, month>12)] = 1900
         month[np.logical_or(month<1, month>12)] = 1
     except KeyValueNotFoundError:
-        if verbose: print ("Caution, no data for month")
+        logging.warning("Caution, no data for month")
         year[0] = 1900
         month[0] = 1
 
@@ -360,7 +357,7 @@ def read_bufr_message(f, count, start_pos, data):
         year[np.logical_or(day<1, day>31)] = 1900
         day[np.logical_or(day<1, day>31)] = 1
     except KeyValueNotFoundError:
-        if verbose: print ("Caution, no data for day")
+        logging.warning("Caution, no data for day")
         year[0] = 1900
         day[0] = 1
 
@@ -370,7 +367,7 @@ def read_bufr_message(f, count, start_pos, data):
         year[np.logical_or(hour<0, hour>23)] = 1900
         hour[np.logical_or(hour<0, hour>23)] = 0
     except KeyValueNotFoundError:
-        if verbose: print ("Caution, no data for hour")
+        logging.warning("Caution, no data for hour")
         year[0] = 1900
         hour[0] = 0
 
@@ -379,7 +376,7 @@ def read_bufr_message(f, count, start_pos, data):
         year[np.logical_or(minute<0, minute>59)] = 1900
         minute[np.logical_or(minute<0, minute>59)] = 0
     except KeyValueNotFoundError:
-        if verbose: print ("Caution, no data for minute")
+        logging.warning("Caution, no data for minute")
         year[0] = 1900
         minute[0] = 0
 
@@ -391,7 +388,7 @@ def read_bufr_message(f, count, start_pos, data):
             if (a>0 and a<60): second[n] = round(a)
             n+=1
     except KeyValueNotFoundError:
-        if verbose: print ("Caution, no data for second")
+        logging.info("Caution, no data for second")
 
     n = 0
     for yyyy in year:
@@ -428,7 +425,7 @@ def read_bufr_message(f, count, start_pos, data):
             avals = codes_get_array(bufr, variable)
             vals[variable] = assign_values(avals, variable)
         except KeyValueNotFoundError:
-            if verbose: print ("Caution, unable to find requested BUFR variable: " + variable)
+            logging.warning("Caution, unable to find requested BUFR variable: " + variable)
             vals[variable] = np.full(len(year), float_missing_value, dtype=np.float32)
 
     # Be done with this BUFR message.
@@ -463,9 +460,9 @@ def read_bufr_message(f, count, start_pos, data):
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 
-    if debug: print ("BUFR message number: ", count[0])
-    if debug: print ("number of observations so far: ", count[1])
-    if debug: print ("number of invalid or useless observations: ", count[2])
+    logging.info("BUFR message number: " + str(count[0]))
+    logging.info("number of observations so far: " + str(count[1]))
+    logging.info("number of invalid or useless observations: " + str(count[2]))
     return data, count, start_pos
 
 
@@ -475,7 +472,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read aircraft (AMDAR/TAMDAR/ACAR/etc.) BUFR file and convert into IODA output file')
+            'Read aircraft (AMDAR) BUFR file and convert into IODA output file')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -494,12 +491,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    debug = True if args.debug else False
-    verbose = True if args.verbose else False
-    if verbose: debug = True
+    if args.debug:
+        logging.basicConfig(level=logging.INFO)
+    elif args.verbose:
+        logging.basicConfig(level=logging.WARNING)
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+
 
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file, debug, verbose)
+    main(args.file_names, args.output_file)
