@@ -41,7 +41,7 @@ locationKeyList = [
     ("aircraft_heading", "integer", "degrees"),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
-    ("height", "integer", "m"),
+    ("height", "float", "m"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
 ]
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -99,7 +99,7 @@ int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
-bufr_missing_value =  CODES_MISSING_LONG
+bufr_missing_value = CODES_MISSING_LONG
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -218,6 +218,8 @@ def assign_values(data, key):
             data[np.abs(data) >= np.abs(bufr_missing_value)] = float_missing_value
             return np.array(data, dtype=np.float32)
     elif type(data[0]) == int:
+        if (locationKeyList[meta_keys.index(key)][1] == "float"):
+            data[np.abs(data) >= np.abs(bufr_missing_value)] = float_missing_value
         if (locationKeyList[meta_keys.index(key)][1] == "long"):
             data[np.abs(data) >= np.abs(bufr_missing_value)] = long_missing_value
             return np.array(data, dtype=np.int64)
