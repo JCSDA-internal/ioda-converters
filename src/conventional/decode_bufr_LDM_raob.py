@@ -57,10 +57,13 @@ def main(file_names, output_file):
     for fname in file_names:
         print("INFO: Reading file: ", fname)
         file_obs_data, count, start_pos = read_file(fname, count, start_pos)
-        if obs_data:
-            concat_obs_dict(obs_data, file_obs_data)
+        if file_obs_data:
+            if obs_data:
+                concat_obs_dict(obs_data, file_obs_data)
+            else:
+                obs_data = file_obs_data
         else:
-            obs_data = file_obs_data
+            print("WARNING: no message data has been captured: ", fname)
 
     if not obs_data:
         print("WARNING: no message data has been captured, stopping execution.")
@@ -382,7 +385,7 @@ def read_bufr_message(f, count, start_pos):
                 print("========")
 
             # index for surface pressure record
-            surface_level = np.where(sounding_significance & 2**significance_table["surface"])[0][0]
+            surface_level = np.where(sounding_significance & 2**significance_table["surface"])[0][-1]
             surface_pressure = pressure[surface_level]
 
             # if these lengths all match no need to do anything
@@ -394,15 +397,22 @@ def read_bufr_message(f, count, start_pos):
                 if (len(pressure) != len(lat_displacement)):
                     print(' ERROR handling geolocation displacement does not match P ', len(lat_displacement), len(pressure))
                     call_fail = True
-                    sys.exit()
                     raise BaseException
                 elif surface_level != 0:
                     # surface level not first record
-                    pressure = pressure[surface_level:]
-                    lat_displacement = lat_displacement[surface_level:]
-                    lon_displacement = lon_displacement[surface_level:]
-                    time_displacement = time_displacement[surface_level:]
-                    sounding_significance = sounding_significance[surface_level:]
+                    surface_not_first = True
+                    first_level = surface_level
+                    if (len(temp_air) == len(pressure)):
+                        temp_air = temp_air[first_level:]
+                        temp_dewpoint = temp_dewpoint[first_level:]
+                        geop_height = geop_height[first_level:]
+                        wind_direction = wind_direction[first_level:]
+                        wind_speed = wind_speed[first_level:]
+                    pressure = pressure[first_level:]
+                    lat_displacement = lat_displacement[first_level:]
+                    lon_displacement = lon_displacement[first_level:]
+                    time_displacement = time_displacement[first_level:]
+                    sounding_significance = sounding_significance[first_level:]
                 elif surface_level == 0:
                     # surface level is first record
                     pressure = pressure[1:]
@@ -411,16 +421,24 @@ def read_bufr_message(f, count, start_pos):
                     time_displacement = time_displacement[1:]
                     sounding_significance = sounding_significance[1:]
 
-            if len(pressure) > len(temp_air):
+            if len(pressure) != len(temp_air):
                 var_length_check = True
                 var_length_check = var_length_check and (len(temp_air) == len(temp_dewpoint) == len(geop_height) == len(wind_direction) == len(wind_speed))
-                var_length_check = var_length_check and (len(sounding_significance) == len(lat_displacement) == len(lon_displacement) == len(time_displacement))
+                var_length_check = var_length_check and \
+                    (len(pressure) == len(sounding_significance) == len(lat_displacement) == len(lon_displacement) == len(time_displacement))
                 if (var_length_check):
+                    new_length = min([len(pressure), len(temp_air)])
                     pressure = pressure[:new_length]
                     lat_displacement = lat_displacement[:new_length]
                     lon_displacement = lon_displacement[:new_length]
                     time_displacement = time_displacement[:new_length]
                     sounding_significance = sounding_significance[:new_length]
+                    # add these too?
+                    temp_air = temp_air[:new_length]
+                    temp_dewpoint = temp_dewpoint[:new_length]
+                    geop_height = geop_height[:new_length]
+                    wind_direction = wind_direction[:new_length]
+                    wind_speed = wind_speed[:new_length]
                 else:
                     print(' ERROR variables have too random a distribution of lengths ')
                     print("starting position: %i" % start_pos)
@@ -435,8 +453,7 @@ def read_bufr_message(f, count, start_pos):
                     print("length lon_displacement: %i" % len(lon_displacement))
                     print("length time_displacement: %i" % len(time_displacement))
                     print("========")
-                    call_fail = True
-                    sys.exit()
+#                   call_fail = True
                     raise BaseException
 
 #  ===========================================================================================
@@ -460,7 +477,6 @@ def read_bufr_message(f, count, start_pos):
             print("length lon_displacement: %i" % len(lon_displacement))
             print("length time_displacement: %i" % len(time_displacement))
             print("========")
-            sys.exit()
 
         # skip records with bad sounding significance values
         if np.any(sounding_significance == np.abs(int_missing_value)):     # 2147483647
@@ -482,7 +498,6 @@ def read_bufr_message(f, count, start_pos):
         if (len(lat_displacement) != len(time_displacement)):
             print("this should never happen lat and time have different displacements lengths")
             call_fail = True
-            sys.exit()
 
         # Check to make sure all variables have the proper length. For now, skip
         # this message if this check fails.
@@ -548,7 +563,8 @@ def read_bufr_message(f, count, start_pos):
     except BaseException:
         # print ( "invalid bufr message" )
         if call_fail:
-            sys.exit()
+            # sys.exit()
+            pass
         count[1] += 1
         # print ( "number of valid mssg: ", count[0] )
         # print ( "number of invalid mssg: ", count[1] )
@@ -576,5 +592,12 @@ if __name__ == "__main__":
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
+
+    args.output_file = os.path.abspath(args.output_file)
+    apath, afile = os.path.split(args.output_file)
+    # create output directory path if necessary
+    if not os.path.exists(apath):
+        print("creating output directory: ", apath)
+        os.makedirs(apath)
 
     main(args.file_names, args.output_file)
