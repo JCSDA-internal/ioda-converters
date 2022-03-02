@@ -107,6 +107,17 @@ bufr_missing_value = CODES_MISSING_LONG
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
+missing_vals = {'string' : string_missing_value,
+                'integer' : int_missing_value,
+                'long' : long_missing_value,
+                'float' : float_missing_value,
+                'double' : double_missing_value}
+dtypes = {'string' : object,
+          'integer' : np.int32,
+          'long' : np.int64,
+          'float' : np.float32,
+          'double' : np.float64}
+
 
 def main(file_names, output_file):
 
@@ -158,17 +169,6 @@ def main(file_names, output_file):
         varAttrs[iodavar, qcName]['units'] = 'unitless'
 
     # Set units of the MetaData variables and all _FillValues.
-    missing_vals = {'string' : string_missing_value,
-                    'integer' : int_missing_value,
-                    'long' : long_missing_value,
-                    'float' : float_missing_value,
-                    'double' : double_missing_value}
-    dtypes = {'string' : object,
-              'integer' : np.int32,
-              'long' : np.int64,
-              'float' : np.float32,
-              'double' : np.float64}
-
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
         varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
@@ -196,6 +196,9 @@ def main(file_names, output_file):
 def assign_values(data, key):
 
     if isinstance(data[0], str):
+        for n, d in enumerate(data):
+            data[n] = ''.join(c for c in d if c.isalnum())
+            if not data[n]: data[n] = string_missing_value
         return np.array(data, dtype=object)
 
     if (data.dtype == np.float32 or data.dtype == np.float64):
@@ -236,24 +239,23 @@ def assign_values(data, key):
 
 
 # Assign the correct IODA missing value to MetaData element.
-def assign_missing_meta(key, num):
+def assign_missing_meta(data, key, num, start):
 
-    if (locationKeyList[meta_keys.index(key)][1] == "string"):
-        return np.full(num, string_missing_value, dtype=object)
-    elif (locationKeyList[meta_keys.index(key)][1] == "integer"):
-        return np.full(num, int_missing_value, dtype=np.int32)
-    elif (locationKeyList[meta_keys.index(key)][1] == "long"):
-        return np.full(num, long_missing_value, dtype=np.int64)
-    elif (locationKeyList[meta_keys.index(key)][1] == "float"):
-        return np.full(num, float_missing_value, dtype=np.float32)
-    elif (locationKeyList[meta_keys.index(key)][1] == "double"):
-        return np.full(num, double_missing_value, dtype=np.float64)
-    else:
+    dtypestr = locationKeyList[meta_keys.index(key)][1]
+    if dtypestr is None:
         logging.critical("ABORT, no matching datatype found for key: " + key)
+    else:
+        if start == 0:
+            return np.full(num, missing_vals[dtypestr], dtype=dtypes[dtypestr])
+        else:
+            for n in range(start, num-1, 1):
+                np.append(data, missing_vals[dtypestr])
+                return data
 
 
 # Return True if all elements in the array are missing, otherwise False.
 def is_all_missing(data):
+
     if data.dtype == np.float32:
         return all(x==float_missing_value for x in data)
     if data.dtype == np.float64:
@@ -332,6 +334,18 @@ def read_bufr_message(f, count, start_pos, data):
     # Determine the target number of observation points from a critical variable (i.e., latitude).
     target_number = len(meta_data[var_mimic_length])
 
+    # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
+    empty = []
+    for k, v in metaDataKeyList.items():
+        if not any(meta_data[k]):
+            meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
+        if (len(meta_data[k]) == 1):
+            meta_data[k] = np.full(target_number, meta_data[k][0])
+        elif (len(meta_data[k]) < target_number):
+            logging.warning("The key called " + k + " contains only " + str(len(meta_data[k]))
+                + " elements, whereas " + str(target_number) + " were expected.")
+            meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, len(meta_data[k])-1)
+
     # Plus, to construct a dateTime, we always need its components.
     try:
         year = codes_get_array(bufr, 'year')
@@ -394,7 +408,7 @@ def read_bufr_message(f, count, start_pos, data):
     for n, yyyy in enumerate(year):
         this_datetime = datetime(yyyy, month[n], day[n], hour[n], minute[n], second[n])
         time_offset = round((this_datetime - epoch).total_seconds())
-        meta_data['dateTime'].append(time_offset)
+        meta_data['dateTime'][n] = time_offset
 
     # Force longitude into space of -180 to +180 only. Reset to missing if either lat or lon not on earth
     meta_data['longitude'][np.logical_or(meta_data['longitude']<-180.0, meta_data['longitude']>360.0)] = float_missing_value
@@ -406,7 +420,7 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['longitude'][n] = 360.0 - meta_data['longitude'][n]
 
     # If the height/altitude is unreasonable, then it is useless.
-    meta_data['height'][np.logical_or(meta_data['height']<-425, meta_data['height']>90000)] = int_missing_value
+    meta_data['height'][np.logical_or(meta_data['height']<-425, meta_data['height']>90000)] = float_missing_value
 
     # Count the locations for which time, lat, lon, or height is nonsense, therefore observation is useless.
     count[1] += target_number
@@ -421,7 +435,11 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             avals = codes_get_array(bufr, variable)
             if (len(avals) < target_number):
-                logging.critical("Caution, length mismatch: " + str(len(avals)) + ", " + str(target_number))
+                logging.warning("Caution, for variable " + variable
+                    + " a length mismatch exists: " + str(len(avals)) + " found, "
+                    + " when expecting " + str(target_number))
+            for n in range(len(avals), target_number-1, 1):
+                avals.append(float_missing_value)
             vals[variable] = assign_values(avals, variable)
         except KeyValueNotFoundError:
             logging.warning("Caution, unable to find requested BUFR variable: " + variable)
@@ -429,11 +447,6 @@ def read_bufr_message(f, count, start_pos, data):
 
     # Be done with this BUFR message.
     codes_release(bufr)
-
-    # For any of the MetaData elements that were totally lacking, fill entire vectory with missing.
-    for k, v in metaDataKeyList.items():
-        if not any(meta_data[k]):
-            meta_data[k] = assign_missing_meta(k, target_number)
 
     # Need to transform some variables to others (wind speed/direction to components for example).
     uwnd = np.full(target_number, float_missing_value)
