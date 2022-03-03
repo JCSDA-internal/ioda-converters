@@ -407,23 +407,26 @@ def read_bufr_message(f, count, start_pos, data):
     for n, yyyy in enumerate(year):
         this_datetime = datetime(yyyy, month[n], day[n], hour[n], minute[n], second[n])
         time_offset = round((this_datetime - epoch).total_seconds())
-        meta_data['dateTime'][n] = time_offset
+        if (time_offset > -1E9): meta_data['dateTime'][n] = time_offset
 
-    # Force longitude into space of -180 to +180 only. Reset to missing if either lat or lon not on earth
-    meta_data['longitude'][np.logical_or(meta_data['longitude']<-180.0, meta_data['longitude']>360.0)] = float_missing_value
-    meta_data['latitude'][np.logical_or(meta_data['latitude']<-90.0, meta_data['latitude']>90.0)] = float_missing_value
-    meta_data['latitude'][np.logical_or(meta_data['longitude']<-180.0, meta_data['longitude']>180.0)] = float_missing_value
-    meta_data['longitude'][np.logical_or(meta_data['latitude']<-90.0, meta_data['latitude']>90.0)] = float_missing_value
+    # Force longitude into space of -180 to +180 only. Reset both lat/lon missing if either absent.
+    mask_lat = np.logical_or(meta_data['latitude']<-90.0, meta_data['latitude']>90.0)
+    mask_lon = np.logical_or(meta_data['longitude']<-180.0, meta_data['longitude']>360.0)
+    meta_data['latitude'][mask_lat] = float_missing_value
+    meta_data['longitude'][mask_lon] = float_missing_value
+    meta_data['latitude'][mask_lon] = float_missing_value
+    meta_data['longitude'][mask_lat] = float_missing_value
     for n, longitude in enumerate(meta_data['longitude']):
-        if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 360):
+        if (longitude != float_missing_value and longitude > 180):
             meta_data['longitude'][n] = 360.0 - meta_data['longitude'][n]
 
     # If the height/altitude is unreasonable, then it is useless.
-    meta_data['height'][np.logical_or(meta_data['height']<-425, meta_data['height']>90000)] = float_missing_value
+    mask_height = np.logical_or(meta_data['height']<-425, meta_data['height']>90000)
+    meta_data['height'][mask_height] = float_missing_value
 
     # Next, get the raw observed weather variables we want.
-    # TO-DO: currently all missing are set to float type, probably need different assignment for integers.
-    for variable in raw_obsvars:           #  ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
+    # TO-DO: currently all ObsValue variables are float type, might need integer/other.
+    for variable in raw_obsvars:    # ['airTemperature','mixingRatio','windDirection','windSpeed']
         vals[variable] = []
         try:
             avals = ecc.codes_get_array(bufr, variable)
@@ -431,6 +434,7 @@ def read_bufr_message(f, count, start_pos, data):
                 logging.warning("Caution, for variable " + variable
                     + " a length mismatch exists: " + str(len(avals)) + " found, "
                     + " when expecting " + str(target_number) + ".  Skpping this BUFR msg.")
+                count[2] += target_number
                 return data, count, start_pos
             vals[variable] = assign_values(avals, variable)
         except ecc.KeyValueNotFoundError:
@@ -440,18 +444,23 @@ def read_bufr_message(f, count, start_pos, data):
     # Be done with this BUFR message.
     ecc.codes_release(bufr)
 
-    # Count the locations for which time, lat, lon, or height is nonsense, therefore observation is useless.
+    # Count the locations for which time, lat, lon, or height is nonsense, therefore ob is useless.
     count[1] += target_number
-    count[2] += sum(x==1900 for x in year)
-    count[2] += sum((y<-90.0 or y>90.0) for y in meta_data['latitude'])
-    count[2] += sum((z<-425.0 or z>90000.0) for z in meta_data['height'])
+    mask_date = np.full(target_number, 0, dtype=np.int32)
+    mask_ll = np.full(target_number, 0, dtype=np.int32)
+    mask_z = np.full(target_number, 0, dtype=np.int32)
+    mask_date[year==1900] = 1
+    mask_ll[meta_data['latitude']==float_missing_value] = 1
+    mask_z[meta_data['height']==float_missing_value] = 1
+    for n, x in enumerate(mask_date):
+        if (mask_date[n]==1 or mask_ll[n]==1 or mask_z[n]==1): count[2] += 1
 
     # Need to transform some variables to others (wind speed/direction to components for example).
     uwnd = np.full(target_number, float_missing_value)
     vwnd = np.full(target_number, float_missing_value)
-    for n, wind_direction in enumerate(vals['windDirection']):
-        if (wind_direction >= 0 and wind_direction<=360 and vals['windSpeed'][n] != float_missing_value):
-            uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wind_direction, vals['windSpeed'][n])
+    for n, wdir in enumerate(vals['windDirection']):
+        if (wdir >= 0 and wdir<=360 and vals['windSpeed'][n] != float_missing_value):
+            uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, vals['windSpeed'][n])
 
     spfh = np.full(target_number, float_missing_value)
     for n, mixing_ratio in enumerate(vals['mixingRatio']):
