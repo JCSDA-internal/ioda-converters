@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -10,7 +10,7 @@ import logging
 
 import numpy as np
 import netCDF4 as nc
-from eccodes import CODES_MISSING_LONG, codes_bufr_new_from_file, codes_set, codes_get_array, KeyValueNotFoundError, codes_release
+import eccodes as ecc
 from multiprocessing import Pool
 
 # set path to ioda_conv_engines module
@@ -102,7 +102,7 @@ int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
-bufr_missing_value = CODES_MISSING_LONG
+bufr_missing_value = ecc.CODES_MISSING_LONG
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -128,10 +128,8 @@ def main(file_names, output_file):
 
     obs_data = {}          # The final outputs.
     data = {}              # Before assigning the output types into the above.
-    data['eastward_wind'] = []
-    data['northward_wind'] = []
-    data['specific_humidity'] = []
-    data['air_temperature'] = []
+    for key in obsvars:
+        data[key] = []
     for key in meta_keys:
         data[key] = []
 
@@ -295,17 +293,18 @@ def read_bufr_message(f, count, start_pos, data):
         return data, count, None
     start_pos = f.tell()
     count[0] += 1
+    logging.info("BUFR message number: " + str(count[0]))
 
     met_utils = meteo_utils.meteo_utils()
 
     try:
-        bufr = codes_bufr_new_from_file(f)
+        bufr = ecc.codes_bufr_new_from_file(f)
     except:
         logging.critical("ABORT, failue when attempting to call:  codes_bufr_new_from_file")
 
     try:
-        codes_set(bufr, 'skipExtraKeyAttributes', 1)   # Supposedly this is ~25 percent faster
-        codes_set(bufr, 'unpack', 1)
+        ecc.codes_set(bufr, 'skipExtraKeyAttributes', 1)   # Supposedly this is ~25 percent faster
+        ecc.codes_set(bufr, 'unpack', 1)
     except:
         logging.info("finished unpacking BUFR file")
         start_pos = None
@@ -318,17 +317,17 @@ def read_bufr_message(f, count, start_pos, data):
             for var in v:
                 if (var != 'Constructed'):
                     try:
-                        avals = codes_get_array(bufr, var)
+                        avals = ecc.codes_get_array(bufr, var)
                         meta_data[k] = assign_values(avals, k)
                         if not is_all_missing(meta_data[k]): break
-                    except KeyValueNotFoundError:
+                    except ecc.KeyValueNotFoundError:
                         logging.warning("Caution: unable to find requested BUFR key: " + var)
         else:
             if (v[0] != 'Constructed'):
                 try:
-                    avals = codes_get_array(bufr, v[0])
+                    avals = ecc.codes_get_array(bufr, v[0])
                     meta_data[k] = assign_values(avals, k)
-                except KeyValueNotFoundError:
+                except ecc.KeyValueNotFoundError:
                     logging.warning("Caution, unable to find requested BUFR key: " + v[0])
 
     # Determine the target number of observation points from a critical variable (i.e., latitude).
@@ -348,61 +347,61 @@ def read_bufr_message(f, count, start_pos, data):
 
     # Plus, to construct a dateTime, we always need its components.
     try:
-        year = codes_get_array(bufr, 'year')
+        year = ecc.codes_get_array(bufr, 'year')
         if (len(year) < target_number): year = np.full(target_number, year[0])
         year[year < 1900] = 1900
         year[year > 2399] = 1900
-    except KeyValueNotFoundError:
+    except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for year")
         year = np.full(target_number, 1900)
 
     try:
-        month = codes_get_array(bufr, 'month')
+        month = ecc.codes_get_array(bufr, 'month')
         if (len(month) < target_number): month = np.full(target_number, month[0])
         year[np.logical_or(month<1, month>12)] = 1900
         month[np.logical_or(month<1, month>12)] = 1
-    except KeyValueNotFoundError:
+    except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for month")
         year = np.full(target_number, 1900)
         month = np.full(target_number, 1)
 
     try:
-        day = codes_get_array(bufr, 'day')
+        day = ecc.codes_get_array(bufr, 'day')
         if (len(day) < target_number): day = np.full(target_number, day[0])
         year[np.logical_or(day<1, day>31)] = 1900
         day[np.logical_or(day<1, day>31)] = 1
-    except KeyValueNotFoundError:
+    except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for day")
         year = np.full(target_number, 1900)
         day = np.full(target_number, 1)
 
     try:
-        hour = codes_get_array(bufr, 'hour')
+        hour = ecc.codes_get_array(bufr, 'hour')
         if (len(hour) < target_number): hour = np.full(target_number, hour[0])
         year[np.logical_or(hour<0, hour>23)] = 1900
         hour[np.logical_or(hour<0, hour>23)] = 0
-    except KeyValueNotFoundError:
+    except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for hour")
         year = np.full(target_number, 1900)
         hour = np.full(target_number, 0)
 
     try:
-        minute = codes_get_array(bufr, 'minute')
+        minute = ecc.codes_get_array(bufr, 'minute')
         if (len(minute) < target_number): minute = np.full(target_number, minute[0])
         year[np.logical_or(minute<0, minute>59)] = 1900
         minute[np.logical_or(minute<0, minute>59)] = 0
-    except KeyValueNotFoundError:
+    except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for minute")
         year = np.full(target_number, 1900)
         minute = np.full(target_number, 0)
 
     second = np.full(target_number, 0)
     try:
-        avals = codes_get_array(bufr, 'second')    # non-integer value, optional
+        avals = ecc.codes_get_array(bufr, 'second')    # non-integer value, optional
         if (len(avals) < target_number): avals = np.full(target_number, avals[0])
         for n, a in enumerate(avals):
             if (a>0 and a<60): second[n] = round(a)
-    except KeyValueNotFoundError:
+    except ecc.KeyValueNotFoundError:
         logging.info("Caution, no data for second")
 
     for n, yyyy in enumerate(year):
@@ -422,31 +421,30 @@ def read_bufr_message(f, count, start_pos, data):
     # If the height/altitude is unreasonable, then it is useless.
     meta_data['height'][np.logical_or(meta_data['height']<-425, meta_data['height']>90000)] = float_missing_value
 
-    # Count the locations for which time, lat, lon, or height is nonsense, therefore observation is useless.
-    count[1] += target_number
-    count[2] += sum(x==1900 for x in year)
-    count[2] += sum((y<-90.0 or y>90.0) for y in meta_data['latitude'])
-    count[2] += sum((z<-425.0 or z>90000.0) for z in meta_data['height'])
-
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all missing are set to float type, probably need different assignment for integers.
     for variable in raw_obsvars:           #  ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
         vals[variable] = []
         try:
-            avals = codes_get_array(bufr, variable)
-            if (len(avals) < target_number):
+            avals = ecc.codes_get_array(bufr, variable)
+            if (len(avals) != target_number):
                 logging.warning("Caution, for variable " + variable
                     + " a length mismatch exists: " + str(len(avals)) + " found, "
-                    + " when expecting " + str(target_number))
-            for n in range(len(avals), target_number-1, 1):
-                avals.append(float_missing_value)
+                    + " when expecting " + str(target_number) + ".  Skpping this BUFR msg.")
+                return data, count, start_pos
             vals[variable] = assign_values(avals, variable)
-        except KeyValueNotFoundError:
+        except ecc.KeyValueNotFoundError:
             logging.warning("Caution, unable to find requested BUFR variable: " + variable)
             vals[variable] = np.full(target_number, float_missing_value, dtype=np.float32)
 
     # Be done with this BUFR message.
-    codes_release(bufr)
+    ecc.codes_release(bufr)
+
+    # Count the locations for which time, lat, lon, or height is nonsense, therefore observation is useless.
+    count[1] += target_number
+    count[2] += sum(x==1900 for x in year)
+    count[2] += sum((y<-90.0 or y>90.0) for y in meta_data['latitude'])
+    count[2] += sum((z<-425.0 or z>90000.0) for z in meta_data['height'])
 
     # Need to transform some variables to others (wind speed/direction to components for example).
     uwnd = np.full(target_number, float_missing_value)
@@ -468,7 +466,6 @@ def read_bufr_message(f, count, start_pos, data):
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 
-    logging.info("BUFR message number: " + str(count[0]))
     logging.info("number of observations so far: " + str(count[1]))
     logging.info("number of invalid or useless observations: " + str(count[2]))
     return data, count, start_pos
