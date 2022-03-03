@@ -107,16 +107,16 @@ bufr_missing_value = ecc.CODES_MISSING_LONG
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
-missing_vals = {'string' : string_missing_value,
-                'integer' : int_missing_value,
-                'long' : long_missing_value,
-                'float' : float_missing_value,
-                'double' : double_missing_value}
-dtypes = {'string' : object,
-          'integer' : np.int32,
-          'long' : np.int64,
-          'float' : np.float32,
-          'double' : np.float64}
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 def main(file_names, output_file):
@@ -196,7 +196,7 @@ def assign_values(data, key):
     if isinstance(data[0], str):
         for n, d in enumerate(data):
             data[n] = ''.join(c for c in d if c.isalnum())
-            if not data[n]: data[n] = string_missing_value
+            if not data[n]: data[n] = string_missing_value # noqa
         return np.array(data, dtype=object)
 
     if (data.dtype == np.float32 or data.dtype == np.float64):
@@ -230,7 +230,6 @@ def assign_values(data, key):
             data[np.abs(data) >= np.abs(bufr_missing_value)] = float_missing_value
             return np.array(data, dtype=np.float32)
     elif data.dtype.kind in {'U', 'S'}:
-        #data[data == ""] = string_missing_value
         return np.array(data, dtype=object)
 
     logging.critical("ABORT, no matching datatype found for key: " + key)
@@ -255,15 +254,15 @@ def assign_missing_meta(data, key, num, start):
 def is_all_missing(data):
 
     if data.dtype == np.float32:
-        return all(x==float_missing_value for x in data)
+        return all(x == float_missing_value for x in data)
     if data.dtype == np.float64:
-        return all(x==double_missing_value for x in data)
+        return all(x == double_missing_value for x in data)
     elif data.dtype == np.int32:
-        return all(x==int_missing_value for x in data)
+        return all(x == int_missing_value for x in data)
     elif data.dtype == np.int64:
-        return all(x==long_missing_value for x in data)
+        return all(x == long_missing_value for x in data)
     elif data.dtype.kind in {'U', 'S'}:
-        return all(x==string_missing_value for x in data)
+        return all(x == string_missing_value for x in data)
 
     logging.warning("data type not determined, returning False")
     return False
@@ -319,7 +318,7 @@ def read_bufr_message(f, count, start_pos, data):
                     try:
                         avals = ecc.codes_get_array(bufr, var)
                         meta_data[k] = assign_values(avals, k)
-                        if not is_all_missing(meta_data[k]): break
+                        if not is_all_missing(meta_data[k]): break # noqa
                     except ecc.KeyValueNotFoundError:
                         logging.warning("Caution: unable to find requested BUFR key: " + var)
         else:
