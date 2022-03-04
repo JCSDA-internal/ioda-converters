@@ -68,6 +68,9 @@ namespace bufr {
         char subset[SubsetLen];
         int iddate;
 
+        int bufrLoc;
+        int il, im; // throw away
+
         auto dataProvider = DataProvider::instance();
         dataProvider->loadTableInfo();
 
@@ -78,9 +81,8 @@ namespace bufr {
         {
             while (ireadsb_f(fileUnit_) == 0)
             {
-                int bufrLoc;
-                int il, im; // throw away
                 status_f(fileUnit_, &bufrLoc, &il, &im);
+
                 dataProvider->loadDataInfo(bufrLoc);
                 query.query(std::string(subset), bufrLoc);
             }

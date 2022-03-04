@@ -289,7 +289,7 @@ namespace bufr {
         }
 
         // Compute insert array
-        std::vector<std::vector<int>> inserts(targetField.seqCounts.size());
+        std::vector<std::vector<int>> inserts(dims.size(), {0});
         for (size_t repIdx = 0; repIdx < targetField.seqCounts.size(); ++repIdx)
         {
             inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) - \
@@ -358,8 +358,8 @@ namespace bufr {
 
     bool ResultSet::isString(const std::string& fieldName) const
     {
-//        return dataFrames_.front().fieldForNodeNamed(fieldName).isString;
-        return false;
+        auto fieldIdx = dataFrames_.front().fieldIndexForNodeNamed(fieldName);
+        return dataFrames_.front().fieldAtIdx(fieldIdx).isString;
     }
 }  // namespace bufr
 }  // namespace Ingester

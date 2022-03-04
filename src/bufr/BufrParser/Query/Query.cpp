@@ -5,6 +5,8 @@
 #include "Query.h"
 #include "bufr_interface.h"
 
+#include "eckit/exception/Exceptions.h"
+
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -169,11 +171,11 @@ namespace bufr {
                     // then go back up the approptiate number of sequences. You may have to exit several
                     // sequences in a row if the current sequence is the last element in the containing
                     // sequence.
-                    for (int pathIdx = seqPath.size() - 2; pathIdx > 0; pathIdx--)
+                    for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--)
                     {
                         if (seqPath[pathIdx] == bufrInfo->getJmpb(nodeIdx + 1))
                         {
-                            for (int rewindIdx = seqPath.size() - 1; rewindIdx >= pathIdx; rewindIdx--)
+                            for (int rewindIdx = seqPath.size() - 1; rewindIdx > pathIdx; rewindIdx--)
                             {
                                 // Exit the sequence
                                 if (isQueryNode(seqPath[rewindIdx] - 1))
@@ -194,6 +196,25 @@ namespace bufr {
                         }
                     }
                 }
+            }
+
+            if (index > static_cast<int>(targetNodes.size()))
+            {
+                std::ostringstream errMsg;
+                errMsg << "Invalid index in query str " << query << ".";
+                throw eckit::BadParameter(errMsg.str());
+            }
+
+            if (index > 0 && index <= targetNodes.size())
+            {
+                targetNodes = { targetNodes[index - 1] };
+            }
+
+            if (targetNodes.size() > 1)
+            {
+                std::ostringstream errMsg;
+                errMsg << "Query string must return 1 target. Are you missing an index? " << query << ".";
+                throw eckit::BadParameter(errMsg.str());
             }
         }
 
@@ -238,8 +259,13 @@ namespace bufr {
         std::string currentDimPath;
         std::string mnemonicStr;
 
+        // Initialize out parameters
+        dimPaths = std::vector<std::string>();
+        dimIdxs = std::vector<int>();
+
         // Allocate enough memory to hold all the dim paths
         dimPaths.reserve(branches.size() + 1);
+        dimIdxs.reserve(branches.size() + 1);
 
         currentDimPath = "*";
         dimPaths.push_back(currentDimPath);
@@ -282,13 +308,14 @@ namespace bufr {
 
         auto& dataFrame = resultSet.nextDataFrame();
         int returnNodeIdx = -1;
+        int lastNonZeroReturnIdx = -1;
 
         // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all the data a bunch of
         // times)
         auto dataTable = __details::OffsetArray<NodeData>(bufrInfo->getInode(),
                                                           bufrInfo->getIsc(bufrInfo->getInode()));
 
-        for (size_t dataCursor = 1; dataCursor < bufrInfo->getNVal(); ++dataCursor)
+        for (size_t dataCursor = 1; dataCursor <= bufrInfo->getNVal(); ++dataCursor)
         {
             int nodeIdx = bufrInfo->getInv(dataCursor);
 
@@ -318,7 +345,6 @@ namespace bufr {
                 }
             }
 
-            size_t lastNonZeroReturnIdx = 0;
             if (currentPath.size() >= 1)
             {
                 if (nodeIdx == returnNodeIdx ||
@@ -328,7 +354,7 @@ namespace bufr {
                     // Look for the first path return idx that is not 0 and check if its this node idx. Exit the sequence if its
                     // appropriate. A return idx of 0 indicates a sequence that occurs as the last element of another sequence.
 
-                    for (size_t pathIdx = currentPathReturns.size() - 1; pathIdx >= lastNonZeroReturnIdx; --pathIdx)
+                    for (int pathIdx = currentPathReturns.size() - 1; pathIdx >= lastNonZeroReturnIdx; --pathIdx)
                     {
                         currentPathReturns.pop_back();
                         auto seqNodeIdx = currentPath.back();
@@ -337,12 +363,12 @@ namespace bufr {
                         const auto typSeqNode = bufrInfo->getTyp(seqNodeIdx);
                         if (typSeqNode == Typ::DelayedRep || typSeqNode == Typ::DelayedRepStacked)
                         {
-                            dataTable[seqNodeIdx].counts.back()--;
+                            dataTable[seqNodeIdx + 1].counts.back()--;
                         }
                     }
 
-                    lastNonZeroReturnIdx = currentPathReturns.size();
-                    returnNodeIdx = currentPathReturns[lastNonZeroReturnIdx - 1];
+                    lastNonZeroReturnIdx = currentPathReturns.size() - 1;
+                    returnNodeIdx = currentPathReturns[lastNonZeroReturnIdx];
                 }
             }
 
@@ -361,23 +387,22 @@ namespace bufr {
 
                     if (tmpReturnNodeIdx != 0)
                     {
-                        lastNonZeroReturnIdx = currentPathReturns.size();
+                        lastNonZeroReturnIdx = currentPathReturns.size() - 1;
                         returnNodeIdx = tmpReturnNodeIdx;
                     }
-                    else
-                    {
-                        lastNonZeroReturnIdx = 1;
+                    else {
+                        lastNonZeroReturnIdx = 0;
                         returnNodeIdx = 0;
-                    }
 
-                    if (dataCursor != bufrInfo->getNVal())
-                    {
-                        for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
+                        if (dataCursor != bufrInfo->getNVal())
                         {
-                            returnNodeIdx = bufrInfo->getLink(bufrInfo->getJmpb(currentPath[pathIdx]));
-                            lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx + 1;
+                            for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
+                            {
+                                returnNodeIdx = bufrInfo->getLink(bufrInfo->getJmpb(currentPath[pathIdx]));
+                                lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx;
 
-                            if (returnNodeIdx != 0) break;
+                                if (returnNodeIdx != 0) break;
+                            }
                         }
                     }
                 }

@@ -28,7 +28,6 @@ namespace bufr {
 
     class DataProvider
     {
-
      public:
         static std::shared_ptr<DataProvider> instance();
 
