@@ -196,7 +196,8 @@ def assign_values(data, key):
     if isinstance(data[0], str):
         for n, d in enumerate(data):
             data[n] = ''.join(c for c in d if c.isalnum())
-            if not data[n]: data[n] = string_missing_value  # noqa
+            if not data[n]:
+                data[n] = string_missing_value
         return np.array(data, dtype=object)
 
     if (data.dtype == np.float32 or data.dtype == np.float64):
@@ -318,7 +319,8 @@ def read_bufr_message(f, count, start_pos, data):
                     try:
                         avals = ecc.codes_get_array(bufr, var)
                         meta_data[k] = assign_values(avals, k)
-                        if not is_all_missing(meta_data[k]): break  # noqa
+                        if not is_all_missing(meta_data[k]):
+                            break
                     except ecc.KeyValueNotFoundError:
                         logging.warning("Caution: unable to find requested BUFR key: " + var)
         else:
@@ -340,14 +342,15 @@ def read_bufr_message(f, count, start_pos, data):
         if (len(meta_data[k]) == 1):
             meta_data[k] = np.full(target_number, meta_data[k][0])
         elif (len(meta_data[k]) < target_number):
-            logging.warning("The key called " + k + " contains only " + str(len(meta_data[k]))
-                            + " elements, whereas " + str(target_number) + " were expected.")
+            logging.warning("Key called " + k + " contains only " + str(len(meta_data[k])) +
+                            " elements, whereas " + str(target_number) + " were expected.")  # noqa
             meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, len(meta_data[k])-1)
 
     # Plus, to construct a dateTime, we always need its components.
     try:
         year = ecc.codes_get_array(bufr, 'year')
-        if (len(year) < target_number): year = np.full(target_number, year[0])  # noqa
+        if (len(year) < target_number):
+            year = np.full(target_number, year[0])
         year[year < 1900] = 1900
         year[year > 2399] = 1900
     except ecc.KeyValueNotFoundError:
@@ -356,7 +359,8 @@ def read_bufr_message(f, count, start_pos, data):
 
     try:
         month = ecc.codes_get_array(bufr, 'month')
-        if (len(month) < target_number): month = np.full(target_number, month[0])  # noqa
+        if (len(month) < target_number):
+            month = np.full(target_number, month[0])
         year[np.logical_or(month < 1, month > 12)] = 1900
         month[np.logical_or(month < 1, month > 12)] = 1
     except ecc.KeyValueNotFoundError:
@@ -366,7 +370,8 @@ def read_bufr_message(f, count, start_pos, data):
 
     try:
         day = ecc.codes_get_array(bufr, 'day')
-        if (len(day) < target_number): day = np.full(target_number, day[0])  # noqa
+        if (len(day) < target_number):
+            day = np.full(target_number, day[0])
         year[np.logical_or(day < 1, day > 31)] = 1900
         day[np.logical_or(day < 1, day > 31)] = 1
     except ecc.KeyValueNotFoundError:
@@ -376,7 +381,8 @@ def read_bufr_message(f, count, start_pos, data):
 
     try:
         hour = ecc.codes_get_array(bufr, 'hour')
-        if (len(hour) < target_number): hour = np.full(target_number, hour[0])  # noqa
+        if (len(hour) < target_number):
+            hour = np.full(target_number, hour[0])
         year[np.logical_or(hour < 0, hour > 23)] = 1900
         hour[np.logical_or(hour < 0, hour > 23)] = 0
     except ecc.KeyValueNotFoundError:
@@ -386,7 +392,8 @@ def read_bufr_message(f, count, start_pos, data):
 
     try:
         minute = ecc.codes_get_array(bufr, 'minute')
-        if (len(minute) < target_number): minute = np.full(target_number, minute[0])  # noqa
+        if (len(minute) < target_number):
+            minute = np.full(target_number, minute[0])
         year[np.logical_or(minute < 0, minute > 59)] = 1900
         minute[np.logical_or(minute < 0, minute > 59)] = 0
     except ecc.KeyValueNotFoundError:
@@ -397,16 +404,19 @@ def read_bufr_message(f, count, start_pos, data):
     second = np.full(target_number, 0)
     try:
         avals = ecc.codes_get_array(bufr, 'second')    # non-integer value, optional
-        if (len(avals) < target_number): avals = np.full(target_number, avals[0])
+        if (len(avals) < target_number):
+            avals = np.full(target_number, avals[0])
         for n, a in enumerate(avals):
-            if (a > 0 and a < 60): second[n] = round(a)
+            if (a > 0 and a < 60):
+                second[n] = round(a)
     except ecc.KeyValueNotFoundError:
         logging.info("Caution, no data for second")
 
     for n, yyyy in enumerate(year):
         this_datetime = datetime(yyyy, month[n], day[n], hour[n], minute[n], second[n])
         time_offset = round((this_datetime - epoch).total_seconds())
-        if (time_offset > -1E9): meta_data['dateTime'][n] = time_offset
+        if (time_offset > -1E9):
+            meta_data['dateTime'][n] = time_offset
 
     # Force longitude into space of -180 to +180 only. Reset both lat/lon missing if either absent.
     mask_lat = np.logical_or(meta_data['latitude'] < -90.0, meta_data['latitude'] > 90.0)
@@ -430,9 +440,9 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             avals = ecc.codes_get_array(bufr, variable)
             if (len(avals) != target_number):
-                logging.warning("Caution, for variable " + variable
-                                + " a length mismatch exists: " + str(len(avals)) + " found, "
-                                + " when expecting " + str(target_number) + ".  Skpping this BUFR msg.")
+                logging.warning("Caution, for " + variable + "a length mismatch exists: " +
+                                str(len(avals)) + " found, when expecting " +
+                                str(target_number) + ".  Skpping this BUFR msg.")            # noqa
                 count[2] += target_number
                 return data, count, start_pos
             vals[variable] = assign_values(avals, variable)
@@ -452,7 +462,8 @@ def read_bufr_message(f, count, start_pos, data):
     mask_ll[meta_data['latitude'] == float_missing_value] = 1
     mask_z[meta_data['height'] == float_missing_value] = 1
     for n, x in enumerate(mask_date):
-        if (mask_date[n] == 1 or mask_ll[n] == 1 or mask_z[n] == 1): count[2] += 1
+        if (mask_date[n] == 1 or mask_ll[n] == 1 or mask_z[n] == 1):
+            count[2] += 1
 
     # Need to transform some variables to others (wind speed/direction to components for example).
     uwnd = np.full(target_number, float_missing_value)
