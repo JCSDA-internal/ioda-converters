@@ -342,8 +342,8 @@ def read_bufr_message(f, count, start_pos, data):
         if (len(meta_data[k]) == 1):
             meta_data[k] = np.full(target_number, meta_data[k][0])
         elif (len(meta_data[k]) < target_number):
-            logging.warning("Key called " + k + " contains only " + str(len(meta_data[k])) +
-                            " elements, whereas " + str(target_number) + " were expected.")  # noqa
+            logging.warning(f"Key called {k} contains only {len(meta_data[k])} "
+                            f" elements, wheras {target_number} were expected.")
             meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, len(meta_data[k])-1)
 
     # Plus, to construct a dateTime, we always need its components.
@@ -440,9 +440,8 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             avals = ecc.codes_get_array(bufr, variable)
             if (len(avals) != target_number):
-                logging.warning("Caution, for " + variable + "a length mismatch exists: " +
-                                str(len(avals)) + " found, when expecting " +
-                                str(target_number) + ".  Skpping this BUFR msg.")            # noqa
+                logging.warning(f"Variable called {k} contains only {len(avals)} "
+                                f" elements, wheras {target_number} were expected.")
                 count[2] += target_number
                 return data, count, start_pos
             vals[variable] = assign_values(avals, variable)
