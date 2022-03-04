@@ -445,7 +445,7 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             avals = ecc.codes_get_array(bufr, variable)
             if (len(avals) != target_number):
-                logging.warning(f"Variable called {k} contains only {len(avals)} "
+                logging.warning(f"Variable called {variable} contains only {len(avals)} "
                                 f" elements, wheras {target_number} were expected.")
                 count[2] += target_number
                 return data, count, start_pos
@@ -470,13 +470,11 @@ def read_bufr_message(f, count, start_pos, data):
             count[2] += 1
 
     # Forcably create station_id 5-char string from WMO block+station number.
+    meta_data['station_id'] = np.full(target_number, string_missing_value, dtype='<S5')
     for n, block in enumerate(meta_data['wmoBlockNumber']):
-        meta_data['station_id'][n] = string_missing_value
         number = meta_data['wmoStationNumber'][n]
         if (block > 0 and block < 100 and number > 0 and number < 1000):
-            meta_data['station_id'][n] = str(block).zfill(2) + str(number).zfill(3)
-            if (meta_data['station_id'][n] == "6"):
-                print("HUH? :" + str(block) + ":" + str(number) + ":")
+            meta_data['station_id'][n] = "{:02d}".format(block) + "{:03d}".format(number)
 
     # Need to transform some variables to others (wind speed/direction to components for example).
     uwnd = np.full(target_number, float_missing_value)
