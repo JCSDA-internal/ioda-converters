@@ -42,7 +42,7 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+#   ("datetime", "string")
 ]
 
 
@@ -137,6 +137,7 @@ def get_data(f, obs_data):
     nbeam_pos = len(f['spots'])
     nchans = len(f['channels'])
     nbands = len(f['bands'])
+    #Bands_to_Channel = "Band 1 = Ch. 1; Band 2 = Ch. 2-4; Band 3 = Ch. 5-8; Band 4 = Ch. 9-11; Band 5 = Ch. 12" ;
     iband = 2   # at this point arbitrarily select a band is this a FOV?
     obs_data[('latitude', 'MetaData')] = np.array(f['losLat_deg'][iband,:,:].flatten(), dtype='float32')
     obs_data[('longitude', 'MetaData')] = np.array(f['losLon_deg'][iband,:,:].flatten(), dtype='float32')
@@ -161,7 +162,7 @@ def get_data(f, obs_data):
 
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(f), dtype=object)
+    #obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(f), dtype=object)
 
     nlocs = len(obs_data[('latitude', 'MetaData')])
     k = 'brightnessTemperature'
@@ -171,7 +172,6 @@ def get_data(f, obs_data):
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
-    # print ( " read and appended: %d" % nlocs )
     return obs_data
 
 
@@ -198,6 +198,9 @@ def get_WMO_satellite_ID(filename):
 
 def get_string_dtg(f):
 
+    # for TROPICS data times are per scan line
+    # current IODA needs replication by beam position
+    nbeam_pos = len(f['spots'])
     year = f['Year']
     month = f['Month']
     day = f['Day']
@@ -206,8 +209,10 @@ def get_string_dtg(f):
     dtg = []
     for i, yyyy in enumerate(year):
         cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        dtg.append(cdtg)
+        #dtg.append(cdtg) # need to add replication by nbeam_pos
+        dtg.append( np.full((nbeam_pos), cdtg, dtype=object) )
 
+    print( "shape dtg: ", np.shape( dtg ) )
     return dtg
 
 
@@ -228,7 +233,7 @@ def init_obs_loc():
         ('channelNumber', 'MetaData'): [],
         ('latitude', 'MetaData'): [],
         ('longitude', 'MetaData'): [],
-        ('datetime', 'MetaData'): [],
+#       ('datetime', 'MetaData'): [],
         ('scan_position', 'MetaData'): [],
         ('solar_zenith_angle', 'MetaData'): [],
         ('solar_azimuth_angle', 'MetaData'): [],
