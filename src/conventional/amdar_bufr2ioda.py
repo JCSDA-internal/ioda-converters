@@ -440,7 +440,7 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             avals = ecc.codes_get_array(bufr, variable)
             if (len(avals) != target_number):
-                logging.warning(f"Variable called {k} contains only {len(avals)} "
+                logging.warning(f"Variable called {variable} contains only {len(avals)} "
                                 f" elements, wheras {target_number} were expected.")
                 count[2] += target_number
                 return data, count, start_pos
