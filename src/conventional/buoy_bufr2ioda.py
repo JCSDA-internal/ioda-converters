@@ -515,7 +515,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read ship (surface obs) BUFR file and convert into IODA output file')
+            'Read buoy (surface obs) BUFR file and convert into IODA output file')
     )
 
     required = parser.add_argument_group(title='required arguments')
