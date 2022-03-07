@@ -193,6 +193,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
+    testoutput/amdar_wmo_multi2.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
     testoutput/buoy_wmo_multi.nc
     testoutput/rass_wmo_multi.nc
@@ -1092,19 +1093,45 @@ if( iodaconv_eccodes_ENABLED )
                            wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
+# Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
+#===============================================================================
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amdar
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/amdar_bufr2ioda.py
+                            -i testinput/amdar_wmo_multi.bufr
+                            -o testrun/amdar_wmo_multi2.nc"
+                            amdar_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
 # Conventional data, surface Obs - SYNOP, Buoy and Ship BUFR (WMO) converters
 #===============================================================================
 
-  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_ship
-                   TYPE    SCRIPT
-                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                   COMMAND bash
-                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                           netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ship_bufr2ioda.py
-                           -i testinput/ship_wmo_multi.bufr
-                           -o testrun/ship_wmo_multi2.nc"
-                           ship_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ship
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ship_bufr2ioda.py
+                            -i testinput/ship_wmo_multi.bufr
+                            -o testrun/ship_wmo_multi2.nc"
+                            ship_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_synop
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/synop_bufr2ioda.py
+                            -i testinput/synop_wmo_multi.bufr
+                            -o testrun/synop_wmo_multi2.nc"
+                            synop_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 endif()
 
