@@ -1092,7 +1092,7 @@ if( iodaconv_eccodes_ENABLED )
                            wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
-# Conventional data, surface Obs - SYNOP BUFR (WMO) converter
+# Conventional data, surface Obs - SYNOP, Buoy and Ship BUFR (WMO) converters
 #===============================================================================
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_synop
