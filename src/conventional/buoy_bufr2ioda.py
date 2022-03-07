@@ -336,7 +336,6 @@ def read_bufr_message(f, count, start_pos, data):
     # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
     empty = []
     for k, v in metaDataKeyList.items():
-        print (" working on MetaData key " + k)
         if not any(meta_data[k]):
             meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
         if (len(meta_data[k]) == 1):
