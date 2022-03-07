@@ -45,7 +45,8 @@ metaDataKeyList = {
     'ship_speed': ['movingObservingPlatformSpeed'],
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'station_elevation': ['heightOfStationGroundAboveMeanSeaLevel',
+    'station_elevation': ['Constructed',
+                          'heightOfStationGroundAboveMeanSeaLevel',
                           'heightOfSensorAboveWaterSurface'],
     'height': ['Constructed',
                'heightOfBarometerAboveMeanSeaLevel',
@@ -345,6 +346,10 @@ def read_bufr_message(f, count, start_pos, data):
             logging.warning(f"Key called {k} contains only {len(meta_data[k])} "
                             f" elements, wheras {target_number} were expected.")
             meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, len(meta_data[k])-1)
+        elif (len(meta_data[k]) > target_number):
+            logging.warning(f"Key called {k} contains {len(meta_data[k])} "
+                            f" elements, wheras {target_number} were expected.")
+            meta_data[k] = meta_data[k][:target_number]
 
     # Plus, to construct a dateTime, we always need its components.
     try:
@@ -437,6 +442,9 @@ def read_bufr_message(f, count, start_pos, data):
     for n, elev in enumerate(meta_data['station_elevation']):
         if (elev > -425 and elev < 800 and np.abs(meta_data['height'][n]-elev) > 50):
             meta_data['height'][n] = elev + 2
+        else:
+            meta_data['station_elevation'][n] = 1.0
+            meta_data['height'][n] = 10.0
 
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all ObsValue variables are float type, might need integer/other.
@@ -464,7 +472,7 @@ def read_bufr_message(f, count, start_pos, data):
     mask_z = np.full(target_number, 0, dtype=np.int32)
     mask_date[year == 1900] = 1
     mask_ll[meta_data['latitude'] == float_missing_value] = 1
-    mask_z[meta_data['station_elevation'] == float_missing_value] = 1
+    mask_z[meta_data['height'] == float_missing_value] = 1
     for n, x in enumerate(mask_date):
         if (mask_date[n] == 1 or mask_ll[n] == 1 or mask_z[n] == 1):
             count[2] += 1
