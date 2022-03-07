@@ -520,7 +520,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read aircraft (AMDAR) BUFR file and convert into IODA output file')
+            'Read Ship (surface obs) BUFR file and convert into IODA output file')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -531,10 +531,12 @@ if __name__ == "__main__":
                           action='store', default=None, required=True,
                           help='output file')
 
+    parser.set_defaults(debug=False)
+    parser.set_defaults(verbose=False)
     optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('--debug', action=argparse.BooleanOptionalAction,
+    optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
-    optional.add_argument('--verbose', action=argparse.BooleanOptionalAction,
+    optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
 
     args = parser.parse_args()
