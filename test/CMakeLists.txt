@@ -1062,6 +1062,8 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                           -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
                           -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
+if( iodaconv_eccodes_ENABLED )
+
 #==============================================================================
 # Generic NRT Ingest tests
 #==============================================================================
@@ -1088,6 +1090,20 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                            -o testrun/wmo_raob_quadruple.nc4"
                            wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
+#===============================================================================
+# Conventional data, surface Obs - SYNOP, Buoy and Ship BUFR (WMO) converters
+#===============================================================================
+
+  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_buoy
+                   TYPE    SCRIPT
+                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                   COMMAND bash
+                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                           netcdf
+                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/buoy_bufr2ioda.py
+                           -i testinput/buoy_wmo_multi.bufr
+                           -o testrun/buoy_wmo_multi2.nc"
+                           buoy_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 endif()
 
@@ -1126,21 +1142,6 @@ if( iodaconv_pbfortran_ENABLED )
                             -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
                             mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2nc_fortran.x)
-
-#===============================================================================
-# Conventional data, surface Obs - Buoy BUFR (WMO) converter
-#===============================================================================
-
-  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_buoy
-                   TYPE    SCRIPT
-                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                   COMMAND bash
-                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                           netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/buoy_bufr2ioda.py
-                           -i testinput/buoy_wmo_multi.bufr
-                           -o testrun/buoy_wmo_multi2.nc"
-                           buoy_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 endif()
 
