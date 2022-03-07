@@ -59,6 +59,7 @@ var_mimic_length = "latitude"
 # True incoming BUFR observed variables.
 raw_obsvars = ['airTemperature',
                'dewpointTemperature',
+               'oceanographicWaterTemperature',
                'windDirection',
                'windSpeed',
                'nonCoordinatePressure',
@@ -67,15 +68,17 @@ raw_obsvars = ['airTemperature',
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['air_temperature',
            'specific_humidity',
+           'sea_surface_temperature',
            'eastward_wind',
            'northward_wind',
            'surface_pressure']
-obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1', 'Pa']
-obserrlist = [1.2, 0.75E-3, 1.7, 1.7, 120.0]
+obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
+obserrlist = [1.2, 0.75E-3, 2.2, 1.7, 1.7, 120.0]
 
 VarDims = {
     'air_temperature': ['nlocs'],
     'specific_humidity': ['nlocs'],
+    'sea_surface_temperature': ['nlocs'],
     'eastward_wind': ['nlocs'],
     'northward_wind': ['nlocs'],
     'surface_pressure': ['nlocs']
@@ -502,6 +505,7 @@ def read_bufr_message(f, count, start_pos, data):
     data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
     data['air_temperature'] = np.append(data['air_temperature'], vals['airTemperature'])
     data['surface_pressure'] = np.append(data['surface_pressure'], vals['nonCoordinatePressure'])
+    data['sea_surface_temperature'] = np.append(data['sea_surface_temperature'], vals['oceanographicWaterTemperature'])
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 
