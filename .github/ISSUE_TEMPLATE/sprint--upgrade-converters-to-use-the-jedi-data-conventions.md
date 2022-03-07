@@ -1,8 +1,8 @@
 ---
-name: "Sprint: Upgrade Converters to Use the JEDI Data Conventions"
+name: 'Sprint: Upgrade Converters to Use the JEDI Data Conventions'
 about: Use this template to create a new issue for the sprint
-title: "Upgrade converter for (CONVERTER NAME) to follow the JEDI Data Conventions"
-labels: 'Sprint'
+title: Upgrade converter for (CONVERTER NAME) to follow the JEDI Data Conventions
+labels: Sprint
 assignees: ''
 
 ---
@@ -37,4 +37,3 @@ about this issue's progress.
 Notifications should always go to: @rhoneyager.
 
 Other people:
-
