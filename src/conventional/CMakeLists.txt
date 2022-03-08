@@ -1,5 +1,4 @@
 list(APPEND programs
-<<<<<<< HEAD
   amdar_bufr2ioda.py
   buoy_bufr2ioda.py
   metar_csv2ioda.py
