@@ -200,6 +200,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/ship_wmo_multi.nc
     testoutput/ship_wmo_multi2.nc
     testoutput/synop_wmo_multi.nc
+    testoutput/synop_wmo_multi2.nc
     testoutput/satwind_EUMet.nc
     testoutput/satwind_Himawari.nc
     testoutput/satwind_Insat.nc
