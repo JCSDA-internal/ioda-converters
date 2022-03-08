@@ -198,7 +198,9 @@ if( iodaconv_bufr_ENABLED )
     testoutput/buoy_wmo_multi.nc
     testoutput/rass_wmo_multi.nc
     testoutput/ship_wmo_multi.nc
+    testoutput/ship_wmo_multi2.nc
     testoutput/synop_wmo_multi.nc
+    testoutput/synop_wmo_multi2.nc
     testoutput/satwind_EUMet.nc
     testoutput/satwind_Himawari.nc
     testoutput/satwind_Insat.nc
@@ -1105,6 +1107,32 @@ if( iodaconv_eccodes_ENABLED )
                             -i testinput/amdar_wmo_multi.bufr
                             -o testrun/amdar_wmo_multi2.nc"
                             amdar_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
+# Conventional data, surface Obs - SYNOP, Buoy and Ship BUFR (WMO) converters
+#===============================================================================
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ship
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ship_bufr2ioda.py
+                            -i testinput/ship_wmo_multi.bufr
+                            -o testrun/ship_wmo_multi2.nc"
+                            ship_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_synop
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/synop_bufr2ioda.py
+                            -i testinput/synop_wmo_multi.bufr
+                            -o testrun/synop_wmo_multi2.nc"
+                            synop_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 endif()
 
