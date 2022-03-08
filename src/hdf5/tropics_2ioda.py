@@ -34,9 +34,9 @@ TROPICS05_WMO_sat_ID = 898
 GlobalAttrs = {
     "platformCommonName": "TROPICS",
     "platformLongDescription": "TROPICS Brightness Temperature Data",
-    "sensorCentralFrequency": [91.655,  114.50,  
-                               115.95,  116.65,  117.25,  117.80,  118.24,
-                               118.58,  184.41,  186.51,  190.31,  204.80]
+    "sensorCentralFrequency": "[91.655,  114.50,  " + \
+                               "115.95,  116.65,  117.25,  117.80,  118.24,  " + \
+                               "118.58,  184.41,  186.51,  190.31,  204.80]"
 }
 
 locationKeyList = [
