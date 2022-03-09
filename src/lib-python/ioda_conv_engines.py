@@ -148,6 +148,18 @@ class IodaWriter(object):
             except KeyError:
                 pass  # no metadata for this variable
 
+    def VerifyDateTime(self, ObsVars):
+        # this method will check if the variable
+        # MetaData/dateTime is a string or datetime object
+        # if string, convert to datetime object
+        VarKey = ('dateTime', 'MetaData')
+        try:
+            dtvar = ObsVars[VarKey]
+        except KeyError:
+            raise KeyError("Required variable 'MetaData/dateTime' does not exist.")
+        print(dtvar)
+
+
     def WriteGlobalAttrs(self, GlobalAttrs):
         # this method will create global attributes from GlobalAttrs dictionary
         for AttrKey, AttrVal in GlobalAttrs.items():
@@ -155,6 +167,8 @@ class IodaWriter(object):
 
     def BuildIoda(self, ObsVars, VarDims, VarAttrs, GlobalAttrs,
                   TestData=None, geovals=False):
+        # check and fix dateTime if necessary
+        ObsVars = self.VerifyDateTime(ObsVars)
         if geovals:
             self.WriteGeoVars(ObsVars, VarDims, VarAttrs)
         else:
