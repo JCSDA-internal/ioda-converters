@@ -155,10 +155,9 @@ class IodaWriter(object):
         # MetaData/dateTime is a string or datetime object
         # if string, convert to datetime object
         VarKey = ('dateTime', 'MetaData')
-        try:
-            dtvar = ObsVars[VarKey]
-        except KeyError:
+        if VarKey not in ObsVars.keys():
             raise KeyError("Required variable 'MetaData/dateTime' does not exist.")
+        dtvar = ObsVars[VarKey]
         # check if the array is type 'object' or not
         # otherwise we will assume it is an integer and already set up
         if (dtvar.dtype == np.dtype('object')):
@@ -169,7 +168,6 @@ class IodaWriter(object):
                 ObsVars[VarKey] = np.array(newdtvar, dtype=object)
 
         return ObsVars
-
 
     def WriteGlobalAttrs(self, GlobalAttrs):
         # this method will create global attributes from GlobalAttrs dictionary
