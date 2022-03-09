@@ -175,7 +175,7 @@ def get_data(f, obs_data):
 
     # set missing value (-999) to generic missing value
     for jchan in np.arange(nchans):
-        chk_ob = obs_data[(k, "ObsValue")][:,jchan] < 0
+        chk_ob = obs_data[(k, "ObsValue")][:,jchan] < 50
         obs_data[(k, "ObsValue")][:,jchan][chk_ob] = float_missing_value
 
     # check some satellite geometry will compress all data using this
