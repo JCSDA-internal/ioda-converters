@@ -15,7 +15,7 @@ from datetime import datetime, date, timedelta
 import os
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
@@ -27,25 +27,25 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 
 obsvars = {
-    'A': "aerosol_optical_depth",
+    'A': "aerosolOpticalDepth",
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
 }
+    #'converter': os.path.basename(__file__),
+    #'nvars': np.int32(len(obsvars)),
 
 
 DimDict = {
 }
 
 VarDims = {
-    'aerosol_optical_depth': ['nlocs']
+    'aerosolOpticalDepth': ['Location', "Channel"]
 }
 
 
@@ -71,8 +71,8 @@ class AOD(object):
             self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -9999.
             self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -9999
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = '1'
 
         # loop through input filenames
         first = True
@@ -86,9 +86,9 @@ class AOD(object):
             if 'MODIS' in ncd_str:
                 AttrData['sensor'] = 'v.modis_terra'
 
-            obstime = self.obs_time
-            AttrData['date_time'] = self.obs_time
-            AttrData['observation_type'] = 'Aod'
+            #obstime = self.obs_time
+            #AttrData['date_time'] = self.obs_time
+            AttrData['ioda_object_type'] = 'AOD@550nm'
 
             #  Get variables
             modis_time = ncd.variables['Scan_Start_Time'][:].ravel()
@@ -132,11 +132,11 @@ class AOD(object):
             if first:
                 self.outdata[('latitude', 'MetaData')] = lats
                 self.outdata[('longitude', 'MetaData')] = lons
-                self.outdata[('datetime', 'MetaData')] = obs_time
+                self.outdata[('dateTime', 'MetaData')] = obs_time
             else:
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons))
-                self.outdata[('datetime', 'MetaData')] = np.concatenate((self.outdata[('datetime', 'MetaData')], obs_time))
+                self.outdata[('dateTime', 'MetaData')] = np.concatenate((self.outdata[('dateTime', 'MetaData')], obs_time))
 
             for ncvar, iodavar in obsvars.items():
                 data = aod.astype('float32')
@@ -155,8 +155,10 @@ class AOD(object):
                         (self.outdata[self.varDict[iodavar]['qcKey']], QC_flag))
 
             first = False
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        self.varAttrs[('dateTime', 'MetaData')]['units'] = ''
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+        #AttrData['Location'] = np.int32(DimDict['Location'])
+        DimDict['Channel'] = 2
 
 
 def main():
