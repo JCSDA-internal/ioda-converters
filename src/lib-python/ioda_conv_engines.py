@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import datetime as dt
 import ioda_obs_space as ioda_os
 import numpy as np
 from collections import OrderedDict
@@ -157,7 +158,21 @@ class IodaWriter(object):
             dtvar = ObsVars[VarKey]
         except KeyError:
             raise KeyError("Required variable 'MetaData/dateTime' does not exist.")
-        print(dtvar)
+        # check if the array is type 'object' or not
+        # otherwise we will assume it is an integer and already set up
+        isostr = False
+        if (dtvar.dtype == np.dtype('object')):
+            if (isinstance(dtvar[0], str)):
+                isostr = True
+        if isostr:
+            # convert ISO date strings to datetime objects
+            newdtvar = [dt.datetime.strptime(x, "%Y-%m-%dT%H:%M:%SZ") for x in dtvar]
+            ObsVars[VarKey] = np.array(newdtvar, dtype=object)
+        else:
+            # assumed to be an integer with proper attributes
+            pass
+
+        return ObsVars
 
 
     def WriteGlobalAttrs(self, GlobalAttrs):
