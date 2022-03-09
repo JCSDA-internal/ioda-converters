@@ -142,6 +142,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_satwnd_new_format.bufr
     testinput/bufr_satwnd_old_format.bufr
     testinput/bufr_mtiasi.bufr
+    testinput/bufr_simple_groupby.bufr
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
@@ -159,6 +160,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_satwnd_new_format.yaml
     testinput/bufr_sevcrs_v2.yaml
     testinput/bufr_mtiasi.yaml
+    testinput/bufr_simple_groupby.yaml
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
@@ -197,6 +199,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005031.nc
     testoutput/NC005066.nc
     testoutput/bufr_mtiasi.nc
+    testoutput/bufr_simple_groupby.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
@@ -306,7 +309,7 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
 #        ...
 #        )
-set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
+#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 #===============================================================================
 # Marine converters
@@ -933,6 +936,14 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mtiasi.yaml"
                     bufr_mtiasi.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_simple_groupby.yaml"
+                    bufr_simple_groupby.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 #
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
