@@ -16,6 +16,9 @@ import sys
 import h5py
 import numpy as np
 
+float_missing_value = 9.96921e+36
+int_missing_value = -2147483647
+
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -42,7 +45,7 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-#   ("datetime", "string")
+    ("datetime", "string")
 ]
 
 
@@ -102,12 +105,10 @@ def main(args):
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    missing_value = 9.96921e+36
-    int_missing_value = -2147483647
     k = 'brightnessTemperature'     #V2
     k = 'brightness_temperature'
-    VarAttrs[(k, 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[(k, 'ObsError')]['_FillValue'] = missing_value
+    VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
     VarAttrs[(k, 'ObsValue')]['units'] = 'K'
     VarAttrs[(k, 'ObsError')]['units'] = 'K'
@@ -162,7 +163,7 @@ def get_data(f, obs_data):
 
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    #obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(f), dtype=object)
+    obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(f), dtype=object)
 
     nlocs = len(obs_data[('latitude', 'MetaData')])
     k = 'brightnessTemperature'
@@ -171,6 +172,32 @@ def get_data(f, obs_data):
     obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(f['tempBrightE_K'],axis=2)), dtype='float32')
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    # set missing value (-999) to generic missing value
+    for jchan in np.arange(nchans):
+        chk_ob = obs_data[(k, "ObsValue")][:,jchan] < 0
+        obs_data[(k, "ObsValue")][:,jchan][chk_ob] = float_missing_value
+
+    # check some satellite geometry will compress all data using this
+    chk_geolocation = np.logical_and( np.logical_and(
+                            np.logical_and( obs_data[('latitude', 'MetaData')] <= 90,  obs_data[('latitude', 'MetaData')] >= -90 ),
+                            np.logical_and( obs_data[('longitude', 'MetaData')] <= 180, obs_data[('longitude', 'MetaData')] >= -180 )),
+                            np.logical_and( obs_data[('sensor_zenith_angle', 'MetaData')] <= 80, obs_data[('sensor_zenith_angle', 'MetaData')] >= 0 ) )
+
+    # compress data
+    if np.sum(chk_geolocation) > 0:
+        for k in obs_data:
+            if 'MetaData' in k:
+                if 'channelNumber' not in k:
+                    obs_data[k] = obs_data[k][chk_geolocation]
+                else:
+                    print ("not setting to missing: ", k,  np.shape(obs_data[k]))
+                    pass
+            elif "Obs" in k or "PreQC" in k:
+                obs_data[k] = obs_data[k][chk_geolocation,:]
+    else:
+        obs_data = {}
+
 
     return obs_data
 
@@ -209,10 +236,10 @@ def get_string_dtg(f):
     dtg = []
     for i, yyyy in enumerate(year):
         cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        #dtg.append(cdtg) # need to add replication by nbeam_pos
-        dtg.append( np.full((nbeam_pos), cdtg, dtype=object) )
+        # need to add replication by nbeam_pos
+        for _ in range(nbeam_pos):
+            dtg.append( cdtg )
 
-    print( "shape dtg: ", np.shape( dtg ) )
     return dtg
 
 
@@ -233,7 +260,7 @@ def init_obs_loc():
         ('channelNumber', 'MetaData'): [],
         ('latitude', 'MetaData'): [],
         ('longitude', 'MetaData'): [],
-#       ('datetime', 'MetaData'): [],
+        ('datetime', 'MetaData'): [],
         ('scan_position', 'MetaData'): [],
         ('solar_zenith_angle', 'MetaData'): [],
         ('solar_azimuth_angle', 'MetaData'): [],
