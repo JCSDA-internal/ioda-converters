@@ -294,7 +294,6 @@ def set_metadata_attributes(VarAttrs):
     VarAttrs[('solarAzimuthAngle', 'MetaData')]['units'] = 'degree'
 
     VarAttrs[('dateTime', 'MetaData')]['units'] = "seconds since 1970-01-01T00:00:00Z"
-    VarAttrs[('satelliteIdentifier', 'MetaData')]['units'] = 'K'
 
     return VarAttrs
 
