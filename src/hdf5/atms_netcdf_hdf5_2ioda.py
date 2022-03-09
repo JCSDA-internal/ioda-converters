@@ -83,8 +83,8 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    # GlobalAttrs['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     # GlobalAttrs['dataBulletinHeader'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeRange'] = np.array( [dtg.strftime("%Y-%m-%dT%H:%M:%SZ"), dtg.strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
     date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
     GlobalAttrs['date_time'] = date_time_int32.item()
 
