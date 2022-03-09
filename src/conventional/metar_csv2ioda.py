@@ -57,7 +57,7 @@ VarDims = {'airTemperature': ['Location'],
            'windNorthward': ['Location']}
 
 AttrData = {'converter': os.path.basename(__file__),
-            'ioda_version': 2,
+            'ioda_object_version': 2,
             'description': 'METAR surface observation data converted from CSV',
             'source': 'NCAR-RAL METAR database (gthompsn)'}
 
