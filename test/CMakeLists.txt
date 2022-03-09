@@ -196,7 +196,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/amdar_wmo_multi2.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
     testoutput/buoy_wmo_multi.nc
-    testoutput/buoy2_wmo_multi.nc
+    testoutput/buoy_wmo_multi2.nc
     testoutput/rass_wmo_multi.nc
     testoutput/ship_wmo_multi.nc
     testoutput/ship_wmo_multi2.nc
