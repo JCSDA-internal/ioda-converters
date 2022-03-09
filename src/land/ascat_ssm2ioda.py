@@ -42,7 +42,7 @@ DimDict = {
 }
 
 VarDims = {
-    'soilMoistureNormalized': ['nlocs'],
+    'soilMoistureNormalized': ['Location'],
 }
 
 
@@ -65,14 +65,18 @@ class ascat(object):
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'percent'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'percent'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+            # Per ioda conventions soilMoistureNormalized has 1 unit (ie percent/100) (2022/03/09)
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
+            # Per ioda conventions soilMoistureNormalized has 1 unit (ie percent/100) (2022/03/09)
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
+            # Per ioda conventions PreQC fields come without unit (2022/03/09)
+#           self.varAttrs[iodavar, iconv.OqcName()]['units'] = '1'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        AttrData["satellite"] = ncd.getncattr('source')
+        # A satellite ID is expected for satellite attribute, use sensor instead
+        AttrData["sensor"] = ncd.getncattr('source')
         AttrData['platform'] = ncd.getncattr('platform_long_name')
         lats = ncd.variables['lat'][:].ravel()
         lons = ncd.variables['lon'][:].ravel()
@@ -107,7 +111,8 @@ class ascat(object):
         for i in range(len(lons)):
             base_date = datetime(2000, 1, 1) + timedelta(seconds=int(secs[i]))
             base_datetime = base_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            AttrData['date_time_string'] = base_datetime
+            # date_time_string is deprecated  (2022/03/09)
+#           AttrData['date_time_string'] = base_datetime
             times[i] = base_datetime
 
         # add metadata variables
@@ -118,11 +123,14 @@ class ascat(object):
         self.outdata[('topographyComplexity', 'MetaData')] = tflg
 
         for iodavar in ['soilMoistureNormalized']:
-            self.outdata[self.varDict[iodavar]['valKey']] = vals
-            self.outdata[self.varDict[iodavar]['errKey']] = errs
+            # ioda conventions expect unit 1 not percent (2022/03/09)
+            self.outdata[self.varDict[iodavar]['valKey']] = vals/100.
+            # ioda conventions expect unit 1 not percent (2022/03/09)
+            self.outdata[self.varDict[iodavar]['errKey']] = errs/100.
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
+        # The Location global attribute is deprecated (2022/03/09)
+#       AttrData['Location'] = np.int32(DimDict['Location'])
 
 
 def main():
@@ -156,8 +164,11 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    ssm.varAttrs[('wetlandFraction', 'MetaData')]['units'] = 'unitless'
-    ssm.varAttrs[('topographyComplexity', 'MetaData')]['units'] = 'unitless'
+    # wetlandFraction is  "Probable inundation or wetland fraction" 
+    # although it is supposed to be in percent, it appear to be [0 1]
+    ssm.varAttrs[('wetlandFraction', 'MetaData')]['units'] = 'percent'
+    # topographyComplexity is "Topographical Complexity" in percent
+    ssm.varAttrs[('topographyComplexity', 'MetaData')]['units'] = 'percent'
 
     # write everything out
     writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)
