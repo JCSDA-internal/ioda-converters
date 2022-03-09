@@ -39,16 +39,14 @@ locationKeyList = [("stationICAO", "string", ""),
                    ("longitude", "float", "degrees_east"),
                    ("stationElevation", "float", "m"),
                    ("height", "float", "m"),
-                   ("dateTime", "integer", "seconds since 1970-01-01T00:00:00Z"),
-]
+                   ("dateTime", "integer", "seconds since 1970-01-01T00:00:00Z")]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 obsvars = ['airTemperature',
            'specificHumidity',
            'stationPressure',
            'windEastward',
-           'windNorthward',
-]
+           'windNorthward']
 obsvars_units = ['K', 'kg kg-1', 'Pa', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 120.0, 1.7, 1.7]
 
@@ -56,17 +54,14 @@ VarDims = {'airTemperature': ['Location'],
            'specificHumidity': ['Location'],
            'stationPressure': ['Location'],
            'windEastward': ['Location'],
-           'windNorthward': ['Location'],
-}
+           'windNorthward': ['Location']}
 
 AttrData = {'converter': os.path.basename(__file__),
-           'ioda_version': 2,
-           'description': 'METAR surface observation data converted from CSV',
-           'source': 'NCAR-RAL METAR database (gthompsn)',
-}
+            'ioda_version': 2,
+            'description': 'METAR surface observation data converted from CSV',
+            'source': 'NCAR-RAL METAR database (gthompsn)'}
 
-DimDict = {
-}
+DimDict = {}
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
@@ -142,8 +137,8 @@ class reformatMetar(object):
 
         '''
         Read in the METARs data
-        Header contains: Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,\  # noqa
-        Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw   # noqa
+        Header contains: Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,  # noqa
+        Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw  # noqa
         '''
 
         # open file in read mode
