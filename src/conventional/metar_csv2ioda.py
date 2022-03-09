@@ -100,8 +100,6 @@ class reformatMetar(object):
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        AttrData['datetimeReference'] = date.strftime("%Y-%m-%dT%H:%M:%SZ")
-
         # Read in CSV-formatted file of METAR data
         self._rd_metars()
 
