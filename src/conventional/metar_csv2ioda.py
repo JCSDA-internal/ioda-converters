@@ -100,6 +100,8 @@ class reformatMetar(object):
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
+        AttrData['datetimeReference'] = date.strftime("%Y-%m-%dT%H:%M:%SZ_PT1H")
+
         # Read in CSV-formatted file of METAR data
         self._rd_metars()
 
@@ -236,6 +238,8 @@ class reformatMetar(object):
             self.outdata[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
         # Transfer from the 1-D data vectors and ensure output data (obs_data) types using numpy.
+        # The value of 2 for the preQC is NCEP-EMC prepBUFR code table 7 meaning not-checked QC.
+        # per source: https://www.emc.ncep.noaa.gov/mmb/data_processing/prepbufr.doc/table_7.htm
         for n, iodavar in enumerate(obsvars):
             self.outdata[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
             self.outdata[(iodavar, obsErrName)] = np.full(nlocs, obserrlist[n], dtype=np.float32)
