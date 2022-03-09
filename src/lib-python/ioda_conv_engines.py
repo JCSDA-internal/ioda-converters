@@ -77,6 +77,7 @@ _defaultF4 = 9.969209968386869e+36
 class IodaWriter(object):
     # Constructor
     def __init__(self, Fname, LocKeyList, DimDict, TestKeyList=None):
+        # note: loc_key_list does nothing
         self._loc_key_list = LocKeyList
         self._dim_dict = DimDict
         self._test_key_list = TestKeyList
@@ -160,17 +161,12 @@ class IodaWriter(object):
             raise KeyError("Required variable 'MetaData/dateTime' does not exist.")
         # check if the array is type 'object' or not
         # otherwise we will assume it is an integer and already set up
-        isostr = False
         if (dtvar.dtype == np.dtype('object')):
+            # object is used for strings or datetime objects
             if (isinstance(dtvar[0], str)):
-                isostr = True
-        if isostr:
-            # convert ISO date strings to datetime objects
-            newdtvar = [dt.datetime.strptime(x, "%Y-%m-%dT%H:%M:%SZ") for x in dtvar]
-            ObsVars[VarKey] = np.array(newdtvar, dtype=object)
-        else:
-            # assumed to be an integer with proper attributes
-            pass
+                # convert ISO date strings to datetime objects
+                newdtvar = [dt.datetime.strptime(x, "%Y-%m-%dT%H:%M:%SZ") for x in dtvar]
+                ObsVars[VarKey] = np.array(newdtvar, dtype=object)
 
         return ObsVars
 
