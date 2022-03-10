@@ -70,7 +70,6 @@ class AOD(object):
             self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -9999
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = '1'
 
         # loop through input filenames
         first = True
