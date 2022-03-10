@@ -155,7 +155,8 @@ namespace Ingester
 
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
-                if (varDesc.units)
+
+                if (!(varDesc.units == "none" || varDesc.units == ""))
                 {
                     var.atts.add<std::string>("units", { varDesc.units }, {1});
                 }
