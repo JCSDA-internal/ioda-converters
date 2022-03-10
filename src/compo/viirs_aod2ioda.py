@@ -68,7 +68,6 @@ class AOD(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = '1'
 
         # loop through input filenamess
         first = True
