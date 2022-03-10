@@ -98,7 +98,7 @@ observations:
           coordinates: "longitude latitude"
           dimensions: [ "Location" ]
           longName: "Wind Direction"
-          units: "deg"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
           source: variables/windSpeed

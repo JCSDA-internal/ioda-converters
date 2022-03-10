@@ -116,38 +116,38 @@ observations:
           source: variables/aircraftHeading
           dimensions: [ "Location" ]
           longName: "Aircraft heading"
-          units: "degree"
+          units: "degrees"
 
         - name: "MetaData/aircraftRollAngle"
           source: variables/aircraftRollAngle
           dimensions: [ "Location" ]
           longName: "Aircraft roll angle quality"
-          units: "degree"
+          units: "degrees"
 
         - name: "ObsValue/airTemperature"
-          coordinates: "longitude latitude"
           source: variables/airTemperature
+          coordinates: "longitude latitude"
           dimensions: [ "Location" ]
           longName: "Air Temperature"
           units: "K"
 
         - name: "ObsValue/waterVaporMixingRatio"
-          coordinates: "longitude latitude"
           source: variables/waterVaporMixingRatio
+          coordinates: "longitude latitude"
           dimensions: [ "Location" ]
           longName: "Water Vapor Mixing Ratio"
           units: "kg kg-1"
 
         - name: "ObsValue/windDirection"
-          coordinates: "longitude latitude"
           source: variables/windDirection
+          coordinates: "longitude latitude"
           dimensions: [ "Location" ]
           longName: "Wind Direction"
-          units: "deg"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
-          coordinates: "longitude latitude"
           source: variables/windSpeed
+          coordinates: "longitude latitude"
           dimensions: [ "Location" ]
           longName: "Wind Speed"
           units: "m s-1"
