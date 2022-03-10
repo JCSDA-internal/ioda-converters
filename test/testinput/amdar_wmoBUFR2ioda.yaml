@@ -33,9 +33,9 @@ observations:
             mnemonic: CLATH
           longitude:
             mnemonic: CLONH
-          pressureAltitude:
+          height:
             mnemonic: FLVLST
-          aircraftRegistrationNum:
+          aircraftIdentifier:
             mnemonic: ACRN
           aircraftFlightNum:
             mnemonic: ACID
@@ -45,13 +45,13 @@ observations:
             mnemonic: OSQN
           aircraftFlightPhase:
             mnemonic: DPOF
-          aircraftTrueAirspeed:
+          aircraftVelocity:
             mnemonic: TASP
           aircraftHeading:
             mnemonic: ACTH
           aircraftRollAngle:
             mnemonic: ROLQ
-          temperatureAir:
+          airTemperature:
             mnemonic: TMDB
           waterVaporMixingRatio:
             mnemonic: MIXR
@@ -65,106 +65,106 @@ observations:
       obsdataout: "./testrun/amdar_wmo_multi.nc"
 
       dimensions:
-        - name: "nlocs"
+        - name: "Location"
           size: variables/latitude.nrows
 
       variables:
         - name: "MetaData/dateTime"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
         - name: "MetaData/height"
-          source: variables/pressureAltitude
-          dimensions: [ "nlocs" ]
-          longName: "Pressure altitude"
+          source: variables/height
+          dimensions: [ "Location" ]
+          longName: "Height"
           units: "m"
 
-        - name: "MetaData/aircraftRegistrationNum"
-          source: variables/aircraftRegistrationNum
-          dimensions: [ "nlocs" ]
-          longName: "Aircraft registration number or other ID"
+        - name: "MetaData/aircraftIdentifier"
+          source: variables/aircraftIdentifier
+          dimensions: [ "Location" ]
+          longName: "Aircraft Identifier"
           units: "none"
 
         - name: "MetaData/aircraftFlightNum"
           source: variables/aircraftFlightNum
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft flight number"
           units: "none"
 
         - name: "MetaData/aircraftTailNum"
           source: variables/aircraftTailNum
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft tail number"
           units: "none"
 
         - name: "MetaData/observationSequenceNum"
           source: variables/observationSequenceNum
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Observation sequence number"
           units: "none"
 
         - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft flight phase (ascending/descending/level)"
           units: "none"
 
-        - name: "MetaData/aircraftTrueAirspeed"
-          source: variables/aircraftTrueAirspeed
-          dimensions: [ "nlocs" ]
-          longName: "Aircraft true airspeed"
+        - name: "MetaData/aircraftVelocity"
+          source: variables/aircraftVelocity
+          dimensions: [ "Location" ]
+          longName: "Aircraft velocity"
           units: "m s-1"
 
         - name: "MetaData/aircraftHeading"
           source: variables/aircraftHeading
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft heading"
           units: "deg"
 
         - name: "MetaData/aircraftRollAngle"
           source: variables/aircraftRollAngle
-          dimensions: [ "nlocs" ]
-          longName: "Aircraft roll angle quality"
+          dimensions: [ "Location" ]
+          longName: "Aircraft roll angle"
           units: "none"
 
-        - name: "ObsValue/air_temperature"
+        - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
           coordinates: "longitude latitude"
-          source: variables/temperatureAir
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/specific_humidity"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/waterVaporMixingRatio"
           source: variables/waterVaporMixingRatio
-          dimensions: [ "nlocs" ]
-          longName: "specific humidity"
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Water Vapor Mixing Ratio"
           units: "kg kg-1"
 
-        - name: "ObsValue/wind_direction"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/windDirection"
           source: variables/windDirection
-          dimensions: [ "nlocs" ]
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Wind Direction"
           units: "degrees"
 
-        - name: "ObsValue/wind_speed"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/windSpeed"
           source: variables/windSpeed
-          dimensions: [ "nlocs" ]
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Wind Speed"
           units: "m s-1"

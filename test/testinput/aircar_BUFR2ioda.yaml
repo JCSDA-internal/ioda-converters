@@ -34,19 +34,19 @@ observations:
             mnemonic: CLON
           height:
             mnemonic: IALT
-          aircraftFlightNum:
+          aircraftIdentifier:
             mnemonic: ACID
           aircraftRegistrationNum:
             mnemonic: ACRN
           aircraftFlightPhase:
             mnemonic: DPOF
-          aircraftTrueAirspeed:
+          aircraftVelocity:
             mnemonic: TASP
           aircraftHeading:
             mnemonic: ACTH
           aircraftRollAngle:
             mnemonic: ROLQ
-          temperatureAir:
+          airTemperature:
             mnemonic: TMDB
           waterVaporMixingRatio:
             mnemonic: MIXR
@@ -60,94 +60,94 @@ observations:
       obsdataout: "./testrun/gdas.aircar.t00z.20210801.nc"
 
       dimensions:
-        - name: "nlocs"
+        - name: "Location"
           size: variables/latitude.nrows
 
       variables:
         - name: "MetaData/dateTime"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
         - name: "MetaData/height"
           source: variables/height
-          dimensions: [ "nlocs" ]
-          longName: "Pressure altitude"
+          dimensions: [ "Location" ]
+          longName: "Height"
           units: "m"
 
         - name: "MetaData/aircraftRegistrationNum"
           source: variables/aircraftRegistrationNum
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft registration number or other ID"
           units: "none"
 
-        - name: "MetaData/aircraftFlightNum"
-          source: variables/aircraftFlightNum
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/aircraftIdentifier"
+          source: variables/aircraftIdentifier
+          dimensions: [ "Location" ]
           longName: "Aircraft flight number"
           units: "none"
 
         - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft flight phase (ascending/descending/level)"
           units: "none"
 
         - name: "MetaData/aircraftTrueAirspeed"
-          source: variables/aircraftTrueAirspeed
-          dimensions: [ "nlocs" ]
-          longName: "Aircraft true airspeed"
+          source: variables/aircraftVelocity
+          dimensions: [ "Location" ]
+          longName: "Aircraft velocity"
           units: "m s-1"
 
         - name: "MetaData/aircraftHeading"
           source: variables/aircraftHeading
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft heading"
-          units: "deg"
+          units: "degree"
 
         - name: "MetaData/aircraftRollAngle"
           source: variables/aircraftRollAngle
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Aircraft roll angle quality"
-          units: "none"
+          units: "degree"
 
-        - name: "ObsValue/air_temperature"
+        - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
-          source: variables/temperatureAir
-          dimensions: [ "nlocs" ]
+          source: variables/airTemperature
+          dimensions: [ "Location" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/specific_humidity"
+        - name: "ObsValue/waterVaporMixingRatio"
           coordinates: "longitude latitude"
           source: variables/waterVaporMixingRatio
-          dimensions: [ "nlocs" ]
-          longName: "specific humidity"
+          dimensions: [ "Location" ]
+          longName: "Water Vapor Mixing Ratio"
           units: "kg kg-1"
 
-        - name: "ObsValue/wind_direction"
+        - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Wind Direction"
-          units: "degrees"
+          units: "degree"
 
-        - name: "ObsValue/wind_speed"
+        - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Wind Speed"
           units: "m s-1"
