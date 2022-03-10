@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020, 2021 UCAR
+# (C) Copyright 2020-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -20,6 +20,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
 import csv
 import netCDF4
+import logging
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -33,42 +34,59 @@ import meteo_utils
 
 os.environ["TZ"] = "UTC"
 
-locationKeyList = [
-    ("station_id", "string"),
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("station_elevation", "float"),
-    ("height", "float"),
-    ("dateTime", "integer"),
-]
+locationKeyList = [("stationICAO", "string", ""),
+                   ("latitude", "float", "degrees_north"),
+                   ("longitude", "float", "degrees_east"),
+                   ("stationElevation", "float", "m"),
+                   ("height", "float", "m"),
+                   ("dateTime", "integer", "seconds since 1970-01-01T00:00:00Z")]
+meta_keys = [m_item[0] for m_item in locationKeyList]
 
-obsvars = {
-    'ob_temp': 'air_temperature',
-    'ob_spfh': 'specific_humidity',
-    'ob_psfc': 'surface_pressure',
-    'ob_uwnd': 'eastward_wind',
-    'ob_vwnd': 'northward_wind',
-}
-
+obsvars = ['airTemperature',
+           'specificHumidity',
+           'stationPressure',
+           'windEastward',
+           'windNorthward']
 obsvars_units = ['K', 'kg kg-1', 'Pa', 'm s-1', 'm s-1']
+obserrlist = [1.2, 0.75E-3, 120.0, 1.7, 1.7]
 
-VarDims = {
-    'ob_temp': ['nlocs'],
-    'ob_spfh': ['nlocs'],
-    'ob_psfc': ['nlocs'],
-    'ob_uwnd': ['nlocs'],
-    'ob_vwnd': ['nlocs'],
-}
+VarDims = {'airTemperature': ['Location'],
+           'specificHumidity': ['Location'],
+           'stationPressure': ['Location'],
+           'windEastward': ['Location'],
+           'windNorthward': ['Location']}
 
-AttrData = {
-    'converter': os.path.basename(__file__),
-    'ioda_version': 2,
-    'description': 'METAR surface observation data converted from CSV',
-    'source': 'NCAR-RAL METAR database (gthompsn)',
-}
+AttrData = {'converter': os.path.basename(__file__),
+            'ioda_object_version': 2,
+            'description': 'METAR surface observation data converted from CSV',
+            'source': 'NCAR-RAL METAR database (gthompsn)'}
 
-DimDict = {
-}
+DimDict = {}
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
+float_missing_value = netCDF4.default_fillvals['f4']
+int_missing_value = netCDF4.default_fillvals['i4']
+double_missing_value = netCDF4.default_fillvals['f8']
+long_missing_value = netCDF4.default_fillvals['i8']
+string_missing_value = '_'
+
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 class reformatMetar(object):
@@ -78,12 +96,11 @@ class reformatMetar(object):
         self.filename = filename
         self.date = date
         self.meteo_utils = meteo_utils.meteo_utils()
-        self.float_fill = netCDF4.default_fillvals['f4']
         self.varDict = defaultdict(lambda: DefaultOrderedDict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        AttrData['datetime_reference'] = date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        AttrData['datetimeReference'] = date.strftime("%Y-%m-%dT%H:%M:%SZ_PT1H")
 
         # Read in CSV-formatted file of METAR data
         self._rd_metars()
@@ -92,52 +109,45 @@ class reformatMetar(object):
 
     def _rd_metars(self):
 
-        n = 0
-        for iodavar in obsvars.values():
-            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = obsvars_units[n]
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = obsvars_units[n]
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
-            n += 1
+        # Set units of the MetaData variables and all _FillValues.
+        for key in meta_keys:
+            dtypestr = locationKeyList[meta_keys.index(key)][1]
+            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+            this_units = locationKeyList[meta_keys.index(key)][2]
+            if this_units:
+                self.varAttrs[(key, metaDataName)]['units'] = this_units
 
-        # Set units of some MetaData variables
-        self.varAttrs['station_elevation', 'MetaData']['units'] = 'm'
-        self.varAttrs['height', 'MetaData']['units'] = 'm'
-        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
+        # Set coordinates and units of the ObsValues.
+        for n, iodavar in enumerate(obsvars):
+            self.varDict[iodavar]['valKey'] = iodavar, obsValName
+            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
+            self.varDict[iodavar]['qcKey'] = iodavar, qcName
+            self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
+            self.varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
 
         # data is the dictionary of incoming observation (METAR) data
         data = {}
-
-        data['ob_icao'] = []
-        data['ob_lat'] = []
-        data['ob_lon'] = []
-        data['ob_time'] = []
-        data['ob_datetime'] = []
-        data['ob_elev'] = []
-        data['ob_hght'] = []
-        data['ob_psfc'] = []
-        data['ob_temp'] = []
-        data['ob_spfh'] = []
-        data['ob_uwnd'] = []
-        data['ob_vwnd'] = []
+        for key in meta_keys:
+            data[key] = []
+        for key in obsvars:
+            data[key] = []
 
         '''
         Read in the METARs data
-        Header contains: Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,\
-        Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw
+        Header contains: Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,  # noqa
+        Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw  # noqa
         '''
 
         # open file in read mode
         with open(self.filename, 'r') as fh:
+            missing = float_missing_value
             # pass the file object to reader() to get the reader object
             csv_dict_reader = csv.DictReader(fh)
             column_names = csv_dict_reader.fieldnames
-            print(column_names)
+            logging.info("Header, columns = " + ", ".join(column_names))
             # Iterate over each row in the csv using reader object
             for row in csv_dict_reader:
                 # row variable is a list that represents a row in csv
@@ -152,99 +162,87 @@ class reformatMetar(object):
                     lon = float(row['Longitude'])
                     elev = float(row['Elev'])
                     if (elev < -999 or elev > 8450):
-                        elev = self.float_fill
-                        hght = self.float_fill
-                    else:
-                        hght = elev + 2.0           # Height of observation assumed 2 meters above station elevation
+                        elev = missing
+                        hght = missing
+                    else:         # Height of observation assumed 2 meters above station elevation
+                        hght = elev + 2.0
                 except (csv.Error, ValueError):
                     continue
                 try:
                     temp = float(row['Temp']) + self.meteo_utils.C_2_K
                 except (csv.Error, ValueError):
-                    temp = self.float_fill
+                    temp = missing
                 try:
                     dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
                 except (csv.Error, ValueError):
-                    dewp = self.float_fill
+                    dewp = missing
                 try:
                     wdir = float(row['Wdir'])
                 except (csv.Error, ValueError):
-                    wdir = self.float_fill
+                    wdir = missing
                 try:
                     wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
                 except (csv.Error, ValueError):
-                    wspd = self.float_fill
+                    wspd = missing
 
-                if ((wdir is not self.float_fill) and (wspd is not self.float_fill)):
+                if ((wdir != missing) and (wspd != missing)):
                     if (wdir == 0 and wspd == 0):
                         uwnd = 0.0
                         vwnd = 0.0
                     elif (wdir > 0 and wdir <= 360 and wspd > 0):
                         uwnd, vwnd = self.meteo_utils.dir_speed_2_uv(wdir, wspd)
                     else:
-                        uwnd = self.float_fill
-                        vwnd = self.float_fill
+                        uwnd = missing
+                        vwnd = missing
                 else:
-                    uwnd = self.float_fill
-                    vwnd = self.float_fill
+                    uwnd = missing
+                    vwnd = missing
 
                 try:
                     altim = float(row['Altimeter'])
                     psfc = self.meteo_utils.altim_2_sfcPressure(altim, elev)
                 except (csv.Error, ValueError):
-                    altim = self.float_fill
-                    psfc = self.float_fill
+                    altim = missing
+                    psfc = missing
 
-                if ((psfc is not self.float_fill) and (temp is not self.float_fill) and (dewp is not self.float_fill)):
+                if ((psfc != missing) and (temp != missing) and (dewp != missing)):
                     spfh = self.meteo_utils.specific_humidity(dewp, psfc)
                 else:
-                    spfh = self.float_fill
+                    spfh = missing
 
-                data['ob_icao'].append(icao)
-                data['ob_datetime'].append(utime)
-                data['ob_lat'].append(lat)
-                data['ob_lon'].append(lon)
-                data['ob_elev'].append(elev)
-                data['ob_hght'].append(hght)
-                data['ob_psfc'].append(psfc)
-                data['ob_temp'].append(temp)
-                data['ob_spfh'].append(spfh)
-                data['ob_uwnd'].append(uwnd)
-                data['ob_vwnd'].append(vwnd)
+                data['stationICAO'].append(icao)
+                data['dateTime'].append(utime)
+                data['latitude'].append(lat)
+                data['longitude'].append(lon)
+                data['stationElevation'].append(elev)
+                data['height'].append(hght)
+                data['stationPressure'].append(psfc)
+                data['airTemperature'].append(temp)
+                data['specificHumidity'].append(spfh)
+                data['windEastward'].append(uwnd)
+                data['windNorthward'].append(vwnd)
 
         fh.close()
 
-        nlocs = len(data['ob_datetime'])
+        nlocs = len(data['dateTime'])
+        DimDict['Location'] = nlocs
 
-        self.outdata[('station_id', 'MetaData')] = np.array(data['ob_icao'], dtype=object)
-        self.outdata[('dateTime', 'MetaData')] = np.array(data['ob_datetime'], dtype=np.int64)
-        self.outdata[('latitude', 'MetaData')] = np.array(data['ob_lat'], dtype=np.float32)
-        self.outdata[('longitude', 'MetaData')] = np.array(data['ob_lon'], dtype=np.float32)
-        self.outdata[('station_elevation', 'MetaData')] = np.array(data['ob_elev'], dtype=np.float32)
-        self.outdata[('height', 'MetaData')] = np.array(data['ob_hght'], dtype=np.float32)
-        iodavar = 'surface_pressure'
-        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_psfc'], dtype=np.float32)
-        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 200.0, dtype=np.float32)
-        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
-        iodavar = 'air_temperature'
-        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_temp'], dtype=np.float32)
-        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.2, dtype=np.float32)
-        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
-        iodavar = 'specific_humidity'
-        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_spfh'], dtype=np.float32)
-        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.75E-3, dtype=np.float32)
-        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
-        iodavar = 'eastward_wind'
-        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_uwnd'], dtype=np.float32)
-        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.7, dtype=np.float32)
-        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
-        iodavar = 'northward_wind'
-        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_vwnd'], dtype=np.float32)
-        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.7, dtype=np.float32)
-        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
+        # Set units of the MetaData variables and all _FillValues.
+        for key in meta_keys:
+            dtypestr = locationKeyList[meta_keys.index(key)][1]
+            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+            this_units = locationKeyList[meta_keys.index(key)][2]
+            if this_units:
+                self.varAttrs[(key, metaDataName)]['units'] = this_units
+            self.outdata[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
-        DimDict['nlocs'] = nlocs
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        # Transfer from the 1-D data vectors and ensure output data (obs_data) types using numpy.
+        # The value of 2 for the preQC is NCEP-EMC prepBUFR code table 7 meaning not-checked QC.
+        # per source: https://www.emc.ncep.noaa.gov/mmb/data_processing/prepbufr.doc/table_7.htm
+        for n, iodavar in enumerate(obsvars):
+            self.outdata[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
+            self.outdata[(iodavar, obsErrName)] = np.full(nlocs, obserrlist[n], dtype=np.float32)
+            self.outdata[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
 
         return
 
