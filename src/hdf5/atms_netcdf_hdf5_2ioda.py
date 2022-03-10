@@ -29,8 +29,8 @@ NOAA20_WMO_sat_ID = 225
 NOAA21_WMO_sat_ID = 226
 ATMS_WMO_sensor_ID = 621
 
-float_missing_value = 9.96921e+36
-int_missing_value = -2147483647
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
 
 epoch = datetime.utcfromtimestamp(0)
 
@@ -75,6 +75,8 @@ def main(args):
 #           else:
 #               obs_data = file_obs_data
 
+    WMO_sat_ID = get_WMO_satellite_ID(input_files[0])
+    GlobalAttrs['platform'] = np.int32(WMO_sat_ID)
     for afile in input_files:
         file_obs_data = get_data_from_files(afile)
         if not file_obs_data:
@@ -84,6 +86,8 @@ def main(args):
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
+        if WMO_sat_ID != GlobalAttrs['platform']:
+            print(' IODA and subsequent UFO expect files to be by satellite and sensor ')
 
     nlocs_int32 = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int32')
     nlocs = nlocs_int32.item()
@@ -184,8 +188,6 @@ def get_data(f, g, obs_data):
     # 'spatial_lbl_len', 'subsat_lat', 'subsat_lon', 'sun_glint_dist', 'sun_glint_lat', 'sun_glint_lon',
     # 'surf_alt', 'surf_alt_sdev', 'utc_tuple', 'utc_tuple_lbl', 'utc_tuple_lbl_len', 'view_ang', 'warm_nedt', 'xtrack'
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
-
     # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
     try:
         nscans = np.shape(g['lat'])[0]
@@ -201,7 +203,6 @@ def get_data(f, g, obs_data):
         obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
         obs_data[('sensorViewAngle', metaDataName)] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
         nlocs = len(obs_data[('latitude', metaDataName)])
-        obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
         obs_data[('dateTime', metaDataName)] = np.array(get_observation_time(g['obs_time_utc'][:, :, :]), dtype='int64')
 
     # BaseException is a catch-all mechamism
@@ -273,7 +274,6 @@ def init_obs_loc():
         ('brightnessTemperature', obsValName): [],
         ('brightnessTemperature', obsErrName): [],
         ('brightnessTemperature', qcName): [],
-        ('satelliteIdentifier', metaDataName): [],
         ('sensorChannelNumber', metaDataName): [],
         ('latitude', metaDataName): [],
         ('longitude', metaDataName): [],
