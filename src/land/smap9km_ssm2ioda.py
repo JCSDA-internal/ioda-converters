@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2022 EMC/NCEP/NWS/NOAA
+# (C) Copyright 2020-2022 EMC/NCEP/NWS/NOAA
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -33,14 +33,13 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'soilMoistureVolumetric': ['nlocs'],
+    'soilMoistureVolumetric': ['Location'],
 }
 
 
@@ -65,15 +64,16 @@ class smap(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        self.satellite = "SMAP"
-        self.sensor = "radar and radiometer"
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
+        #self.satellite = 789
+        #self.sensor = 432
+        #AttrData["platform"] = int(self.satellite)
+        #AttrData["sensor"] = int(self.sensor)
+        AttrData["platform"] = "789"
+        AttrData["sensor"] = "432" 
 
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
@@ -115,7 +115,6 @@ class smap(object):
         qflg = qflg.astype('int32')
         sflg = sflg.astype('int32')
         vegop = vegop.astype('int32')
-        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(lons)):
             times[i] = base_datetime
@@ -127,17 +126,16 @@ class smap(object):
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('surfaceFlag', 'MetaData')] = sflg
-        self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
+        #self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
-        self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
+        #self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
 
 
 def main():
