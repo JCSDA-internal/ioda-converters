@@ -48,11 +48,9 @@ observations:
             mnemonic: SAID
           instrumentIdentifier:
             mnemonic: SIID
-          satelliteClassification:
-            mnemonic: SCLF
           platformTransmitterId:
             mnemonic: PTID
-          originatingCenter:
+          dataProviderOrigin:
             mnemonic: OGCE
           qualityFlags:
             mnemonic: QFRO
@@ -117,16 +115,10 @@ observations:
           longName: "Air pressure"
           units: "Pa"
 
-        - name: "MetaData/originatingCenter"
-          source: variables/originatingCenter
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/dataProviderOrigin
           dimensions: [ "Location" ]
           longName: "Originating center"
-          units: ""
-
-        - name: "MetaData/satelliteClassification"
-          source: variables/satelliteClassification
-          dimensions: [ "Location" ]
-          longName: "GNSS satellite classification"
           units: ""
 
         - name: "MetaData/satelliteIdentifier"
@@ -147,7 +139,7 @@ observations:
           longName: "GNSS platform transmitter ID"
           units: ""
 
-        - name: "MetaData/qualityFlags"
+        - name: "QualityMarker/qualityFlags"
           source: variables/qualityFlags
           dimensions: [ "Location" ]
           longName: "Quality flags"

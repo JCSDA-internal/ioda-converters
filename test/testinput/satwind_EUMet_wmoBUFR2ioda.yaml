@@ -70,7 +70,7 @@ observations:
       dimensions:
         - name: "Location"
           size: variables/latitude.nrows
-        - name: "nconfidences"
+        - name: "Confidence"
           size: variables/windPercentConfidence.ncols
 
       globals:
@@ -151,14 +151,14 @@ observations:
 
         - name: "MetaData/windPercentConfidence"
           source: variables/windPercentConfidence
-          coordinates: "longitude latitude nconfidences"
-          dimensions: ["Location", "nconfidences"]
+          coordinates: "longitude latitude Confidence"
+          dimensions: ["Location", "Confidence"]
           longName: "Percent confidence"
           units: "percent"
 
-        - name: "MetaData/sensorCentralFrequency"
-          source: variables/sensorCentralFrequency
-          coordinates: "longitude latitude nconfidences"
-          dimensions: ["Location"]
-          longName: "Sensor Central Frequency"
-          units: "Hz"
+#       - name: "MetaData/sensorCentralFrequency"
+#         source: variables/sensorCentralFrequency
+#         coordinates: "longitude latitude Confidence"
+#         dimensions: ["Location", "Confidence"]
+#         longName: "Sensor Central Frequency"
+#         units: "Hz"

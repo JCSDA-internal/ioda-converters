@@ -36,11 +36,9 @@ observations:
           height:
             mnemonic: FLVLST
           aircraftIdentifier:
-            mnemonic: ACRN
-          aircraftFlightNum:
             mnemonic: ACID
-          aircraftTailNum:
-            mnemonic: ACTN
+          aircraftTailNumber:
+            mnemonic: [ACTN, ACRN]
           observationSequenceNum:
             mnemonic: OSQN
           aircraftFlightPhase:
@@ -49,7 +47,7 @@ observations:
             mnemonic: TASP
           aircraftHeading:
             mnemonic: ACTH
-          aircraftRollAngle:
+          aircraftRollAngleQuality:
             mnemonic: ROLQ
           airTemperature:
             mnemonic: TMDB
@@ -99,14 +97,8 @@ observations:
           longName: "Aircraft Identifier"
           units: "none"
 
-        - name: "MetaData/aircraftFlightNum"
-          source: variables/aircraftFlightNum
-          dimensions: [ "Location" ]
-          longName: "Aircraft flight number"
-          units: "none"
-
-        - name: "MetaData/aircraftTailNum"
-          source: variables/aircraftTailNum
+        - name: "MetaData/aircraftTailNumber"
+          source: variables/aircraftTailNumber
           dimensions: [ "Location" ]
           longName: "Aircraft tail number"
           units: "none"
@@ -135,8 +127,8 @@ observations:
           longName: "Aircraft heading"
           units: "degrees"
 
-        - name: "MetaData/aircraftRollAngle"
-          source: variables/aircraftRollAngle
+        - name: "MetaData/aircraftRollAngleQuality"
+          source: variables/aircraftRollAngleQuality
           dimensions: [ "Location" ]
           longName: "Aircraft roll angle"
           units: "none"

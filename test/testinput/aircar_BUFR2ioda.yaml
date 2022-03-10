@@ -14,7 +14,7 @@ observations:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
         - mnemonics: [ACID, ACRN]
         - mnemonics: [CLAT, CLON]
-        - mnemonics: [IALT, DPOF, ROLQ]
+        - mnemonics: [IALT, DPOF, ROLL, ROLQ]
         - mnemonics: [MIXR, TMDB, WDIR, WSPD]
         - mnemonics: [TASP, ACTH]
 
@@ -36,7 +36,7 @@ observations:
             mnemonic: IALT
           aircraftIdentifier:
             mnemonic: ACID
-          aircraftRegistrationNum:
+          aircraftTailNumber:
             mnemonic: ACRN
           aircraftFlightPhase:
             mnemonic: DPOF
@@ -45,6 +45,8 @@ observations:
           aircraftHeading:
             mnemonic: ACTH
           aircraftRollAngle:
+            mnemonic: ROLL
+          aircraftRollAngleQuality:
             mnemonic: ROLQ
           airTemperature:
             mnemonic: TMDB
@@ -88,8 +90,8 @@ observations:
           longName: "Height"
           units: "m"
 
-        - name: "MetaData/aircraftRegistrationNum"
-          source: variables/aircraftRegistrationNum
+        - name: "MetaData/aircraftTailNumber"
+          source: variables/aircraftTailNumber
           dimensions: [ "Location" ]
           longName: "Aircraft registration number or other ID"
           units: "none"
@@ -121,8 +123,14 @@ observations:
         - name: "MetaData/aircraftRollAngle"
           source: variables/aircraftRollAngle
           dimensions: [ "Location" ]
-          longName: "Aircraft roll angle quality"
+          longName: "Aircraft roll angle"
           units: "degrees"
+
+        - name: "MetaData/aircraftRollAngleQuality"
+          source: variables/aircraftRollAngleQuality
+          dimensions: [ "Location" ]
+          longName: "Aircraft roll angle quality"
+          units: "none"
 
         - name: "ObsValue/airTemperature"
           source: variables/airTemperature

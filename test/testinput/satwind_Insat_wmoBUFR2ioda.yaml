@@ -39,7 +39,7 @@ observations:
             mnemonic: CLATH
           longitude:
             mnemonic: CLONH
-          satelliteIdentification:
+          satelliteIdentifier:
             mnemonic: SAID
           dataProviderOrigin:
             mnemonic: GCLONG
@@ -71,7 +71,7 @@ observations:
       dimensions:
         - name: "Location"
           size: variables/latitude.nrows
-        - name: "nconfidences"
+        - name: "Confidence"
           size: variables/windPercentConfidence.ncols
 
       globals:
@@ -80,8 +80,8 @@ observations:
           value: "Insat_AMV"
 
       variables:
-        - name: "MetaData/satelliteIdentification"
-          source: variables/satelliteIdentification
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
           dimensions: ["Location"]
           longName: "Satellite identification"
           units: ""
@@ -144,17 +144,17 @@ observations:
 
         - name: "MetaData/windPercentConfidence"
           source: variables/windPercentConfidence
-          coordinates: "longitude latitude nconfidences"
-          dimensions: ["Location", "nconfidences"]
+          coordinates: "longitude latitude Confidence"
+          dimensions: ["Location", "Confidence"]
           longName: "Percent confidence"
           units: "percent"
 
-        - name: "MetaData/sensorCentralFrequency"
-          source: variables/sensorCentralFrequency
-          coordinates: "longitude latitude nconfidences"
-          dimensions: ["Location"]
-          longName: "Sensor Central Frequency"
-          units: "Hz"
+#       - name: "MetaData/sensorCentralFrequency"
+#         source: variables/sensorCentralFrequency
+#         coordinates: "longitude latitude Confidence"
+#         dimensions: ["Location"]
+#         longName: "Sensor Central Frequency"
+#         units: "Hz"
 
         - name: "ObsValue/windDirection"
           source: variables/windDirection
