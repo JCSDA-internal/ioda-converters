@@ -196,6 +196,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/amdar_wmo_multi2.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
     testoutput/buoy_wmo_multi.nc
+    testoutput/buoy_wmo_multi2.nc
     testoutput/rass_wmo_multi.nc
     testoutput/ship_wmo_multi.nc
     testoutput/ship_wmo_multi2.nc
@@ -1111,6 +1112,17 @@ if( iodaconv_eccodes_ENABLED )
 #===============================================================================
 # Conventional data, surface Obs - SYNOP, Buoy and Ship BUFR (WMO) converters
 #===============================================================================
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_buoy
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/buoy_bufr2ioda.py
+                            -i testinput/buoy_wmo_multi.bufr
+                            -o testrun/buoy_wmo_multi2.nc"
+                            buoy_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ship
                     TYPE    SCRIPT
