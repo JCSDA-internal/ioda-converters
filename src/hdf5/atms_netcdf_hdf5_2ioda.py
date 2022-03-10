@@ -40,7 +40,7 @@ obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
 GlobalAttrs = {
-    "sensor": ("%d"%ATMS_WMO_sensor_ID),
+    "sensor": str(ATMS_WMO_sensor_ID),
     "platformCommonName": "ATMS",
     "platformLongDescription": "ATMS Brightness Temperature Data",
     "sensorCentralFrequency": [23.8,
@@ -257,14 +257,13 @@ def get_observation_time(obs_time_utc, write_string=False):
     second = 0
     dtg = []
     for i, yyyy in enumerate(year):
-        if not write_string:
-            observation_time_string = ('%.4i%.2i%.2i%.2i%.2i%.2i' % (yyyy, month[i], day[i], hour[i], minute[i], second))
-            observation_time = datetime.strptime(observation_time_string, '%Y%m%d%H%M%S')
+        observation_time_string = ("%4i-%.2i-%.2iT%.2i:%.2i:%.2iZ" % (yyyy, month[i], day[i], hour[i], minute[i], second))
+        if write_string:
+            dtg.append(cdtg)
+        else:
+            observation_time = datetime.strptime(observation_time_string, '%Y-%m-%dT%H:%M:%SZ')
             time_offset = round((observation_time - epoch).total_seconds())
             dtg.append(time_offset)
-        else:
-            cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-            dtg.append(cdtg)
 
     return dtg
 
