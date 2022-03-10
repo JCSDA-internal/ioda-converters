@@ -106,7 +106,7 @@ observations:
           longName: "Aircraft flight phase (ascending/descending/level)"
           units: "none"
 
-        - name: "MetaData/aircraftTrueAirspeed"
+        - name: "MetaData/aircraftVelocity"
           source: variables/aircraftVelocity
           dimensions: [ "Location" ]
           longName: "Aircraft velocity"
@@ -143,7 +143,7 @@ observations:
           source: variables/windDirection
           dimensions: [ "Location" ]
           longName: "Wind Direction"
-          units: "degree"
+          units: "deg"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
