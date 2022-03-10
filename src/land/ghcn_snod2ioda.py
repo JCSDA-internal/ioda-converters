@@ -35,14 +35,13 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'totalSnowDepth': ['nlocs'],
+    'totalSnowDepth': ['Location'],
 }
 
 
@@ -70,9 +69,8 @@ class ghcn(object):
         self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
-        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
-        self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm'
+        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
@@ -162,11 +160,11 @@ class ghcn(object):
         my_date = datetime.strptime(startdate, "%Y%m%d")
         start_datetime = my_date.strftime('%Y-%m-%d')
         base_datetime = start_datetime + 'T18:00:00Z'
-        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(vals)):
             if vals[i] >= 0.0:
-                errs[i] = 40.0
+                errs[i] = 0.04
+                vals[i] = 0.001*vals[i]
             times[i] = base_datetime
         # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
@@ -180,8 +178,7 @@ class ghcn(object):
         self.outdata[self.varDict[iodavar]['errKey']] = errs
         self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
 
 
 def main():
