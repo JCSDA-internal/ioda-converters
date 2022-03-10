@@ -169,7 +169,7 @@ namespace bufr {
                     int groupbyElementsForFrame = 1;
                     for (auto &seqCount: groupByField.seqCounts)
                     {
-                        groupbyElementsForFrame *= seqCount.size();
+                        groupbyElementsForFrame *= max(seqCount);
                     }
 
                     totalGroupbyElements = std::max(totalGroupbyElements, groupbyElementsForFrame);
@@ -177,7 +177,7 @@ namespace bufr {
                 else
                 {
                     dimPaths = {};
-                    for (size_t targetIdx = exportDims.size(); targetIdx < targetField.dimPaths.size(); ++targetIdx)
+                    for (size_t targetIdx = exportDims.size() - 1; targetIdx < targetField.dimPaths.size(); ++targetIdx)
                     {
                         dimPaths.push_back(targetField.dimPaths[targetIdx]);
                     }
@@ -192,30 +192,36 @@ namespace bufr {
             // The groupby field occurs at the same or greater repetition level as the target field.
             if (groupbyIdx > static_cast<int>(dimsList.size()))
             {
-                exportDims = {1};
-                dims[0] = { totalGroupbyElements };
+                dims.resize(1, totalGroupbyElements);
+                exportDims = {0};
                 allDims = dims;
             }
             // The groupby field occurs at a lower repetition level than the target field.
             else
             {
-                dims.resize(dimsList.size() - groupbyIdx);
+                dims.resize(dimsList.size() - groupbyIdx + 1, 1);
                 for (int dimIdx = 0; dimIdx < groupbyIdx; ++dimIdx)
                 {
                     dims[0]*= allDims[dimIdx];
                 }
 
+                exportDims = exportDims - (groupbyIdx - 1);
+
                 // Filter out exportDims that are 0
                 std::vector<int> filteredExportDims;
-                for (size_t dimIdx = 2; dimIdx < dims.size(); ++dimIdx)
+                for (size_t dimIdx = 0; dimIdx < exportDims.size(); ++dimIdx)
                 {
-                    dims[0]*= allDims[dimIdx];
-
-                    if (exportDims[dimIdx] > 0)
+                    if (exportDims[dimIdx] >= 0)
                     {
                         filteredExportDims.push_back(exportDims[dimIdx]);
                     }
                 }
+
+                if (filteredExportDims[0] != 0)
+                {
+                    filteredExportDims.insert(filteredExportDims.begin(), 0);
+                }
+
                 exportDims = filteredExportDims;
             }
         }
@@ -225,7 +231,6 @@ namespace bufr {
         }
 
         size_t totalRows = dims[0] * dataFrames_.size();
-
 
         // Make data set
         int rowLength = 1;
@@ -324,26 +329,34 @@ namespace bufr {
         // Apply groupBy and make output
         if (groupbyIdx > 0)
         {
-            if (groupbyIdx >= static_cast<int>(targetField.seqCounts.size()))
+            if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
             {
-                size_t numRows = output.size();
+                size_t numRows = product(dims);
                 dataRows.resize(numRows * maxCounts, {MissingValue});
                 for (size_t i = 0; i < numRows; ++i)
                 {
-                    dataRows[i][0] = output[1];
+                    if (output.size())
+                    {
+                        dataRows[i][0] = output[0];
+                    }
                 }
             }
             else
             {
-                size_t numRows = product<int>(dims.begin() + groupbyIdx, dims.end());
+                size_t numRows = product<int>(dims.begin() + groupbyIdx - 1, dims.end());
                 std::vector<int> rowDims;
-                rowDims.assign(dims.begin() + groupbyIdx + 1, dims.end());
+                rowDims.assign(dims.begin() + groupbyIdx - 1, dims.end());
 
                 dataRows.resize(numRows * maxCounts, std::vector<double>(maxCounts, MissingValue));
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     for (size_t j = 0; j < maxCounts; ++j)
                     {
+                        if (output.size() < i * maxCounts + j + 1)
+                        {
+                            continue;
+                        }
+
                         dataRows[i][j] = output[i * maxCounts + j];
                     }
                 }

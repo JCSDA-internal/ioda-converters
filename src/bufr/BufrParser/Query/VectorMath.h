@@ -81,5 +81,32 @@ namespace bufr {
 
         return result;
     }
+
+    template<typename U, typename T>
+    std::vector<T> operator-(const std::vector<T>& vec, const U& scalar)
+    {
+        std::vector<T> result(vec.size());
+        for (size_t i = 0; i < vec.size(); i++)
+        {
+            result[i] = vec[i] - static_cast<T>(scalar);
+        }
+
+        return result;
+    }
+
+    template<typename T>
+    T max(const std::vector<T>& vec)
+    {
+        T result = vec[0];
+        for (size_t i = 1; i < vec.size(); i++)
+        {
+            if (vec[i] > result)
+            {
+                result = vec[i];
+            }
+        }
+
+        return result;
+    }
 }  // namespace bufr
 }  // namespace Ingester

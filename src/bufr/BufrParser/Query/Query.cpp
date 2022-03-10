@@ -374,7 +374,7 @@ namespace bufr {
 
             if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
             {
-                if (bufrInfo->getTyp(nodeIdx) == Typ::DelayedRep &&
+                if (bufrInfo->getTyp(nodeIdx) == Typ::DelayedBinary &&
                     bufrInfo->getVal(dataCursor) == 0)
                 {
                     // Ignore the node if it is a delayed binary and the value is 0
