@@ -15,7 +15,7 @@ from datetime import datetime, date, timedelta
 import os
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
@@ -37,15 +37,13 @@ obsvars = {
 
 AttrData = {
 }
-    #'converter': os.path.basename(__file__),
-    #'nvars': np.int32(len(obsvars)),
 
 
 DimDict = {
 }
 
 VarDims = {
-    'aerosolOpticalDepth': ['Location', "Channel"]
+    'aerosolOpticalDepth': ['Location', 'Channel']
 }
 
 
@@ -86,8 +84,6 @@ class AOD(object):
             if 'MODIS' in ncd_str:
                 AttrData['sensor'] = 'v.modis_terra'
 
-            #obstime = self.obs_time
-            #AttrData['date_time'] = self.obs_time
             AttrData['ioda_object_type'] = 'AOD@550nm'
 
             #  Get variables
@@ -141,8 +137,11 @@ class AOD(object):
             for ncvar, iodavar in obsvars.items():
                 data = aod.astype('float32')
                 err = UNC.astype('float32')
+                data2d = np.array(data).reshape(len(data), 1)
+                err2d = np.array(err).reshape(len(err), 1)
+                qc2d = np.array(QC_flag).reshape(len(QC_flag), 1)
                 if first:
-                    self.outdata[self.varDict[iodavar]['valKey']] = data
+                    self.outdata[self.varDict[iodavar]['valKey']] = data2d
                     self.outdata[self.varDict[iodavar]['errKey']] = err
                     self.outdata[self.varDict[iodavar]['qcKey']] = QC_flag
 
@@ -157,8 +156,7 @@ class AOD(object):
             first = False
         self.varAttrs[('dateTime', 'MetaData')]['units'] = ''
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
-        #AttrData['Location'] = np.int32(DimDict['Location'])
-        DimDict['Channel'] = 2
+        DimDict['Channel'] = np.array([2], dtype=np.intc)
 
 
 def main():
