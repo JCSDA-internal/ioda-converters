@@ -25,13 +25,6 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-#class Object(object):
-#    pass
-#
-#    a = Object()
-#    a.somefield = somevalue
-#
-#    return
  
 class argoClim(object):
 
@@ -79,7 +72,7 @@ class argoClim(object):
         lon = nc.variables['LONGITUDE'][:]
         lat = nc.variables['LATITUDE'][:]
         pres = nc.variables['PRESSURE'][:] #pressure in decibar
-        presPa = [10000*x for x in pres]   #pressure in Pascals
+        depth = pres   #1 decibar = 1 meter, so you can use pressure as depth
 
         # Get absolute time instead of time since epoch
         dtime = nc.variables['TIME']
@@ -126,7 +119,7 @@ class argoClim(object):
         self.data = {}
         self.data['lat'] = lat
         self.data['lon'] = lon
-        self.data['pres'] = presPa
+        self.data['depth'] = depth 
         self.data['time'] = time
         self.data['field'] = fullField.data
 
@@ -148,7 +141,7 @@ class IODA(object):
         self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
-            ("pressure", "float"),
+            ("depthBelowWaterSurface", "float"),
             ("dateTime", "string")
         ]
 
@@ -168,9 +161,9 @@ class IODA(object):
         for t, time in enumerate(argo.data['time']):
             for y, lat in enumerate(argo.data['lat']):
                 for x, lon in enumerate(argo.data['lon']):
-                    for z, presPa in enumerate(argo.data['pres']):
+                    for z, depth in enumerate(argo.data['depth']):
 
-                        locKey = lat, lon, presPa, time.strftime('%Y-%m-%dT%H:%M:%SZ')
+                        locKey = lat, lon, depth, time.strftime('%Y-%m-%dT%H:%M:%SZ')
 
                         val = argo.data['field'][t, z, y, x]
                         err = 0.
@@ -184,26 +177,20 @@ class IODA(object):
         self.varAttrs[argo.varname2, iconv.OerrName()]['_FillValue'] = -999.
         self.varAttrs[argo.varname2, iconv.OqcName()]['_FillValue'] = -999
         self.varAttrs[argo.varname2, iconv.OvalName()]['units'] = 'K'
-#        self.varAttrs[argo.varname, iconv.OvalName()]['units'] = 'degree_C'
         self.varAttrs[argo.varname2, iconv.OerrName()]['units'] = 'K'
-#        self.varAttrs[argo.varname, iconv.OerrName()]['units'] = 'degree_C'
-#        self.varAttrs[argo.varname2, iconv.OqcName()]['units'] = 'unitless'
-        self.varAttrs['pressure', 'MetaData']['units'] = 'Pa'
+        self.varAttrs['depthBelowWaterSurface', 'MetaData']['units'] = 'm'
 
 
         # Extract obs
         ObsVars, Location = iconv.ExtractObsData(self.data, self.locKeyList)
-        ObsVars, Level = iconv.ExtractObsData(self.data, self.locKeyList)
-#        ObsVars, Level = iconv.ExtractObsData(
-        DimDict = {'Location': Location,
-                   'Level': Level
+        DimDict = {'Location': Location
 }
         varDims = {
-#            'TEMPERATURE': ['Location']
-            'TEMPERATURE': ['Location', 'Level']
+            'waterTemperature': ['Location']
         }
         # Set up IODA writer
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+
         # Write out observations
         self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
@@ -247,7 +234,7 @@ def main():
     }
 
     varDims = {
-        'TEMPERATURE': ['Location']
+        'waterTemperature': ['Location']
     }
 
     IODA(foutput, fdate, argo)
