@@ -5,7 +5,7 @@ Python code to ingest netCDF4 or HDF5 ATMS data
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 import glob
 # from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -27,9 +27,12 @@ from orddicts import DefaultOrderedDict
 SNPP_WMO_sat_ID = 224
 NOAA20_WMO_sat_ID = 225
 NOAA21_WMO_sat_ID = 226
+ATMS_WMO_sensor_ID = 621
 
 float_missing_value = 9.96921e+36
 int_missing_value = -2147483647
+
+epoch = datetime.utcfromtimestamp(0)
 
 GlobalAttrs = {
     "platformCommonName": "ATMS",
@@ -43,7 +46,7 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string")
+    ("dateTime", "integer")
 ]
 
 
@@ -76,8 +79,7 @@ def main(args):
         else:
             obs_data = file_obs_data
 
-# V2 nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='int32')
-    nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='float32')  # this is float32 in old convention
+    nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='int32')
     nlocs = nlocs_int32.item()
     nchans = len(obs_data[('sensorChannelNumber', 'MetaData')])
 
@@ -194,7 +196,7 @@ def get_data(f, g, obs_data):
         obs_data[('sensorViewAngle', 'MetaData')] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
         nlocs = len(obs_data[('latitude', 'MetaData')])
         obs_data[('satelliteIdentifier', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-        obs_data[('dateTime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
+        obs_data[('dateTime', 'MetaData')] = np.array(get_observation_time(g['obs_time_utc'][:, :, :]), dtype='int64')
 
     # BaseException is a catch-all mechamism
     except BaseException:
@@ -238,17 +240,24 @@ def get_WMO_satellite_ID(filename):
     return WMO_sat_ID
 
 
-def get_string_dtg(obs_time_utc):
+def get_observation_time(obs_time_utc, write_string=False):
 
     year = obs_time_utc[:, :, 0].flatten()
     month = obs_time_utc[:, :, 1].flatten()
     day = obs_time_utc[:, :, 2].flatten()
     hour = obs_time_utc[:, :, 3].flatten()
     minute = obs_time_utc[:, :, 4].flatten()
+    second = 0
     dtg = []
     for i, yyyy in enumerate(year):
-        cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        dtg.append(cdtg)
+        if not write_string:
+            observation_time_string = ('%.4i%.2i%.2i%.2i%.2i%.2i' % (yyyy, month[i], day[i], hour[i], minute[i], second))
+            observation_time = datetime.strptime(observation_time_string, '%Y%m%d%H%M%S')
+            time_offset = round((observation_time - epoch).total_seconds())
+            dtg.append(time_offset)
+        else:
+            cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
+            dtg.append(cdtg)
 
     return dtg
 
