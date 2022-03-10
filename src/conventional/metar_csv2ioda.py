@@ -226,7 +226,6 @@ class reformatMetar(object):
 
         nlocs = len(data['dateTime'])
         DimDict['Location'] = nlocs
-        AttrData['Location'] = np.int64(DimDict['Location'])
 
         # Set units of the MetaData variables and all _FillValues.
         for key in meta_keys:
