@@ -23,7 +23,8 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = "sea_surface_salinity"
+vName = "salinity"
+# "sea_surface_salinity" changed to salinity
 
 locationKeyList = [
     ("latitude", "float"),
@@ -119,25 +120,25 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 #
     VarDims = {
-        'sea_surface_salinity': ['nlocs'],
+        'salinity': ['Location'],
     }
 
     # Read in the salinity
     sal = Salinity(args.input, fdate)
 
     # write them out
-    ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(sal.data, locationKeyList)
 
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('salinity', 'ObsValue')]['units'] = 'g kg-1'
+    VarAttrs[('salinity', 'ObsError')]['units'] = 'g kg-1'
+    #VarAttrs[('salinity', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('salinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('salinity', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('salinity', 'PreQC')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
