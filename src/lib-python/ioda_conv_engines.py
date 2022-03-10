@@ -91,7 +91,7 @@ class IodaWriter(object):
                 dims = GeoVarDims[VarName]
             else:
                 # assume it is just nlocs
-                dims = ['nlocs']
+                dims = ['Location']
             fillval = get_default_fill_val(Vvals.dtype)
             # get fill value
             if VarName in GeoVarAttrs.keys():
@@ -120,7 +120,7 @@ class IodaWriter(object):
                 dims = VarDims[Vname]
             else:
                 # assume it is just nlocs
-                dims = ['nlocs']
+                dims = ['Location']
             fillval = get_default_fill_val(Vvals.dtype)
             # get fill value
             if VarKey in VarAttrs.keys():
