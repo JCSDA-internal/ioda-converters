@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2020-2022 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -32,14 +32,13 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'soilMoistureVolumetric': ['nlocs'],
+    'soilMoistureVolumetric': ['Location'],
 }
 
 
@@ -65,14 +64,12 @@ class SMOS_L2NRT(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        AttrData["observation_type"] = "surface soil moisture"
-        AttrData["satellite"] = "SMOS"
-        AttrData["sensor"] = "MIRAS"
+        AttrData["platform"] = "46"
+        AttrData["sensor"] = "176"
 
         lons = ncd.variables['longitude'][:]
         lats = ncd.variables['latitude'][:]
@@ -112,7 +109,6 @@ class SMOS_L2NRT(object):
             base_date = datetime(2000, 1, 1) + timedelta(days=int(ddys[i]))
             dt = base_date + timedelta(seconds=int(secs[i]))
             base_datetime = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            AttrData['date_time_string'] = base_datetime
             times[i] = base_datetime
 
         # add metadata variables
@@ -125,8 +121,7 @@ class SMOS_L2NRT(object):
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
 
 
 def main():
