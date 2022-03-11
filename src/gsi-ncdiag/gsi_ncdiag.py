@@ -1439,8 +1439,6 @@ class Radiances(BaseGSI):
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
 
-        print('emily checking globalAttrs = ', globalAttrs)
-
         print("Satellite radiance obs processed, wrote to: %s" % outname)
 
 
