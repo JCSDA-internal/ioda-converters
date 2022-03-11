@@ -32,11 +32,11 @@ arg_parse_description = (
     to IODA output files. """)
 
 # obs file name -> ioda file name
-output_var_dict = {'snow_depth_m': 'totalSnowDepth', 'snow_water_equivalent_mm': 'swe'}
+output_var_dict = {'snow_depth_m': 'totalSnowDepth', 'snow_water_equivalent_mm': 'snowWaterEquivalent'}
 # ioda file_name -> ioda file units
-output_var_unit_dict = {'totalSnowDepth': 'm', 'swe': 'mm'}
+output_var_unit_dict = {'totalSnowDepth': 'm', 'snowWaterEquivalent': 'kg m-2'}
 one = 1.00000000000000
-output_conversion_factor = {'totalSnowDepth': one, 'swe': one}
+output_conversion_factor = {'totalSnowDepth': one, 'snowWaterEquivalent': one}
 
 col_types = {
     'StnObjID': np.int32,
@@ -61,7 +61,7 @@ dim_dict = {}
 
 var_dims = {
     'totalSnowDepth': ['Location'],
-    'swe': ['Location'], }
+    'snowWaterEquivalent': ['Location'], }
 
 attr_data = {
  }
@@ -106,7 +106,6 @@ class OwpSnowObs(object):
 
     def _read(self):
         # print(f"Reading: {self.file_in}")
-        #self.attr_data['obs_file'] = str(self.file_in.split('/')[-1])
         # use pandas to get the data lined up
         obs_df = pd.read_csv(self.file_in, header=0, index_col=False, dtype=col_types)
 
@@ -203,8 +202,7 @@ class OwpSnowObs(object):
             self.data[self.var_dict[ioda_var]['qcKey']] = (
                 mask_nans(obs_df[f'PreQC {obs_var}'].values * conv_fact))
 
-        Location = len(self.data[('datetime', 'MetaData')])
-        dim_dict['Location'] = Location
+        dim_dict['Location'] = len(self.data[('datetime', 'MetaData')])
 
     def write(self):
         writer = iconv.IodaWriter(self.file_out, location_key_list, dim_dict)

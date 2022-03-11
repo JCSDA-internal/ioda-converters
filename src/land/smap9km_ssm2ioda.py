@@ -124,7 +124,6 @@ class smap(object):
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('surfaceFlag', 'MetaData')] = sflg
-        #self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
         #self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
 
