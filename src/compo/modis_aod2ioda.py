@@ -27,24 +27,28 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string")
+    ("dateTime", "integer")
 ]
 
+obsvars = ["aerosolOpticalDepth"]
 
-obsvars = {
-    'A': "aerosolOpticalDepth",
-}
+# A dictionary of global attributes.  More filled in further down.
+AttrData = {}
+AttrData['ioda_object_type'] = 'AOD at 550nm'
 
-AttrData = {
-}
+# A dictionary of variable dimensions.
+DimDict = {}
 
+# A dictionary of variable names and their dimensions.
+VarDims = {'aerosolOpticalDepth': ['Location']}
 
-DimDict = {
-}
+# Get the group names we use the most.
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
-VarDims = {
-    'aerosolOpticalDepth': ['Location', 'Channel']
-}
+long_missing_value = nc.default_fillvals['i8']
 
 
 class AOD(object):
@@ -58,22 +62,32 @@ class AOD(object):
 
     def _read(self):
         # set up variable names for IODA
-        for ncvar, iodavar in obsvars.items():
-            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -9999
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = '1'
+        for iodavar in obsvars:
+            self.varDict[iodavar]['valKey'] = iodavar, obsValName
+            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
+            self.varDict[iodavar]['qcKey'] = iodavar, qcName
+            self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, obsValName]['_FillValue'] = -9999.
+            self.varAttrs[iodavar, obsErrName]['_FillValue'] = -9999.
+            self.varAttrs[iodavar, qcName]['_FillValue'] = -9999
+            self.varAttrs[iodavar, obsValName]['units'] = '1'
+            self.varAttrs[iodavar, obsErrName]['units'] = '1'
+
+        # All of MODIS AOD data have a singular reference time
+        self.varAttrs[('dateTime', metaDataName)]['units'] = 'seconds since 1993-01-01T00:00:00Z'
+
+        # Make empty lists for the output vars
+        self.outdata[('latitude', metaDataName)] = []
+        self.outdata[('longitude', metaDataName)] = []
+        self.outdata[('dateTime', metaDataName)] = []
+        for iodavar in obsvars:
+            self.outdata[self.varDict[iodavar]['valKey']] = []
+            self.outdata[self.varDict[iodavar]['errKey']] = []
+            self.outdata[self.varDict[iodavar]['qcKey']] = []
 
         # loop through input filenames
-        first = True
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
             ncd_str = str(ncd)
@@ -84,12 +98,9 @@ class AOD(object):
             if 'MODIS' in ncd_str:
                 AttrData['sensor'] = 'v.modis_terra'
 
-            AttrData['ioda_object_type'] = 'AOD@550nm'
-
             #  Get variables
             modis_time = ncd.variables['Scan_Start_Time'][:].ravel()
-
-            # convert time to date_string
+            modis_time = modis_time.astype('float64')
             lats = ncd.variables['Latitude'][:].ravel()
             lats = lats.astype('float32')
             lons = ncd.variables['Longitude'][:].ravel()
@@ -113,10 +124,9 @@ class AOD(object):
             sen_zen = sen_zen[pos_index]
             unc_land = unc_land[pos_index]
             modis_time = modis_time[pos_index]
-            obs_time = np.empty_like(QC_flag, dtype=object)
-            obs_time_2 = [datetime.fromisoformat('1993-01-01') + timedelta(seconds=x) for x in modis_time]
-            for t in range(len(obs_time_2)):
-                obs_time[t] = obs_time_2[t].strftime('%Y-%m-%dT%H:%M:%SZ')
+            obs_time = np.full(len(modis_time), long_missing_value, dtype=np.int64)
+            for n, t in enumerate(modis_time):
+                obs_time[n] = round(t)
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
@@ -125,38 +135,17 @@ class AOD(object):
             over_ocean = np.logical_not(land_sea_flag > 0)
             over_land = np.logical_not(land_sea_flag == 0)
             UNC = np.where(over_land, unc_land, np.add(0.05, np.multiply(0.15, aod)))
-            if first:
-                self.outdata[('latitude', 'MetaData')] = lats
-                self.outdata[('longitude', 'MetaData')] = lons
-                self.outdata[('dateTime', 'MetaData')] = obs_time
-            else:
-                self.outdata[('latitude', 'MetaData')] = np.concatenate((self.outdata[('latitude', 'MetaData')], lats))
-                self.outdata[('longitude', 'MetaData')] = np.concatenate((self.outdata[('longitude', 'MetaData')], lons))
-                self.outdata[('dateTime', 'MetaData')] = np.concatenate((self.outdata[('dateTime', 'MetaData')], obs_time))
 
-            for ncvar, iodavar in obsvars.items():
-                data = aod.astype('float32')
-                err = UNC.astype('float32')
-                data2d = np.array(data).reshape(len(data), 1)
-                err2d = np.array(err).reshape(len(err), 1)
-                qc2d = np.array(QC_flag).reshape(len(QC_flag), 1)
-                if first:
-                    self.outdata[self.varDict[iodavar]['valKey']] = data2d
-                    self.outdata[self.varDict[iodavar]['errKey']] = err
-                    self.outdata[self.varDict[iodavar]['qcKey']] = QC_flag
+            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=np.int64))
 
-                else:
-                    self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['valKey']], data))
-                    self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['errKey']], err))
-                    self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['qcKey']], QC_flag))
+            for iodavar in obsvars:
+                self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']], np.array(aod, dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']], np.array(UNC, dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']], np.array(QC_flag, dtype=np.int32))
 
-            first = False
-        self.varAttrs[('dateTime', 'MetaData')]['units'] = ''
-        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
-        DimDict['Channel'] = np.array([2], dtype=np.intc)
+        DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
 
 
 def main():
