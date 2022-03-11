@@ -77,6 +77,7 @@ def main(args):
     GlobalAttrs['platform'] = np.int32(WMO_sat_ID)
     for afile in input_files:
         file_obs_data = get_data_from_files(afile)
+        WMO_sat_ID = get_WMO_satellite_ID(afile)
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
@@ -85,7 +86,10 @@ def main(args):
         else:
             obs_data = file_obs_data
         if WMO_sat_ID != GlobalAttrs['platform']:
-            print(' IODA and subsequent UFO expect files to be by satellite and sensor ')
+            print(' ERROR:  IODA and subsequent UFO expect individual files to be a single satellite and sensor ')
+            print('    .... initial file satellite: ', GlobalAttrs['platform'])
+            print('    ...... final file satellite: ', WMO_sat_ID)
+            sys.exit()
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
