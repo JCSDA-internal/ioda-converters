@@ -29,6 +29,8 @@ locationKeyList = [
     ("dateTime", "integer")
 ]
 
+#iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+#epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 obsvars = ["aerosolOpticalDepth"]
 
@@ -82,7 +84,7 @@ class AOD(object):
 	# Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = []
         self.outdata[('longitude', metaDataName)] = []
-        self.outdata[('dateTime', metaDataName)] = []
+        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = []
             self.outdata[self.varDict[iodavar]['errKey']] = []
@@ -92,7 +94,8 @@ class AOD(object):
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
-            base_datetime = gatts["time_coverage_end"]
+            #base_datetime = datetime.fromisoformat(gatts["time_coverage_end"])
+            base_datetime = datetime.strptime(gatts["time_coverage_end"],'%Y-%m-%dT%H:%M:%SZ')
             self.satellite = gatts["satellite_name"]
             self.sensor = gatts["instrument_name"]
             AttrData["platform"] = self.satellite
@@ -112,6 +115,18 @@ class AOD(object):
             obs_time = np.empty_like(qcall, dtype=object)
             for t in range(len(obs_time)):
                 obs_time[t] = base_datetime
+#            print(base_datetime)
+#            year = base_datetime[:, :, 0].flatten()
+#            month = base_datetime[:, :, 1].flatten()
+#            day = base_datetime[:, :, 2].flatten()
+#            hour = base_datetime[:, :, 3].flatten()
+#            minute = base_datetime[:, :, 4].flatten()
+#            second = base_datetime[:, :, 5].flatten()
+#
+#            obs_time = np.full(len(base_datetime), long_missing_value, dtype=np.int64)
+#	    for n, yyyy in enumerate(year):
+#                this_datetime = datetime(yyyy, month[n], day[n], hour[n], minute[n], second[n])                
+#                obs_time = round((this_datetime - epoch).total_seconds())
             if self.mask == "maskout":
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
@@ -163,7 +178,7 @@ class AOD(object):
             #  Write out data
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],np.array(lats, dtype=np.float32))
             self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time dtype=np.int64))
+            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=object))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
