@@ -137,7 +137,6 @@ if __name__ == '__main__':
         varDict[key]['qcKey'] = key, iconv.OqcName()
         varAttrs[key, iconv.OqcName()]['_FillValue'] = -999
         varAttrs[key, iconv.OqcName()]['coordinates'] = 'longitude latitude stationElevation'
-        varAttrs[key, iconv.OqcName()]['units'] = '1'
 
     for key, value in obsvars.items():
         outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-999.))))
