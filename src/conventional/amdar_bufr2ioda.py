@@ -164,7 +164,8 @@ def main(file_names, output_file):
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
-        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
         obs_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
