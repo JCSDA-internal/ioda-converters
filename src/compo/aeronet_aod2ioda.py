@@ -113,63 +113,69 @@ if __name__ == '__main__':
                                        'aod_500nm', 'aod_870nm',
                                        'aod_1020nm', 'aod_1640nm']}
 
-    AttrData = {
-    }
+    # A dictionary of global attributes.  More filled in further down.
+    AttrData = {}
+    AttrData['ioda_object_type'] = 'AOD'
+    AttrData['sensor'] = 'aeronet'
 
-    DimDict = {
-    }
+    # A dictionary of variable dimensions.
+    DimDict = {}
 
+    # A dictionary of variable names and their dimensions.
     VarDims = {
         'aerosolOpticalDepth': ["Location", "Channel"],
         'sensorCentralFrequency': ['Channel'],
         'sensorChannelNumber': ['Channel']
     }
 
-    for key, value in obsvars.items():
-        varDict[key]['valKey'] = key, iconv.OvalName()
-        varAttrs[key, iconv.OvalName()]['_FillValue'] = -999.
-        varAttrs[key, iconv.OvalName()]['coordinates'] = 'longitude latitude stationElevation'
-        varAttrs[key, iconv.OvalName()]['units'] = '1'
-        varDict[key]['errKey'] = key, iconv.OerrName()
-        varAttrs[key, iconv.OerrName()]['_FillValue'] = -999.
-        varAttrs[key, iconv.OerrName()]['units'] = '1'
-        varAttrs[key, iconv.OerrName()]['coordinates'] = 'longitude latitude stationElevation'
-        varDict[key]['qcKey'] = key, iconv.OqcName()
-        varAttrs[key, iconv.OqcName()]['_FillValue'] = -999
-        varAttrs[key, iconv.OqcName()]['coordinates'] = 'longitude latitude stationElevation'
+    # Get the group names we use the most.
+    metaDataName = iconv.MetaDataName()
+    obsValName = iconv.OvalName()
+    obsErrName = iconv.OerrName()
+    qcName = iconv.OqcName()
 
     for key, value in obsvars.items():
-        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-999.))))
-        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
+        varDict[key]['valKey'] = key, obsValName
+        varDict[key]['errKey'] = key, obsErrName
+        varDict[key]['qcKey'] = key, qcName
+        varAttrs[key, obsValName]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[key, obsErrName]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[key, qcName]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[key, obsValName]['_FillValue'] = -9999.
+        varAttrs[key, obsErrName]['_FillValue'] = -9999.
+        varAttrs[key, qcName]['_FillValue'] = -9999
+        varAttrs[key, obsValName]['units'] = '1'
+        varAttrs[key, obsErrName]['units'] = '1'
+
+    for key, value in obsvars.items():
+        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-9999.))))
+        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-9999.),
                                                   1, 0)
-        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
-                                                   np.float32(-999.), np.float32(0.02))
+        outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-9999.),
+                                                   np.float32(-9999.), np.float32(0.02))
 
     # Add metadata variables
-    outdata[('latitude', 'MetaData')] = np.array(np.float32(f3['latitude']))
-    outdata[('longitude', 'MetaData')] = np.array(np.float32(f3['longitude']))
-    outdata[('stationElevation', 'MetaData')] = np.array(np.float32(f3['elevation']))
-    varAttrs[('stationElevation', 'MetaData')]['units'] = 'm'
+    outdata[('latitude', metaDataName)] = np.array(np.float32(f3['latitude']))
+    outdata[('longitude', metaDataName)] = np.array(np.float32(f3['longitude']))
+    outdata[('stationElevation', metaDataName)] = np.array(np.float32(f3['elevation']))
+    varAttrs[('stationElevation', metaDataName)]['units'] = 'm'
 
     c = np.empty([nlocs], dtype=object)
     c[:] = np.array(f3.siteid)
-    outdata[('stationIdentification', 'MetaData')] = c
+    outdata[('stationIdentification', metaDataName)] = c
 
     d = np.empty([nlocs], dtype=object)
     for i in range(nlocs):
         d[i] = f3.time[i].strftime('%Y-%m-%dT%H:%M:%SZ')
-    outdata[('dateTime', 'MetaData')] = d
-    varAttrs[('dateTime', 'MetaData')]['units'] = ''
+    outdata[('dateTime', metaDataName)] = d
 
-    outdata[('sensorCentralFrequency', 'MetaData')] = np.float32(frequency)
-    varAttrs[('sensorCentralFrequency', 'MetaData')]['units'] = 'Hz'
-    outdata[('sensorChannelNumber', 'MetaData')] = np.int32(aod_chan)
+    outdata[('sensorCentralFrequency', metaDataName)] = np.float32(frequency)
+    varAttrs[('sensorCentralFrequency', metaDataName)]['units'] = 'Hz'
+    outdata[('sensorChannelNumber', metaDataName)] = np.int32(aod_chan)
 
     # Add global atrributes
     DimDict['Location'] = nlocs
     DimDict['Channel'] = aod_chan
-    AttrData['ioda_object_type'] = 'AOD'
-    AttrData['sensor'] = 'aeronet'
 
     # Setup the IODA writer
     writer = iconv.IodaWriter(outfile, locationKeyList, DimDict)
