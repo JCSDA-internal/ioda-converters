@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021-2022 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 #
