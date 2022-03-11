@@ -80,27 +80,43 @@ conv_bufrtypes = {
     # 132 are dropsondes
 }
 
+# WMO satellite IDs
+wmo_satid = {
+    'aqua': 784,
+    'metop-a': 4,
+    'metop-b': 3,
+    'metop-c': 5,
+    'noaa-15': 206,
+    'noaa-18': 209,
+    'noaa-19': 223,
+}
+
+wmo_instid = {
+    'amsua': 570,
+    'atms': 621,
+}
+
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
 all_LocKeyList = {
-    'Station_ID': ('station_id', 'string'),
-    'Time': ('datetime', 'string'),
+    'Station_ID': ('stationIdentification', 'Fixed-length string'),
+    'Time': ('dateTime', 'string'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
-    'Station_Elevation': ('station_elevation', 'float'),
-    'Pressure': ('air_pressure', 'float'),
+    'Station_Elevation': ('stationElevation', 'float'),
+    'Pressure': ('airPressure', 'float'),
     'Height': ('height', 'float'),
-    'Elevation': ('height_above_mean_sea_level', 'float'),
-    'Obs_Time': ('datetime', 'string'),
-    'Scan_Position': ('scan_position', 'float'),
-    'Sat_Zenith_Angle': ('sensor_zenith_angle', 'float'),
-    'Sat_Azimuth_Angle': ('sensor_azimuth_angle', 'float'),
-    'Sol_Zenith_Angle': ('solar_zenith_angle', 'float'),
-    'Sol_Azimuth_Angle': ('solar_azimuth_angle', 'float'),
-    'Scan_Angle': ('sensor_view_angle', 'float'),
+    'Elevation': ('heightOfSurface', 'float'),
+    'Obs_Time': ('dateTime', 'string'),
+    'Scan_Position': ('sensorScanPosition', 'float'),
+    'Sat_Zenith_Angle': ('sensorZenithAngle', 'float'),
+    'Sat_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
+    'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
+    'Sol_Azimuth_Angle': ('solarAzimuthAngle', 'float'),
+    'Scan_Angle': ('sensorViewAngle', 'float'),
     'Surface_type': ('surface_type', 'integer'),
     'MODIS_deep_blue_flag': ('modis_deep_blue_flag', 'integer'),
     'Reference_Pressure': ('air_pressure', 'float'),
-    'Solar_Zenith_Angle': ('solar_zenith_angle', 'float'),
+    'Solar_Zenith_Angle': ('solarZenithAngle', 'float'),
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
@@ -124,14 +140,14 @@ checkuv = {
 }
 
 conv_varnames = {
-    "tv": ["virtual_temperature"],
-    "tsen": ["air_temperature"],
-    "uv": ["eastward_wind", "northward_wind"],
+    "tv": ["virtualTemperature"],
+    "tsen": ["airTemperature"],
+    "uv": ["windEastward", "windNorthward"],
     "ps": ["surface_pressure"],
-    "q": ["specific_humidity"],
-    "bend": ["bending_angle"],
+    "q": ["specificHumidity"],
+    "bend": ["bendingAngle"],
     "refract": ["refractivity"],
-    "sst": ["sea_surface_temperature"],
+    "sst": ["seaSurfaceTemperature"],
 }
 
 conv_gsivarnames = {
@@ -282,14 +298,14 @@ radar_sensors = [
 ]
 
 chan_metadata_dict = {
-    'sensor_chan': 'sensor_channel',
-    'use_flag': 'gsi_use_flag',
-    'frequency': 'sensor_band_central_radiation_frequency',
-    'polarization': 'polarization',
-    'wavenumber': 'sensor_band_central_radiation_wavenumber',
-    'error_variance': 'ObsError',
-    'mean_lapse_rate': 'mean_lapse_rate',
+    'sensor_chan': 'sensorChannelNumber',
+    'frequency': 'sensorCentralFrequency',
+    'polarization': 'sensorPolarizationDirection',
+    'wavenumber': 'sensorCentralWavenumber',
 }
+# 'use_flag': 'gsi_use_flag',
+# 'error_variance': 'ObsError',
+# 'mean_lapse_rate': 'mean_lapse_rate',
 
 chan_metadata_int = [
     'sensor_channel',
@@ -409,7 +425,7 @@ units_values = {
     'northward_wind': 'm s-1',
     'eastward_wind': 'm s-1',
     'geopotential_height': 'm',
-    'height_above_mean_sea_level': 'm',
+    'heightOfSurface': 'm',
     'surface_pressure': 'Pa',
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
@@ -471,11 +487,11 @@ units_values = {
     'station_elevation': 'm',
     'height': 'm',
     'height_above_mean_sea_level': 'm',
-    'scan_position': '1',
-    'sensor_zenith_angle': 'degree',
-    'sensor_azimuth_angle': 'degree',
-    'solar_zenith_angle': 'degree',
-    'solar_azimuth_angle': 'degree',
+    'sensorViewAngle': 'degree',
+    'sensorZenithAngle': 'degree',
+    'sensorAzimuthAngle': 'degree',
+    'solarZenithAngle': 'degree',
+    'solarAzimuthAngle': 'degree',
     'modis_deep_blue_flag': '1',
     'row_anomaly_index': '1',
     'total_ozone_error_flag': '1',
@@ -488,10 +504,13 @@ units_values = {
     'brightness_temperature_jacobian_air_temperature': '1',
     'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
     'optical_thickness_of_atmosphere_layer': '1',
-    'clw_retrieved_from_observation': 'kg/m/m',
-    'clw_retrieved_from_background': 'kg/m/m',
-    'scat_retrieved_from_observation': '1',
+    'cloudWaterRetrievedFromObservation': 'kg m-2',
+    'cloudWaterRetrievedFromSimulatedObservation': 'kg m-2',
+    'scatteringIndexRetrievedFromObservation': '1',
     'LaunchTime': 'hours',
+    'sensorCentralWavenumber': 'm-1',
+    'sensorCentralFrequency': 'Hz',
+    'brightnessTemperature': 'K',
 }
 
 # @TestReference
@@ -505,10 +524,10 @@ test_fields_conv = {
 test_fields = {}
 
 test_fields_allsky = {
-    'clwp_amsua': ('clw_retrieved_from_observation', 'float'),
-    'clw_guess_retrieval': ('clw_retrieved_from_background', 'float'),
+    'clwp_amsua': ('cloudWaterRetrievedFromObservation', 'float'),
+    'clw_guess_retrieval': ('cloudWaterRetrievedFromSimulatedObservation', 'float'),
     'clw_symmetric_amount': ('clw_symmetric_amount', 'float'),
-    'scat_amsua': ('scat_retrieved_from_observation', 'float'),
+    'scat_amsua': ('scatteringIndexRetrievedFromObservation', 'float'),
 }
 test_fields_with_channels_allsky = {
     'Hydrometeor_Affected_Channels': ('Hydrometeor_Affected_Channels', 'float'),
@@ -652,11 +671,11 @@ class Conv(BaseGSI):
                         self.validtime.strftime("%Y%m%d%H")))
                 # get nlocs
                 nlocs = np.sum(idx)
-                ncout.createDimension("nlocs", nlocs)
+                ncout.createDimension("Location", nlocs)
                 # other dims
                 if (v != "sst"):
                     ncout.createDimension(
-                        "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+                        "Layer", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
                     ncout.createDimension(
                         "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
@@ -672,17 +691,17 @@ class Conv(BaseGSI):
                         vdata = np.frombuffer(vdata, dtype=var.dtype)
                         vdata = np.reshape(vdata, dims)
                         if vname in geovals_metadata_dict.keys():
-                            dims = ("nlocs",) + var.dimensions[1:]
+                            dims = ("Location",) + var.dimensions[1:]
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
                             if (len(var.dimensions) == 1):
-                                dims = ("nlocs",)
+                                dims = ("Location",)
                             else:
                                 if vname == "atmosphere_pressure_coordinate_interface":
-                                    dims = ("nlocs", "ninterfaces")
+                                    dims = ("Location", "ninterfaces")
                                 else:
-                                    dims = ("nlocs", "nlevs")
+                                    dims = ("Location", "Layer")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
                             var_out[...] = vdata[idx, ...]
                 ncout.close()
@@ -745,7 +764,8 @@ class Conv(BaseGSI):
                     varDict[value]['valKey'] = value, iconv.OvalName()
                     varDict[value]['errKey'] = value, iconv.OerrName()
                     varDict[value]['qcKey'] = value, iconv.OqcName()
-                    VarDims[value] = ['nlocs']
+#                   VarDims[value] = ['nlocs']
+                    VarDims[value] = ['Location']
                     varAttrs[varDict[value]['valKey']]['units'] = units_values[value]
                     varAttrs[varDict[value]['errKey']]['units'] = units_values[value]
                     varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
@@ -839,7 +859,7 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                        varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
+                        varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
@@ -884,7 +904,8 @@ class Conv(BaseGSI):
                         outdata[(test_mdata_name, 'TestReference')] = tmp
 
                 # writer metadata
-                DimDict['nlocs'] = len(StationIDs)
+#               DimDict['nlocs'] = len(StationIDs)
+                DimDict['Location'] = len(StationIDs)
 
                 writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
                 writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
@@ -997,28 +1018,30 @@ class Radiances(BaseGSI):
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("satellite", self.satellite)
         ncout.setncattr("sensor", self.sensor)
+
         # get nlocs
         nlocs = self.nobs / self.nchans
-        ncout.createDimension("nlocs", nlocs)
+        ncout.createDimension("Location", nlocs)
+
         # other dims
-        ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
-        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        ncout.createDimension("Layer", self.df.dimensions["air_temperature_arr_dim"].size)
+        ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
 
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("nlocs",)
+                dims = ("Location",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("nlocs",)
+                    dims = ("Location",)
                 elif "_levels" in vname:
-                    dims = ("nlocs", "nlevsp1")
+                    dims = ("Location", "Level")
                 else:
-                    dims = ("nlocs", "nlevs")
+                    dims = ("Location", "Level")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
@@ -1052,16 +1075,18 @@ class Radiances(BaseGSI):
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
-        ncout.setncattr("satellite", self.satellite)
+        ncout.setncattr("platform", self.satellite)
         ncout.setncattr("sensor", self.sensor)
+
         # get nlocs
         nlocs = self.nobs / self.nchans
-        ncout.createDimension("nlocs", nlocs)
-        # other dims
-        nlevs = self.df.dimensions["air_pressure_arr_dim"].size
-        nlevsp1 = self.df.dimensions["air_pressure_levels_arr_dim"].size
+        ncout.createDimension("Location", nlocs)
 
-        ncout.createDimension("nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
+        # other dims
+        Layer = self.df.dimensions["air_pressure_arr_dim"].size
+        Level = self.df.dimensions["air_pressure_levels_arr_dim"].size
+
+        ncout.createDimension("Layer", self.df.dimensions["air_pressure_arr_dim"].size)
 
         # get channel info and list
         chan_number = self.darr('sensor_chan')
@@ -1075,7 +1100,7 @@ class Radiances(BaseGSI):
         for var in self.df.variables.values():
             vname = var.name
             if vname in obsdiag_metadata_dict.keys():
-                dims = ("nlocs",)
+                dims = ("Location",)
                 var_out = ncout.createVariable(obsdiag_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
@@ -1083,7 +1108,7 @@ class Radiances(BaseGSI):
             elif vname in obsdiag_vars.keys():
                 # print("toObsdiag: var.shape = ", var.shape)
                 if (len(var.dimensions) == 1):
-                    dims = ("nlocs",)
+                    dims = ("Location",)
                     for c in range(len(chanlist)):
                         var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
@@ -1095,9 +1120,9 @@ class Radiances(BaseGSI):
                         vdata = vdata[idx]
                         var_out[:] = vdata
                 elif "_levels" in vname:
-                    dims = ("nlocs", "nlevsp1")
+                    dims = ("Location", "Level")
                 else:
-                    dims = ("nlocs", "nlevs")
+                    dims = ("Location", "Level")
                     for c in range(len(chanlist)):
                         var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
@@ -1165,17 +1190,17 @@ class Radiances(BaseGSI):
 
         chanlist = chan_number
 
-        value = "brightness_temperature"
+        value = "brightnessTemperature"
         varDict[value]['valKey'] = value, iconv.OvalName()
         varDict[value]['errKey'] = value, iconv.OerrName()
         varDict[value]['qcKey'] = value, iconv.OqcName()
-        VarDims[value] = ['nlocs', 'nchans']
+        VarDims[value] = ['Location', 'Channel']
         varAttrs[varDict[value]['valKey']]['units'] = 'K'
         varAttrs[varDict[value]['errKey']]['units'] = 'K'
-        varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
-        varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
-        varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
-        varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
+#       varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
+#       varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
+#       varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
+#       varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
         varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
@@ -1199,7 +1224,7 @@ class Radiances(BaseGSI):
             for vbc in valuebc:
                 varDict[vbc]['bctKey'] = vbc, iconv.ObiastermName()
                 varDict[vbc]['bcpKey'] = vbc, iconv.ObiaspredName()
-                VarDims[(vbc, 'MetaData')] = ['nlocs']
+                VarDims[(vbc, 'MetaData')] = ['Location']
                 ibc += 1
         obsdata = self.var('Observation')
         try:
@@ -1254,7 +1279,7 @@ class Radiances(BaseGSI):
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
+                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
                 # Channels 1-9
                 tmp = self.var(lvar)[::nchans]
@@ -1282,7 +1307,7 @@ class Radiances(BaseGSI):
                 tmp = self.var(tvar)[:]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[test_mdata_name] = np.reshape(tmp, (nlocs, nchans))
-                VarDims[test_mdata_name] = ['nlocs', 'nchans']
+                VarDims[test_mdata_name] = ['Location', 'Channel']
                 if test_fields_with_channels_[tvar][0] in units_values.keys():
                     varAttrs[test_mdata_name]['units'] = units_values[test_fields_with_channels_[tvar][0]]
 
@@ -1291,7 +1316,7 @@ class Radiances(BaseGSI):
                 tmp = self.var(tvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[test_mdata_name] = tmp
-                VarDims[test_mdata_name] = ['nlocs']
+                VarDims[test_mdata_name] = ['Location']
                 if test_fields_[tvar][0] in units_values.keys():
                     varAttrs[test_mdata_name]['units'] = units_values[test_fields_[tvar][0]]
 
@@ -1329,12 +1354,12 @@ class Radiances(BaseGSI):
                     tmp = tmp.astype(np.int32)
                 else:
                     tmp[tmp > 4e8] = self.FLOAT_FILL
-                gvname = "brightness_temperature", iodavar
+                gvname = "brightnessTemperature", iodavar
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
-                VarDims[gvname] = ['nlocs', 'nchans']
+                VarDims[gvname] = ['Location', 'Channel']
 
         # brightness temperature variables
-        value = 'brightness_temperature'
+        value = 'brightnessTemperature'
         obsdata[obsdata > 9e5] = self.FLOAT_FILL
         obsqc[obsdata > 9e5] = self.INT_FILL
 
@@ -1342,14 +1367,25 @@ class Radiances(BaseGSI):
         outdata[varDict[value]['valKey']] = np.reshape(obsdata, (nlocs, nchans))
         outdata[varDict[value]['errKey']] = np.reshape(obserr, (nlocs, nchans))
         outdata[varDict[value]['qcKey']] = np.reshape(obsqc.astype(np.int32), (nlocs, nchans))
-        # create a GSI effective QC variable
+
+        # create a GSI effective QC variable (group)
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
         gsiqc[outdata[errname] > 1e8] = 1
         gsiqc[np.reshape(self.var('QC_Flag'), (nlocs, nchans)) < 0] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
-        varAttrs[gsiqcname]['units'] = 'unitless'
+
+        # create a GSI related variable (group)
+        varAttrs[errname]['units'] = 'K'
+        grpname = value, 'GsiBc'
+        varAttrs[grpname]['units'] = 'K'
+        grpname = value, 'GsiHofXBc'
+        varAttrs[grpname]['units'] = 'K'
+        grpname = value, 'GsiHofX'
+        varAttrs[grpname]['units'] = 'K'
+        grpname = value, 'GsiHofXClr'
+        varAttrs[grpname]['units'] = 'K'
 
         if (ObsBias):
             valuebc = [
@@ -1387,23 +1423,25 @@ class Radiances(BaseGSI):
                     outdata[(value2, 'MetaData')] = self.var(key).astype(np.int32)
                 else:
                     outdata[(value2, 'MetaData')] = self.var(key).astype(np.float32)
-                VarDims[(value2, 'MetaData')] = ['nchans']
+                VarDims[(value2, 'MetaData')] = ['Channel']
                 if value2 in units_values.keys():
                     varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
             except IndexError:
                 pass
 
         # global attributes
-        globalAttrs["satellite"] = self.satellite
-        globalAttrs["sensor"] = self.sensor
+        globalAttrs["platform"] = str(wmo_satid[self.satellite])
+        globalAttrs["sensor"] = str(wmo_instid[self.sensor])
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        DimDict['nlocs'] = nlocs
-        DimDict['nchans'] = chanlist
+        DimDict['Location'] = nlocs
+        DimDict['Channel'] = chanlist
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
+
+        print('emily checking globalAttrs = ', globalAttrs)
 
         print("Satellite radiance obs processed, wrote to: %s" % outname)
 
@@ -1472,13 +1510,15 @@ class Ozone(BaseGSI):
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("satellite", self.satellite)
         ncout.setncattr("sensor", self.sensor)
+
         # get nlocs
         nlocs = self.nobs
-        ncout.createDimension("nlocs", nlocs)
+        ncout.createDimension("Location", nlocs)
+
         # other dims
-        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        ncout.createDimension("Layer", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         if (self.sensor not in ["ompslp", "mls55"]):
-            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+            ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1488,11 +1528,11 @@ class Ozone(BaseGSI):
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("nlocs",)
+                    dims = ("Location",)
                 elif "_levels" in vname:
-                    dims = ("nlocs", "nlevsp1")
+                    dims = ("Location", "Level")
                 else:
-                    dims = ("nlocs", "nlevs")
+                    dims = ("Location", "Layer")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
@@ -1554,7 +1594,7 @@ class Ozone(BaseGSI):
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
+                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             else:
                 tmp = self.var(lvar)
                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -1592,12 +1632,12 @@ class Ozone(BaseGSI):
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
 
-        globalAttrs["satellite"] = self.satellite
+        globalAttrs["platform"] = self.satellite
         globalAttrs["sensor"] = self.sensor
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        DimDict['nlocs'] = nlocs
+        DimDict['Location'] = nlocs
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
@@ -1667,24 +1707,24 @@ class Radar(BaseGSI):
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         # get nlocs
         nlocs = self.nobs
-        ncout.createDimension("nlocs", nlocs)
+        ncout.createDimension("Location", nlocs)
         # other dims
-        ncout.createDimension("nlevs", self.df.dimensions["nlevs"].size)
+        ncout.createDimension("Layer", self.df.dimensions["Layer"].size)
         # ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("nlocs",)
+                dims = ("Location",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("nlocs",)
+                    dims = ("Location",)
                 elif "_levels" in vname:
-                    dims = ("nlocs", "nlevsp1")
+                    dims = ("Location", "Level")
                 else:
-                    dims = ("nlocs", "nlevs")
+                    dims = ("Location", "Layer")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
@@ -1731,7 +1771,7 @@ class Radar(BaseGSI):
             varDict[value]['valKey'] = value, iconv.OvalName()
             varDict[value]['errKey'] = value, iconv.OerrName()
             varDict[value]['qcKey'] = value, iconv.OqcName()
-            VarDims[value] = ['nlocs']
+            VarDims[value] = ['Location']
             varAttrs[varDict[value]['valKey']]['units'] = myunits
             varAttrs[varDict[value]['errKey']]['units'] = myunits
             varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
@@ -1774,7 +1814,7 @@ class Radar(BaseGSI):
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'UTC Time in YYYY-MM-DDTHH:MM:SSZ format'
+                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             else:
                 tmp = self.var(lvar)[:]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -1786,7 +1826,7 @@ class Radar(BaseGSI):
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
-        DimDict['nlocs'] = nlocs
+        DimDict['Location'] = nlocs
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
