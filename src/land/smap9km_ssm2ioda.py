@@ -68,12 +68,10 @@ class smap(object):
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        #self.satellite = 789
-        #self.sensor = 432
-        #AttrData["platform"] = int(self.satellite)
-        #AttrData["sensor"] = int(self.sensor)
-        AttrData["platform"] = "789"
-        AttrData["sensor"] = "432" 
+        self.satellite = 789
+        self.sensor = 432
+        AttrData["platform"] = np.array([self.satellite], dtype=np.int32)
+        AttrData["sensor"] = np.array([self.sensor], dtype=np.int32)
 
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()

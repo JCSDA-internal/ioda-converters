@@ -68,8 +68,10 @@ class SMOS_L2NRT(object):
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        AttrData["platform"] = "46"
-        AttrData["sensor"] = "176"
+        satelliteID = 46
+        sensorID = 176
+        AttrData["platform"] = np.array([satelliteID], dtype=np.int32)
+        AttrData["sensor"] = np.array([sensorID], dtype=np.int32)
 
         lons = ncd.variables['longitude'][:]
         lats = ncd.variables['latitude'][:]
