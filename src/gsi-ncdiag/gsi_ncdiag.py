@@ -89,11 +89,17 @@ wmo_satid = {
     'noaa-15': 206,
     'noaa-18': 209,
     'noaa-19': 223,
+    'noaa-20': 225,
+    'npp': 224,
 }
 
 wmo_instid = {
     'amsua': 570,
     'atms': 621,
+    'iasi': 221,
+    'abi': 617,
+    'omps': 947,
+    'sbuv': 956,
 }
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
@@ -1428,8 +1434,8 @@ class Radiances(BaseGSI):
                 pass
 
         # global attributes
-        globalAttrs["platform"] = str(wmo_satid[self.satellite])
-        globalAttrs["sensor"] = str(wmo_instid[self.sensor])
+        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
+        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
@@ -1628,8 +1634,8 @@ class Ozone(BaseGSI):
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
 
-        globalAttrs["platform"] = self.satellite
-        globalAttrs["sensor"] = self.sensor
+        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
+        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
