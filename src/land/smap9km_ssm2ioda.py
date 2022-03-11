@@ -125,7 +125,6 @@ class smap(object):
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('surfaceFlag', 'MetaData')] = sflg
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
-        #self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
