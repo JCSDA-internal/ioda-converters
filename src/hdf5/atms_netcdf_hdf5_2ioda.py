@@ -93,6 +93,8 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
+    GlobalAttrs['datetimeRange'] = np.array([obs_data[('dateTime', metaDataName)][0].strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                             obs_data[('dateTime', metaDataName)][-1].strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
     GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # pass parameters to the IODA writer
