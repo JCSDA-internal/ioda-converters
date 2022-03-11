@@ -79,7 +79,7 @@ class AOD(object):
             self.varAttrs[iodavar, obsErrName]['units'] = '1'
 
         # All of VIIRS AOD data have a singular reference time
-        self.varAttrs[('dateTime', metaDataName)]['units'] = 'seconds since 1993-01-01T00:00:00Z'
+        #self.varAttrs[('dateTime', metaDataName)]['units'] = 'seconds since 1993-01-01T00:00:00Z'
         
 	# Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = []
