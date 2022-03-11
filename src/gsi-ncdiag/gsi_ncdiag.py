@@ -764,7 +764,6 @@ class Conv(BaseGSI):
                     varDict[value]['valKey'] = value, iconv.OvalName()
                     varDict[value]['errKey'] = value, iconv.OerrName()
                     varDict[value]['qcKey'] = value, iconv.OqcName()
-#                   VarDims[value] = ['nlocs']
                     VarDims[value] = ['Location']
                     varAttrs[varDict[value]['valKey']]['units'] = units_values[value]
                     varAttrs[varDict[value]['errKey']]['units'] = units_values[value]
@@ -904,7 +903,6 @@ class Conv(BaseGSI):
                         outdata[(test_mdata_name, 'TestReference')] = tmp
 
                 # writer metadata
-#               DimDict['nlocs'] = len(StationIDs)
                 DimDict['Location'] = len(StationIDs)
 
                 writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
