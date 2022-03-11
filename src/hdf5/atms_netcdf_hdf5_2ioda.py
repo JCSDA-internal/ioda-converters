@@ -50,7 +50,7 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "integer")
+    ("dateTime", "object")
 ]
 
 
@@ -87,21 +87,19 @@ def main(args):
         if WMO_sat_ID != GlobalAttrs['platform']:
             print(' IODA and subsequent UFO expect files to be by satellite and sensor ')
 
-    nlocs_int32 = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int32')
-    nlocs = nlocs_int32.item()
+    nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
+    nlocs = nlocs_int.item()
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     # GlobalAttrs['dataBulletinHeader'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['datetimeRange'] = np.array([dtg.strftime("%Y-%m-%dT%H:%M:%SZ"), dtg.strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
-    date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
-    GlobalAttrs['date_time'] = date_time_int32.item()
 
     # pass parameters to the IODA writer
     VarDims = {
-        'brightnessTemperature': [ ['Location', 'Channel'] ],
-        'sensorChannelNumber': [ ['Channel'] ],
+        'brightnessTemperature': ['Location', 'Channel'],
+        'sensorChannelNumber': ['Channel'],
     }
 
     DimDict = {
@@ -201,7 +199,7 @@ def get_data(f, g, obs_data):
         obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
         obs_data[('sensorViewAngle', metaDataName)] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
         nlocs = len(obs_data[('latitude', metaDataName)])
-        obs_data[('dateTime', metaDataName)] = np.array(get_observation_time(g['obs_time_utc'][:, :, :]), dtype='int64')
+        obs_data[('dateTime', metaDataName)] = np.array(get_observation_time(g['obs_time_utc'][:, :, :]), dtype='object')
 
     # BaseException is a catch-all mechamism
     except BaseException:
@@ -255,7 +253,7 @@ def get_observation_time(obs_time_utc):
     second = 0
     dtg = []
     for i, yyyy in enumerate(year):
-        observation_time = datetime.datetime(yyyy, month[i], day[i], hour[i], minute[i], second)
+        observation_time = datetime(yyyy, month[i], day[i], hour[i], minute[i], second)
         dtg.append(observation_time)
 
     return dtg
@@ -299,8 +297,6 @@ def set_metadata_attributes(VarAttrs):
     VarAttrs[('solarZenithAngle', metaDataName)]['units'] = 'degree'
     VarAttrs[('sensorAzimuthAngle', metaDataName)]['units'] = 'degree'
     VarAttrs[('solarAzimuthAngle', metaDataName)]['units'] = 'degree'
-
-    VarAttrs[('dateTime', metaDataName)]['units'] = "seconds since 1970-01-01T00:00:00Z"
 
     return VarAttrs
 
