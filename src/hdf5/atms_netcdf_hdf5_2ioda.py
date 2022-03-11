@@ -32,8 +32,6 @@ ATMS_WMO_sensor_ID = 621
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 
-epoch = datetime.utcfromtimestamp(0)
-
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
@@ -102,8 +100,8 @@ def main(args):
 
     # pass parameters to the IODA writer
     VarDims = {
-        'brightnessTemperature': ['Location', 'Channel'],
-        'sensorChannelNumber': ['Channel'],
+        'brightnessTemperature': [ ['Location', 'Channel'] ],
+        'sensorChannelNumber': [ ['Channel'] ],
     }
 
     DimDict = {
@@ -247,7 +245,7 @@ def get_WMO_satellite_ID(filename):
     return WMO_sat_ID
 
 
-def get_observation_time(obs_time_utc, write_string=False):
+def get_observation_time(obs_time_utc):
 
     year = obs_time_utc[:, :, 0].flatten()
     month = obs_time_utc[:, :, 1].flatten()
@@ -257,13 +255,8 @@ def get_observation_time(obs_time_utc, write_string=False):
     second = 0
     dtg = []
     for i, yyyy in enumerate(year):
-        observation_time_string = ("%4i-%.2i-%.2iT%.2i:%.2i:%.2iZ" % (yyyy, month[i], day[i], hour[i], minute[i], second))
-        if write_string:
-            dtg.append(cdtg)
-        else:
-            observation_time = datetime.strptime(observation_time_string, '%Y-%m-%dT%H:%M:%SZ')
-            time_offset = round((observation_time - epoch).total_seconds())
-            dtg.append(time_offset)
+        observation_time = datetime.datetime(yyyy, month[i], day[i], hour[i], minute[i], second)
+        dtg.append(observation_time)
 
     return dtg
 
