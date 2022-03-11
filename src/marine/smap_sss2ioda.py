@@ -25,12 +25,12 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = "salinity"
+vName = "seaSurfaceSalinity"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {}
@@ -134,7 +134,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read JPL/RSS SMAP sea surface salinity (SSS) file(s) and convert'
+            'Read JPL/RSS SMAP sea surface seaSurfaceSalinity (SSS) file(s) and convert'
             ' to a concatenated IODA formatted output file.')
     )
     required = parser.add_argument_group(title='required arguments')
@@ -154,10 +154,10 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     VarDims = {
-        'salinity': ['Location'],
+        'seaSurfaceSalinity': ['Location'],
     }
 
-    # Read in the salinity
+    # Read in the seaSurfaceSalinity
     sal = Salinity(args.input, fdate)
 
     # write them out
@@ -167,11 +167,11 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('salinity', 'ObsValue')]['units'] = 'g kg-1'
-    VarAttrs[('salinity', 'ObsError')]['units'] = 'g kg-1'
-    VarAttrs[('salinity', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('salinity', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('salinity', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['units'] = 'g kg-1'
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['units'] = 'g kg-1'
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'PreQC')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
