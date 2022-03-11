@@ -488,8 +488,8 @@ units_values = {
     'seas2': '1',
     'seas3': '1',
     'seas4': '1',
-    'latitude': 'degrees_north',
-    'longitude': 'degrees_east',
+    'latitude': 'degree_north',
+    'longitude': 'degree_east',
     'station_elevation': 'm',
     'height': 'm',
     'height_above_mean_sea_level': 'm',
@@ -1278,12 +1278,13 @@ class Radiances(BaseGSI):
                 ii += 1
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
+            print('emily checking loc_mdata_name= ', loc_mdata_name)
             if lvar == 'Obs_Time':
                 tmp = self.var(lvar)[::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-            #   varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                # varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
                 # Channels 1-9
                 tmp = self.var(lvar)[::nchans]
@@ -1297,6 +1298,11 @@ class Radiances(BaseGSI):
                 outdata[(loc_mdata_name+'1', 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name+'1', 'MetaData')]['units'] = units_values[loc_mdata_name]
+                tmp = self.var(lvar)[::nchans]
+                tmp[tmp > 4e8] = self.FLOAT_FILL
+                outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if loc_mdata_name in units_values.keys():
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -1427,6 +1433,12 @@ class Radiances(BaseGSI):
                     outdata[(value2, 'MetaData')] = self.var(key).astype(np.int32)
                 else:
                     outdata[(value2, 'MetaData')] = self.var(key).astype(np.float32)
+                    # Frequency units is GHz in CRTM/GSI
+                    if value2 == 'sensorCentralFrequency':
+                        outdata[(value2, 'MetaData')] = outdata[(value2, 'MetaData')]*1.e9
+                    # Wavenumber unit is cm-1 in CRTM/GSI
+                    if value2 == 'sensorCentralWavenumber':
+                        outdata[(value2, 'MetaData')] = outdata[(value2, 'MetaData')]*1.e2
                 VarDims[(value2, 'MetaData')] = ['Channel']
                 if value2 in units_values.keys():
                     varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
