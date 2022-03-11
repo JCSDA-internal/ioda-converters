@@ -345,6 +345,10 @@ def read_bufr_message(f, count, start_pos, data):
             logging.warning(f"Key called {k} contains only {len(meta_data[k])} "
                             f" elements, wheras {target_number} were expected.")
             meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, len(meta_data[k])-1)
+        elif (len(meta_data[k]) > target_number):
+            logging.warning(f"Key called {k} contains {len(meta_data[k])} "
+                            f" elements, wheras {target_number} were expected.")
+            meta_data[k] = meta_data[k][:target_number]
 
     # Plus, to construct a dateTime, we always need its components.
     try:
