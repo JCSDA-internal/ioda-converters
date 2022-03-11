@@ -27,7 +27,7 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("height", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 obsvars = {
@@ -167,7 +167,7 @@ class ghcn(object):
                 vals[i] = 0.001*vals[i]
             times[i] = base_datetime
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
@@ -178,7 +178,7 @@ class ghcn(object):
         self.outdata[self.varDict[iodavar]['errKey']] = errs
         self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():

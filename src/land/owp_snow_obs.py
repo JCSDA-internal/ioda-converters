@@ -48,14 +48,14 @@ col_types = {
     'rec_elev_m': np.int32,
     'latitude': np.float64,
     'longitude': np.float64,
-    'datetime': str,
+    'dateTime': str,
     'variable_name': str}
 
 location_key_list = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("height", "integer"),
-    ("datetime", "string"), ]
+    ("dateTime", "string"), ]
 
 dim_dict = {}
 
@@ -170,7 +170,7 @@ class OwpSnowObs(object):
                     wh_not_var_other = np.where(np.isnan(obs_df[f'ObsValue {var_other}']))[0]  # 1-D
                     obs_df = obs_df.drop(wh_not_var_other).reset_index()
 
-        self.data[('datetime', 'MetaData')] = obs_df.datetime.values
+        self.data[('dateTime', 'MetaData')] = obs_df.datetime.values
         self.data[('latitude', 'MetaData')] = obs_df.latitude.values
         self.data[('longitude', 'MetaData')] = obs_df.longitude.values
 
@@ -202,7 +202,7 @@ class OwpSnowObs(object):
             self.data[self.var_dict[ioda_var]['qcKey']] = (
                 mask_nans(obs_df[f'PreQC {obs_var}'].values * conv_fact))
 
-        dim_dict['Location'] = len(self.data[('datetime', 'MetaData')])
+        dim_dict['Location'] = len(self.data[('dateTime', 'MetaData')])
 
     def write(self):
         writer = iconv.IodaWriter(self.file_out, location_key_list, dim_dict)

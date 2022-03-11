@@ -25,7 +25,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 obsvars = {
@@ -121,7 +121,7 @@ class smap(object):
             times[i] = base_datetime
 
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
 
@@ -130,7 +130,7 @@ class smap(object):
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():

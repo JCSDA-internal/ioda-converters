@@ -28,7 +28,7 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("height", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 obsvars = {
@@ -115,7 +115,7 @@ class imsFV3(object):
             sndv[i] = 0.001*sndv[i]
 
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
         self.outdata[('height', 'MetaData')] = oros
@@ -132,7 +132,7 @@ class imsFV3(object):
                     self.outdata[self.varDict[iodavar]['valKey']] = sndv
                     self.outdata[self.varDict[iodavar]['errKey']] = errsd
                     self.outdata[self.varDict[iodavar]['qcKey']] = qdflg
-        DimDict['Location'] = len(self.outdata[('datetime', 'MetaData')])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():
