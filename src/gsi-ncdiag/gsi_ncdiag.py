@@ -1278,7 +1278,6 @@ class Radiances(BaseGSI):
                 ii += 1
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
-            print('emily checking loc_mdata_name= ', loc_mdata_name)
             if lvar == 'Obs_Time':
                 tmp = self.var(lvar)[::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
@@ -1328,7 +1327,8 @@ class Radiances(BaseGSI):
                 outdata[test_mdata_name] = tmp
                 VarDims[test_mdata_name] = ['Location']
                 if test_fields_[tvar][0] in units_values.keys():
-                    varAttrs[test_mdata_name]['units'] = units_values[test_fields_[tvar][0]]
+                    if tvar != 'scat_amsua':
+                        varAttrs[test_mdata_name]['units'] = units_values[test_fields_[tvar][0]]
 
         gsi_add_radvars = gsi_add_vars
         if (QCVars):
