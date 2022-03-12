@@ -76,7 +76,6 @@ class smap(object):
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
         _FillValue = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('_FillValue')
-        self.varAttrs['soilMoistureVolumetric', iconv.OvalName()]['_FillValue'] = _FillValue
         valid_max = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_max')
         valid_min = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_min')
 
