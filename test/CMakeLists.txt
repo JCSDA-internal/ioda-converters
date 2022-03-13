@@ -144,7 +144,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_mtiasi.bufr
     testinput/bufr_simple_groupby.bufr
     testinput/bufr_empty_fields.bufr_d
-    testinput/bufr_mhs.yaml
+    testinput/bufr_sfcshp.bufr
+    testinput/bufr_mhs.bufr
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
@@ -163,6 +164,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
     testinput/bufr_empty_fields.yaml
+    testinput/bufr_sfcshp.yaml
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
@@ -203,6 +205,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_mtiasi.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
+    testoutput/bufr_sfcshp.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
@@ -955,6 +958,14 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_empty_fields.yaml"
                     bufr_empty_fields.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_sfcshp
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_sfcshp.yaml"
+                    bufr_sfcshp.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 #
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
