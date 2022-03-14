@@ -145,7 +145,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_simple_groupby.bufr
     testinput/bufr_empty_fields.bufr_d
     testinput/bufr_sfcshp.bufr
-    testinput/bufr_mhs.bufr
+    testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
