@@ -1,0 +1,56 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/bufr_empty_fields.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          swellWavesDirection:
+            query: "NC000000/WAVSQ3/DOSW"
+          heightOfSwellWaves:
+            query: "NC000000/WAVSQ3/HOSW"
+          periodOfSwellWaves:
+            query: "NC000000/WAVSQ3/POSW"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/bufr_empty_fields.nc"
+
+      variables:
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "ObsValue/swellWavesDirection"
+          coordinates: "longitude latitude"
+          source: variables/swellWavesDirection
+          longName: "Swell Waves Direction"
+          units: "Degrees True"
+
+        - name: "ObsValue/heightOfSwellWaves"
+          coordinates: "longitude latitude"
+          source: variables/heightOfSwellWaves
+          longName: "Height of Swell Waves"
+          units: "Meter"
+
+        - name: "ObsValue/periodOfSwellWaves"
+          coordinates: "longitude latitude"
+          source: variables/periodOfSwellWaves
+          longName: "Period of Swell Waves"
+          units: "Second"
+
