@@ -187,6 +187,18 @@ namespace bufr {
 
         auto allDims = dimsList;
 
+        // If there is absolutely no data for a field you will have the problem were the
+        // size of some dimensions are zero. We need to have at least 1 element in each
+        // dimension to make room for the missing value. This if statement makes sure there
+        // is at least 1 element in each dimension.
+        for (size_t dimIdx = 0; dimIdx < allDims.size(); ++dimIdx)
+        {
+            if (allDims[dimIdx] == 0)
+            {
+                allDims[dimIdx] = 1;
+            }
+        }
+
         if (groupbyIdx > 0)
         {
             // The groupby field occurs at the same or greater repetition level as the target field.

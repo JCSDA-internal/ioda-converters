@@ -182,11 +182,9 @@ namespace bufr {
                                 {
                                     if (mnemonicCursor > -1 && tableCursor == mnemonicCursor)
                                     {
-                                        if (bufrInfo->getLink(branches[mnemonicCursor]) == nodeIdx)
-                                        {
-                                            mnemonicCursor--;
-                                        }
+                                        mnemonicCursor--;
                                     }
+
                                     tableCursor--;
                                 }
                                 // Pop out of the current sequence
