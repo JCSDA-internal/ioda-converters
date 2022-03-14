@@ -7,8 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./ADPUPA.prepbufr"
-#     obsdatain: "./testinput/ADPUPA.prepbufr"
+      obsdatain: "./testinput/ADPUPA.prepbufr"
 
       exports:
         variables:
@@ -125,7 +124,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "../testoutput/adpupa_prepbufr.nc"
+      obsdataout: "./testrun/adpupa_prepbufr.nc"
 
       dimensions:
 #       - name: prslevel_Dim
