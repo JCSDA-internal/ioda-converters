@@ -152,9 +152,11 @@ namespace bufr {
 
             for (size_t cntIdx = 0; cntIdx < targetField.seqCounts.size(); ++cntIdx)
             {
-                dimsList[cntIdx] = std::max(dimsList[cntIdx],
-                                            *std::max_element(targetField.seqCounts[cntIdx].begin(),
-                                                              targetField.seqCounts[cntIdx].end()));
+                if (!targetField.seqCounts[cntIdx].empty())
+                {
+                    dimsList[cntIdx] = std::max(dimsList[cntIdx],
+                                                max(targetField.seqCounts[cntIdx]));
+                }
             }
 
             if (groupByField != "")
@@ -169,7 +171,10 @@ namespace bufr {
                     int groupbyElementsForFrame = 1;
                     for (auto &seqCount: groupByField.seqCounts)
                     {
-                        groupbyElementsForFrame *= max(seqCount);
+                        if (!seqCount.empty())
+                        {
+                            groupbyElementsForFrame *= max(seqCount);
+                        }
                     }
 
                     totalGroupbyElements = std::max(totalGroupbyElements, groupbyElementsForFrame);
