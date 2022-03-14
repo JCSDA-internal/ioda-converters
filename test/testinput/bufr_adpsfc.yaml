@@ -24,14 +24,13 @@ observations:
               day: DAYS
               hour: HOUR
               minute: MINU
-
-#         dataReceiptTime:
-#           datetime:
-#             year: YEAR
-#             month: MNTH
-#             day: DAYS
-#             hour: RCHR
-#             minute: RCMI
+          dataReceiptTime:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: RCHR
+              minute: RCMI
 
           wmoBlockNumber:
             mnemonic: WMOB
@@ -41,7 +40,7 @@ observations:
             mnemonic: CLON
           latitude:
             mnemonic: CLAT
-          pressure:
+          stationPressure:
             mnemonic: PRES
           pressureReducedToMeanSeaLevel:
             mnemonic: PMSL
@@ -71,11 +70,11 @@ observations:
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
-#       - name: "MetaData/dataReceiptTime"
-#         source: variables/dataReceiptTime
-#         dimensions: [ "Location" ]
-#         longName: "Receipt time of data"
-#         units: "seconds since 1970-01-01T00:00:00Z"
+        - name: "MetaData/dataReceiptTime"
+          source: variables/dataReceiptTime
+          dimensions: [ "Location" ]
+          longName: "Receipt time of data"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/wmoBlockNumber"
           source: variables/wmoBlockNumber
@@ -104,49 +103,49 @@ observations:
           range: [-180, 180]
 
         - name: "MetaData/stationElevation"
-          coordinates: "longitude latitude"
           source: variables/stationElevation
           dimensions: ["Location"]
           longName: "Station elevation"
           units: "m"
 
-        - name: "ObsValue/pressure"
+        - name: "ObsValue/stationPressure"
+          source: variables/stationPressure
           coordinates: "longitude latitude"
-          source: variables/pressure
           dimensions: ["Location"]
           longName: "Pressure"
           units: "Pa"
 
         - name: "ObsValue/pressureReducedToMeanSeaLevel"
-          coordinates: "longitude latitude"
           source: variables/pressureReducedToMeanSeaLevel
+          coordinates: "longitude latitude"
           dimensions: ["Location"]
           longName: "Mean sea-level pressure"
           units: "Pa"
 
-        - name: "airTemperature"
+        - name: "ObsValue/airTemperature"
           source: variables/airTemperature
+          coordinates: "longitude latitude"
           dimensions: ["Location"]
           longName: "Tempreature"
           units: "K"
 
         - name: "ObsValue/dewpointTemperature"
-          coordinates: "longitude latitude"
           source: variables/dewpointTemperature
+          coordinates: "longitude latitude"
           dimensions: ["Location"]
           longName: "Dewpoint Temperature"
           units: "K"
 
         - name: "ObsValue/windDirection"
-          coordinates: "longitude latitude"
           source: variables/windDirection
+          coordinates: "longitude latitude"
           dimensions: ["Location"]
           longName: "Wind direction"
           units: "Degrees"
 
         - name: "ObsValue/windSpeed"
-          coordinates: "longitude latitude"
           source: variables/windSpeed
+          coordinates: "longitude latitude"
           dimensions: ["Location"]
           longName: "Wind speed"
           units: "m s-1"
