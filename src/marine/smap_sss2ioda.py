@@ -134,7 +134,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read JPL/RSS SMAP sea surface seaSurfaceSalinity (SSS) file(s) and convert'
+            'Read JPL/RSS SMAP seaSurfaceSalinity (SSS) file(s) and convert'
             ' to a concatenated IODA formatted output file.')
     )
     required = parser.add_argument_group(title='required arguments')
