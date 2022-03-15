@@ -137,6 +137,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t00z.airsev.tm00.bufr_d
+    testinput/gdas.t00z.1bamua.tm00.bufr_d
     testinput/gdas.t00z.avcsam.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
@@ -187,6 +188,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t00z.airsev.tm00.nc
+    testoutput/gdas.t00z.1bamsua.tm00.bufr_d
     testoutput/gdas.t00z.avcsam.tm00.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
@@ -851,6 +853,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_airs_v2.yaml"
                             gdas.t00z.airsev.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_amsua2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_amsua_v2.yaml"
+                            gdas.t00z.1bamsua.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_avhrr2ioda
