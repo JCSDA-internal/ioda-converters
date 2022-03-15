@@ -26,9 +26,9 @@ observations:
               day: DAYS
               hour: HOUR
               minute: MINU
-          stationIdWMOblock:
+          wmoBlockNumber:
             mnemonic: WMOB
-          stationIdWMOstation:
+          wmoStationNumber:
             mnemonic: WMOS
           latitude:
             mnemonic: CLAT
@@ -50,68 +50,69 @@ observations:
       obsdataout: "./testrun/rass_wmo_multi.nc"
 
       dimensions:
-        - name: "nlocs"
+        - name: "Location"
           size: variables/latitude.nrows
 
       variables:
         - name: "MetaData/dateTime"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
-        - name: "MetaData/stationIdWMOblock"
-          source: variables/stationIdWMOblock
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/wmoBlockNumber"
+          source: variables/wmoBlockNumber
+          dimensions: [ "Location" ]
           longName: "Station Identification WMO block number"
-          units: "none"
+          units: ""
 
-        - name: "MetaData/stationIdWMOstation"
-          source: variables/stationIdWMOstation
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/wmoStationNumber"
+          source: variables/wmoStationNumber
+          dimensions: [ "Location" ]
           longName: "Station Identification WMO station number"
-          units: "none"
+          units: ""
 
-        - name: "MetaData/station_elevation"
+        - name: "MetaData/stationElevation"
           source: variables/stationElevation
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Station Elevation"
           units: "m"
 
         - name: "MetaData/height"
           source: variables/height
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Height"
           units: "m"
 
         # ADD this in later
         # - name: "MetaData/qualityIndicator"
         #   source: variables/qualityIndicator
-        #   dimensions: [ "nlocs" ]
+        #   dimensions: [ "Location" ]
         #   longName: "Quality Indicator (0=good, 1=no-good)"
         #   units: "unitless"
 
-        - name: "MetaData/signalToNoiseRatio"
+        - name: "ObsValue/signalToNoiseRatio"
           source: variables/signalToNoiseRatio
-          dimensions: [ "nlocs" ]
-          longName: "Signal-to-noise Ratio"
-          units: "unitless"
-
-        - name: "ObsValue/virtual_temperature"
           coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Signal-to-noise Ratio"
+          units: "0.1 lg(re 0.001 m2 kg s-3)"
+
+        - name: "ObsValue/virtualTemperature"
           source: variables/virtualTemperature
-          dimensions: [ "nlocs" ]
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Virtual Temperature"
           units: "K"
