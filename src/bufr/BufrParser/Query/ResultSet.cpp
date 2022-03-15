@@ -326,12 +326,12 @@ namespace bufr {
                 size_t num_inserts = inserts[dim_idx][insert_idx];
                 if (num_inserts > 0)
                 {
-                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) * (insert_idx - 1) +
-                                   product<int>(dims.begin() + dim_idx, dims.end()) - num_inserts;
+                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) * insert_idx +
+                                   product<int>(dims.begin() + dim_idx, dims.end()) - num_inserts - 1;
 
-                    for (size_t i = 0; i < idxs.size(); ++i)
+                    for (auto i = 0; i < idxs.size(); ++i)
                     {
-                        if (idxs[i] > static_cast<size_t>(data_idx))
+                        if (static_cast<int>(idxs[i]) > data_idx)
                         {
                             idxs[i] += num_inserts;
                         }
@@ -340,8 +340,11 @@ namespace bufr {
             }
         }
 
-        auto output = std::vector<double>(idxs.size(), 10.0e10);
-        output = slice(targetField.data, idxs);
+        auto output = std::vector<double>(product(dims), 10.0e10);
+        for (auto i = 0; i < idxs.size(); ++i)
+        {
+            output[idxs[i]] = targetField.data[i];
+        }
 
         // Apply groupBy and make output
         if (groupbyIdx > 0)
