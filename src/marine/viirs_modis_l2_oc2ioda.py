@@ -64,8 +64,11 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
 
     # get global attributes
-    for v in ('platform', 'instrument', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+#    for v in ('platform', 'instrument', 'processing_level'):
+#        GlobalAttrs[v] = ncd.getncattr(v)
+    GlobalAttrs['platform'] = ncd.getncattr('platform')
+    GlobalAttrs['sensor'] = ncd.getncattr('instrument')
+    GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
@@ -243,18 +246,18 @@ def main():
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
     DimDict['Location'] = Location
-    GlobalAttrs['Location'] = np.int32(DimDict['Location'])
+#    GlobalAttrs['Location'] = np.int32(DimDict['Location'])
 
     # determine which variables we are going to output
     if args.poc:
         VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = \
-            'mg ^m-3'
+            'mg m-3'
         VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
-            'mg ^m-3'
+            'mg m-3'
 #        VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = \
 #            'unitless'
         VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
@@ -267,9 +270,9 @@ def main():
 
     if args.chl:
         VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
-            'mg ^m-3'
+            'mg m-3'
         VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
-            'mg ^m-3'
+            'mg m-3'
 #        VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = \
 #            'unitless'
         VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
