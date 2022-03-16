@@ -864,7 +864,6 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                        varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
@@ -1201,10 +1200,6 @@ class Radiances(BaseGSI):
         VarDims[value] = ['Location', 'Channel']
         varAttrs[varDict[value]['valKey']]['units'] = 'K'
         varAttrs[varDict[value]['errKey']]['units'] = 'K'
-#       varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
-#       varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
-#       varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
-#       varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
         varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
