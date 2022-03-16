@@ -1,0 +1,176 @@
+# (C) Copyright 2022 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t00z.mtiasi.tm00.bufr_d"
+      mnemonicSets:
+        - mnemonics: [SAID, YEAR, MNTH, DAYS, HOUR, MINU, SECO]
+        - mnemonics: [CLATH, CLONH, SAZA, BEARAZ, SOZA, SOLAZI, FOVN, SLNM]
+        - mnemonics: [STCH, ENCH, CHSF]
+          channels: 1-10
+        - mnemonics: [CHNM, SCRA]
+          channels: 1-616
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          satelliteIdentifier:
+            mnemonic: SAID
+          scanLineNumber:
+            mnemonic: SLNM
+          fieldOfViewNumber:
+            mnemonic: FOVN
+          solarZenithAngle:
+            mnemonic: SOZA
+          solarAzimuthAngle:
+            mnemonic: SOLAZI
+          sensorZenithAngle:
+            mnemonic: SAZA
+          sensorAzimuthAngle:
+            mnemonic: BEARAZ
+          sensorChannelStart:
+            mnemonic: STCH
+          sensorChannelEnd:
+            mnemonic: ENCH
+          channelScaleFactor:
+            mnemonic: CHSF
+          sensorChannelNumber:
+            mnemonic: CHNM
+          radianceScaled:
+            mnemonic: SCRA
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t00z.mtiasi.tm00.nc"
+
+      dimensions:
+        - name: "Location"
+          size: variables/latitude.nrows
+        - name: "Channel"
+          size: variables/radianceScaled.ncols
+        - name: "ChannelBlock"
+          size: variables/sensorChannelStart.ncols
+
+      globals:
+        - name: "platformCommonName"
+          type: string
+          value: "IASI"
+
+        - name: "platformLongDescription"
+          type: string
+          value: "MTYP 021-241 IASI 1C RADIANCES (VARIABLE CHNS) (METOP)"
+
+      variables:
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          dimensions: ["Location"]
+          longName: "Satellite identifier"
+          units: ""
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: ["Location"]
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: ["Location"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: ["Location"]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/fieldOfViewNumber"
+          source: variables/fieldOfViewNumber
+          dimensions: ["Location"]
+          longName: "Field of view number"
+          units: ""
+
+        - name: "MetaData/scanLineNumber"
+          source: variables/scanLineNumber
+          dimensions: ["Location"]
+          longName: "Scan line number"
+          units: ""
+
+        - name: "MetaData/solarZenithAngle"
+          source: variables/solarZenithAngle
+          dimensions: ["Location"]
+          longName: "Solar zenith angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "MetaData/solarAzimuthAngle"
+          source: variables/solarAzimuthAngle
+          dimensions: ["Location"]
+          longName: "Solar azimuth angle"
+          units: "degrees"
+          range: [0, 360]
+
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/sensorZenithAngle
+          dimensions: ["Location"]
+          longName: "Sensor zenith angle"
+          units: "degrees"
+          range: [0, 90]
+
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/sensorAzimuthAngle
+          dimensions: ["Location"]
+          longName: "Sensor azimuth angle"
+          units: "degrees"
+          range: [0, 360]
+
+        - name: "MetaData/sensorChannelStart"
+          source: variables/sensorChannelStart
+          dimensions: ["ChannelBlock"]
+          longName: "Starting channel number"
+          units: ""
+
+        - name: "MetaData/sensorChannelEnd"
+          source: variables/sensorChannelEnd
+          dimensions: ["ChannelBlock"]
+          longName: "Ending channel number"
+          units: ""
+
+        - name: "MetaData/channelScaleFactor"
+          source: variables/channelScaleFactor
+          dimensions: ["ChannelBlock"]
+          longName: "Channel scale factor"
+          units: ""
+
+        - name: "MetaData/sensorChannelNumber"
+          source: variables/sensorChannelNumber
+          dimensions: ["Channel"]
+          longName: "Channel number"
+          units: ""
+
+        - name: "ObsValue/radianceScaled"
+          source: variables/radianceScaled
+          coordinates: "longitude latitude Channel"
+          dimensions: ["Location", "Channel"]
+          longName: "Scaled radiance"
+          units: "W m-2 sr-1"
+          chunks: [1000, 616]
+          compressionLevel: 4
