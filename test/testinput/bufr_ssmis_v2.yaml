@@ -9,8 +9,9 @@ observations:
       obsdatain: "./testinput/gdas.t00z.ssmisu.tm00.bufr_d"
       mnemonicSets:
         - mnemonics: [SAID, YEAR, MNTH, DAYS, HOUR, MINU, SECO]
+        - mnemonics: [SLNM, FOVN]
         - mnemonics: [CLAT, CLON]
-        - mnemonics: [SLNM, FOVN, SFLG, RFLAG]
+        - mnemonics: [SFLG, RFLAG]
         - mnemonics: [CHNM, TMBR]
           channels: 1-24
 
@@ -36,7 +37,7 @@ observations:
             mnemonic: FOVN
           earthSurfaceType:
             mnemonic: SFLG
-          rainFlag:
+          qualityFlags:
             mnemonic: RFLAG
           sensorChannelNumber:
             mnemonic: CHNM
@@ -62,12 +63,12 @@ observations:
           type: string
           value: "MTYP 021-201 DMSP SSM/IS Tb (UNIFIED PRE-PROCESSOR)"
 
-        - name: "sensorCentralFrequency"
-          type: floatVector
-          dimensions: ["Channel"]
-          value: [19.35, 19.35, 22.235, 37.0, 37.0, 50.3, 52.8, 53.596,
-                  54.4, 55.5, 57.29, 59.4, 63.283248, 60.792668, 60.792668, 60.792668, 
-                  60.792668, 60.792668, 91.665, 91.665, 150, 183.311, 183.311, 183.311]
+#       - name: "sensorCentralFrequency"
+#         type: floatVector
+#         dimensions: ["Channel"]
+#         value: [19.35, 19.35, 22.235, 37.0, 37.0, 50.3, 52.8, 53.596,
+#                 54.4, 55.5, 57.29, 59.4, 63.283248, 60.792668, 60.792668, 60.792668, 
+#                 60.792668, 60.792668, 91.665, 91.665, 150, 183.311, 183.311, 183.311]
 
       variables:
         - name: "MetaData/satelliteIdentifier"
@@ -100,7 +101,7 @@ observations:
           source: variables/scanLineNumber
           dimensions: ["Location"]
           longName: "Scan line number"
-          units: "1"
+          units: ""
 
         - name: "MetaData/fieldOfViewNumber"
           source: variables/fieldOfViewNumber
