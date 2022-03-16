@@ -28,57 +28,55 @@ import meteo_utils
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
-    ("aircraft_id", "string", ""),
-    ("aircraft_flightNum", "string", ""),
-    ("aircraft_tailNum", "string", ""),
-    ("obs_sequenceNum", "integer", ""),
-    ("originationAirport", "string", ""),
-    ("destinationAirport", "string", ""),
-    ("flight_phase", "integer", ""),
-    ("roll_angle", "float", "degrees"),
-    ("roll_angle_quality", "integer", ""),
-    ("aircraft_speed", "float", "m s-1"),
-    ("aircraft_heading", "integer", "degrees"),
+    ("station_id", "integer", ""),
+    ("station_name", "string", ""),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
+    ("station_elevation", "float", "m"),
     ("height", "float", "m"),
-    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
 ]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 metaDataKeyList = {
-    'aircraft_id': ['aircraftRegistrationNumberOrOtherIdentification'],
-    'aircraft_flightNum': ['aircraftFlightNumber'],
-    'aircraft_tailNum': ['aircraftTailNumber'],
-    'obs_sequenceNum': ['observationSequenceNumber'],
-    'originationAirport': ['originationAirport'],
-    'destinationAirport': ['destinationAirport'],
-    'flight_phase': ['detailedPhaseOfFlight'],
-    'roll_angle': ['aircraftRollAngle'],
-    'roll_angle_quality': ['aircraftRollAngleQuality'],
-    'aircraft_speed': ['aircraftTrueAirspeed'],
-    'aircraft_heading': ['aircraftTrueHeading'],
+    'station_id': ['marineObservingPlatformIdentifier'],
+    'station_name': ['stationOrSiteName'],
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'height': ['Constructed', 'globalNavigationSatelliteSystemAltitude', 'height', 'flightLevel'],
-    'dateTime': ['Constructed'],
+    'station_elevation': ['heightOfStationGroundAboveMeanSeaLevel'],
+    'height': ['heightOfSensorAboveWaterSurface',
+               'heightOfBarometerAboveMeanSeaLevel'],
+    'dateTime': ['Constructed']
 }
 
 var_mimic_length = "latitude"
 
 # True incoming BUFR observed variables.
-raw_obsvars = ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
+raw_obsvars = ['airTemperature',
+               'dewpointTemperature',
+               'seaSurfaceTemperature',
+               'windDirection',
+               'windSpeed',
+               'nonCoordinatePressure',
+               'pressureReducedToMeanSeaLevel']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature', 'specific_humidity', 'eastward_wind', 'northward_wind']
-obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 0.75E-3, 1.7, 1.7]
+obsvars = ['air_temperature',
+           'specific_humidity',
+           'sea_surface_temperature',
+           'eastward_wind',
+           'northward_wind',
+           'surface_pressure']
+obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
+obserrlist = [1.2, 0.75E-3, 2.2, 1.7, 1.7, 120.0]
 
 VarDims = {
     'air_temperature': ['nlocs'],
     'specific_humidity': ['nlocs'],
+    'sea_surface_temperature': ['nlocs'],
     'eastward_wind': ['nlocs'],
     'northward_wind': ['nlocs'],
+    'surface_pressure': ['nlocs']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -89,7 +87,7 @@ qcName = iconv.OqcName()
 AttrData = {
     'converter': os.path.basename(__file__),
     'ioda_version': 2,
-    'description': 'Aircraft observations converted from BUFR',
+    'description': 'Surface (Ship) observations converted from BUFR',
     'source': 'LDM at NCAR-RAL',
     'source_files': ''
 }
@@ -333,6 +331,7 @@ def read_bufr_message(f, count, start_pos, data):
 
     # Determine the target number of observation points from a critical variable (i.e., latitude).
     target_number = len(meta_data[var_mimic_length])
+    logging.debug("Target number of obs in this BUFR message: " + str(target_number))
 
     # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
     empty = []
@@ -430,16 +429,24 @@ def read_bufr_message(f, count, start_pos, data):
     meta_data['latitude'][mask_lon] = float_missing_value
     meta_data['longitude'][mask_lat] = float_missing_value
     for n, longitude in enumerate(meta_data['longitude']):
-        if (longitude != float_missing_value and longitude > 180):
+        if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 360):
             meta_data['longitude'][n] = 360.0 - meta_data['longitude'][n]
 
     # If the height/altitude is unreasonable, then it is useless.
-    mask_height = np.logical_or(meta_data['height'] < -425, meta_data['height'] > 90000)
+    mask_height = np.logical_or(meta_data['height'] < -425, meta_data['height'] > 800)
     meta_data['height'][mask_height] = float_missing_value
+
+    # If the height of the observation (sensor) is missing, try to fill it with station_elevation.
+    for n, elev in enumerate(meta_data['station_elevation']):
+        if (elev > -425 and elev < 800 and np.abs(meta_data['height'][n]-elev) > 50):
+            meta_data['height'][n] = elev + 2
+        else:
+            meta_data['station_elevation'][n] = 0.5
+            meta_data['height'][n] = 2.0
 
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all ObsValue variables are float type, might need integer/other.
-    for variable in raw_obsvars:    # ['airTemperature','mixingRatio','windDirection','windSpeed']
+    for variable in raw_obsvars:
         vals[variable] = []
         try:
             avals = ecc.codes_get_array(bufr, variable)
@@ -475,16 +482,25 @@ def read_bufr_message(f, count, start_pos, data):
         if (wdir >= 0 and wdir <= 360 and vals['windSpeed'][n] != float_missing_value):
             uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, vals['windSpeed'][n])
 
+    # Most ships are floating at or near sea level, so assign MSLP to surface_pressure if needed.
+    for n, psfc in enumerate(vals['nonCoordinatePressure']):
+        mslp = vals['pressureReducedToMeanSeaLevel'][n]
+        if ((psfc < 75000 or psfc > 107900) and (mslp > 75000 and mslp < 107900)):
+            vals['nonCoordinatePressure'][n] = mslp
+
     spfh = np.full(target_number, float_missing_value)
-    for n, mixing_ratio in enumerate(vals['mixingRatio']):
-        if (mixing_ratio > 0 and mixing_ratio < 25.E-3):
-            spfh[n] = mixing_ratio / (1.0 + mixing_ratio)
+    for n, dewpoint in enumerate(vals['dewpointTemperature']):
+        psfc = vals['nonCoordinatePressure'][n]
+        if (dewpoint > 90 and dewpoint < 325 and psfc > 30000 and psfc < 109900):
+            spfh[n] = met_utils.specific_humidity(dewpoint, psfc)
 
     # Move everything into the final data dictionary, including metadata.
     data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
     data['northward_wind'] = np.append(data['northward_wind'], vwnd)
     data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
     data['air_temperature'] = np.append(data['air_temperature'], vals['airTemperature'])
+    data['surface_pressure'] = np.append(data['surface_pressure'], vals['nonCoordinatePressure'])
+    data['sea_surface_temperature'] = np.append(data['sea_surface_temperature'], vals['seaSurfaceTemperature'])
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 
@@ -499,7 +515,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read aircraft (AMDAR) BUFR file and convert into IODA output file')
+            'Read buoy (surface obs) BUFR file and convert into IODA output file')
     )
 
     required = parser.add_argument_group(title='required arguments')
