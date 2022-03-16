@@ -141,6 +141,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.avcsam.tm00.bufr_d
     testinput/gdas.t00z.atms.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
+    testinput/gdas.t00z.crisf4.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
     testinput/bufr_read_wmo_radiosonde.bufr
     testinput/bufr_satwnd_new_format.bufr
@@ -194,6 +195,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t00z.atms.tm00.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
+    testoutput/gdas.t00z.crisf4.tm00.bufr_d
     testoutput/bufr_read_2_dim_blocks.nc
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
@@ -882,6 +884,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_avhrr_v2.yaml"
                             gdas.t00z.avcsam.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_cris2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_cris_v2.yaml"
+                            gdas.t00z.crisf4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_hrs2ioda
