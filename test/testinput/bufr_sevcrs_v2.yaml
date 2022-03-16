@@ -11,7 +11,8 @@ observations:
         - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH]
         - mnemonics: [SAID, SAZA, SOZA]
         - mnemonics: [CLDMNT, TMBRST, SDTB]
-          channels: 1-7
+          channels: 1-12
+        - mnemonics: [SEQNUM]
 
       exports:
         variables:
@@ -34,10 +35,14 @@ observations:
             mnemonic: SAZA
           cloudAmount:
             mnemonic: CLDMNT
+            transforms:
+              - scale: 0.01
           brightnessTemperature:
             mnemonic: TMBRST
 #         brightnessTemperatureStdDev:
 #           mnemonic: SDTB
+          observationSequenceNum:
+            mnemonic: SEQNUM
 
     ioda:
       backend: netcdf
@@ -45,7 +50,7 @@ observations:
 
       dimensions:
         - name: "Location"
-          size: variables/brightnessTemperature.nrows
+          size: variables/latitude.nrows
         - name: "Channel"
           size: variables/brightnessTemperature.ncols
 
@@ -99,14 +104,20 @@ observations:
           units: "degrees"
           range: [0, 90]
 
+        - name: "MetaData/observationSequenceNum"
+          source: variables/observationSequenceNum
+          dimensions: ["Location"]
+          longName: "Channel sequence number"
+          units: ""
+
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude Channel"
           source: variables/cloudAmount
           dimensions: ["Location", "Channel"]
           longName: "cloud fraction"
           units: "1"
-          range: [0, 100]
-          chunks: [1000, 15]
+          range: [0, 1]
+          chunks: [1000, 12]
 
         - name: "ObsValue/brightnessTemperature"
           source: variables/brightnessTemperature
@@ -115,7 +126,7 @@ observations:
           longName: "Brightness temperature"
           units: "K"
           range: [150, 350]
-          chunks: [1000, 15]
+          chunks: [1000, 12]
 
 #       - name: "ObsValue/brightnessTemperatureStdDev"
 #         source: variables/brightnessTemperatureStdDev
