@@ -18,10 +18,6 @@ args = parser.parse_args()
 predictor_out = netCDF4.stringtochar(np.array(['constant'], 'S8'))
 channels_out = [4]
 ncfile = Dataset(args.output, mode='w', format='NETCDF4')
-group1 = ncfile.createGroup("MetaData")
-group1.long_name = "MetaData"
-ncfile._ioda_layout = 'ObsGroup'
-ncfile._ioda_layout_version = 0
 coef_dim = ncfile.createDimension('bias_coefficients', 1)
 coef_err_dim = ncfile.createDimension('bias_coeff_errors', 1)
 npredictors = ncfile.createDimension('npredictors', 1)
