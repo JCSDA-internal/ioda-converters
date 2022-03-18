@@ -1,10 +1,7 @@
-import sys
 import argparse
 import netCDF4
-from netCDF4 import Dataset, chartostring
 import numpy as np
 import os
-from pathlib import Path
 
 parser = argparse.ArgumentParser(
     description=('Write VIIRS aerosol optical depth bias coefficients to NetCDF')
@@ -17,7 +14,7 @@ parser.add_argument(
 args = parser.parse_args()
 predictor_out = netCDF4.stringtochar(np.array(['constant'], 'S8'))
 channels_out = [4]
-ncfile = Dataset(args.output, mode='w', format='NETCDF4')
+ncfile = netCDF4.Dataset(args.output, mode='w', format='NETCDF4')
 coef_dim = ncfile.createDimension('bias_coefficients', 1)
 coef_err_dim = ncfile.createDimension('bias_coeff_errors', 1)
 npredictors = ncfile.createDimension('npredictors', 1)
