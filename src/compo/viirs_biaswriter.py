@@ -10,7 +10,7 @@ import os
 
 # Usage:
 # python viirs_biaswriter.p -o viirs_bias.nc
- 
+
 parser = argparse.ArgumentParser(
     description=('Write VIIRS aerosol optical depth bias coefficients to NetCDF')
 )
