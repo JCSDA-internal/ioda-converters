@@ -5,7 +5,7 @@ Python code to ingest netCDF4 or HDF5 ATMS data
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 import glob
 # from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -27,8 +27,18 @@ from orddicts import DefaultOrderedDict
 SNPP_WMO_sat_ID = 224
 NOAA20_WMO_sat_ID = 225
 NOAA21_WMO_sat_ID = 226
+ATMS_WMO_sensor_ID = 621
+
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
 GlobalAttrs = {
+    "sensor": str(ATMS_WMO_sensor_ID),
     "platformCommonName": "ATMS",
     "platformLongDescription": "ATMS Brightness Temperature Data",
     "sensorCentralFrequency": [23.8,
@@ -40,7 +50,7 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "object")
 ]
 
 
@@ -63,8 +73,11 @@ def main(args):
 #           else:
 #               obs_data = file_obs_data
 
+    WMO_sat_ID = get_WMO_satellite_ID(input_files[0])
+    GlobalAttrs['platform'] = np.int32(WMO_sat_ID)
     for afile in input_files:
         file_obs_data = get_data_from_files(afile)
+        WMO_sat_ID = get_WMO_satellite_ID(afile)
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
@@ -72,51 +85,39 @@ def main(args):
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
+        if WMO_sat_ID != GlobalAttrs['platform']:
+            print(' ERROR:  IODA and subsequent UFO expect individual files to be a single satellite and sensor ')
+            print('    .... initial file satellite: ', GlobalAttrs['platform'])
+            print('    ...... final file satellite: ', WMO_sat_ID)
+            sys.exit()
 
-# V2 nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='int32')
-    nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='float32')  # this is float32 in old convention
-    nlocs = nlocs_int32.item()
-    nchans = len(obs_data[('channelNumber', 'MetaData')])
+    nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
+    nlocs = nlocs_int.item()
+    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
-    date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
-    GlobalAttrs['date_time'] = date_time_int32.item()
-    GlobalAttrs['converter'] = os.path.basename(__file__)
+    GlobalAttrs['datetimeRange'] = np.array([obs_data[('dateTime', metaDataName)][0].strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                             obs_data[('dateTime', metaDataName)][-1].strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
+    GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # pass parameters to the IODA writer
-# V2     'brightnessTemperature': ['nlocs', 'nchans']
     VarDims = {
-        'brightness_temperature': ['nlocs', 'nchans'],
-        'channelNumber': ['nchans'],
+        'brightnessTemperature': ['Location', 'Channel'],
+        'sensorChannelNumber': ['Channel'],
     }
 
     DimDict = {
-        'nlocs': nlocs,
-        'nchans': obs_data[('channelNumber', 'MetaData')],
+        'Location': nlocs,
+        'Channel': obs_data[('sensorChannelNumber', metaDataName)],
     }
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-# V2 VarAttrs[('brightnessTemperature', 'ObsValue')]['units'] = 'K'
-# V2 VarAttrs[('brightnessTemperature', 'ObsError')]['units'] = 'K'
-# V2 VarAttrs[('brightnessTemperature', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('brightness_temperature', 'ObsValue')]['units'] = 'K'
-    VarAttrs[('brightness_temperature', 'ObsError')]['units'] = 'K'
-    VarAttrs[('brightness_temperature', 'PreQC')]['units'] = 'unitless'
 
-    missing_value = 9.96921e+36
-    int_missing_value = -2147483647
-# V2 VarAttrs[('brightnessTemperature', 'ObsValue')]['_FillValue'] = missing_value
-# V2 VarAttrs[('brightnessTemperature', 'ObsError')]['_FillValue'] = missing_value
-# V2 VarAttrs[('brightnessTemperature', 'PreQC')]['_FillValue'] = int_missing_value
-    VarAttrs[('brightness_temperature', 'ObsValue')]['_FillValue'] = missing_value
-    VarAttrs[('brightness_temperature', 'ObsError')]['_FillValue'] = missing_value
-    VarAttrs[('brightness_temperature', 'PreQC')]['_FillValue'] = int_missing_value
+    set_obspace_attributes(VarAttrs)
+    set_metadata_attributes(VarAttrs)
 
-#   there can be more than one input file
-#   GlobalAttrs['converter'] = os.path.basename(__file__)
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
@@ -188,54 +189,44 @@ def get_data(f, g, obs_data):
     # 'spatial_lbl_len', 'subsat_lat', 'subsat_lon', 'sun_glint_dist', 'sun_glint_lat', 'sun_glint_lon',
     # 'surf_alt', 'surf_alt_sdev', 'utc_tuple', 'utc_tuple_lbl', 'utc_tuple_lbl_len', 'view_ang', 'warm_nedt', 'xtrack'
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
-
     # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
     try:
         nscans = np.shape(g['lat'])[0]
         nbeam_pos = np.shape(g['lat'])[1]
-        obs_data[('latitude', 'MetaData')] = np.array(g['lat'][:, :].flatten(), dtype='float32')
-        obs_data[('longitude', 'MetaData')] = np.array(g['lon'][:, :].flatten(), dtype='float32')
-        obs_data[('channelNumber', 'MetaData')] = np.array(g['channel'][:], dtype='int32')
-# V2     obs_data[('fieldOfViewNumber', 'MetaData')] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
-        obs_data[('scan_position', 'MetaData')] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
-# V2     obs_data[('solarZenithAngle', 'MetaData')] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
-        obs_data[('solar_zenith_angle', 'MetaData')] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
-# V2     obs_data[('solarAzimuthAngle', 'MetaData')] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
-        obs_data[('solar_azimuth_angle', 'MetaData')] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
-# V2     obs_data[('sensorZenithAngle', 'MetaData')] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
-        obs_data[('sensor_zenith_angle', 'MetaData')] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
-# V2     obs_data[('sensorAzimuthAngle', 'MetaData')] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
-        obs_data[('sensor_azimuth_angle', 'MetaData')] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
-        obs_data[('sensor_view_angle', 'MetaData')] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
-        nlocs = len(obs_data[('latitude', 'MetaData')])
-        obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-        obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
+        obs_data[('latitude', metaDataName)] = np.array(g['lat'][:, :].flatten(), dtype='float32')
+        obs_data[('longitude', metaDataName)] = np.array(g['lon'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')
+        obs_data[('fieldOfViewNumber', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
+        obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
+        obs_data[('solarZenithAngle', metaDataName)] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
+        obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorViewAngle', metaDataName)] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
+        nlocs = len(obs_data[('latitude', metaDataName)])
+        obs_data[('dateTime', metaDataName)] = np.array(get_observation_time(g['obs_time_utc'][:, :, :]), dtype='object')
 
     # BaseException is a catch-all mechamism
     except BaseException:
         # this section is for the NOAA CLASS files and need to be tested
-        obs_data[('latitude', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten(), dtype='float32')
-        obs_data[('longitude', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten(), dtype='float32')
+        obs_data[('latitude', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten(), dtype='float32')
+        obs_data[('longitude', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten(), dtype='float32')
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     try:
-        nchans = len(obs_data[('channelNumber', 'MetaData')])
-        nlocs = len(obs_data[('latitude', 'MetaData')])
-# V2     obs_data[('brightnessTemperature', "ObsValue")] = np.array(np.vstack(g['antenna_temp']), dtype='float32')
-# V2     obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
-# V2     obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
-        obs_data[('brightness_temperature', "ObsValue")] = np.array(np.vstack(g['antenna_temp']), dtype='float32')
-        obs_data[('brightness_temperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
-        obs_data[('brightness_temperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+        nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+        nlocs = len(obs_data[('latitude', metaDataName)])
+        obs_data[('brightnessTemperature', obsValName)] = np.array(np.vstack(g['antenna_temp']), dtype='float32')
+        obs_data[('brightnessTemperature', obsErrName)] = np.full((nlocs, nchans), 5.0, dtype='float32')
+        obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
     except BaseException:
         # this section is for the NOAA CLASS files and need to be tested
         scaled_data = np.vstack(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])
         scale_fac = f['All_Data']['ATMS-SDR_All']['BrightnessTemperatureFactors'][:].flatten()
 
-        obs_data[('brightnessTemperature', "ObsValue")] = np.array((scaled_data * scale_fac[0]) + scale_fac[1], dtype='float32')
-        obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
-        obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+        obs_data[('brightnessTemperature', obsValName)] = np.array((scaled_data * scale_fac[0]) + scale_fac[1], dtype='float32')
+        obs_data[('brightnessTemperature', obsErrName)] = np.full((nlocs, nchans), 5.0, dtype='float32')
+        obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
 
     return obs_data
 
@@ -257,45 +248,38 @@ def get_WMO_satellite_ID(filename):
     return WMO_sat_ID
 
 
-def get_string_dtg(obs_time_utc):
+def get_observation_time(obs_time_utc):
 
     year = obs_time_utc[:, :, 0].flatten()
     month = obs_time_utc[:, :, 1].flatten()
     day = obs_time_utc[:, :, 2].flatten()
     hour = obs_time_utc[:, :, 3].flatten()
     minute = obs_time_utc[:, :, 4].flatten()
+    second = 0
     dtg = []
     for i, yyyy in enumerate(year):
-        cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        dtg.append(cdtg)
+        observation_time = datetime(yyyy, month[i], day[i], hour[i], minute[i], second)
+        dtg.append(observation_time)
 
     return dtg
 
 
 def init_obs_loc():
-    # V2     ('brightnessTemperature', "ObsValue"): [],
-    # V2     ('brightnessTemperature', "ObsError"): [],
-    # V2     ('brightnessTemperature', "PreQC"): [],
-    # V2     ('fieldOfViewNumber', 'MetaData'): [],
-    # V2     ('solarZenithAngle', 'MetaData'): [],
-    # V2     ('solarAzimuthAngle', 'MetaData'): [],
-    # V2     ('sensorZenithAngle', 'MetaData'): [],
-    # V2     ('sensorAzimuthAngle', 'MetaData'): [],
     obs = {
-        ('brightness_temperature', "ObsValue"): [],
-        ('brightness_temperature', "ObsError"): [],
-        ('brightness_temperature', "PreQC"): [],
-        ('satelliteId', 'MetaData'): [],
-        ('channelNumber', 'MetaData'): [],
-        ('latitude', 'MetaData'): [],
-        ('longitude', 'MetaData'): [],
-        ('datetime', 'MetaData'): [],
-        ('scan_position', 'MetaData'): [],
-        ('solar_zenith_angle', 'MetaData'): [],
-        ('solar_azimuth_angle', 'MetaData'): [],
-        ('sensor_zenith_angle', 'MetaData'): [],
-        ('sensor_view_angle', 'MetaData'): [],
-        ('sensor_azimuth_angle', 'MetaData'): [],
+        ('brightnessTemperature', obsValName): [],
+        ('brightnessTemperature', obsErrName): [],
+        ('brightnessTemperature', qcName): [],
+        ('sensorChannelNumber', metaDataName): [],
+        ('latitude', metaDataName): [],
+        ('longitude', metaDataName): [],
+        ('dateTime', metaDataName): [],
+        ('sensorScanPosition', metaDataName): [],
+        ('fieldOfViewNumber', metaDataName): [],
+        ('solarZenithAngle', metaDataName): [],
+        ('solarAzimuthAngle', metaDataName): [],
+        ('sensorZenithAngle', metaDataName): [],
+        ('sensorAzimuthAngle', metaDataName): [],
+        ('sensorViewAngle', metaDataName): [],
     }
 
     return obs
@@ -310,6 +294,27 @@ def concat_obs_dict(obs_data, append_obs_data):
             obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key], axis=0)
         else:
             print("WARNING: ", gv_key, " is missing from append_obs_data dictionary")
+
+
+def set_metadata_attributes(VarAttrs):
+    VarAttrs[('sensorZenithAngle', metaDataName)]['units'] = 'degree'
+    VarAttrs[('sensorViewAngle', metaDataName)]['units'] = 'degree'
+    VarAttrs[('solarZenithAngle', metaDataName)]['units'] = 'degree'
+    VarAttrs[('sensorAzimuthAngle', metaDataName)]['units'] = 'degree'
+    VarAttrs[('solarAzimuthAngle', metaDataName)]['units'] = 'degree'
+
+    return VarAttrs
+
+
+def set_obspace_attributes(VarAttrs):
+    VarAttrs[('brightnessTemperature', obsValName)]['units'] = 'K'
+    VarAttrs[('brightnessTemperature', obsErrName)]['units'] = 'K'
+
+    VarAttrs[('brightnessTemperature', obsValName)]['_FillValue'] = float_missing_value
+    VarAttrs[('brightnessTemperature', obsErrName)]['_FillValue'] = float_missing_value
+    VarAttrs[('brightnessTemperature', qcName)]['_FillValue'] = int_missing_value
+
+    return VarAttrs
 
 
 if __name__ == "__main__":
