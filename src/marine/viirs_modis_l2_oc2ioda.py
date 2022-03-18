@@ -64,8 +64,6 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
 
     # get global attributes
-#    for v in ('platform', 'instrument', 'processing_level'):
-#        GlobalAttrs[v] = ncd.getncattr(v)
     GlobalAttrs['platform'] = ncd.getncattr('platform')
     GlobalAttrs['sensor'] = ncd.getncattr('instrument')
     GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
@@ -250,7 +248,6 @@ def main():
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
     DimDict['Location'] = Location
-#    GlobalAttrs['Location'] = np.int32(DimDict['Location'])
 
     # determine which variables we are going to output
     if args.poc:
@@ -258,8 +255,6 @@ def main():
             'mg m-3'
         VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
             'mg m-3'
-#        VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = \
-#            'unitless'
         VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = \
@@ -273,8 +268,6 @@ def main():
             'mg m-3'
         VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
             'mg m-3'
-#        VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = \
-#            'unitless'
         VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = \
