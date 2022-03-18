@@ -8,16 +8,28 @@ observations:
       name: bufr
       obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
       mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLAT, CLON]
         - mnemonics: [OGCE, GNAP, PCCF]
           channels: 1-12
 
       exports:
         variables:
-          originating_generating_center:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          longitude:
+            mnemonic: CLON
+          latitude:
+            mnemonic: CLAT
+          dataProviderOrigin:
             mnemonic: OGCE
-          generating_application:
+          generatingApplication:
             mnemonic: GNAP
-          percent_confidence:
+          windPercentConfidence:
             mnemonic: PCCF
 
     ioda:
@@ -25,27 +37,47 @@ observations:
       obsdataout: "./testrun/bufr_read_2_dim_blocks.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/percent_confidence.nrows
-        - name: "ncols_conf"
-          size: variables/percent_confidence.ncols
+        - name: "Location"
+          size: variables/windPercentConfidence.nrows
+        - name: "Confidence"
+          size: variables/windPercentConfidence.ncols
 
       variables:
-        - name: "originating_generating_center@MetaData"
-          source: variables/originating_generating_center
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "Location" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: ["Location"]
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: ["Location"]
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/dataProviderOrigin
+          dimensions: [ "Location" ]
           longName: "Originating/Generating Center"
-          units: "id"
+          units: ""
 
-        - name: "generating_application@MetaData"
-          source: variables/generating_application
-          dimensions: [ "nlocs" , "ncols_conf"]
+        - name: "MetaData/generatingApplication"
+          source: variables/generatingApplication
+          dimensions: [ "Location" ]
           longName: "Generating Application"
-          units: "id"
+          units: ""
 
-        - name: "percent_confidence@ObsValue"
+        - name: "ObsValue/windPercentConfidence"
+          source: variables/windPercentConfidence
           coordinates: "longitude latitude"
-          source: variables/percent_confidence
-          dimensions: [ "nlocs", "ncols_conf"]
+          dimensions: [ "Location", "Confidence"]
           longName: "Percent Confidence"
           units: "percent"

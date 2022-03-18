@@ -76,12 +76,12 @@ class Observation(object):
             os.remove("cryosat_nc4classic.nc")
 
 
-vName = "sea_ice_freeboard"
+vName = "seaIceFreeboard"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {
@@ -98,7 +98,7 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="Cryosat-2 ice freeboard obs input file(s)",
+        help="Cryosat-2 sea ice freeboard obs input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -119,7 +119,7 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        vName: ['nlocs'],
+        vName: ['Location'],
     }
 
     # Read in
@@ -127,14 +127,13 @@ def main():
 
     # write them out
 
-    ObsVars, nlocs = iconv.ExtractObsData(ice.data, locationKeyList)
-    DimDict = {'nlocs': nlocs}
+    ObsVars, Location = iconv.ExtractObsData(ice.data, locationKeyList)
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[vName, iconv.OvalName()]['units'] = 'm'
     VarAttrs[vName, iconv.OerrName()]['units'] = 'm'
-    VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
     VarAttrs[vName, iconv.OvalName()]['_FillValue'] = -32768
     VarAttrs[vName, iconv.OerrName()]['_FillValue'] = -999.
     VarAttrs[vName, iconv.OqcName()]['_FillValue'] = -2147483648
