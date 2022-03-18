@@ -63,8 +63,8 @@ observations:
           size: variables/latitude.nrows
         - name: "Channel"
           size: variables/radiance.ncols
-        - name: "ChannelBlock"
-          size: variables/sensorChannelStart.ncols
+  #     - name: "ChannelBlock"
+  #       size: variables/sensorChannelStart.ncols
 
       globals:
         - name: "platformCommonName"
