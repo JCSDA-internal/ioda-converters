@@ -754,13 +754,13 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf 
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_biaswriter.py
-                            -o testrun/viirs_bias.nc"
-                            viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf 
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_biaswriter.py
+                          -o testrun/viirs_bias.nc"
+                          viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                   TYPE    SCRIPT
