@@ -21,13 +21,13 @@ observations:
             mnemonic: CLATH
           longitude:
             mnemonic: CLONH
-          air_temperature:
+          airTemperature:
             mnemonic: TMDB
-          dewpoint_temperature:
+          dewpointTemperature:
             mnemonic: TMDP
-          wind_direction:
+          windDirection:
             mnemonic: WDIR
-          wind_speed:
+          windSpeed:
             mnemonic: WSPD
 
     ioda:
@@ -35,48 +35,48 @@ observations:
       obsdataout: "./testrun/bufr_read_wmo_radiosonde.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/air_temperature.nrows
-        - name: "temp_ncols"
-          size: variables/air_temperature.ncols
+        - name: "Location"
+          size: variables/airTemperature.nrows
+        - name: "Level"
+          size: variables/airTemperature.ncols
 
       variables:
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
-        - name: "air_temperature@ObsValue"
-          coordinates: "longitude latitude"
-          source: variables/air_temperature
-          dimensions: [ "nlocs", "temp_ncols"]
+        - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
+          coordinates: "longitude latitude Level"
+          dimensions: [ "Location", "Level" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "dewpoint_temperature@ObsValue"
-          coordinates: "longitude latitude"
-          source: variables/dewpoint_temperature
-          dimensions: [ "nlocs",  "temp_ncols"]
+        - name: "ObsValue/dewpointTemperature"
+          source: variables/dewpointTemperature
+          coordinates: "longitude latitude Level"
+          dimensions: [ "Location", "Level" ]
           longName: "Dewpoint Temperature"
           units: "K"
 
-        - name: "wind_direction@ObsValue"
-          coordinates: "longitude latitude"
-          source: variables/wind_direction
-          dimensions: [ "nlocs",  "temp_ncols"]
+        - name: "ObsValue/windDirection"
+          source: variables/windDirection
+          coordinates: "longitude latitude Level"
+          dimensions: [ "Location", "Level" ]
           longName: "Wind Direction"
-          units: "degrees true"
+          units: "degrees"
 
-        - name: "wind_speed@ObsValue"
-          coordinates: "longitude latitude"
-          source: variables/wind_speed
-          dimensions: [ "nlocs",  "temp_ncols"]
+        - name: "ObsValue/windSpeed"
+          source: variables/windSpeed
+          coordinates: "longitude latitude Level"
+          dimensions: [ "Location", "Level" ]
           longName: "Wind Speed"
-          units: "m/s"
+          units: "m s-1"
