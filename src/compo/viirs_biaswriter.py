@@ -3,11 +3,11 @@ import netCDF4
 import numpy as np
 import os
 
-# Writes out netCDF file with bias coefficient for VIIRS AOD observations. Currently this 
-# is just a single global value for the "constant" parameter value. This value is defined in the 
-# python code rather than read in from a file. Future implementations 
+# Writes out netCDF file with bias coefficient for VIIRS AOD observations. Currently this
+# is just a single global value for the "constant" parameter value. This value is defined in the
+# python code rather than read in from a file. Future implementations
 # will include regional, seasonal and AOD magnitude depencies.
-#
+
 # Usage:
 # python viirs_biaswriter.p -o viirs_bias.nc
  
