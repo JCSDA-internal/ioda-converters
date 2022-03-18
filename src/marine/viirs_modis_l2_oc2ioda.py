@@ -250,7 +250,6 @@ def main():
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
     DimDict['Location'] = Location
-#    GlobalAttrs['Location'] = np.int32(DimDict['Location'])
 
     # determine which variables we are going to output
     if args.poc:
@@ -258,8 +257,6 @@ def main():
             'mg m-3'
         VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
             'mg m-3'
-#        VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = \
-#            'unitless'
         VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = \
@@ -273,8 +270,6 @@ def main():
             'mg m-3'
         VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
             'mg m-3'
-#        VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = \
-#            'unitless'
         VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = \
