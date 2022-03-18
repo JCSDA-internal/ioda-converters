@@ -12,8 +12,9 @@ observations:
         - mnemonics: [SAZA, BEARAZ, SOZA, SOLAZI, STKO]
         - mnemonics: [SLNM, FOVN, HOLS]
         - mnemonics: [TOCC, HOCT, NSQF]
+        - mnemonics: [STCH, ENCH, CHSF]
         - mnemonics: [CHNM, SRAD]
-          channels : 1-616
+          channels : 1-430
 #       - mnemonics: [CHNM, SCHRAD]      # VIIRS radiance
 #         channels : 1-16
 
@@ -55,12 +56,16 @@ observations:
             mnemonic: HOCT
           qualityFlags:
             mnemonic: NSQF
+          sensorChannelStart:
+            mnemonic: STCH
+          sensorChannelEnd:
+            mnemonic: ENCH
+          channelScaleFactor:
+            mnemonic: CHSF
           sensorChannelNumber:
             mnemonic: CHNM
-          radiance:
+          radiance:          # This is actually a scaled radiance, needs a fix
             mnemonic: SRAD
-#         radianceVIIRS:
-#           mnemonic: SCHRAD
 
     ioda:
       backend: netcdf
@@ -180,14 +185,5 @@ observations:
           dimensions: ["Location", "Channel"]
           longName: "radiance"
           units: "W m-2 sr-1"
-          chunks: [1000, 616]
+          chunks: [1000, 430]
           compressionLevel: 4
-
-#       - name: "ObsValue/radianceVIIRS"
-#         coordinates: "longitude latitude Channel"
-#         source: variables/radianceVIIRS
-#         dimensions: ["Location", "Channel"]
-#         longName: "radiance"
-#         units: "W m-2 sr-1 um-1"
-#         chunks: [1000, 16]
-#         compressionLevel: 4

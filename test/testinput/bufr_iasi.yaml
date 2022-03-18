@@ -51,7 +51,7 @@ observations:
             mnemonic: CHSF
           sensorChannelNumber:
             mnemonic: CHNM
-          radianceScaled:
+          radiance:          # This is actually a scaled radiance, needs a fix
             mnemonic: SCRA
 
     ioda:
@@ -62,7 +62,7 @@ observations:
         - name: "Location"
           size: variables/latitude.nrows
         - name: "Channel"
-          size: variables/radianceScaled.ncols
+          size: variables/radiance.ncols
         - name: "ChannelBlock"
           size: variables/sensorChannelStart.ncols
 
@@ -142,23 +142,23 @@ observations:
           units: "degrees"
           range: [0, 360]
 
-        - name: "MetaData/sensorChannelStart"
-          source: variables/sensorChannelStart
-          dimensions: ["ChannelBlock"]
-          longName: "Starting channel number"
-          units: ""
+#       - name: "MetaData/sensorChannelStart"
+#         source: variables/sensorChannelStart
+#         dimensions: ["ChannelBlock"]
+#         longName: "Starting channel number"
+#         units: ""
 
-        - name: "MetaData/sensorChannelEnd"
-          source: variables/sensorChannelEnd
-          dimensions: ["ChannelBlock"]
-          longName: "Ending channel number"
-          units: ""
+#       - name: "MetaData/sensorChannelEnd"
+#         source: variables/sensorChannelEnd
+#         dimensions: ["ChannelBlock"]
+#         longName: "Ending channel number"
+#         units: ""
 
-        - name: "MetaData/channelScaleFactor"
-          source: variables/channelScaleFactor
-          dimensions: ["ChannelBlock"]
-          longName: "Channel scale factor"
-          units: ""
+#       - name: "MetaData/channelScaleFactor"
+#         source: variables/channelScaleFactor
+#         dimensions: ["ChannelBlock"]
+#         longName: "Channel scale factor"
+#         units: ""
 
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
@@ -166,8 +166,8 @@ observations:
           longName: "Channel number"
           units: ""
 
-        - name: "ObsValue/radianceScaled"
-          source: variables/radianceScaled
+        - name: "ObsValue/radiance"
+          source: variables/radiance
           coordinates: "longitude latitude Channel"
           dimensions: ["Location", "Channel"]
           longName: "Scaled radiance"
