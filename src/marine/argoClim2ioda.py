@@ -229,14 +229,6 @@ def main():
 
     argo = argoClim(filename, begindate=bdate, enddate=edate)
 
-#    varDict = {
-#        'ob_tem': 'temperature',
-#    }
-
-#    varDims = {
-#        'waterTemperature': ['Location']
-#    }
-
     IODA(foutput, fdate, argo)
 
 
