@@ -74,12 +74,12 @@ class Observation(object):
                 self.data[locKey][qcKey] = qc[i]
 
 
-vName = "sea_ice_area_fraction"
+vName = "seaIceFraction"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {
@@ -96,7 +96,7 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="EMC ice fraction obs input file(s)",
+        help="EMC sea ice fraction obs input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -117,20 +117,19 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        vName: ['nlocs'],
+        vName: ['Location'],
     }
     # Read in
     ice = Observation(args.input, args.thin, fdate)
 
     # write them out
-    ObsVars, nlocs = iconv.ExtractObsData(ice.data, locationKeyList)
-    DimDict = {'nlocs': nlocs}
+    ObsVars, Location = iconv.ExtractObsData(ice.data, locationKeyList)
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[vName, iconv.OvalName()]['units'] = '1'
     VarAttrs[vName, iconv.OerrName()]['units'] = '1'
-    VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
 
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
