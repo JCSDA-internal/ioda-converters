@@ -60,6 +60,10 @@ def main(args):
             else:
                 obs_data = file_obs_data
 
+    if len(obs_data) == 0:
+        print ('ERROR: no occultations to write out')
+        sys.exit()
+
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
