@@ -138,7 +138,7 @@ def get_data(f, obs_data):
     nbeam_pos = len(f['spots'])
     nchans = len(f['channels'])
     nbands = len(f['bands'])
-    #Bands_to_Channel = "Band 1 = Ch. 1; Band 2 = Ch. 2-4; Band 3 = Ch. 5-8; Band 4 = Ch. 9-11; Band 5 = Ch. 12" ;
+    # Bands_to_Channel = "Band 1 = Ch. 1; Band 2 = Ch. 2-4; Band 3 = Ch. 5-8; Band 4 = Ch. 9-11; Band 5 = Ch. 12" ;
     iband = 2   # at this point arbitrarily select a band is this a FOV?
     obs_data[('latitude', 'MetaData')] = np.array(f['losLat_deg'][iband,:,:].flatten(), dtype='float32')
     obs_data[('longitude', 'MetaData')] = np.array(f['losLon_deg'][iband,:,:].flatten(), dtype='float32')
@@ -173,9 +173,30 @@ def get_data(f, obs_data):
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
+    # Bit 1: land/undefined
+    # Bit 2: Lunar/solar intrusion
+    # Bit 3: Active Maneuver
+    # Bit 4: Cold Cal. Consistency
+    # Bit 5: Hot Cal. Consistency
+    # Bit 6: Ascending/Descending
+    # Bit 7: Day/Night
+    # Bit 8: Payload forward/aft"
+    quality_word = np.vstack(np.stack(f['calQualityFlag'],axis=2))
+    obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:,0], bit_index=6), dtype='int32')
+
     # set missing value (-999) to generic missing value
     for jchan in np.arange(nchans):
-        chk_ob = obs_data[(k, "ObsValue")][:,jchan] < 50
+        i_land = get_normalized_bit(quality_word[:,jchan], bit_index=1)
+        i_intrusion = get_normalized_bit(quality_word[:,jchan], bit_index=2)
+        i_maneuver = get_normalized_bit(quality_word[:,jchan], bit_index=3)
+        i_cold_cal = get_normalized_bit(quality_word[:,jchan], bit_index=4)
+        i_hot_cal = get_normalized_bit(quality_word[:,jchan], bit_index=5)
+        i_asc = get_normalized_bit(quality_word[:,jchan], bit_index=6)
+        i_day = get_normalized_bit(quality_word[:,jchan], bit_index=7)
+        i_forward = get_normalized_bit(quality_word[:,jchan], bit_index=8)
+        chk_ob = np.logical_or(
+                    np.logical_or(i_cold_cal, i_hot_cal),
+                    np.logical_or(i_intrusion, i_maneuver) )
         obs_data[(k, "ObsValue")][:,jchan][chk_ob] = float_missing_value
 
     # check some satellite geometry will compress all data using this
@@ -201,6 +222,28 @@ def get_data(f, obs_data):
 
     return obs_data
 
+
+def get_normalized_bit(value, bit_index):
+    return (value >> bit_index) & 1
+
+
+def assign_values(data):
+    if data.dtype == float:
+        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
+        return np.array(data, dtype=ioda_float_type)
+    elif data.dtype == int:
+        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
+        return np.array(data, dtype=ioda_int_type)
+
+
+def concat_obs_dict(obs_data, append_obs_data):
+    # For now we are assuming that the obs_data dictionary has the "golden" list
+    # of variables. If one is missing from append_obs_data, the obs_data variable
+    # will be extended using fill values.
+    #
+    # Use the first key in the append_obs_data dictionary to determine how
+    # long to make the fill value vector.
+    append_keys = list(append_obs_data.keys())
 
 def get_WMO_satellite_ID(filename):
 
