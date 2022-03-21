@@ -170,7 +170,7 @@ class OwpSnowObs(object):
                     wh_not_var_other = np.where(np.isnan(obs_df[f'ObsValue {var_other}']))[0]  # 1-D
                     obs_df = obs_df.drop(wh_not_var_other).reset_index()
 
-        self.data[('datetime', 'MetaData')] = obs_df.datetime.values
+        self.data[('dateTime', 'MetaData')] = obs_df.datetime.values
         self.data[('latitude', 'MetaData')] = obs_df.latitude.values.astype('float32')
         self.data[('longitude', 'MetaData')] = obs_df.longitude.values.astype('float32')
 
