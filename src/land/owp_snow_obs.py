@@ -44,8 +44,8 @@ col_types = {
     'ObsValue': np.float32,
     'ObsError': np.float32,
     'PreQC': np.int32,
-    'dem_elev_m': np.int32,
-    'rec_elev_m': np.int32,
+    'dem_elev_m': np.float32,
+    'rec_elev_m': np.float32,
     'latitude': np.float64,
     'longitude': np.float64,
     'dateTime': str,
@@ -170,12 +170,12 @@ class OwpSnowObs(object):
                     wh_not_var_other = np.where(np.isnan(obs_df[f'ObsValue {var_other}']))[0]  # 1-D
                     obs_df = obs_df.drop(wh_not_var_other).reset_index()
 
-        self.data[('dateTime', 'MetaData')] = obs_df.datetime.values
-        self.data[('latitude', 'MetaData')] = obs_df.latitude.values
-        self.data[('longitude', 'MetaData')] = obs_df.longitude.values
+        self.data[('datetime', 'MetaData')] = obs_df.datetime.values
+        self.data[('latitude', 'MetaData')] = obs_df.latitude.values.astype('float32')
+        self.data[('longitude', 'MetaData')] = obs_df.longitude.values.astype('float32')
 
-        self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values
-        self.data[('stationIdentification', 'MetaData')] = obs_df.StnID.values
+        self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values.astype('float32')
+        self.data[('station_id', 'MetaData')] = obs_df.StnID.values
         self.var_metadata[('height', 'MetaData')]['units'] = 'm'
 
         for obs_var, ioda_var in output_var_dict.items():

@@ -122,7 +122,7 @@ class smap(object):
         self.outdata[('longitude', 'MetaData')] = lons
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
-        self.outdata[('surfaceFlag', 'MetaData')] = sflg
+        self.outdata[('earthSurfaceType', 'MetaData')] = sflg
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
 
         for iodavar in ['soilMoistureVolumetric']:

@@ -37,7 +37,7 @@ observations:
             mnemonic: HEIT
           geopotentialHeight:
             mnemonic: GPHTST
-          airPressure:
+          pressure:
             mnemonic: PRES
           airTemperature:
             mnemonic: TMDBST
@@ -48,28 +48,26 @@ observations:
             mnemonic: SAID
           instrumentIdentifier:
             mnemonic: SIID
-          satelliteClassification:
-            mnemonic: SCLF
           platformTransmitterId:
             mnemonic: PTID
-          originatingCenter:
+          dataProviderOrigin:
             mnemonic: OGCE
           qualityFlags:
             mnemonic: QFRO
           percentConfidence:
             mnemonic: PCCF
-          impactParameter:
+          impactParameterRO:
             mnemonic: IMPP
           geoidUndulation:
             mnemonic: GEODU
-          azimuth:
+          sensorAzimuthAngle:
             mnemonic: BEARAZ
           earthRadiusCurvature:
             mnemonic: ELRC
 
           bendingAngle:
             mnemonic: BNDA
-          refractivity:
+          atmosphericRefractivity:
             mnemonic: ARFR
 
     ioda:
@@ -77,141 +75,124 @@ observations:
       obsdataout: "./testrun/gnssro_2020-306-2358C2E6.nc"
 
       dimensions:
-        - name: "nlocs"
+        - name: "Location"
           size: variables/latitude.nrows
 
       variables:
         - name: "MetaData/dateTime"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
         - name: "MetaData/height"
           source: variables/height
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Height"
           units: "m"
 
         - name: "MetaData/geopotentialHeight"
           source: variables/geopotentialHeight
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Geopotential height"
           units: "m"
 
-        - name: "MetaData/airPressure"
-          coordinates: "longitude latitude"
-          source: variables/airPressure
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/pressure"
+          source: variables/pressure
+          dimensions: [ "Location" ]
           longName: "Air pressure"
           units: "Pa"
 
-        - name: "MetaData/process_center
-          coordinates: "longitude latitude"
-          source: variables/originatingCenter
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/dataProviderOrigin
+          dimensions: [ "Location" ]
           longName: "Originating center"
-          units: "unitless"
+          units: ""
 
-        - name: "MetaData/gnss_sat_class
-          coordinates: "longitude latitude"
-          source: variables/satelliteClassification
-          dimensions: [ "nlocs" ]
-          longName: "GNSS satellite classification"
-          units: "unitless"
-
-        - name: "MetaData/reference_sat_id
-          coordinates: "longitude latitude"
+        - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteIdentifier
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "GNSS satellite ID"
-          units: "unitless"
+          units: ""
 
-        - name: "MetaData/occulting_sat_is
-          coordinates: "longitude latitude"
+        - name: "MetaData/instrumentIdentifier"
           source: variables/instrumentIdentifier
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Instrument ID"
-          units: "unitless"
+          units: ""
 
-        - name: "MetaData/occulting_sat_id
-          coordinates: "longitude latitude"
+        - name: "MetaData/platformTransmitterId"
           source: variables/platformTransmitterId
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "GNSS platform transmitter ID"
-          units: "unitless"
+          units: ""
 
-        - name: "MetaData/qualityFlags
-          coordinates: "longitude latitude"
+        - name: "QualityMarker/qualityFlags"
           source: variables/qualityFlags
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Quality flags"
-          units: "unitless"
+          units: ""
 
-        - name: "MetaData/earth_radius_of_curvature"
-          coordinates: "longitude latitude"
+        - name: "MetaData/earthRadiusCurvature"
           source: variables/earthRadiusCurvature
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Earth local radius of curvature"
           units: "m"
 
-        - name: "MetaData/geoid_height_above_reference_ellipsoid
-          coordinates: "longitude latitude"
+        - name: "MetaData/geoidUndulation"
           source: variables/geoidUndulation
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Geoid undulation"
           units: "m"
 
-        - name: "MetaData/impact_parameter
-          coordinates: "longitude latitude"
-          source: variables/impactParameter
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/impactParameterRO"
+          source: variables/impactParameterRO
+          dimensions: [ "Location" ]
           longName: "Impact parameter"
-          units: "m"
+          units: ""
 
-        - name: "MetaData/sensor_azimuth_angle
-          coordinates: "longitude latitude"
-          source: variables/azimuth
-          dimensions: [ "nlocs" ]
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/sensorAzimuthAngle
+          dimensions: [ "Location" ]
           longName: "Sensor azimuth angle"
           units: "degrees"
 
         - name: "ObsValue/airTemperature"
-          coordinates: "longitude latitude"
           source: variables/airTemperature
-          dimensions: [ "nlocs" ]
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Air temperature"
           units: "K"
 
         - name: "ObsValue/specificHumidity"
-          coordinates: "longitude latitude"
           source: variables/specificHumidity
-          dimensions: [ "nlocs" ]
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Specific humidity"
           units: "kg kg-1"
 
-        - name: "ObsValue/bending_angle"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/bendingAngle"
           source: variables/bendingAngle
-          dimensions: [ "nlocs" ]
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Bending angle"
           units: "radians"
 
-        - name: "ObsValue/refractivity"
+        - name: "ObsValue/atmosphericRefractivity"
+          source: variables/atmosphericRefractivity
           coordinates: "longitude latitude"
-          source: variables/refractivity
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "Refractivity"
-          units: "N units"
+          units: "INVALID N units"

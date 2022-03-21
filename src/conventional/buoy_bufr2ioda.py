@@ -28,22 +28,22 @@ import meteo_utils
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
-    ("station_id", "integer", ""),
-    ("station_name", "string", ""),
+    ("stationIdentification", "integer", ""),
+    ("stationLongName", "string", ""),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
-    ("station_elevation", "float", "m"),
+    ("stationElevation", "float", "m"),
     ("height", "float", "m"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
 ]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 metaDataKeyList = {
-    'station_id': ['marineObservingPlatformIdentifier'],
-    'station_name': ['stationOrSiteName'],
+    'stationIdentification': ['marineObservingPlatformIdentifier'],
+    'stationLongName': ['stationOrSiteName'],
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'station_elevation': ['heightOfStationGroundAboveMeanSeaLevel'],
+    'stationElevation': ['heightOfStationGroundAboveMeanSeaLevel'],
     'height': ['heightOfSensorAboveWaterSurface',
                'heightOfBarometerAboveMeanSeaLevel'],
     'dateTime': ['Constructed']
@@ -61,22 +61,22 @@ raw_obsvars = ['airTemperature',
                'pressureReducedToMeanSeaLevel']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature',
-           'specific_humidity',
-           'sea_surface_temperature',
-           'eastward_wind',
-           'northward_wind',
-           'surface_pressure']
+obsvars = ['airTemperature',
+           'specificHumidity',
+           'seaSurfaceTemperature',
+           'windEastward',
+           'windNorthward',
+           'stationPressure']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
 obserrlist = [1.2, 0.75E-3, 2.2, 1.7, 1.7, 120.0]
 
 VarDims = {
-    'air_temperature': ['nlocs'],
-    'specific_humidity': ['nlocs'],
-    'sea_surface_temperature': ['nlocs'],
-    'eastward_wind': ['nlocs'],
-    'northward_wind': ['nlocs'],
-    'surface_pressure': ['nlocs']
+    'airTemperature': ['nlocs'],
+    'specificHumidity': ['nlocs'],
+    'seaSurfaceTemperature': ['nlocs'],
+    'windEastward': ['nlocs'],
+    'windNorthward': ['nlocs'],
+    'stationPressure': ['nlocs']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -162,12 +162,12 @@ def main(file_names, output_file):
         varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
         varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
-        varAttrs[iodavar, qcName]['units'] = 'unitless'
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
-        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
         obs_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
@@ -436,12 +436,12 @@ def read_bufr_message(f, count, start_pos, data):
     mask_height = np.logical_or(meta_data['height'] < -425, meta_data['height'] > 800)
     meta_data['height'][mask_height] = float_missing_value
 
-    # If the height of the observation (sensor) is missing, try to fill it with station_elevation.
-    for n, elev in enumerate(meta_data['station_elevation']):
+    # If the height of the observation (sensor) is missing, try to fill it with stationElevation.
+    for n, elev in enumerate(meta_data['stationElevation']):
         if (elev > -425 and elev < 800 and np.abs(meta_data['height'][n]-elev) > 50):
             meta_data['height'][n] = elev + 2
         else:
-            meta_data['station_elevation'][n] = 0.5
+            meta_data['stationElevation'][n] = 0.5
             meta_data['height'][n] = 2.0
 
     # Next, get the raw observed weather variables we want.
@@ -495,12 +495,12 @@ def read_bufr_message(f, count, start_pos, data):
             spfh[n] = met_utils.specific_humidity(dewpoint, psfc)
 
     # Move everything into the final data dictionary, including metadata.
-    data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-    data['northward_wind'] = np.append(data['northward_wind'], vwnd)
-    data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
-    data['air_temperature'] = np.append(data['air_temperature'], vals['airTemperature'])
-    data['surface_pressure'] = np.append(data['surface_pressure'], vals['nonCoordinatePressure'])
-    data['sea_surface_temperature'] = np.append(data['sea_surface_temperature'], vals['seaSurfaceTemperature'])
+    data['windEastward'] = np.append(data['windEastward'], uwnd)
+    data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+    data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+    data['airTemperature'] = np.append(data['airTemperature'], vals['airTemperature'])
+    data['stationPressure'] = np.append(data['stationPressure'], vals['nonCoordinatePressure'])
+    data['seaSurfaceTemperature'] = np.append(data['seaSurfaceTemperature'], vals['seaSurfaceTemperature'])
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 

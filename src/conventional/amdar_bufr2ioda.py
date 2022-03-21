@@ -28,17 +28,15 @@ import meteo_utils
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
-    ("aircraft_id", "string", ""),
-    ("aircraft_flightNum", "string", ""),
-    ("aircraft_tailNum", "string", ""),
-    ("obs_sequenceNum", "integer", ""),
-    ("originationAirport", "string", ""),
-    ("destinationAirport", "string", ""),
-    ("flight_phase", "integer", ""),
-    ("roll_angle", "float", "degrees"),
-    ("roll_angle_quality", "integer", ""),
-    ("aircraft_speed", "float", "m s-1"),
-    ("aircraft_heading", "integer", "degrees"),
+    ("aircraftIdentifier", "string", ""),
+    ("aircraftFlightNumber", "string", ""),
+    ("aircraftTailNumber", "string", ""),
+    ("observationSequenceNum", "integer", ""),
+    ("aircraftFlightPhase", "integer", ""),
+    ("aircraftRollAngle", "float", "degrees"),
+    ("aircraftRollAngleQuality", "integer", ""),
+    ("aircraftVelocity", "float", "m s-1"),
+    ("aircraftHeading", "integer", "degrees"),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("height", "float", "m"),
@@ -47,17 +45,15 @@ locationKeyList = [
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 metaDataKeyList = {
-    'aircraft_id': ['aircraftRegistrationNumberOrOtherIdentification'],
-    'aircraft_flightNum': ['aircraftFlightNumber'],
-    'aircraft_tailNum': ['aircraftTailNumber'],
-    'obs_sequenceNum': ['observationSequenceNumber'],
-    'originationAirport': ['originationAirport'],
-    'destinationAirport': ['destinationAirport'],
-    'flight_phase': ['detailedPhaseOfFlight'],
-    'roll_angle': ['aircraftRollAngle'],
-    'roll_angle_quality': ['aircraftRollAngleQuality'],
-    'aircraft_speed': ['aircraftTrueAirspeed'],
-    'aircraft_heading': ['aircraftTrueHeading'],
+    'aircraftIdentifier': ['aircraftRegistrationNumberOrOtherIdentification'],
+    'aircraftFlightNumber': ['aircraftFlightNumber'],
+    'aircraftTailNumber': ['aircraftTailNumber'],
+    'observationSequenceNum': ['observationSequenceNumber'],
+    'aircraftFlightPhase': ['detailedPhaseOfFlight'],
+    'aircraftRollAngle': ['aircraftRollAngle'],
+    'aircraftRollAngleQuality': ['aircraftRollAngleQuality'],
+    'aircraftVelocity': ['aircraftTrueAirspeed'],
+    'aircraftHeading': ['aircraftTrueHeading'],
     'latitude': ['latitude'],
     'longitude': ['longitude'],
     'height': ['Constructed', 'globalNavigationSatelliteSystemAltitude', 'height', 'flightLevel'],
@@ -70,15 +66,15 @@ var_mimic_length = "latitude"
 raw_obsvars = ['airTemperature', 'mixingRatio', 'windDirection', 'windSpeed']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature', 'specific_humidity', 'eastward_wind', 'northward_wind']
+obsvars = ['airTemperature', 'specificHumidity', 'windEastward', 'windNorthward']
 obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 1.7, 1.7]
 
 VarDims = {
-    'air_temperature': ['nlocs'],
-    'specific_humidity': ['nlocs'],
-    'eastward_wind': ['nlocs'],
-    'northward_wind': ['nlocs'],
+    'airTemperature': ['nlocs'],
+    'specificHumidity': ['nlocs'],
+    'windEastward': ['nlocs'],
+    'windNorthward': ['nlocs'],
 }
 
 metaDataName = iconv.MetaDataName()
@@ -164,12 +160,12 @@ def main(file_names, output_file):
         varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
         varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
-        varAttrs[iodavar, qcName]['units'] = 'unitless'
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
-        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
         obs_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
@@ -481,10 +477,10 @@ def read_bufr_message(f, count, start_pos, data):
             spfh[n] = mixing_ratio / (1.0 + mixing_ratio)
 
     # Move everything into the final data dictionary, including metadata.
-    data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-    data['northward_wind'] = np.append(data['northward_wind'], vwnd)
-    data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
-    data['air_temperature'] = np.append(data['air_temperature'], vals['airTemperature'])
+    data['windEastward'] = np.append(data['windEastward'], uwnd)
+    data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+    data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+    data['airTemperature'] = np.append(data['airTemperature'], vals['airTemperature'])
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 
