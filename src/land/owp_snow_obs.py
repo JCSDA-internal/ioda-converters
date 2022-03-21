@@ -175,7 +175,7 @@ class OwpSnowObs(object):
         self.data[('longitude', 'MetaData')] = obs_df.longitude.values.astype('float32')
 
         self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values.astype('float32')
-        self.data[('station_id', 'MetaData')] = obs_df.StnID.values
+        self.data[('stationIdentification', 'MetaData')] = obs_df.StnID.values
         self.var_metadata[('height', 'MetaData')]['units'] = 'm'
 
         for obs_var, ioda_var in output_var_dict.items():
