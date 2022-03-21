@@ -93,6 +93,7 @@ list( APPEND test_output
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
+  testoutput/viirs_bias.nc 
   testoutput/tropomi_no2.nc
   testoutput/mopitt_co.nc
   testoutput/modis_aod.nc
@@ -222,6 +223,7 @@ if (iodaconv_satbias_ENABLED )
     testoutput/satbias_amsua_n18.nc4
     testoutput/satbias_cris_npp.nc4
     testoutput/satbias_ssmis_f16.nc4
+    testoutput/viirs_bias.nc 
   )
 endif()
 
@@ -750,6 +752,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           -k maskout
                           -n 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf 
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_biaswriter.py
+                          -o testrun/viirs_bias.nc"
+                          viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                   TYPE    SCRIPT
