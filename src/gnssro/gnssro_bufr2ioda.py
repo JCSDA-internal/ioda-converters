@@ -43,6 +43,8 @@ locationKeyList = [
 def main(args):
 
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
+    global qc
+    qc = args.qualitycontrol
 
     # read / process files in parallel
     pool_input_01 = args.input
@@ -81,7 +83,6 @@ def main(args):
     for k, v in meta_data_types.items():
         locationKeyList.append((k, v))
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('bending_angle', 'ObsValue')]['units'] = 'Radians'
     VarAttrs[('bending_angle', 'ObsError')]['units'] = 'Radians'
@@ -118,6 +119,7 @@ def read_input(input_file_and_record):
 
         A dictionary holding the variables (obs_data) needed by the IODA writer
     """
+    global qc
     input_file = input_file_and_record[0]
     record_number = input_file_and_record[1]
     print("Reading: %s" % input_file)
@@ -158,6 +160,7 @@ def get_meta_data(bufr):
 
 
 def get_obs_data(bufr, profile_meta_data, record_number=None):
+    global qc
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -179,28 +182,14 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     impact = codes_get_array(bufr, 'impactParameter')[2::drepfac[0]]
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
-
-    # ! Bit 1=Non-nominal quality
-    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
-    # ! Bit 4=Excess Phase non-nominal
-    # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
-    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
-
-    # exit if non-nominal profile
-    if i_non_nominal != 0 or i_phase_non_nominal != 0 or i_bang_non_nominal != 0:
-        return {}
-
+    # (geometric) height is read as integer but expected as float in output
+    height = codes_get_array(bufr, 'height', ktype=float)
+    
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
     obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
     obs_data[('bending_angle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
-    # (geometric) height is read as integer but expected as float in output
-    height = codes_get_array(bufr, 'height', ktype=float)
     # get the refractivity
     refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
     refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
@@ -225,7 +214,22 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
         else:  # something else (datetime for instance)
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
+
+    # bits are in reverse order according to WMO GNSSRO bufr documentation
+    # ! Bit 1=Non-nominal quality
+    # ! Bit 4=Excess Phase non-nominal
+    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
+    # ! Bit 5=Bending Angle non-nominal
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)    
+
+    if (i_non_nominal != 0) or (i_phase_non_nominal != 0) or (i_bang_non_nominal != 0) or (bang_conf == 0):
+        return {}
+        # return if non-nominal profile
+
     # add rising/setting (ascending/descending) bit
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
     obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
     # set record number (multi file procesing will change this)
@@ -244,11 +248,32 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
 
     # Compute impact height
     obs_data[('impact_height', 'MetaData')] = \
-        obs_data[('impact_parameter', 'MetaData')] - \
-        obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
-        obs_data[('earth_radius_of_curvature', 'MetaData')]
+     obs_data[('impact_parameter', 'MetaData')] - \
+     obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
+     obs_data[('earth_radius_of_curvature', 'MetaData')]
+    
+    if qc:
+        good = quality_control(profile_meta_data, height, lats, lons)
+        if len(lats[good])==0:
+            return{}
+            # exit if entire profile is missing
+        for k in obs_data.keys():
+            obs_data[k] = obs_data[k][good]
 
     return obs_data
+
+def quality_control(profile_meta_data, heights, lats, lons):
+    print('Performing QC Checks')
+
+    good = (heights>0.) & (heights<100000.) & (abs(lats)<90.) & (abs(lons)<360.)  
+
+    # bad radius or
+    # large geoid undulation
+    if (profile_meta_data['earth_radius_of_curvature'] > 6450000.) or (profile_meta_data['earth_radius_of_curvature'] < 6250000.) or \
+        (abs(profile_meta_data['geoid_height_above_reference_ellipsoid'])>200):
+        good = [] 
+        # bad profile
+    return good
 
 
 def def_meta_data():
@@ -363,6 +388,10 @@ if __name__ == "__main__":
         help=' optional record number to associate with profile ',
         type=int, default=1)
 
-    args = parser.parse_args()
+    optional.add_argument(
+        '-q', '--qualitycontrol',
+        help='turn on quality control georeality checks',
+        default=False, action='store_true', required=False)
 
+    args = parser.parse_args()
     main(args)
