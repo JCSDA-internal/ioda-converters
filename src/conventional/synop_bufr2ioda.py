@@ -28,13 +28,13 @@ import meteo_utils
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
-    ("station_id", "string", ""),
-    ("station_name", "string", ""),
+    ("stationIdentification", "string", ""),
+    ("stationLongName", "string", ""),
     ("wmoBlockNumber", "integer", ""),
     ("wmoStationNumber", "integer", ""),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
-    ("station_elevation", "float", "m"),
+    ("stationElevation", "float", "m"),
     ("height", "float", "m"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
 ]
@@ -43,14 +43,14 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 metaDataKeyList = {
     'wmoBlockNumber': ['blockNumber'],
     'wmoStationNumber': ['stationNumber'],
-    'station_name': ['stationOrSiteName'],
+    'stationLongName': ['stationOrSiteName'],
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'station_elevation': ['heightOfStationGroundAboveMeanSeaLevel'],
+    'stationElevation': ['heightOfStationGroundAboveMeanSeaLevel'],
     'height': ['Constructed',
                'heightOfBarometerAboveMeanSeaLevel',
                'heightOfStationGroundAboveMeanSeaLevel'],
-    'station_id': ['Constructed'],
+    'stationIdentification': ['Constructed'],
     'dateTime': ['Constructed']
 }
 
@@ -64,20 +64,20 @@ raw_obsvars = ['airTemperature',
                'nonCoordinatePressure']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature',
-           'specific_humidity',
-           'eastward_wind',
-           'northward_wind',
-           'surface_pressure']
+obsvars = ['airTemperature',
+           'specificHumidity',
+           'windEastward',
+           'windNorthward',
+           'stationPressure']
 obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1', 'Pa']
 obserrlist = [1.2, 0.75E-3, 1.7, 1.7, 120.0]
 
 VarDims = {
-    'air_temperature': ['nlocs'],
-    'specific_humidity': ['nlocs'],
-    'eastward_wind': ['nlocs'],
-    'northward_wind': ['nlocs'],
-    'surface_pressure': ['nlocs']
+    'airTemperature': ['nlocs'],
+    'specificHumidity': ['nlocs'],
+    'windEastward': ['nlocs'],
+    'windNorthward': ['nlocs'],
+    'stationPressure': ['nlocs']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -163,12 +163,12 @@ def main(file_names, output_file):
         varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
         varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
-        varAttrs[iodavar, qcName]['units'] = 'unitless'
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
-        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
         obs_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
@@ -433,8 +433,8 @@ def read_bufr_message(f, count, start_pos, data):
     mask_height = np.logical_or(meta_data['height'] < -425, meta_data['height'] > 8500)
     meta_data['height'][mask_height] = float_missing_value
 
-    # If the height of the observation (sensor) is missing, try to fill it with station_elevation.
-    for n, elev in enumerate(meta_data['station_elevation']):
+    # If the height of the observation (sensor) is missing, try to fill it with stationElevation.
+    for n, elev in enumerate(meta_data['stationElevation']):
         if (elev > -425 and elev < 8500 and np.abs(meta_data['height'][n]-elev) > 50):
             meta_data['height'][n] = elev + 2
 
@@ -464,7 +464,7 @@ def read_bufr_message(f, count, start_pos, data):
     mask_z = np.full(target_number, 0, dtype=np.int32)
     mask_date[year == 1900] = 1
     mask_ll[meta_data['latitude'] == float_missing_value] = 1
-    mask_z[meta_data['station_elevation'] == float_missing_value] = 1
+    mask_z[meta_data['stationElevation'] == float_missing_value] = 1
     for n, x in enumerate(mask_date):
         if (mask_date[n] == 1 or mask_ll[n] == 1 or mask_z[n] == 1):
             count[2] += 1
@@ -474,7 +474,7 @@ def read_bufr_message(f, count, start_pos, data):
     for n, block in enumerate(meta_data['wmoBlockNumber']):
         number = meta_data['wmoStationNumber'][n]
         if (block > 0 and block < 100 and number > 0 and number < 1000):
-            meta_data['station_id'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+            meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
 
     # Need to transform some variables to others (wind speed/direction to components for example).
     uwnd = np.full(target_number, float_missing_value)
@@ -490,11 +490,11 @@ def read_bufr_message(f, count, start_pos, data):
             spfh[n] = met_utils.specific_humidity(dewpoint, psfc)
 
     # Move everything into the final data dictionary, including metadata.
-    data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-    data['northward_wind'] = np.append(data['northward_wind'], vwnd)
-    data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
-    data['air_temperature'] = np.append(data['air_temperature'], vals['airTemperature'])
-    data['surface_pressure'] = np.append(data['surface_pressure'], vals['nonCoordinatePressure'])
+    data['windEastward'] = np.append(data['windEastward'], uwnd)
+    data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+    data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+    data['airTemperature'] = np.append(data['airTemperature'], vals['airTemperature'])
+    data['stationPressure'] = np.append(data['stationPressure'], vals['nonCoordinatePressure'])
     for key in meta_keys:
         data[key] = np.append(data[key], meta_data[key])
 

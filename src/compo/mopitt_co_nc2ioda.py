@@ -110,7 +110,8 @@ class mopitt(object):
             # get ak
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
             # ak to be applied on surface density molecules/m2
-            ak_tc_dimless = dat.variables['TotalColumnAveragingKernelDimless'][:].astype('float32')
+            ak_tc_dimless = dat.variables['TotalColumnAveragingKernelDimless'][:]
+            ak_tc_dimless.mask = np.ma.nomask
 
             # get apriori quantities, profile is needed to compute (I-A)x_a
             xa_tc = dat.variables['APrioriCOTotalColumn'][:]

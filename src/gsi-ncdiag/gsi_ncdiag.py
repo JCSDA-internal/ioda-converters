@@ -109,7 +109,7 @@ all_LocKeyList = {
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('stationElevation', 'float'),
-    'Pressure': ('pressure', 'float'),  # apply to observed surface pressure and air pressure
+    'Pressure': ('airPressure', 'float'),
     'Height': ('height', 'float'),
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
