@@ -25,7 +25,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-
+ 
 class argoClim(object):
 
     def __init__(self, filename, begindate=None, enddate=None):
@@ -67,9 +67,12 @@ class argoClim(object):
         assert self.varname in ['TEMPERATURE', 'SALINITY'],\
             "%s is not a valid variable name" % self.varname
 
+        self.varname2 = 'waterTemperature'
+        
         lon = nc.variables['LONGITUDE'][:]
         lat = nc.variables['LATITUDE'][:]
-        pres = nc.variables['PRESSURE'][:]
+        pres = nc.variables['PRESSURE'][:] #pressure in decibar
+        depth = pres   #1 decibar = 1 meter, so you can use pressure as depth
 
         # Get absolute time instead of time since epoch
         dtime = nc.variables['TIME']
@@ -100,9 +103,10 @@ class argoClim(object):
             time = timeArray[bI:eI]
 
         mean = nc.variables['ARGO_%s_MEAN' % self.varname][:]
+        meanK = [x+273.15 for x in mean]
 
         # create a full field from mean and anomaly
-        fullField = anomaly + np.tile(mean, (anomaly.shape[0], 1, 1, 1))
+        fullField = anomaly + np.tile(meanK, (anomaly.shape[0], 1, 1, 1))
 
         try:
             nc.close()
@@ -115,7 +119,7 @@ class argoClim(object):
         self.data = {}
         self.data['lat'] = lat
         self.data['lon'] = lon
-        self.data['pres'] = pres
+        self.data['depth'] = depth 
         self.data['time'] = time
         self.data['field'] = fullField.data
 
@@ -137,8 +141,8 @@ class IODA(object):
         self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
-            ("pressure", "float"),
-            ("datetime", "string")
+            ("depthBelowWaterSurface", "float"),
+            ("dateTime", "string")
         ]
 
         self.GlobalAttrs = {
@@ -149,17 +153,17 @@ class IODA(object):
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        valKey = argo.varname, iconv.OvalName()
-        errKey = argo.varname, iconv.OerrName()
-        qcKey = argo.varname, iconv.OqcName()
+        valKey = argo.varname2, iconv.OvalName()
+        errKey = argo.varname2, iconv.OerrName()
+        qcKey = argo.varname2, iconv.OqcName()
 
         # There has to be a better way than explicitly looping over 4! dimensions
         for t, time in enumerate(argo.data['time']):
             for y, lat in enumerate(argo.data['lat']):
                 for x, lon in enumerate(argo.data['lon']):
-                    for z, pres in enumerate(argo.data['pres']):
+                    for z, depth in enumerate(argo.data['depth']):
 
-                        locKey = lat, lon, pres, time.strftime('%Y-%m-%dT%H:%M:%SZ')
+                        locKey = lat, lon, depth, time.strftime('%Y-%m-%dT%H:%M:%SZ')
 
                         val = argo.data['field'][t, z, y, x]
                         err = 0.
@@ -169,21 +173,24 @@ class IODA(object):
                         self.data[locKey][errKey] = err
                         self.data[locKey][qcKey] = qc
 
-        self.varAttrs[argo.varname, iconv.OvalName()]['_FillValue'] = -999.
-        self.varAttrs[argo.varname, iconv.OerrName()]['_FillValue'] = -999.
-        self.varAttrs[argo.varname, iconv.OqcName()]['_FillValue'] = -999
-        self.varAttrs[argo.varname, iconv.OvalName()]['units'] = 'degree_C'
-        self.varAttrs[argo.varname, iconv.OerrName()]['units'] = 'degree_C'
-        self.varAttrs[argo.varname, iconv.OqcName()]['units'] = 'unitless'
+        self.varAttrs[argo.varname2, iconv.OvalName()]['_FillValue'] = -999.
+        self.varAttrs[argo.varname2, iconv.OerrName()]['_FillValue'] = -999.
+        self.varAttrs[argo.varname2, iconv.OqcName()]['_FillValue'] = -999
+        self.varAttrs[argo.varname2, iconv.OvalName()]['units'] = 'K'
+        self.varAttrs[argo.varname2, iconv.OerrName()]['units'] = 'K'
+        self.varAttrs['depthBelowWaterSurface', 'MetaData']['units'] = 'm'
+
 
         # Extract obs
-        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
-        DimDict = {'nlocs': nlocs}
+        ObsVars, Location = iconv.ExtractObsData(self.data, self.locKeyList)
+        DimDict = {'Location': Location
+}
         varDims = {
-            'TEMPERATURE': ['nlocs']
+            'waterTemperature': ['Location']
         }
         # Set up IODA writer
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+
         # Write out observations
         self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
@@ -227,7 +234,7 @@ def main():
     }
 
     varDims = {
-        'TEMPERATURE': ['nlocs']
+        'waterTemperature': ['Location']
     }
 
     IODA(foutput, fdate, argo)
