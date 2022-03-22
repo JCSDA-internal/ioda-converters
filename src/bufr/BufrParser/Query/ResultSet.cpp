@@ -182,7 +182,7 @@ namespace bufr {
                 else
                 {
                     dimPaths = {};
-                    for (size_t targetIdx = exportDims.size() - 1; targetIdx < targetField.dimPaths.size(); ++targetIdx)
+                    for (size_t targetIdx = groupByField.exportDims.size() - 1; targetIdx < targetField.dimPaths.size(); ++targetIdx)
                     {
                         dimPaths.push_back(targetField.dimPaths[targetIdx]);
                     }
