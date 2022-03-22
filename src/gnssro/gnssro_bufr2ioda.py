@@ -184,7 +184,7 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
     # (geometric) height is read as integer but expected as float in output
     height = codes_get_array(bufr, 'height', ktype=float)
-    
+
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
     obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
@@ -222,7 +222,7 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     # ! Bit 5=Bending Angle non-nominal
     i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
     i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)    
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
 
     if (i_non_nominal != 0) or (i_phase_non_nominal != 0) or (i_bang_non_nominal != 0) or (bang_conf == 0):
         return {}
@@ -248,13 +248,13 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
 
     # Compute impact height
     obs_data[('impact_height', 'MetaData')] = \
-     obs_data[('impact_parameter', 'MetaData')] - \
-     obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
-     obs_data[('earth_radius_of_curvature', 'MetaData')]
-    
+            obs_data[('impact_parameter', 'MetaData')] - \
+            obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
+            obs_data[('earth_radius_of_curvature', 'MetaData')]
+
     if qc:
         good = quality_control(profile_meta_data, height, lats, lons)
-        if len(lats[good])==0:
+        if len(lats[good]) == 0:
             return{}
             # exit if entire profile is missing
         for k in obs_data.keys():
@@ -262,16 +262,17 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
 
     return obs_data
 
+
 def quality_control(profile_meta_data, heights, lats, lons):
     print('Performing QC Checks')
 
-    good = (heights>0.) & (heights<100000.) & (abs(lats)<90.) & (abs(lons)<360.)  
+    good = (heights > 0.) & (heights < 100000.) & (abs(lats) < 90.) & (abs(lons) < 360.)
 
     # bad radius or
     # large geoid undulation
     if (profile_meta_data['earth_radius_of_curvature'] > 6450000.) or (profile_meta_data['earth_radius_of_curvature'] < 6250000.) or \
-        (abs(profile_meta_data['geoid_height_above_reference_ellipsoid'])>200):
-        good = [] 
+    (abs(profile_meta_data['geoid_height_above_reference_ellipsoid']) > 200):
+        good = []
         # bad profile
     return good
 
