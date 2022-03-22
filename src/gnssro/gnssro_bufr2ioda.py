@@ -224,7 +224,7 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
     i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
 
-    if (i_non_nominal != 0) or (i_phase_non_nominal != 0) or (i_bang_non_nominal != 0) or (bang_conf == 0):
+    if (i_non_nominal != 0) or (i_phase_non_nominal != 0) or (i_bang_non_nominal != 0):
         return {}
         # return if non-nominal profile
 
