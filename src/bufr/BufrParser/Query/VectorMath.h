@@ -25,7 +25,7 @@ namespace bufr {
               typename std::vector<T>::const_iterator end)
     {
         T result = 1;
-        for (auto i = begin; i != end; ++i)
+        for (auto i = begin; i < end; ++i)
         {
             result *= *i;
         }

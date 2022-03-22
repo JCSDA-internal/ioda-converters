@@ -217,9 +217,14 @@ namespace bufr {
             else
             {
                 dims.resize(dimsList.size() - groupbyIdx + 1, 1);
-                for (int dimIdx = 0; dimIdx < groupbyIdx; ++dimIdx)
+                for (auto dimIdx = 0; dimIdx < groupbyIdx; ++dimIdx)
                 {
-                    dims[0]*= allDims[dimIdx];
+                    dims[0] *= allDims[dimIdx];
+                }
+
+                for (auto dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
+                {
+                    dims[dimIdx - groupbyIdx + 1] = allDims[dimIdx];
                 }
 
                 exportDims = exportDims - (groupbyIdx - 1);
@@ -234,7 +239,7 @@ namespace bufr {
                     }
                 }
 
-                if (filteredExportDims[0] != 0)
+                if (filteredExportDims.empty() || filteredExportDims[0] != 0)
                 {
                     filteredExportDims.insert(filteredExportDims.begin(), 0);
                 }
@@ -262,20 +267,22 @@ namespace bufr {
             auto& dataFrame = dataFrames_[frameIdx];
             std::vector<std::vector<double>> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-            getRowsForField(targetField,
-                            frameData,
-                            allDims,
-                            groupbyIdx);
 
-            auto dataRowIdx = dims[0] * frameIdx;
-            for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
-            {
-                auto& row = frameData[rowIdx];
-                for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
+            if (!targetField.missing) {
+                getRowsForField(targetField,
+                                frameData,
+                                allDims,
+                                groupbyIdx);
+
+                auto dataRowIdx = dims[0] * frameIdx;
+                for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
                 {
-                    data[dataRowIdx * rowLength + colIdx] = row[colIdx];
+                    auto &row = frameData[rowIdx];
+                    for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
+                    {
+                        data[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = row[colIdx];
+                    }
                 }
-                dataRowIdx++;
             }
         }
 
@@ -312,7 +319,9 @@ namespace bufr {
 
         // Compute insert array
         std::vector<std::vector<int>> inserts(dims.size(), {0});
-        for (size_t repIdx = 0; repIdx < targetField.seqCounts.size(); ++repIdx)
+        for (size_t repIdx = 0;
+             repIdx < std::min(dims.size(), targetField.seqCounts.size());
+             ++repIdx)
         {
             inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) - \
                               targetField.seqCounts[repIdx] * product<int>(dims.begin() + repIdx + 1, dims.end());
@@ -363,21 +372,22 @@ namespace bufr {
             }
             else
             {
-                size_t numRows = product<int>(dims.begin() + groupbyIdx - 1, dims.end());
+                size_t numRows = product<int>(dims.begin(), dims.begin() + groupbyIdx);
                 std::vector<int> rowDims;
-                rowDims.assign(dims.begin() + groupbyIdx - 1, dims.end());
+                rowDims.assign(dims.begin() + groupbyIdx, dims.end());
 
-                dataRows.resize(numRows * maxCounts, std::vector<double>(maxCounts, MissingValue));
+                auto numsPerRow = product(rowDims);
+                dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
                 for (size_t i = 0; i < numRows; ++i)
                 {
-                    for (size_t j = 0; j < maxCounts; ++j)
+                    for (size_t j = 0; j < numsPerRow; ++j)
                     {
-                        if (output.size() < i * maxCounts + j + 1)
+                        if (output.size() < i * numsPerRow + j + 1)
                         {
                             continue;
                         }
 
-                        dataRows[i][j] = output[i * maxCounts + j];
+                        dataRows[i][j] = output[i * numsPerRow + j];
                     }
                 }
             }
