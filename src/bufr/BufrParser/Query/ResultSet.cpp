@@ -382,11 +382,6 @@ namespace bufr {
                 {
                     for (size_t j = 0; j < numsPerRow; ++j)
                     {
-                        if (output.size() < i * numsPerRow + j + 1)
-                        {
-                            continue;
-                        }
-
                         dataRows[i][j] = output[i * numsPerRow + j];
                     }
                 }
