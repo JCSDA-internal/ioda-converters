@@ -61,7 +61,7 @@ def main(args):
                 obs_data = file_obs_data
 
     if len(obs_data) == 0:
-        print ('ERROR: no occultations to write out')
+        print('ERROR: no occultations to write out')
         sys.exit()
 
     # prepare global attributes we want to output in the file,
