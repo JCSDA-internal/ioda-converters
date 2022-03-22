@@ -60,6 +60,10 @@ def main(args):
             else:
                 obs_data = file_obs_data
 
+    if len(obs_data) == 0:
+        print('ERROR: no occultations to write out')
+        sys.exit()
+
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
@@ -180,14 +184,15 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
+    # bits are in reverse order according to WMO GNSSRO bufr documentation
     # ! Bit 1=Non-nominal quality
     # ! Bit 3=Rising Occulation (1=rising; 0=setting)
     # ! Bit 4=Excess Phase non-nominal
     # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=3)
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-1))
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-4))
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-5))
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-3))
     # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
 
     # exit if non-nominal profile
