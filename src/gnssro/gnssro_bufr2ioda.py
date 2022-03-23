@@ -175,7 +175,7 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
 
     drepfac = codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
     # len(drepfac) Out[13]: 247   # ALL values all 3
-    # sequence is 3 * (freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
+    # sequence is 3 *(freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
     #  note the label bendingAngle is used for both the value and its error !!!
 
     # get the bending angle
@@ -185,8 +185,26 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     bang_err = codes_get_array(bufr, 'bendingAngle')[5::drepfac[0]*2]
     impact = codes_get_array(bufr, 'impactParameter')[2::drepfac[0]]
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
-    # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
+    # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
+<<<<<<< HEAD
+=======
+    # bits are in reverse order according to WMO GNSSRO bufr documentation
+    # ! Bit 1=Non-nominal quality
+    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
+    # ! Bit 4=Excess Phase non-nominal
+    # ! Bit 5=Bending Angle non-nominal
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
+    # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
+
+    # exit if non-nominal profile
+    if i_non_nominal != 0 or i_phase_non_nominal != 0 or i_bang_non_nominal != 0:
+        return {}
+
+>>>>>>> feature/fixGNSSRO_converter_bit_check
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
     obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
@@ -320,7 +338,7 @@ def def_meta_types():
 
 
 def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
+    return(value >> bit_index) & 1
 
 
 def assign_values(data):
@@ -384,7 +402,7 @@ if __name__ == "__main__":
     optional.add_argument(
         '-j', '--threads',
         help='multiple threads can be used to load input files in parallel.'
-             ' (default: %(default)s)',
+             '(default: %(default)s)',
         type=int, default=1)
     optional.add_argument(
         '-r', '--recordnumber',
