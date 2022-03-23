@@ -187,8 +187,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
-<<<<<<< HEAD
-=======
     # bits are in reverse order according to WMO GNSSRO bufr documentation
     # ! Bit 1=Non-nominal quality
     # ! Bit 3=Rising Occulation (1=rising; 0=setting)
@@ -198,17 +196,22 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
     i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
     iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
+    # add rising/setting (ascending/descending) bit
+    obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
+
     # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
 
     # exit if non-nominal profile
     if i_non_nominal != 0 or i_phase_non_nominal != 0 or i_bang_non_nominal != 0:
         return {}
 
->>>>>>> feature/fixGNSSRO_converter_bit_check
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
     obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
     obs_data[('bending_angle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
+
+    # (geometric) height is read as integer but expected as float in output
+    height = codes_get_array(bufr, 'height', ktype=float)
 
     # get the refractivity
     refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
@@ -234,23 +237,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
         else:  # something else (datetime for instance)
             string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
             obs_data[(k, 'MetaData')] = string_array.astype(object)
-
-    # bits are in reverse order according to WMO GNSSRO bufr documentation
-    # ! Bit 1=Non-nominal quality
-    # ! Bit 4=Excess Phase non-nominal
-    # ! Bit 3=Rising Occulation (1=rising; 0=setting)
-    # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
-
-    if (i_non_nominal != 0) or (i_phase_non_nominal != 0) or (i_bang_non_nominal != 0):
-        return {}
-        # return if non-nominal profile
-
-    # add rising/setting (ascending/descending) bit
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
-    obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
     # set record number (multi file procesing will change this)
     if record_number is None:
