@@ -62,6 +62,10 @@ def main(args):
             else:
                 obs_data = file_obs_data
 
+    if len(obs_data) == 0:
+        print('ERROR: no occultations to write out')
+        sys.exit()
+
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
@@ -248,9 +252,9 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
 
     # Compute impact height
     obs_data[('impact_height', 'MetaData')] = \
-            obs_data[('impact_parameter', 'MetaData')] - \
-            obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
-            obs_data[('earth_radius_of_curvature', 'MetaData')]
+        obs_data[('impact_parameter', 'MetaData')] - \
+        obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
+        obs_data[('earth_radius_of_curvature', 'MetaData')]
 
     if qc:
         good = quality_control(profile_meta_data, height, lats, lons)
@@ -271,7 +275,7 @@ def quality_control(profile_meta_data, heights, lats, lons):
     # bad radius or
     # large geoid undulation
     if (profile_meta_data['earth_radius_of_curvature'] > 6450000.) or (profile_meta_data['earth_radius_of_curvature'] < 6250000.) or \
-    (abs(profile_meta_data['geoid_height_above_reference_ellipsoid']) > 200):
+       (abs(profile_meta_data['geoid_height_above_reference_ellipsoid']) > 200):
         good = []
         # bad profile
     return good
