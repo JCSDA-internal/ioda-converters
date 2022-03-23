@@ -186,8 +186,6 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
     impact = codes_get_array(bufr, 'impactParameter')[2::drepfac[0]]
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len(bang) Out[19]: 1482   (krepfac * 6) -or- (krepfac * drepfac * 2 )`
-    # (geometric) height is read as integer but expected as float in output
-    height = codes_get_array(bufr, 'height', ktype=float)
 
     # value, ob_error, qc
     obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
