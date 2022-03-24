@@ -23,12 +23,12 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = "sea_surface_salinity"
+vName = "seaSurfaceSalinity"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {}
@@ -99,7 +99,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read JPL/RSS SMOS sea surface salinity (SSS) file(s) and convert'
+            'Read JPL/RSS SMOS seaSurfaceSalinity (SSS) file(s) and convert'
             ' to a concatenated IODA formatted output file.')
     )
     required = parser.add_argument_group(title='required arguments')
@@ -119,25 +119,24 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 #
     VarDims = {
-        'sea_surface_salinity': ['nlocs'],
+        'seaSurfaceSalinity': ['Location'],
     }
 
-    # Read in the salinity
+    # Read in the seaSurfaceSalinity
     sal = Salinity(args.input, fdate)
 
     # write them out
-    ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(sal.data, locationKeyList)
 
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['units'] = 'g kg-1'
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['units'] = 'g kg-1'
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'PreQC')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2022 UCAR
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
@@ -32,11 +32,11 @@ arg_parse_description = (
     to IODA output files. """)
 
 # obs file name -> ioda file name
-output_var_dict = {'snow_depth_m': 'snow_depth', 'snow_water_equivalent_mm': 'swe'}
+output_var_dict = {'snow_depth_m': 'totalSnowDepth', 'snow_water_equivalent_mm': 'snowWaterEquivalent'}
 # ioda file_name -> ioda file units
-output_var_unit_dict = {'snow_depth': 'm', 'swe': 'mm'}
+output_var_unit_dict = {'totalSnowDepth': 'm', 'snowWaterEquivalent': 'kg m-2'}
 one = 1.00000000000000
-output_conversion_factor = {'snow_depth': one, 'swe': one}
+output_conversion_factor = {'totalSnowDepth': one, 'snowWaterEquivalent': one}
 
 col_types = {
     'StnObjID': np.int32,
@@ -44,29 +44,27 @@ col_types = {
     'ObsValue': np.float32,
     'ObsError': np.float32,
     'PreQC': np.int32,
-    'dem_elev_m': np.int32,
-    'rec_elev_m': np.int32,
+    'dem_elev_m': np.float32,
+    'rec_elev_m': np.float32,
     'latitude': np.float64,
     'longitude': np.float64,
-    'datetime': str,
+    'dateTime': str,
     'variable_name': str}
 
 location_key_list = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("height", "integer"),
-    ("datetime", "string"), ]
+    ("dateTime", "string"), ]
 
 dim_dict = {}
 
 var_dims = {
-    'snow_depth': ['nlocs'],
-    'swe': ['nlocs'], }
+    'totalSnowDepth': ['Location'],
+    'snowWaterEquivalent': ['Location'], }
 
 attr_data = {
-    'converter': os.path.basename(__file__),
-    'converter_version': 0.3,
-    'nvars': np.int32(len(var_dims)), }
+ }
 
 fill_value = 9.96921e+36
 
@@ -108,7 +106,6 @@ class OwpSnowObs(object):
 
     def _read(self):
         # print(f"Reading: {self.file_in}")
-        self.attr_data['obs_file'] = str(self.file_in.split('/')[-1])
         # use pandas to get the data lined up
         obs_df = pd.read_csv(self.file_in, header=0, index_col=False, dtype=col_types)
 
@@ -135,7 +132,7 @@ class OwpSnowObs(object):
             .sort_index()
             .reset_index())
 
-        self.attr_data['ref_date_time'] = (
+        self.attr_data['datetimeReference'] = (
             pd.to_datetime(obs_df.datetime[0])
             .round('D')
             .strftime('%Y-%m-%dT%H:%M:%SZ'))
@@ -173,14 +170,13 @@ class OwpSnowObs(object):
                     wh_not_var_other = np.where(np.isnan(obs_df[f'ObsValue {var_other}']))[0]  # 1-D
                     obs_df = obs_df.drop(wh_not_var_other).reset_index()
 
-        self.data[('datetime', 'MetaData')] = obs_df.datetime.values
-        self.data[('latitude', 'MetaData')] = obs_df.latitude.values
-        self.data[('longitude', 'MetaData')] = obs_df.longitude.values
+        self.data[('dateTime', 'MetaData')] = obs_df.datetime.values
+        self.data[('latitude', 'MetaData')] = obs_df.latitude.values.astype('float32')
+        self.data[('longitude', 'MetaData')] = obs_df.longitude.values.astype('float32')
 
-        self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values
-        self.data[('station_id', 'MetaData')] = obs_df.StnID.values
+        self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values.astype('float32')
+        self.data[('stationIdentification', 'MetaData')] = obs_df.StnID.values
         self.var_metadata[('height', 'MetaData')]['units'] = 'm'
-        self.var_metadata[('station_id', 'MetaData')]['units'] = 'unitless'
 
         for obs_var, ioda_var in output_var_dict.items():
             # define the ioda variable
@@ -190,9 +186,9 @@ class OwpSnowObs(object):
             # define ioda meta/ancillary
             for name in [iconv.OvalName(), iconv.OerrName(), iconv.OqcName()]:
                 self.var_metadata[ioda_var, name]['coordinates'] = 'longitude latitude'
-                self.var_metadata[ioda_var, name]['units'] = output_var_unit_dict[ioda_var]  # not really for Oqc... but
+                if(iconv.OqcName()!=name):
+                    self.var_metadata[ioda_var, name]['units'] = output_var_unit_dict[ioda_var]  # not really for Oqc... but
             # just kidding for OqcName... a lazy tag along above, fix now (less code to overwrite)
-            self.var_metadata[ioda_var, iconv.OqcName()]['units'] = 'unitless'
             # the data
             conv_fact = output_conversion_factor[ioda_var]
             self.data[self.var_dict[ioda_var]['valKey']] = (
@@ -206,9 +202,7 @@ class OwpSnowObs(object):
             self.data[self.var_dict[ioda_var]['qcKey']] = (
                 mask_nans(obs_df[f'PreQC {obs_var}'].values * conv_fact))
 
-        nlocs = len(self.data[('datetime', 'MetaData')])
-        dim_dict['nlocs'] = nlocs
-        attr_data['nlocs'] = np.int32(nlocs)
+        dim_dict['Location'] = len(self.data[('dateTime', 'MetaData')])
 
     def write(self):
         writer = iconv.IodaWriter(self.file_out, location_key_list, dim_dict)
