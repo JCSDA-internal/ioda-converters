@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import sys
 import time
-
+import csv
 import numpy as np
 import netCDF4 as nc
 
@@ -42,21 +42,19 @@ def main(file_names, output_file):
     obs_data = {}
     for fname in file_names:
         print("INFO: Reading file: ", fname)
-        file_obs_data, count, start_pos = read_file(fname, count, start_pos)
+        file_obs_data = read_file(fname)
         if obs_data:
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
 
     if not obs_data:
-        print("WARNING: no message data has been captured, stopping execution.")
+        print("WARNING: no data to write, stopping execution.")
         sys.exit()
 
     attr_data = {}
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-#   dtg = datetime.strptime(cdtg, '%Y%m%d%H')
-#   attr_data['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     attr_data['converter'] = os.path.basename(__file__)
 
     GlobalAttrs = {
@@ -64,8 +62,8 @@ def main(file_names, output_file):
         "platformLongDescription":  "EUMETSAT AMV from IR cloudy regions",
     }
     VarDims = {
-        'windEastward': ['nlocs'],
-        'windNorthward': ['nlocs'],
+        'wind_direction': ['nlocs'],
+        'wind_speed': ['nlocs'],
     }
 
 #   MetaData_keys = {
@@ -78,20 +76,31 @@ def main(file_names, output_file):
 
     # write them out
     print("INFO: Writing file: ", output_file)
-    nlocs = obs_data[('windNorthward', 'ObsValue')].shape[0]
+    nlocs = obs_data[('wind_direction', 'ObsValue')].shape[0]
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('windEastward', "ObsValue")]['_FillValue'] = float_missing_value
-    VarAttrs[('windNorthward', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('wind_direction', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('wind_speed', "ObsValue")]['_FillValue'] = float_missing_value
+    VarAttrs[('pressure', "ObsValue")]['_FillValue'] = float_missing_value
 
     VarAttrs[('latitude', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', "MetaData")]['_FillValue'] = float_missing_value
-    VarAttrs[('pressureAir', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('dateTime', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('satellite_channel_center_frequency', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('satellite_zenith_angle', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('satellite_wind_quality_mark',"MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('height_assignment_method', "MetaData")]['_FillValue'] = float_missing_value
 
     epoch_units = "seconds since {0}Z".format(ioda_datetime_epoch.isoformat('T'))
     VarAttrs[('dateTime', "MetaData")]['units'] = epoch_units
+    VarAttrs[('latitude', "MetaData")]['units'] = 'degrees'
+    VarAttrs[('longitude', "MetaData")]['units'] = 'degrees'
+    VarAttrs[('satellite_channel_center_frequency', "MetaData")]['units'] = 'hz'
+    VarAttrs[('satellite_zenith_angle', "MetaData")]['units'] = 'degrees'
+    VarAttrs[('height_assignment_method', "MetaData")]['units'] = 'id'
+    VarAttrs[('satellite_wind_quality_mark', "MetaData")]['units'] = 'id'
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -125,58 +134,67 @@ def concat_obs_dict(obs_data, append_obs_data):
 def read_file(file_name):
 
     obs_data = {}
-    f = open(file_name, 'rb')
+    obs_data_keys = def_obs_data_keys()
 
- #type   sat      day     hms     lat     lon     pre   spd   dir   rff    qi  int
-#WVCA   GOES17  20210801  0000   -8.00   175.49   287    6.7  227  68.29  0.00  30
-#WVCA   GOES17  20210801  0000   -8.10   173.58   287    9.1  239  69.44  0.00  30
-#WVCA   GOES17  20210801  0000   -8.00   172.53   312   11.7  235  53.40  0.00  30
+    for key in obs_data_keys:
+        obs_data[key]=[]
 
-    obs_data = {}
+    with open(file_name, newline='') as f:
+        reader = csv.DictReader(f, skipinitialspace=True, delimiter = ' ')
 
-    # get the message reference values
-    lat = codes_get(bufr, 'latitude', ktype=float)
-    lon = codes_get(bufr, 'longitude', ktype=float)
-    year = codes_get(bufr, 'year')
-    month = codes_get(bufr, 'month')
-    day = codes_get(bufr, 'day')
-    hour = codes_get(bufr, 'hour')
-    minute = codes_get(bufr, 'minute')
-    second = codes_get(bufr, 'second')  # non-integer value
-    msg_datetime_ref = datetime(year, month, day, hour, minute, second)
+        for row in reader:
+            year = int(row['day'][0:4])
+            month = int(row['day'][5:6])
+            day = int(row['day'][7:8])
+            hour = int(row['hms'][0:1])
+            minute = int(row['hms'][2:3])
+            second = 0
+            obs_data[('dateTime', 'MetaData')].append(datetime(year, month, day, hour, minute, second).timestamp())
 
-    wind_direction = codes_get_array(bufr, 'windDirection', ktype=float)
-    wind_speed = codes_get_array(bufr, 'windSpeed', ktype=float)
-    temp_air = codes_get_array(bufr, 'airTemperature', ktype=float)
-    temp_dewpoint = codes_get_array(bufr, 'dewpointTemperature', ktype=float)
-    pressure = codes_get_array(bufr, 'pressure', ktype=float)
-    geop_height = codes_get_array(bufr, 'nonCoordinateGeopotentialHeight', ktype=float)
+            obs_data[('longitude', 'MetaData')].append(float(row['lon']))
+            obs_data[('latitude', 'MetaData')].append(float(row['lat']))
 
-    # what to do for "ObsError" set to 1? and "PreQC" all zero?
-    obs_data[('surface_pressure', "ObsValue")] = np.full(num_levels, surface_pressure, dtype='float32')
-    obs_data[('geopotential_height', "ObsValue")] = assign_values(geop_height)
-    obs_data[('air_temperature', "ObsValue")] = assign_values(temp_air)
-    obs_data[('eastward_wind', "ObsValue")] = assign_values(eastward_wind)
-    obs_data[('northward_wind', "ObsValue")] = assign_values(northward_wind)
-    obs_data[('specific_humidity', "ObsValue")] = assign_values(specific_humidity)
+            obs_data[('satellite_channel_center_frequency', 'MetaData')].append(get_frequency(row['type']))
+            obs_data[('satellite_zenith_angle', 'MetaData')].append(float(row['rff']))
+            obs_data[('satellite_wind_quality_mark', 'MetaData')].append(float(row['qi']))
+            obs_data[('height_assignment_method', 'MetaData')].append(int(row['int']))
 
-    obs_data[('latitude', "MetaData")] = np.full(num_levels, lat, dtype='float32') + assign_values(lat_displacement)
-    obs_data[('longitude', "MetaData")] = np.full(num_levels, lon, dtype='float32') + assign_values(lon_displacement)
-    obs_data[('air_pressure', "MetaData")] = assign_values(pressure)
+            obs_data[('pressure', 'ObsValue')].append(float(row['pre']))
+            obs_data[('wind_direction', 'ObsValue')].append(float(row['dir']))
+            obs_data[('wind_speed', 'ObsValue')].append(float(row['spd']))
 
-    # get the datetime variables in the new epoch style representation
-    obs_dtime, obs_launch_time = get_dtime_offsets(ioda_datetime_epoch, msg_datetime_ref, time_displacement)
-    # second argument to assign_values (which is False by default) tells
-    # assign_values if it's okay to keep the incoming integer datatype
-    # at 64 bits.
-    obs_data[('dateTime', "MetaData")] = assign_values(obs_dtime, True)
-
-    # put all the other MetaData repeating nlocs times
-    for k, v in profile_meta_data.items():
-        vals = np.repeat(v, num_levels)
-        obs_data[(k, "MetaData")] = assign_values(vals)
-
+    for key in obs_data_keys:
+        obs_data[key] = np.asarray(obs_data[key])
+        print(key,obs_data[key].min(),obs_data[key].max())
     return obs_data
+
+
+def def_obs_data_keys():
+
+    # keys to be read out of satwinds file
+    return [('dateTime', 'MetaData'), ('longitude', 'MetaData'), ('latitude', 'MetaData'), \
+            ('satellite_channel_center_frequency', 'MetaData'), ('satellite_zenith_angle', 'MetaData'), \
+            ('satellite_wind_quality_mark', 'MetaData'), ('height_assignment_method', 'MetaData'), \
+            ('pressure', 'ObsValue'), ('wind_direction', 'ObsValue'), ('wind_speed', 'ObsValue')]
+
+
+def get_frequency(obs_type):
+
+    if obs_type == 'IR':
+        freq = 1/10.7
+
+    elif (obs_type == 'WVCA') | (obs_type == 'WVCT'):
+        freq = 1/6.7
+
+    elif (obs_type == 'VIS'):
+        freq = 1/0.65
+
+    else:
+        print('WARNING: Unknown observation type')
+        freq = float_missing_value
+
+    print(obs_type,freq)
+    return freq   
 
 
 def get_meta_data(bufr):
