@@ -120,7 +120,7 @@ iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
-def main(file_names, output_file):
+def main(file_names, output_file, datetimeRef):
 
     # initialize
     count = [1, 0, 0]
@@ -144,6 +144,7 @@ def main(file_names, output_file):
         # Read from a BUFR file.
         data, count, start_pos = read_file(fname, count, start_pos, data)
 
+    AttrData['datetimeReference'] = datetimeRef
     AttrData['source_files'] = AttrData['source_files'][2:]
     logging.debug("All source files: " + AttrData['source_files'])
 
@@ -566,6 +567,13 @@ def read_bufr_message(f, count, start_pos, data):
         if (dewpoint > 90 and dewpoint < 325 and pres > 100 and pres < 109900):
             spfh[n] = met_utils.specific_humidity(dewpoint, pres)
 
+    # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
+    if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0]):
+        meta_data['geopotentialHeight'][0] = float_missing_value
+        meta_data['pressure'][0] = float_missing_value
+    if vals['airTemperature'][0] == 0:
+        vals['airTemperature'][0] == float_missing_value
+
     # Move everything into the final data dictionary, including metadata.
     data['windEastward'] = np.append(data['windEastward'], uwnd)
     data['windNorthward'] = np.append(data['windNorthward'], vwnd)
@@ -598,11 +606,15 @@ if __name__ == "__main__":
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
+    parser.set_defaults(datetimeReference=" ")
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
+    optional.add_argument('--date', dest='datetimeReference',
+                          action='store', default=' ',
+                          help='date reference string (ISO8601)')
 
     args = parser.parse_args()
 
@@ -624,4 +636,4 @@ if __name__ == "__main__":
         print("creating output directory: ", apath)
         os.makedirs(apath)
 
-    main(args.file_names, args.output_file)
+    main(args.file_names, args.output_file, args.datetimeReference)
