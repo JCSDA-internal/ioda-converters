@@ -34,7 +34,7 @@ locationKeyList = [
     ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
     ("pressure", "float", "Pa", "keep"),
     ("geopotentialHeight", "float", "m", "keep"),
-    ("vertSignificance", "integer", "", "keep"),
+    ("vertSignificance", "integer", "", "toss"),
     ("latDisplacement", "float", "degrees", "toss"),
     ("lonDisplacement", "float", "degrees", "toss"),
     ("timeDisplacement", "float", "s", "toss"),
