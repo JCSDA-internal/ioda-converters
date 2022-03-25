@@ -29,10 +29,10 @@ locationKeyList = [
 
 ioda_float_type = 'float32'
 ioda_int_type = 'int32'
-ioda_long_type = 'int64'
+#ioda_long_type = 'int64'
 float_missing_value = -1.0e+38
 int_missing_value = -2147483647
-long_missing_value = -9223372036854775806
+#long_missing_value = -9223372036854775806
 
 ioda_datetime_epoch = datetime(1970, 1, 1, 0, 0, 0)  # Jan 1, 1970 00Z
 
@@ -52,15 +52,14 @@ def main(file_names, output_file):
         print("WARNING: no data to write, stopping execution.")
         sys.exit()
 
-    attr_data = {}
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    attr_data['converter'] = os.path.basename(__file__)
-
     GlobalAttrs = {
         "platformCommonName":  "EUMETSAT_AMV",
         "platformLongDescription":  "EUMETSAT AMV from IR cloudy regions",
+        'converter': os.path.basename(__file__)
     }
+
     VarDims = {
         'wind_direction': ['nlocs'],
         'wind_speed': ['nlocs'],
@@ -78,34 +77,41 @@ def main(file_names, output_file):
     print("INFO: Writing file: ", output_file)
     nlocs = obs_data[('wind_direction', 'ObsValue')].shape[0]
     DimDict = {'nlocs': nlocs}
+    meta_data_types = def_meta_types()
+    for k, v in meta_data_types.items():
+        locationKeyList.append((k, v))
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
+    #print(float_missing_value.dtype,int_missing_value.dtype)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('wind_direction', "ObsValue")]['_FillValue'] = float_missing_value
     VarAttrs[('wind_speed', "ObsValue")]['_FillValue'] = float_missing_value
     VarAttrs[('pressure', "ObsValue")]['_FillValue'] = float_missing_value
-
+    
     VarAttrs[('latitude', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('dateTime', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('satellite_channel_center_frequency', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('satellite_zenith_angle', "MetaData")]['_FillValue'] = float_missing_value
     VarAttrs[('satellite_wind_quality_mark',"MetaData")]['_FillValue'] = float_missing_value
-    VarAttrs[('height_assignment_method', "MetaData")]['_FillValue'] = float_missing_value
+    VarAttrs[('height_assignment_method', "MetaData")]['_FillValue'] = int_missing_value
 
-    epoch_units = "seconds since {0}Z".format(ioda_datetime_epoch.isoformat('T'))
-    VarAttrs[('dateTime', "MetaData")]['units'] = epoch_units
-    VarAttrs[('latitude', "MetaData")]['units'] = 'degrees'
-    VarAttrs[('longitude', "MetaData")]['units'] = 'degrees'
-    VarAttrs[('satellite_channel_center_frequency', "MetaData")]['units'] = 'hz'
-    VarAttrs[('satellite_zenith_angle', "MetaData")]['units'] = 'degrees'
-    VarAttrs[('height_assignment_method', "MetaData")]['units'] = 'id'
-    VarAttrs[('satellite_wind_quality_mark', "MetaData")]['units'] = 'id'
+    VarAttrs[('wind_direction', "ObsValue")]['units'] = 'degrees true'
+    VarAttrs[('wind_speed', "ObsValue")]['units'] = 'meters per second'
+    VarAttrs[('pressure', "ObsValue")]['units'] = 'pascals'
+    #epoch_units = "seconds since {0}Z".format(ioda_datetime_epoch.isoformat('T'))
+    #VarAttrs[('dateTime', "MetaData")]['units'] = epoch_units
+    #VarAttrs[('latitude', "MetaData")]['units'] = 'degrees'
+    #VarAttrs[('longitude', "MetaData")]['units'] = 'degrees'
+    #VarAttrs[('satellite_channel_center_frequency', "MetaData")]['units'] = 'hz'
+    #VarAttrs[('satellite_zenith_angle', "MetaData")]['units'] = 'degrees'
+    #VarAttrs[('height_assignment_method', "MetaData")]['units'] = 'id'
+    #VarAttrs[('satellite_wind_quality_mark', "MetaData")]['units'] = 'id'
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
-    print("--- %s total seconds ---" % (time.time() - start_time))
+    #print("--- %s total seconds ---" % (time.time() - start_time))
 
 
 def concat_obs_dict(obs_data, append_obs_data):
@@ -149,7 +155,8 @@ def read_file(file_name):
             hour = int(row['hms'][0:1])
             minute = int(row['hms'][2:3])
             second = 0
-            obs_data[('dateTime', 'MetaData')].append(datetime(year, month, day, hour, minute, second).timestamp())
+            dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute))
+            obs_data[('dateTime', 'MetaData')].append(datetime.strptime(dtg, "%Y-%m-%dT%H:%M:%SZ"))
 
             obs_data[('longitude', 'MetaData')].append(float(row['lon']))
             obs_data[('latitude', 'MetaData')].append(float(row['lat']))
@@ -165,7 +172,12 @@ def read_file(file_name):
 
     for key in obs_data_keys:
         obs_data[key] = np.asarray(obs_data[key])
-        print(key,obs_data[key].min(),obs_data[key].max())
+
+        if isinstance(obs_data[key][0], int):
+            obs_data[key] = obs_data[key].astype(np.int32)
+
+        if isinstance(obs_data[key][0], float):
+            obs_data[key] = obs_data[key].astype(np.float32)
     return obs_data
 
 
@@ -193,7 +205,6 @@ def get_frequency(obs_type):
         print('WARNING: Unknown observation type')
         freq = float_missing_value
 
-    print(obs_type,freq)
     return freq   
 
 
@@ -213,14 +224,20 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_station_id(profile_meta_data):
+def def_meta_types():
 
-    k = 'station_id'
-    wmo_block_id = profile_meta_data["stationIdWMOblock"]
-    wmo_station_id = profile_meta_data["stationIdWMOstation"]
-    profile_meta_data[k] = '{0:02}'.format(wmo_block_id) + '{0:03}'.format(wmo_station_id)
+    meta_data_types = {
+        "latitude": "float",
+        "longitude": "float",
+        "dateTime": "string",
+        'satelllite_channel_center_frequency': 'float',
+        'satellite_zenith_angle': 'float',
+        'satellite_wind_quality_mark': 'float',
+        'height_assignment_method': 'integer'
+    }
 
-    return profile_meta_data
+    return meta_data_types
+
 
 def def_meta_data():
 
