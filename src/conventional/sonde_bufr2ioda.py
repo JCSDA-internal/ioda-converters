@@ -59,12 +59,12 @@ metaDataKeyList = {
     'wmoBlockNumber': ['blockNumber'],
     'wmoStationNumber': ['stationNumber'],
     'stationWMO': ['Constructed'],
-#   "stationLongName": 'shipOrMobileLandStationIdentifier',
-#   "instrumentType": 'radiosondeType',
-#   "instrumentSerialNum": 'radiosondeSerialNumber',
-#   "instrumentSoftwareVersion": 'softwareVersionNumber',
-#   "instrumentHumidityCorrectionInfo": 'correctionAlgorithmsForHumidityMeasurements',
-#   "instrumentRadiationCorrectionInfo": 'solarAndInfraredRadiationCorrection',
+    # "stationLongName": 'shipOrMobileLandStationIdentifier',
+    # "instrumentType": 'radiosondeType',
+    # "instrumentSerialNum": 'radiosondeSerialNumber',
+    # "instrumentSoftwareVersion": 'softwareVersionNumber',
+    # "instrumentHumidityCorrectionInfo": 'correctionAlgorithmsForHumidityMeasurements',
+    # "instrumentRadiationCorrectionInfo": 'solarAndInfraredRadiationCorrection',
 }
 
 # True incoming BUFR observed variables.
@@ -321,7 +321,7 @@ def def_significance_table():
     return significance_table
 
 
-def specialty_time (bufr, tvals):
+def specialty_time(bufr, tvals):
 
     bad_date = False
     vals = []
@@ -379,7 +379,7 @@ def specialty_time (bufr, tvals):
     except ecc.KeyValueNotFoundError:
         logging.info("Caution, no data for second")
 
-    if (year < 1900 or year>2499 or month < 1 or month > 12 or day < 1 or day > 31 or hour < 0 or hour > 23 or minute < 0 or minute > 59):
+    if (year < 1900 or year > 2499 or month < 1 or month > 12 or day < 1 or day > 31 or hour < 0 or hour > 23 or minute < 0 or minute > 59):
         bad_date = True
 
     if bad_date:
@@ -419,7 +419,7 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             msg_size = ecc.codes_get_message_size(bufr)
             logging.info(f"   will attempt to read BUFR msg with size: ({msg_size} bytes)")
-        except:  #noqa
+        except:      # noqa
             return data, count, None
     except ecc.CodesInternalError:
         logging.critical(f"Useless BUFR message (codes_bufr_new_from_file)")
@@ -512,7 +512,7 @@ def read_bufr_message(f, count, start_pos, data):
 
     # Sondes are special with a launch time and time displacement.
     if meta_data['timeDisplacement'].any():
-        meta_data['dateTime'] = specialty_time (bufr, meta_data['timeDisplacement'])
+        meta_data['dateTime'] = specialty_time(bufr, meta_data['timeDisplacement'])
         meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
     else:
         count[2] += target_number
