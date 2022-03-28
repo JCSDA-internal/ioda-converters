@@ -88,7 +88,7 @@ AttrData = {
     'ioda_version': 2,
     'description': 'Radiosonde observations converted from BUFR',
     'source': 'LDM at NCAR-RAL',
-    'source_files': ''
+    'sourceFiles': ''
 }
 
 DimDict = {
@@ -138,14 +138,14 @@ def main(file_names, output_file, datetimeRef):
 
     # Open one input file at a time.
     for fname in file_names:
-        AttrData['source_files'] += ", " + fname
+        AttrData['sourceFiles'] += ", " + fname
 
         # Read from a BUFR file.
         data, count = read_file(fname, count, data)
 
     AttrData['datetimeReference'] = datetimeRef
-    AttrData['source_files'] = AttrData['source_files'][2:]
-    logging.debug("All source files: " + AttrData['source_files'])
+    AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
+    logging.debug("All source files: " + AttrData['sourceFiles'])
 
     if not data:
         logging.critical("ABORT: no message data was captured, stopping execution.")
