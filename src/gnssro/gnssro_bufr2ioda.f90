@@ -204,12 +204,12 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
      if(nib > 0) then
         do i = 1, nib
-            if(ibit(i)== 5) then  ! bending angle
+            if(ibit(i)== 5 .or. ibit(i)==1 .or. ibit(i)==4) then  ! bending angle
                bendflag = 1
                write(6,*)'READ_GNSSRO: bad profile said=',said,'ptid=',ptid, ' SKIP this report'
                cycle read_loop
             endif
-            if(ibit(i)== 6) then  ! refractivity
+            if(ibit(i)== 6 .or. ibit(i)==1 .or. ibit(i)==4) then  ! refractivity
                refflag = 1
                exit
             endif
