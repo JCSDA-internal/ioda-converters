@@ -47,7 +47,8 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 metaDataKeyList = {
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel', 'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
+    'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
+                         'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
     'releaseTime': ['Constructed'],
     'pressure': ['pressure', 'nonCoordinatePressure'],
