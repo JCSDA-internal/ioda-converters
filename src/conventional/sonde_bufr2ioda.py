@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import dateutil.parser
 import os
 from pathlib import Path
@@ -47,12 +47,12 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 metaDataKeyList = {
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel', 'heightOfStationGroundAboveMeanSeaLevel', 'height'],
+    'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel', 'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
     'releaseTime': ['Constructed'],
     'pressure': ['pressure', 'nonCoordinatePressure'],
     'geopotentialHeight': ['nonCoordinateGeopotentialHeight', 'geopotentialHeight'],
-    'vertSignificance': ['extendedVerticalSoundingSignificance'],
+    'vertSignificance': ['extendedVerticalSoundingSignificance', 'verticalSoundingSignificance'],
     'latDisplacement': ['latitudeDisplacement'],
     'lonDisplacement': ['longitudeDisplacement'],
     'timeDisplacement': ['timePeriod'],
@@ -123,8 +123,7 @@ epoch = datetime.fromisoformat(iso8601_string[14:-1])
 def main(file_names, output_file, datetimeRef):
 
     # initialize
-    count = [1, 0, 0]
-    start_pos = None
+    count = [1, 0, 0, 0]
     start_time = time.time()
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -138,11 +137,10 @@ def main(file_names, output_file, datetimeRef):
 
     # Open one input file at a time.
     for fname in file_names:
-        logging.debug("Reading file: " + fname)
         AttrData['source_files'] += ", " + fname
 
         # Read from a BUFR file.
-        data, count, start_pos = read_file(fname, count, start_pos, data)
+        data, count = read_file(fname, count, data)
 
     AttrData['datetimeReference'] = datetimeRef
     AttrData['source_files'] = AttrData['source_files'][2:]
@@ -195,18 +193,23 @@ def main(file_names, output_file, datetimeRef):
     logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, count, start_pos, data):
+def read_file(file_name, count, data):
 
     f = open(file_name, 'rb')
+    fsize = os.path.getsize(file_name)
+    logging.info(f"Processing file {file_name} with size: {fsize}")
+    start_pos = 0
 
     while True:
+        logging.info(f"  within file, reading BUFR msg ({count[0]}) starting at: {start_pos}")
         # Use eccodes to decode each bufr message in the file
         data, count, start_pos = read_bufr_message(f, count, start_pos, data)
+        count[0] += 1
 
-        if start_pos is None:
+        if ((start_pos is None) or (start_pos >= fsize)):
             break
 
-    return data, count, start_pos
+    return data, count
 
 
 # Replace BUFR missing value indicators with IODA missings.
@@ -265,9 +268,10 @@ def assign_missing_meta(data, key, num, start):
         if start == 0:
             return np.full(num, missing_vals[dtypestr], dtype=dtypes[dtypestr])
         else:
-            for n in range(start, num-1, 1):
-                np.append(data, missing_vals[dtypestr])
-                return data
+            out_data = np.full(num, missing_vals[dtypestr], dtype=dtypes[dtypestr])
+            for n in range(0, start):
+                out_data[n] = data[n]
+            return out_data
 
 
 # Return True if all elements in the array are missing, otherwise False.
@@ -326,6 +330,11 @@ def specialty_time (bufr, tvals):
     try:
         vals = ecc.codes_get_array(bufr, 'year')
         year = vals[0]
+        # UGH, some BUFR uses 2-digit year, awful.
+        if (year >= 0 and year <= 50):
+            year += 2000
+        elif (year > 50 and year <= 99):
+            year += 1900
     except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for year")
         bad_date = True
@@ -351,9 +360,12 @@ def specialty_time (bufr, tvals):
         logging.warning("Caution, no data for hour")
         bad_date = True
 
+    minute = 0
     try:
         vals = ecc.codes_get_array(bufr, 'minute')
         minute = vals[0]
+        if (minute < 0 or minute > 59):
+            minute = 0
     except ecc.KeyValueNotFoundError:
         logging.warning("Caution, no data for minute")
         bad_date = True
@@ -397,29 +409,33 @@ def read_bufr_message(f, count, start_pos, data):
     meta_data = {}         # All the various MetaData go in here.
     vals = {}              # Floating-point ObsValues variables go in here.
     avals = []             # Temporarily hold array of values.
-    call_fail = False
-    if start_pos == f.tell():
-        return data, count, None
     start_pos = f.tell()
-    logging.info("BUFR message number: " + str(count[0]))
 
     met_utils = meteo_utils.meteo_utils()
     significance_table = def_significance_table()
 
     try:
         bufr = ecc.codes_bufr_new_from_file(f)
-    except:  # noqa
-        logging.critical("ABORT, failue when attempting to call:  codes_bufr_new_from_file")
+        try:
+            msg_size = ecc.codes_get_message_size(bufr)
+            logging.info(f"   will attempt to read BUFR msg with size: ({msg_size} bytes)")
+        except:  #noqa
+            return data, count, None
+    except ecc.CodesInternalError:
+        logging.critical(f"Useless BUFR message (codes_bufr_new_from_file)")
+        start_pos = f.tell()
+        return data, count, start_pos
 
     try:
         ecc.codes_set(bufr, 'skipExtraKeyAttributes', 1)   # Supposedly this is ~25 percent faster
         ecc.codes_set(bufr, 'unpack', 1)
-    except:  # noqa
-        logging.info("finished unpacking BUFR file")
-        start_pos = None
+        numberOfSubsets = ecc.codes_get(bufr, 'numberOfSubsets')
+    except ecc.CodesInternalError:
+        ecc.codes_release(bufr)
+        logging.info(f"INCOMPLETE BUFR message, skipping ({msg_size} bytes)")
+        start_pos += int(0.5*msg_size)
+        f.seek(start_pos)
         return data, count, start_pos
-
-    count[0] += 1
 
     drepfac = 0
     krepfac = 0
@@ -455,6 +471,7 @@ def read_bufr_message(f, count, start_pos, data):
         krepfac = ecc.codes_get(bufr, 'extendedDelayedDescriptorReplicationFactor')
     except ecc.KeyValueNotFoundError:
         pass
+
     if krepfac > 0:
         target_number = krepfac
     elif drepfac > 0:
@@ -462,7 +479,9 @@ def read_bufr_message(f, count, start_pos, data):
     if target_number > 0:
         logging.debug("Delayed and extendedDelayed replications: " + str(drepfac) + ", " + str(krepfac))
     else:
-        if len(meta_data['timeDisplacement']) > 0:
+        if len(meta_data['vertSignificance']) > 0:
+            target_number = len(meta_data['vertSignificance'])
+        elif len(meta_data['timeDisplacement']) > 0:
             target_number = len(meta_data['timeDisplacement'])
         elif len(meta_data['latDisplacement']) > 0:
             target_number = len(meta_data['latDisplacement'])
@@ -487,7 +506,7 @@ def read_bufr_message(f, count, start_pos, data):
                             f" elements, whereas {target_number} were expected.")
             meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, length-1)
         elif (length > target_number):
-            print(f"Key called {k} contains {length} "
+            logging.warning(f"Key called {k} contains {length} "
                             f" elements, whereas {target_number} were expected.")
             meta_data[k] = meta_data[k][:target_number]
 
@@ -534,6 +553,9 @@ def read_bufr_message(f, count, start_pos, data):
         number = meta_data['wmoStationNumber'][n]
         if (block > 0 and block < 100 and number > 0 and number < 1000):
             meta_data['stationWMO'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+        if n == 1:
+            count[3] += 1
+            logging.info(f"Processing sonde for station: {meta_data['stationWMO'][n]}")
 
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all ObsValue variables are float type, might need integer/other.
@@ -542,7 +564,7 @@ def read_bufr_message(f, count, start_pos, data):
         try:
             avals = ecc.codes_get_array(bufr, variable)
             if (len(avals) != target_number):
-                logging.warning(f"Variable called {variable} contains only {len(avals)} "
+                logging.warning(f"Variable called {variable} contains {len(avals)} "
                                 f" elements, wheras {target_number} were expected.")
                 count[2] += target_number
                 return data, count, start_pos
@@ -558,21 +580,22 @@ def read_bufr_message(f, count, start_pos, data):
     uwnd = np.full(target_number, float_missing_value)
     vwnd = np.full(target_number, float_missing_value)
     for n, wdir in enumerate(vals['windDirection']):
-        if (wdir >= 0 and wdir <= 360 and vals['windSpeed'][n] != float_missing_value):
-            uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, vals['windSpeed'][n])
+        wspd = vals['windSpeed'][n]
+        if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
+            uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, wspd)
 
     spfh = np.full(target_number, float_missing_value)
     for n, dewpoint in enumerate(vals['dewpointTemperature']):
         pres = meta_data['pressure'][n]
-        if (dewpoint > 90 and dewpoint < 325 and pres > 100 and pres < 109900):
+        if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
             spfh[n] = met_utils.specific_humidity(dewpoint, pres)
 
     # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
-    if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0]):
+    if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
         meta_data['geopotentialHeight'][0] = float_missing_value
         meta_data['pressure'][0] = float_missing_value
-    if vals['airTemperature'][0] == 0:
-        vals['airTemperature'][0] == float_missing_value
+    mask_T = np.logical_or(vals['airTemperature'] < 50, vals['airTemperature'] > 335)
+    vals['airTemperature'][mask_T] = float_missing_value
 
     # Move everything into the final data dictionary, including metadata.
     data['windEastward'] = np.append(data['windEastward'], uwnd)
@@ -584,6 +607,8 @@ def read_bufr_message(f, count, start_pos, data):
 
     logging.info("number of observations so far: " + str(count[1]))
     logging.info("number of invalid or useless observations: " + str(count[2]))
+    logging.info("number of sonde locations: " + str(count[3]))
+    start_pos = f.tell()
     return data, count, start_pos
 
 
