@@ -537,8 +537,8 @@ def read_bufr_message(f, count, start_pos, data):
     meta_data['latitude'][mask_lon] = float_missing_value
     meta_data['longitude'][mask_lat] = float_missing_value
     for n, longitude in enumerate(meta_data['longitude']):
-        if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 360):
-            meta_data['longitude'][n] = 360.0 - meta_data['longitude'][n]
+        if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 180):
+            meta_data['longitude'][n] = meta_data['longitude'][n] - 360.0
 
     # It is NOT IDEAL, but if missing a lat or lon, fill with prior known value for now.
     for n, lon in enumerate(meta_data['longitude']):
