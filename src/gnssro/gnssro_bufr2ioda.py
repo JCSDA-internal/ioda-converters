@@ -17,6 +17,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import os
 from pathlib import Path
+from itertools import repeat
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -43,7 +44,6 @@ locationKeyList = [
 def main(args):
 
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
-    global qc
     qc = args.qualitycontrol
 
     # read / process files in parallel
@@ -53,7 +53,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc)):
             if not file_obs_data:
                 print("INFO: non-nominal file skipping")
                 continue
@@ -110,7 +110,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_file_and_record):
+def read_input(input_file_and_record, add_qc):
     """
     Reads/converts input file(s)
 
@@ -123,7 +123,6 @@ def read_input(input_file_and_record):
 
         A dictionary holding the variables (obs_data) needed by the IODA writer
     """
-    global qc
     input_file = input_file_and_record[0]
     record_number = input_file_and_record[1]
     print("Reading: %s" % input_file)
@@ -133,7 +132,7 @@ def read_input(input_file_and_record):
 
     profile_meta_data = get_meta_data(bufr)
 
-    obs_data = get_obs_data(bufr, profile_meta_data, record_number=record_number)
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, record_number=record_number)
 
     return obs_data
 
@@ -163,8 +162,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, record_number=None):
-    global qc
+def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -258,7 +256,7 @@ def get_obs_data(bufr, profile_meta_data, record_number=None):
         obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
         obs_data[('earth_radius_of_curvature', 'MetaData')]
 
-    if qc:
+    if add_qc:
         good = quality_control(profile_meta_data, height, lats, lons)
         if len(lats[good]) == 0:
             return{}
