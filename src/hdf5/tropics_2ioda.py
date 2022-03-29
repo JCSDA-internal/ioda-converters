@@ -138,8 +138,8 @@ def get_data(f, obs_data):
     nbeam_pos = len(f['spots'])
     nchans = len(f['channels'])
     nbands = len(f['bands'])
-    # Bands_to_Channel = "Band 1 = Ch. 1; Band 2 = Ch. 2-4; Band 3 = Ch. 5-8; Band 4 = Ch. 9-11; Band 5 = Ch. 12" ;
-    iband = 2   # at this point arbitrarily select a band is this a FOV?
+    # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
+    iband = 0   # at this point arbitrarily select a band
     obs_data[('latitude', 'MetaData')] = np.array(f['losLat_deg'][iband,:,:].flatten(), dtype='float32')
     obs_data[('longitude', 'MetaData')] = np.array(f['losLon_deg'][iband,:,:].flatten(), dtype='float32')
     obs_data[('channelNumber', 'MetaData')] = np.array(np.arange(nchans)+1,dtype='int32')
@@ -184,6 +184,19 @@ def get_data(f, obs_data):
     quality_word = np.vstack(np.stack(f['calQualityFlag'],axis=2))
     obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:,0], bit_index=6), dtype='int32')
 
+    # check some satellite geometry will compress all data using this
+    chk_geolocation = (obs_data[('latitude', 'MetaData')] > 90) |  (obs_data[('latitude', 'MetaData')] < -90 ) | \
+                     (obs_data[('longitude', 'MetaData')] > 180) | (obs_data[('longitude', 'MetaData')] < -180 ) | \
+                      (obs_data[('sensor_zenith_angle', 'MetaData')] > 80) | (obs_data[('sensor_zenith_angle', 'MetaData')] < 0 )
+    # sanity check -- returns null dictionary
+    if np.sum(chk_geolocation) == 0:
+        obs_data = {}
+        return obs_data
+
+    obs_data[('latitude', 'MetaData')][chk_geolocation] = float_missing_value
+    obs_data[('longitude', 'MetaData')][chk_geolocation] = float_missing_value
+    obs_data[('sensor_zenith_angle', 'MetaData')][chk_geolocation] = float_missing_value
+
     # set missing value (-999) to generic missing value
     for jchan in np.arange(nchans):
         i_land = get_normalized_bit(quality_word[:,jchan], bit_index=1)
@@ -194,31 +207,8 @@ def get_data(f, obs_data):
         i_asc = get_normalized_bit(quality_word[:,jchan], bit_index=6)
         i_day = get_normalized_bit(quality_word[:,jchan], bit_index=7)
         i_forward = get_normalized_bit(quality_word[:,jchan], bit_index=8)
-        chk_ob = np.logical_or(
-                    np.logical_or(i_cold_cal, i_hot_cal),
-                    np.logical_or(i_intrusion, i_maneuver) )
+        chk_ob = (i_cold_cal + i_hot_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
         obs_data[(k, "ObsValue")][:,jchan][chk_ob] = float_missing_value
-
-    # check some satellite geometry will compress all data using this
-    chk_geolocation = np.logical_and( np.logical_and(
-                            np.logical_and( obs_data[('latitude', 'MetaData')] <= 90,  obs_data[('latitude', 'MetaData')] >= -90 ),
-                            np.logical_and( obs_data[('longitude', 'MetaData')] <= 180, obs_data[('longitude', 'MetaData')] >= -180 )),
-                            np.logical_and( obs_data[('sensor_zenith_angle', 'MetaData')] <= 80, obs_data[('sensor_zenith_angle', 'MetaData')] >= 0 ) )
-
-    # compress data
-    if np.sum(chk_geolocation) > 0:
-        for k in obs_data:
-            if 'MetaData' in k:
-                if 'channelNumber' not in k:
-                    obs_data[k] = obs_data[k][chk_geolocation]
-                else:
-                    print ("not setting to missing: ", k,  np.shape(obs_data[k]))
-                    pass
-            elif "Obs" in k or "PreQC" in k:
-                obs_data[k] = obs_data[k][chk_geolocation,:]
-    else:
-        obs_data = {}
-
 
     return obs_data
 
