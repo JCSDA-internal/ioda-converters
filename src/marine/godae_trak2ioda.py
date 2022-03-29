@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019-2021 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -9,6 +9,7 @@
 
 from __future__ import print_function
 import sys
+import os
 import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
@@ -24,10 +25,10 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 unitDict = {
-    'ob_sst': 'degree_C',
-    'ob_sal': 'PSU',
-    'ob_uuu': 'm/s',
-    'ob_vvv': 'm/s'
+    'ob_sst': 'K',
+    'ob_sal': 'g kg-1',
+    'ob_uuu': 'm s-1',
+    'ob_vvv': 'm s-1'
 }
 
 
@@ -118,14 +119,25 @@ class IODA(object):
         self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
-            ("datetime", "string")
+            ("dateTime", "long")
         ]
 
         self.GlobalAttrs = {
+            'converter': os.path.basename(__file__),
+            'ioda_version': 2,
+            'sourceFiles': self.filename,
+            'description': "GODAE Ship Observations of sea surface temperature"
         }
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+        # Hard-wire the units of lat, lon, dateTime epoch
+        self.varAttrs['latitude', 'MetaData']['units'] = 'degrees_north'
+        self.varAttrs['longitude', 'MetaData']['units'] = 'degrees_east'
+        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
+        epoch = datetime.fromisoformat(self.varAttrs['dateTime', 'MetaData']['units'][14:-1])
+
         for key in self.varDict.keys():
             value = self.varDict[key]
             self.keyDict[key]['valKey'] = value, iconv.OvalName()
@@ -136,7 +148,6 @@ class IODA(object):
             self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
             self.varAttrs[value, iconv.OvalName()]['units'] = unitDict[key]
             self.varAttrs[value, iconv.OerrName()]['units'] = unitDict[key]
-            self.varAttrs[value, iconv.OqcName()]['units'] = 'unitless'
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -152,8 +163,9 @@ class IODA(object):
                 lat = obs.data['ob_lat'][n]
                 lon = obs.data['ob_lon'][n]
                 dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
+                time_offset = np.int64(round((dtg - epoch).total_seconds()))
 
-                locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+                locKey = lat, lon, time_offset
 
                 for key in self.varDict.keys():
 
@@ -162,7 +174,10 @@ class IODA(object):
                     else:
                         varName = key.split('_')[-1]
 
-                    val = obs.data[key][n]
+                    if key == "ob_sst":
+                        val = obs.data[key][n] + 273.15
+                    else:
+                        val = obs.data[key][n]
                     err = 1.0
                     qc = (100*obs.data['ob_qc_'+varName][n]).astype('i4')
 
@@ -175,7 +190,7 @@ class IODA(object):
                     self.data[locKey][qcKey] = qc
         # Extract obs
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
-        DimDict = {'nlocs': nlocs}
+        DimDict = {'Location': nlocs}
 
         # Set up IODA writer
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
@@ -213,17 +228,17 @@ def main():
         obsList.append(trak(fname, fdate))
 
     varDict = {
-        'ob_sst': 'sea_surface_temperature',
-        'ob_sal': 'sea_surface_salinity',
-        'ob_uuu': 'sea_surface_zonal_wind',
-        'ob_vvv': 'sea_surface_meriodional_wind'
+        'ob_sst': 'seaSurfaceTemperature',
+        'ob_sal': 'seaSurfaceSalinity',
+        'ob_uuu': 'seaSurfaceZonalWind',
+        'ob_vvv': 'seaSurfaceMeriodionalWind'
     }
 
     varDims = {
-        'sea_surface_temperature': ['nlocs'],
-        'sea_surface_salinity': ['nlocs'],
-        'sea_surface_zonal_wind': ['nlocs'],
-        'sea_surface_meriodional_wind': ['nlocs']
+        'seaSurfaceTemperature': ['Location'],
+        'seaSurfaceSalinity': ['Location'],
+        'seaSurfaceZonalWind': ['Location'],
+        'seaSurfaceMeriodionalWind': ['Location']
     }
 
     IODA(foutput, fdate, varDict, varDims, obsList)
