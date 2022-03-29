@@ -9,6 +9,8 @@
 
 from __future__ import print_function
 import sys
+import os
+import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -151,7 +153,7 @@ class profile(object):
 
 class IODA(object):
 
-    def __init__(self, filename, date, varDict, varDims, obsList):
+    def __init__(self, files_input, filename, date, varDict, varDims, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -165,16 +167,28 @@ class IODA(object):
         self.locKeyList = [
             ("latitude", "float"),
             ("longitude", "float"),
-            ("depth", "float"),
-            ("datetime", "string")
+            ("depthBelowWaterSurface", "float"),
+            ("dateTime", "long")
         ]
 
         self.GlobalAttrs = {
             'odb_version': 1,
+            'converter': os.path.basename(__file__),
+            'ioda_version': 2,
+            'sourceFiles': ", ".join(files_input),
+            'description': "GODAE Profile Observations of salinity and temperature"
         }
 
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+        # Hard-wire the units of depth, lat, lon, dateTime epoch
+        self.varAttrs['depthBelowWaterSurface', 'MetaData']['units'] = "m"
+        self.varAttrs['latitude', 'MetaData']['units'] = 'degrees_north'
+        self.varAttrs['longitude', 'MetaData']['units'] = 'degrees_east'
+        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
+        epoch = datetime.fromisoformat(self.varAttrs['dateTime', 'MetaData']['units'][14:-1])
+
         for key in self.varDict.keys():
             value = self.varDict[key][0]
             units = self.varDict[key][1]
@@ -186,7 +200,6 @@ class IODA(object):
             self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
             self.varAttrs[value, iconv.OvalName()]['units'] = units
             self.varAttrs[value, iconv.OerrName()]['units'] = units
-            self.varAttrs[value, iconv.OqcName()]['units'] = "unitless"
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -202,14 +215,18 @@ class IODA(object):
                 lat = obs.data['ob_lat'][n]
                 lon = obs.data['ob_lon'][n]
                 dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
+                time_offset = np.int64(round((dtg - epoch).total_seconds()))
 
                 for ilev, lvl in enumerate(obs.data['ob_lvl'][n]):
 
-                    locKey = lat, lon, lvl, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    locKey = lat, lon, lvl, time_offset
 
                     for key in self.varDict.keys():
 
-                        val = obs.data[key][n][ilev]
+                        if key == 'ob_tmp':
+                            val = obs.data[key][n][ilev] + 273.15
+                        else:
+                            val = obs.data[key][n][ilev]
                         err = obs.data[key+'_err'][n][ilev]
                         qc = (100 * obs.data[key+'_qc'][n]).astype('i4')
 
@@ -222,9 +239,8 @@ class IODA(object):
                         self.data[locKey][qcKey] = qc
 
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
-        DimDict = {'nlocs': nlocs}
+        DimDict = {'Location': nlocs}
         self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
-        self.varAttrs['depth', 'MetaData']['units'] = "m"
         self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
@@ -259,16 +275,16 @@ def main():
 
     varDict = {
         #              var name,             units
-        'ob_tmp': ['sea_water_temperature', 'C'],
-        'ob_sal': ['sea_water_salinity', 'PSU']
+        'ob_tmp': ['waterTemperature', 'K'],
+        'ob_sal': ['salinity', 'g kg-1']
     }
 
     varDims = {
-        'sea_water_temperature': ['nlocs'],
-        'sea_water_salinity': ['nlocs'],
+        'waterTemperature': ['Location'],
+        'salinity': ['Location'],
     }
 
-    IODA(foutput, fdate, varDict, varDims, obsList)
+    IODA(fList, foutput, fdate, varDict, varDims, obsList)
 
 
 if __name__ == '__main__':

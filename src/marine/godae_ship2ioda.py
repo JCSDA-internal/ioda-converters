@@ -104,7 +104,7 @@ class ship(object):
 
 class IODA(object):
 
-    def __init__(self, filename, date, varDict, varDims, obsList):
+    def __init__(self, files_input, filename, date, varDict, varDims, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -124,7 +124,7 @@ class IODA(object):
         self.GlobalAttrs = {
             'converter': os.path.basename(__file__),
             'ioda_version': 2,
-            'sourceFiles': self.filename,
+            'sourceFiles': ", ".join(files_input),
             'description': "GODAE Ship Observations of sea surface temperature"
         }
 
@@ -226,7 +226,7 @@ def main():
         'sea_surface_temperature': ['Location'],
     }
 
-    IODA(foutput, fdate, varDict, varDims, obsList)
+    IODA(fList, foutput, fdate, varDict, varDims, obsList)
 
 
 if __name__ == '__main__':
