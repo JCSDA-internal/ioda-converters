@@ -46,7 +46,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.avcsam.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.avcsam.tm00.nc"
 
       dimensions:
         - name: "Location"
