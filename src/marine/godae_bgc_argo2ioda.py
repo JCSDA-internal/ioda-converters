@@ -87,7 +87,12 @@ class Profile(object):
         qcs = ncd.variables['CHLA_ADJUSTED_QC'][:]
         ncd.close()
 
-        data = {}
+        obs = {}
+        for key in meta_keys:
+            obs[key] = []
+        obs['vals'] = []
+        obs['errs'] = []
+        obs['qc'] = []
 
         for i in range(len(dpth[1])-1):
 
@@ -95,13 +100,15 @@ class Profile(object):
                 continue
 
             dt = epoch + timedelta(days=float(time[1]))
-            self.data['dateTime'] = np.int64(round((dt - epoch).total_seconds()))
-            self.data['latitude'] = ma.getdata(lats)[1]
-            self.data['longitude'] = ma.getdata(lons)[1]
-            self.data['depthBelowWaterSurface'] = ma.getdata(dpth)[1][i]
-            self.data['vals'] = ma.getdata(vals)[1][i]
-            self.data['errs'] = ma.getdata(errs)[1][i]
-            self.data['qc'] = np.full(len(data['vals']), 0, dtype=int)
+            obs['dateTime'].append(np.int64(round((dt - epoch).total_seconds())))
+            obs['latitude'].append(ma.getdata(lats)[1])
+            obs['longitude'].append(ma.getdata(lons)[1])
+            obs['depthBelowWaterSurface'].append(ma.getdata(dpth)[1][i])
+            obs['vals'].append(ma.getdata(vals)[1][i])
+            obs['errs'].append(ma.getdata(errs)[1][i])
+            obs['qc'].append(0)
+
+        self.data = obs
 
 
 class IODA(object):
@@ -127,11 +134,14 @@ class IODA(object):
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
         # Set units and FillValue attributes for groups associated with observed variable.
-        self.varAttrs[(varInfo[0], obsValName())]['units'] = varInfo[1]
-        self.varAttrs[(varInfo[0], obsErrName())]['units'] = varInfo[1]
-        self.varAttrs[(varInfo[0], obsValName())]['_FillValue'] = varInfo[2]
-        self.varAttrs[(varInfo[0], obsErrName())]['_FillValue'] = varInfo[2]
-        self.varAttrs[(varInfo[0], qcName())]['_FillValue'] = int(varInfo[2])
+        self.varAttrs[(varInfo[0], obsValName)]['units'] = varInfo[1]
+        self.varAttrs[(varInfo[0], obsErrName)]['units'] = varInfo[1]
+        self.varAttrs[(varInfo[0], obsValName)]['_FillValue'] = varInfo[2]
+        self.varAttrs[(varInfo[0], obsErrName)]['_FillValue'] = varInfo[2]
+        self.varAttrs[(varInfo[0], qcName)]['_FillValue'] = int(varInfo[2])
+
+        for n, d in enumerate(obsList['depthBelowWaterSurface']):
+            print(f"DEBUG, depth: {d}")
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
