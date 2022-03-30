@@ -110,6 +110,8 @@ class Profile(object):
 
         self.data = obs
 
+        return
+
 
 class IODA(object):
 
@@ -140,30 +142,34 @@ class IODA(object):
         self.varAttrs[(varInfo[0], obsErrName)]['_FillValue'] = varInfo[2]
         self.varAttrs[(varInfo[0], qcName)]['_FillValue'] = int(varInfo[2])
 
-        for n, d in enumerate(obsList['depthBelowWaterSurface']):
-            print(f"DEBUG, depth: {d}")
-
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        # Set units of the MetaData variables and all _FillValues.
-        for key in meta_keys:
-            dtypestr = locationKeyList[meta_keys.index(key)][1]
-            if locationKeyList[meta_keys.index(key)][2]:
-                self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
-            self.data[(key, metaDataName)] = np.array(obsList[key], dtype=dtypes[dtypestr])
+        nobs = 0
+        for obs in obsList:
 
-        # Fill up the final array of observed values, obsErrors, and Qc
-        self.data[(varInfo[0], obsValName)] = np.array(obsList['vals'], dtype=float)
-        self.data[(varInfo[0], obsErrName)] = np.array(obsList['errs'], dtype=float)
-        self.data[(varInfo[0], qcName)] = np.array(obsList['qc'], dtype=float)
+            nobs += len(obs.data['vals'])
+            if nobs <= 0:
+                print('No observations for IODA!')
+                continue
+
+            # Set units of the MetaData variables and all _FillValues.
+            for key in meta_keys:
+                dtypestr = locationKeyList[meta_keys.index(key)][1]
+                if locationKeyList[meta_keys.index(key)][2]:
+                    self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+                self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+                self.data[(key, metaDataName)] = np.array(obs.data[key], dtype=dtypes[dtypestr])
+
+            # Fill up the final array of observed values, obsErrors, and Qc
+            self.data[(varInfo[0], obsValName)] = np.array(obs.data['vals'], dtype=float)
+            self.data[(varInfo[0], obsErrName)] = np.array(obs.data['errs'], dtype=float)
+            self.data[(varInfo[0], qcName)] = np.array(obs.data['qc'], dtype=float)
 
         # Initialize the writer, then write the file.
-        ObsVars, nlocs = iconv.ExtractObsData(self.data, locationKeyList)
-        DimDict = {'Location': nlocs}
+        DimDict = {'Location': nobs}
         self.writer = iconv.IodaWriter(self.filename, locationKeyList, DimDict)
-        self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
+        self.writer.BuildIoda(self.data, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
 
