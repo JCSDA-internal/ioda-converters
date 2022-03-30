@@ -24,6 +24,8 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
+
 unitDict = {
     'ob_sst': 'K',
     'ob_sal': 'g kg-1',
@@ -188,6 +190,7 @@ class IODA(object):
                     self.data[locKey][valKey] = val
                     self.data[locKey][errKey] = err
                     self.data[locKey][qcKey] = qc
+
         # Extract obs
         ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
         DimDict = {'Location': nlocs}

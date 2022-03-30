@@ -24,6 +24,8 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
+
 
 class profile(object):
 
