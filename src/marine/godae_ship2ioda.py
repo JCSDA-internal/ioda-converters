@@ -11,6 +11,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
+import netCDF4 as nc
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -133,8 +134,8 @@ class ship(object):
         fh.close()
 
         # Transfer timestamp into seconds since epoch and convert Celcius to Kelvin
-        for n in range(obs.data['n_obs']):
-            dtg = datetime.strptime(self.data['ob_dtg'][n], '%Y%m%d%H%M')
+        for n in range(data['n_obs']):
+            dtg = datetime.strptime(data['ob_dtg'][n], '%Y%m%d%H%M')
             time_offset = np.int64(round((dtg - epoch).total_seconds()))
             data['dateTime'].append(time_offset)
             data['ob_sst'][n] = data['ob_sst'][n] + 273.15

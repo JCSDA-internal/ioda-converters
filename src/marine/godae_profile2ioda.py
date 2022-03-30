@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019-2021 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -11,6 +11,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
+import netCDF4 as nc
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -25,6 +26,49 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
+
+varDict = {
+    'ob_tmp': ['waterTemperature', 'K'],
+    'ob_sal': ['salinity', 'g kg-1']
+}
+
+varDims = {
+    'waterTemperature': ['Location'],
+    'salinity': ['Location'],
+}
+
+locationKeyList = [
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("depthBelowWaterSurface", "float", "m"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
+]
+meta_keys = [m_item[0] for m_item in locationKeyList]
+
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
+float_missing_value = -999.   #   or  nc.default_fillvals['f4']
+int_missing_value = -999      #   or  nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 class profile(object):
@@ -54,7 +98,7 @@ class profile(object):
 
         # data is the dictionary with data structure as in ocn_obs.f
         data = {}
-
+        data['dateTime'] = []
         data['n_obs'], data['n_lvl'], data['n_vrsn'] = fh.read_ints('>i4')
 
         print('    number profiles: %d' % data['n_obs'])
@@ -66,8 +110,8 @@ class profile(object):
             return
 
         data['ob_btm'] = fh.read_reals('>f4')
-        data['ob_lat'] = fh.read_reals('>f4')
-        data['ob_lon'] = fh.read_reals('>f4')
+        data['latitude'] = fh.read_reals('>f4')
+        data['longitude'] = fh.read_reals('>f4')
         data['ob_ls'] = fh.read_reals('>i4')
         data['ob_lt'] = fh.read_reals('>i4')
         data['ob_ssh'] = fh.read_reals('>f4')
@@ -77,7 +121,7 @@ class profile(object):
         data['ob_tmp_typ'] = fh.read_reals('>i4')
         data['ob_tmp_qc'] = fh.read_reals('>f4')
 
-        data['ob_lvl'] = []
+        data['depthBelowWaterSurface'] = []
         data['ob_sal'] = []
         data['ob_sal_err'] = []
         data['ob_sal_prb'] = []
@@ -86,7 +130,7 @@ class profile(object):
         data['ob_tmp_prb'] = []
 
         for n in range(data['n_obs']):
-            data['ob_lvl'].append(fh.read_reals('>f4'))
+            data['depthBelowWaterSurface'].append(fh.read_reals('>f4'))
             data['ob_sal'].append(fh.read_reals('>f4'))
             data['ob_sal_err'].append(fh.read_reals('>f4'))
             data['ob_sal_prb'].append(fh.read_reals('>f4'))
@@ -148,6 +192,15 @@ class profile(object):
 
         fh.close()
 
+        # Transfer timestamp into seconds since epoch and convert Celcius to Kelvin
+        for n in range(data['n_obs']):
+            dtg = datetime.strptime(data['ob_dtg'][n], '%Y%m%d%H%M')
+            time_offset = np.int64(round((dtg - epoch).total_seconds()))
+            data['dateTime'].append(time_offset)
+
+            for k, depth in enumerate(data['depthBelowWaterSurface'][n]):
+                data['ob_tmp'][n][k] = data['ob_tmp'][n][k] + 273.15
+
         self.data = data
 
         return
@@ -155,7 +208,7 @@ class profile(object):
 
 class IODA(object):
 
-    def __init__(self, files_input, filename, date, varDict, varDims, obsList):
+    def __init__(self, files_input, filename, date, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -164,14 +217,6 @@ class IODA(object):
 
         self.filename = filename
         self.date = date
-        self.varDict = varDict
-
-        self.locKeyList = [
-            ("latitude", "float"),
-            ("longitude", "float"),
-            ("depthBelowWaterSurface", "float"),
-            ("dateTime", "long")
-        ]
 
         self.GlobalAttrs = {
             'odb_version': 1,
@@ -181,69 +226,58 @@ class IODA(object):
             'description': "GODAE Profile Observations of salinity and temperature"
         }
 
-        self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        # Hard-wire the units of depth, lat, lon, dateTime epoch
-        self.varAttrs['depthBelowWaterSurface', 'MetaData']['units'] = "m"
-        self.varAttrs['latitude', 'MetaData']['units'] = 'degrees_north'
-        self.varAttrs['longitude', 'MetaData']['units'] = 'degrees_east'
-        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
-        epoch = datetime.fromisoformat(self.varAttrs['dateTime', 'MetaData']['units'][14:-1])
+        # Set units of the MetaData variables and all _FillValues.
+        for key in meta_keys:
+            dtypestr = locationKeyList[meta_keys.index(key)][1]
+            if locationKeyList[meta_keys.index(key)][2]:
+                self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
-        for key in self.varDict.keys():
-            value = self.varDict[key][0]
-            units = self.varDict[key][1]
-            self.keyDict[key]['valKey'] = value, iconv.OvalName()
-            self.keyDict[key]['errKey'] = value, iconv.OerrName()
-            self.keyDict[key]['qcKey'] = value, iconv.OqcName()
-            self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
-            self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
-            self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
-            self.varAttrs[value, iconv.OvalName()]['units'] = units
-            self.varAttrs[value, iconv.OerrName()]['units'] = units
+        # Set units and FillValue attributes for groups associated with observed variable.
+        for key in varDict.keys():
+            value = varDict[key][0]
+            units = varDict[key][1]
+            self.varAttrs[(value, obsValName)]['units'] = units
+            self.varAttrs[(value, obsErrName)]['units'] = units
+            self.varAttrs[(value, obsValName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(value, obsErrName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(value, qcName)]['_FillValue'] = int_missing_value*100
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
+        nprofs = 0
+        nlocs = 0
         for obs in obsList:
 
-            if obs.data['n_obs'] <= 0:
-                print('No profile observations for IODA!')
+            nprofs += obs.data['n_obs']
+            if nprofs <= 0:
+                print('No observations for IODA!')
                 continue
 
-            for n in range(obs.data['n_obs']):
+            for n in range(nprofs):
+                for k, depth in enumerate(obs.data['depthBelowWaterSurface'][n]):
+                    nlocs += 1
+                    # Transfer the MetaData info into the IODA final data container.
+                    for key in meta_keys:
+                        dtypestr = locationKeyList[meta_keys.index(key)][1]
+                        self.data[(key, metaDataName)] = np.append(self.data[(key, metaDataName)], obs.data[key][n])
 
-                lat = obs.data['ob_lat'][n]
-                lon = obs.data['ob_lon'][n]
-                dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
-                time_offset = np.int64(round((dtg - epoch).total_seconds()))
+                    # Fill up the final array of observed values, obsErrors, and Qc
+                    for key in varDict.keys():
+                        value = varDict[key]
+                        varErr = key + '_err'
+                        varQc = key + '_qc'
+                        self.data[(value, obsValName)] = np.append(self.data[(value, obsValName)], obs.data[key][n][k])
+                        self.data[(value, obsErrName)] = np.append(self.data[(value, obsErrName)], obs.data[varErr][n][k])
+                        self.data[(value, qcName)] = np.append(self.data[(value, qcName)], obs.data[varQc][n][k]*100)
 
-                for ilev, lvl in enumerate(obs.data['ob_lvl'][n]):
-
-                    locKey = lat, lon, lvl, time_offset
-
-                    for key in self.varDict.keys():
-
-                        if key == 'ob_tmp':
-                            val = obs.data[key][n][ilev] + 273.15
-                        else:
-                            val = obs.data[key][n][ilev]
-                        err = obs.data[key+'_err'][n][ilev]
-                        qc = (100 * obs.data[key+'_qc'][n]).astype('i4')
-
-                        valKey = self.keyDict[key]['valKey']
-                        errKey = self.keyDict[key]['errKey']
-                        qcKey = self.keyDict[key]['qcKey']
-
-                        self.data[locKey][valKey] = val
-                        self.data[locKey][errKey] = err
-                        self.data[locKey][qcKey] = qc
-
-        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
+        # Initialize the writer, then write the file.
         DimDict = {'Location': nlocs}
-        self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
-        self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
+        self.writer = iconv.IodaWriter(self.filename, locationKeyList, DimDict)
+        self.writer.BuildIoda(self.data, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
 
@@ -275,18 +309,7 @@ def main():
         obs = profile(fname, fdate)
         obsList.append(obs)
 
-    varDict = {
-        #              var name,             units
-        'ob_tmp': ['waterTemperature', 'K'],
-        'ob_sal': ['salinity', 'g kg-1']
-    }
-
-    varDims = {
-        'waterTemperature': ['Location'],
-        'salinity': ['Location'],
-    }
-
-    IODA(fList, foutput, fdate, varDict, varDims, obsList)
+    IODA(fList, foutput, fdate, obsList)
 
 
 if __name__ == '__main__':
