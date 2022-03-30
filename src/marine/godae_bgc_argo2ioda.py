@@ -46,10 +46,6 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-valKey = varInfo[0], obsValName
-errKey = varInfo[0], obsErrName
-qcKey = varInfo[0], qcName
-
 float_missing_value = 999.   #   or  nc.default_fillvals['f4']
 int_missing_value = 999      #   or  nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
@@ -115,7 +111,7 @@ class Profile(object):
 
 class IODA(object):
 
-    def __init__(self, files_input, filename, date, varDims, obsList):
+    def __init__(self, files_input, filename, date, obsList):
 
         '''
         Initialize IODA writer class,
@@ -208,7 +204,7 @@ def main():
         obsList.append(obs)
 
     # Write the output file.
-    IODA(fList, foutput, fdate, varDims, obsList)
+    IODA(fList, foutput, fdate, obsList)
 
 
 if __name__ == '__main__':
