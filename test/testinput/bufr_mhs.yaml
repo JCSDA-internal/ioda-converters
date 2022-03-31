@@ -11,7 +11,7 @@ observations:
         - mnemonics: [SAID, SIID, FOVN, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLAT, CLON, CLATH, CLONH] 
         - mnemonics: [LSQL, HOLS, HMSL]
         - mnemonics: [SAZA, SOZA, BEARAZ, SOLAZI]
-        - mnemonics: [TMBR]
+        - mnemonics: [CHNM, TMBR]
           channels : 1-5
 
       exports:
@@ -24,27 +24,33 @@ observations:
               hour: HOUR
               minute: MINU
               second: SECO
-          height: 
-            mnemonic: HMSL
-          hols: 
-            mnemonic: HOLS
-          fovn:
-            mnemonic: FOVN 
-          lsql:
-            mnemonic: LSQL
-          longitude:
-            mnemonic: CLON
           latitude:
             mnemonic: CLAT
-          sza:
+          longitude:
+            mnemonic: CLON
+          satelliteIdentifier:
+            mnemonic: SAID
+          stationElevation: 
+            mnemonic: HMSL
+          heightOfSurface: 
+            mnemonic: HOLS
+          fieldOfViewNumber:
+            mnemonic: FOVN 
+          landOrSeaQualifier:
+            mnemonic: LSQL
+          fieldOfViewNumber:
+            mnemonic: FOVN
+          solarZenithAngle:
             mnemonic: SOZA
-          saz:
+          solarAzimuthAngle:
             mnemonic: SOLAZI
-          vza:
+          sensorZenithAngle:
             mnemonic: SAZA
-          vaz:
+          sensorAzimuthAngle:  
             mnemonic: BEARAZ
-          radiance:
+          sensorChannelNumber: 
+            mnemonic: CHNM
+          brightnessTemperature:
             mnemonic: TMBR
     
     ioda:
@@ -52,103 +58,111 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/radiance.nrows
-        - name: "nchans"
-          size: variables/radiance.ncols
+        - name: "Location"
+          size: variables/latitude.nrows
+        - name: "Channel"
+          size: variables/brightnessTemperature.ncols
 
       globals: 
-        - name: "sensorCentralFrequency@MetaData"
-          type: floatVector
-          value: [89.0, 157.0, 183.311, 183.311, 190.311]
 
-        - name: "platformCommonName@MetaData"
+        - name: "platformCommonName"
           type: string
           value: "MHS"
+
+        - name: "platformLongDescription"
+          type: string
+          value: "MTYP 021-027 PROCESSED MHS Tb (NOAA-18-19, METOP-1,2)"
+
+#       - name: "sensorCentralFrequency"
+#         type: floatVector
+#         value: [89.0, 157.0, 183.311, 183.311, 190.311]
             
       variables:
 
-        - name: "stationElevation@MetaData"
-          source: variables/height
-          dimensions: ["nlocs"]
-          longName: "Station Elevation"
-          units: "meters"
-
-        - name: "heightOfSurface@MetaData"
-          source: variables/hols
-          dimensions: ["nlocs"]
-          longName: "Height of Land Surface"
-          units: "meters"
-
-        - name: "fieldOfViewNumber@MetaData"
-          source: variables/fovn
-          dimensions: ["nlocs"]
-          longName: "Field of View Number"
-          units: "none"
-
-        - name: "landSeaQualifier@MetaData"
-          source: variables/lsql
-          dimensions: ["nlocs"]
-          longName: "Land/Sea Qualifier"
-          units: "none"
-
-        - name: "dateTime@MetaData"
+        - name: "MetaData/dateTime"
           source: variables/timestamp
-          dimensions: [ "nlocs" ]
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: ["nlocs"]
+          dimensions: ["Location"]
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: ["nlocs"]
+          dimensions: ["Location"]
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "solarZenithAngle@MetaData"
-          source: variables/sza
-          dimensions: ["nlocs"]
+        - name: "MetaData/stationElevation"
+          source: variables/stationElevation
+          dimensions: ["Location"]
+          longName: "Height"
+          units: "m"
+
+        - name: "MetaData/heightOfSurface"
+          source: variables/heightOfSurface
+          dimensions: ["Location"]
+          longName: "Height of Land Surface"
+          units: "m"
+
+        - name: "MetaData/fieldOfViewNumber"
+          source: variables/fieldOfViewNumber
+          dimensions: ["Location"]
+          longName: "Field of View Number"
+          units: "none"
+
+        - name: "MetaData/landOrSeaQualifier"
+          source: variables/landOrSeaQualifier
+          dimensions: ["Location"]
+          longName: "Land/Sea Qualifier"
+          units: "none"
+
+        - name: "MetaData/solarZenithAngle"
+          source: variables/solarZenithAngle
+          dimensions: ["Location"]
           longName: "Solar Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "solarAzimuthAngle@MetaData"
-          source: variables/saz
-          dimensions: ["nlocs"]
+        - name: "MetaData/solarAzimuthAngle"
+          source: variables/solarAzimuthAngle
+          dimensions: ["Location"]
           longName: "Solar Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
 
-        - name: "sensorZenithAngle@MetaData"
-          source: variables/vza
-          dimensions: ["nlocs"]
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/sensorZenithAngle
+          dimensions: ["Location"]
           longName: "Sensor Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "sensorAzimuthAngle@MetaData"
-          source: variables/vaz
-          dimensions: ["nlocs"]
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/sensorAzimuthAngle
+          dimensions: ["Location"]
           longName: "Sensor Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
 
-        - name: "brightnessTemperature@ObsValue"
-          coordinates: "longitude latitude nchans"
-          source: variables/radiance
-          dimensions: ["nlocs", "nchans"]
+        - name: "MetaData/sensorChannelNumber"
+          source: variables/sensorChannelNumber
+          dimensions: ["Channel"]
+          longName: "Channel number"
+          units: ""
+
+        - name: "ObsValue/brightnessTemperature"
+          source: variables/brightnessTemperature
+          coordinates: "longitude latitude Channel"
+          dimensions: ["Location", "Channel"]
           longName: "Brightness Temperature"
           units: "K"
           range: [120, 500]
-          chunks: [1000, 15]
+          chunks: [1000, 5]
           compressionLevel: 4
-
-
-        

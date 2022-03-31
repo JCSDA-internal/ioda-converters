@@ -1,0 +1,112 @@
+Here is the DX table that was generated:
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC021241 | A61207 | MTYP 021-241 IASI 1C RADIANCES (VARIABLE CHNS) (METOP)   |
+|          |        |                                                          |
+| NC021241 | SAID  GCLONG  SIID  SCLF  YEAR  MNTH  DAYS  HOUR  MINU  202131    |
+| NC021241 | 201138  SECO  201000  202000  CLATH  CLONH  SAZA  BEARAZ  SOZA    |
+| NC021241 | SOLAZI  FOVN  ORBN  201133  SLNM  201000  201132  MJFC  201000    |
+| NC021241 | 202126  SELV  202000  QGFQ  QGQI  QGQIL  QGQIR  QGQIS  QGSSQ      |
+| NC021241 | "IASIL1CB"10  (IASICHN)  SIID  AVHCST  "IASIL1CS"7                |
+|          |        |                                                          |
+| IASIL1CB | 340002 | IASI LEVEL 1C BAND DESCRIPTION SEQUENCE                  |
+| IASIL1CS | 340004 | IASI LEVEL 1C AVHRR SINGLE SCENE SEQUENCE                |
+| IASICHN  | 361137 | IASI LEVEL 1C SCALED RADIANCE SEQUENCE                   |
+|          |                                                                   |
+| IASIL1CB | STCH  ENCH  CHSF                                                  |
+|          |                                                                   |
+| IASIL1CS | YAPCG  ZAPCG  FCPH  "AVHRCHN"6                                    |
+|          |                                                                   |
+| AVHRCHN  | 361139 | IASI LEVEL 1C MEAN AND STANDARD DEVIATION RADIANCE SEQ   |
+| AVHRCHN  | CHNM  CHSF  SMRA  CHSF  SSDR                                      |
+|          |                                                                   |
+| IASICHN  | 201136  CHNM  201000  SCRA                                        |
+|          |        |                                                          |
+| SAID     | 001007 | SATELLITE IDENTIFIER                                     |
+| GCLONG   | 001031 | ORIGINATING/GENERATING CENTER                            |
+| SIID     | 002019 | SATELLITE INSTRUMENTS                                    |
+| SCLF     | 002020 | SATELLITE CLASSIFICATION                                 |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| SECO     | 004006 | SECOND                                                   |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| SAZA     | 007024 | SATELLITE ZENITH ANGLE                                   |
+| SOZA     | 007025 | SOLAR ZENITH ANGLE                                       |
+| BEARAZ   | 005021 | BEARING OR AZIMUTH                                       |
+| SOLAZI   | 005022 | SOLAR AZIMUTH                                            |
+| FOVN     | 005043 | FIELD OF VIEW NUMBER                                     |
+| ORBN     | 005040 | ORBIT NUMBER                                             |
+| SLNM     | 005041 | SCAN LINE NUMBER                                         |
+| MJFC     | 025070 | MAJOR FRAME COUNT                                        |
+| SELV     | 007001 | HEIGHT OF STATION                                        |
+| QGFQ     | 033060 | INDIVIDUAL IASI-SYSTEM QUALITY FLAG                      |
+| QGQI     | 033061 | INSTR. NOISE PERF. INDICATOR (SPECTRAL & RADIOMETRIC)    |
+| QGQIL    | 033062 | GEOMETRIC QUALITY INDEX INDICATOR                        |
+| QGQIR    | 033063 | INSTR. NOISE PERF. INDICATOR (RADIOMETRIC CALIBRATION)   |
+| QGQIS    | 033064 | INSTRUMENT NOISE PERF. INDICATOR (SPECTRAL CALIBRATION)  |
+| QGSSQ    | 033065 | OUTPUT OF TEC FUNCTION                                   |
+| AVHCST   | 025051 | AVHRR CHANNEL COMBINATION                                |
+| STCH     | 025140 | START CHANNEL                                            |
+| ENCH     | 025141 | END CHANNEL                                              |
+| CHSF     | 025142 | CHANNEL SCALE FACTOR                                     |
+| YAPCG    | 005060 | Y ANGULAR POSITION OF CENTER OF GRAVITY                  |
+| ZAPCG    | 005061 | Z ANGULAR POSITION OF CENTER OF GRAVITY                  |
+| FCPH     | 025085 | FRACTION OF CLEAR PIXELS IN HIRS FOV                     |
+| CHNM     | 005042 | CHANNEL NUMBER                                           |
+| SMRA     | 014047 | SCALED MEAN AVHRR RADIANCE                               |
+| SSDR     | 014048 | SCALED STANDARD DEVIATION OF AVHRR RADIANCE              |
+| SCRA     | 014046 | SCALED IASI RADIANCE                                     |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| GCLONG   |    0 |           0 |  16 | CODE TABLE               |-------------|
+| SIID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| SCLF     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| SAZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| SOZA     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| SOLAZI   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| FOVN     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| ORBN     |    0 |           0 |  24 | NUMERIC                  |-------------|
+| SLNM     |    0 |           0 |   8 | NUMERIC                  |-------------|
+| MJFC     |    0 |           0 |   4 | NUMERIC                  |-------------|
+| SELV     |    0 |        -400 |  15 | M                        |-------------|
+| QGFQ     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| QGQI     |    0 |           0 |   7 | %                        |-------------|
+| QGQIL    |    0 |           0 |   7 | %                        |-------------|
+| QGQIR    |    0 |           0 |   7 | %                        |-------------|
+| QGQIS    |    0 |           0 |   7 | %                        |-------------|
+| QGSSQ    |    0 |           0 |  24 | NUMERIC                  |-------------|
+| AVHCST   |    0 |           0 |   7 | FLAG TABLE               |-------------|
+| STCH     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| ENCH     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| CHSF     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| YAPCG    |    6 |    -8000000 |  24 | DEGREE                   |-------------|
+| ZAPCG    |    6 |    -8000000 |  24 | DEGREE                   |-------------|
+| FCPH     |    0 |           0 |   7 | NUMERIC                  |-------------|
+| CHNM     |    0 |           0 |   6 | NUMERIC                  |-------------|
+| SMRA     |    0 |           0 |  31 | W M**-2 SR**-1 M         |-------------|
+| SSDR     |    0 |           0 |  31 | W M**-2 SR**-1 M         |-------------|
+| SCRA     |    0 |           0 |  16 | W M**-2 SR**-1 M         |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
