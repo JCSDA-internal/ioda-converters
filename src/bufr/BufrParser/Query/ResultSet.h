@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "FortranObject.h"
-
 #include <iostream>
 #include <memory>
 #include <string>
