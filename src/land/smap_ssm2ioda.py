@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2021 EMC/NCEP/NWS/NOAA
+# (C) Copyright 2021-2022 EMC/NCEP/NWS/NOAA
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -25,7 +25,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 obsvars = {
@@ -33,14 +33,13 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'soilMoistureVolumetric': ['nlocs'],
+    'soilMoistureVolumetric': ['Location'],
 }
 
 
@@ -65,15 +64,14 @@ class smap(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        self.satellite = "SMAP"
-        self.sensor = "radar and radiometer"
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
+        satelliteID = 789
+        sensorID = 432
+        AttrData["platform"] = np.array([satelliteID], dtype=np.int32)
+        AttrData["sensor"] = np.array([sensorID], dtype=np.int32)
 
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
@@ -107,7 +105,6 @@ class smap(object):
         lons = lons.astype('float32')
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
-        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(lons)):
 
@@ -124,7 +121,7 @@ class smap(object):
             times[i] = base_datetime
 
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
 
@@ -133,8 +130,7 @@ class smap(object):
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():
