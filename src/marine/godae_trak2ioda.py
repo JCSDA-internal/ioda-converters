@@ -31,14 +31,14 @@ varDict = {
     'ob_sst': 'seaSurfaceTemperature',
     'ob_sal': 'seaSurfaceSalinity',
     'ob_uuu': 'seaSurfaceZonalWind',
-    'ob_vvv': 'seaSurfaceMeriodionalWind'
+    'ob_vvv': 'seaSurfaceMeridionalWind'
 }
 
 varDims = {
     'seaSurfaceTemperature': ['Location'],
     'seaSurfaceSalinity': ['Location'],
     'seaSurfaceZonalWind': ['Location'],
-    'seaSurfaceMeriodionalWind': ['Location']
+    'seaSurfaceMeridionalWind': ['Location']
 }
 
 unitDict = {
