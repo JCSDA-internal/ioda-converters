@@ -264,20 +264,50 @@ class IODA(object):
                     nlocs += 1
                     # Transfer the MetaData info into the IODA final data container.
                     for key in meta_keys:
+                        dtypestr = locationKeyList[meta_keys.index(key)][1]
                         if isinstance(obs.data[key][n], list):
                             val = obs.data[key][n][k]
                         else:
                             val = obs.data[key][n]
-                        data[(key, metaDataName)] = np.append(data[(key, metaDataName)], val)
+                        varVals = np.array(val, dtype=dtypes[dtypestr])
+                        # If on the first time through, set the data dict entry
+                        # to a numpy array with a specified data type. Otherwise, append
+                        # the incoming data to the current data.
+                        if (key, metaDataName) in data:
+                            data[(key, metaDataName)] = np.append(
+                                data[(key, metaDataName)], varVals)
+                        else:
+                            data[(key, metaDataName)] = varVals
 
                     # Fill up the final array of observed values, obsErrors, and Qc
                     for key in varDict.keys():
                         value = varDict[key][0]
                         varErr = key + '_err'
                         varQc = key + '_qc'
-                        data[(value, obsValName)] = np.append(data[(value, obsValName)], obs.data[key][n][k])
-                        data[(value, obsErrName)] = np.append(data[(value, obsErrName)], obs.data[varErr][n][k])
-                        data[(value, qcName)] = np.append(data[(value, qcName)], obs.data[varQc][n]*100)
+
+                        # ObsValue
+                        varVals = np.array(obs.data[key][n][k], dtype=dtypes['float'])
+                        if (value, obsValName) in data:
+                            data[(value, obsValName)] = np.append(
+                                data[(value, obsValName)], varVals);
+                        else:
+                            data[(value, obsValName)] = varVals
+
+                        # ObsError
+                        varVals = np.array(obs.data[varErr][n][k], dtype=dtypes['float'])
+                        if (value, obsErrName) in data:
+                            data[(value, obsErrName)] = np.append(
+                                data[(value, obsErrName)], varVals);
+                        else:
+                            data[(value, obsErrName)] = varVals
+
+                        # QC
+                        varVals = np.array(obs.data[varQc][n]*100, dtype=dtypes['integer'])
+                        if (value, qcName) in data:
+                            data[(value, qcName)] = np.append(
+                                data[(value, qcName)], varVals);
+                        else:
+                            data[(value, qcName)] = varVals
 
         print(f"Found a total number of observations: {nlocs}")
 
