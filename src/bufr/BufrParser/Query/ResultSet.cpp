@@ -4,12 +4,9 @@
 
 
 #include "ResultSet.h"
-#include "query_interface.h"
 
+#include <algorithm>
 #include <string>
-#include <algorithm> 
-#include <iostream>
-#include <sstream>
 
 #include "VectorMath.h"
 
