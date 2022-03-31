@@ -218,41 +218,43 @@ class IODA(object):
         self.filename = filename
         self.date = date
 
-        self.GlobalAttrs = {
+        GlobalAttrs = {
             'odb_version': 1,
             'converter': os.path.basename(__file__),
             'ioda_version': 2,
             'sourceFiles': ", ".join(files_input),
+            'datetimeReference': self.date,
             'description': "GODAE Profile Observations of salinity and temperature"
         }
 
-        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
         # Set units of the MetaData variables and all _FillValues.
         for key in meta_keys:
             dtypestr = locationKeyList[meta_keys.index(key)][1]
             if locationKeyList[meta_keys.index(key)][2]:
-                self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+                varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            print(f"Setting a FillValue for key: {key} to {missing_vals[dtypestr]}")
+            varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
         # Set units and FillValue attributes for groups associated with observed variable.
         for key in varDict.keys():
             value = varDict[key][0]
             units = varDict[key][1]
-            self.varAttrs[(value, obsValName)]['units'] = units
-            self.varAttrs[(value, obsErrName)]['units'] = units
-            self.varAttrs[(value, obsValName)]['_FillValue'] = float_missing_value
-            self.varAttrs[(value, obsErrName)]['_FillValue'] = float_missing_value
-            self.varAttrs[(value, qcName)]['_FillValue'] = int_missing_value*100
+            varAttrs[(value, obsValName)]['units'] = units
+            varAttrs[(value, obsErrName)]['units'] = units
+            varAttrs[(value, obsValName)]['_FillValue'] = float_missing_value
+            varAttrs[(value, obsErrName)]['_FillValue'] = float_missing_value
+            varAttrs[(value, qcName)]['_FillValue'] = int_missing_value*100
 
         # data is the dictionary containing IODA friendly data structure
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
         nprofs = 0
         nlocs = 0
         for obs in obsList:
 
-            nprofs += obs.data['n_obs']
+            nprofs = obs.data['n_obs']
             if nprofs <= 0:
                 print('No observations for IODA!')
                 continue
@@ -262,22 +264,27 @@ class IODA(object):
                     nlocs += 1
                     # Transfer the MetaData info into the IODA final data container.
                     for key in meta_keys:
-                        dtypestr = locationKeyList[meta_keys.index(key)][1]
-                        self.data[(key, metaDataName)] = np.append(self.data[(key, metaDataName)], obs.data[key][n])
+                        if isinstance(obs.data[key][n], list):
+                            val = obs.data[key][n][k]
+                        else:
+                            val = obs.data[key][n]
+                        data[(key, metaDataName)] = np.append(data[(key, metaDataName)], val)
 
                     # Fill up the final array of observed values, obsErrors, and Qc
                     for key in varDict.keys():
-                        value = varDict[key]
+                        value = varDict[key][0]
                         varErr = key + '_err'
                         varQc = key + '_qc'
-                        self.data[(value, obsValName)] = np.append(self.data[(value, obsValName)], obs.data[key][n][k])
-                        self.data[(value, obsErrName)] = np.append(self.data[(value, obsErrName)], obs.data[varErr][n][k])
-                        self.data[(value, qcName)] = np.append(self.data[(value, qcName)], obs.data[varQc][n][k]*100)
+                        data[(value, obsValName)] = np.append(data[(value, obsValName)], obs.data[key][n][k])
+                        data[(value, obsErrName)] = np.append(data[(value, obsErrName)], obs.data[varErr][n][k])
+                        data[(value, qcName)] = np.append(data[(value, qcName)], obs.data[varQc][n]*100)
+
+        print(f"Found a total number of observations: {nlocs}")
 
         # Initialize the writer, then write the file.
         DimDict = {'Location': nlocs}
         self.writer = iconv.IodaWriter(self.filename, locationKeyList, DimDict)
-        self.writer.BuildIoda(self.data, varDims, self.varAttrs, self.GlobalAttrs)
+        self.writer.BuildIoda(data, varDims, varAttrs, GlobalAttrs)
 
         return
 
