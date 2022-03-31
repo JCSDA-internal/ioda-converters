@@ -174,6 +174,7 @@ class IODA(object):
             'converter': os.path.basename(__file__),
             'ioda_version': 2,
             'sourceFiles': ", ".join(files_input),
+            'datetimeReference': self.date.strftime('%Y-%m-%dT%H:%M:%S%z'),
             'description': "GODAE Ship Observations of sea surface temperature"
         }
 
@@ -182,11 +183,11 @@ class IODA(object):
         # Set units and FillValue attributes for groups associated with observed variable.
         for key in varDict.keys():
             value = varDict[key]
-            self.varAttrs[value, obsValName]['units'] = unitDict[key]
-            self.varAttrs[value, obsErrName]['units'] = unitDict[key]
-            self.varAttrs[value, obsValName]['_FillValue'] = float_missing_value
-            self.varAttrs[value, obsErrName]['_FillValue'] = float_missing_value
-            self.varAttrs[value, qcName]['_FillValue'] = int_missing_value*100
+            self.varAttrs[(value, obsValName)]['units'] = unitDict[key]
+            self.varAttrs[(value, obsErrName)]['units'] = unitDict[key]
+            self.varAttrs[(value, obsValName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(value, obsErrName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(value, qcName)]['_FillValue'] = int_missing_value*100
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -215,9 +216,9 @@ class IODA(object):
                 else:
                     varQc = 'ob_' + key.split('_')[-1]
 
-                self.data[value, obsValName] = np.array(obs.data[key], dtype=np.float32)
-                self.data[value, obsErrName] = np.full(nobs, 1.0, dtype=np.float32)
-                self.data[value, qcName] = np.array(obs.data[varQc]*100, dtype=np.int32)
+                self.data[(value, obsValName)] = np.array(obs.data[key], dtype=np.float32)
+                self.data[(value, obsErrName)] = np.full(nobs, 1.0, dtype=np.float32)
+                self.data[(value, qcName)] = np.array(obs.data[varQc]*100, dtype=np.int32)
 
         # Initialize the writer, then write the file.
         DimDict = {'Location': nobs}

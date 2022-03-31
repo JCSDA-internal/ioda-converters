@@ -161,6 +161,7 @@ class IODA(object):
             'converter': os.path.basename(__file__),
             'ioda_version': 2,
             'sourceFiles': ", ".join(files_input),
+            'datetimeReference': self.date.strftime('%Y-%m-%dT%H:%M:%S%z'),
             'description': "GODAE Ship Observations of sea surface temperature"
         }
 

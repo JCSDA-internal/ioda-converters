@@ -223,7 +223,7 @@ class IODA(object):
             'converter': os.path.basename(__file__),
             'ioda_version': 2,
             'sourceFiles': ", ".join(files_input),
-            'datetimeReference': self.date,
+            'datetimeReference': self.date.strftime('%Y-%m-%dT%H:%M:%S%z'),
             'description': "GODAE Profile Observations of salinity and temperature"
         }
 
@@ -234,7 +234,6 @@ class IODA(object):
             dtypestr = locationKeyList[meta_keys.index(key)][1]
             if locationKeyList[meta_keys.index(key)][2]:
                 varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-            print(f"Setting a FillValue for key: {key} to {missing_vals[dtypestr]}")
             varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
         # Set units and FillValue attributes for groups associated with observed variable.
