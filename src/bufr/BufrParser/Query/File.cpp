@@ -4,7 +4,6 @@
 
 #include "File.h"
 
-#include "FortranObject.h"
 #include "bufr_interface.h"
 
 #include "Query.h"
