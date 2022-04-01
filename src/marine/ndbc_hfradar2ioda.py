@@ -22,15 +22,14 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
-vName = ["sea_water_meridional_current",
-         "sea_water_zonal_current",
-         "DOPX",
-         "DOPY"]
+vName = ["waterMeridionalCurrentSpeed",
+         "waterZonalCurrentSpeed",
+         ]
 
 locKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {
@@ -56,9 +55,8 @@ class Observation(object):
         vals_v = ncd.variables['v'][:]
         dopx = ncd.variables['dopx'][:]
         dopy = ncd.variables['dopy'][:]
-        units = '1970-01-01 00:00:00'
-        reftime = dateutil.parser.parse(units)
         ncd.close()
+
         lons, lats = np.meshgrid(lons, lats)
         lons = lons.flatten()
         lats = lats.flatten()
@@ -75,8 +73,8 @@ class Observation(object):
                 qcKey = vName[j], iconv.OqcName()
                 if vals_u[i] != '--':
                     count += 1
-                    obs_date = reftime + timedelta(seconds=int(time[i]))
-                    locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    obs_date = int(time[i])
+                    locKey = lats[i], lons[i], obs_date
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]
                         self.data[locKey][errKey] = 0.1
@@ -120,18 +118,18 @@ def main():
         'sea_water_meridional_current': ['nlocs'],
         'sea_water_zonal_current': ['nlocs']}
     radar = Observation(args.input, fdate)
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     ObsVars, nlocs = iconv.ExtractObsData(radar.data, locKeyList)
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
     writer = iconv.IodaWriter(args.output, locKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_water_meridional_current', 'ObsValue')]['units'] = 'm/s'
-    VarAttrs[('sea_water_zonal_current', 'ObsValue')]['units'] = 'm/s'
-    VarAttrs[('sea_water_meridional_current', 'ObsValue')]['_FillValue'] = -32767
-    VarAttrs[('sea_water_zonal_current', 'ObsValue')]['_FillValue'] = -32767
-    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
-    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('waterMeridionalCurrentSpeed', 'ObsValue')]['units'] = 'm s-1'
+    VarAttrs[('waterZonalCurrentSpeed', 'ObsValue')]['units'] = 'm s-1'
+    VarAttrs[('waterMeridionalCurrentSpeed', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('waterZonalCurrentSpeed', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
+    VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
