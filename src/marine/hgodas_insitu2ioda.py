@@ -26,7 +26,7 @@ from orddicts import DefaultOrderedDict
 vName = {
     #          var name,            units
     2210: ["waterTemperature", "K"],
-    2220: ["salinity", "g kg-1"]
+    2220: ["salinity", "unitless"]
 }
 
 locationKeyList = [
