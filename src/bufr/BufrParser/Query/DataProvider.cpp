@@ -27,21 +27,7 @@ namespace
 namespace Ingester {
 namespace bufr {
 
-    std::shared_ptr<DataProvider> DataProvider::instance()
-    {
-        static auto instance = std::make_shared<DataProvider>();
-        return instance;
-    }
-
-    void DataProvider::loadTableInfo()
-    {
-        int size = 0;
-        int strLen = 0;
-        int *intPtr = nullptr;
-        char *charPtr = nullptr;
-    }
-
-    void DataProvider::loadDataInfo(int bufrLoc)
+    void DataProvider::updateData(int bufrLoc)
     {
         int size = 0;
         int *intPtr = nullptr;
@@ -97,9 +83,11 @@ namespace bufr {
 
         get_inv_f(bufrLoc, &intPtr, &size);
         inv_ = gsl::span<const int>(intPtr, size);
+
+        subset_ = getTag(getInode());
     }
 
-    void DataProvider::deleteTableInfo()
+    void DataProvider::deleteData()
     {
         delete_table_data_f();
     }
