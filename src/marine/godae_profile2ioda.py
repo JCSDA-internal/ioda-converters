@@ -29,7 +29,7 @@ os.environ["TZ"] = "UTC"
 
 varDict = {
     'ob_tmp': ['waterTemperature', 'K'],
-    'ob_sal': ['salinity', 'g kg-1']
+    'ob_sal': ['salinity', '1']
 }
 
 varDims = {

@@ -43,7 +43,7 @@ varDims = {
 
 unitDict = {
     'ob_sst': 'K',
-    'ob_sal': 'g kg-1',
+    'ob_sal': '1',
     'ob_uuu': 'm s-1',
     'ob_vvv': 'm s-1'
 }
