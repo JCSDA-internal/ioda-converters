@@ -46,7 +46,7 @@ obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
 float_missing_value = -999.   #   or  nc.default_fillvals['f4']
-int_missing_value = -999      #   or  nc.default_fillvals['i4']
+int_missing_value = -99900    #   or  nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
@@ -172,7 +172,7 @@ class IODA(object):
         self.varAttrs[(varInfo[0], obsErrName)]['units'] = varInfo[1]
         self.varAttrs[(varInfo[0], obsValName)]['_FillValue'] = varInfo[2]
         self.varAttrs[(varInfo[0], obsErrName)]['_FillValue'] = varInfo[2]
-        self.varAttrs[(varInfo[0], qcName)]['_FillValue'] = int(varInfo[2])
+        self.varAttrs[(varInfo[0], qcName)]['_FillValue'] = int_missing_value
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
