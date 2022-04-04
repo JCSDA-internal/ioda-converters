@@ -22,14 +22,14 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
-vName = ["waterMeridionalCurrentSpeed",
-         "waterZonalCurrentSpeed",
+vName = ["vComponentOfCurrent",
+         "uComponentOfCurrent",
          ]
 
 locKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string")
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {
@@ -115,18 +115,20 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        'sea_water_meridional_current': ['nlocs'],
-        'sea_water_zonal_current': ['nlocs']}
+        'vComponentOfCurrent': ['Location'],
+        'uComponentOfCurrent': ['Location']}
     radar = Observation(args.input, fdate)
 
     ObsVars, nlocs = iconv.ExtractObsData(radar.data, locKeyList)
     DimDict = {'Location': nlocs}
     writer = iconv.IodaWriter(args.output, locKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('waterMeridionalCurrentSpeed', 'ObsValue')]['units'] = 'm s-1'
-    VarAttrs[('waterZonalCurrentSpeed', 'ObsValue')]['units'] = 'm s-1'
-    VarAttrs[('waterMeridionalCurrentSpeed', 'ObsValue')]['_FillValue'] = -32767
-    VarAttrs[('waterZonalCurrentSpeed', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('vComponentOfCurrent', 'ObsValue')]['units'] = 'm s-1'
+    VarAttrs[('vComponentOfCurrent', 'ObsError')]['units'] = 'm s-1'
+    VarAttrs[('uComponentOfCurrent', 'ObsValue')]['units'] = 'm s-1'
+    VarAttrs[('uComponentOfCurrent', 'ObsError')]['units'] = 'm s-1'
+    VarAttrs[('vComponentOfCurrent', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('uComponentOfCurrent', 'ObsValue')]['_FillValue'] = -32767
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
     VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'

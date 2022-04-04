@@ -141,8 +141,8 @@ def main():
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('waterTemperature', 'ObsValue')]['units'] = 'K'
     VarAttrs[('waterTemperature', 'ObsError')]['units'] = 'K'
-    VarAttrs[('salinity', 'ObsValue')]['units'] = 'unitless'
-    VarAttrs[('salinity', 'ObsError')]['units'] = 'unitless'
+    VarAttrs[('salinity', 'ObsValue')]['units'] = '1'
+    VarAttrs[('salinity', 'ObsError')]['units'] = '1'
     VarAttrs[('depthBelowWaterSurface', 'MetaData')]['units'] = 'm'
     VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
     VarAttrs[('waterTemperature', 'ObsValue')]['_FillValue'] = -32767
