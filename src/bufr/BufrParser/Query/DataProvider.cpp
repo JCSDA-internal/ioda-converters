@@ -21,6 +21,8 @@ namespace
     const char* Sequence = "SEQ";
     const char* Repeat = "RPC";
     const char* StackedRepeat = "RPS";
+    const char* Number = "NUM";
+    const char* Character = "CHR";
 }
 
 
@@ -61,6 +63,8 @@ namespace bufr {
                 else if (typ == Sequence)          typ_[wordIdx] = Typ::Sequence;
                 else if (typ == Repeat)            typ_[wordIdx] = Typ::Repeat;
                 else if (typ == StackedRepeat)     typ_[wordIdx] = Typ::StackedRepeat;
+                else if (typ == Number)            typ_[wordIdx] = Typ::Number;
+                else if (typ == Character)         typ_[wordIdx] = Typ::Character;
             }
 
             get_tag_f(&charPtr, &strLen, &size);

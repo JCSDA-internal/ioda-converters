@@ -27,6 +27,8 @@ namespace bufr {
         Sequence,
         Repeat,
         StackedRepeat,
+        Number,
+        Character
     };
 
     class DataProvider
