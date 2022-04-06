@@ -355,6 +355,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l3u
                           -t 0.5"
                           gds2_sst_l3u.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_obs
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_obs2ioda.py
+                          -i testinput/gmao-obs-20180415.nc
+                          -o testrun/gmao_oceanObs.nc
+                          -d 2018041500"
+                          gmao_oceanObs.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
