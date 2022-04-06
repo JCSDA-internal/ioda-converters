@@ -45,13 +45,20 @@ namespace bufr {
             const char* charPtr = (char*) data.data();
             for (int row_idx = 0; row_idx < dims[0]; row_idx++)
             {
-                std::string str = std::string(charPtr + row_idx * sizeof(double), sizeof(double));
+                if (data.data()[row_idx] != MissingValue)
+                {
+                    std::string str = std::string(charPtr + row_idx * sizeof(double), sizeof(double));
 
-                // trim trailing whitespace from str
-                str.erase(std::find_if(str.rbegin(), str.rend(),
-                                       [](char c) { return !std::isspace(c); }).base(), str.end());
+                    // trim trailing whitespace from str
+                    str.erase(std::find_if(str.rbegin(), str.rend(),
+                                           [](char c) { return !std::isspace(c); }).base(), str.end());
 
-                strData.push_back(str);
+                    strData.push_back(str);
+                }
+                else
+                {
+                    strData.push_back("");
+                }
             }
 
             auto strResult = std::make_shared<Result<std::string>>();
