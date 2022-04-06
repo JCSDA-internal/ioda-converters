@@ -120,8 +120,8 @@ class smap(object):
         self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
-        self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
+        self.varAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
+        self.varAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
         self.outdata[('earthSurfaceType', 'MetaData')] = sflg
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
 

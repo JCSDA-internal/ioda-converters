@@ -129,8 +129,8 @@ def main():
     VarAttrs[('uComponentOfCurrent', 'ObsError')]['units'] = 'm s-1'
     VarAttrs[('vComponentOfCurrent', 'ObsValue')]['_FillValue'] = -32767
     VarAttrs[('uComponentOfCurrent', 'ObsValue')]['_FillValue'] = -32767
-    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
-    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
     VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
