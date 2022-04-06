@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -11,6 +11,7 @@ Convert GMAO ocean data to IODA netCDF4 format
 
 from __future__ import print_function
 import sys
+import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import netCDF4 as nc4
 import numpy as np
@@ -25,40 +26,50 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
 
-
-# obsIdDict is defined as obsid_dict in ocean_obs.py
-obsIdDict = {
-    5521: 'sea_water_salinity',  # Salinity
-    3073: 'sea_water_temperature',  # Temperature
-    5525: 'sea_surface_temperature',  # SST
-    5526: 'absolute_dynamic_topography',  # SSH (Not used ...)
-    5351: 'absolute_dynamic_topography',  # SSH
-    6000: 'sea_ice_area_fraction',  # AICE
-    6001: 'sea_ice_thickness'  # HICE
-}
-
+os.environ["TZ"] = "UTC"
 
 varDict = {
-    'sea_water_salinity': 'sal',
-    'sea_water_temperature': 'temp',
-    'sea_surface_temperature': 'sst',
-    'absolute_dynamic_topography': 'adt',
-    'sea_ice_area_fraction': 'frac',
-    'sea_ice_thickness': 'thick'
+    5521: ['sal', 'salinity', '1'],
+    3073: ['temp', 'waterTemperature', 'K'],
+    5525: ['sst', 'seaSurfaceTemperature', 'K'],
+    5526: ['adt', 'absoluteDynamicTopography', 'm'],
+    5351: ['adt', 'absoluteDynamicTopography', 'm'],   # not used
+    6000: ['frac', 'seaIceFraction', '1'],
+    6001: ['thick', 'iceThickness', 'm'],
 }
 
+locationKeyList = [
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("depthBelowWaterSurface", "float", "m"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
+]
+meta_keys = [m_item[0] for m_item in locationKeyList]
 
-def flipDict(dictIn):
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
-    dictOut = {}
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
-    for key, value in dictIn.items():
-        if value not in dictOut:
-            dictOut[value] = [key]
-        else:
-            dictOut[value].append(key)
+float_missing_value = nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
 
-    return dictOut
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 class GMAOobs(object):
@@ -82,11 +93,11 @@ class GMAOobs(object):
         data['nobs'] = len(nc.dimensions['nobs'])
 
         data['typ'] = nc.variables['typ'][:].data
-        data['lon'] = nc.variables['lon'][:].data
-        data['lat'] = nc.variables['lat'][:].data
-        data['depth'] = nc.variables['depth'][:].data
-        data['value'] = nc.variables['value'][:].data
-        data['oerr'] = nc.variables['oerr'][:].data
+        data['longitude'] = nc.variables['lon'][:].data
+        data['latitude'] = nc.variables['lat'][:].data
+        data['depthBelowWaterSurface'] = nc.variables['depth'][:].data
+        data['vals'] = nc.variables['value'][:].data
+        data['errs'] = nc.variables['oerr'][:].data
 
         nc.close()
 
@@ -95,40 +106,42 @@ class GMAOobs(object):
         return
 
 
-class refGMAOobs(object):
-
-    def __init__(self, filename, date, data):
-
-        self.filename = filename
-        self.date = date
-        self.data = data
-
-        return
-
-
 class IODA(object):
 
-    def __init__(self, filename, date, varName, obsList):
-        '''
-        Initialize IODA writer class,
-        transform to IODA data structure and,
-        write out to IODA file.
-        '''
+    def __init__(self, files_input, filename, date, obsList):
 
+        self.files_input = files_input
         self.filename = filename
         self.date = date
 
-        self.locKeyList = [
-            ("latitude", "float"),
-            ("longitude", "float"),
-            ("depth", "float"),
-            ("datetime", "string")
-        ]
-
-        self.AttrData = {
+        GlobalAttrs = {
             'odb_version': 1,
-            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+            'converter': os.path.basename(__file__),
+            'ioda_version': 2,
+            'sourceFiles': ", ".join(files_input),
+            'datetimeReference': self.date.strftime('%Y-%m-%dT%H:%M:%S%z'),
+            'description': "GMAO Ocean Observations"
         }
+
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+        # Set units of the MetaData variables and all _FillValues.
+        for key in meta_keys:
+            dtypestr = locationKeyList[meta_keys.index(key)][1]
+            if locationKeyList[meta_keys.index(key)][2]:
+                varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+
+        # Set units and FillValue attributes for groups associated with observed variable.
+        for key in varDict.keys():
+            variable = varDict[key][1]
+            units = varDict[key][2]
+            varAttrs[(variable, obsValName)]['units'] = units
+            varAttrs[(variable, obsErrName)]['units'] = units
+            varAttrs[(variable, obsValName)]['_FillValue'] = float_missing_value
+            varAttrs[(variable, obsErrName)]['_FillValue'] = float_missing_value
+            varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
+
 
         # Skip out if there are no obs!
         totalObs = 0
@@ -140,100 +153,66 @@ class IODA(object):
             print('No %s observations for IODA!' % varName)
             return
 
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
-
-        self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-
-        self.keyDict[varName]['valKey'] = varName, self.writer.OvalName()
-        self.keyDict[varName]['errKey'] = varName, self.writer.OerrName()
-        self.keyDict[varName]['qcKey'] = varName, self.writer.OqcName()
-
         # data is the dictionary containing IODA friendly data structure
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        recKey = 0
-
+        nlevels = 0
+        nlocs = 0
         for obs in obsList:
+            nlevels = obs.data['nobs']
+            for n in range(nlevels):
+                for k, depth in enumerate(obs.data['depthBelowWaterSurface'][n]):
+                    nlocs += 1
+                    # Transfer the MetaData info into the IODA final data container.
+                    for key in meta_keys:
+                        dtypestr = locationKeyList[meta_keys.index(key)][1]
+                        if isinstance(obs.data[key][n], list):
+                            val = obs.data[key][n][k]
+                        else:
+                            val = obs.data[key][n]
+                        varVals = np.array(val, dtype=dtypes[dtypestr])
+                        # If on the first time through, set the data dict entry
+                        # to a numpy array with a specified data type. Otherwise, append
+                        # the incoming data to the current data.
+                        if (key, metaDataName) in data:
+                            data[(key, metaDataName)] = np.append(
+                                data[(key, metaDataName)], varVals)
+                        else:
+                            data[(key, metaDataName)] = varVals
 
-            if obs.data['nobs'] <= 0:
-                continue
+                    # Fill up the final array of observed values and obsErrors
+                    for key in varDict.keys():
+                        key_val = varDict[key][0] + "_vals"
+                        key_err = varDict[key][0] + "_errs"
+                        variable = varDict[key][1]
 
-            for n in range(obs.data['nobs']):
+                        # ObsValue
+                        varVals = np.array(obs.data[key_val][n][k], dtype=dtypes['float'])
+                        if (variable, obsValName) in data:
+                            data[(variable, obsValName)] = np.append(
+                                data[(variable, obsValName)], varVals);
+                        else:
+                            data[(variable, obsValName)] = varVals
 
-                oval = obs.data['value'][n]
-                oerr = obs.data['oerr'][n]
+                        # ObsError
+                        varVals = np.array(obs.data[key_err][n][k], dtype=dtypes['float'])
+                        if (variable, obsErrName) in data:
+                            data[(variable, obsErrName)] = np.append(
+                                data[(variable, obsErrName)], varVals);
+                        else:
+                            data[(variable, obsErrName)] = varVals
 
-                if discardOb(varName, oval):
-                    continue
+        # Just fill in the QC value as zero everywhere.
+        data[(variable, qcName)] = np.full(len(data[(variable, obsValName)]), 0, dtype=np.int32)
 
-                lat = obs.data['lat'][n]
-                lon = obs.data['lon'][n]
-                lvl = obs.data['depth'][n]
+        print(f"Found a total number of observations: {nlocs}")
 
-                locKey = lat, lon, lvl, obs.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-                valKey = self.keyDict[varName]['valKey']
-                errKey = self.keyDict[varName]['errKey']
-                qcKey = self.keyDict[varName]['qcKey']
-
-                self.data[recKey][locKey][valKey] = oval
-                self.data[recKey][locKey][errKey] = oerr
-                self.data[recKey][locKey][qcKey] = 0
-
-        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
+        # Initialize the writer, then write the file.
+        DimDict = {'Location': nlocs}
+        self.writer = iconv.IodaWriter(self.filename, locationKeyList, DimDict)
+        self.writer.BuildIoda(data, varDims, varAttrs, GlobalAttrs)
 
         return
-
-
-def separateObs(obsList):
-
-    obsDict = {}
-    for key in obsIdDict.keys():
-
-        obsListKey = []
-
-        for obs in obsList:
-
-            date = obs.date
-            filename = obs.filename
-
-            ind = np.where(obs.data['typ'] == key)
-
-            data = {}
-            data['nobs'] = len(ind[0])
-            data['typ'] = obs.data['typ'][ind]
-            data['lon'] = obs.data['lon'][ind]
-            data['lat'] = obs.data['lat'][ind]
-            data['depth'] = obs.data['depth'][ind]
-            data['value'] = obs.data['value'][ind]
-            data['oerr'] = obs.data['oerr'][ind]
-
-            obsListKey.append(refGMAOobs(filename, date, data))
-
-        obsDict[key] = obsListKey
-
-    return obsDict
-
-
-def sortDict(obsDictIn):
-
-    # Flip the obsIdDict
-    obsIdDictFlipped = flipDict(obsIdDict)
-
-    obsDictOut = {}
-
-    # Loop over flipped obsIdDict
-    for key, values in obsIdDictFlipped.items():
-
-        obsList = []
-        for value in values:
-            obsList.append(obsDictIn[value])
-
-        # Flatten the newly created list of lists
-        obsDictOut[key] = [item for sublist in obsList for item in sublist]
-
-    return obsDictOut
 
 
 def discardOb(varName, obsValue):
