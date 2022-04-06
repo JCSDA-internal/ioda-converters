@@ -13,7 +13,7 @@ from __future__ import print_function
 import sys
 import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import netCDF4 as nc4
+import netCDF4 as nc
 import numpy as np
 from datetime import datetime
 from pathlib import Path
@@ -23,19 +23,21 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
+# varDict has a numerical code to match a variable type attribute in the netCDF input file
+# followed by an abbreviated name, IODA output var name, units, then acceptable min/max vals.
 varDict = {
-    5521: ['sal', 'salinity', '1'],
-    3073: ['temp', 'waterTemperature', 'K'],
-    5525: ['sst', 'seaSurfaceTemperature', 'K'],
-    5526: ['adt', 'absoluteDynamicTopography', 'm'],
-    5351: ['adt', 'absoluteDynamicTopography', 'm'],   # not used
-    6000: ['frac', 'seaIceFraction', '1'],
-    6001: ['thick', 'iceThickness', 'm'],
+    5521: ['sal', 'salinity', '1', 0.0, 50.0],
+    3073: ['temp', 'waterTemperature', 'K', 271.0, 325.0],
+    5525: ['sst', 'seaSurfaceTemperature', 'K', 271.0, 325.0],
+    5526: ['adt', 'absoluteDynamicTopography', 'm', -5.0, 5.0],
+    5351: ['adt', 'absoluteDynamicTopography', 'm', -5.0, 5.0],   # not used
+    6000: ['frac', 'seaIceFraction', '1', 0.0, 1.0],
+    6001: ['thick', 'iceThickness', 'm', 0.001, 5000.0],
 }
 
 locationKeyList = [
@@ -80,26 +82,41 @@ class GMAOobs(object):
         self.date = date
 
         # Read GMAO data
-        self._read()
+        self._read(self.date)
 
         return
 
-    def _read(self):
+    def _read(self, date):
+
+        self.date = date
 
         data = {}
 
-        nc = nc4.Dataset(self.filename)
+        ncd = nc.Dataset(self.filename)
 
-        data['nobs'] = len(nc.dimensions['nobs'])
+        nobs = len(ncd.dimensions['nobs'])
+        data['nobs'] = nobs
 
-        data['typ'] = nc.variables['typ'][:].data
-        data['longitude'] = nc.variables['lon'][:].data
-        data['latitude'] = nc.variables['lat'][:].data
-        data['depthBelowWaterSurface'] = nc.variables['depth'][:].data
-        data['vals'] = nc.variables['value'][:].data
-        data['errs'] = nc.variables['oerr'][:].data
+        # The input file(s) contain no date information, so take it from command line info.
+        data['dateTime'] = np.full(nobs, np.int64(round((self.date - epoch).total_seconds())))
 
-        nc.close()
+        data['longitude'] = ncd.variables['lon'][:].data
+        data['latitude'] = ncd.variables['lat'][:].data
+        data['depthBelowWaterSurface'] = ncd.variables['depth'][:].data
+        types = ncd.variables['typ'][:].data
+        values = ncd.variables['value'][:].data
+        errors = ncd.variables['oerr'][:].data
+
+        for key in varDict.keys():
+            key_var = varDict[key][0] + "_vals"
+            key_err = varDict[key][0] + "_errs"
+            data[key_var] = np.full(nobs, float_missing_value)
+            data[key_err] = np.full(nobs, float_missing_value)
+            ind = np.where(types == key)
+            data[key_var][ind] = values[ind]
+            data[key_err][ind] = errors[ind]
+
+        ncd.close()
 
         self.data = data
 
@@ -118,7 +135,7 @@ class IODA(object):
             'odb_version': 1,
             'converter': os.path.basename(__file__),
             'ioda_version': 2,
-            'sourceFiles': ", ".join(files_input),
+            'sourceFiles': ", ".join(self.files_input),
             'datetimeReference': self.date.strftime('%Y-%m-%dT%H:%M:%S%z'),
             'description': "GMAO Ocean Observations"
         }
@@ -156,54 +173,64 @@ class IODA(object):
         # data is the dictionary containing IODA friendly data structure
         data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        nlevels = 0
         nlocs = 0
         for obs in obsList:
-            nlevels = obs.data['nobs']
-            for n in range(nlevels):
-                for k, depth in enumerate(obs.data['depthBelowWaterSurface'][n]):
-                    nlocs += 1
-                    # Transfer the MetaData info into the IODA final data container.
-                    for key in meta_keys:
-                        dtypestr = locationKeyList[meta_keys.index(key)][1]
-                        if isinstance(obs.data[key][n], list):
-                            val = obs.data[key][n][k]
-                        else:
-                            val = obs.data[key][n]
-                        varVals = np.array(val, dtype=dtypes[dtypestr])
-                        # If on the first time through, set the data dict entry
-                        # to a numpy array with a specified data type. Otherwise, append
-                        # the incoming data to the current data.
-                        if (key, metaDataName) in data:
-                            data[(key, metaDataName)] = np.append(
-                                data[(key, metaDataName)], varVals)
-                        else:
-                            data[(key, metaDataName)] = varVals
+            nlocs = obs.data['nobs']
+            for n in range(nlocs):
+                # Transfer the MetaData info into the IODA final data container.
+                for key in meta_keys:
+                    dtypestr = locationKeyList[meta_keys.index(key)][1]
+                    val = obs.data[key][n]
+                    varVals = np.array(val, dtype=dtypes[dtypestr])
+                    # If on the first time through, set the data dict entry
+                    # to a numpy array with a specified data type. Otherwise, append
+                    # the incoming data to the current data.
+                    if (key, metaDataName) in data:
+                        data[(key, metaDataName)] = np.append(
+                            data[(key, metaDataName)], varVals)
+                    else:
+                        data[(key, metaDataName)] = varVals
 
-                    # Fill up the final array of observed values and obsErrors
-                    for key in varDict.keys():
-                        key_val = varDict[key][0] + "_vals"
-                        key_err = varDict[key][0] + "_errs"
-                        variable = varDict[key][1]
+                varDims = {}
+                # Fill up the final array of observed values and obsErrors
+                for key in varDict.keys():
+                    key_var = varDict[key][0] + "_vals"
+                    key_err = varDict[key][0] + "_errs"
+                    variable = varDict[key][1]
+                    min_val = varDict[key][3]
+                    max_val = varDict[key][4]
 
-                        # ObsValue
-                        varVals = np.array(obs.data[key_val][n][k], dtype=dtypes['float'])
-                        if (variable, obsValName) in data:
-                            data[(variable, obsValName)] = np.append(
-                                data[(variable, obsValName)], varVals);
-                        else:
-                            data[(variable, obsValName)] = varVals
+                    if all(x == float_missing_value for x in obs.data[key_var]):
+                        continue
 
-                        # ObsError
-                        varVals = np.array(obs.data[key_err][n][k], dtype=dtypes['float'])
-                        if (variable, obsErrName) in data:
-                            data[(variable, obsErrName)] = np.append(
-                                data[(variable, obsErrName)], varVals);
-                        else:
-                            data[(variable, obsErrName)] = varVals
+                    varDims = {key_var: ['Location']}
 
-        # Just fill in the QC value as zero everywhere.
-        data[(variable, qcName)] = np.full(len(data[(variable, obsValName)]), 0, dtype=np.int32)
+                    # ObsValue
+                    varVals = np.array(obs.data[key_var][n], dtype=dtypes['float'])
+                    if 'Temperature' in variable:
+                        if varVals != float_missing_value:
+                            varVals = varVals + 273.15
+                    if (varVals < min_val or varVals > max_val):
+                        varVals = float_missing_value
+                    if (variable, obsValName) in data:
+                        data[(variable, obsValName)] = np.append(
+                            data[(variable, obsValName)], varVals);
+                    else:
+                        data[(variable, obsValName)] = varVals
+
+                    # ObsError
+                    varVals = np.array(obs.data[key_err][n], dtype=dtypes['float'])
+                    if (variable, obsErrName) in data:
+                        data[(variable, obsErrName)] = np.append(
+                            data[(variable, obsErrName)], varVals);
+                    else:
+                        data[(variable, obsErrName)] = varVals
+
+                    # QC (preQC) value (zero for now)
+                    if (variable, qcName) in data:
+                        data[(variable, qcName)] = np.append(data[(variable, qcName)], 0)
+                    else:
+                        data[(variable, qcName)] = 0
 
         print(f"Found a total number of observations: {nlocs}")
 
@@ -213,30 +240,6 @@ class IODA(object):
         self.writer.BuildIoda(data, varDims, varAttrs, GlobalAttrs)
 
         return
-
-
-def discardOb(varName, obsValue):
-
-    discardOb = True
-
-    if varName in ["sea_water_salinity"]:
-        if 0. <= obsValue <= 50.:
-            discardOb = False
-    elif varName in ["sea_water_temperature", "sea_surface_temperature"]:
-        if -2. <= obsValue <= 100.:
-            discardOb = False
-    elif varName in ["absolute_dynamic_topography"]:
-        if -5. <= obsValue <= 5.:
-            discardOb = False
-    elif varName in ["sea_ice_area_fraction"]:
-        if 0. <= obsValue <= 1.:
-            discardOb = False
-    elif varName in ["sea_ice_thickness"]:
-        discardOb = False
-    else:
-        raise SystemExit("Unknown observation variable %s" % varName)
-
-    return discardOb
 
 
 def main():
@@ -272,15 +275,12 @@ def main():
 
     obsList = []
     for fname, idate in zip(fList, dList):
+        if not os.path.isfile(fname):
+            parser.error('Input (-i option) file: ', fname, ' does not exist')
+
         obsList.append(GMAOobs(fname, idate))
 
-    obsDict = separateObs(obsList)
-
-    obsDictSorted = sortDict(obsDict)
-
-    for key, value in varDict.items():
-        fout = '%s_%s.nc' % (foutput, value)
-        IODA(fout, fdate, key, obsDictSorted[key])
+    IODA(fList, foutput, fdate, obsList)
 
 
 if __name__ == '__main__':
