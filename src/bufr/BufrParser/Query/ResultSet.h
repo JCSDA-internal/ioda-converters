@@ -100,6 +100,9 @@ namespace bufr {
 
         DataFrame& nextDataFrame();
 
+        void indicateFieldIsString(int fieldIdx) { dataFrames_.front().fieldAtIdx(fieldIdx).isString = true; }
+        bool isFieldStr(int fieldIdx) { return dataFrames_.front().fieldAtIdx(fieldIdx).isString; }
+
      private:
         std::vector<DataFrame> dataFrames_;
         std::vector<std::string> names_;

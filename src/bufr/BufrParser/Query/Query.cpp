@@ -408,6 +408,7 @@ namespace bufr {
             dataField.name = targ.name;
             dataField.queryStr = targ.queryStr;
             dataField.isString = targ.isString;
+            if (targ.isString) resultSet.indicateFieldIsString(targetIdx); // Whole column is string.
             dataField.dimPaths = targ.dimPaths;
             dataField.seqPath.resize(targ.seqPath.size() + 1);
             dataField.seqPath[0] = 1;
@@ -427,6 +428,14 @@ namespace bufr {
                 for (size_t pathIdx = 0; pathIdx < targ.seqPath.size(); pathIdx++)
                 {
                     dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
+                }
+
+                if (resultSet.isFieldStr(targetIdx) != targ.isString)
+                {
+                    std::ostringstream errMsg;
+                    errMsg << "Different subsets don't agree whether " << dataField.name
+                           << "is a string or not (there is a type mismatch).";
+                    throw eckit::BadParameter(errMsg.str());
                 }
 
                 dataField.data = dataTable[targ.nodeIds[0]].values;
