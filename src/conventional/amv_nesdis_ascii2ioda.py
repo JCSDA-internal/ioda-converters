@@ -23,21 +23,17 @@ from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {
-           'windEastward': ['windEastward', 'm s-1'],
-           'windNorthward': ['windNorthward', 'm s-1']
-          }
+varDict = {'windEastward': ['windEastward', 'm s-1'],
+           'windNorthward': ['windNorthward', 'm s-1']}
 
-locationKeyList = [
-                   ("latitude", "float", "degrees_north"),
+locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
                    ("pressure", "float", "Pa"),
                    ("sensorCentralFrequency", "float", "Hz"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
-                   ("windHeightAssignMethod", "integer", "")
-                  ]
+                   ("windHeightAssignMethod", "integer", "")]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 GlobalAttrs = {
@@ -95,8 +91,8 @@ def main(file_names, output_file, datetimeRef):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {
-        'platformCommonName':  "EUMETSAT_AMV",
-        'platformLongDescription':  "EUMETSAT AMV from IR cloudy regions",
+        'platformCommonName': "EUMETSAT_AMV",
+        'platformLongDescription': "EUMETSAT AMV from IR cloudy regions",
         'soureFiles': ", ".join(file_names),
         'datetimeReference': datetimeRef
     }
@@ -156,7 +152,7 @@ def main(file_names, output_file, datetimeRef):
 def read_file(file_name, data):
 
     with open(file_name, newline='') as f:
-        reader = csv.DictReader(f, skipinitialspace=True, delimiter = ' ')
+        reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
 
         for row in reader:
             year = int(row['day'][0:4])
@@ -205,7 +201,7 @@ def get_frequency(obs_type):
         logging.warning('Unknown channel type: {obs_type}')
         freq = float_missing_value
 
-    return freq   
+    return freq
 
 
 if __name__ == "__main__":
