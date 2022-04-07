@@ -1,5 +1,6 @@
 list(APPEND programs
   amdar_bufr2ioda.py
+  amv_nesdis_ascii2ioda.py
   buoy_bufr2ioda.py
   metar_csv2ioda.py
   decode_bufr_LDM_raob.py
