@@ -23,21 +23,17 @@ from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {
-           'eastward_wind': ['eastward_wind', 'm s-1'],
-           'northward_wind': ['northward_wind', 'm s-1']
-          }
+varDict = {'windEastward': ['windEastward', 'm s-1'],
+           'windNorthward': ['windNorthward', 'm s-1']}
 
-locationKeyList = [
-                   ("latitude", "float", "degrees_north"),
+locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
-                   ("air_pressure", "float", "Pa"),
+                   ("pressure", "float", "Pa"),
                    ("sensorCentralFrequency", "float", "Hz"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
-                   ("windHeightAssignMethod", "integer", "")
-                  ]
+                   ("windHeightAssignMethod", "integer", "")]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 GlobalAttrs = {
@@ -95,20 +91,20 @@ def main(file_names, output_file, datetimeRef):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {
-        'platformCommonName':  "EUMETSAT_AMV",
-        'platformLongDescription':  "EUMETSAT AMV from IR cloudy regions",
+        'platformCommonName': "EUMETSAT_AMV",
+        'platformLongDescription': "EUMETSAT AMV from IR cloudy regions",
         'soureFiles': ", ".join(file_names),
         'datetimeReference': datetimeRef
     }
 
     nlocs = len(data['dateTime'])
     logging.info(f" found a total of {nlocs} observations")
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
 
     varDims = {}
     for key in varDict.keys():
         variable = varDict[key][0]
-        varDims[variable] = ['nlocs']
+        varDims[variable] = ['Location']
 
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
@@ -156,7 +152,7 @@ def main(file_names, output_file, datetimeRef):
 def read_file(file_name, data):
 
     with open(file_name, newline='') as f:
-        reader = csv.DictReader(f, skipinitialspace=True, delimiter = ' ')
+        reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
 
         for row in reader:
             year = int(row['day'][0:4])
@@ -178,7 +174,7 @@ def read_file(file_name, data):
             data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
 
             pres = float(row['pre'])*100.
-            data['air_pressure'] = np.append(data['air_pressure'], pres)
+            data['pressure'] = np.append(data['pressure'], pres)
             wdir = float(row['dir'])*1.0
             wspd = float(row['spd'])*1.0
             if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
@@ -187,8 +183,8 @@ def read_file(file_name, data):
                 uwnd = float_missing_value
                 vwnd = float_missing_value
 
-            data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-            data['northward_wind'] = np.append(data['northward_wind'], vwnd)
+            data['windEastward'] = np.append(data['windEastward'], uwnd)
+            data['windNorthward'] = np.append(data['windNorthward'], vwnd)
 
     return data
 
@@ -205,7 +201,7 @@ def get_frequency(obs_type):
         logging.warning('Unknown channel type: {obs_type}')
         freq = float_missing_value
 
-    return freq   
+    return freq
 
 
 if __name__ == "__main__":
@@ -233,9 +229,9 @@ if __name__ == "__main__":
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
-    optional.add_argument('--date', dest='datetimeReference',
-                          action='store', default=' ',
-                          help='date reference string (ISO8601)')
+    optional.add_argument('-d', '--date', dest='datetimeReference',
+                          action='store',
+                          help='date reference string (YYYYMMDDHH)')
 
     args = parser.parse_args()
 
@@ -250,4 +246,7 @@ if __name__ == "__main__":
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file, args.datetimeReference)
+    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
+    datetimeRef = dtg.isoformat() + "Z"
+
+    main(args.file_names, args.output_file, datetimeRef)
