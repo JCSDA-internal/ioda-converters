@@ -121,7 +121,7 @@ list( APPEND test_output
   testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
   testoutput/smap9km_ssm.nc
-  testoutput/testinput/satwinds_nesdis2021080103.nc
+  testoutput/satwinds_nesdis2021080103.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
