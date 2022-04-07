@@ -233,9 +233,9 @@ if __name__ == "__main__":
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
-    optional.add_argument('--date', dest='datetimeReference',
-                          action='store', default=' ',
-                          help='date reference string (ISO8601)')
+    optional.add_argument('-d', '--date', dest='datetimeReference',
+                          action='store',
+                          help='date reference string (YYYYMMDDHH)')
 
     args = parser.parse_args()
 
@@ -250,4 +250,7 @@ if __name__ == "__main__":
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file, args.datetimeReference)
+    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
+    datetimeRef = dtg.isoformat() + "Z"
+
+    main(args.file_names, args.output_file, datetimeRef)
