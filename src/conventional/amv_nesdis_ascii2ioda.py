@@ -23,13 +23,13 @@ from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {'windEastward': ['windEastward', 'm s-1'],
-           'windNorthward': ['windNorthward', 'm s-1']}
+varDict = {'eastward_wind': ['eastward_wind', 'm s-1'],
+           'northward_wind': ['northward_wind', 'm s-1']}
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
-                   ("pressure", "float", "Pa"),
+                   ("air_pressure", "float", "Pa"),
                    ("sensorCentralFrequency", "float", "Hz"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
@@ -99,12 +99,12 @@ def main(file_names, output_file, datetimeRef):
 
     nlocs = len(data['dateTime'])
     logging.info(f" found a total of {nlocs} observations")
-    DimDict = {'Location': nlocs}
+    DimDict = {'nlocs': nlocs}
 
     varDims = {}
     for key in varDict.keys():
         variable = varDict[key][0]
-        varDims[variable] = ['Location']
+        varDims[variable] = ['nlocs']
 
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
@@ -174,7 +174,7 @@ def read_file(file_name, data):
             data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
 
             pres = float(row['pre'])*100.
-            data['pressure'] = np.append(data['pressure'], pres)
+            data['air_pressure'] = np.append(data['air_pressure'], pres)
             wdir = float(row['dir'])*1.0
             wspd = float(row['spd'])*1.0
             if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
@@ -183,8 +183,8 @@ def read_file(file_name, data):
                 uwnd = float_missing_value
                 vwnd = float_missing_value
 
-            data['windEastward'] = np.append(data['windEastward'], uwnd)
-            data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+            data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
+            data['northward_wind'] = np.append(data['northward_wind'], vwnd)
 
     return data
 
