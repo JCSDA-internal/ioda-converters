@@ -161,7 +161,7 @@ class IODA(object):
             # Fill up the final array of observed values, obsErrors, and Qc
             self.data[(varInfo[0], obsValName)] = np.array(obs.data['vals'], dtype=float)
             self.data[(varInfo[0], obsErrName)] = np.array(obs.data['errs'], dtype=float)
-            self.data[(varInfo[0], qcName)] = np.array(obs.data['qc'], dtype=float)
+            self.data[(varInfo[0], qcName)] = np.array(obs.data['qc'], dtype=np.int32)
 
         # Initialize the writer, then write the file.
         DimDict = {'Location': nobs}
