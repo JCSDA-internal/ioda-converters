@@ -1,0 +1,402 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.adpsfc.tm00.prepbufr"
+
+      exports:
+        variables:
+          stationIdentification:
+            query: "*/SID"
+          prepbufrDataLvlCat:
+            query: "*/CAT"
+          prepbufrReportType:
+            query: "*/TYP"
+          dumpReportType:
+            query: "*/T29"
+          ObsTimeMinusCycleTime:
+            query: "*/DHR"
+          presentWeather:
+            query: "*/PREWXSEQ/PRWE"
+          longitude:
+            query: "*/XOB"
+          latitude:
+            query: "*/YOB"
+          stationElevation:
+            query: "*/ELV"
+
+          heightOfObservation:
+            query: "*/Z___INFO/Z__EVENT/ZOB"
+          pressureReducedToMeanSeaLevel:
+            query: "*/PMSL_SEQ/PMO"
+            transforms:
+              - scale: 100
+          pressure:
+            query: "*/P___INFO/P__EVENT/POB"
+            transforms:
+              - scale: 100
+          pressureError:
+            query: "*/P___INFO/P__BACKG/POE"
+            transforms:
+              - scale: 100
+          airTemperature:
+            query: "*/T___INFO/T__EVENT/TOB"
+            transforms:
+              - offset: 273.15
+          airTemperatureError:
+            query: "*/T___INFO/T__BACKG/TOE"
+          dewpointTemperature:
+            query: "*/Q___INFO/TDO"
+            transforms:
+              - offset: 273.15
+          minimumTemperature:
+            query: "*/TMXMNSEQ/MITM"
+          maximumTemperature:
+            query: "*/TMXMNSEQ/MXTM"
+          specificHumidity:
+            query: "*/Q___INFO/Q__EVENT/QOB"
+            transforms:
+              - scale: 0.000001
+          relativeHumidityError:
+            query: "*/Q___INFO/Q__BACKG/QOE"
+
+          horizontalVisibility:
+            query: "*/VISB1SEQ/HOVI"
+          cloudAmount:
+            query: "*/CLOUDSEQ/CLAM"
+          cloudCoverTotal:
+            query: "*/CLOU2SEQ/TOCC"
+          cloudCeiling:
+            query: "*/CLOU3SEQ/CEILING"
+          heightAboveSurfaceofBaseofLowestCloud:
+            query: "*/CLOU2SEQ/HBLCS"
+          heightOfBaseOfCloud:
+            query: "*/CLOUDSEQ/HOCB"
+
+          seaSurfaceTemperature:
+            query: "*/SST_INFO/SSTEVENT/SST1"
+          seaSurfaceTemperatureError:
+            query: "*/SST_INFO/SSTBACKG/SSTOE"
+          heightOfWaves:
+            query: "*/WAVE_SEQ/HOWV"
+          depthBelowSeaSurface:
+            query: "*/SST_INFO/DBSS_SEQ/DBSS"
+          methodofTemperatureSeaSurfaceMeasurement:
+            query: "*/SST_INFO/MSST"
+
+          windEastward:
+            query: "*/W___INFO/W__EVENT/UOB"
+          windNorthward:
+            query: "*/W___INFO/W__EVENT/VOB"
+          windError:
+            query: "*/W___INFO/W__BACKG/WOE"
+          windSpeedPeak:
+            query: "*/GUST1SEQ/MXGS"
+
+          heightQualityMarker:
+            query: "*/Z___INFO/Z__EVENT/ZQM"
+          pressureQualityMarker:
+            query: "*/P___INFO/P__EVENT/PQM"
+          pressureReducedToMeanSeaLevelQualityMarker:
+            query: "*/PMSL_SEQ/PMQ"
+          airTemperatureQualityMarker:
+            query: "*/T___INFO/T__EVENT/TQM"
+          specificHumidityQualityMarker:
+            query: "*/Q___INFO/Q__EVENT/QQM"
+          verticalSignificanceSurfaceObservations:
+            query: "*/CLOUDSEQ/VSSO"
+          seaSurfaceTemperatureQualityMarker:
+            query: "*/SST_INFO/SSTEVENT/SSTQM"
+          windEastwardQualityMarker:
+            query: "*/W___INFO/W__EVENT/WQM"
+          windNorthwardQualityMarker:
+            query: "*/W___INFO/W__EVENT/WQM"
+
+    ioda:
+      backend: netcdf 
+      obsdataout: "testrun/gdas.t12z.adpsfc.tm00.prepbufr.nc"
+
+      variables:
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station ID"
+          units: ""
+
+        - name: "MetaData/prepbufrDataLvlCat"
+          coordinates: "longitude latitude"
+          source: variables/prepbufrDataLvlCat
+          longName: "Prepbufr Data Level Category"
+          units: ""
+
+        - name: "MetaData/prepbufrReportType"
+          coordinates: "longitude latitude"
+          source: variables/prepbufrReportType
+          longName: "Prepbufr Report Type"
+          units: ""
+
+        - name: "MetaData/dumpReportType"
+          coordinates: "longitude latitude"
+          source: variables/dumpReportType
+          longName: "Data Dump Report Type"
+          units: ""
+
+        - name: "MetaData/ObsTimeMinusCycleTime"
+          coordinates: "longitude latitude"
+          source: variables/ObsTimeMinusCycleTime
+          longName: "Present weather"
+          units: ""
+
+        - name: "ObsValue/presentWeather"
+          coordinates: "longitude latitude"
+          source: variables/presentWeather
+          longName: "Present weather"
+          units: "unitless"
+
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [0, 360]
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Height of Station"
+          units: "Meter"
+
+        - name: "ObsValue/heightOfObservation"
+          coordinates: "longitude latitude"
+          source: variables/heightOfObservation
+          longName: "Height of Observation"
+          units: "Meter"
+
+        - name: "ObsValue/pressureReducedToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureReducedToMeanSeaLevel
+          longName: "Mean Sea-Level Pressure"
+          units: "Pa"
+          range: [87000, 107000]
+
+        - name: "ObsValue/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pa"
+          range: [20000, 110000]
+
+        - name: "ObsValue/pressureError"
+          coordinates: "longitude latitude"
+          source: variables/pressureError
+          longName: "Pressure Error"
+          units: "Pa"
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Temperature"
+          units: "Kelvin"
+          range: [193, 325]
+
+        - name: "ObsValue/airTemperatureError"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureError
+          longName: "Temperature Error"
+          units: "Kelvin"
+
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dew Point"
+          units: "Kelvin"
+          range: [193, 325]
+
+        - name: "ObsValue/minimumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/minimumTemperature
+          longName: "Minimum Temperature"
+          units: "Kelvin"
+          range: [193, 325]
+
+        - name: "ObsValue/maximumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/maximumTemperature
+          longName: "Maximum Temperature"
+          units: "Kelvin"
+          range: [193, 325]
+
+        - name: "ObsValue/specificHumidity"
+          coordinates: "longitude latitude"
+          source: variables/specificHumidity
+          longName: "Specific Humidity"
+          units: "Kilogram Kilogram-1"
+
+        - name: "ObsValue/relativeHumidityError"
+          coordinates: "longitude latitude"
+          source: variables/relativeHumidityError
+          longName: "Relative Humidity Error"
+          units: "Percent divided by 10"
+
+        - name: "ObsValue/horizontalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/horizontalVisibility
+          longName: "Horizontal Visibility"
+          units: "Meter"
+
+        - name: "ObsValue/cloudAmount"
+          coordinates: "longitude latitude"
+          source: variables/cloudAmount
+          longName: "Cloud Amount"
+          units: "1"
+
+        - name: "ObsValue/cloudCoverTotal"
+          coordinates: "longitude latitude"
+          source: variables/cloudCoverTotal
+          longName: "Cloud Cover"
+          units: "1"
+
+        - name: "ObsValue/cloudCeiling"
+          coordinates: "longitude latitude"
+          source: variables/cloudCeiling
+          longName: "Cloud Ceiling"
+          units: "Meter"
+
+        - name: "ObsValue/heightAboveSurfaceofBaseofLowestCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightAboveSurfaceofBaseofLowestCloud
+          longName: "Height above Surface of Base of Lowest Cloud"
+          units: "Meter"
+
+        - name: "ObsValue/heightOfBaseOfCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightOfBaseOfCloud
+          longName: "Height of Base of Cloud"
+          units: "Meter" 
+
+        - name: "ObsValue/seaSurfaceTemperature"
+          coordinates: "longitude latitude"
+          source: variables/seaSurfaceTemperature
+          longName: "Sea Surface Temperature"
+          units: "Kelvin"
+
+        - name: "ObsValue/seaSurfaceTemperatureError"
+          coordinates: "longitude latitude"
+          source: variables/seaSurfaceTemperatureError
+          longName: "Sea Surface Temperature Obs Error"
+          units: "Kelvin"
+
+        - name: "ObsValue/heightOfWaves"
+          coordinates: "longitude latitude"
+          source: variables/heightOfWaves
+          longName: "Wave Height"
+          units: "Meter"
+
+        - name: "ObsValue/depthBelowSeaSurface"
+          coordinates: "longitude latitude"
+          source: variables/depthBelowSeaSurface
+          longName: "Depth Below Sea Surface"
+          units: "Meter"
+          range: [-200, 0]
+
+        - name: "ObsValue/methodofTemperatureSeaSurfaceMeasurement"
+          coordinates: "longitude latitude"
+          source: variables/methodofTemperatureSeaSurfaceMeasurement
+          longName: "Method of Sea Surface Measurement"
+          units: ""
+
+        - name: "ObsValue/windEastward"
+          coordinates: "longitude latitude"
+          source: variables/windEastward
+          longName: "Eastward Wind"
+          units: "Meter Second-1"
+          range: [-50, 50]
+
+        - name: "ObsValue/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windNorthward
+          longName: "Northward Wind"
+          units: "Meter Second-1"
+          range: [-50, 50]
+
+        - name: "ObsValue/windError"
+          coordinates: "longitude latitude"
+          source: variables/windError
+          longName: "East and Northward wind error"
+          units: "Meter Second-1"
+
+
+        - name: "ObsValue/windSpeedPeak"
+          coordinates: "longitude latitude"
+          source: variables/windSpeedPeak
+          longName: "Maximum Wind Speed (Gusts)"
+          units: "Meter Second-1"
+
+        - name: "QualityMarker/height"
+          coordinates: "longitude latitude"
+          source: variables/heightQualityMarker
+          longName: "Height Quality Marker"
+          units: ""
+
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQualityMarker
+          longName: "Pressure Quality Marker"
+          units: ""
+
+        - name: "QualityMarker/pressureReducedToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureReducedToMeanSeaLevelQualityMarker
+          longName: "Mean Sea Level Pressure Quality Marker"
+          units: ""
+
+        - name: "QualityMarker/airTemperatur"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQualityMarker
+          longName: "Temperature Quality Marker"
+          units: ""
+
+        - name: "QualityMarker/specificHumidity"
+          coordinates: "longitude latitude"
+          source: variables/specificHumidityQualityMarker
+          longName: "Specific Humidity Quality Marker"
+          units: ""
+
+        - name: "ObsValue/verticalSignificanceSurfaceObservations"
+          coordinates: "longitude latitude"
+          source: variables/verticalSignificanceSurfaceObservations
+          longName: "Vertical Significance (Surface Observations)"
+          units: ""
+
+        - name: "QualityMarker/seaSurfaceTemperature"
+          coordinates: "longitude latitude"
+          source: variables/seaSurfaceTemperatureQualityMarker
+          longName: "Sea Surface Temperature Quality Marker"
+          units: ""
+
+        - name: "QualityMarker/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windNorthwardQualityMarker
+          longName: "U, V-Component of Wind Quality Marker"
+          units: ""
+
+        - name: "QualityMarker/windEastward"
+          coordinates: "longitude latitude"
+          source: variables/windEastwardQualityMarker
+          longName: "U, V-Component of Wind Quality Marker"
+          units: ""
+

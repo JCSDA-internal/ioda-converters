@@ -1,0 +1,162 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.adpsfc.nc000101_thinned.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          latitude:
+            query: "NC000101/CLATH"
+          longitude:
+            query: "NC000101/CLONH"
+          heightOfStationGroundAboveMeanSeaLevel:
+            query: "NC000101/HSMSL"
+          pressureReducedToMeanSeaLevel:
+            query: "NC000101/PMSL"
+          pressure:
+            query: "NC000101/PRES"
+          airTemperatureQM:
+            query: "NC000101/QMAT"
+          moistureQM:
+            query: "NC000101/QMDD"
+          pressureQM:
+            query: "NC000101/QMPR"
+          dataReceiptTimeHour:
+            query: "NC000101/RCHR"
+          dataReceiptTimeMinute:
+            query: "NC000101/RCMI"
+          dataReceiptTimeSignificance:
+            query: "NC000101/RCTS"
+          reportIdentifier:
+            query: "NC000101/RPID"
+          airTemperature:
+            query: "NC000101/TMDB"
+          dewpointTemperature:
+            query: "NC000101/TMDP"
+          windDirection:
+            query: "NC000101/WDIR"
+          windSpeed:
+            query: "NC000101/WSPD"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "testrun/gdas.t12z.adpsfc_bufr_nc000101_select.tm00.nc"
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "dateTime"
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/heightOfStationGroundAboveMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/heightOfStationGroundAboveMeanSeaLevel
+          longName: "Height of Station Ground Above Mean Sea Level"
+          units: "Meter"
+
+        - name: "ObsValue/pressureReducedToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureReducedToMeanSeaLevel
+          longName: "Mean Sea-Level Pressure"
+          units: "Pascal"
+
+        - name: "ObsValue/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pascal"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Atmospheric Temperature"
+          units: ""
+
+        - name: "QualityMarker/moisture"
+          coordinates: "longitude latitude"
+          source: variables/moistureQM
+          longName: "Quality Indicator for Moisture"
+          units: ""
+
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQM
+          longName: "Quality Indicator for Pressure"
+          units: ""
+
+        - name: "MetaData/dataReceiptTimeHour"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
+          units: ""
+
+        - name: "MetaData/reportIdentifier"
+          coordinates: "longitude latitude"
+          source: variables/reportIdentifier
+          longName: "Report Identifier"
+          units: "CCITT IA5"
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "Kelvin"
+ 
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dew Point"
+          units: "Kelvin"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "Degrees True"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "Meter Second-1"
+
