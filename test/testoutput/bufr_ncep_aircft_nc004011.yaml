@@ -1,0 +1,151 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.aircft.nc004011_thinned.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          aircraftRegistrationNumberOrOtherIdentification:
+            query: "NC004011/ACRN"
+          latitude:
+            query: "NC004011/CLATH"
+          longitude:
+            query: "NC004011/CLONH"
+          detailedPhaseOfFlight:
+            query: "NC004011/DPOF"
+          dataRestrictedExpiration:
+            query: "NC004011/EXPRSRD"
+          flightLevelST:
+            query: "NC004011/FLVLST"
+          airTemperatureQM:
+            query: "NC004011/QMAT"
+          windQM:
+            query: "NC004011/QMWN"
+          dataReceiptTimeHour:
+            query: "NC004011/RCHR"
+          dataReceiptTimeMinute:
+            query: "NC004011/RCMI"
+          dataReceiptTimeSignificance:
+            query: "NC004011/RCTS"
+          dataProviderRestricted:
+            query: "NC004011/RSRD"
+
+          airTemperature:
+            query: "NC004011/TMDB"
+
+          windDirection:
+            query: "NC004011/WDIR"
+          windSpeed:
+            query: "NC004011/WSPD"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "testrun/gdas.t12z.aircft.nc004011_select_thinned.tm00.nc"
+
+      variables:
+
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "MetaData/aircraftRegistrationNumberOrOtherIdentification"
+          coordinates: "longitude latitude"
+          source: variables/aircraftRegistrationNumberOrOtherIdentification
+          longName: "Aircraft Registration Number Or Other Identification"
+          units: ""
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/detailedPhaseOfFlight"
+          coordinates: "longitude latitude"
+          source: variables/detailedPhaseOfFlight
+          longName: "Detailed Phase of Flight"
+          units: ""
+
+        - name: "MetaData/dataRestrictedExpiration"
+          coordinates: "longitude latitude"
+          source: variables/dataRestrictedExpiration
+          longName: "Restricted Data Expiration"
+          units: "Hour"
+
+        - name: "ObsValue/flightLevelST"
+          coordinates: "longitude latitude"
+          source: variables/flightLevelST
+          longName: "Flight Level"
+          units: "Meter"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Atmospheric Temperature"
+          units: ""
+
+        - name: "QualityMarker/wind"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind"
+          units: ""
+
+        - name: "MetaData/dataReceiptTimeHour"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
+          units: ""
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "Kelvin"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "Degrees True"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "Meter Second-1"
+

@@ -1,0 +1,202 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.aircft.nc004003_thinned.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          aircraftNavigationalSystem:
+            query: "NC004003/ACNS"
+          aircraftFlightNumber:
+            query: "NC004003/ACID"
+          latitude:
+            query: "NC004003/CLAT"
+          longitude:
+            query: "NC004003/CLON"
+          dataRestrictedExpiration:
+            query: "NC004003/EXPRSRD"
+          flightLevel:
+            query: "NC004003/FLVL"
+          temperatureObservationPrecision:
+            query: "NC004003/PCAT"
+          aircraftFlightPhase:
+            query: "NC004003/POAF"
+          pressureAltitudeRelativeToMeanSeaLevel:
+            query: "NC004003/PSAL"
+          airTemperatureQM:
+            query: "NC004003/QMAT"
+          moistureQM:
+            query: "NC004003/AFMST/QMDD"
+          windQM:
+            query: "NC004003/QMWN"
+          dataReceiptTimeHour:
+            query: "NC004003/RCHR"
+          dataReceiptTimeMinute:
+            query: "NC004003/RCMI"
+          dataReceiptTimeSignificance:
+            query: "NC004003/RCTS"
+          relativeHumidity:
+            query: "NC004003/AFMST/REHU"
+          dataProviderRestricted:
+            query: "NC004003/RSRD"
+          airTemperature:
+            query: "NC004003/TMDB"
+          dewpointTemperature:
+            query: "NC004003/AFMST/TMDP"
+          windDirection:
+            query: "NC004003/WDIR"
+          windSpeed:
+            query: "NC004003/WSPD"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "testrun/gdas.t12z.aircft.nc004003_select_thinned.tm00.nc"
+
+      variables:
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "MetaData/aircraftFlightNumber"
+          coordinates: "longitude latitude"
+          source: variables/aircraftFlightNumber
+          longName: "Aircraft Flight Number"
+          units: ""
+
+        - name: "MetaData/aircraftNavigationalSystem"
+          coordinates: "longitude latitude"
+          source: variables/aircraftNavigationalSystem
+          longName: "Aircraft Navigational System"
+          units: ""
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/dataRestrictedExpiration"
+          coordinates: "longitude latitude"
+          source: variables/dataRestrictedExpiration
+          longName: "Restricted Data Expiration"
+          units: "Hour"
+
+        - name: "ObsValue/flightLevel"
+          coordinates: "longitude latitude"
+          source: variables/flightLevel
+          longName: "Flight Level"
+          units: "Meter"
+
+        - name: "ObsValue/temperatureObservationPrecision"
+          coordinates: "longitude latitude"
+          source: variables/temperatureObservationPrecision
+          longName: "Temperature Observation Precision"
+          units: "Kelvin"
+
+        - name: "ObsValue/aircraftFlightPhase"
+          coordinates: "longitude latitude"
+          source: variables/aircraftFlightPhase
+          longName: "Aircraft Flight Phase"
+          units: ""
+
+        - name: "ObsValue/pressureAltitudeRelativeToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureAltitudeRelativeToMeanSeaLevel
+          longName: "Pressure Altitude Relative to Mean Sea Level"
+          units: "Meter"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Atmospheric Temperature"
+          units: ""
+
+        - name: "QualityMarker/moisture"
+          coordinates: "longitude latitude"
+          source: variables/moistureQM
+          longName: "Quality Indicator for Moisture"
+          units: ""
+
+        - name: "QualityMarker/wind"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind"
+          units: ""
+
+        - name: "MetaData/dataReceiptTimeHour"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
+          units: ""
+
+        - name: "ObsValue/relativeHumidity"
+          coordinates: "longitude latitude"
+          source: variables/relativeHumidity
+          longName: "Relative Humidity"
+          units: "PERCENT"
+
+        - name: "MetaData/dataProviderRestricted"
+          coordinates: "longitude latitude"
+          source: variables/dataProviderRestricted
+          longName: "Data Provider Restricted"
+          units: ""
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "Kelvin"
+
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dewpoint Temperature"
+          units: "Kelvin"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "Degrees True"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "Meter Second-1"
+

@@ -1,0 +1,226 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.aircar.nc004004_thinned.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
+          longitude:
+            query: "NC004004/CLON"
+            group_by: longitude
+          latitude:
+            query: "NC004004/CLAT"
+            group_by: longitude
+          detailedPhaseOfFlight:
+            query: "NC004004/DPOF"
+            group_by: longitude
+          dataRestrictedExpiration:
+            query: "NC004004/EXPRSRD"
+            group_by: longitude
+          altitudeIndicator:
+            query: "NC004004/IALT"
+            group_by: longitude
+
+          waterVaporMixingRatio:
+            query: "NC004004/ACMST2/MIXR"
+            group_by: longitude
+          moistureQuality:
+            query: "NC004004/MSTQ"
+            group_by: longitude
+          temperatureObservationPrecision:
+            query: "NC004004/PCAT"
+            group_by: longitude
+          aircraftFlightPhase:
+            query: "NC004004/POAF"
+            group_by: longitude
+          pressure:
+            query: "NC004004/PRLC"
+            group_by: longitude
+          airTemperatureQM:
+            query: "NC004004/QMAT"
+            group_by: longitude
+          moistureQM:
+            query: "NC004004/ACMST2/QMDD"
+            group_by: longitude
+          windQM:
+            query: "NC004004/QMWN"
+            group_by: longitude
+          dataReceiptTimeHour:
+            query: "NC004004/RCHR"
+            group_by: longitude
+          dataReceiptTimeMinute:
+            query: "NC004004/RCMI"
+            group_by: longitude
+          dataReceiptTimeSignificance:
+            query: "NC004004/RCTS"
+            group_by: longitude
+          relativeHumidity:
+            query: "NC004004/ACMST2/REHU"
+            group_by: longitude
+          dataProviderRestricted:
+            query: "NC004004/RSRD"
+            group_by: longitude
+
+          airTemperature:
+            query: "NC004004/TMDB"
+            group_by: longitude
+          windDirection:
+            query: "NC004004/WDIR"
+            group_by: longitude
+          windSpeed:
+            query: "NC004004/WSPD"
+            group_by: longitude
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "testrun/gdas.t12z.aircar.nc004004_select_thinned.tm00.nc"
+
+      variables:
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/detailedPhaseOfFlight"
+          coordinates: "longitude latitude"
+          source: variables/detailedPhaseOfFlight
+          longName: "Detailed Phase of Flight"
+          units: ""
+
+        - name: "MetaData/dataRestrictedExpiration"
+          coordinates: "longitude latitude"
+          source: variables/dataRestrictedExpiration
+          longName: "Restricted Data Expiration"
+          units: "Hour"
+
+        - name: "ObsValue/altitudeIndicator"
+          coordinates: "longitude latitude"
+          source: variables/altitudeIndicator
+          longName: "Indicated Aircraft Altitude"
+          units: "Meter"
+
+        - name: "ObsValue/waterVaporMixingRatio"
+          coordinates: "longitude latitude"
+          source: variables/waterVaporMixingRatio
+          longName: "Water Vapor Mixing Ratio"
+          units: "Kilogram Kilogram-1"
+
+        - name: "QualityMarker/moistureQuality"
+          coordinates: "longitude latitude"
+          source: variables/moistureQuality
+          longName: "Moisture Quality"
+          units: ""
+
+        - name: "ObsValue/temperatureObservationPrecision"
+          coordinates: "longitude latitude"
+          source: variables/temperatureObservationPrecision
+          longName: "Temperature Observation Precision"
+          units: "Kelvin"
+
+        - name: "ObsValue/aircraftFlightPhase"
+          coordinates: "longitude latitude"
+          source: variables/aircraftFlightPhase
+          longName: "Aircraft Flight Phase"
+          units: ""
+
+        - name: "ObsValue/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pascal"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Atmospheric Temperature"
+          units: ""
+
+        - name: "QualityMarker/moisture"
+          coordinates: "longitude latitude"
+          source: variables/moistureQM
+          longName: "Quality Indicator for Moisture"
+          units: ""
+
+        - name: "QualityMarker/wind"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind"
+          units: ""
+
+        - name: "MetaData/dataReceiptTimeHour"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
+          units: ""
+
+        - name: "ObsValue/relativeHumidity"
+          coordinates: "longitude latitude"
+          source: variables/relativeHumidity
+          longName: "Relative Humidity"
+          units: "PERCENT"
+
+        - name: "MetaData/dataProviderRestricted"
+          coordinates: "longitude latitude"
+          source: variables/dataProviderRestricted
+          longName: "Data Provider Restricted"
+          units: ""
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "Kelvin"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "Degrees True"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "Meter Second-1"
+

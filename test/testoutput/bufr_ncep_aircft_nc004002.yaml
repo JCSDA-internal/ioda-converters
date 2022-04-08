@@ -1,0 +1,149 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.aircft.nc004002_thinned.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          commercialAircraftType:
+            query: "*/ACTP"
+          latitude:
+            query: "NC004002/CLAT"
+          longitude:
+            query: "NC004002/CLON"
+          flightLevel:
+            query: "NC004002/FLVL"
+          pressureAltitudeRelativeToMeanSeaLevel:
+            query: "NC004002/PSAL"
+
+          airTemperatureQM:
+            query: "NC004002/QMAT"
+          windQM:
+            query: "NC004002/QMWN"
+
+          dataReceiptTimeHour:
+            query: "NC004002/RCHR"
+          dataReceiptTimeMinute:
+            query: "NC004002/RCMI"
+          dataReceiptTimeSignificance:
+            query: "NC004002/RCTS"
+          reportIdentifier:
+            query: "NC004002/RPID"
+          airTemperature:
+            query: "NC004002/TMDB"
+
+          windDirection:
+            query: "NC004002/WDIR"
+          windSpeed:
+            query: "NC004002/WSPD"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "testrun/gdas.t12z.aircft.nc004002_select_thinned.tm00.nc"
+
+      variables:
+        - name: "MetaData/datetime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "datetime"
+
+        - name: "MetaData/commercialAircraftType"
+          coordinates: "longitude latitude"
+          source: variables/commercialAircraftType
+          longName: "Commercial Aircraft Type"
+          units: ""
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "ObsValue/flightLevel"
+          coordinates: "longitude latitude"
+          source: variables/flightLevel
+          longName: "Flight Level"
+          units: "Meter"
+
+        - name: "ObsValue/pressureAltitudeRelativeToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureAltitudeRelativeToMeanSeaLevel
+          longName: "Pressure Altitude Relative to Mean Sea Level"
+          units: "Meter"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Atmospheric Temperature"
+          units: ""
+
+        - name: "QualityMarker/wind"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind"
+          units: ""
+
+        - name: "MetaData/dataReceiptTimeHour"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
+          units: ""
+
+        - name: "MetaData/reportIdentifier"
+          coordinates: "longitude latitude"
+          source: variables/reportIdentifier
+          longName: "Report Identifier"
+          units: ""
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "Kelvin"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "Degrees True"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "Meter Second-1"
+
