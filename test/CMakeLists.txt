@@ -168,7 +168,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
-    testinput/bufr_sevcrs_v2.yaml
+    testinput/bufr_ncep_sevcsr.yaml
     testinput/bufr_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
     testinput/bufr_empty_fields.yaml
@@ -1054,6 +1054,13 @@ if(iodaconv_bufr_ENABLED)
                     adpupa_prepbufr_group_by.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+ ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_sevcsr.yaml"
+                    gdas.t00z.sevcsr.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
