@@ -41,6 +41,8 @@ observations:
             query: "*/CLOUDSEQ/VSSO"
           cloudAmount:
             query: "*/CLOUDSEQ/CLAM"
+          cloudType:
+            query: "*/CLOUDSEQ/CLTP"
           heightOfBaseOfCloud:
             query: "*/CLOUDSEQ/HOCB"
 
@@ -51,6 +53,12 @@ observations:
 
           dewpointTemperature:
             query: "*/PRSLEVEL/Q___INFO/TDO"
+            group_by: prepbufrDataLvlCat
+            transforms:
+              - offset: 273.15
+
+          virtualTemperature:
+            query: "*/PRSLEVEL/T___INFO/TVO"
             group_by: prepbufrDataLvlCat
             transforms:
               - offset: 273.15
@@ -140,7 +148,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "./testrun/bufr_ncep_prepbufr_adpupa_gsi.nc"
+      obsdataout: "./testrun/bufr_ncep_prepbufr_adpupa.nc"
 
 
 #      dimensions:
@@ -237,6 +245,12 @@ observations:
           longName: "Cloud Amount"
           units: ""
 
+        - name: "MetaData/cloudType"
+          coordinates: "longitude latitude"
+          source: variables/cloudType
+          longName: "Cloud Type"
+          units: ""
+
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
           source: variables/heightOfBaseOfCloud
@@ -259,6 +273,13 @@ observations:
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
           longName: "Dew Point"
+          units: "Kelvin"
+#         range: [193, 325]
+
+        - name: "ObsValue/virtualTemperature"
+          coordinates: "longitude latitude"
+          source: variables/virtualTemperature
+          longName: "Virtual Temperature Non-Q Controlled"
           units: "Kelvin"
 #         range: [193, 325]
 
