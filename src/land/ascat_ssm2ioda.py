@@ -114,6 +114,8 @@ class ascat(object):
             time_offset = np.int64(round((base_date - epoch).total_seconds()))
             times[i] = time_offset
 
+        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since ' + iso8601_string
+
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = np.array(times, dtype=np.int64)
         self.outdata[('latitude', 'MetaData')] = np.array(lats, dtype=np.float32)
@@ -121,10 +123,10 @@ class ascat(object):
         self.outdata[('wetlandFraction', 'MetaData')] = np.array(wflg, dtype=np.float32)
         self.outdata[('topographyComplexity', 'MetaData')] = np.array(tflg, dtype=np.float32)
 
-        for iodavar in ['soilMoistureNormalized']:
-            self.outdata[self.varDict[iodavar]['valKey']] = np.array(vals, dtype=np.float32)
-            self.outdata[self.varDict[iodavar]['errKey']] = np.array(errs, dtype=np.float32)
-            self.outdata[self.varDict[iodavar]['qcKey']] = np.array(qflg, dtype=np.int32)
+        iodavar = 'soilMoistureNormalized'
+        self.outdata[self.varDict[iodavar]['valKey']] = np.array(vals, dtype=np.float32)
+        self.outdata[self.varDict[iodavar]['errKey']] = np.array(errs, dtype=np.float32)
+        self.outdata[self.varDict[iodavar]['qcKey']] = np.array(qflg, dtype=np.int32)
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
