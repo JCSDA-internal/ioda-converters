@@ -88,7 +88,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.aircar.nc004004_select_thinned.tm00.nc"
+      obsdataout: "testrun/gdas.t12z.aircar.nc004004_thinned.tm00.nc"
 
       variables:
         - name: "MetaData/datetime"
