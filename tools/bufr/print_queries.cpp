@@ -8,17 +8,12 @@
 #include <algorithm>
 
 #include "../../src/bufr/BufrParser/Query/DataProvider.h"
+#include "../../src/bufr/BufrParser/Query/SubsetTable.h"
 
 #include "bufr_interface.h"
 
 
 static const char Esc = 27;
-
-struct Query
-{
-    std::vector<std::string> pathComponents;
-    std::vector<size_t> dimIdxs;
-};
 
 
 std::set<std::string> getSubsets(int fileUnit)
@@ -38,60 +33,18 @@ std::set<std::string> getSubsets(int fileUnit)
 }
 
 
-std::vector<size_t> dimPathIdxs(const Ingester::bufr::DataProvider& dataProvider, std::vector<int> seqPath)
-{
-    std::vector<size_t> dimPathIdxs;
-    dimPathIdxs.push_back(0);
-    for (auto idx = 1; idx < seqPath.size(); idx++)
-    {
-        if (dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::DelayedRep ||
-            dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::FixedRep ||
-            dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::DelayedRepStacked)
-        {
-            dimPathIdxs.push_back(idx);
-        }
-    }
-
-    return dimPathIdxs;
-}
-
-
-std::vector<std::string> makePathComponents(const Ingester::bufr::DataProvider& dataProvider,
-                                            std::vector<int> seqPath,
-                                            int nodeIdx)
-{
-    std::vector<std::string> pathComps;
-    auto dimIdxs = dimPathIdxs(dataProvider, seqPath);
-
-    pathComps.push_back(dataProvider.getTag(seqPath[0]));
-    for (auto idx = 1; idx < seqPath.size(); idx++)
-    {
-        if (dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::DelayedRep ||
-            dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::FixedRep ||
-            dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::DelayedRepStacked ||
-            dataProvider.getTyp(seqPath[idx] - 1) == Ingester::bufr::Typ::DelayedBinary)
-        {
-            pathComps.push_back(dataProvider.getTag(seqPath[idx]));
-        }
-    }
-
-    pathComps.push_back(dataProvider.getTag(nodeIdx));
-    return pathComps;
-}
-
-std::vector<Query> getQueries(int fileUnit, const std::string& subset)
+std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit, const std::string& subset)
 {
     static const int SubsetLen = 9;
 
     size_t msgNum = 0;
-    bool subsetFound = false;
 
     int iddate;
     int bufrLoc;
     int il, im; // throw away
     char current_subset[9];
 
-    std::vector<Query> queries;
+    std::vector<Ingester::bufr::QueryData> queryData;
 
     auto dataProvider = Ingester::bufr::DataProvider();
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
@@ -102,55 +55,12 @@ std::vector<Query> getQueries(int fileUnit, const std::string& subset)
         msgNum++;
         if (std::string(current_subset) == subset)
         {
-            subsetFound = true;
-            std::vector<int> seqPath;
-
-            seqPath.push_back(dataProvider.getInode());
-
-            for (auto nodeIdx = dataProvider.getInode();
-                 nodeIdx <= dataProvider.getIsc(dataProvider.getInode());
-                 nodeIdx++)
-            {
-                if (dataProvider.getTyp(nodeIdx) == Ingester::bufr::Typ::Sequence ||
-                    dataProvider.getTyp(nodeIdx) == Ingester::bufr::Typ::Repeat ||
-                    dataProvider.getTyp(nodeIdx) == Ingester::bufr::Typ::StackedRepeat)
-                {
-                    seqPath.push_back(nodeIdx);
-                }
-                else if (dataProvider.getTyp(nodeIdx) == Ingester::bufr::Typ::Number ||
-                         dataProvider.getTyp(nodeIdx) == Ingester::bufr::Typ::Character)
-                {
-                    auto query = Query();
-                    query.pathComponents = makePathComponents(dataProvider, seqPath, nodeIdx);
-                    query.dimIdxs = dimPathIdxs(dataProvider, seqPath);
-                    queries.push_back(query);
-                }
-
-                if (seqPath.size() > 1)
-                {
-                    // Peak ahead to see if the next node is inside one of the containing sequences.
-                    for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--)
-                    {
-                        // Check if the node idx is the next node for the current path
-                        // or if the parent node of the next node is the previous path index
-
-                        if (seqPath[pathIdx] == dataProvider.getJmpb(nodeIdx + 1))
-                        {
-                            auto numToRewind = seqPath.size() - pathIdx - 1;
-                            for (auto rewindIdx = 0; rewindIdx < numToRewind; rewindIdx++)
-                            {
-                                seqPath.pop_back();
-                            }
-                        }
-                    }
-                }
-            }
+            queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
+            break;
         }
-
-        if (subsetFound) break;
     }
 
-    return queries;
+    return queryData;
 }
 
 
@@ -167,7 +77,8 @@ void printHelp()
     std::cout << "  ./print_queries.x -s NC005066 ../data/bufr_satwnd_old_format.bufr" << std::endl;
 }
 
-void printQueryList(const std::vector<Query>& queries)
+
+void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
 {
     for (auto query : queries)
     {
@@ -186,9 +97,15 @@ void printQueryList(const std::vector<Query>& queries)
             }
         }
 
+        if (query.requiresIdx)
+        {
+            ostr << "[" << query.idx << "]";
+        }
+
         std::cout << ostr.str() << std::endl;
     }
 }
+
 
 void printQueries(const std::string& filePath, const std::string& subset, const std::string& tablePath)
 {
@@ -259,6 +176,7 @@ void printQueries(const std::string& filePath, const std::string& subset, const 
     closbf_f(FileUnit);
     close_f(FileUnit);
 }
+
 
 int main(int argc, char** argv)
 {
