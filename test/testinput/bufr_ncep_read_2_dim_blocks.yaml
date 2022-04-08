@@ -47,50 +47,50 @@ observations:
             - "*/QCPRMS"
 
       variables:
-        - name: "originatingGeneratingCenter@MetaData"
+        - name: "MetaData/originatingGeneratingCenter"
           source: variables/originatingGeneratingCenter
           longName: "Originating Generating Center"
           units: "id"
 
-        - name: "pressure@GeneratingApplication"
+        - name: "GeneratingApplication/pressure"
           source: variables/pressure
           longName: "air pressure"
           units: "id"
 
-        - name: "windDirection@GeneratingApplication"
+        - name: "GeneratingApplication/windDirection"
           source: variables/windDirection
           longName: "wind direction"
           units: "id"
 
-        - name: "windSpeed@GeneratingApplication"
+        - name: "GeneratingApplication/windSpeed"
           source: variables/windSpeed
           longName: "wind speed"
           units: "id"
 
-        - name: "coldClusterTemperature@GeneratingApplication"
+        - name: "GeneratingApplication/coldClusterTemperature"
           source: variables/coldClusterTemperature
           longName: "cold cluster temperature"
           units: "id"
 
-        - name: "pressure@PercentConfidence"
+        - name: "PercentConfidence/pressure"
           coordinates: "longitude latitude"
           source: variables/percentConfidencePressure
           longName: "Percent Confidence of Pressure"
           units: "percent"
 
-        - name: "windDirection@PercentConfidence"
+        - name: "PercentConfidence/windDirection"
           coordinates: "longitude latitude"
           source: variables/percentConfidenceWindDirection
           longName: "Percent Confidence of Wind Direction"
           units: "percent"
 
-        - name: "windSpeed@PercentConfidence"
+        - name: "PercentConfidence/windSpeed"
           coordinates: "longitude latitude"
           source: variables/percentConfidenceWindSpeed
           longName: "Percent Confidence of Wind Speed"
           units: "percent"
 
-        - name: "coldClusterTemperature@PercentConfidence"
+        - name: "PercentConfidence/coldClusterTemperature"
           coordinates: "longitude latitude"
           source: variables/percentConfidenceColdClusterTemperature
           longName: "Percent Confidence of Clod Cluster Temperature"
