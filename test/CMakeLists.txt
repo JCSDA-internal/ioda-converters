@@ -59,7 +59,7 @@ list( APPEND test_input
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
   testinput/owp_snow_obs.csv
-  testinput/sonde_wmo_double.bufr
+  testinput/sonde_wmo_multi.bufr
   testinput/avhrr_radiance.nc
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
 )
@@ -114,8 +114,7 @@ list( APPEND test_output
   testoutput/2021120600_atms_sdr.nc4
   testoutput/godae_bgc_argo.nc
   testoutput/owp_snow_obs_dup_thin_err_fn.nc
-  testoutput/wmo_raob_double.nc4
-  testoutput/wmo_raob_quadruple.nc4
+  testoutput/sonde_wmo_multi.nc
   testoutput/avhrr_radiance.nc
   testoutput/smap9km_ssm.nc
 )
@@ -1186,30 +1185,19 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
 if( iodaconv_eccodes_ENABLED )
 
 #==============================================================================
-# Generic NRT Ingest tests
+# Conventional data, radiosonde (WMO) converter
 #==============================================================================
 
-  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob
+  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_bufr_wmo_sonde
                    TYPE    SCRIPT
                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                    COMMAND bash
                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                            netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
-                           -i testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_double.nc4"
-                           wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
-
-  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob_multi_files
-                   TYPE    SCRIPT
-                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                   COMMAND bash
-                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                           netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
-                           -i testinput/sonde_wmo_double.bufr testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_quadruple.nc4"
-                           wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_bufr2ioda.py
+                           -i testinput/sonde_wmo_multi.bufr
+                           -o testrun/sonde_wmo_multi.nc"
+                           sonde_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
