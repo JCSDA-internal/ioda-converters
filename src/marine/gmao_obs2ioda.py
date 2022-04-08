@@ -159,7 +159,6 @@ class IODA(object):
             varAttrs[(variable, obsErrName)]['_FillValue'] = float_missing_value
             varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
 
-
         # Skip out if there are no obs!
         totalObs = 0
         for obs in obsList:
@@ -214,7 +213,7 @@ class IODA(object):
                         varVals = float_missing_value
                     if (variable, obsValName) in data:
                         data[(variable, obsValName)] = np.append(
-                            data[(variable, obsValName)], varVals);
+                            data[(variable, obsValName)], varVals)
                     else:
                         data[(variable, obsValName)] = varVals
 
@@ -222,7 +221,7 @@ class IODA(object):
                     varVals = np.array(obs.data[key_err][n], dtype=dtypes['float'])
                     if (variable, obsErrName) in data:
                         data[(variable, obsErrName)] = np.append(
-                            data[(variable, obsErrName)], varVals);
+                            data[(variable, obsErrName)], varVals)
                     else:
                         data[(variable, obsErrName)] = varVals
 
