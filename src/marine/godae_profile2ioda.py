@@ -53,8 +53,8 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-float_missing_value = -999.   #   or  nc.default_fillvals['f4']
-int_missing_value = -99900    #   or  nc.default_fillvals['i4']
+float_missing_value = -999.
+int_missing_value = -99900
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
@@ -288,7 +288,7 @@ class IODA(object):
                         varVals = np.array(obs.data[key][n][k], dtype=dtypes['float'])
                         if (value, obsValName) in data:
                             data[(value, obsValName)] = np.append(
-                                data[(value, obsValName)], varVals);
+                                data[(value, obsValName)], varVals)
                         else:
                             data[(value, obsValName)] = varVals
 
@@ -296,7 +296,7 @@ class IODA(object):
                         varVals = np.array(obs.data[varErr][n][k], dtype=dtypes['float'])
                         if (value, obsErrName) in data:
                             data[(value, obsErrName)] = np.append(
-                                data[(value, obsErrName)], varVals);
+                                data[(value, obsErrName)], varVals)
                         else:
                             data[(value, obsErrName)] = varVals
 
@@ -304,7 +304,7 @@ class IODA(object):
                         varVals = np.array(obs.data[varQc][n]*100, dtype=dtypes['integer'])
                         if (value, qcName) in data:
                             data[(value, qcName)] = np.append(
-                                data[(value, qcName)], varVals);
+                                data[(value, qcName)], varVals)
                         else:
                             data[(value, qcName)] = varVals
 

@@ -45,8 +45,8 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-float_missing_value = -999.   #   or  nc.default_fillvals['f4']
-int_missing_value = -99900    #   or  nc.default_fillvals['i4']
+float_missing_value = -999.
+int_missing_value = -99900
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
