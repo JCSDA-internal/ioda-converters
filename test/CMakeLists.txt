@@ -159,7 +159,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_splitting.yaml
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
-    testinput/bufr_snow_adpsfc.yaml
+    testinput/bufr_ncep_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
     testinput/bufr_ncep_esamua.yaml
@@ -959,12 +959,12 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_snowadpsfc2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_snowadpsfc2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_snow_adpsfc.yaml"
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_snow_adpsfc.yaml"
                             gdas.t06z.adpsfc_snow.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
