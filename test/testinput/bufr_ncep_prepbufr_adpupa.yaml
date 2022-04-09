@@ -151,23 +151,22 @@ observations:
       obsdataout: "./testrun/bufr_ncep_prepbufr_adpupa.nc"
 
 
-#      dimensions:
-##       - name: prslevel_Dim -> Level
-#        - name: Level
-#          path: "*/PRSLEVEL"
-#        - name: cloudseq_Dim
-#          path: "*/CLOUDSEQ"
-#        - name: pevent_Dim
-#          path: "*/PRSLEVEL/P___INFO/P__EVENT"
-#        - name: qevent_Dim
-#          path: "*/PRSLEVEL/Q___INFO/Q__EVENT"
-#        - name: tevent_Dim
-#          path: "*/PRSLEVEL/T___INFO/T__EVENT"
-#        - name: zevent_Dim
-#          path: "*/PRSLEVEL/Z___INFO/Z__EVENT"
-#        - name: wevent_Dim
-#          path: "*/PRSLEVEL/W___INFO/W__EVENT"
-#
+      dimensions:
+        - name: Level
+          path: "*/PRSLEVEL"
+        - name: cloudseq_Dim
+          path: "*/CLOUDSEQ"
+        - name: pevent_Dim
+          path: "*/PRSLEVEL/P___INFO/P__EVENT"
+        - name: qevent_Dim
+          path: "*/PRSLEVEL/Q___INFO/Q__EVENT"
+        - name: tevent_Dim
+          path: "*/PRSLEVEL/T___INFO/T__EVENT"
+        - name: zevent_Dim
+          path: "*/PRSLEVEL/Z___INFO/Z__EVENT"
+        - name: wevent_Dim
+          path: "*/PRSLEVEL/W___INFO/W__EVENT"
+
 
       variables:
 
