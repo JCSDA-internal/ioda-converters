@@ -19,8 +19,7 @@ verbose=${5:-${VERBOSE:-"N"}}
 rc="-1"
 case $file_type in
   netcdf)
-    $cmd && \
-    nccmp testrun/$file_name testoutput/$file_name -d -m -g -f -S -T ${tol}
+    $cmd
     rc=${?}
     ;;
    odb)
