@@ -22,7 +22,7 @@
 
 namespace Ingester
 {
-    static const char* DefualtLocationName = "nlocs";
+    static const char* DefualtLocationName = "Location";
     static const char* DefualtDimName = "dim";
 
     IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
