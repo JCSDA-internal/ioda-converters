@@ -14,8 +14,7 @@
 
 namespace Ingester
 {
-    CategorySplit::CategorySplit(const std::string& name, const std::string& variable,
-                                 const NameMap& nameMap) :
+    CategorySplit::CategorySplit(const std::string& name, const std::string& variable, const NameMap& nameMap) :
         Split(name),
         variable_(variable),
         nameMap_(nameMap)
@@ -47,7 +46,7 @@ namespace Ingester
         {
             // Find matching rows
             std::vector<size_t> indexVec;
-            for (size_t rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
+            for (auto rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
             {
                 auto location = Location(dataObject->getDims().size(), 0);
                 location[0] = rowIdx;

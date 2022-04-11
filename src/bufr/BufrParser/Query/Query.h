@@ -60,9 +60,10 @@ namespace bufr {
         void query();
 
      private:
-        ResultSet& resultSet_;
         const QuerySet querySet_;
+        ResultSet& resultSet_;
         const DataProvider& dataProvider_;
+
 
         std::map<std::string, std::shared_ptr<std::vector<__details::Target>>> targetCache_;
         std::map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;

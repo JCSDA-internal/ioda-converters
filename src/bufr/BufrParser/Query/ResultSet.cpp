@@ -224,7 +224,7 @@ namespace bufr {
                     dims[0] *= allDims[dimIdx];
                 }
 
-                for (auto dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
+                for (size_t dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
                 {
                     dims[dimIdx - groupbyIdx + 1] = allDims[dimIdx];
                 }
@@ -340,7 +340,7 @@ namespace bufr {
                     int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) * insert_idx +
                                    product<int>(dims.begin() + dim_idx, dims.end()) - num_inserts - 1;
 
-                    for (auto i = 0; i < idxs.size(); ++i)
+                    for (size_t i = 0; i < idxs.size(); ++i)
                     {
                         if (static_cast<int>(idxs[i]) > data_idx)
                         {
@@ -352,7 +352,7 @@ namespace bufr {
         }
 
         auto output = std::vector<double>(product(dims), 10.0e10);
-        for (auto i = 0; i < idxs.size(); ++i)
+        for (size_t i = 0; i < idxs.size(); ++i)
         {
             output[idxs[i]] = targetField.data[i];
         }
@@ -378,7 +378,7 @@ namespace bufr {
                 std::vector<int> rowDims;
                 rowDims.assign(dims.begin() + groupbyIdx, dims.end());
 
-                auto numsPerRow = product(rowDims);
+                size_t numsPerRow = static_cast<size_t>(product(rowDims));
                 dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
                 for (size_t i = 0; i < numRows; ++i)
                 {

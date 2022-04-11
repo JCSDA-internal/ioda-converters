@@ -23,7 +23,7 @@ namespace bufr {
              bool isWmoFormat = false,
              const std::string& wmoTablePath = "");
 
-        ResultSet execute(const QuerySet& query_set, int next = 0);
+        ResultSet execute(const QuerySet& query_set, size_t next = 0);
 
         void open();
         void close();
@@ -31,12 +31,11 @@ namespace bufr {
 
     private:
         const std::string filename_;
+        const int fileUnit_;
+        const int fileUnitTable1_;
+        const int fileUnitTable2_;
+        const bool isWmoFormat_;
         const std::string wmoTablePath_;
-
-        bool isWmoFormat_;
-        int fileUnit_;
-        int fileUnitTable1_;
-        int fileUnitTable2_;
 
         int nextFileUnit();
     };
