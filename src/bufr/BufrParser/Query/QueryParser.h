@@ -14,15 +14,14 @@ namespace Ingester {
 namespace bufr {
     class QueryParser
     {
-    public:
-
+     public:
         static std::vector<std::string> splitMultiquery(const std::string& query);
         static void splitQueryStr(const std::string& query,
                                   std::string& subset,
                                   std::vector<std::string>& mnemonics,
                                   int& index);
 
-    private:
+     private:
         QueryParser();
     };
 }  // namespace bufr

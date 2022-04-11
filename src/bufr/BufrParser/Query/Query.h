@@ -85,6 +85,6 @@ namespace bufr {
         void collectData(std::shared_ptr<std::vector<__details::Target>> targets,
                          std::shared_ptr<__details::ProcessingMasks> masks,
                          ResultSet& resultSet) const;
-        };
+    };
 }  // namespace bufr
 }  // namespace Ingester

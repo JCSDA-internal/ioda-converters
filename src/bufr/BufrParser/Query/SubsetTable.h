@@ -1,6 +1,9 @@
-//
-// Created by rmclaren on 4/6/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
@@ -12,8 +15,7 @@
 #include "DataProvider.h"
 
 namespace Ingester {
-namespace bufr
-{
+namespace bufr {
     struct QueryData
     {
         bool isMissing;
@@ -30,7 +32,7 @@ namespace bufr
     {
      public:
         SubsetTable() = delete;
-        SubsetTable(const DataProvider& dataProvider);
+        explicit SubsetTable(const DataProvider& dataProvider);
         ~SubsetTable() = default;
 
         std::vector<QueryData> allQueryData();
@@ -47,6 +49,6 @@ namespace bufr
         std::string mapKey(const std::vector<std::string>& pathComponents, size_t idx = 0) const;
         std::string mapKey(const std::shared_ptr<QueryData> query) const;
     };
-}  // bufr
-}  // Ingester
+}  // namespace bufr
+}  // namespace Ingester
 

@@ -16,7 +16,7 @@ namespace Ingester {
 namespace bufr {
     class File
     {
-    public:
+     public:
         File() = delete;
 
         File(const std::string& filename,
@@ -29,7 +29,7 @@ namespace bufr {
         void close();
         void rewind();
 
-    private:
+     private:
         const std::string filename_;
         const int fileUnit_;
         const int fileUnitTable1_;

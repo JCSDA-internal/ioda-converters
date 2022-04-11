@@ -65,7 +65,7 @@ namespace bufr {
         int iddate;
 
         int bufrLoc;
-        int il, im; // throw away
+        int il, im;  // throw away
 
         auto dataProvider = DataProvider();
 
@@ -91,7 +91,7 @@ namespace bufr {
 
     int File::nextFileUnit()
     {
-        static int lastFileUnit = 11; //  Numbers 12 and above are valid.
+        static int lastFileUnit = 11;  // Numbers 12 and above are valid.
         return ++lastFileUnit;
     }
 }  // namespace bufr

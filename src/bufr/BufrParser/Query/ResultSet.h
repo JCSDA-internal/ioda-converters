@@ -34,7 +34,7 @@ namespace bufr {
     class DataFrame
     {
      public:
-        DataFrame(int fieldCnt)
+        explicit DataFrame(int fieldCnt)
         {
             fields_.resize(fieldCnt);
         }
@@ -76,7 +76,6 @@ namespace bufr {
     struct Result : ResultBase
     {
         typedef T value_type;
-        
         std::vector<T> data;
 
         void print() final
@@ -92,7 +91,7 @@ namespace bufr {
     class ResultSet
     {
      public:
-        ResultSet(const std::vector<std::string>& names);
+        explicit ResultSet(const std::vector<std::string>& names);
         ~ResultSet();
 
         std::shared_ptr<ResultBase> get(const std::string& fieldName,
@@ -100,8 +99,15 @@ namespace bufr {
 
         DataFrame& nextDataFrame();
 
-        void indicateFieldIsString(int fieldIdx) { dataFrames_.front().fieldAtIdx(fieldIdx).isString = true; }
-        bool isFieldStr(int fieldIdx) { return dataFrames_.front().fieldAtIdx(fieldIdx).isString; }
+        void indicateFieldIsString(int fieldIdx)
+        {
+            dataFrames_.front().fieldAtIdx(fieldIdx).isString = true;
+        }
+
+        bool isFieldStr(int fieldIdx)
+        {
+            return dataFrames_.front().fieldAtIdx(fieldIdx).isString;
+        }
 
      private:
         std::vector<DataFrame> dataFrames_;
