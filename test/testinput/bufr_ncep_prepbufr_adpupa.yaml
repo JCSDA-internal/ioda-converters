@@ -22,10 +22,13 @@ observations:
             query: "*/DHR"
           stationElevation:
             query: "*/ELV"
+            group_by: prepbufrDataLvlCat
           prepbufrReportType:
             query: "*/TYP"
+            group_by: prepbufrDataLvlCat
           dumpReportType:
             query: "*/T29"
+            group_by: prepbufrDataLvlCat
 
           prepbufrDataLvlCat:
             query: "*/PRSLEVEL/CAT"
