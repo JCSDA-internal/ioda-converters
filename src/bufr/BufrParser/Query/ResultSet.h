@@ -1,16 +1,17 @@
-//
-// Created by rmclaren on 6/30/21.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
-#include "FortranObject.h"
-
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
 
 
 namespace Ingester {
@@ -98,6 +99,9 @@ namespace bufr {
                                         const std::string& groupByFieldName = "") const;
 
         DataFrame& nextDataFrame();
+
+        void indicateFieldIsString(int fieldIdx) { dataFrames_.front().fieldAtIdx(fieldIdx).isString = true; }
+        bool isFieldStr(int fieldIdx) { return dataFrames_.front().fieldAtIdx(fieldIdx).isString; }
 
      private:
         std::vector<DataFrame> dataFrames_;

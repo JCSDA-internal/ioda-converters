@@ -1,6 +1,9 @@
-//
-// Created by rmclaren on 1/30/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
@@ -24,20 +27,20 @@ namespace bufr {
         Sequence,
         Repeat,
         StackedRepeat,
+        Number,
+        Character
     };
 
     class DataProvider
     {
      public:
-        static std::shared_ptr<DataProvider> instance();
-
         DataProvider() = default;
         ~DataProvider() = default;
 
-        void loadTableInfo();
-        void loadDataInfo(int bufrLoc);
-        void deleteTableInfo();
-        void deleteDataInfo();
+        void updateData(int bufrLoc);
+        void deleteData();
+
+        std::string getSubset() const { return subset_; }
 
         // Getters to get the raw data by idx. Since fortran indices are 1-based,
         // we need to subtract 1 to get the correct c style index.
@@ -54,6 +57,7 @@ namespace bufr {
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
 
      private:
+        std::string subset_;
 
         // Table data;
         gsl::span<const int> isc_;

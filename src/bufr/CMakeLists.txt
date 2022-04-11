@@ -60,7 +60,7 @@ list(APPEND _ingester_deps
   eckit
   ${oops_LIBRARIES}
   ioda_engines
-  bufr::bufr_4_DA
+  bufr::bufr_d
 )
 
 ecbuild_add_library( TARGET   ingester

@@ -284,6 +284,7 @@ namespace Ingester
             params.chunk = true;
             params.chunks = chunks;
             params.compressWithGZIP(compressionLevel);
+            params.setFillValue<T>(static_cast<T>(std::string("")));
 
             return params;
         }

@@ -1,10 +1,12 @@
-//
-// Created by rmclaren on 7/1/21.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "File.h"
 
-#include "FortranObject.h"
 #include "bufr_interface.h"
 
 #include "Query.h"
@@ -71,26 +73,24 @@ namespace bufr {
         int bufrLoc;
         int il, im; // throw away
 
-        auto dataProvider = DataProvider::instance();
-        dataProvider->loadTableInfo();
+        auto dataProvider = DataProvider();
 
         auto resultSet = ResultSet(querySet.names());
-        auto query = Query(querySet, resultSet);
+        auto query = Query(querySet, resultSet, dataProvider);
 
         while (ireadmg_f(fileUnit_, subset, &iddate, SubsetLen) == 0)
         {
             while (ireadsb_f(fileUnit_) == 0)
             {
                 status_f(fileUnit_, &bufrLoc, &il, &im);
-
-                dataProvider->loadDataInfo(bufrLoc);
-                query.query(std::string(subset), bufrLoc);
+                dataProvider.updateData(bufrLoc);
+                query.query();
             }
 
             if (next > 0 && ++messageNum >= next) break;
         }
 
-        dataProvider->deleteTableInfo();
+        dataProvider.deleteData();
 
         return resultSet;
     }

@@ -82,16 +82,16 @@ At this time, only the output variables of air_temperature, surface_pressure (co
 Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -d YYYYMMDDHH
 ```
 
-## chem
+## compo
 
-The chem converters include all converter scripts for aerosols and related chemistry variables.
+The compo converters include all converter scripts for aerosols and related chemistry variables.
 
-For NO2, TROPOMI netCDF files are supported with `tropomi_no2_nc2ioda.py`.
+For atmospheric composition netCDF files are supported with `<instrument>_<species>_nc2ioda.py`.
 ```
-Usage: tropomi_no2_nc2ioda.py -i input_tropomi_files.nc -o output_ioda_file.nc
+Usage: <instrument>_<species>_nc2ioda.py -i input_tropomi_files.nc -o output_ioda_file.nc
 ```
 For -i you can specify a list of files with a shell wildcard and the converter will write them to one output file.
-This converter provides all fields needed for assimilation, including the observation value, error, and averaging kernel information.
+This converter provides all fields needed for assimilation, including the observation value, error, and averaging kernel and a-priori information.
 
 
 For AOD, `viirs_aod2ioda.py`, is used to convert the native netCDF format for observations of optical depth from VIIRS AOD550 to IODA netCDF format. Note that it takes only AOD550 explicitly and does not take the 11 AOD channels from VIIRS. The converter uses the following format to execute:

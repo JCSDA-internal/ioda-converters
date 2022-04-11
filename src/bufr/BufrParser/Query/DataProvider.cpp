@@ -1,6 +1,9 @@
-//
-// Created by rmclaren on 1/30/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "DataProvider.h"
 #include "bufr_interface.h"
@@ -18,27 +21,15 @@ namespace
     const char* Sequence = "SEQ";
     const char* Repeat = "RPC";
     const char* StackedRepeat = "RPS";
+    const char* Number = "NUM";
+    const char* Character = "CHR";
 }
 
 
 namespace Ingester {
 namespace bufr {
 
-    std::shared_ptr<DataProvider> DataProvider::instance()
-    {
-        static auto instance = std::make_shared<DataProvider>();
-        return instance;
-    }
-
-    void DataProvider::loadTableInfo()
-    {
-        int size = 0;
-        int strLen = 0;
-        int *intPtr = nullptr;
-        char *charPtr = nullptr;
-    }
-
-    void DataProvider::loadDataInfo(int bufrLoc)
+    void DataProvider::updateData(int bufrLoc)
     {
         int size = 0;
         int *intPtr = nullptr;
@@ -72,6 +63,8 @@ namespace bufr {
                 else if (typ == Sequence)          typ_[wordIdx] = Typ::Sequence;
                 else if (typ == Repeat)            typ_[wordIdx] = Typ::Repeat;
                 else if (typ == StackedRepeat)     typ_[wordIdx] = Typ::StackedRepeat;
+                else if (typ == Number)            typ_[wordIdx] = Typ::Number;
+                else if (typ == Character)         typ_[wordIdx] = Typ::Character;
             }
 
             get_tag_f(&charPtr, &strLen, &size);
@@ -94,9 +87,11 @@ namespace bufr {
 
         get_inv_f(bufrLoc, &intPtr, &size);
         inv_ = gsl::span<const int>(intPtr, size);
+
+        subset_ = getTag(getInode());
     }
 
-    void DataProvider::deleteTableInfo()
+    void DataProvider::deleteData()
     {
         delete_table_data_f();
     }

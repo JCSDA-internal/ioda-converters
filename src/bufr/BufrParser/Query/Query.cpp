@@ -1,7 +1,9 @@
-//
-// Created by rmclaren on 1/28/22.
-//
-
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 #include "Query.h"
 #include "bufr_interface.h"
 
@@ -23,41 +25,37 @@ namespace bufr {
     };
 
     //constructor
-    Query::Query(const QuerySet& querySet, ResultSet& resultSet) :
+    Query::Query(const QuerySet& querySet, ResultSet& resultSet, const DataProvider& dataProvider) :
         querySet_(querySet),
-        resultSet_(resultSet)
+        resultSet_(resultSet),
+        dataProvider_(dataProvider)
     {
     }
 
-    void Query::query(const std::string& subset, int bufrLoc)
+    void Query::query()
     {
-        bufrLoc_ = bufrLoc;
-
         std::shared_ptr<std::vector<__details::Target>> targets;
         std::shared_ptr<__details::ProcessingMasks> masks;
 
-        findTargets(subset, targets, masks);
+        findTargets(targets, masks);
         return collectData(targets, masks, resultSet_);
     }
 
-    void Query::findTargets(const std::string& subset,
-                            std::shared_ptr<std::vector<__details::Target>>& targets,
+    void Query::findTargets(std::shared_ptr<std::vector<__details::Target>>& targets,
                             std::shared_ptr<__details::ProcessingMasks>& masks)
     {
         // Check if the target list for this subset is cached in the targetMap_
-        if (targetCache_.find(subset) != targetCache_.end())
+        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end())
         {
-            targets = targetCache_.at(subset);
-            masks = maskCache_.at(subset);
+            targets = targetCache_.at(dataProvider_.getSubset());
+            masks = maskCache_.at(dataProvider_.getSubset());
             return;
         }
 
         masks = std::make_shared<__details::ProcessingMasks>();
         targets = std::make_shared<std::vector<__details::Target>>();
 
-        auto bufrInfo = DataProvider::instance();
-
-        size_t numNodes = bufrInfo->getIsc(bufrInfo->getInode());
+        size_t numNodes = dataProvider_.getIsc(dataProvider_.getInode());
 
         masks->valueNodeMask.resize(numNodes, false);
         masks->pathNodeMask.resize(numNodes, false);
@@ -75,7 +73,7 @@ namespace bufr {
             {
                 const std::string& subQuery = subQueries[subQueryIdx];
 
-                target = findTarget(subset, queryName, subQuery);
+                target = findTarget(queryName, subQuery);
 
                 if (target.nodeIds.size() > 0)
                 {
@@ -96,23 +94,24 @@ namespace bufr {
             {
                 // Add the last missing target to the list
                 targets->push_back(target);
-                std::cout << "Warning: Query String " << queryStr << " didn't apply to subset " << subset << std::endl;
+                std::cout << "Warning: Query String "
+                          << queryStr
+                          << " didn't apply to subset "
+                          << dataProvider_.getSubset()
+                          << std::endl;
             }
         }
 
-        targetCache_.insert({subset, targets});
-        maskCache_.insert({subset, masks});
+        targetCache_.insert({dataProvider_.getSubset(), targets});
+        maskCache_.insert({dataProvider_.getSubset(), masks});
     }
 
-    __details::Target Query::findTarget(const std::string& subset,
-                                        const std::string& targetName,
+    __details::Target Query::findTarget(const std::string& targetName,
                                         const std::string& query) const
     {
         std::string querySubset;
         std::vector<std::string> mnemonics;
         int index;
-
-        auto bufrInfo = DataProvider::instance();
 
         QueryParser::splitQueryStr(query, querySubset, mnemonics, index);
 
@@ -123,27 +122,27 @@ namespace bufr {
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(querySubset == "*" || querySubset == subset);
+        bool targetMissing = !(querySubset == "*" || querySubset == dataProvider_.getSubset());
         if (!targetMissing)
         {
             branches.resize(mnemonics.size() - 1);
 
-            seqPath.push_back(bufrInfo->getInode());
+            seqPath.push_back(dataProvider_.getInode());
 
             int tableCursor = -1;
             int mnemonicCursor = -1;
 
-            for (auto nodeIdx = bufrInfo->getInode();
-                 nodeIdx <= bufrInfo->getIsc(bufrInfo->getInode());
+            for (auto nodeIdx = dataProvider_.getInode();
+                 nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
                  nodeIdx++)
             {
-                if (bufrInfo->getTyp(nodeIdx) == Typ::Sequence ||
-                    bufrInfo->getTyp(nodeIdx) == Typ::Repeat ||
-                    bufrInfo->getTyp(nodeIdx) == Typ::StackedRepeat)
+                if (dataProvider_.getTyp(nodeIdx) == Typ::Sequence ||
+                    dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
+                    dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat)
                 {
                     if (isQueryNode(nodeIdx - 1))
                     {
-                        if (bufrInfo->getTag(nodeIdx) == mnemonics[mnemonicCursor + 1] &&
+                        if (dataProvider_.getTag(nodeIdx) == mnemonics[mnemonicCursor + 1] &&
                             tableCursor == mnemonicCursor)
                         {
                             mnemonicCursor++;
@@ -155,11 +154,11 @@ namespace bufr {
                 }
                 else if (mnemonicCursor == mnemonics.size() - 2 &&
                          tableCursor == mnemonicCursor &&
-                        bufrInfo->getTag(nodeIdx) == mnemonics.back())
+                        dataProvider_.getTag(nodeIdx) == mnemonics.back())
                 {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
-                    isString = (bufrInfo->getItp(nodeIdx) == 3);
+                    isString = (dataProvider_.getItp(nodeIdx) == 3);
 
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
                 }
@@ -173,7 +172,7 @@ namespace bufr {
                     // sequence.
                     for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--)
                     {
-                        if (seqPath[pathIdx] == bufrInfo->getJmpb(nodeIdx + 1))
+                        if (seqPath[pathIdx] == dataProvider_.getJmpb(nodeIdx + 1))
                         {
                             for (int rewindIdx = seqPath.size() - 1; rewindIdx > pathIdx; rewindIdx--)
                             {
@@ -203,7 +202,7 @@ namespace bufr {
                 throw eckit::BadParameter(errMsg.str());
             }
 
-            if (index > 0 && index <= targetNodes.size())
+            if (index > 0 && index <= static_cast<int>(targetNodes.size()))
             {
                 targetNodes = { targetNodes[index - 1] };
             }
@@ -239,12 +238,10 @@ namespace bufr {
 
     bool Query::isQueryNode(int nodeIdx) const
     {
-        auto bufrInfo = DataProvider::instance();
-
-        return (bufrInfo->getTyp(nodeIdx) == Typ::DelayedRep ||
-                bufrInfo->getTyp(nodeIdx) == Typ::FixedRep ||
-                bufrInfo->getTyp(nodeIdx) == Typ::DelayedRepStacked ||
-                bufrInfo->getTyp(nodeIdx) == Typ::DelayedBinary);
+        return (dataProvider_.getTyp(nodeIdx) == Typ::DelayedRep ||
+                dataProvider_.getTyp(nodeIdx) == Typ::FixedRep ||
+                dataProvider_.getTyp(nodeIdx) == Typ::DelayedRepStacked ||
+                dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary);
     }
 
     void Query::getDimInfo(const std::vector<int>& branches,
@@ -252,8 +249,6 @@ namespace bufr {
                            std::vector<std::string>& dimPaths,
                            std::vector<int>& dimIdxs) const
     {
-        auto bufrInfo = DataProvider::instance();
-
         std::string currentDimPath;
         std::string mnemonicStr;
 
@@ -276,15 +271,15 @@ namespace bufr {
             for (int branchIdx = 0; branchIdx <= mnemonicCursor; branchIdx++)
             {
                 int nodeIdx = branches[branchIdx];
-                mnemonicStr = bufrInfo->getTag(nodeIdx);
+                mnemonicStr = dataProvider_.getTag(nodeIdx);
 
                 std::ostringstream path;
                 path << currentDimPath << "/" << mnemonicStr.substr(1, mnemonicStr.size() - 2);
                 currentDimPath = path.str();
 
-                if (bufrInfo->getTyp(nodeIdx)  == Typ::DelayedRep ||
-                    bufrInfo->getTyp(nodeIdx)  == Typ::FixedRep ||
-                    bufrInfo->getTyp(nodeIdx)  == Typ::DelayedRepStacked)
+                if (dataProvider_.getTyp(nodeIdx)  == Typ::DelayedRep ||
+                    dataProvider_.getTyp(nodeIdx)  == Typ::FixedRep ||
+                    dataProvider_.getTyp(nodeIdx)  == Typ::DelayedRepStacked)
                 {
                     dimIdx = dimIdx + 1;
                     dimIdxs.push_back(branchIdx + 1);  // +1 to account for the root dimension
@@ -298,9 +293,6 @@ namespace bufr {
                             std::shared_ptr<__details::ProcessingMasks> masks,
                             ResultSet& resultSet) const
     {
-
-        auto bufrInfo = DataProvider::instance();
-
         std::vector<int> currentPath;
         std::vector<int> currentPathReturns;
 
@@ -310,17 +302,17 @@ namespace bufr {
 
         // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all the data a bunch of
         // times)
-        auto dataTable = __details::OffsetArray<NodeData>(bufrInfo->getInode(),
-                                                          bufrInfo->getIsc(bufrInfo->getInode()));
+        auto dataTable = __details::OffsetArray<NodeData>(dataProvider_.getInode(),
+                                                          dataProvider_.getIsc(dataProvider_.getInode()));
 
-        for (size_t dataCursor = 1; dataCursor <= bufrInfo->getNVal(); ++dataCursor)
+        for (size_t dataCursor = 1; dataCursor <= dataProvider_.getNVal(); ++dataCursor)
         {
-            int nodeIdx = bufrInfo->getInv(dataCursor);
+            int nodeIdx = dataProvider_.getInv(dataCursor);
 
             if (masks->valueNodeMask[nodeIdx])
             {
                 auto& values = dataTable[nodeIdx].values;
-                values.push_back(bufrInfo->getVal(dataCursor));
+                values.push_back(dataProvider_.getVal(dataCursor));
             }
 
             // Unfortuantely the fixed replicated sequences do not store their counts as values for the Fixed Replication
@@ -328,11 +320,11 @@ namespace bufr {
             // counting everything manually. Since we have to do it for fixed reps anyways, its easier just to do it for all
             // the squences.
 
-            if (bufrInfo->getJmpb(nodeIdx) > 0 &&
-                masks->pathNodeMask[bufrInfo->getJmpb(nodeIdx)])
+            if (dataProvider_.getJmpb(nodeIdx) > 0 &&
+                masks->pathNodeMask[dataProvider_.getJmpb(nodeIdx)])
             {
-                const auto typ = bufrInfo->getTyp(nodeIdx);
-                const auto jmpbTyp = bufrInfo->getTyp(bufrInfo->getJmpb(nodeIdx));
+                const auto typ = dataProvider_.getTyp(nodeIdx);
+                const auto jmpbTyp = dataProvider_.getTyp(dataProvider_.getJmpb(nodeIdx));
                 if ((typ == Typ::Sequence && (jmpbTyp == Typ::Sequence ||
                                               jmpbTyp == Typ::DelayedBinary ||
                                               jmpbTyp == Typ::FixedRep)) ||
@@ -346,7 +338,7 @@ namespace bufr {
             if (currentPath.size() >= 1)
             {
                 if (nodeIdx == returnNodeIdx ||
-                    dataCursor == bufrInfo->getNVal() ||
+                    dataCursor == dataProvider_.getNVal() ||
                     (currentPath.size() > 1 && nodeIdx == *(currentPath.end() - 1) + 1))
                 {
                     // Look for the first path return idx that is not 0 and check if its this node idx. Exit the sequence if its
@@ -358,7 +350,7 @@ namespace bufr {
                         auto seqNodeIdx = currentPath.back();
                         currentPath.pop_back();
 
-                        const auto typSeqNode = bufrInfo->getTyp(seqNodeIdx);
+                        const auto typSeqNode = dataProvider_.getTyp(seqNodeIdx);
                         if (typSeqNode == Typ::DelayedRep || typSeqNode == Typ::DelayedRepStacked)
                         {
                             dataTable[seqNodeIdx + 1].counts.back()--;
@@ -372,15 +364,15 @@ namespace bufr {
 
             if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
             {
-                if (bufrInfo->getTyp(nodeIdx) == Typ::DelayedBinary &&
-                    bufrInfo->getVal(dataCursor) == 0)
+                if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary &&
+                    dataProvider_.getVal(dataCursor) == 0)
                 {
                     // Ignore the node if it is a delayed binary and the value is 0
                 }
                 else
                 {
                     currentPath.push_back(nodeIdx);
-                    const auto tmpReturnNodeIdx = bufrInfo->getLink(nodeIdx);
+                    const auto tmpReturnNodeIdx = dataProvider_.getLink(nodeIdx);
                     currentPathReturns.push_back(tmpReturnNodeIdx);
 
                     if (tmpReturnNodeIdx != 0)
@@ -392,11 +384,11 @@ namespace bufr {
                         lastNonZeroReturnIdx = 0;
                         returnNodeIdx = 0;
 
-                        if (dataCursor != bufrInfo->getNVal())
+                        if (dataCursor != dataProvider_.getNVal())
                         {
                             for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
                             {
-                                returnNodeIdx = bufrInfo->getLink(bufrInfo->getJmpb(currentPath[pathIdx]));
+                                returnNodeIdx = dataProvider_.getLink(dataProvider_.getJmpb(currentPath[pathIdx]));
                                 lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx;
 
                                 if (returnNodeIdx != 0) break;
@@ -416,6 +408,7 @@ namespace bufr {
             dataField.name = targ.name;
             dataField.queryStr = targ.queryStr;
             dataField.isString = targ.isString;
+            if (targ.isString) resultSet.indicateFieldIsString(targetIdx); // Whole column is string.
             dataField.dimPaths = targ.dimPaths;
             dataField.seqPath.resize(targ.seqPath.size() + 1);
             dataField.seqPath[0] = 1;
@@ -435,6 +428,14 @@ namespace bufr {
                 for (size_t pathIdx = 0; pathIdx < targ.seqPath.size(); pathIdx++)
                 {
                     dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
+                }
+
+                if (resultSet.isFieldStr(targetIdx) != targ.isString)
+                {
+                    std::ostringstream errMsg;
+                    errMsg << "Different subsets don't agree whether " << dataField.name
+                           << "is a string or not (there is a type mismatch).";
+                    throw eckit::BadParameter(errMsg.str());
                 }
 
                 dataField.data = dataTable[targ.nodeIds[0]].values;

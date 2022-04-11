@@ -20,10 +20,6 @@
 #include "Exports/Splits/Split.h"
 
 #include "Query/QuerySet.h"
-//#include "Query/QuerySet.h"
-
-
-#include "ResultSet.h"
 
 
 namespace Ingester {
