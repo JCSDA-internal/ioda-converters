@@ -40,7 +40,7 @@ observations:
       obsdataout: "./testrun/gdas.t00z.sevcsr.tm00.nc"
 
       dimensions:
-        - name: "nchans"
+        - name: "Channel"
           paths:
             - "*/RPSEQ7"
 
@@ -92,7 +92,7 @@ observations:
           coordinates: "longitude latitude nchans"
           source: variables/cloudAmount
           longName: "Amount of cloud coverage"
-          units: "%"
+          units: "percent"
           range: [0, 100]
           chunks: [1000, 15]
 
