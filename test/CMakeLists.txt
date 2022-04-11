@@ -413,7 +413,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
                           -o testrun/godae_trak.nc
                           -d 2004070812"
                           godae_trak.nc ${IODA_CONV_COMP_TOL_ZERO})
-set_tests_properties( test_${PROJECT_NAME}_godae_trak PROPERTIES ATTACHED_FILES testrun/godae_trak.nc )
+set_tests_properties( test_${PROJECT_NAME}_godae_trak PROPERTIES ATTACHED_FILES ${CMAKE_BINARY_DIR}/test/testrun/godae_trak.nc )
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_hgodas_adt
                   TYPE    SCRIPT
