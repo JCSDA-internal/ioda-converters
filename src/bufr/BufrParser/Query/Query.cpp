@@ -118,7 +118,7 @@ namespace bufr {
         std::vector<int> branches;
         bool isString = false;
         std::vector<int> targetNodes;
-        std::vector<int> seqPath;
+        std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
@@ -152,7 +152,7 @@ namespace bufr {
                     }
                     seqPath.push_back(nodeIdx);
                 }
-                else if (mnemonicCursor == mnemonics.size() - 2 &&
+                else if (mnemonicCursor == static_cast<int>(mnemonics.size()) - 2 &&
                          tableCursor == mnemonicCursor &&
                         dataProvider_.getTag(nodeIdx) == mnemonics.back())
                 {
