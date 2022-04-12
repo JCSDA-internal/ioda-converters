@@ -23,7 +23,7 @@ namespace
     const char* StackedRepeat = "RPS";
     const char* Number = "NUM";
     const char* Character = "CHR";
-}
+}  // namespace
 
 
 namespace Ingester {

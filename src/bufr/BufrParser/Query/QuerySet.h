@@ -15,17 +15,21 @@ namespace bufr
 {
     class QuerySet
     {
-    public:
+     public:
         QuerySet() = default;
         ~QuerySet() = default;
 
-        void add(const std::string& name, const std::string& query) { queryList_.push_back({name, query}); };
-        int size() const { return queryList_.size(); };
-        std::string nameAt(size_t idx) const { return queryList_.at(idx).first; };
-        std::string queryAt(size_t idx) const { return queryList_.at(idx).second; };
+        void add(const std::string& name, const std::string& query)
+        {
+            queryList_.push_back({name, query});
+        }
+
+        size_t size() const { return queryList_.size(); }
+        std::string nameAt(size_t idx) const { return queryList_.at(idx).first; }
+        std::string queryAt(size_t idx) const { return queryList_.at(idx).second; }
         std::vector<std::string> names() const;
 
-    private:
+     private:
         std::vector<std::pair<std::string, std::string>> queryList_;
     };
 }  // namespace bufr
