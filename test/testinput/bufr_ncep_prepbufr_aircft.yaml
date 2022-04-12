@@ -190,7 +190,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/stationElevation
           longName: "Height of Station"
-          units: "Meter"
+          units: "m"
 
         - name: "MetaData/timeProfileLevel"
           coordinates: "longitude latitude"
@@ -202,7 +202,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/instantaneousAltitudeRate
           longName: "Instantaneous Rate Altitue"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "MetaData/aircraftPhase"
           coordinates: "longitude latitude"
@@ -214,50 +214,50 @@ observations:
           coordinates: "longitude latitude"
           source: variables/height
           longName: "Height of Observation"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
-          units: "Pascals"
+          units: "Pa"
 
         - name: "ObsError/pressure"
           coordinates: "longitude latitude"
           source: variables/pressureError
           longName: "Pressure Error"
-          units: "Pascals"
+          units: "Pa"
 
         - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsError/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperatureError
           longName: "Temperature Error"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/dewpointTemperature"
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
           longName: "Dew Point Temperature"
-          units: "Kelvin"
+          units: "K"
           range: [193, 325]
 
         - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude"
           source: variables/specificHumidity
           longName: "Specific Humidity"
-          units: "Kilogram Kilogram-1"
+          units: "kg kg-1"
 
         - name: "ObsError/relativeHumidity"
           coordinates: "longitude latitude"
           source: variables/relativeHumidityError
           longName: "Relative Humidity Error"
-          units: "Percent"
+          units: "percent"
 
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude"
@@ -269,31 +269,31 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightOfBaseOfCloud
           longName: "Height of base of cloud"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/windEastward"
           coordinates: "longitude latitude"
           source: variables/windEastward
           longName: "U component of Wind"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "ObsValue/windNorthward"
           coordinates: "longitude latitude"
           source: variables/windNorthward
           longName: "V component of Wind"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "ObsError/windEastward"
           coordinates: "longitude latitude"
           source: variables/windError
           longName: "U component of wind error"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "ObsError/windNorthward"
           coordinates: "longitude latitude"
           source: variables/windError
           longName: "V component of wind error"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "QualityMarker/height"
           coordinates: "longitude latitude"

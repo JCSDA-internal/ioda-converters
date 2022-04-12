@@ -88,13 +88,13 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.aircar.nc004004_thinned.tm00.nc"
+      obsdataout: "testrun/gdas.t12z.aircar.nc004004_select_thinned.tm00.nc"
 
       variables:
         - name: "MetaData/datetime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
@@ -126,13 +126,13 @@ observations:
           coordinates: "longitude latitude"
           source: variables/altitudeIndicator
           longName: "Indicated Aircraft Altitude"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/waterVaporMixingRatio"
           coordinates: "longitude latitude"
           source: variables/waterVaporMixingRatio
           longName: "Water Vapor Mixing Ratio"
-          units: "Kilogram Kilogram-1"
+          units: "kg kg-1"
 
         - name: "QualityMarker/moistureQuality"
           coordinates: "longitude latitude"
@@ -144,7 +144,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/temperatureObservationPrecision
           longName: "Temperature Observation Precision"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/aircraftFlightPhase"
           coordinates: "longitude latitude"
@@ -156,7 +156,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
-          units: "Pascal"
+          units: "Pa"
 
         - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
@@ -198,7 +198,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/relativeHumidity
           longName: "Relative Humidity"
-          units: "PERCENT"
+          units: "percent"
 
         - name: "MetaData/dataProviderRestricted"
           coordinates: "longitude latitude"
@@ -210,17 +210,17 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Air Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "Degrees True"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           longName: "Wind Speed"
-          units: "Meter Second-1"
+          units: "m s-1"
 

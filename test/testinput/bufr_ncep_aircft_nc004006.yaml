@@ -70,7 +70,7 @@ observations:
         - name: "MetaData/datetime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/aircraftFlightNumber"
           coordinates: "longitude latitude"
@@ -115,25 +115,25 @@ observations:
           coordinates: "longitude latitude"
           source: variables/height
           longName: "height"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/heightOrAltitude"
           coordinates: "longitude latitude"
           source: variables/heightOrAltitude
           longName: "Height or Altitude"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/waterVaporMixingRatio"
           coordinates: "longitude latitude"
           source: variables/waterVaporMixingRatio
           longName: "Water Vapor Mixing Ratio"
-          units: "Kilogram Kilogram-1"
+          units: "kg kg-1"
 
         - name: "ObsValue/temperatureObservationPrecision"
           coordinates: "longitude latitude"
           source: variables/temperatureObservationPrecision
           longName: "Temperature Observation Precision"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/aircraftFlightPhase"
           coordinates: "longitude latitude"
@@ -181,17 +181,17 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Air Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "Degrees True"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           longName: "Wind Speed"
-          units: "Meter Second-1"
+          units: "m s-1"
 

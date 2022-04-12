@@ -111,7 +111,7 @@ observations:
         - name: "MetaData/datetime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/aircraftRegistrationNumberOrOtherIdentification"
           coordinates: "longitude latitude"
@@ -149,19 +149,19 @@ observations:
           coordinates: "longitude latitude"
           source: variables/flightLevelST
           longName: "Flight Level ST"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/heightOrAltitude"
           coordinates: "longitude latitude"
           source: variables/heightOrAltitude
           longName: "Height or Altitude"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/instantaneousAltitudeRate"
           coordinates: "longitude latitude"
           source: variables/instantaneousAltitudeRate
           longName: "Instantaneous Altitude Rate"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "MetaData/observerIdentification"
           coordinates: "longitude latitude"
@@ -173,7 +173,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/percentConfidence
           longName: "Percent Confidence"
-          units: "PERCENT"
+          units: "percent"
 
         - name: "ObsValue/aircraftFlightPhase"
           coordinates: "longitude latitude"
@@ -251,17 +251,17 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperatureST
           longName: "Air Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "Degrees True"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           longName: "Wind Speed"
-          units: "Meter Second-1"
+          units: "m s-1"
 

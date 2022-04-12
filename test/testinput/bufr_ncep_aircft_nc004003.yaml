@@ -70,7 +70,7 @@ observations:
         - name: "MetaData/datetime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/aircraftFlightNumber"
           coordinates: "longitude latitude"
@@ -108,13 +108,13 @@ observations:
           coordinates: "longitude latitude"
           source: variables/flightLevel
           longName: "Flight Level"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/temperatureObservationPrecision"
           coordinates: "longitude latitude"
           source: variables/temperatureObservationPrecision
           longName: "Temperature Observation Precision"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/aircraftFlightPhase"
           coordinates: "longitude latitude"
@@ -126,7 +126,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/pressureAltitudeRelativeToMeanSeaLevel
           longName: "Pressure Altitude Relative to Mean Sea Level"
-          units: "Meter"
+          units: "m"
 
         - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
@@ -168,7 +168,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/relativeHumidity
           longName: "Relative Humidity"
-          units: "PERCENT"
+          units: "percent"
 
         - name: "MetaData/dataProviderRestricted"
           coordinates: "longitude latitude"
@@ -180,23 +180,23 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Air Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/dewpointTemperature"
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
           longName: "Dewpoint Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "Degrees True"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
           source: variables/windSpeed
           longName: "Wind Speed"
-          units: "Meter Second-1"
+          units: "m s-1"
 
