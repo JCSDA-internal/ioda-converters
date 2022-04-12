@@ -16,6 +16,7 @@
 
 namespace Ingester {
 namespace bufr {
+    /// \brief Meta data for a query according to the BUFR subset table.
     struct QueryData
     {
         bool isMissing;
@@ -28,6 +29,7 @@ namespace bufr {
         bool requiresIdx;
     };
 
+    /// \brief Parses the BUFR message subset Meta data tables.
     class SubsetTable
     {
      public:
@@ -35,7 +37,11 @@ namespace bufr {
         explicit SubsetTable(const DataProvider& dataProvider);
         ~SubsetTable() = default;
 
+        /// \brief Returns all the query data elements.
+        /// \returns BUFR table meta data for all the queries
         std::vector<QueryData> allQueryData();
+
+        /// \brief Get meta data for the query with the given components.
         QueryData dataForQuery(const std::vector<std::string>& queryComponents) const;
 
      private:
