@@ -34,7 +34,7 @@ locationKeyList = [("latitude", "float", "degrees_north"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
                    ("windHeightAssignMethod", "integer", ""),
-                   ("satellite", "integer", "")]
+                   ("satelliteID", "integer", "")]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
@@ -86,8 +86,6 @@ def main(file_names, output_file, datetimeRef):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {
-        'platformCommonName': "EUMETSAT_AMV",
-        'platformLongDescription': "EUMETSAT AMV from IR cloudy regions",
         'soureFiles': ", ".join(file_names),
         'datetimeReference': datetimeRef
     }
@@ -168,6 +166,7 @@ def read_file(file_name, data):
     
                 freq, freqerr = get_frequency(row['type'], freqerr)
                 satid, saterr = get_id(row['sat'], saterr)
+                data['satelliteID'] = np.append(data['satelliteID'], satid)
                 data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
                 data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
