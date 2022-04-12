@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/gdas.t12z.adpsfc.tm00.prepbufr"
+      obsdatain: "./testinput/gdas.t12z.adpsfc_thinned.tm00.prepbufr"
 
       exports:
         variables:
@@ -64,6 +64,8 @@ observations:
               - scale: 0.000001
           relativeHumidityError:
             query: "*/Q___INFO/Q__BACKG/QOE"
+            transforms:
+              - scale: 10
 
           horizontalVisibility:
             query: "*/VISB1SEQ/HOVI"
@@ -119,7 +121,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "testrun/gdas.t12z.adpsfc.tm00.prepbufr.nc"
+      obsdataout: "testrun/gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc"
 
       variables:
 
@@ -178,13 +180,13 @@ observations:
           coordinates: "longitude latitude"
           source: variables/stationElevation
           longName: "Height of Station"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/heightOfObservation"
           coordinates: "longitude latitude"
           source: variables/heightOfObservation
           longName: "Height of Observation"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/pressureReducedToMeanSeaLevel"
           coordinates: "longitude latitude"
@@ -210,53 +212,53 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Temperature"
-          units: "Kelvin"
+          units: "K"
           range: [193, 325]
 
         - name: "ObsValue/airTemperatureError"
           coordinates: "longitude latitude"
           source: variables/airTemperatureError
           longName: "Temperature Error"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/dewpointTemperature"
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
           longName: "Dew Point"
-          units: "Kelvin"
+          units: "K"
           range: [193, 325]
 
         - name: "ObsValue/minimumTemperature"
           coordinates: "longitude latitude"
           source: variables/minimumTemperature
           longName: "Minimum Temperature"
-          units: "Kelvin"
+          units: "K"
           range: [193, 325]
 
         - name: "ObsValue/maximumTemperature"
           coordinates: "longitude latitude"
           source: variables/maximumTemperature
           longName: "Maximum Temperature"
-          units: "Kelvin"
+          units: "K"
           range: [193, 325]
 
         - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude"
           source: variables/specificHumidity
           longName: "Specific Humidity"
-          units: "Kilogram Kilogram-1"
+          units: "kg kg-1"
 
         - name: "ObsValue/relativeHumidityError"
           coordinates: "longitude latitude"
           source: variables/relativeHumidityError
           longName: "Relative Humidity Error"
-          units: "Percent divided by 10"
+          units: "percent"
 
         - name: "ObsValue/horizontalVisibility"
           coordinates: "longitude latitude"
           source: variables/horizontalVisibility
           longName: "Horizontal Visibility"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude"
@@ -274,43 +276,43 @@ observations:
           coordinates: "longitude latitude"
           source: variables/cloudCeiling
           longName: "Cloud Ceiling"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/heightAboveSurfaceofBaseofLowestCloud"
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceofBaseofLowestCloud
           longName: "Height above Surface of Base of Lowest Cloud"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
           source: variables/heightOfBaseOfCloud
           longName: "Height of Base of Cloud"
-          units: "Meter" 
+          units: "m" 
 
         - name: "ObsValue/seaSurfaceTemperature"
           coordinates: "longitude latitude"
           source: variables/seaSurfaceTemperature
           longName: "Sea Surface Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/seaSurfaceTemperatureError"
           coordinates: "longitude latitude"
           source: variables/seaSurfaceTemperatureError
           longName: "Sea Surface Temperature Obs Error"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/heightOfWaves"
           coordinates: "longitude latitude"
           source: variables/heightOfWaves
           longName: "Wave Height"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/depthBelowSeaSurface"
           coordinates: "longitude latitude"
           source: variables/depthBelowSeaSurface
           longName: "Depth Below Sea Surface"
-          units: "Meter"
+          units: "m"
           range: [-200, 0]
 
         - name: "ObsValue/methodofTemperatureSeaSurfaceMeasurement"
@@ -323,28 +325,28 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windEastward
           longName: "Eastward Wind"
-          units: "Meter Second-1"
+          units: "m s-1"
           range: [-50, 50]
 
         - name: "ObsValue/windNorthward"
           coordinates: "longitude latitude"
           source: variables/windNorthward
           longName: "Northward Wind"
-          units: "Meter Second-1"
+          units: "m s-1"
           range: [-50, 50]
 
         - name: "ObsValue/windError"
           coordinates: "longitude latitude"
           source: variables/windError
           longName: "East and Northward wind error"
-          units: "Meter Second-1"
+          units: "m s-1"
 
 
         - name: "ObsValue/windSpeedPeak"
           coordinates: "longitude latitude"
           source: variables/windSpeedPeak
           longName: "Maximum Wind Speed (Gusts)"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "QualityMarker/height"
           coordinates: "longitude latitude"
