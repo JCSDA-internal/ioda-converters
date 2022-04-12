@@ -17,19 +17,13 @@
 namespace Ingester {
 namespace bufr {
     File::File(const std::string &filename, bool isWmoFormat, const std::string &wmoTablePath) :
-            fileUnit_(nextFileUnit()),
-            fileUnitTable1_(0),
-            fileUnitTable2_(0),
             filename_(filename),
+            fileUnit_(nextFileUnit()),
+            fileUnitTable1_(nextFileUnit()),
+            fileUnitTable2_(nextFileUnit()),
             isWmoFormat_(isWmoFormat),
             wmoTablePath_(wmoTablePath)
     {
-        if (isWmoFormat && !wmoTablePath_.empty())
-        {
-            fileUnitTable1_ = nextFileUnit();
-            fileUnitTable2_ = nextFileUnit();
-        }
-
         open();
     }
 
@@ -63,7 +57,7 @@ namespace bufr {
         open();
     }
 
-    ResultSet File::execute(const QuerySet &querySet, int next)
+    ResultSet File::execute(const QuerySet &querySet, size_t next)
     {
         static int SubsetLen = 9;
         unsigned int messageNum = 0;
@@ -71,7 +65,7 @@ namespace bufr {
         int iddate;
 
         int bufrLoc;
-        int il, im; // throw away
+        int il, im;  // throw away
 
         auto dataProvider = DataProvider();
 
@@ -97,7 +91,7 @@ namespace bufr {
 
     int File::nextFileUnit()
     {
-        static int lastFileUnit = 11; //  Numbers 12 and above are valid.
+        static int lastFileUnit = 11;  // Numbers 12 and above are valid.
         return ++lastFileUnit;
     }
 }  // namespace bufr
