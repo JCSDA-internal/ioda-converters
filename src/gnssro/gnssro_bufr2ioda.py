@@ -190,12 +190,11 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     # ! Bit 3=Rising Occulation (1=rising; 0=setting)
     # ! Bit 4=Excess Phase non-nominal
     # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
-    # add rising/setting (ascending/descending) bit
-    obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
+
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-1))
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-4))
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-5))
+    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=(16-3))
 
     # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
 
