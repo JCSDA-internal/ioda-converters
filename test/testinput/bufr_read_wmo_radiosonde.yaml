@@ -30,7 +30,7 @@ observations:
       obsdataout: "./testrun/bufr_read_wmo_radiosonde.nc"
 
       dimensions:
-        - name: temp_ncols
+        - name: Channel
           path: "*/TDWPRAOB"
 
 

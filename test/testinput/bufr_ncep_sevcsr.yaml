@@ -89,7 +89,7 @@ observations:
           range: [0, 90]
 
         - name: "ObsValue/cloudAmount"
-          coordinates: "longitude latitude nchans"
+          coordinates: "longitude latitude Channel"
           source: variables/cloudAmount
           longName: "Amount of cloud coverage"
           units: "percent"
@@ -97,7 +97,7 @@ observations:
           chunks: [1000, 15]
 
         - name: "ObsValue/brightnessTemperature"
-          coordinates: "longitude latitude nchans"
+          coordinates: "longitude latitude Channel"
           source: variables/brightnessTemperature
           longName: "Brightness temperature"
           units: "K"
@@ -105,7 +105,7 @@ observations:
           chunks: [1000, 15]
 
         - name: "ObsValue/brightnessTemperatureStdDev"
-          coordinates: "longitude latitude nchans"
+          coordinates: "longitude latitude Channel"
           source: variables/brightnessTemperatureStdDev
           longName: "Brightness temperature standard deviation"
           units: "K"
