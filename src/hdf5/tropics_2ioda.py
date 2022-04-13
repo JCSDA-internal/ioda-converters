@@ -27,7 +27,7 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 # globals
-TROPICS_WMO_sat_IDs =  [ 691, 895, 896, 897, 898 ]
+TROPICS_WMO_sat_IDs = [691, 895, 896, 897, 898]
 TROPICS01_WMO_sat_ID = 691
 TROPICS02_WMO_sat_ID = 895
 TROPICS03_WMO_sat_ID = 896
@@ -37,9 +37,7 @@ TROPICS05_WMO_sat_ID = 898
 GlobalAttrs = {
     "platformCommonName": "TROPICS",
     "platformLongDescription": "TROPICS Brightness Temperature Data",
-    "sensorCentralFrequency": "[91.655,  114.50,  " + \
-                               "115.95,  116.65,  117.25,  117.80,  118.24,  " + \
-                               "118.58,  184.41,  186.51,  190.31,  204.80]"
+    "sensorCentralFrequency": "[91.655,  114.50,  115.95,  116.65,  117.25,  117.80,  118.24,  118.58,  184.41,  186.51,  190.31,  204.80]"
 }
 
 locationKeyList = [
@@ -55,7 +53,7 @@ def main(args):
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
 
     input_files = [(i) for i in args.input]
-    # initialize 
+    # initialize
     obs_data = {}
     # read / process files in parallel
 #   with ProcessPoolExecutor(max_workers=args.threads) as executor:
@@ -105,7 +103,7 @@ def main(args):
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    k = 'brightnessTemperature'     #V2
+    k = 'brightnessTemperature'     # V2
     k = 'brightness_temperature'
     VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
@@ -140,26 +138,26 @@ def get_data(f, obs_data):
     nbands = len(f['bands'])
     # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
     iband = 0   # at this point arbitrarily select a band
-    obs_data[('latitude', 'MetaData')] = np.array(f['losLat_deg'][iband,:,:].flatten(), dtype='float32')
-    obs_data[('longitude', 'MetaData')] = np.array(f['losLon_deg'][iband,:,:].flatten(), dtype='float32')
-    obs_data[('channelNumber', 'MetaData')] = np.array(np.arange(nchans)+1,dtype='int32')
-    k = 'fieldOfViewNumber'     #V2   #### dtype = 'int32'  ####
+    obs_data[('latitude', 'MetaData')] = np.array(f['losLat_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('longitude', 'MetaData')] = np.array(f['losLon_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('channelNumber', 'MetaData')] = np.array(np.arange(nchans)+1, dtype='int32')
+    k = 'fieldOfViewNumber'     # V2   #### dtype = 'int32'  ####
     k = 'scan_position'
-    obs_data[(k, 'MetaData')] = np.tile(np.arange(nbeam_pos,dtype='float32')+1, (nscans,1)).flatten()
-    k = 'solarZenithAngle'      #V2
+    obs_data[(k, 'MetaData')] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
+    k = 'solarZenithAngle'      # V2
     k = 'solar_zenith_angle'
-    obs_data[(k, 'MetaData')] = np.array(f['losSolZen_deg'][iband,:,:].flatten(), dtype='float32')
-    k = 'solarAzimuthAngle'     #V2
+    obs_data[(k, 'MetaData')] = np.array(f['losSolZen_deg'][iband, :, :].flatten(), dtype='float32')
+    k = 'solarAzimuthAngle'     # V2
     k = 'solar_azimuth_angle'
-    obs_data[(k, 'MetaData')] = np.array(f['losSolAzi_deg'][iband,:,:].flatten(), dtype='float32')
-    k = 'sensorZenithAngle'     #V2
+    obs_data[(k, 'MetaData')] = np.array(f['losSolAzi_deg'][iband, :, :].flatten(), dtype='float32')
+    k = 'sensorZenithAngle'     # V2
     k = 'sensor_zenith_angle'
-    obs_data[(k, 'MetaData')] = np.array(f['losZen_deg'][iband,:,:].flatten(), dtype='float32')
-    k = 'sensorAzimuthAngle'    #V2
+    obs_data[(k, 'MetaData')] = np.array(f['losZen_deg'][iband, :, :].flatten(), dtype='float32')
+    k = 'sensorAzimuthAngle'    # V2
     k = 'sensor_azimuth_angle'
-    obs_data[(k, 'MetaData')] = np.array(f['losAzi_deg'][iband,:,:].flatten(), dtype='float32')
+    obs_data[(k, 'MetaData')] = np.array(f['losAzi_deg'][iband, :, :].flatten(), dtype='float32')
     k = 'sensor_view_angle'
-    obs_data[(k, 'MetaData')] = np.array(f['losScan_deg'][iband,:,:].flatten(), dtype='float32')
+    obs_data[(k, 'MetaData')] = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
 
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
@@ -169,7 +167,7 @@ def get_data(f, obs_data):
     k = 'brightnessTemperature'
     k = 'brightness_temperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(f['tempBrightE_K'],axis=2)), dtype='float32')
+    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(f['tempBrightE_K'], axis=2)), dtype='float32')
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
@@ -181,13 +179,13 @@ def get_data(f, obs_data):
     # Bit 6: Ascending/Descending
     # Bit 7: Day/Night
     # Bit 8: Payload forward/aft"
-    quality_word = np.vstack(np.stack(f['calQualityFlag'],axis=2))
-    obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:,0], bit_index=6), dtype='int32')
+    quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
+    obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
 
     # check some satellite geometry will compress all data using this
-    chk_geolocation = (obs_data[('latitude', 'MetaData')] > 90) |  (obs_data[('latitude', 'MetaData')] < -90 ) | \
-                     (obs_data[('longitude', 'MetaData')] > 180) | (obs_data[('longitude', 'MetaData')] < -180 ) | \
-                      (obs_data[('sensor_zenith_angle', 'MetaData')] > 80) | (obs_data[('sensor_zenith_angle', 'MetaData')] < 0 )
+    chk_geolocation = (obs_data[('latitude', 'MetaData')] > 90) | (obs_data[('latitude', 'MetaData')] < -90) | \
+        (obs_data[('longitude', 'MetaData')] > 180) | (obs_data[('longitude', 'MetaData')] < -180) | \
+        (obs_data[('sensor_zenith_angle', 'MetaData')] > 80) | (obs_data[('sensor_zenith_angle', 'MetaData')] < 0)
     # sanity check -- returns null dictionary
     if np.sum(chk_geolocation) == 0:
         obs_data = {}
@@ -197,18 +195,25 @@ def get_data(f, obs_data):
     obs_data[('longitude', 'MetaData')][chk_geolocation] = float_missing_value
     obs_data[('sensor_zenith_angle', 'MetaData')][chk_geolocation] = float_missing_value
 
-    # set missing value (-999) to generic missing value
+    obs_key = (k, "ObsValue")
+    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
+
+    return obs_data
+
+
+def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
+    # use quality word to determine where to set for missing values
     for jchan in np.arange(nchans):
-        i_land = get_normalized_bit(quality_word[:,jchan], bit_index=1)
-        i_intrusion = get_normalized_bit(quality_word[:,jchan], bit_index=2)
-        i_maneuver = get_normalized_bit(quality_word[:,jchan], bit_index=3)
-        i_cold_cal = get_normalized_bit(quality_word[:,jchan], bit_index=4)
-        i_hot_cal = get_normalized_bit(quality_word[:,jchan], bit_index=5)
-        i_asc = get_normalized_bit(quality_word[:,jchan], bit_index=6)
-        i_day = get_normalized_bit(quality_word[:,jchan], bit_index=7)
-        i_forward = get_normalized_bit(quality_word[:,jchan], bit_index=8)
+        i_land = get_normalized_bit(quality_word[:, jchan], bit_index=1)
+        i_intrusion = get_normalized_bit(quality_word[:, jchan], bit_index=2)
+        i_maneuver = get_normalized_bit(quality_word[:, jchan], bit_index=3)
+        i_cold_cal = get_normalized_bit(quality_word[:, jchan], bit_index=4)
+        i_hot_cal = get_normalized_bit(quality_word[:, jchan], bit_index=5)
+        i_asc = get_normalized_bit(quality_word[:, jchan], bit_index=6)
+        i_day = get_normalized_bit(quality_word[:, jchan], bit_index=7)
+        i_forward = get_normalized_bit(quality_word[:, jchan], bit_index=8)
         chk_ob = (i_cold_cal + i_hot_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
-        obs_data[(k, "ObsValue")][:,jchan][chk_ob] = float_missing_value
+        obs_data[obs_key][:, jchan][chk_ob] = float_missing_value
 
     return obs_data
 
@@ -234,6 +239,7 @@ def concat_obs_dict(obs_data, append_obs_data):
     # Use the first key in the append_obs_data dictionary to determine how
     # long to make the fill value vector.
     append_keys = list(append_obs_data.keys())
+
 
 def get_WMO_satellite_ID(filename):
 
@@ -271,7 +277,7 @@ def get_string_dtg(f):
         cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
         # need to add replication by nbeam_pos
         for _ in range(nbeam_pos):
-            dtg.append( cdtg )
+            dtg.append(cdtg)
 
     return dtg
 
