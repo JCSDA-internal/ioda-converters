@@ -27,27 +27,33 @@ namespace Ingester {
             description_(description),
             file_(bufr::File(description_.filepath(),
                              description_.isWmoFormat(),
-                             description_.tablepath())) {
+                             description_.tablepath()))
+    {
     }
 
     BufrParser::BufrParser(const eckit::Configuration &conf) :
             description_(BufrDescription(conf)),
             file_(bufr::File(description_.filepath(),
                              description_.isWmoFormat(),
-                             description_.tablepath())) {
+                             description_.tablepath()))
+    {
     }
 
-    BufrParser::~BufrParser() {
+    BufrParser::~BufrParser()
+    {
         file_.close();
     }
 
-    std::shared_ptr<DataContainer> BufrParser::parse(const size_t maxMsgsToParse) {
+    std::shared_ptr<DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
+    {
         auto startTime = std::chrono::steady_clock::now();
 
         std::cout << "Start" << std::endl;
         auto querySet = bufr::QuerySet();
-        for (const auto &var: description_.getExport().getVariables()) {
-            for (const auto &queryPair: var->getQueryList()) {
+        for (const auto &var : description_.getExport().getVariables())
+        {
+            for (const auto &queryPair : var->getQueryList())
+            {
                 querySet.add(queryPair.name, queryPair.query);
             }
         }
@@ -61,7 +67,8 @@ namespace Ingester {
         {
             for (const auto& queryInfo : var->getQueryList())
             {
-                auto resultBase = resultSet.get(queryInfo.name, queryInfo.groupByField);
+                auto resultBase = resultSet.get(
+                        queryInfo.name, queryInfo.groupByField);
                 srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase, queryInfo.query);
             }
         }
@@ -88,13 +95,15 @@ namespace Ingester {
 
         // Filter
         BufrDataMap dataCopy = srcData;  // make mutable copy
-        for (const auto &filter: filters) {
+        for (const auto &filter : filters)
+        {
             filter->apply(dataCopy);
         }
 
         // Split
         CategoryMap catMap;
-        for (const auto &split: splits) {
+        for (const auto &split : splits)
+        {
             std::ostringstream catName;
             catName << "splits/" << split->getName();
             catMap.insert({catName.str(), split->subCategories(dataCopy)});
@@ -102,14 +111,17 @@ namespace Ingester {
 
         BufrParser::CatDataMap splitDataMaps;
         splitDataMaps.insert({std::vector<std::string>(), dataCopy});
-        for (const auto &split: splits) {
+        for (const auto &split : splits)
+        {
             splitDataMaps = splitData(splitDataMaps, *split);
         }
 
         // Export
         auto exportData = std::make_shared<Ingester::DataContainer>(catMap);
-        for (const auto &dataPair: splitDataMaps) {
-            for (const auto &var: vars) {
+        for (const auto &dataPair : splitDataMaps)
+        {
+            for (const auto &var : vars)
+            {
                 std::ostringstream pathStr;
                 pathStr << "variables/" << var->getExportName();
 
@@ -122,13 +134,16 @@ namespace Ingester {
         return exportData;
     }
 
-    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap &splitMaps, Split &split) {
+    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap &splitMaps, Split &split)
+    {
         CatDataMap splitDataMap;
 
-        for (const auto &splitMapPair: splitMaps) {
+        for (const auto &splitMapPair : splitMaps)
+        {
             auto newData = split.split(splitMapPair.second);
 
-            for (const auto &newDataPair: newData) {
+            for (const auto &newDataPair : newData)
+            {
                 auto catVect = splitMapPair.first;
                 catVect.push_back(newDataPair.first);
                 splitDataMap.insert({catVect, newDataPair.second});
@@ -138,19 +153,24 @@ namespace Ingester {
         return splitDataMap;
     }
 
-    void BufrParser::reset() {
+    void BufrParser::reset()
+    {
         file_.rewind();
     }
 
-    void BufrParser::printMap(const BufrParser::CatDataMap &map) {
-        for (const auto &mp: map) {
+    void BufrParser::printMap(const BufrParser::CatDataMap &map)
+    {
+        for (const auto &mp : map)
+        {
             std::cout << " keys: ";
-            for (const auto &s: mp.first) {
+            for (const auto &s : mp.first)
+            {
                 std::cout << s;
             }
 
             std::cout << " subkeys: ";
-            for (const auto &m2p: mp.second) {
+            for (const auto &m2p : mp.second)
+            {
                 std::cout << m2p.first << " " << m2p.second->getDims()[0] << " ";
             }
 

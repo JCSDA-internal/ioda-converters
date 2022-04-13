@@ -14,22 +14,31 @@
 
 namespace Ingester {
 namespace bufr {
+
+    /// \breif Manages an open BUFR file.
     class File
     {
-    public:
+     public:
         File() = delete;
 
         File(const std::string& filename,
              bool isWmoFormat = false,
              const std::string& wmoTablePath = "");
 
+        /// \brief Execute the queryies given in the query set over the BUFR file and accumulate the
+        /// resulting data in the ResultSet.
+        /// \param query_set The queryset object that contains the collection of desired queries
+        /// \param next The number of messages worth of data to run. 0 reads all messages in the
+        /// file.
         ResultSet execute(const QuerySet& query_set, size_t next = 0);
 
-        void open();
+        /// \brief Close the currently opened BUFR file.
         void close();
+
+        /// \brief Rewind the currently opened BUFR file to the beginning.
         void rewind();
 
-    private:
+     private:
         const std::string filename_;
         const int fileUnit_;
         const int fileUnitTable1_;
@@ -37,6 +46,11 @@ namespace bufr {
         const bool isWmoFormat_;
         const std::string wmoTablePath_;
 
+
+        /// \brief Open the BUFR file whose parameters where given in the constructor.
+        void open();
+
+        /// \brief Get the next available Fortran file unit number.
         int nextFileUnit();
     };
 }  // namespace bufr

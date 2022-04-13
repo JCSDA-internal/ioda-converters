@@ -19,7 +19,6 @@ namespace Ingester
      public:
         Parser() = default;
         explicit Parser(const eckit::Configuration& conf);
-
         virtual ~Parser() = default;
 
         /// \brief Parse the input.
