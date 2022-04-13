@@ -86,7 +86,7 @@ def main(file_names, output_file, datetimeRef):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {
-        'soureFiles': ", ".join(file_names),
+        'sourceFiles': ", ".join(file_names),
         'datetimeReference': datetimeRef
     }
 
@@ -166,7 +166,7 @@ def read_file(file_name, data):
 
                 freq, freqerr = get_frequency(row['type'], freqerr)
                 satid, saterr = get_id(row['sat'], saterr)
-                iata['satelliteID'] = np.append(data['satelliteID'], satid)
+                data['satelliteID'] = np.append(data['satelliteID'], satid)
                 data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
                 data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
