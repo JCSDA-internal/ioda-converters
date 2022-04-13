@@ -18,11 +18,13 @@
 | ADSUP    | 362041 | AMDAR SUPPLEMENTARY DATA                                 |
 |          |        |                                                          |
 | ACID     | 001006 | AIRCRAFT FLIGHT NUMBER                                   |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
 | PCAT     | 002005 | PRECISION OF TEMPERATURE OBSERVATION                     |
 | ACNS     | 002061 | AIRCRAFT NAVIGATION SYSTEM                               |
 | TADR     | 002062 | TYPE OF AIRCRAFT DATA RELAY SYSTEM                       |
 | YEAR     | 004001 | YEAR                                                     |
 | MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
 | HOUR     | 004004 | HOUR                                                     |
 | MINU     | 004005 | MINUTE                                                   |
 | RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
@@ -88,11 +90,13 @@
 |----------|------|-------------|-----|--------------------------|-------------|
 |          |      |             |     |                          |-------------|
 | ACID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
 | PCAT     |    2 |           0 |   7 | DEGREES KELVIN           |-------------|
 | ACNS     |    0 |           0 |   3 | CODE TABLE               |-------------|
 | TADR     |    0 |           0 |   4 | CODE TABLE               |-------------|
 | YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
 | MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
 | HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
 | MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
 | RCYR     |    0 |           0 |  12 | YEAR                     |-------------|

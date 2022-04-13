@@ -33,6 +33,10 @@ phases:
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
 
+      # read cdash url from s3
+      - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
+      - CDASH_URL=$(cat cdash_url.txt)        
+
   pre_build:
     on-failure: CONTINUE
     commands:
@@ -71,6 +75,7 @@ phases:
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
       - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
+      - sed -i "s@CDASH_URL@$CDASH_URL@g" /jcsda/ioda-bundle/CTestConfig.cmake
       - ls /jcsda/ioda-bundle/
 
   build:
@@ -79,8 +84,17 @@ phases:
         && echo $CC
         && echo $CXX
         && echo $FC
-        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle/"
+        && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -Wno-dev -DCDASH_OVERRIDE_SITE=CodeBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DUSE_ECCODES=ON /jcsda/ioda-bundle/"
 
+      - su - jedi -c "cd /home/jedi/ioda
+        && echo $CC
+        && echo $CXX
+        && echo $FC
+        && cp ../DartConfiguration.tcl .
+        && sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
+        && sed -i 's/jedi/jedi\/ioda/' DartConfiguration.tcl
+        && cat DartConfiguration.tcl
+        && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
 
       - su - jedi -c "cd /home/jedi/iodaconv
         && echo $CC
@@ -122,8 +136,7 @@ phases:
       # upload find cdash url and upload it as CodeBuild artifact to S3
       - if [ "$BUILD_STATUS" = "1" ];
         then echo "Build & tests passed, find cdash url";
-        bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing;
-        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing);
+        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing $CDASH_URL);
         echo $url;
         echo ${url} > /jcsda/artifacts/cdash-url.txt;
         cat /jcsda/artifacts/cdash-url.txt;

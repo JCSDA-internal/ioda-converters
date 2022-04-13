@@ -12,7 +12,7 @@ observations:
         variables:
           satellite:
             query: "*/SAID"
-          datetime:
+          timestamp:
             datetime:
               year: "*/YEAR"
               month: "*/MNTH"
@@ -66,10 +66,10 @@ observations:
           longName: "Satellite ID"
           units: "id"
 
-        - name: "datetime@MetaData"
-          source: variables/datetime
-          longName: "Date Time"
-          units: "YYYYmmddHHMMSSZ"
+        - name: "dateTime@MetaData"
+          source: variables/timestamp
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "longitude@MetaData"
           source: variables/longitude

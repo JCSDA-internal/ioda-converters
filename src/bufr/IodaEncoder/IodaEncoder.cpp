@@ -316,28 +316,6 @@ namespace Ingester
         return result;
     }
 
-  bool IodaEncoder::isInteger(const std::string& str) const
-  {
-      bool isInt = true;
-      if (str.empty())
-      {
-          isInt = false;
-      }
-      else
-      {
-          for (auto it = str.begin(); it != str.end(); it++)
-          {
-              if (!std::isdigit(*it))
-              {
-                isInt = false;
-                break;
-              }
-          }
-      }
-
-      return isInt;
-  }
-
     bool IodaEncoder::existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const
     {
         for (auto paths : pathMap)

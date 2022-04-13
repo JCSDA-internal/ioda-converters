@@ -9,9 +9,9 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "eckit/config/LocalConfiguration.h"
-#include "ResultSet.h"
 
 #include "Variable.h"
 

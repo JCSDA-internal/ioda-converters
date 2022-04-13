@@ -36,6 +36,19 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
   BufrParser/Exports/Variables/Transforms/TransformBuilder.h
   BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
+  BufrParser/Query/DataProvider.h
+  BufrParser/Query/DataProvider.cpp
+  BufrParser/Query/File.h
+  BufrParser/Query/File.cpp
+  BufrParser/Query/VectorMath.h
+  BufrParser/Query/QuerySet.h
+  BufrParser/Query/QuerySet.cpp
+  BufrParser/Query/Query.h
+  BufrParser/Query/Query.cpp
+  BufrParser/Query/QueryParser.h
+  BufrParser/Query/QueryParser.cpp
+  BufrParser/Query/ResultSet.h
+  BufrParser/Query/ResultSet.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp
@@ -47,7 +60,7 @@ list(APPEND _ingester_deps
   eckit
   ${oops_LIBRARIES}
   ioda_engines
-  bufr::bufr_4_DA
+  bufr::bufr_d
 )
 
 ecbuild_add_library( TARGET   ingester
@@ -70,7 +83,7 @@ ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp
                         LIBS    ingester )
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_bufr_coding_norms
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
                   ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}

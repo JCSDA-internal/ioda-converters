@@ -1,0 +1,333 @@
+
+Found BUFR message #      1
+  
+        Message length:       11721
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          23
+          Master table:           0
+    Originating center:          34 (= Tokyo (RSMC), Japan Meteorological Agency)
+ Originating subcenter:           0 (= No sub-centre)
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           5 (= Single level upper-air data (satellite))
+     Local subcategory:           0
+ Internatl subcategory:           0 (= Cloud wind data (SATOB))
+  Master table version:           8
+   Local table version:           0
+                  Year:        2019
+                 Month:          11
+                   Day:          27
+                  Hour:          12
+                Minute:           0
+                Second:           0
+  
+ Number of data subsets:         420
+     Data are observed?: Yes
+   Data are compressed?: Yes
+  Number of descriptors:          57
+        1: 310014
+        2: 222000
+        3: 236000
+        4: 101103
+        5: 031031
+        6: 001031
+        7: 001032
+        8: 101004
+        9: 033007
+       10: 222000
+       11: 237000
+       12: 001031
+       13: 001032
+       14: 101004
+       15: 033035
+       16: 222000
+       17: 237000
+       18: 001031
+       19: 001032
+       20: 101004
+       21: 033036
+       22: 222000
+       23: 237000
+       24: 001031
+       25: 001032
+       26: 101004
+       27: 033007
+       28: 222000
+       29: 237000
+       30: 001031
+       31: 001032
+       32: 101004
+       33: 033035
+       34: 222000
+       35: 237000
+       36: 001031
+       37: 001032
+       38: 101004
+       39: 033036
+       40: 222000
+       41: 237000
+       42: 001031
+       43: 001032
+       44: 101004
+       45: 033007
+       46: 222000
+       47: 237000
+       48: 001031
+       49: 001032
+       50: 101004
+       51: 033035
+       52: 222000
+       53: 237000
+       54: 001031
+       55: 001032
+       56: 101004
+       57: 033036
+
+BUFR message #      1 of type MSTTB001 and date 2019112712 contains    420 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001007  SAID                       173.0  CODE TABLE                    Satellite identifier                            
+                                    173 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+002020  SCLF                       273.0  CODE TABLE                    Satellite classification                        
+                                    273 = ***THIS IS AN ILLEGAL/UNDEFINED VALUE***
+002028  SSNX                     14000.0  M                             Segment size at nadir in x-direction            
+002029  SSNY                     14000.0  M                             Segment size at nadir in y-direction            
+004001  YEAR                      2019.0  YEAR                          Year                                            
+004002  MNTH                        11.0  MONTH                         Month                                           
+004003  DAYS                        27.0  DAY                           Day                                             
+004004  HOUR                        12.0  HOUR                          Hour                                            
+004005  MINU                        10.0  MINUTE                        Minute                                          
+004006  SECO                         0.0  S                             Second                                          
+005001  CLATH                    2.37973  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  139.25200  DEGREE                        Longitude (high accuracy)                       
+002152  SIDP                   4194304.0  FLAG TABLE(9)                 Satellite instrument used in data processing    
+                                      9 = Geostationary Imager
+002023  SWCM                         1.0  CODE TABLE                    Satellite-derived wind computation method       
+                                      1 = Wind derived from cloud motion observed in the infrared channel
+007004  PRLC                     97200.0  PA                            Pressure                                        
+011001  WDIR                       273.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        13.2  M S⁻¹                      Wind speed                                      
+002153  SCCF            28826100000000.0  HZ                            Satellite channel centre frequency              
+002154  SCBW             1164600000000.0  HZ                            Satellite channel band width                    
+012071  CCST                     MISSING  K                             Coldest cluster temperature                     
+002163  HAMD                        14.0  CODE TABLE                    Height assignment method                        
+                                     14 = Composite height assignment
+002164  TCMD                         2.0  CODE TABLE                    Tracer correlation method                       
+                                      2 = CC - Cross correlation
+008012  LSQL                     MISSING  CODE TABLE                    Land/sea qualifier                              
+007024  SAZA                        3.26  DEGREE                        Satellite zenith angle                          
+002057  OFGI                     MISSING  CODE TABLE                    Origin of first-guess information for GOES-I/M s
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+004001  YEAR                     MISSING  YEAR                          Year                                            
+004002  MNTH                     MISSING  MONTH                         Month                                           
+004003  DAYS                     MISSING  DAY                           Day                                             
+004004  HOUR                     MISSING  HOUR                          Hour                                            
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+004024  TPHR                     MISSING  HOUR                          Time period or displacement                     
+           "RPSEQ001"     4 REPLICATIONS
+    ++++++  RPSEQ001  REPLICATION #     1  ++++++
+008021  TSIG                        28.0  CODE TABLE                    Time significance                               
+                                     28 = Start of scan
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        50.0  MINUTE                        Minute                                          
+004006  SECO                        20.0  S                             Second                                          
+008021  TSIG                        29.0  CODE TABLE                    Time significance                               
+                                     29 = End of scan
+004004  HOUR                        12.0  HOUR                          Hour                                            
+004005  MINU                         0.0  MINUTE                        Minute                                          
+004006  SECO                        20.0  S                             Second                                          
+011001  WDIR                       273.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        13.2  M S⁻¹                      Wind speed                                      
+    ++++++  RPSEQ001  REPLICATION #     2  ++++++
+008021  TSIG                        28.0  CODE TABLE                    Time significance                               
+                                     28 = Start of scan
+004004  HOUR                        12.0  HOUR                          Hour                                            
+004005  MINU                         0.0  MINUTE                        Minute                                          
+004006  SECO                        20.0  S                             Second                                          
+008021  TSIG                        29.0  CODE TABLE                    Time significance                               
+                                     29 = End of scan
+004004  HOUR                        12.0  HOUR                          Hour                                            
+004005  MINU                        10.0  MINUTE                        Minute                                          
+004006  SECO                        20.0  S                             Second                                          
+011001  WDIR                       273.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        13.2  M S⁻¹                      Wind speed                                      
+    ++++++  RPSEQ001  REPLICATION #     3  ++++++
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+004004  HOUR                     MISSING  HOUR                          Hour                                            
+004005  MINU                     MISSING  MINUTE                        Minute                                          
+004006  SECO                     MISSING  S                             Second                                          
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+004004  HOUR                     MISSING  HOUR                          Hour                                            
+004005  MINU                     MISSING  MINUTE                        Minute                                          
+004006  SECO                     MISSING  S                             Second                                          
+011001  WDIR                     MISSING  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                     MISSING  M S⁻¹                      Wind speed                                      
+    ++++++  RPSEQ001  REPLICATION #     4  ++++++
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+004004  HOUR                     MISSING  HOUR                          Hour                                            
+004005  MINU                     MISSING  MINUTE                        Minute                                          
+004006  SECO                     MISSING  S                             Second                                          
+008021  TSIG                     MISSING  CODE TABLE                    Time significance                               
+004004  HOUR                     MISSING  HOUR                          Hour                                            
+004005  MINU                     MISSING  MINUTE                        Minute                                          
+004006  SECO                     MISSING  S                             Second                                          
+011001  WDIR                     MISSING  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                     MISSING  M S⁻¹                      Wind speed                                      
+           "RPSEQ002"    10 REPLICATIONS
+    ++++++  RPSEQ002  REPLICATION #     1  ++++++
+002163  HAMD                        14.0  CODE TABLE                    Height assignment method                        
+                                     14 = Composite height assignment
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/dry-bulb temperature                
+<REPEATS SNIPPED>
+    ++++++  RPSEQ002  REPLICATION #    10  ++++++
+002163  HAMD                        14.0  CODE TABLE                    Height assignment method                        
+                                     14 = Composite height assignment
+007004  PRLC                     MISSING  PA                            Pressure                                        
+012001  TMDBST                   MISSING  K                             Temperature/dry-bulb temperature                
+           "RPSEQ003"   103 REPLICATIONS
+    ++++++  RPSEQ003  REPLICATION #     1  ++++++
+031031  DPRI                     MISSING  FLAG TABLE                    Data present indicator                          
+<REPEATS SNIPPED>
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       101.0  CODE TABLE                    Generating application                          
+                                    101 = Quality values derived from the EUMETSAT QI (Quality Indicator) method, with the forecast consistency test
+           "RPSEQ004"     4 REPLICATIONS
+    ++++++  RPSEQ004  REPLICATION #     1  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for PRLC                     
+    ++++++  RPSEQ004  REPLICATION #     2  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for WDIR                     
+    ++++++  RPSEQ004  REPLICATION #     3  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for WSPD                     
+    ++++++  RPSEQ004  REPLICATION #     4  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for CCST                     
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       101.0  CODE TABLE                    Generating application                          
+                                    101 = Quality values derived from the EUMETSAT QI (Quality Indicator) method, with the forecast consistency test
+           "RPSEQ005"     4 REPLICATIONS
+    ++++++  RPSEQ005  REPLICATION #     1  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for PRLC       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ005  REPLICATION #     2  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for WDIR       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ005  REPLICATION #     3  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for WSPD       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ005  REPLICATION #     4  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for CCST       
+                                      0 = Automatic quality control passed and not manually checked
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       101.0  CODE TABLE                    Generating application                          
+                                    101 = Quality values derived from the EUMETSAT QI (Quality Indicator) method, with the forecast consistency test
+           "RPSEQ006"     4 REPLICATIONS
+    ++++++  RPSEQ006  REPLICATION #     1  ++++++
+033036  NCTH                        65.0  %                             Nominal confidence threshold for PRLC           
+    ++++++  RPSEQ006  REPLICATION #     2  ++++++
+033036  NCTH                        65.0  %                             Nominal confidence threshold for WDIR           
+    ++++++  RPSEQ006  REPLICATION #     3  ++++++
+033036  NCTH                        65.0  %                             Nominal confidence threshold for WSPD           
+    ++++++  RPSEQ006  REPLICATION #     4  ++++++
+033036  NCTH                        65.0  %                             Nominal confidence threshold for CCST           
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       102.0  CODE TABLE                    Generating application                          
+                                    102 = Quality values derived from the EUMETSAT QI (Quality Indicator) method, excluding the forecast consistency test
+           "RPSEQ007"     4 REPLICATIONS
+    ++++++  RPSEQ007  REPLICATION #     1  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for PRLC                     
+    ++++++  RPSEQ007  REPLICATION #     2  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for WDIR                     
+    ++++++  RPSEQ007  REPLICATION #     3  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for WSPD                     
+    ++++++  RPSEQ007  REPLICATION #     4  ++++++
+033007  PCCF                        99.0  %                             Percent confidence for CCST                     
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       102.0  CODE TABLE                    Generating application                          
+                                    102 = Quality values derived from the EUMETSAT QI (Quality Indicator) method, excluding the forecast consistency test
+           "RPSEQ008"     4 REPLICATIONS
+    ++++++  RPSEQ008  REPLICATION #     1  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for PRLC       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ008  REPLICATION #     2  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for WDIR       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ008  REPLICATION #     3  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for WSPD       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ008  REPLICATION #     4  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for CCST       
+                                      0 = Automatic quality control passed and not manually checked
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       102.0  CODE TABLE                    Generating application                          
+                                    102 = Quality values derived from the EUMETSAT QI (Quality Indicator) method, excluding the forecast consistency test
+           "RPSEQ009"     4 REPLICATIONS
+    ++++++  RPSEQ009  REPLICATION #     1  ++++++
+033036  NCTH                        70.0  %                             Nominal confidence threshold for PRLC           
+    ++++++  RPSEQ009  REPLICATION #     2  ++++++
+033036  NCTH                        70.0  %                             Nominal confidence threshold for WDIR           
+    ++++++  RPSEQ009  REPLICATION #     3  ++++++
+033036  NCTH                        70.0  %                             Nominal confidence threshold for WSPD           
+    ++++++  RPSEQ009  REPLICATION #     4  ++++++
+033036  NCTH                        70.0  %                             Nominal confidence threshold for CCST           
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       103.0  CODE TABLE                    Generating application                          
+                                    103 = Quality values derived from the NESDIS RFF (Recursive Filter Function) method
+           "RPSEQ010"     4 REPLICATIONS
+    ++++++  RPSEQ010  REPLICATION #     1  ++++++
+033007  PCCF                       100.0  %                             Percent confidence for PRLC                     
+    ++++++  RPSEQ010  REPLICATION #     2  ++++++
+033007  PCCF                       100.0  %                             Percent confidence for WDIR                     
+    ++++++  RPSEQ010  REPLICATION #     3  ++++++
+033007  PCCF                       100.0  %                             Percent confidence for WSPD                     
+    ++++++  RPSEQ010  REPLICATION #     4  ++++++
+033007  PCCF                       100.0  %                             Percent confidence for CCST                     
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       103.0  CODE TABLE                    Generating application                          
+                                    103 = Quality values derived from the NESDIS RFF (Recursive Filter Function) method
+           "RPSEQ011"     4 REPLICATIONS
+    ++++++  RPSEQ011  REPLICATION #     1  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for PRLC       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ011  REPLICATION #     2  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for WDIR       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ011  REPLICATION #     3  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for WSPD       
+                                      0 = Automatic quality control passed and not manually checked
+    ++++++  RPSEQ011  REPLICATION #     4  ++++++
+033035  MAQC                         0.0  CODE TABLE                    Manual/automatic quality control for CCST       
+                                      0 = Automatic quality control passed and not manually checked
+001031  GCLONG                      34.0  CODE TABLE                    Identification of originating/generating centre 
+                                     34 = Tokyo (RSMC), Japan Meteorological Agency
+001032  GNAP                       103.0  CODE TABLE                    Generating application                          
+                                    103 = Quality values derived from the NESDIS RFF (Recursive Filter Function) method
+           "RPSEQ012"     4 REPLICATIONS
+    ++++++  RPSEQ012  REPLICATION #     1  ++++++
+033036  NCTH                        80.0  %                             Nominal confidence threshold for PRLC           
+    ++++++  RPSEQ012  REPLICATION #     2  ++++++
+033036  NCTH                        80.0  %                             Nominal confidence threshold for WDIR           
+    ++++++  RPSEQ012  REPLICATION #     3  ++++++
+033036  NCTH                        80.0  %                             Nominal confidence threshold for WSPD           
+    ++++++  RPSEQ012  REPLICATION #     4  ++++++
+033036  NCTH                        80.0  %                             Nominal confidence threshold for CCST           
+
+ >>> END OF SUBSET <<< 
+
+End of BUFR message #      1
+
+------------------------------------------------------------------------------------------------------------------------
+
+Reached end of BUFR file; it contained a total of      1 messages and      420 subsets

@@ -40,12 +40,19 @@
 | DAYS     | 004003 | DAY                                                      |
 | HOUR     | 004004 | HOUR                                                     |
 | MINU     | 004005 | MINUTES                                                  |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
 | WSHFTH   | 004212 | TIME OF OCCURENCE OF WIND SHIFT (HOURS)                  |
 | WSHFTM   | 004213 | TIME OF OCCURENCE OF WIND SHIFT (MINUTES)                |
 | CLAT     | 005002 | LATITUDE (COARSE ACCURACY)                               |
 | CLON     | 006002 | LONGITUDE (COARSE ACCURACY)                              |
 | SELV     | 007001 | HEIGHT OF STATION                                        |
 | VSSO     | 008002 | VERT. SIGNIFICANCE (SFC OBSERVATION)                     |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
 | RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
 | PMSL     | 010051 | PRESSURE REDUCED TO MSL                                  |
 | ALSE     | 010052 | ALTIMETER SETTING                                        |
@@ -163,12 +170,19 @@
 | DAYS     |    0 |           0 |   6 | DAY                      |-------------|
 | HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
 | MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
 | WSHFTH   |    0 |           0 |   5 | HOUR                     |-------------|
 | WSHFTM   |    0 |           0 |   6 | MINUTE                   |-------------|
 | CLAT     |    2 |       -9000 |  15 | DEGREES                  |-------------|
 | CLON     |    2 |      -18000 |  16 | DEGREES                  |-------------|
 | SELV     |    0 |        -400 |  15 | METERS                   |-------------|
 | VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
 | RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
 | PMSL     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | ALSE     |   -1 |           0 |  14 | PASCALS                  |-------------|

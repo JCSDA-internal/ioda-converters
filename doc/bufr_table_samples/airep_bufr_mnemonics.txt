@@ -1,0 +1,74 @@
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| AIRCRAFT | 311001 | Aircraft reports                                         |
+| ACFTSEQN | 301051 |                                                          |
+| YYMMDD   | 301011 |                                                          |
+| HHMM     | 301012 |                                                          |
+| LTLONH   | 301021 |                                                          |
+|          |        |                                                          |
+| ACID     | 001006 | Aircraft flight number                                   |
+| ACNS     | 002061 | Aircraft navigational system                             |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| POAF     | 008004 | Phase of aircraft flight                                 |
+| HMSL     | 007002 | Height or altitude                                       |
+| TMDBST   | 012001 | Temperature/dry-bulb temperature                         |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| DGOT     | 011031 | Degree of turbulence                                     |
+| HBOT     | 011032 | Height of base of turbulence                             |
+| HTOT     | 011033 | Height of top of turbulence                              |
+| AFIC     | 020041 | Airframe icing                                           |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | AIRCRAFT                                                          |
+|          |                                                                   |
+| AIRCRAFT | ACFTSEQN  HMSL  TMDBST  WDIR  WSPD  DGOT  HBOT  HTOT  AFIC        |
+|          |                                                                   |
+| ACFTSEQN | ACID  ACNS  YYMMDD  HHMM  LTLONH  POAF                            |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| ACID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| ACNS     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| POAF     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| HMSL     |   -1 |         -40 |  16 | M                        |-------------|
+| TMDBST   |    1 |           0 |  12 | K                        |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| DGOT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HBOT     |   -1 |         -40 |  16 | M                        |-------------|
+| HTOT     |   -1 |         -40 |  16 | M                        |-------------|
+| AFIC     |    0 |           0 |   4 | CODE TABLE               |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

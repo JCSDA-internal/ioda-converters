@@ -1,0 +1,153 @@
+# (C) Copyright 2021 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/buoy_wmo_multi.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [WMOP, STSN, BUYT]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU]
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [PRES, PMSL, HSAWS, TMDB, TMDP, WDIR, WSPD, SST0]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          stationIdentification:
+            mnemonic: WMOP
+          stationLongName:
+            mnemonic: STSN
+          buoyType:
+            mnemonic: BUYT
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          stationElevation:
+            mnemonic: HSAWS
+          temperatureAir:
+            mnemonic: TMDB
+          temperatureDewpoint:
+            mnemonic: TMDP
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
+          pressureStation:
+            mnemonic: PRES
+          meanSeaLevelPressure:
+            mnemonic: PMSL
+          temperatureSeaSurface:
+            mnemonic: SST0
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/buoy_wmo_multi.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "nlocs" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "nlocs" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/station_id"
+          source: variables/stationIdentification
+          dimensions: [ "nlocs" ]
+          longName: "Station Identification"
+          units: "none"
+
+        - name: "MetaData/stationLongName"
+          source: variables/stationLongName
+          dimensions: [ "nlocs" ]
+          longName: "Station long name"
+          units: "none"
+
+        - name: "MetaData/station_elevation"
+          source: variables/stationElevation
+          dimensions: [ "nlocs" ]
+          longName: "Station Elevation"
+          units: "m"
+
+        - name: "MetaData/height"
+          source: variables/stationElevation
+          dimensions: [ "nlocs" ]
+          longName: "Height"
+          units: "m"
+
+        - name: "ObsValue/air_temperature"
+          coordinates: "longitude latitude"
+          source: variables/temperatureAir
+          dimensions: [ "nlocs" ]
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "ObsValue/dewpoint_temperature"
+          coordinates: "longitude latitude"
+          source: variables/temperatureDewpoint
+          dimensions: [ "nlocs" ]
+          longName: "Dewpoint Temperature"
+          units: "K"
+
+        - name: "ObsValue/wind_direction"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          dimensions: [ "nlocs" ]
+          longName: "Wind Direction"
+          units: "degrees"
+
+        - name: "ObsValue/wind_speed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          dimensions: [ "nlocs" ]
+          longName: "Wind Speed"
+          units: "m s-1"
+
+        - name: "ObsValue/surface_pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureStation
+          dimensions: [ "nlocs" ]
+          longName: "Surface Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/sea_level_pressure"
+          coordinates: "longitude latitude"
+          source: variables/meanSeaLevelPressure
+          dimensions: [ "nlocs" ]
+          longName: "Mean Sea Level Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/sea_surface_temperature"
+          coordinates: "longitude latitude"
+          source: variables/temperatureSeaSurface
+          dimensions: [ "nlocs" ]
+          longName: "Sea Surface Temperature"
+          units: "K"

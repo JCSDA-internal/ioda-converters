@@ -40,6 +40,8 @@
 | DAYS     | 004003 | DAY                                                      |
 | HOUR     | 004004 | HOUR                                                     |
 | MINU     | 004005 | MINUTES                                                  |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
 | RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
 | RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
 | RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
@@ -50,6 +52,7 @@
 | SELV     | 007001 | HEIGHT OF STATION                                        |
 | PRLC     | 007004 | PRESSURE                                                 |
 | VSSO     | 008002 | VERT. SIGNIFICANCE (SFC OBSERVATION)                     |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
 | RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
 | PRES     | 010004 | PRESSURE                                                 |
 | GP10     | 010008 | GEOPOTENTIAL                                             |
@@ -167,6 +170,8 @@
 | DAYS     |    0 |           0 |   6 | DAY                      |-------------|
 | HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
 | MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
 | RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
 | RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
 | RCDY     |    0 |           0 |   6 | DAY                      |-------------|
@@ -177,6 +182,7 @@
 | SELV     |    0 |        -400 |  15 | METERS                   |-------------|
 | PRLC     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
 | RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
 | PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | GP10     |    0 |      -10000 |  20 | (METERS/SECOND)**2       |-------------|

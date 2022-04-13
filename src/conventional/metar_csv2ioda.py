@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
+# (C) Copyright 2020, 2021 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -14,6 +14,7 @@
 import sys
 import os
 import math
+import numpy as np
 from datetime import datetime
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
@@ -25,11 +26,49 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import meteo_utils
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
+from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
+import meteo_utils
 
 os.environ["TZ"] = "UTC"
+
+locationKeyList = [
+    ("station_id", "string"),
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("station_elevation", "float"),
+    ("height", "float"),
+    ("dateTime", "integer"),
+]
+
+obsvars = {
+    'ob_temp': 'air_temperature',
+    'ob_spfh': 'specific_humidity',
+    'ob_psfc': 'surface_pressure',
+    'ob_uwnd': 'eastward_wind',
+    'ob_vwnd': 'northward_wind',
+}
+
+obsvars_units = ['K', 'kg kg-1', 'Pa', 'm s-1', 'm s-1']
+
+VarDims = {
+    'ob_temp': ['nlocs'],
+    'ob_spfh': ['nlocs'],
+    'ob_psfc': ['nlocs'],
+    'ob_uwnd': ['nlocs'],
+    'ob_vwnd': ['nlocs'],
+}
+
+AttrData = {
+    'converter': os.path.basename(__file__),
+    'ioda_version': 2,
+    'description': 'METAR surface observation data converted from CSV',
+    'source': 'NCAR-RAL METAR database (gthompsn)',
+}
+
+DimDict = {
+}
 
 
 class reformatMetar(object):
@@ -40,6 +79,11 @@ class reformatMetar(object):
         self.date = date
         self.meteo_utils = meteo_utils.meteo_utils()
         self.float_fill = netCDF4.default_fillvals['f4']
+        self.varDict = defaultdict(lambda: DefaultOrderedDict(dict))
+        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+        AttrData['datetime_reference'] = date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Read in CSV-formatted file of METAR data
         self._rd_metars()
@@ -47,6 +91,24 @@ class reformatMetar(object):
         return
 
     def _rd_metars(self):
+
+        n = 0
+        for iodavar in obsvars.values():
+            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = obsvars_units[n]
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = obsvars_units[n]
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+            n += 1
+
+        # Set units of some MetaData variables
+        self.varAttrs['station_elevation', 'MetaData']['units'] = 'm'
+        self.varAttrs['height', 'MetaData']['units'] = 'm'
+        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
 
         # data is the dictionary of incoming observation (METAR) data
         data = {}
@@ -80,7 +142,7 @@ class reformatMetar(object):
             for row in csv_dict_reader:
                 # row variable is a list that represents a row in csv
 
-                if row['ICAO'] is '':
+                if row['ICAO'] == '':
                     continue
                 else:
                     icao = str(row['ICAO'])
@@ -139,8 +201,7 @@ class reformatMetar(object):
                     spfh = self.float_fill
 
                 data['ob_icao'].append(icao)
-                data['ob_time'].append(utime)
-                data['ob_datetime'].append(datetime.fromtimestamp(utime).strftime("%Y-%m-%dT%H:%M:%SZ"))
+                data['ob_datetime'].append(utime)
                 data['ob_lat'].append(lat)
                 data['ob_lon'].append(lon)
                 data['ob_elev'].append(elev)
@@ -152,84 +213,38 @@ class reformatMetar(object):
                 data['ob_vwnd'].append(vwnd)
 
         fh.close()
-        self.data = data
 
-        return
+        nlocs = len(data['ob_datetime'])
 
+        self.outdata[('station_id', 'MetaData')] = np.array(data['ob_icao'], dtype=object)
+        self.outdata[('dateTime', 'MetaData')] = np.array(data['ob_datetime'], dtype=np.int64)
+        self.outdata[('latitude', 'MetaData')] = np.array(data['ob_lat'], dtype=np.float32)
+        self.outdata[('longitude', 'MetaData')] = np.array(data['ob_lon'], dtype=np.float32)
+        self.outdata[('station_elevation', 'MetaData')] = np.array(data['ob_elev'], dtype=np.float32)
+        self.outdata[('height', 'MetaData')] = np.array(data['ob_hght'], dtype=np.float32)
+        iodavar = 'surface_pressure'
+        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_psfc'], dtype=np.float32)
+        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 200.0, dtype=np.float32)
+        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
+        iodavar = 'air_temperature'
+        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_temp'], dtype=np.float32)
+        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.2, dtype=np.float32)
+        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
+        iodavar = 'specific_humidity'
+        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_spfh'], dtype=np.float32)
+        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.75E-3, dtype=np.float32)
+        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
+        iodavar = 'eastward_wind'
+        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_uwnd'], dtype=np.float32)
+        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.7, dtype=np.float32)
+        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
+        iodavar = 'northward_wind'
+        self.outdata[(iodavar, iconv.OvalName())] = np.array(data['ob_vwnd'], dtype=np.float32)
+        self.outdata[(iodavar, iconv.OerrName())] = np.full((nlocs), 0.7, dtype=np.float32)
+        self.outdata[(iodavar, iconv.OqcName())] = np.full((nlocs), 2, dtype=np.int32)
 
-class IODA(object):
-
-    def __init__(self, filename, date, varDict, obsList):
-        '''
-        Initialize IODA writer class,
-        transform to IODA data structure and,
-        write out to IODA file.
-        '''
-
-        self.filename = filename
-        self.date = date
-        self.varDict = varDict
-
-        self.locKeyList = [
-            ("station_id", "string"),
-            ("latitude", "float"),
-            ("longitude", "float"),
-            ("station_elevation", "float"),
-            ("height", "float"),
-            ("datetime", "string")
-        ]
-
-        self.AttrData = {
-            'odb_version': 1,
-            'date_time_string': self.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-        }
-
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
-
-        self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        for key in self.varDict.keys():
-            value = self.varDict[key]
-            self.keyDict[key]['valKey'] = value, self.writer.OvalName()
-            self.keyDict[key]['errKey'] = value, self.writer.OerrName()
-            self.keyDict[key]['qcKey'] = value, self.writer.OqcName()
-
-        # data is the dictionary containing IODA friendly data structure
-        self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-
-        recKey = 0
-
-        for obs in obsList:
-
-            for n in range(len(obs.data['ob_lat'])):
-
-                icao = obs.data['ob_icao'][n]
-                lat = obs.data['ob_lat'][n]
-                lon = obs.data['ob_lon'][n]
-                elev = obs.data['ob_elev'][n]
-                hght = obs.data['ob_hght'][n]
-                dtg = obs.data['ob_datetime'][n]
-                locKey = icao, lat, lon, elev, hght, dtg
-
-                # print ("obs iterate: " + str(n) + ", " + icao + ", " + str(lat) + ", " + str(lon) + ", " + str(elev) + ", " + dtg)
-
-                for key in self.varDict.keys():
-
-                    val = obs.data[key][n]
-                    err = 0.0
-                    qc = 2
-
-                    valKey = self.keyDict[key]['valKey']
-                    errKey = self.keyDict[key]['errKey']
-                    qcKey = self.keyDict[key]['qcKey']
-
-                    self.data[recKey][locKey][valKey] = val
-                    self.data[recKey][locKey][errKey] = err
-                    self.data[recKey][locKey][qcKey] = qc
-
-                recKey += 1
-
-        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
+        DimDict['nlocs'] = nlocs
+        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
         return
 
@@ -242,7 +257,7 @@ def main():
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-i', '--input', help='name of the input METARs CSV-formatted file',
-        type=str, nargs='+', required=True)
+        type=str, required=True, default=None)
     parser.add_argument(
         '-o', '--output', help='name of the output netCDF IODA-ready file',
         type=str, required=True, default=None)
@@ -252,24 +267,15 @@ def main():
 
     args = parser.parse_args()
 
-    fList = args.input
-    foutput = args.output
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    obsList = []
-    for fname in fList:
-        obs = reformatMetar(fname, fdate)
-        obsList.append(obs)
+    obs = reformatMetar(args.input, fdate)
 
-    varDict = {
-        'ob_temp': 'air_temperature',
-        'ob_spfh': 'specific_humidity',
-        'ob_psfc': 'surface_pressure',
-        'ob_uwnd': 'eastward_wind',
-        'ob_vwnd': 'northward_wind'
-    }
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    IODA(foutput, fdate, varDict, obsList)
+    # write everything out
+    writer.BuildIoda(obs.outdata, VarDims, obs.varAttrs, AttrData)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@
 |------------------------------------------------------------------------------|
 | MNEMONIC | NUMBER | DESCRIPTION                                              |
 |----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
 | NC000101 | A51051 | MTYP 000-101 SYNOPTIC - FIXED LAND (BUFR)                |
 |          |        |                                                          |
 | SFCSTNID | 301004 | SURFACE STATION IDENTIFICATION                           |
@@ -51,6 +52,8 @@
 | MINU     | 004005 | MINUTES                                                  |
 | TPHR     | 004024 | TIME PERIOD OR DISPLACEMENT                              |
 | TPMI     | 004025 | TIME PERIOD OR DISPLACEMENT                              |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
 | RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
 | RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
 | RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
@@ -65,6 +68,7 @@
 | HSAWS    | 007033 | HEIGHT OF SENSOR ABOVE WATER SURFACE                     |
 | VSSO     | 008002 | VERT. SIGNIFICANCE (SFC OBSERVATION)                     |
 | TSIG     | 008021 | TIME SIGNIFICANCE                                        |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
 | RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
 | PRES     | 010004 | PRESSURE                                                 |
 | GPH10    | 010009 | GEOPOTENTIAL HEIGHT                                      |
@@ -192,6 +196,8 @@
 | MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
 | TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
 | TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
 | RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
 | RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
 | RCDY     |    0 |           0 |   6 | DAY                      |-------------|
@@ -206,6 +212,7 @@
 | HSAWS    |    1 |           0 |  12 | M                        |-------------|
 | VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
 | TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
 | RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
 | PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
 | GPH10    |    0 |       -1000 |  17 | GPM                      |-------------|

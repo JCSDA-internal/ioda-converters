@@ -28,6 +28,10 @@ phases:
       - echo $PYTHONPATH
       - . /etc/profile.d/intel.sh
 
+      # read cdash url from s3
+      - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
+      - CDASH_URL=$(cat cdash_url.txt)
+
       - pip install xarray
 
   pre_build:
@@ -81,6 +85,7 @@ phases:
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
       - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
+      - sed -i "s@CDASH_URL@$CDASH_URL@g" /jcsda/ioda-bundle/CTestConfig.cmake
 
   build:
     on-failure: CONTINUE
@@ -88,7 +93,15 @@ phases:
       - cd /home/jedi
       - echo $PYTHONPATH
       - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
-      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DBUILD_PYTHON_BINDINGS=ON /jcsda/ioda-bundle/
+      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle/
+
+      - cd /home/jedi/ioda
+      - cp ../DartConfiguration.tcl .
+      - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
+      - sed -i 's/jedi/jedi\/ioda/' DartConfiguration.tcl
+      - cat DartConfiguration.tcl
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
+
       - cd /home/jedi/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
@@ -119,8 +132,7 @@ phases:
 
       - if [ "$BUILD_STATUS" = "1" ];
         then echo "Build & tests passed, find cdash url";
-        bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing;
-        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing);
+        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing $CDASH_URL);
         echo $url;
         echo ${url} > /jcsda/artifacts/cdash-url.txt;
         cat /jcsda/artifacts/cdash-url.txt;

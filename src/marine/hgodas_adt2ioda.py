@@ -19,11 +19,11 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
+import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = "obs_absolute_dynamic_topography",
+vName = "absolute_dynamic_topography"
 
 locationKeyList = [
     ("latitude", "float"),
@@ -31,18 +31,24 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-AttrData = {
-    'odb_version': 1,
+GlobalAttrs = {
+}
+
+VarDims = {
+    vName: ['nlocs'],
+}
+
+DimDict = {
 }
 
 
 class Observation(object):
 
-    def __init__(self, filename, date, writer):
+    def __init__(self, filename, date):
         self.filename = filename
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.writer = writer
+        self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     def _read(self):
@@ -58,9 +64,15 @@ class Observation(object):
 
         base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
 
-        valKey = vName, self.writer.OvalName()
-        errKey = vName, self.writer.OerrName()
-        qcKey = vName, self.writer.OqcName()
+        valKey = vName, iconv.OvalName()
+        errKey = vName, iconv.OerrName()
+        qcKey = vName, iconv.OqcName()
+        self.VarAttrs[vName, iconv.OvalName()]['_FillValue'] = -999.
+        self.VarAttrs[vName, iconv.OerrName()]['_FillValue'] = -999.
+        self.VarAttrs[vName, iconv.OqcName()]['_FillValue'] = -999
+        self.VarAttrs[vName, iconv.OvalName()]['units'] = 'm'
+        self.VarAttrs[vName, iconv.OerrName()]['units'] = 'm'
+        self.VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
 
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
@@ -69,9 +81,9 @@ class Observation(object):
 
             dt = base_date + timedelta(hours=float(hrs[i]))
             locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[0][locKey][valKey] = vals[i]
-            self.data[0][locKey][errKey] = errs[i]
-            self.data[0][locKey][qcKey] = qcs[i]
+            self.data[locKey][valKey] = vals[i]
+            self.data[locKey][errKey] = errs[i]
+            self.data[locKey][qcKey] = qcs[i]
 
 
 def main():
@@ -98,16 +110,20 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    # Read in the adt
+    adt = Observation(args.input, fdate)
 
-    # Read in the profiles
-    prof = Observation(args.input, fdate, writer)
+    # Extract Obsdata
+    ObsVars, nlocs = iconv.ExtractObsData(adt.data, locationKeyList)
+
+    # Set attributes
+    DimDict['nlocs'] = nlocs
+
+    # Set up the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write them out
-    AttrData['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    (ObsVars, LocMdata, VarMdata) = writer.ExtractObsData(prof.data)
-    writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, AttrData)
+    writer.BuildIoda(ObsVars, VarDims, adt.VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':

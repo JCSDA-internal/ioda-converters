@@ -1,0 +1,170 @@
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/amdar_wmo_multi.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [ACRN, OSQN, ACID, ACTN]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [GNSA, FLVLST, GNSA, DPOF]
+        - mnemonics: [WDIR, WSPD]
+        - mnemonics: [ROLQ, TASP, ACTH]
+        - mnemonics: [TMDB, MIXR]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          pressureAltitude:
+            mnemonic: FLVLST
+          aircraftRegistrationNum:
+            mnemonic: ACRN
+          aircraftFlightNum:
+            mnemonic: ACID
+          aircraftTailNum:
+            mnemonic: ACTN
+          observationSequenceNum:
+            mnemonic: OSQN
+          aircraftFlightPhase:
+            mnemonic: DPOF
+          aircraftTrueAirspeed:
+            mnemonic: TASP
+          aircraftHeading:
+            mnemonic: ACTH
+          aircraftRollAngle:
+            mnemonic: ROLQ
+          temperatureAir:
+            mnemonic: TMDB
+          waterVaporMixingRatio:
+            mnemonic: MIXR
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/amdar_wmo_multi.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "nlocs" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "nlocs" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/height"
+          source: variables/pressureAltitude
+          dimensions: [ "nlocs" ]
+          longName: "Pressure altitude"
+          units: "m"
+
+        - name: "MetaData/aircraftRegistrationNum"
+          source: variables/aircraftRegistrationNum
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft registration number or other ID"
+          units: "none"
+
+        - name: "MetaData/aircraftFlightNum"
+          source: variables/aircraftFlightNum
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft flight number"
+          units: "none"
+
+        - name: "MetaData/aircraftTailNum"
+          source: variables/aircraftTailNum
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft tail number"
+          units: "none"
+
+        - name: "MetaData/observationSequenceNum"
+          source: variables/observationSequenceNum
+          dimensions: [ "nlocs" ]
+          longName: "Observation sequence number"
+          units: "none"
+
+        - name: "MetaData/aircraftFlightPhase"
+          source: variables/aircraftFlightPhase
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft flight phase (ascending/descending/level)"
+          units: "none"
+
+        - name: "MetaData/aircraftTrueAirspeed"
+          source: variables/aircraftTrueAirspeed
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft true airspeed"
+          units: "m s-1"
+
+        - name: "MetaData/aircraftHeading"
+          source: variables/aircraftHeading
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft heading"
+          units: "deg"
+
+        - name: "MetaData/aircraftRollAngle"
+          source: variables/aircraftRollAngle
+          dimensions: [ "nlocs" ]
+          longName: "Aircraft roll angle quality"
+          units: "none"
+
+        - name: "ObsValue/air_temperature"
+          coordinates: "longitude latitude"
+          source: variables/temperatureAir
+          dimensions: [ "nlocs" ]
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "ObsValue/specific_humidity"
+          coordinates: "longitude latitude"
+          source: variables/waterVaporMixingRatio
+          dimensions: [ "nlocs" ]
+          longName: "specific humidity"
+          units: "kg kg-1"
+
+        - name: "ObsValue/wind_direction"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          dimensions: [ "nlocs" ]
+          longName: "Wind Direction"
+          units: "degrees"
+
+        - name: "ObsValue/wind_speed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          dimensions: [ "nlocs" ]
+          longName: "Wind Speed"
+          units: "m s-1"

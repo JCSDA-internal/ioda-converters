@@ -1,0 +1,217 @@
+# (C) Copyright 2021 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gnssro_2020-306-2358C2E6.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLATH, CLONH]
+        - mnemonics: [HEIT]
+        - mnemonics: [GPHTST, PRES, TMDBST, SPFH, PRES]
+        - mnemonics: [SAID, SIID, OGCE]
+        - mnemonics: [IMPP, BNDA]
+        - mnemonics: [QFRO, PCCF, SCLF, PTID, ELRC, BEARAZ, GEODU]
+        - mnemonics: [ARFR]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          height:
+            mnemonic: HEIT
+          geopotentialHeight:
+            mnemonic: GPHTST
+          airPressure:
+            mnemonic: PRES
+          airTemperature:
+            mnemonic: TMDBST
+          specificHumidity:
+            mnemonic: SPFH
+
+          satelliteIdentifier:
+            mnemonic: SAID
+          instrumentIdentifier:
+            mnemonic: SIID
+          satelliteClassification:
+            mnemonic: SCLF
+          platformTransmitterId:
+            mnemonic: PTID
+          originatingCenter:
+            mnemonic: OGCE
+          qualityFlags:
+            mnemonic: QFRO
+          percentConfidence:
+            mnemonic: PCCF
+          impactParameter:
+            mnemonic: IMPP
+          geoidUndulation:
+            mnemonic: GEODU
+          azimuth:
+            mnemonic: BEARAZ
+          earthRadiusCurvature:
+            mnemonic: ELRC
+
+          bendingAngle:
+            mnemonic: BNDA
+          refractivity:
+            mnemonic: ARFR
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gnssro_2020-306-2358C2E6.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "nlocs" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "nlocs" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/height"
+          source: variables/height
+          dimensions: [ "nlocs" ]
+          longName: "Height"
+          units: "m"
+
+        - name: "MetaData/geopotentialHeight"
+          source: variables/geopotentialHeight
+          dimensions: [ "nlocs" ]
+          longName: "Geopotential height"
+          units: "m"
+
+        - name: "MetaData/airPressure"
+          coordinates: "longitude latitude"
+          source: variables/airPressure
+          dimensions: [ "nlocs" ]
+          longName: "Air pressure"
+          units: "Pa"
+
+        - name: "MetaData/process_center
+          coordinates: "longitude latitude"
+          source: variables/originatingCenter
+          dimensions: [ "nlocs" ]
+          longName: "Originating center"
+          units: "unitless"
+
+        - name: "MetaData/gnss_sat_class
+          coordinates: "longitude latitude"
+          source: variables/satelliteClassification
+          dimensions: [ "nlocs" ]
+          longName: "GNSS satellite classification"
+          units: "unitless"
+
+        - name: "MetaData/reference_sat_id
+          coordinates: "longitude latitude"
+          source: variables/satelliteIdentifier
+          dimensions: [ "nlocs" ]
+          longName: "GNSS satellite ID"
+          units: "unitless"
+
+        - name: "MetaData/occulting_sat_is
+          coordinates: "longitude latitude"
+          source: variables/instrumentIdentifier
+          dimensions: [ "nlocs" ]
+          longName: "Instrument ID"
+          units: "unitless"
+
+        - name: "MetaData/occulting_sat_id
+          coordinates: "longitude latitude"
+          source: variables/platformTransmitterId
+          dimensions: [ "nlocs" ]
+          longName: "GNSS platform transmitter ID"
+          units: "unitless"
+
+        - name: "MetaData/qualityFlags
+          coordinates: "longitude latitude"
+          source: variables/qualityFlags
+          dimensions: [ "nlocs" ]
+          longName: "Quality flags"
+          units: "unitless"
+
+        - name: "MetaData/earth_radius_of_curvature"
+          coordinates: "longitude latitude"
+          source: variables/earthRadiusCurvature
+          dimensions: [ "nlocs" ]
+          longName: "Earth local radius of curvature"
+          units: "m"
+
+        - name: "MetaData/geoid_height_above_reference_ellipsoid
+          coordinates: "longitude latitude"
+          source: variables/geoidUndulation
+          dimensions: [ "nlocs" ]
+          longName: "Geoid undulation"
+          units: "m"
+
+        - name: "MetaData/impact_parameter
+          coordinates: "longitude latitude"
+          source: variables/impactParameter
+          dimensions: [ "nlocs" ]
+          longName: "Impact parameter"
+          units: "m"
+
+        - name: "MetaData/sensor_azimuth_angle
+          coordinates: "longitude latitude"
+          source: variables/azimuth
+          dimensions: [ "nlocs" ]
+          longName: "Sensor azimuth angle"
+          units: "degrees"
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          dimensions: [ "nlocs" ]
+          longName: "Air temperature"
+          units: "K"
+
+        - name: "ObsValue/specificHumidity"
+          coordinates: "longitude latitude"
+          source: variables/specificHumidity
+          dimensions: [ "nlocs" ]
+          longName: "Specific humidity"
+          units: "kg kg-1"
+
+        - name: "ObsValue/bending_angle"
+          coordinates: "longitude latitude"
+          source: variables/bendingAngle
+          dimensions: [ "nlocs" ]
+          longName: "Bending angle"
+          units: "radians"
+
+        - name: "ObsValue/refractivity"
+          coordinates: "longitude latitude"
+          source: variables/refractivity
+          dimensions: [ "nlocs" ]
+          longName: "Refractivity"
+          units: "N units"

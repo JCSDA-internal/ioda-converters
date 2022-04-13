@@ -5,9 +5,12 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
+#include <climits>
 #include <iostream>
 #include <iomanip>
+
 #include <ostream>
+#include <time.h>
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
@@ -66,54 +69,83 @@ namespace Ingester
     std::shared_ptr<DataObjectBase> DatetimeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
+        static const float missing = 1.e+11;
+        static const int64_t missing_int = INT_MIN;
 
-        auto datetimes = std::vector<std::string>();
+        std::tm tm{};                // zero initialise
+        tm.tm_year = 1970-1900;      // 1970
+        tm.tm_mon = 0;               // Jan=0, Feb=1, ...
+        tm.tm_mday = 1;              // 1st
+        tm.tm_hour = 0;              // midnight
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
+        tm.tm_isdst = 0;             // Not daylight saving
+        std::time_t epochDt = std::mktime(&tm);
+        std::time_t this_time = std::mktime(&tm);
+        int64_t diff_time;
 
-        auto years = map.at(getExportKey(ConfKeys::Year))->getAsFloatVector();
-        auto months = map.at(getExportKey(ConfKeys::Month))->getAsFloatVector();
-        auto days = map.at(getExportKey(ConfKeys::Day))->getAsFloatVector();
-        auto hours = map.at(getExportKey(ConfKeys::Hour))->getAsFloatVector();
-        auto minutes = map.at(getExportKey(ConfKeys::Minute))->getAsFloatVector();
+        std::vector<int64_t> timeOffsets;
+        timeOffsets.reserve(map.at(getExportKey(ConfKeys::Year))->size());
 
-        datetimes.resize(years.size());
-        for (unsigned int idx = 0; idx < years.size(); idx++)
+        for (unsigned int idx = 0; idx < map.at(getExportKey(ConfKeys::Year))->size(); idx++)
         {
-            // YYYY-MM-DDThh:mm:ssZ
-            std::ostringstream datetimeStr;
-            datetimeStr << std::setfill('0')
-                        << std::setw(4) << years[idx] << "-" \
-                        << std::setw(2) << months[idx] << "-" \
-                        << std::setw(2) << days[idx] << "T" \
-                        << std::setw(2) << hours[idx] - hoursFromUtc_ << ":" \
-                        << std::setw(2) << minutes[idx] << ":";
+            int year = static_cast<int>(map.at(getExportKey(ConfKeys::Year))->getAsFloat(idx));
+            int month = static_cast<int>(map.at(getExportKey(ConfKeys::Month))->getAsFloat(idx));
+            int day = static_cast<int>(map.at(getExportKey(ConfKeys::Day))->getAsFloat(idx));
+            int hour = static_cast<int>(map.at(getExportKey(ConfKeys::Hour))->getAsFloat(idx));
+            int minute = static_cast<int>(map.at(getExportKey(ConfKeys::Minute))->getAsFloat(idx));
+            int seconds = 0;
 
-            if (!secondQuery_.empty())
+            diff_time = missing_int;
+            if (year != missing &&
+                month != missing &&
+                day != missing &&
+                hour != missing &&
+                minute != missing)
             {
-                auto dataObject = map.at(getExportKey(ConfKeys::Second));
-                auto location = Location(dataObject->getDims().size(), 0);
-                location[0] = idx;
+                tm.tm_year = year - 1900;
+                tm.tm_mon = month - 1;
+                tm.tm_mday = day;
+                tm.tm_hour = hour;
+                tm.tm_min = minute;
+                tm.tm_sec = 0;
+                tm.tm_isdst = 0;
 
-                datetimeStr << std::setw(2)
-                            << dataObject->getAsFloat(location)
-                            << ":";
-            }
-            else
-            {
-                datetimeStr << std::setw(2) << 0;
+                if (!secondQuery_.empty())
+                {
+                    seconds =
+                        static_cast<int>(map.at(getExportKey(ConfKeys::Second))->getAsFloat(idx));
+
+                    if (seconds >= 0 && seconds < 60)
+                    {
+                        tm.tm_sec = seconds;
+                    }
+                }
+
+                this_time = std::mktime(&tm);
+                if (this_time < 0)
+                {
+                    std::cout << "Caution, date suspicious date (year, month, day): "
+                              << year << ", "
+                              << month << ", "
+                              << day << std::endl;
+                }
+                diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt)
+                                                      + hoursFromUtc_*3600);
             }
 
-            datetimeStr << "Z";
-            datetimes[idx] = datetimeStr.str();
+            timeOffsets.push_back(diff_time);
         }
 
-        Dimensions dims = {datetimes.size()};
-        return std::make_shared<DataObject<std::string>>(
-            datetimes,
-            getExportName(),
-            groupByField_,
-            dims,
-            map.at(getExportKey(ConfKeys::Year))->getPath(),
-            map.at(getExportKey(ConfKeys::Year))->getDimPaths());
+        Dimensions dims = {static_cast<int>(timeOffsets.size())};
+
+        return std::make_shared<DataObject<int64_t>>(
+                timeOffsets,
+                getExportName(),
+                groupByField_,
+                dims,
+                map.at(getExportKey(ConfKeys::Year))->getPath(),
+                map.at(getExportKey(ConfKeys::Year))->getDimPaths());
     }
 
     void DatetimeVariable::checkKeys(const BufrDataMap& map)

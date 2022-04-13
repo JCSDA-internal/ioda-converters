@@ -1,7 +1,8 @@
 
-add_subdirectory(chem)
+add_subdirectory(compo)
 add_subdirectory(gsi-ncdiag)
 add_subdirectory(goes)
+add_subdirectory(hdf5)
 add_subdirectory(land)
 add_subdirectory(lib-python)
 add_subdirectory(marine)
@@ -26,4 +27,8 @@ endif()
 
 if(iodaconv_satbias_ENABLED)
   add_subdirectory(satbias)
+endif()
+
+if(iodaconv_obserror_ENABLED)
+  add_subdirectory(obserror)
 endif()
