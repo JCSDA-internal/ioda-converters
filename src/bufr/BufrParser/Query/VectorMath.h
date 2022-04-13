@@ -12,6 +12,9 @@
 
 namespace Ingester {
 namespace bufr {
+
+    /// \brief Multiply all the values in a vector together.
+    /// \return Scalar value.
     template<typename T>
     T product(std::vector<T> vec)
     {
@@ -24,6 +27,10 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Multiply a range of values in a vector together.
+    /// \param begin The beginning of the range.
+    /// \param end The end of the range.
+    /// \return Scalar value.
     template<typename T>
     T product(typename std::vector<T>::const_iterator begin,
               typename std::vector<T>::const_iterator end)
@@ -37,6 +44,10 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Slice a vector into a range of values.
+    /// \param begin The beginning of the range.
+    /// \param end The end of the range.
+    /// \return Sliced vector.
     template<typename T>
     std::vector<T> slice(typename std::vector<T>::const_iterator begin,
                          typename std::vector<T>::const_iterator end)
@@ -50,6 +61,10 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Slice a vector according to a list of indices.
+    /// \param vec The vector to slice.
+    /// \param indices The indices to slice the vector.
+    /// \return Sliced vector.
     template<typename T, typename U>
     std::vector<T> slice(const std::vector<T>& vec, const std::vector<U>& indices)
     {
@@ -62,6 +77,10 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Multiple a vector by a scalar.
+    /// \param vec The vector to multiply.
+    /// \param scalar The scalar to multiply by.
+    /// \return Multiplied vector.
     template<typename T, typename U>
     std::vector<T> operator*(const std::vector<T>& vec, const U& scalar)
     {
@@ -74,6 +93,10 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Subtract a vector from a scalar.
+    /// \param scalar The scalar to subtract from.
+    /// \param vec The vector to subtract.
+    /// \return Result vector.
     template<typename U, typename T>
     std::vector<T> operator-(const U& scalar, const std::vector<T>& vec)
     {
@@ -86,6 +109,10 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Subtract a scalar from a vector.
+    /// \param vec The vector to subtract from.
+    /// \param scalar The scalar to subtract.
+    /// \return Result vector.
     template<typename U, typename T>
     std::vector<T> operator-(const std::vector<T>& vec, const U& scalar)
     {
@@ -98,6 +125,9 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Max value in a vector.
+    /// \param vec The vector to find the max value in.
+    /// \return Max value.
     template<typename T>
     T max(const std::vector<T>& vec)
     {
