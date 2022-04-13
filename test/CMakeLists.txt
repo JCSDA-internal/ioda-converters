@@ -144,6 +144,15 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
+    testinput/gdas.t12z.aircar.nc004004_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004001_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004002_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004003_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004006_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004009_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004010_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004011_thinned.tm00.bufr_d
+    testinput/gdas.t12z.aircft.nc004103_thinned.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
     testinput/bufr_read_wmo_radiosonde.bufr
     testinput/bufr_satwnd_new_format.bufr
@@ -160,6 +169,15 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
     testinput/bufr_snow_adpsfc.yaml
+    testinput/bufr_ncep_aircar_nc004004.yaml
+    testinput/bufr_ncep_aircft_nc004001.yaml
+    testinput/bufr_ncep_aircft_nc004002.yaml
+    testinput/bufr_ncep_aircft_nc004003.yaml
+    testinput/bufr_ncep_aircft_nc004006.yaml
+    testinput/bufr_ncep_aircft_nc004009.yaml
+    testinput/bufr_ncep_aircft_nc004010.yaml
+    testinput/bufr_ncep_aircft_nc004011.yaml
+    testinput/bufr_ncep_aircft_nc004103.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
     testinput/bufr_ncep_esamua.yaml
@@ -214,6 +232,15 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
     testoutput/gdas.t00z.sevcsr.tm00.nc
+    testoutput/gdas.t12z.aircar.nc004004_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004001_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004002_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004003_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004006_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004009_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004010_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004011_select_thinned.tm00.nc
+    testoutput/gdas.t12z.aircft.nc004103_select_thinned.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
@@ -948,6 +975,24 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_esmhs.yaml"
                             gdas.t12z.esmhs.tm00.noaa-19.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_nc004001_aircft2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircft_nc004001.yaml"
+                            gdas.t12z.aircft.nc004001_select_thinned.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_aircft2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
+                            aircraft_prepbufr_select_thinned.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_adpsfc2ioda

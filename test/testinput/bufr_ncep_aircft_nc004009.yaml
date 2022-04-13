@@ -13,11 +13,11 @@ observations:
         variables:
           timestamp:
             datetime:
-              year: "*/YEAR"
-              month: "*/MNTH"
-              day: "*/DAYS"
-              hour: "*/HOUR"
-              minute: "*/MINU"
+              year: "NC004009/YEAR"
+              month: "NC004009/MNTH"
+              day: "NC004009/DAYS"
+              hour: "NC004009/HOUR"
+              minute: "NC004009/MINU"
           longitude:
             query: "NC004009/CLONH"
             group_by: longitude
@@ -25,7 +25,7 @@ observations:
             query: "NC004009/CLATH"
             group_by: longitude
           aircraftFlightNumber:
-            query: "*/ACID"
+            query: "NC004009/ACID"
             group_by: longitude
 
           aircraftNavigationalSystem:
@@ -194,7 +194,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "degrees"
+          units: "deg"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
