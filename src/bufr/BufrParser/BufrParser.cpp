@@ -19,25 +19,23 @@
 #include "Exports/Export.h"
 #include "Exports/Splits/Split.h"
 
-#include "File.h"
-#include "ResultSet.h"
-#include "QuerySet.h"
+#include "Query/QuerySet.h"
 
-namespace Ingester
-{
+
+namespace Ingester {
     BufrParser::BufrParser(const BufrDescription &description) :
-        description_(description),
-        file_(bufr::File(description_.filepath(),
-                         description_.isWmoFormat(),
-                         description_.tablepath()))
+            description_(description),
+            file_(bufr::File(description_.filepath(),
+                             description_.isWmoFormat(),
+                             description_.tablepath()))
     {
     }
 
-    BufrParser::BufrParser(const eckit::Configuration& conf) :
-        description_(BufrDescription(conf)),
-        file_(bufr::File(description_.filepath(),
-                         description_.isWmoFormat(),
-                         description_.tablepath()))
+    BufrParser::BufrParser(const eckit::Configuration &conf) :
+            description_(BufrDescription(conf)),
+            file_(bufr::File(description_.filepath(),
+                             description_.isWmoFormat(),
+                             description_.tablepath()))
     {
     }
 
@@ -46,22 +44,22 @@ namespace Ingester
         file_.close();
     }
 
-    std::shared_ptr <DataContainer> BufrParser::parse(const std::size_t maxMsgsToParse)
+    std::shared_ptr<DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
     {
         auto startTime = std::chrono::steady_clock::now();
 
         std::cout << "Start" << std::endl;
         auto querySet = bufr::QuerySet();
-        for (const auto& var : description_.getExport().getVariables())
+        for (const auto &var : description_.getExport().getVariables())
         {
-            for (const auto& queryPair : var->getQueryList())
+            for (const auto &queryPair : var->getQueryList())
             {
-                querySet.add(queryPair.query, queryPair.name);
+                querySet.add(queryPair.name, queryPair.query);
             }
         }
 
         std::cout << "Executing Queries" << std::endl;
-        auto result_set = file_.execute(querySet, maxMsgsToParse);
+        const auto resultSet = file_.execute(querySet, maxMsgsToParse);
 
         std::cout << "Building Bufr Data" << std::endl;
         auto srcData = BufrDataMap();
@@ -69,7 +67,8 @@ namespace Ingester
         {
             for (const auto& queryInfo : var->getQueryList())
             {
-                auto resultBase = result_set.get(queryInfo.name, queryInfo.groupByField);
+                auto resultBase = resultSet.get(
+                        queryInfo.name, queryInfo.groupByField);
                 srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase, queryInfo.query);
             }
         }
@@ -78,17 +77,16 @@ namespace Ingester
         auto exportedData = exportData(srcData);
 
         auto timeElapsed = std::chrono::steady_clock::now() - startTime;
-        auto timeElapsedDuration  = std::chrono::duration_cast<std::chrono::milliseconds>
-                                        (timeElapsed);
+        auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::milliseconds>
+                (timeElapsed);
         std::cout << "Finished "
-                  << "[" << timeElapsedDuration.count()/1000.0 << "s]"
+                  << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
                   << std::endl;
 
         return exportedData;
     }
 
-    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
-    {
+    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap &srcData) {
         auto exportDescription = description_.getExport();
 
         auto filters = exportDescription.getFilters();
@@ -97,14 +95,14 @@ namespace Ingester
 
         // Filter
         BufrDataMap dataCopy = srcData;  // make mutable copy
-        for (const auto& filter : filters)
+        for (const auto &filter : filters)
         {
             filter->apply(dataCopy);
         }
 
         // Split
         CategoryMap catMap;
-        for (const auto& split : splits)
+        for (const auto &split : splits)
         {
             std::ostringstream catName;
             catName << "splits/" << split->getName();
@@ -113,16 +111,16 @@ namespace Ingester
 
         BufrParser::CatDataMap splitDataMaps;
         splitDataMaps.insert({std::vector<std::string>(), dataCopy});
-        for (const auto& split : splits)
+        for (const auto &split : splits)
         {
             splitDataMaps = splitData(splitDataMaps, *split);
         }
 
         // Export
-        auto exportData = std::make_shared<DataContainer>(catMap);
-        for (const auto& dataPair : splitDataMaps)
+        auto exportData = std::make_shared<Ingester::DataContainer>(catMap);
+        for (const auto &dataPair : splitDataMaps)
         {
-            for (const auto& var : vars)
+            for (const auto &var : vars)
             {
                 std::ostringstream pathStr;
                 pathStr << "variables/" << var->getExportName();
@@ -136,15 +134,15 @@ namespace Ingester
         return exportData;
     }
 
-    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap& splitMaps, Split& split)
+    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap &splitMaps, Split &split)
     {
         CatDataMap splitDataMap;
 
-        for (const auto& splitMapPair : splitMaps)
+        for (const auto &splitMapPair : splitMaps)
         {
             auto newData = split.split(splitMapPair.second);
 
-            for (const auto& newDataPair : newData)
+            for (const auto &newDataPair : newData)
             {
                 auto catVect = splitMapPair.first;
                 catVect.push_back(newDataPair.first);
@@ -160,7 +158,7 @@ namespace Ingester
         file_.rewind();
     }
 
-    void BufrParser::printMap(const BufrParser::CatDataMap& map)
+    void BufrParser::printMap(const BufrParser::CatDataMap &map)
     {
         for (const auto &mp : map)
         {

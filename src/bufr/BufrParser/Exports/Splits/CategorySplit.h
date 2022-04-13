@@ -56,8 +56,10 @@ namespace Ingester
         std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) final;
 
      private:
-        NameMap nameMap_;
         const std::string variable_;
+
+        NameMap nameMap_;
+
 
         /// \brief Adds values to nameMap_ using the data if nameMap_ is empty.
         /// \param dataMap Data to be split

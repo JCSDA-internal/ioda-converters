@@ -39,8 +39,7 @@ locationKeyList = [
     ("longitude", "float"),
     ("station_elevation", "float"),
     ("height", "float"),
-    ("datetime", "string"),
-    ("unixtime", "integer"),
+    ("dateTime", "integer"),
 ]
 
 obsvars = {
@@ -109,7 +108,7 @@ class reformatMetar(object):
         # Set units of some MetaData variables
         self.varAttrs['station_elevation', 'MetaData']['units'] = 'm'
         self.varAttrs['height', 'MetaData']['units'] = 'm'
-        self.varAttrs['unixtime', 'MetaData']['units'] = 's'
+        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
 
         # data is the dictionary of incoming observation (METAR) data
         data = {}
@@ -202,8 +201,7 @@ class reformatMetar(object):
                     spfh = self.float_fill
 
                 data['ob_icao'].append(icao)
-                data['ob_time'].append(utime)
-                data['ob_datetime'].append(datetime.fromtimestamp(utime).strftime("%Y-%m-%dT%H:%M:%SZ"))
+                data['ob_datetime'].append(utime)
                 data['ob_lat'].append(lat)
                 data['ob_lon'].append(lon)
                 data['ob_elev'].append(elev)
@@ -219,8 +217,7 @@ class reformatMetar(object):
         nlocs = len(data['ob_datetime'])
 
         self.outdata[('station_id', 'MetaData')] = np.array(data['ob_icao'], dtype=object)
-        self.outdata[('unixtime', 'MetaData')] = np.array(data['ob_time'], dtype=np.int32)
-        self.outdata[('datetime', 'MetaData')] = np.array(data['ob_datetime'], dtype=object)
+        self.outdata[('dateTime', 'MetaData')] = np.array(data['ob_datetime'], dtype=np.int64)
         self.outdata[('latitude', 'MetaData')] = np.array(data['ob_lat'], dtype=np.float32)
         self.outdata[('longitude', 'MetaData')] = np.array(data['ob_lon'], dtype=np.float32)
         self.outdata[('station_elevation', 'MetaData')] = np.array(data['ob_elev'], dtype=np.float32)

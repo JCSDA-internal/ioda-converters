@@ -22,7 +22,7 @@
 
 namespace Ingester
 {
-    static const char* DefualtLocationName = "nlocs";
+    static const char* DefualtLocationName = "Location";
     static const char* DefualtDimName = "dim";
 
     IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
@@ -315,28 +315,6 @@ namespace Ingester
 
         return result;
     }
-
-  bool IodaEncoder::isInteger(const std::string& str) const
-  {
-      bool isInt = true;
-      if (str.empty())
-      {
-          isInt = false;
-      }
-      else
-      {
-          for (auto it = str.begin(); it != str.end(); it++)
-          {
-              if (!std::isdigit(*it))
-              {
-                isInt = false;
-                break;
-              }
-          }
-      }
-
-      return isInt;
-  }
 
     bool IodaEncoder::existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const
     {

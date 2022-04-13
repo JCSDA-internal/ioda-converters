@@ -23,7 +23,7 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 
-vName = "obs_absolute_dynamic_topography"
+vName = "absolute_dynamic_topography"
 
 locationKeyList = [
     ("latitude", "float"),

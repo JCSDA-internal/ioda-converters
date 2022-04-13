@@ -7,8 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./ADPUPA.prepbufr"
-#     obsdatain: "./testinput/ADPUPA.prepbufr"
+      obsdatain: "./testinput/ADPUPA.prepbufr"
 
       exports:
         variables:
@@ -158,10 +157,10 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "../testoutput/adpupa_prepbufr_group_by.nc"
+      obsdataout: "./testrun/adpupa_prepbufr_group_by.nc"
 
       dimensions:
-#       - name: prslevel_Dim
+#       - name: prslevel_Dim -> Level
         - name: Level
           path: "*/PRSLEVEL"
         - name: cloudseq_Dim
@@ -178,7 +177,7 @@ observations:
           path: "*/PRSLEVEL/W___INFO/W__EVENT"
 
 #     dimensions:
-#       - name: "nlocs"
+#       - name: "nlocs" 
 #         size: variables/latitude.nrows
 
 
