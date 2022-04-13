@@ -31,15 +31,23 @@ namespace bufr {
         Character
     };
 
+    /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
     class DataProvider
     {
      public:
         DataProvider() = default;
         ~DataProvider() = default;
 
+        /// \brief Read the data from the BUFR interface for the current subset and reset the
+        /// internal data structures.
+        ////// \param bufrLoc The Fortran idx for the subset we need to read.
         void updateData(int bufrLoc);
+
+        /// \brief Tells the Fortran BUFR interface to delete its temporary data structures that are
+        /// are needed to support this class instanc.
         void deleteData();
 
+        /// \brief Get the subset string for the currently active message subset.
         std::string getSubset() const { return subset_; }
 
         // Getters to get the raw data by idx. Since fortran indices are 1-based,

@@ -1,6 +1,9 @@
-//
-// Created by rmclaren on 4/6/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "SubsetTable.h"
 
@@ -104,7 +107,6 @@ namespace bufr {
 
                 allQueries.push_back(query);
                 foundQueryMap[mapKey(query->pathComponents, numElements)] = allQueries.back();
-
             }
 
             if (seqPath.size() > 1)
@@ -118,7 +120,7 @@ namespace bufr {
                     if (seqPath[pathIdx] == dataProvider_.getJmpb(nodeIdx + 1))
                     {
                         auto numToRewind = seqPath.size() - pathIdx - 1;
-                        for (auto rewindIdx = 0; rewindIdx < numToRewind; rewindIdx++)
+                        for (size_t rewindIdx = 0; rewindIdx < numToRewind; rewindIdx++)
                         {
                             seqPath.pop_back();
                             currentPathElements.clear();
@@ -141,7 +143,7 @@ namespace bufr {
     {
         std::vector<size_t> dimPathIdxs;
         dimPathIdxs.push_back(0);
-        for (auto idx = 1; idx < seqPath.size(); idx++)
+        for (size_t idx = 1; idx < seqPath.size(); idx++)
         {
             if (dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
                 dataProvider_.getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
@@ -155,12 +157,13 @@ namespace bufr {
     }
 
 
-    std::vector<std::string> SubsetTable::makePathComponents(std::vector<size_t> seqPath, int nodeIdx)
+    std::vector<std::string> SubsetTable::makePathComponents(std::vector<size_t> seqPath,
+                                                             int nodeIdx)
     {
         std::vector<std::string> pathComps;
 
         pathComps.push_back(dataProvider_.getTag(seqPath[0]));
-        for (auto idx = 1; idx < seqPath.size(); idx++)
+        for (size_t idx = 1; idx < seqPath.size(); idx++)
         {
             if (dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
                 dataProvider_.getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
@@ -176,7 +179,8 @@ namespace bufr {
     }
 
 
-    std::string SubsetTable::mapKey(const std::vector<std::string>& pathComponents, size_t idx) const
+    std::string SubsetTable::mapKey(const std::vector<std::string>& pathComponents,
+                                    size_t idx) const
     {
         std::ostringstream ostr;
         for (size_t pathIdx = 1; pathIdx < pathComponents.size(); pathIdx++)
@@ -206,7 +210,7 @@ namespace bufr {
 
         return key;
     }
-}  // bufr
-}  // Ingester
+}  // namespace bufr
+}  // namespace Ingester
 
 

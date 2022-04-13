@@ -66,7 +66,7 @@ namespace Ingester
             auto rawData = var->getRawData();
             auto array = Eigen::Map<EigArray> (rawData.data(), dims[0], extraDims);
 
-            for (std::size_t rowIdx = 0; rowIdx < dims[0]; rowIdx++)
+            for (auto rowIdx = 0; rowIdx < dims[0]; rowIdx++)
             {
                 if (lowerBound_ && upperBound_)
                 {
