@@ -173,7 +173,7 @@ def read_file(file_name, data):
             data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
             try:
                 data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
-            except:
+            except:   # noqa
                 data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], 0)
 
             pres = float(row['pre'])*100.
