@@ -163,7 +163,7 @@ def read_file(file_name, data):
                 data['dateTime'] = np.append(data['dateTime'], time_offset)
                 data['longitude'] = np.append(data['longitude'], float(row['lon']))
                 data['latitude'] = np.append(data['latitude'], float(row['lat']))
-    
+
                 freq, freqerr = get_frequency(row['type'], freqerr)
                 satid, saterr = get_id(row['sat'], saterr)
                 iata['satelliteID'] = np.append(data['satelliteID'], satid)
@@ -171,7 +171,7 @@ def read_file(file_name, data):
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
                 data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
                 data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
-    
+
                 pres = float(row['pre'])*100.
                 data['air_pressure'] = np.append(data['air_pressure'], pres)
                 wdir = float(row['dir'])*1.0
@@ -181,7 +181,7 @@ def read_file(file_name, data):
                 else:
                     uwnd = float_missing_value
                     vwnd = float_missing_value
-    
+
                 data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
                 data['northward_wind'] = np.append(data['northward_wind'], vwnd)
 
@@ -194,7 +194,7 @@ def read_file(file_name, data):
                     data['eastward_wind'] = np.append(data['eastward_wind'], float_missing_value)
                     data['northward_wind'] = np.append(data['northward_wind'], float_missing_value)
                 else:
-                    outname,missing = get_outname(e.args[0])
+                    outname, missing = get_outname(e.args[0])
                     data[outname] = np.append(data[outname], missing)
     return data
 
@@ -217,8 +217,9 @@ def get_frequency(obs_type, freqerr):
 
     return freq, freqerr
 
+
 def get_id(sat_name, saterr):
-    
+
     if sat_name == 'HMWR08':
         satid = 173
     elif sat_name == 'MET11':
@@ -237,13 +238,14 @@ def get_id(sat_name, saterr):
 
     return satid, saterr
 
+
 def get_outname(key):
 
     if key == 'type':
         outname = 'sensorCentralFrequency'
         missing = float_missing_value
     elif key == 'sat':
-        outname = 'satellite' 
+        outname = 'satellite'
         missing = int_missing_value
     elif (key == 'day') | (key == 'hms'):
         outname = 'dateTime'
@@ -256,7 +258,7 @@ def get_outname(key):
         missing = float_missing_value
     elif key == 'pre':
         outname = 'air_pressure'
-        missing = float_missing_value 
+        missing = float_missing_value
     elif key == 'rff':
         outname = 'sensorZenithAngle'
         missing = float_missing_value
@@ -268,6 +270,7 @@ def get_outname(key):
         missing = int_missing_value
 
     return outname, missing
+
 
 if __name__ == "__main__":
 
@@ -285,6 +288,9 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output-file', dest='output_file',
                           action='store', default=None, required=True,
                           help='output file')
+    required.add_argument('-d', '--date', dest='datetimeReference',
+                          action='store',
+                          help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
@@ -294,9 +300,6 @@ if __name__ == "__main__":
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
-    optional.add_argument('-d', '--date', dest='datetimeReference',
-                          action='store',
-                          help='date reference string (YYYYMMDDHH)')
 
     args = parser.parse_args()
 
