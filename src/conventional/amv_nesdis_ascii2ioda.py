@@ -288,6 +288,9 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output-file', dest='output_file',
                           action='store', default=None, required=True,
                           help='output file')
+    required.add_argument('-d', '--date', dest='datetimeReference',
+                          action='store',
+                          help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
@@ -297,9 +300,6 @@ if __name__ == "__main__":
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
-    optional.add_argument('-d', '--date', dest='datetimeReference',
-                          action='store',
-                          help='date reference string (YYYYMMDDHH)')
 
     args = parser.parse_args()
 
