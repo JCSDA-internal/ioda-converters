@@ -146,9 +146,9 @@ def read_file(file_name, data):
 
     with open(file_name, newline='') as f:
         reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
-        keyerr = False
-        freqerr = False
-        saterr = False
+        keyerr = False # no key errors in file
+        unk_freq = [] # list of unknown frequencies in file
+        unk_sat = [] # list of unknown satellites in file
 
         for row in reader:
             try:
@@ -164,8 +164,8 @@ def read_file(file_name, data):
                 data['longitude'] = np.append(data['longitude'], float(row['lon']))
                 data['latitude'] = np.append(data['latitude'], float(row['lat']))
 
-                freq, freqerr = get_frequency(row['type'], freqerr)
-                satid, saterr = get_id(row['sat'], saterr)
+                freq, unk_freq = get_frequency(row['type'], unk_freq)
+                satid, unk_sat = get_id(row['sat'], unk_sat)
                 data['satelliteID'] = np.append(data['satelliteID'], satid)
                 data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
@@ -196,10 +196,17 @@ def read_file(file_name, data):
                 else:
                     outname, missing = get_outname(e.args[0])
                     data[outname] = np.append(data[outname], missing)
+
+        for f in unk_freq:
+            logging.warning(file_name + ' contains unknown frequency ' + f)
+
+        for s in unk_sat:
+            logging.warning(file_name + ' contains unknown satellite ID ' + s)
+
     return data
 
 
-def get_frequency(obs_type, freqerr):
+def get_frequency(obs_type, unk_freq):
 
     if obs_type == 'IR':
         freq = 2.99792458E+14/10.7
@@ -210,15 +217,13 @@ def get_frequency(obs_type, freqerr):
     elif (obs_type == 'VIS'):
         freq = 2.99792458E+14/0.65
     else:
-        if not freqerr:
-            logging.warning('Unknown channel type: ' + obs_type)
-        freqerr = True
+        unk_freq.append(obs_type)
         freq = float_missing_value
 
-    return freq, freqerr
+    return freq, unk_freq
 
 
-def get_id(sat_name, saterr):
+def get_id(sat_name, unk_sat):
 
     if sat_name == 'HMWR08':
         satid = 173
@@ -231,12 +236,10 @@ def get_id(sat_name, saterr):
     elif sat_name == 'GOES17':
         satid = 271
     else:
-        if not saterr:
-            logging.warning('Unknown satellite: ' + sat_name)
-        saterr = True
+        unk_sat.append(unk_sat)
         satid = int_missing_value
 
-    return satid, saterr
+    return satid, unk_sat
 
 
 def get_outname(key):
