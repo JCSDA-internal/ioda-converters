@@ -166,7 +166,7 @@ def read_file(file_name, data):
     
                 freq, freqerr = get_frequency(row['type'], freqerr)
                 satid, saterr = get_id(row['sat'], saterr)
-                data['satelliteID'] = np.append(data['satelliteID'], satid)
+                iata['satelliteID'] = np.append(data['satelliteID'], satid)
                 data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
                 data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
@@ -274,7 +274,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser(
-        description=('Read a satwind AMV ascii/csv file from NESDIS'
+        description=('Read a satwind AMV ascii/csv file from SSEC'
                      ' and convert into IODA output file')
     )
 
