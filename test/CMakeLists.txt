@@ -983,7 +983,7 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_nc000000adpsfc2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_nc000000_adpsfc2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
@@ -992,7 +992,7 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t12z.adpsfc_bufr_nc000000_select.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_prepbufradpsfc2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_adpsfc2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
