@@ -64,7 +64,7 @@ var_dims = {
     'snowWaterEquivalent': ['Location'], }
 
 attr_data = {
- }
+}
 
 fill_value = 9.96921e+36
 
@@ -186,7 +186,7 @@ class OwpSnowObs(object):
             # define ioda meta/ancillary
             for name in [iconv.OvalName(), iconv.OerrName(), iconv.OqcName()]:
                 self.var_metadata[ioda_var, name]['coordinates'] = 'longitude latitude'
-                if(iconv.OqcName()!=name):
+                if(iconv.OqcName() != name):
                     self.var_metadata[ioda_var, name]['units'] = output_var_unit_dict[ioda_var]  # not really for Oqc... but
             # just kidding for OqcName... a lazy tag along above, fix now (less code to overwrite)
             # the data
