@@ -171,7 +171,10 @@ def read_file(file_name, data):
             data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
             data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
             data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
-            data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
+            try:
+                data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
+            except:
+                data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], 0)
 
             pres = float(row['pre'])*100.
             data['pressure'] = np.append(data['pressure'], pres)
@@ -193,12 +196,14 @@ def get_frequency(obs_type):
 
     if obs_type == 'IR':
         freq = 2.99792458E+14/10.7
-    elif (obs_type == 'WVCA') | (obs_type == 'WVCT'):
+    elif ("WV" in obs_type):
         freq = 2.99792458E+14/6.7
     elif (obs_type == 'VIS'):
         freq = 2.99792458E+14/0.65
+    elif (obs_type == 'SWIR'):
+        freq = 2.99792458E+14/3.7
     else:
-        logging.warning('Unknown channel type: {obs_type}')
+        logging.warning(f"Unknown channel type: {obs_type}")
         freq = float_missing_value
 
     return freq
