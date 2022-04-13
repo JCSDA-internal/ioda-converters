@@ -13,11 +13,11 @@ observations:
         variables:
           timestamp:
             datetime:
-              year: "*/YEAR"
-              month: "*/MNTH"
-              day: "*/DAYS"
-              hour: "*/HOUR"
-              minute: "*/MINU"
+              year: "NC000102/YEAR"
+              month: "NC000102/MNTH"
+              day: "NC000102/DAYS"
+              hour: "NC000102/HOUR"
+              minute: "NC000102/MINU"
           latitude:
             query: "NC000102/CLATH"
           longitude:
@@ -160,7 +160,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "degrees"
+          units: "deg"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"

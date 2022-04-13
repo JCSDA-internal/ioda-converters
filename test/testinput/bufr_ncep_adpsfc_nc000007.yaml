@@ -13,11 +13,11 @@ observations:
         variables:
           timestamp:
             datetime:
-              year: "[*/YEAR[1], */YEAR[2]]"
-              month: "[*/MNTH[1], */MNTH[2]]"
-              day: "[*/DAYS[1], */DAYS[2]]"
-              hour: "[*/HOUR[1], */HOUR[2]]"
-              minute: "[*/MINU[1], */MINU[2]]"
+              year: "[NC000007/YEAR[1]]"
+              month: "[NC000007/MNTH[1]]"
+              day: "[NC000007/DAYS[1]]"
+              hour: "[NC000007/HOUR[1]]"
+              minute: "[NC000007/MINU[1]]"
           altimeterSettingQnh:
             query: "NC000007/ALSE"
           latitude:
