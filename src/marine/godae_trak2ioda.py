@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019-2021 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -9,7 +9,9 @@
 
 from __future__ import print_function
 import sys
+import os
 import numpy as np
+import netCDF4 as nc
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -23,12 +25,60 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-unitDict = {
-    'ob_sst': 'degree_C',
-    'ob_sal': 'PSU',
-    'ob_uuu': 'm/s',
-    'ob_vvv': 'm/s'
+os.environ["TZ"] = "UTC"
+
+varDict = {
+    'ob_sst': 'seaSurfaceTemperature',
+    'ob_sal': 'seaSurfaceSalinity',
+    'ob_uuu': 'seaSurfaceZonalWind',
+    'ob_vvv': 'seaSurfaceMeridionalWind'
 }
+
+varDims = {
+    'seaSurfaceTemperature': ['Location'],
+    'seaSurfaceSalinity': ['Location'],
+    'seaSurfaceZonalWind': ['Location'],
+    'seaSurfaceMeridionalWind': ['Location']
+}
+
+unitDict = {
+    'ob_sst': 'K',
+    'ob_sal': '1',
+    'ob_uuu': 'm s-1',
+    'ob_vvv': 'm s-1'
+}
+
+locationKeyList = [
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
+]
+meta_keys = [m_item[0] for m_item in locationKeyList]
+
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
+float_missing_value = -999.
+int_missing_value = -99900
+double_missing_value = nc.default_fillvals['f8']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 class trak(object):
@@ -58,7 +108,7 @@ class trak(object):
 
         # data is the dictionary with data structure as in ocn_obs.f
         data = {}
-
+        data['dateTime'] = []
         data['n_obs'], data['n_lvl'], data['n_vrsn'] = fh.read_ints('>i4')
 
         print('    number trak obs: %d' % data['n_obs'])
@@ -72,8 +122,8 @@ class trak(object):
         data['ob_wm'] = fh.read_reals('>i4')
         data['ob_gsal'] = fh.read_reals('>f4')
         data['ob_gsst'] = fh.read_reals('>f4')
-        data['ob_lat'] = fh.read_reals('>f4')
-        data['ob_lon'] = fh.read_reals('>f4')
+        data['latitude'] = fh.read_reals('>f4')
+        data['longitude'] = fh.read_reals('>f4')
         data['ob_age'] = fh.read_reals('>f4')
         data['ob_csal'] = fh.read_reals('>f4')
         data['ob_csst'] = fh.read_reals('>f4')
@@ -97,6 +147,13 @@ class trak(object):
 
         fh.close()
 
+        # Transfer timestamp into seconds since epoch and convert Celcius to Kelvin
+        for n in range(data['n_obs']):
+            dtg = datetime.strptime(data['ob_dtg'][n], '%Y%m%d%H%M')
+            time_offset = np.int64(round((dtg - epoch).total_seconds()))
+            data['dateTime'].append(time_offset)
+            data['ob_sst'][n] = data['ob_sst'][n] + 273.15
+
         self.data = data
 
         return
@@ -104,7 +161,7 @@ class trak(object):
 
 class IODA(object):
 
-    def __init__(self, filename, date, varDict, varDims, obsList):
+    def __init__(self, files_input, filename, date, obsList):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -113,75 +170,61 @@ class IODA(object):
 
         self.filename = filename
         self.date = date
-        self.varDict = varDict
-
-        self.locKeyList = [
-            ("latitude", "float"),
-            ("longitude", "float"),
-            ("datetime", "string")
-        ]
 
         self.GlobalAttrs = {
+            'converter': os.path.basename(__file__),
+            'ioda_version': 2,
+            'sourceFiles': ", ".join(files_input),
+            'datetimeReference': self.date.strftime('%Y-%m-%dT%H:%M:%S%z'),
+            'description': "GODAE Ship Observations of sea surface temperature"
         }
 
-        self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        for key in self.varDict.keys():
-            value = self.varDict[key]
-            self.keyDict[key]['valKey'] = value, iconv.OvalName()
-            self.keyDict[key]['errKey'] = value, iconv.OerrName()
-            self.keyDict[key]['qcKey'] = value, iconv.OqcName()
-            self.varAttrs[value, iconv.OvalName()]['_FillValue'] = -999.
-            self.varAttrs[value, iconv.OerrName()]['_FillValue'] = -999.
-            self.varAttrs[value, iconv.OqcName()]['_FillValue'] = -999
-            self.varAttrs[value, iconv.OvalName()]['units'] = unitDict[key]
-            self.varAttrs[value, iconv.OerrName()]['units'] = unitDict[key]
-            self.varAttrs[value, iconv.OqcName()]['units'] = 'unitless'
+
+        # Set units and FillValue attributes for groups associated with observed variable.
+        for key in varDict.keys():
+            value = varDict[key]
+            self.varAttrs[(value, obsValName)]['units'] = unitDict[key]
+            self.varAttrs[(value, obsErrName)]['units'] = unitDict[key]
+            self.varAttrs[(value, obsValName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(value, obsErrName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(value, qcName)]['_FillValue'] = int_missing_value
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
+        nobs = 0
         for obs in obsList:
 
-            if obs.data['n_obs'] <= 0:
-                print('No trak observations for IODA!')
+            nobs += obs.data['n_obs']
+            if nobs <= 0:
+                print('No observations for IODA!')
                 continue
 
-            for n in range(obs.data['n_obs']):
+            # Set units of the MetaData variables and all _FillValues.
+            for key in meta_keys:
+                dtypestr = locationKeyList[meta_keys.index(key)][1]
+                if locationKeyList[meta_keys.index(key)][2]:
+                    self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+                self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+                self.data[(key, metaDataName)] = np.array(obs.data[key], dtype=dtypes[dtypestr])
 
-                lat = obs.data['ob_lat'][n]
-                lon = obs.data['ob_lon'][n]
-                dtg = datetime.strptime(obs.data['ob_dtg'][n], '%Y%m%d%H%M')
+            # Fill up the final array of observed values, obsErrors, and Qc
+            for key in varDict.keys():
+                value = varDict[key]
+                if key in ['ob_uuu', 'ob_vvv']:
+                    varQc = 'ob_qc_vel'
+                else:
+                    varQc = 'ob_' + key.split('_')[-1]
 
-                locKey = lat, lon, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+                self.data[(value, obsValName)] = np.array(obs.data[key], dtype=np.float32)
+                self.data[(value, obsErrName)] = np.full(nobs, 1.0, dtype=np.float32)
+                self.data[(value, qcName)] = np.array(obs.data[varQc]*100, dtype=np.int32)
 
-                for key in self.varDict.keys():
-
-                    if key in ['ob_uuu', 'ob_vvv']:
-                        varName = 'vel'
-                    else:
-                        varName = key.split('_')[-1]
-
-                    val = obs.data[key][n]
-                    err = 1.0
-                    qc = (100*obs.data['ob_qc_'+varName][n]).astype('i4')
-
-                    valKey = self.keyDict[key]['valKey']
-                    errKey = self.keyDict[key]['errKey']
-                    qcKey = self.keyDict[key]['qcKey']
-
-                    self.data[locKey][valKey] = val
-                    self.data[locKey][errKey] = err
-                    self.data[locKey][qcKey] = qc
-        # Extract obs
-        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
-        DimDict = {'nlocs': nlocs}
-
-        # Set up IODA writer
-        self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
-
-        # Write out observations
-        self.writer.BuildIoda(ObsVars, varDims, self.varAttrs, self.GlobalAttrs)
+        # Initialize the writer, then write the file.
+        DimDict = {'Location': nobs}
+        self.writer = iconv.IodaWriter(self.filename, locationKeyList, DimDict)
+        self.writer.BuildIoda(self.data, varDims, self.varAttrs, self.GlobalAttrs)
 
         return
 
@@ -212,21 +255,7 @@ def main():
     for fname in fList:
         obsList.append(trak(fname, fdate))
 
-    varDict = {
-        'ob_sst': 'sea_surface_temperature',
-        'ob_sal': 'sea_surface_salinity',
-        'ob_uuu': 'sea_surface_zonal_wind',
-        'ob_vvv': 'sea_surface_meriodional_wind'
-    }
-
-    varDims = {
-        'sea_surface_temperature': ['nlocs'],
-        'sea_surface_salinity': ['nlocs'],
-        'sea_surface_zonal_wind': ['nlocs'],
-        'sea_surface_meriodional_wind': ['nlocs']
-    }
-
-    IODA(foutput, fdate, varDict, varDims, obsList)
+    IODA(fList, foutput, fdate, obsList)
 
 
 if __name__ == '__main__':
