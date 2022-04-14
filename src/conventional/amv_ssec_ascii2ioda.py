@@ -76,7 +76,7 @@ known_sat = {'HMWR08': 173,
              'GOES16': 270,
              'GOES17': 271}
 
-known_var = {'type': ['sensorCentralFrequency',float_missing_value],
+known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'sat': ['satellite', int_missing_value],
              'day': ['dateTime', int_missing_value],
              'hms': ['dateTime', int_missing_value],
@@ -88,6 +88,7 @@ known_var = {'type': ['sensorCentralFrequency',float_missing_value],
              'int': ['windHeightAssignMethod', int_missing_value],
              'spd': ['speed', float_missing_value],
              'dir': ['direction', float_missing_value]}
+
 
 def main(file_names, output_file, datetimeRef):
 
@@ -242,7 +243,6 @@ def read_file(file_name, data):
             for k in row.keys():
                 if k not in known_var.keys():
                     logging.warning(file_name + ' contains unknown variable ' + k)
-
 
     return data
 
