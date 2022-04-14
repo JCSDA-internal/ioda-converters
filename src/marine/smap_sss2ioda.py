@@ -167,8 +167,8 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['units'] = 'g kg-1'
-    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['units'] = 'g kg-1'
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['units'] = '1'
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['units'] = '1'
     VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['_FillValue'] = 999
     VarAttrs[('seaSurfaceSalinity', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('seaSurfaceSalinity', 'PreQC')]['_FillValue'] = 999
