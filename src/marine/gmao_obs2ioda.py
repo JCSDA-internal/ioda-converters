@@ -213,9 +213,9 @@ class IODA(object):
                         varVals = float_missing_value
                     if (variable, obsValName) in data:
                         data[(variable, obsValName)] = np.append(
-                            data[(variable, obsValName)], varVals)
+                            data[(variable, obsValName)], np.float32(varVals))
                     else:
-                        data[(variable, obsValName)] = varVals
+                        data[(variable, obsValName)] = np.float32(varVals)
 
                     # ObsError
                     varVals = np.array(obs.data[key_err][n], dtype=dtypes['float'])
