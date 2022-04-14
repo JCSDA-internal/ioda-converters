@@ -194,34 +194,26 @@ do while(ireadmg(lnbufr,subset,idate)==0)
          cycle read_loop
      endif
 
-!    profile check:  (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
-     if ( ((said >= 740).and.(said <=745)).or.((said >= 750).and.(said <= 755)) &
-            .or.(said == 820).or.(said == 786).or.(said == 825) &
-            .or. ogce == 60) then  !CDAAC processing
-       if(pcc == 0.0) then
+     if(pcc == 0.0) then
           write(6,*)'READ_GNSSRO: bad profile 0.0% confidence said=',said,'ptid=',ptid, ' SKIP this report'
           cycle read_loop
-        endif
      endif
 
      bendflag = 0
      refflag  = 0
-!    profile check:  (2) GRAS SAF processing - metopa-c, oceansat2, megha-tropiques, sacd
-     if ( (said >= 3 .and.said <= 5).or.(said == 421).or.(said == 440).or. (said == 821) ) then
-          call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
-          if(nib > 0) then
-            do i = 1, nib
-               if(ibit(i)== 5) then  ! bending angle
-                  bendflag = 1
-                  write(6,*)'READ_GNSSRO: bad profile said=',said,'ptid=',ptid, ' SKIP this report'
-                  cycle read_loop
-               endif
-               if(ibit(i)== 6) then  ! refractivity
-                  refflag = 1
-                  exit
-               endif
-           enddo
-         endif
+     call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
+     if(nib > 0) then
+        do i = 1, nib
+            if(ibit(i)== 5 .or. ibit(i)==1 .or. ibit(i)==4) then  ! bending angle
+               bendflag = 1
+               write(6,*)'READ_GNSSRO: bad profile said=',said,'ptid=',ptid, ' SKIP this report'
+               cycle read_loop
+            endif
+            if(ibit(i)== 6 .or. ibit(i)==1 .or. ibit(i)==4) then  ! refractivity
+               refflag = 1
+               exit
+            endif
+        enddo
      endif
 
      asce = 0

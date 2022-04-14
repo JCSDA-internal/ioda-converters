@@ -25,7 +25,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
- 
+
 class argoClim(object):
 
     def __init__(self, filename, begindate=None, enddate=None):
@@ -68,11 +68,11 @@ class argoClim(object):
             "%s is not a valid variable name" % self.varname
 
         self.varname2 = 'waterTemperature'
-        
+
         lon = nc.variables['LONGITUDE'][:]
         lat = nc.variables['LATITUDE'][:]
-        pres = nc.variables['PRESSURE'][:] #pressure in decibar
-        depth = pres   #1 decibar = 1 meter, so you can use pressure as depth
+        pres = nc.variables['PRESSURE'][:]  # pressure in decibar
+        depth = pres   # 1 decibar = 1 meter, so you can use pressure as depth
 
         # Get absolute time instead of time since epoch
         dtime = nc.variables['TIME']
@@ -119,7 +119,7 @@ class argoClim(object):
         self.data = {}
         self.data['lat'] = lat
         self.data['lon'] = lon
-        self.data['depth'] = depth 
+        self.data['depth'] = depth
         self.data['time'] = time
         self.data['field'] = fullField.data
 
@@ -180,11 +180,9 @@ class IODA(object):
         self.varAttrs[argo.varname2, iconv.OerrName()]['units'] = 'K'
         self.varAttrs['depthBelowWaterSurface', 'MetaData']['units'] = 'm'
 
-
         # Extract obs
         ObsVars, Location = iconv.ExtractObsData(self.data, self.locKeyList)
-        DimDict = {'Location': Location
-}
+        DimDict = {'Location': Location}
         varDims = {
             'waterTemperature': ['Location']
         }
