@@ -63,6 +63,31 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
+known_freq = {'IR': 2.99792458E+14/10.7,
+              'WVCA': 2.99792458E+14/6.7,
+              'WVCT': 2.99792458E+14/6.7,
+              'WV': 2.99792458E+14/6.7,
+              'SWIR': 2.99792458E+14/3.9,
+              'VIS': 2.99792458E+14/0.65}
+
+known_sat = {'HMWR08': 173,
+             'MET11': 70,
+             'MET8': 55,
+             'GOES16': 270,
+             'GOES17': 271}
+
+known_var = {'type': ['sensorCentralFrequency',float_missing_value],
+             'sat': ['satellite', int_missing_value],
+             'day': ['dateTime', int_missing_value],
+             'hms': ['dateTime', int_missing_value],
+             'lat': ['latitude', float_missing_value],
+             'lon': ['longitude', float_missing_value],
+             'pre': ['air_pressure', float_missing_value],
+             'rff': ['sensorZenithAngle', float_missing_value],
+             'qi': ['windTrackingCorrelation', float_missing_value],
+             'int': ['windHeightAssignMethod', int_missing_value],
+             'spd': ['speed', float_missing_value],
+             'dir': ['direction', float_missing_value]}
 
 def main(file_names, output_file, datetimeRef):
 
@@ -146,9 +171,10 @@ def read_file(file_name, data):
 
     with open(file_name, newline='') as f:
         reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
-        keyerr = False # no key errors in file
-        unk_freq = [] # list of unknown frequencies in file
-        unk_sat = [] # list of unknown satellites in file
+        keyerr = False  # no key errors in file
+
+        unk_freq = []   # list of unknown frequencies in file
+        unk_sat = []    # list of unknown satellites in file
 
         for row in reader:
             try:
@@ -164,10 +190,20 @@ def read_file(file_name, data):
                 data['longitude'] = np.append(data['longitude'], float(row['lon']))
                 data['latitude'] = np.append(data['latitude'], float(row['lat']))
 
-                freq, unk_freq = get_frequency(row['type'], unk_freq)
-                satid, unk_sat = get_id(row['sat'], unk_sat)
-                data['satelliteID'] = np.append(data['satelliteID'], satid)
+                if row['type'] in known_freq.keys():
+                    freq = known_freq[row['type']]
+                else:
+                    freq = float_missing_value
+                    unk_freq.append(row['type'])
                 data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
+
+                if row['sat'] in known_sat.keys():
+                    satid = known_sat[row['sat']]
+                else:
+                    satid = int_missing_value
+                    unk_sat.append(row['sat'])
+                data['satelliteID'] = np.append(data['satelliteID'], satid)
+
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
                 data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
                 data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
@@ -190,12 +226,11 @@ def read_file(file_name, data):
                     logging.warning(file_name + ' is missing variable ' + e.args[0])
                 keyerr = True
 
-                if (e.args[0] == 'dir') | (e.args[0] == 'spd'):
+                if (e.args[0] == 'dir') or (e.args[0] == 'spd'):
                     data['eastward_wind'] = np.append(data['eastward_wind'], float_missing_value)
                     data['northward_wind'] = np.append(data['northward_wind'], float_missing_value)
                 else:
-                    outname, missing = get_outname(e.args[0])
-                    data[outname] = np.append(data[outname], missing)
+                    data[known_var[e.args[0]][0]] = np.append(data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
 
         for f in unk_freq:
             logging.warning(file_name + ' contains unknown frequency ' + f)
@@ -203,76 +238,13 @@ def read_file(file_name, data):
         for s in unk_sat:
             logging.warning(file_name + ' contains unknown satellite ID ' + s)
 
+        if len(row.keys()) > len(known_var.keys()):
+            for k in row.keys():
+                if k not in known_var.keys():
+                    logging.warning(file_name + ' contains unknown variable ' + k)
+
+
     return data
-
-
-def get_frequency(obs_type, unk_freq):
-
-    if obs_type == 'IR':
-        freq = 2.99792458E+14/10.7
-    elif (obs_type == 'WVCA') | (obs_type == 'WVCT') | (obs_type == 'WV'):
-        freq = 2.99792458E+14/6.7
-    elif (obs_type == 'SWIR'):
-        freq = 2.99792458E+14/3.9
-    elif (obs_type == 'VIS'):
-        freq = 2.99792458E+14/0.65
-    else:
-        unk_freq.append(obs_type)
-        freq = float_missing_value
-
-    return freq, unk_freq
-
-
-def get_id(sat_name, unk_sat):
-
-    if sat_name == 'HMWR08':
-        satid = 173
-    elif sat_name == 'MET11':
-        satid = 70
-    elif sat_name == 'MET8':
-        satid = 55
-    elif sat_name == 'GOES16':
-        satid = 270
-    elif sat_name == 'GOES17':
-        satid = 271
-    else:
-        unk_sat.append(unk_sat)
-        satid = int_missing_value
-
-    return satid, unk_sat
-
-
-def get_outname(key):
-
-    if key == 'type':
-        outname = 'sensorCentralFrequency'
-        missing = float_missing_value
-    elif key == 'sat':
-        outname = 'satellite'
-        missing = int_missing_value
-    elif (key == 'day') | (key == 'hms'):
-        outname = 'dateTime'
-        missing = int_missing_value
-    elif key == 'lat':
-        outname = 'latitude'
-        missing = float_missing_value
-    elif key == 'lon':
-        outname = 'longitude'
-        missing = float_missing_value
-    elif key == 'pre':
-        outname = 'air_pressure'
-        missing = float_missing_value
-    elif key == 'rff':
-        outname = 'sensorZenithAngle'
-        missing = float_missing_value
-    elif key == 'qi':
-        outname = 'windTrackingCorrelation'
-        missing = float_missing_value
-    elif key == 'int':
-        outname = 'windHeightAssignMethod'
-        missing = int_missing_value
-
-    return outname, missing
 
 
 if __name__ == "__main__":
