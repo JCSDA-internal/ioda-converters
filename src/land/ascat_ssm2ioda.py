@@ -75,8 +75,8 @@ class ascat(object):
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
         # A satellite ID is expected for satellite attribute, use sensor instead
-        AttrData['instrumentIdentifier'] = ncd.getncattr('source')
-        AttrData['satelliteIdentifier'] = ncd.getncattr('platform_long_name')
+        AttrData['sensor'] = ncd.getncattr('source')
+        AttrData['platform'] = ncd.getncattr('platform_long_name')
         lats = ncd.variables['lat'][:].ravel()
         lons = ncd.variables['lon'][:].ravel()
         vals = ncd.variables['soil_moisture'][:].ravel()
