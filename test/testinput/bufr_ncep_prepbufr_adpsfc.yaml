@@ -80,15 +80,15 @@ observations:
           heightOfBaseOfCloud:
             query: "*/CLOUDSEQ/HOCB"
 
-          seaSurfaceTemperature:
+          waterTemperature:
             query: "*/SST_INFO/SSTEVENT/SST1"
-          seaSurfaceTemperatureError:
+          waterTemperatureError:
             query: "*/SST_INFO/SSTBACKG/SSTOE"
           heightOfWaves:
             query: "*/WAVE_SEQ/HOWV"
-          depthBelowSeaSurface:
+          depthBelowWaterSurface:
             query: "*/SST_INFO/DBSS_SEQ/DBSS"
-          methodofTemperatureSeaSurfaceMeasurement:
+          waterTemperatureMethod:
             query: "*/SST_INFO/MSST"
 
           windEastward:
@@ -112,7 +112,7 @@ observations:
             query: "*/Q___INFO/Q__EVENT/QQM"
           verticalSignificanceSurfaceObservations:
             query: "*/CLOUDSEQ/VSSO"
-          seaSurfaceTemperatureQualityMarker:
+          waterTemperatureQualityMarker:
             query: "*/SST_INFO/SSTEVENT/SSTQM"
           windEastwardQualityMarker:
             query: "*/W___INFO/W__EVENT/WQM"
@@ -193,16 +193,14 @@ observations:
           source: variables/pressureReducedToMeanSeaLevel
           longName: "Mean Sea-Level Pressure"
           units: "Pa"
-          range: [87000, 107000]
 
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
           units: "Pa"
-          range: [20000, 110000]
 
-        - name: "ObsValue/pressureError"
+        - name: "ObsError/pressure"
           coordinates: "longitude latitude"
           source: variables/pressureError
           longName: "Pressure Error"
@@ -213,9 +211,8 @@ observations:
           source: variables/airTemperature
           longName: "Temperature"
           units: "K"
-          range: [193, 325]
 
-        - name: "ObsValue/airTemperatureError"
+        - name: "ObsError/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperatureError
           longName: "Temperature Error"
@@ -226,21 +223,18 @@ observations:
           source: variables/dewpointTemperature
           longName: "Dew Point"
           units: "K"
-          range: [193, 325]
 
         - name: "ObsValue/minimumTemperature"
           coordinates: "longitude latitude"
           source: variables/minimumTemperature
           longName: "Minimum Temperature"
           units: "K"
-          range: [193, 325]
 
         - name: "ObsValue/maximumTemperature"
           coordinates: "longitude latitude"
           source: variables/maximumTemperature
           longName: "Maximum Temperature"
           units: "K"
-          range: [193, 325]
 
         - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude"
@@ -248,7 +242,7 @@ observations:
           longName: "Specific Humidity"
           units: "kg kg-1"
 
-        - name: "ObsValue/relativeHumidityError"
+        - name: "ObsError/relativeHumidity"
           coordinates: "longitude latitude"
           source: variables/relativeHumidityError
           longName: "Relative Humidity Error"
@@ -290,16 +284,16 @@ observations:
           longName: "Height of Base of Cloud"
           units: "m" 
 
-        - name: "ObsValue/seaSurfaceTemperature"
+        - name: "ObsValue/waterTemperature"
           coordinates: "longitude latitude"
-          source: variables/seaSurfaceTemperature
-          longName: "Sea Surface Temperature"
+          source: variables/waterTemperature
+          longName: "Water Temperature"
           units: "K"
 
-        - name: "ObsValue/seaSurfaceTemperatureError"
+        - name: "ObsError/waterTemperature"
           coordinates: "longitude latitude"
-          source: variables/seaSurfaceTemperatureError
-          longName: "Sea Surface Temperature Obs Error"
+          source: variables/waterTemperatureError
+          longName: "Water Temperature Obs Error"
           units: "K"
 
         - name: "ObsValue/heightOfWaves"
@@ -308,17 +302,16 @@ observations:
           longName: "Wave Height"
           units: "m"
 
-        - name: "ObsValue/depthBelowSeaSurface"
+        - name: "ObsValue/depthBelowWaterSurface"
           coordinates: "longitude latitude"
-          source: variables/depthBelowSeaSurface
-          longName: "Depth Below Sea Surface"
+          source: variables/depthBelowWaterSurface
+          longName: "Depth Below Water Surface"
           units: "m"
-          range: [-200, 0]
 
-        - name: "ObsValue/methodofTemperatureSeaSurfaceMeasurement"
+        - name: "MetaData/waterTemperatureMethod"
           coordinates: "longitude latitude"
-          source: variables/methodofTemperatureSeaSurfaceMeasurement
-          longName: "Method of Sea Surface Measurement"
+          source: variables/waterTemperatureMethod
+          longName: "Method of Water Temperature Measurement"
           units: ""
 
         - name: "ObsValue/windEastward"
@@ -326,16 +319,14 @@ observations:
           source: variables/windEastward
           longName: "Eastward Wind"
           units: "m s-1"
-          range: [-50, 50]
 
         - name: "ObsValue/windNorthward"
           coordinates: "longitude latitude"
           source: variables/windNorthward
           longName: "Northward Wind"
           units: "m s-1"
-          range: [-50, 50]
 
-        - name: "ObsValue/windError"
+        - name: "ObsError/wind"
           coordinates: "longitude latitude"
           source: variables/windError
           longName: "East and Northward wind error"
@@ -366,7 +357,7 @@ observations:
           longName: "Mean Sea Level Pressure Quality Marker"
           units: ""
 
-        - name: "QualityMarker/airTemperatur"
+        - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperatureQualityMarker
           longName: "Temperature Quality Marker"
@@ -384,10 +375,10 @@ observations:
           longName: "Vertical Significance (Surface Observations)"
           units: ""
 
-        - name: "QualityMarker/seaSurfaceTemperature"
+        - name: "QualityMarker/waterTemperature"
           coordinates: "longitude latitude"
-          source: variables/seaSurfaceTemperatureQualityMarker
-          longName: "Sea Surface Temperature Quality Marker"
+          source: variables/waterTemperatureQualityMarker
+          longName: "Water Temperature Quality Marker"
           units: ""
 
         - name: "QualityMarker/windNorthward"
