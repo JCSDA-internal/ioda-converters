@@ -10,6 +10,7 @@
 from __future__ import print_function
 import sys
 import argparse
+import numpy as np
 import netCDF4 as nc
 from datetime import datetime
 from pathlib import Path
@@ -70,7 +71,7 @@ class Profile(object):
         qcs = ncd.variables['qc'][:]
         ncd.close()
 
-        dt = qcs.astype('int64')
+        dt = np.full(len(qcs), 0, dtype=np.int64)
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
