@@ -221,15 +221,15 @@ class IODA(object):
                     varVals = np.array(obs.data[key_err][n], dtype=dtypes['float'])
                     if (variable, obsErrName) in data:
                         data[(variable, obsErrName)] = np.append(
-                            data[(variable, obsErrName)], varVals)
+                            data[(variable, obsErrName)], np.float32(varVals))
                     else:
-                        data[(variable, obsErrName)] = varVals
+                        data[(variable, obsErrName)] = np.float32(varVals)
 
                     # QC (preQC) value (zero for now)
                     if (variable, qcName) in data:
-                        data[(variable, qcName)] = np.append(data[(variable, qcName)], 0)
+                        data[(variable, qcName)] = np.append(data[(variable, qcName)], np.int32(0))
                     else:
-                        data[(variable, qcName)] = 0
+                        data[(variable, qcName)] = np.int32(0)
 
         print(f"Found a total number of observations: {nlocs}")
 
