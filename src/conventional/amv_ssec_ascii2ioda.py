@@ -93,7 +93,7 @@ def main(file_names, output_file, datetimeRef):
     GlobalAttrs = {
         'platformCommonName': "EUMETSAT_AMV",
         'platformLongDescription': "EUMETSAT AMV from IR cloudy regions",
-        'soureFiles': ", ".join(file_names),
+        'sourceFiles': ", ".join(file_names),
         'datetimeReference': datetimeRef
     }
 
