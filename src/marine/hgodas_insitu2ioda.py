@@ -51,7 +51,7 @@ class Profile(object):
         self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.floatDefFillVal = iconv.get_default_fill_val('float32')
         self.intDefFillVal = iconv.get_default_fill_val('int32')
-        
+
         self.VarAttrs['depthBelowWaterSurface', 'MetaData']['units'] = 'm'
         self.VarAttrs['latitude', 'MetaData']['units'] = 'degrees_north'
         self.VarAttrs['longitude', 'MetaData']['units'] = 'degrees_east'
