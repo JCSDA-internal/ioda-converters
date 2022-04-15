@@ -33,14 +33,16 @@ locationKeyList = [("latitude", "float", "degrees_north"),
                    ("sensorCentralFrequency", "float", "Hz"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
-                   ("windHeightAssignMethod", "integer", "")]
+                   ("windHeightAssignMethod", "integer", ""),
+                   ("satelliteIdentifier", "integer", "")]
+
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 GlobalAttrs = {
     'converter': os.path.basename(__file__),
     'ioda_version': 2,
     'description': 'Satellite atmospheric motion vectors (AMV)',
-    'source': 'NESDIS (ftp)'
+    'source': 'SSEC (ftp)'
 }
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
@@ -68,6 +70,32 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
+known_freq = {'IR': 2.99792458E+14/10.7,
+              'WVCA': 2.99792458E+14/6.7,
+              'WVCT': 2.99792458E+14/6.7,
+              'WV': 2.99792458E+14/6.7,
+              'SWIR': 2.99792458E+14/3.9,
+              'VIS': 2.99792458E+14/0.65}
+
+known_sat = {'HMWR08': 173,
+             'MET11': 70,
+             'MET8': 55,
+             'GOES16': 270,
+             'GOES17': 271}
+
+known_var = {'type': ['sensorCentralFrequency', float_missing_value],
+             'sat': ['satellite', int_missing_value],
+             'day': ['dateTime', int_missing_value],
+             'hms': ['dateTime', int_missing_value],
+             'lat': ['latitude', float_missing_value],
+             'lon': ['longitude', float_missing_value],
+             'pre': ['air_pressure', float_missing_value],
+             'rff': ['sensorZenithAngle', float_missing_value],
+             'qi': ['windTrackingCorrelation', float_missing_value],
+             'int': ['windHeightAssignMethod', int_missing_value],
+             'spd': ['speed', float_missing_value],
+             'dir': ['direction', float_missing_value]}
+
 
 def main(file_names, output_file, datetimeRef):
 
@@ -91,8 +119,6 @@ def main(file_names, output_file, datetimeRef):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {
-        'platformCommonName': "EUMETSAT_AMV",
-        'platformLongDescription': "EUMETSAT AMV from IR cloudy regions",
         'sourceFiles': ", ".join(file_names),
         'datetimeReference': datetimeRef
     }
@@ -153,60 +179,79 @@ def read_file(file_name, data):
 
     with open(file_name, newline='') as f:
         reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
+        keyerr = False  # no key errors in file
+
+        unk_freq = []   # list of unknown frequencies in file
+        unk_sat = []    # list of unknown satellites in file
 
         for row in reader:
-            year = int(row['day'][0:4])
-            month = int(row['day'][5:6])
-            day = int(row['day'][7:8])
-            hour = int(row['hms'][0:1])
-            minute = int(row['hms'][2:3])
-            second = 0
-            dtg = datetime(year, month, day, hour, minute, second)
-            time_offset = np.int64(round((dtg - epoch).total_seconds()))
-            data['dateTime'] = np.append(data['dateTime'], time_offset)
-            data['longitude'] = np.append(data['longitude'], float(row['lon']))
-            data['latitude'] = np.append(data['latitude'], float(row['lat']))
-
-            freq = get_frequency(row['type'])
-            data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
-            data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
-            data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
             try:
+                year = int(row['day'][0:4])
+                month = int(row['day'][5:6])
+                day = int(row['day'][7:8])
+                hour = int(row['hms'][0:1])
+                minute = int(row['hms'][2:3])
+                second = 0
+                dtg = datetime(year, month, day, hour, minute, second)
+                time_offset = np.int64(round((dtg - epoch).total_seconds()))
+                data['dateTime'] = np.append(data['dateTime'], time_offset)
+                data['longitude'] = np.append(data['longitude'], float(row['lon']))
+                data['latitude'] = np.append(data['latitude'], float(row['lat']))
+
+                if row['type'] in known_freq.keys():
+                    freq = known_freq[row['type']]
+                else:
+                    freq = float_missing_value
+                    unk_freq.append(row['type'])
+                data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
+
+                if row['sat'] in known_sat.keys():
+                    satid = known_sat[row['sat']]
+                else:
+                    satid = int_missing_value
+                    unk_sat.append(row['sat'])
+
+                data['satelliteIdentifier'] = np.append(data['satelliteIdentifier'], satid)
+                data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
+                data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
                 data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
-            except:   # noqa
-                data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], 0)
 
-            pres = float(row['pre'])*100.
-            data['pressure'] = np.append(data['pressure'], pres)
-            wdir = float(row['dir'])*1.0
-            wspd = float(row['spd'])*1.0
-            if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
-                uwnd, vwnd = meteo_utils.meteo_utils().dir_speed_2_uv(wdir, wspd)
-            else:
-                uwnd = float_missing_value
-                vwnd = float_missing_value
+                pres = float(row['pre'])*100.
+                data['pressure'] = np.append(data['pressure'], pres)
+                wdir = float(row['dir'])*1.0
+                wspd = float(row['spd'])*1.0
+                if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
+                    uwnd, vwnd = meteo_utils.meteo_utils().dir_speed_2_uv(wdir, wspd)
+                else:
+                    uwnd = float_missing_value
+                    vwnd = float_missing_value
 
-            data['windEastward'] = np.append(data['windEastward'], uwnd)
-            data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+                data['windEastward'] = np.append(data['windEastward'], uwnd)
+                data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+
+            except KeyError as e:
+                if not keyerr:
+                    logging.warning(file_name + ' is missing variable ' + e.args[0])
+                keyerr = True
+
+                if (e.args[0] == 'dir') or (e.args[0] == 'spd'):
+                    data['eastward_wind'] = np.append(data['eastward_wind'], float_missing_value)
+                    data['northward_wind'] = np.append(data['northward_wind'], float_missing_value)
+                else:
+                    data[known_var[e.args[0]][0]] = np.append(data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
+
+        for f in unk_freq:
+            logging.warning(file_name + ' contains unknown frequency ' + f)
+
+        for s in unk_sat:
+            logging.warning(file_name + ' contains unknown satellite ID ' + s)
+
+        if len(row.keys()) > len(known_var.keys()):
+            for k in row.keys():
+                if k not in known_var.keys():
+                    logging.warning(file_name + ' contains unknown variable ' + k)
 
     return data
-
-
-def get_frequency(obs_type):
-
-    if obs_type == 'IR':
-        freq = 2.99792458E+14/10.7
-    elif ("WV" in obs_type):
-        freq = 2.99792458E+14/6.7
-    elif (obs_type == 'VIS'):
-        freq = 2.99792458E+14/0.65
-    elif (obs_type == 'SWIR'):
-        freq = 2.99792458E+14/3.7
-    else:
-        logging.warning(f"Unknown channel type: {obs_type}")
-        freq = float_missing_value
-
-    return freq
 
 
 if __name__ == "__main__":
@@ -214,7 +259,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser(
-        description=('Read a satwind AMV ascii/csv file from NESDIS'
+        description=('Read a satwind AMV ascii/csv file from SSEC'
                      ' and convert into IODA output file')
     )
 
@@ -225,18 +270,17 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output-file', dest='output_file',
                           action='store', default=None, required=True,
                           help='output file')
+    required.add_argument('-d', '--date', dest='datetimeReference',
+                          action='store',
+                          help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
-    parser.set_defaults(datetimeReference=" ")
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
                           help='enable verbose debug messages')
-    optional.add_argument('-d', '--date', dest='datetimeReference',
-                          action='store',
-                          help='date reference string (YYYYMMDDHH)')
 
     args = parser.parse_args()
 
