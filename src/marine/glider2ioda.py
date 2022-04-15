@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -25,14 +25,14 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 vName = [
-    "sea_water_temperature",
-    "sea_water_salinity"]
+    "waterTemperature",
+    "salinity"]
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("depth", "float"),
-    ("datetime", "string")
+    ("depthBelowWaterSurface", "float"),
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {
@@ -74,7 +74,7 @@ class Profile(object):
         Sqcs = ncd.variables['salinity_qc'][:]-1
         errs = np.squeeze(errs)
         ncd.close()
-        base_date = datetime(1970, 1, 1)
+
         ii = int((self.lon_eth_HAT10-self.lon_wth_HAT10)/self.dxy)+10
         jj = int((self.lat_nth_HAT10-self.lat_sth_HAT10)/self.dxy)+10
         kk = int((self.mdep)/self.dz)+10
@@ -93,10 +93,10 @@ class Profile(object):
                         valKey = vName[j], iconv.OvalName()
                         errKey = vName[j], iconv.OerrName()
                         qcKey = vName[j], iconv.OqcName()
-                        dt = base_date + timedelta(seconds=int(time[i]))
-                        locKey = lats[i], lons[i], dpth[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        dt = int(time[i])
+                        locKey = lats[i], lons[i], dpth[i], dt
                         if j == 0:
-                            self.data[locKey][valKey] = temperature[i]
+                            self.data[locKey][valKey] = temperature[i] + 273.15
                             self.data[locKey][errKey] = errs[i]
                             self.data[locKey][qcKey] = Tqcs[i]
                         else:
@@ -132,20 +132,21 @@ def main():
     yamlfile = args.yaml
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        'sea_water_temperature': ['nlocs'],
-        'sea_water_salinity': ['nlocs']}
+        'waterTemperature': ['Location'],
+        'salinity': ['Location']}
     prof = Profile(args.input, args.yaml, fdate)
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_water_temperature', 'ObsValue')]['units'] = 'celsius'
-    VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'psu'
-    VarAttrs[('sea_water_temperature', 'ObsValue')]['_FillValue'] = -32767
-    VarAttrs[('sea_water_salinity', 'ObsValue')]['_FillValue'] = -32767
-    VarAttrs[('sea_water_temperature', 'PreQC')]['units'] = ''
-    VarAttrs[('sea_water_salinity', 'ObsError')]['units'] = ''
+    VarAttrs[('waterTemperature', 'ObsValue')]['units'] = 'K'
+    VarAttrs[('waterTemperature', 'ObsError')]['units'] = 'K'
+    VarAttrs[('salinity', 'ObsValue')]['units'] = '1'
+    VarAttrs[('salinity', 'ObsError')]['units'] = '1'
+    VarAttrs[('depthBelowWaterSurface', 'MetaData')]['units'] = 'm'
+    VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+    VarAttrs[('waterTemperature', 'ObsValue')]['_FillValue'] = -32767
+    VarAttrs[('salinity', 'ObsValue')]['_FillValue'] = -32767
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 
