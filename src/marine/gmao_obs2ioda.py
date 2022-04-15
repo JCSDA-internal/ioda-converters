@@ -105,6 +105,7 @@ class GMAOobs(object):
         data['depthBelowWaterSurface'] = ncd.variables['depth'][:].data
         types = ncd.variables['typ'][:].data
         values = ncd.variables['value'][:].data
+        values[np.isnan(values)] = float_missing_value
         errors = ncd.variables['oerr'][:].data
 
         for key in varDict.keys():
