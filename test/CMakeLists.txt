@@ -559,6 +559,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
                           -d 2015010100"
                           avhrr_radiance.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+#===============================================================================
+# Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satwinds
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/amv_ssec_ascii2ioda.py
+                          -i testinput/satwinds_ssec2021080103.txt
+                          -o testrun/satwinds_ssec2021080103.nc
+                          -d 2021080103"
+                          satwinds_ssec2021080103.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
