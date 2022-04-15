@@ -144,6 +144,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
+    testinput/NC005080.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
     testinput/bufr_read_wmo_radiosonde.bufr
     testinput/bufr_satwnd_new_format.bufr
@@ -168,6 +169,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
+    testinput/bufr_ncep_satwind_avhrr.yaml
     testinput/bufr_sevcrs_v2.yaml
     testinput/bufr_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
@@ -218,6 +220,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
     testoutput/NC005066.nc
+    testoutput/Out_NC005080.nc
     testoutput/bufr_mtiasi.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
@@ -1005,6 +1008,14 @@ if(iodaconv_bufr_ENABLED)
                     NC005031.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_satwind_avhrr
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_satwind_avhrr.yaml"
+                    Out_NC005080.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_mtiasi
                     TYPE    SCRIPT

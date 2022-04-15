@@ -1,0 +1,186 @@
+#(C) Copyright 2021 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# SAID, CLAT, CLON, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM
+# HAMD, PRLC, WDIR, WSPD
+# GNAP, PCCF
+
+observations:
+  - obs space:
+      name: bufr
+      #obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
+      obsdatain: "/scratch1/NCEPDEV/da/Ashley.Stanfield/IODA/ioda-bundle/iodaconv/test/testinput/NC005080.bufr_d"
+
+      exports:
+        variables:
+          satelliteIdentifier:
+            query: "*/SAID"
+
+          latitude:
+            query: "*/CLAT"
+
+          longitude:
+            query: "*/CLON"
+
+          year:
+            query: "*/YEAR"
+
+          month:
+            query: "*/MNTH"
+
+          day:
+            query: "*/DAYS"
+
+          hour:
+            query: "*/HOUR"
+
+          minute:
+            query: "*/MINU"
+
+          second:
+            query: "*/SECO"
+
+          satelliteDerivedWindComputationMethod:
+            query: "*/SWCM"
+
+          satelliteZenithAngle:
+            query: "*/SAZA"
+
+          originatingCenter:
+            query: "*/OGCE"
+
+          satelliteChannelCentreFrequency:
+            query: "*/SCCF"
+
+          sdmeditSatWindQualMark:
+            query: "*/SWQM"
+
+          heightAssignmentMethod:
+            query: "*/HAMD[1]"
+
+          pressure:
+            query: "*/PRLC[1]"
+
+          windDirection:
+            query: "*/WDIR"
+
+          windSpeed:
+            query: "*/WSPD"
+
+          generatingApplication:
+            query: "*/GQCPRMS/GNAP[1]"
+
+          percentConfidence:
+            query: "*/GQCPRMS/PCCF[1]"
+
+    ioda:
+      backend: netcdf
+      obsdataout: "/scratch1/NCEPDEV/da/Ashley.Stanfield/IODA/ioda-bundle/iodaconv/test/testoutput/Out_NC005080.nc"
+      dimensions:
+        - name: "ncols_conf"
+          paths:
+            - "*/QCPRMS"
+
+      variables:
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          longName: "Satellite Identifier"
+          units: ""
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude (Coarse Accuracy)"
+          units: "degree_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude (Coarse Accuracy)"
+          units: "degree_east"
+
+        - name: "MetaData/year"
+          source: variables/year
+          longName: "Year"
+          units: "year"
+
+        - name: "MetaData/month"
+          source: variables/month
+          longName: "Month"
+          units: "mon"
+
+        - name: "MetaData/day"
+          source: variables/day
+          longName: "Day"
+          units: "day"
+
+        - name: "MetaData/hour"
+          source: variables/hour
+          longName: "Hour"
+          units: "hr"
+
+        - name: "MetaData/minute"
+          source: variables/minute
+          longName: "Minutes"
+          units: "min"
+
+        - name: "MetaData/second"
+          source: variables/second
+          longName: "Seconds"
+          units: "sec"
+
+        - name: "MetaData/satelliteDerivedWindComputationMethod"
+          source: variables/satelliteDerivedWindComputationMethod
+          longName: "Satellite Derived Wind Computation Method"
+          units: ""
+
+        - name: "MetaData/satelliteZenithAngle"
+          source: variables/satelliteZenithAngle
+          longName: "Satellite Zenith Angle"
+          units: "degree"
+
+        - name: "MetaData/originatingCenter"
+          source: variables/originatingCenter
+          longName: "Identification of Originating/Generating Center"
+          units: ""
+
+        - name: "MetaData/satelliteChannelCentreFrequency"
+          source: variables/satelliteChannelCentreFrequency
+          longName: "Satellite Channel Centre Frequency"
+          units: "Hz"
+
+        - name: "QualityMarker/sdmeditSatWindQualMark"
+          source: variables/sdmeditSatWindQualMark
+          longName: "SDMEDIT Satellite Wind Quality Mark"
+          units: ""
+
+        - name: "MetaData/heightAssignmentMethod"
+          source: variables/heightAssignmentMethod
+          longName: "Height Assignment Method"
+          units: ""
+
+        - name: "MetaData/pressure"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/windDirection"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "deg"
+
+        - name: "ObsValue/windSpeed"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "m s-1"
+
+        - name: "MetaData/generatingApplication"
+          source: variables/generatingApplication
+          longName: "Generating Application"
+          units: ""
+
+        - name: "MetaData/percentConfidence"
+          source: variables/percentConfidence
+          longName: "Per Cent Confidence"
+          units: "percent"
+
