@@ -27,34 +27,28 @@ phases:
 
       # Codebuild only runs on PUSH events if HEAD_REF
       # is refs/heads/develop (merge to develop). In this
-      # case CODEBUILD_GIT_BRANCH="develop"  
-     
+      # case CODEBUILD_GIT_BRANCH="develop"
+
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PUSH" ];
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";
         else export CODEBUILD_GIT_BRANCH=${CODEBUILD_WEBHOOK_HEAD_REF#refs/heads/};
-        fi 
+        fi
 
+      # Determine the git base branch. This is the branch we are merging into.
+      # It can be develop or another branch. It will be used as a fall back branch in clone.sh
+      - export GIT_BASE_BRANCH=${CODEBUILD_WEBHOOK_BASE_REF#refs/heads/}
+
+      - echo "GIT_BASE_BRANCH=${GIT_BASE_BRANCH}"
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
-
-      - git lfs install
-      - git clone https://$GIT_USER:$GIT_PASS@github.com/jcsda-internal/ioda-converters
-      - cd ioda-converters
-      - git checkout $CODEBUILD_GIT_BRANCH || echo "No branch named $CODEBUILD_GIT_BRANCH in ioda-converters repo"
-      - cd $CODEBUILD_SRC_DIR
 
   pre_build:
     commands:
       - echo Executing pre_build phase
+      - git lfs install
       - mkdir /build_container
       - mkdir -p /jcsda/ioda-bundle
-
-      - if [ "$CODEBUILD_GIT_BRANCH" = "develop" ];
-        then export CODEBUILD_GIT_BRANCH_FORK="release-stable";
-        else export CODEBUILD_GIT_BRANCH_FORK=${CODEBUILD_GIT_BRANCH};
-        echo "CODEBUILD_GIT_BRANCH_FORK=${CODEBUILD_GIT_BRANCH_FORK}";
-        fi
 
       - cd CI
 
@@ -64,19 +58,19 @@ phases:
       - echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} > /jcsda/artifacts/commit_sha.tx
 
       # ioda-converters (testing repo)
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH iodaconv /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH  /jcsda/ioda-bundle iodaconv ${GIT_BASE_BRANCH} develop
 
       # jedi-cmake
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH jedicmake /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle jedicmake ${GIT_BASE_BRANCH} develop
 
      # oops
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/oops $CODEBUILD_GIT_BRANCH oops /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/oops $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle oops ${GIT_BASE_BRANCH} develop
 
      # ioda
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/ioda $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda ${GIT_BASE_BRANCH} develop
 
       # ioda-data
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda-data $CODEBUILD_GIT_BRANCH ioda-data /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/ioda-data $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda-data ${GIT_BASE_BRANCH} develop
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
