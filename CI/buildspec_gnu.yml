@@ -28,14 +28,19 @@ phases:
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";
         else export CODEBUILD_GIT_BRANCH=${CODEBUILD_WEBHOOK_HEAD_REF#refs/heads/};
-        fi 
+        fi
 
+      # Determine the git base branch. This is the branch we are merging into.
+      # It can be develop or another branch. It will be used as a fall back branch in clone.sh
+      - export GIT_BASE_BRANCH=${CODEBUILD_WEBHOOK_BASE_REF#refs/heads/}
+
+      - echo "GIT_BASE_BRANCH=${GIT_BASE_BRANCH}"
       - echo "CODEBUILD_GIT_BRANCH=${CODEBUILD_GIT_BRANCH}"
       - echo "CODEBUILD_SOURCE_VERSION=${CODEBUILD_SOURCE_VERSION}"
 
       # read cdash url from s3
       - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
-      - CDASH_URL=$(cat cdash_url.txt)        
+      - CDASH_URL=$(cat cdash_url.txt)
 
   pre_build:
     on-failure: CONTINUE
@@ -44,12 +49,6 @@ phases:
       - git lfs install # creates .gitconfig
       - mkdir -p /jcsda/ioda-bundle
 
-      - if [ "$CODEBUILD_GIT_BRANCH" = "develop" ];
-        then export CODEBUILD_GIT_BRANCH_FORK="release-stable";
-        else export CODEBUILD_GIT_BRANCH_FORK=${CODEBUILD_GIT_BRANCH};
-        echo "CODEBUILD_GIT_BRANCH_FORK=${CODEBUILD_GIT_BRANCH_FORK}";
-        fi
-
       # Upload branch name and commit sha as CodeBuild artifact to S3
       - mkdir -p /jcsda/artifacts
       - echo ${CODEBUILD_GIT_BRANCH} > /jcsda/artifacts/branch_name.txt
@@ -57,20 +56,28 @@ phases:
 
       - cd CI
 
+      #  Setting git credentials
+      - sed -i '/ssh/d' ~/.gitconfig
+      - sed '/instead/d' ~/.gitconfig
+      - git config --global credential.helper store
+      - touch ~/.git-credentials
+      - chmod 0700 ~/.git-credentials
+      - echo "https://${GIT_USER}:${GIT_PASS}@github.com" >~/.git-credentials
+
       # ioda-converters (testing repo)
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH iodaconv /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH  /jcsda/ioda-bundle iodaconv ${GIT_BASE_BRANCH} develop
 
       # jedi-cmake
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH jedicmake /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle jedicmake ${GIT_BASE_BRANCH} develop
 
      # oops
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/oops $CODEBUILD_GIT_BRANCH oops /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/oops $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle oops ${GIT_BASE_BRANCH} develop
 
      # ioda
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/ioda $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda ${GIT_BASE_BRANCH} develop
 
       # ioda-data
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda-data $CODEBUILD_GIT_BRANCH ioda-data /jcsda/ioda-bundle develop
+      - ./clone.sh jcsda-internal/ioda-data $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda-data ${GIT_BASE_BRANCH} develop
 
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
@@ -147,4 +154,3 @@ artifacts:
   files:
     - '/jcsda/artifacts/*'
   name: iodaconv-gnu-url
-
