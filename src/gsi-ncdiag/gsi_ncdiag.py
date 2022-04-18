@@ -134,7 +134,7 @@ all_LocKeyList = {
     'Vterminal': ('vterminal', 'float'),
     'SWCM_spec_type': ('windComputationMethod', 'float'),
     'SAZA_sat_zen_angle': ('sensorZenithAngle', 'float'),
-    'SCCF_chan_wavelen': ('sensorCentralFrequency', 'float'),
+    'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
     'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
     'LaunchTime': ('LaunchTime', 'float'),
