@@ -574,7 +574,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
                           avhrr_radiance.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
-# Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
+# Conventional data, Sat-winds atmospheric motion vectors SSEC ftp server
 #===============================================================================
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satwinds
@@ -1455,6 +1455,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
 #  since it already exists with valid data.
 
 file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
+
+# Remove bias files from validation. These will need a separate YAML file.
+list( FILTER TESTOUTPUT_IODA_FILES EXCLUDE REGEX "(.*)bias(.*)" )
 
 foreach ( f ${TESTOUTPUT_IODA_FILES} )
 	get_filename_component(filename ${f} NAME)
