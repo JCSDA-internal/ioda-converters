@@ -33,7 +33,9 @@ std::set<std::string> getSubsets(int fileUnit)
 }
 
 
-std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit, const std::string& subset)
+std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
+                                                  const std::string& subset,
+                                                  Ingester::bufr::DataProvider& dataProvider)
 {
     static const int SubsetLen = 9;
 
@@ -46,7 +48,6 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit, const std::strin
 
     std::vector<Ingester::bufr::QueryData> queryData;
 
-    auto dataProvider = Ingester::bufr::DataProvider();
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
     {
         status_f(fileUnit, &bufrLoc, &il, &im);
@@ -71,25 +72,72 @@ void printHelp()
     std::cout << "Arguments: " << std::endl;
     std::cout << "  -h          (Optional) Print out the help message." << std::endl;
     std::cout << "  -s <subset> (Optional) Print paths only for this subset." << std::endl;
+    std::cout << "  -m          (Optional) Remove the colors (monotone)." << std::endl;
+    std::cout << "              Use this when piping to text file." << std::endl;
     std::cout << "  input_file  Path to the BUFR file." << std::endl;
+    std::cout << "  output_file  (Optional) Save the output. " << std::endl;
     std::cout << "Examples: " << std::endl;
     std::cout << "  ./print_queries.x ../data/bufr_satwnd_old_format.bufr" << std::endl;
     std::cout << "  ./print_queries.x -s NC005066 ../data/bufr_satwnd_old_format.bufr" << std::endl;
 }
 
+std::string dimStyledStr(int dims, bool colorize)
+{
+    std::ostringstream ostr;
+    if (colorize)
+    {
+        ostr << Esc << "[1m" << dims << "d" << Esc << "[0m";
+    }
+    else
+    {
+        ostr << dims << "d";
+    }
 
-void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
+    return ostr.str();
+}
+
+std::string subsetStyledStr(const std::string& str, bool colorize)
+{
+    std::ostringstream ostr;
+    if (colorize)
+    {
+        ostr << Esc << "[1;34m" << str << Esc << "[0m";
+    }
+    else
+    {
+        ostr << str;
+    }
+
+    return ostr.str();
+}
+
+std::string dimPathStyledStr(const std::string& str, bool colorize)
+{
+    std::ostringstream ostr;
+    if (colorize)
+    {
+        ostr << Esc << "[1;31m" << str << Esc << "[0m";
+    }
+    else
+    {
+        ostr << str;
+    }
+
+    return ostr.str();
+}
+
+void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries, bool colorize)
 {
     for (auto query : queries)
     {
         std::ostringstream ostr;
-        ostr << Esc << "[1m" << query.dimIdxs.size() << "d" << Esc << "[0m" << " ";
-        ostr << Esc << "[1;34m" << query.pathComponents[0] << Esc << "[0m";
+        ostr << dimStyledStr(query.dimIdxs.size(), colorize) << " ";
+        ostr << subsetStyledStr(query.pathComponents[0], colorize);
         for (size_t pathIdx = 1; pathIdx < query.pathComponents.size(); pathIdx++)
         {
             if (std::find(query.dimIdxs.begin(), query.dimIdxs.end(), pathIdx) != query.dimIdxs.end())
             {
-                ostr << "/" << Esc << "[1;31m" << query.pathComponents[pathIdx] << Esc << "[0m";
+                ostr << "/" << dimPathStyledStr(query.pathComponents[pathIdx], colorize);
             }
             else
             {
@@ -106,8 +154,10 @@ void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
     }
 }
 
-
-void printQueries(const std::string& filePath, const std::string& subset, const std::string& tablePath)
+void printQueries(const std::string& filePath,
+                  const std::string& subset,
+                  const std::string& tablePath,
+                  bool colorize)
 {
     const static int FileUnit = 12;
     const static int FileUnitTable1 = 13;
@@ -125,11 +175,12 @@ void printQueries(const std::string& filePath, const std::string& subset, const 
         mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
     }
 
+    auto dataProvider = Ingester::bufr::DataProvider();
     if (!subset.empty())
     {
-        auto queries = getQueries(FileUnit, subset.c_str());
+        auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);
         std::cout << "Possible queries for subset: " << subset << std::endl;
-        printQueryList(queries);
+        printQueryList(queries, colorize);
     }
     else
     {
@@ -144,9 +195,10 @@ void printQueries(const std::string& filePath, const std::string& subset, const 
         std::cout << "Available subsets: " << std::endl;
         for (auto subset : subsets)
         {
-            std::cout << Esc << "[1;34m" << "  " << subset << Esc << "[0m" << std::endl;
+            std::cout << subsetStyledStr(subset, colorize) << std::endl;
         }
         std::cout << "Total number of subsets found: " << subsets.size() << std::endl << std::endl;
+
 
         for (auto subset : subsets)
         {
@@ -166,9 +218,12 @@ void printQueries(const std::string& filePath, const std::string& subset, const 
             }
 
             std::cout << "Possible queries for subset: "
-                      << Esc << "[1;34m" << subset << Esc << "[0m"
+                      << subsetStyledStr(subset, colorize)
                       << std::endl;
-            printQueryList(getQueries(FileUnit, subset.c_str()));
+
+            auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);
+            printQueryList(queries, colorize);
+
             std::cout << std::endl;
         }
     }
@@ -183,15 +238,29 @@ int main(int argc, char** argv)
     std::string inputFile = "";
     std::string tablePath = "";
     std::string subset = "";
+    bool colorize = true;
 
     int idx = 1;
     while (idx < argc)
     {
         std::string arg = argv[idx];
-        if (arg == "-s")
+        if (arg == "-m")
         {
-            subset = std::string(argv[idx+1]);
-            idx = idx + 2;
+            colorize = false;
+            idx++;
+        }
+        else if (arg.substr(0,2) == "-s")
+        {
+            if (arg.size() == 2)
+            {
+                subset = argv[idx+1];
+                idx = idx + 2;
+            }
+            else
+            {
+                subset = arg.substr(2, arg.size());
+                idx++;
+            }
         }
         else if (arg == "-h")
         {
@@ -217,7 +286,7 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    printQueries(inputFile, subset, tablePath);
+    printQueries(inputFile, subset, tablePath, colorize);
 
     return 0;
 }
