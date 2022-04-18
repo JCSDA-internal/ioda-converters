@@ -1456,6 +1456,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
 
 file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
 
+# Remove bias files from validation. These will need a separate YAML file.
+list( FILTER TESTOUTPUT_IODA_FILES EXCLUDE REGEX "(.*)bias(.*)" )
+
 foreach ( f ${TESTOUTPUT_IODA_FILES} )
 	get_filename_component(filename ${f} NAME)
 
