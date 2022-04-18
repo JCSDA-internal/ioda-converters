@@ -574,7 +574,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
                           avhrr_radiance.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
-# Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
+# Conventional data, Sat-winds atmospheric motion vectors SSEC ftp server
 #===============================================================================
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satwinds
