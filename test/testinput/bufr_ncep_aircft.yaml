@@ -406,7 +406,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "deg"
+          units: "degree"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"
