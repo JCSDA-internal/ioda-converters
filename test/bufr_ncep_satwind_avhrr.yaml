@@ -11,7 +11,7 @@ observations:
   - obs space:
       name: bufr
       #obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
-      obsdatain: "/scratch1/NCEPDEV/da/Ashley.Stanfield/IODA/ioda-bundle/iodaconv/test/testinput/bufr_ncep_satwind_avhrr.bufr_d"
+      obsdatain: "./testinput/bufr_ncep_satwind_avhrr.bufr_d"
 
       exports:
         variables:
@@ -77,7 +77,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "/scratch1/NCEPDEV/da/Ashley.Stanfield/IODA/ioda-bundle/iodaconv/test/testoutput/bufr_ncep_satwind_avhrr.nc"
+      obsdataout: "./testoutput/bufr_ncep_satwind_avhrr.nc"
       dimensions:
         - name: "ncols_conf"
           paths:
