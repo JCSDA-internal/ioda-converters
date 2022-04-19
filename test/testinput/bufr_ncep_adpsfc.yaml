@@ -29,9 +29,9 @@ observations:
             query: "*/.DTHTOPC"
           relationshipToHorizontalVisibility:
             query: "*/.REHOVI"
-          24HourPressureChange:
+          PressureChangePast24Hour:
             query: "*/24PC"
-          3HourPressureChange:
+          PressureChangePast3Hour:
             query: "*/3HPC"
           altimeterSettingQnh:
             query: "*/ALSE"
@@ -40,9 +40,9 @@ observations:
           cloudAmount:
             query: "*/CLAM"
           latitude:
-            query: "*/CLATH"
+            query: "[*/CLAT, */CLATH]"
           longitude:
-            query: "*/CLONH"
+            query: "[*/CLON, */CLONH]"
           cloudType:
             query: "[*/CLDSQ1/CLTP, */MTRCLD/CLTP, */CLTP[1], */BSYSCLD/CLTP, */BSYBCLD/CLTP]"
           freshSnowDepth:
@@ -189,15 +189,15 @@ observations:
           longName: "Relationship to Horizontal Visibility"
           units: ""
 
-        - name: "ObsValue/24HourPressureChange"
+        - name: "ObsValue/PressureChangePast24Hour"
           coordinates: "longitude latitude"
-          source: variables/24HourPressureChange
+          source: variables/PressureChangePast24Hour
           longName: "24 Hour Pressure Change"
           units: "Pa"
 
-        - name: "ObsValue/3HourPressureChange"
+        - name: "ObsValue/PressureChangePast3Hour"
           coordinates: "longitude latitude"
-          source: variables/3HourPressureChange
+          source: variables/PressureChangePast3Hour
           longName: "3 Hour Pressure Change"
           units: "Pa"
 
@@ -532,7 +532,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "deg"
+          units: "degree"
 
         - name: "ObsValue/windSpeed"
           coordinates: "longitude latitude"

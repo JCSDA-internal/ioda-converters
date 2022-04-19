@@ -160,21 +160,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_filter_split.yaml
     testinput/bufr_adpsfc.yaml
     testinput/bufr_ncep_prepbufr_adpsfc.yaml
-    testinput/bufr_ncep_adpsfc_nc000000.yaml
-    testinput/bufr_ncep_adpsfc_nc000001.yaml
-    testinput/bufr_ncep_adpsfc_nc000002.yaml
-    testinput/bufr_ncep_adpsfc_nc000007.yaml
-    testinput/bufr_ncep_adpsfc_nc000100.yaml
-    testinput/bufr_ncep_adpsfc_nc000101.yaml
-    testinput/bufr_ncep_adpsfc_nc000102.yaml
+    testinput/bufr_ncep_adpsfc.yaml
     testinput/gdas.t12z.adpsfc_thinned.tm00.prepbufr
-    testinput/gdas.t12z.adpsfc.nc000000_thinned.tm00.bufr_d
-    testinput/gdas.t12z.adpsfc.nc000001_thinned.tm00.bufr_d
-    testinput/gdas.t12z.adpsfc.nc000002_thinned.tm00.bufr_d
-    testinput/gdas.t12z.adpsfc.nc000007_thinned.tm00.bufr_d
-    testinput/gdas.t12z.adpsfc.nc000100_thinned.tm00.bufr_d
-    testinput/gdas.t12z.adpsfc.nc000101_thinned.tm00.bufr_d
-    testinput/gdas.t12z.adpsfc.nc000102_thinned.tm00.bufr_d
+    testinput/gdas.t12z.adpsfc_thinned.tm00.bufr_d
     testinput/bufr_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
@@ -229,13 +217,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t12z.esmhs.tm00.noaa-19.nc
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000000_select.tm00.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000001_select.tm00.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000002_select.tm00.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000007_select.tm00.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000100_select.tm00.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000101_select.tm00.nc
-    testoutput/gdas.t12z.adpsfc_bufr_nc000102_select.tm00.nc
+    testoutput/gdas.t12z.adpsfc_bufr_thinned.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
     testoutput/gdas.t00z.sevcsr.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
@@ -983,16 +965,16 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t06z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_nc000000_adpsfc2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_adpsfc2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_adpsfc_nc000000.yaml"
-                            gdas.t12z.adpsfc_bufr_nc000000_select.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_adpsfc.yaml"
+                            gdas.t12z.adpsfc_bufr_thinned.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_adpsfc2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_adpsfc2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
