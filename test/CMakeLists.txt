@@ -220,7 +220,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
     testoutput/gdas.t00z.sevcsr.tm00.nc
-    testoutput/gdas.t12z.aircar_thinned.tm00.nc
+    testoutput/gdas.t12z.aircar_bufr_thinned.tm00.nc
     testoutput/gdas.t12z.aircft_bufr_thinned.tm00.nc
     testoutput/aircraft_prepbufr_select_thinned.nc
     testoutput/bufr_read_2_dim_blocks.nc
