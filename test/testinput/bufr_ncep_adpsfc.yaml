@@ -43,8 +43,6 @@ observations:
             query: "[*/CLAT, */CLATH]"
           longitude:
             query: "[*/CLON, */CLONH]"
-          cloudType:
-            query: "[*/CLDSQ1/CLTP, */MTRCLD/CLTP, */CLTP[1], */BSYSCLD/CLTP, */BSYBCLD/CLTP]"
           freshSnowDepth:
             query: "*/SNWSQ1/DOFS"
           swellWavesDirection:
@@ -137,8 +135,6 @@ observations:
             query: "*/TP12"
           totalPrecipitationPast24Hours:
             query: "*/TP24"
-          verticalSignificanceSurfaceObservations:
-            query: "[*/CLDSQ1/VSSO, */MTRCLD/VSSO, */VSSO[1], */BSYSCLD/VSSO, */BSYBCLD/VSSO]"
           verticalVisibility:
             query: "*/VTVI"
           windDirection:
@@ -233,12 +229,6 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "ObsValue/cloudType"
-          coordinates: "longitude latitude"
-          source: variables/cloudType
-          longName: "Cloud Type"
-          units: ""
-
         - name: "ObsValue/freshSnowDepth"
           coordinates: "longitude latitude"
           source: variables/freshSnowDepth
@@ -249,7 +239,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/swellWavesDirection
           longName: "Swell Waves Direction"
-          units: "degrees"
+          units: "degree"
 
         - name: "MetaData/dataRestrictedExpiration"
           coordinates: "longitude latitude"
@@ -327,7 +317,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/peakWindDirection
           longName: "Peak Wind Direction"
-          units: "degrees"
+          units: "degree"
 
         - name: "ObsValue/peakWindSpeed"
           coordinates: "longitude latitude"
@@ -515,12 +505,6 @@ observations:
           source: variables/totalPrecipitationPast24Hours
           longName: "total PrecipitatonPast 24 Hours"
           units: "Kg m-2"
-
-        - name: "ObsValue/verticalSignificanceSurfaceObservations"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservations
-          longName: "Vertical Significance of Surface Observations"
-          units: ""
 
         - name: "ObsValue/verticalVisibility"
           coordinates: "longitude latitude"
