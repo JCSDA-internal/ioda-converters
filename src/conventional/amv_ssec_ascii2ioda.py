@@ -204,7 +204,6 @@ def read_file(file_name, data):
                 data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
                 data['northward_wind'] = np.append(data['northward_wind'], vwnd)
 
-
                 if row['type'] in known_freq.keys():
                     freq = known_freq[row['type']]
                 else:
