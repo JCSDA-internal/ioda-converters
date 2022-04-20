@@ -24,23 +24,13 @@ observations:
           longitude:
             query: "*/CLON"
 
-          year:
-            query: "*/YEAR"
-
-          month:
-            query: "*/MNTH"
-
-          day:
-            query: "*/DAYS"
-
-          hour:
-            query: "*/HOUR"
-
-          minute:
-            query: "*/MINU"
-
-          second:
-            query: "*/SECO"
+          timestamp:
+            datetime:
+              year: "*/YEAR[1]"
+              month: "*/MNTH[1]"
+              day: "*/DAYS[1]"
+              hour: "*/HOUR[1]"
+              minute: "*/MINU[1]"
 
           satelliteDerivedWindComputationMethod:
             query: "*/SWCM"
@@ -79,9 +69,9 @@ observations:
       backend: netcdf
       obsdataout: "./testoutput/bufr_ncep_satwind_avhrr.nc"
       dimensions:
-        - name: "ncols_conf"
+        - name: Confidence
           paths:
-            - "*/QCPRMS"
+            - "*/GQCPRMS"
 
       variables:
         - name: "MetaData/satelliteIdentifier"
@@ -99,35 +89,11 @@ observations:
           longName: "Longitude (Coarse Accuracy)"
           units: "degree_east"
 
-        - name: "MetaData/year"
-          source: variables/year
-          longName: "Year"
-          units: "year"
-
-        - name: "MetaData/month"
-          source: variables/month
-          longName: "Month"
-          units: "mon"
-
-        - name: "MetaData/day"
-          source: variables/day
-          longName: "Day"
-          units: "day"
-
-        - name: "MetaData/hour"
-          source: variables/hour
-          longName: "Hour"
-          units: "hr"
-
-        - name: "MetaData/minute"
-          source: variables/minute
-          longName: "Minutes"
-          units: "min"
-
-        - name: "MetaData/second"
-          source: variables/second
-          longName: "Seconds"
-          units: "sec"
+        - name: "MetaData/dateTime"
+          coordinates: "longitude latitude"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/satelliteDerivedWindComputationMethod"
           source: variables/satelliteDerivedWindComputationMethod

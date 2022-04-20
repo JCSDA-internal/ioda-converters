@@ -144,7 +144,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
-    testinput/NC005080.bufr_d
+    testinput/bufr_ncep_satwind_avhrr.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
     testinput/bufr_read_wmo_radiosonde.bufr
     testinput/bufr_satwnd_new_format.bufr
@@ -220,7 +220,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
     testoutput/NC005066.nc
-    testoutput/Out_NC005080.nc
+    testoutput/bufr_ncep_satwind_avhrr.nc
     testoutput/bufr_mtiasi.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
