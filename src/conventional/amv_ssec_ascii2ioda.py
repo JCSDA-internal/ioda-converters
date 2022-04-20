@@ -180,8 +180,8 @@ def read_file(file_name, data):
         for row in reader:
             try:
                 year = int(row['day'][0:4])
-                month = int(row['day'][5:6])
-                day = int(row['day'][7:8])
+                month = int(row['day'][4:6])
+                day = int(row['day'][-2:])
                 hour = int(row['hms'][0:1])
                 minute = int(row['hms'][2:3])
                 second = 0
@@ -190,6 +190,20 @@ def read_file(file_name, data):
                 data['dateTime'] = np.append(data['dateTime'], time_offset)
                 data['longitude'] = np.append(data['longitude'], float(row['lon']))
                 data['latitude'] = np.append(data['latitude'], float(row['lat']))
+
+                pres = float(row['pre'])*100.
+                data['air_pressure'] = np.append(data['air_pressure'], pres)
+                wdir = float(row['dir'])*1.0
+                wspd = float(row['spd'])*1.0
+                if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
+                    uwnd, vwnd = meteo_utils.meteo_utils().dir_speed_2_uv(wdir, wspd)
+                else:
+                    uwnd = float_missing_value
+                    vwnd = float_missing_value
+
+                data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
+                data['northward_wind'] = np.append(data['northward_wind'], vwnd)
+
 
                 if row['type'] in known_freq.keys():
                     freq = known_freq[row['type']]
@@ -208,19 +222,6 @@ def read_file(file_name, data):
                 data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
                 data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
                 data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
-
-                pres = float(row['pre'])*100.
-                data['air_pressure'] = np.append(data['air_pressure'], pres)
-                wdir = float(row['dir'])*1.0
-                wspd = float(row['spd'])*1.0
-                if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
-                    uwnd, vwnd = meteo_utils.meteo_utils().dir_speed_2_uv(wdir, wspd)
-                else:
-                    uwnd = float_missing_value
-                    vwnd = float_missing_value
-
-                data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-                data['northward_wind'] = np.append(data['northward_wind'], vwnd)
 
             except KeyError as e:
                 if not keyerr:
