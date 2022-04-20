@@ -109,7 +109,7 @@ all_LocKeyList = {
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('stationElevation', 'float'),
-    'Pressure': ('airPressure', 'float'),
+    'Pressure': ('pressure', 'float'),
     'Height': ('height', 'float'),
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
@@ -132,17 +132,17 @@ all_LocKeyList = {
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
     'Vterminal': ('vterminal', 'float'),
-    'SWCM_spec_type': ('satwind_spectral_type', 'float'),
-    'SAZA_sat_zen_angle': ('sensor_zenith_angle', 'float'),
-    'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
-    'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
-    'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
+    'SWCM_spec_type': ('windComputationMethod', 'float'),
+    'SAZA_sat_zen_angle': ('sensorZenithAngle', 'float'),
+    'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
+    'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
+    'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
     'LaunchTime': ('LaunchTime', 'float'),
 }
 
 checkuv = {
-    "eastward_wind": "u",
-    "northward_wind": "v",
+    "windEastward": "u",
+    "windNorthward": "v",
 }
 
 conv_varnames = {
@@ -425,20 +425,28 @@ oz_sensors = [
 # units
 # 'IODA/UFO_variable_name': 'Unit'
 units_values = {
+    'virtualTemperature': 'K',
     'virtual_temperature': 'K',
     'atmosphere_ln_pressure_coordinate': '1',
     'specific_humidity': '1',
+    'specificHumidity': '1',
     'northward_wind': 'm s-1',
+    'windNorthward': 'm s-1',
     'eastward_wind': 'm s-1',
+    'windEastward': 'm s-1',
     'geopotential_height': 'm',
+    'height_above_mean_sea_level': 'm',
     'heightOfSurface': 'm',
     'surface_pressure': 'Pa',
+    'station{ressure': 'Pa',
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
     'surface_geopotential_height': 'm',
     'land_area_fraction': '1',
     'air_temperature': 'K',
+    'airTemperature': 'K',
+    'pressure': 'Pa',
     'air_pressure': 'Pa',
     'air_pressure_levels': 'Pa',
     'humidity_mixing_ratio': '1',
@@ -517,6 +525,9 @@ units_values = {
     'sensorCentralWavenumber': 'm-1',
     'sensorCentralFrequency': 'Hz',
     'brightnessTemperature': 'K',
+    'percentConfidenceWithForecast': 'percent',
+    'percentConfidenceWithoutForecast': 'percent',
+    'satelliteChannelCentreFrequency': 'Hz',
 }
 
 # @TestReference
@@ -773,7 +784,6 @@ class Conv(BaseGSI):
                     VarDims[value] = ['Location']
                     varAttrs[varDict[value]['valKey']]['units'] = units_values[value]
                     varAttrs[varDict[value]['errKey']]['units'] = units_values[value]
-                    varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
                     varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
                     varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
                     varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
@@ -839,6 +849,8 @@ class Conv(BaseGSI):
                             else:
                                 tmp[tmp > 4e8] = self.FLOAT_FILL
                             outdata[gvname] = tmp
+                            if gvname[1] != 'PreUseFlag' and gvname[1] != 'ObsType' and gvname[1] != 'GsiUseFlag' and gvname[1] != 'GsiQCWeight':
+                                varAttrs[gvname]['units'] = units_values[gvname[0]]
                     # create a GSI effective QC variable
                     gsiqcname = outvars[o], 'GsiEffectiveQC'
                     errname = outvars[o], 'GsiFinalObsError'
@@ -846,7 +858,6 @@ class Conv(BaseGSI):
                     gsiqc[outdata[errname] == 1e8] = 1
                     gsiqc[outdata[(outvars[o], "GsiUseFlag")] < 0] = 1
                     outdata[gsiqcname] = gsiqc.astype(np.int32)
-                    varAttrs[gsiqcname]['units'] = 'unitless'
                     varAttrs[gsiqcname]['_FillValue'] = self.INT_FILL
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
@@ -864,6 +875,7 @@ class Conv(BaseGSI):
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
+                    #   varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
                         tmpps = self.var(lvar)[idx]
@@ -899,6 +911,7 @@ class Conv(BaseGSI):
                         outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                         if loc_mdata_name in units_values.keys():
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
+
                 # put the TestReference fields in the structure for writing out
                 for tvar in TestVars:
                     if tvar in test_fields_:
@@ -1200,6 +1213,10 @@ class Radiances(BaseGSI):
         VarDims[value] = ['Location', 'Channel']
         varAttrs[varDict[value]['valKey']]['units'] = 'K'
         varAttrs[varDict[value]['errKey']]['units'] = 'K'
+#       varAttrs[varDict[value]['qcKey']]['units'] = 'unitless'
+#       varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
+#       varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
+#       varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
         varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
@@ -1603,7 +1620,7 @@ class Ozone(BaseGSI):
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                # varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             else:
                 tmp = self.var(lvar)
                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -1823,7 +1840,7 @@ class Radar(BaseGSI):
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
                 outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
-                varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                # varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             else:
                 tmp = self.var(lvar)[:]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
