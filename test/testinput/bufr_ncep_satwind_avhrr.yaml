@@ -26,11 +26,12 @@ observations:
 
           timestamp:
             datetime:
-              year: "*/YEAR[1]"
-              month: "*/MNTH[1]"
-              day: "*/DAYS[1]"
-              hour: "*/HOUR[1]"
-              minute: "*/MINU[1]"
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
 
           satelliteDerivedWindComputationMethod:
             query: "*/SWCM"
@@ -48,10 +49,10 @@ observations:
             query: "*/SWQM"
 
           heightAssignmentMethod:
-            query: "*/HAMD[1]"
+            query: "*/HAMD"
 
           pressure:
-            query: "*/PRLC[1]"
+            query: "*/PRLC"
 
           windDirection:
             query: "*/WDIR"
@@ -59,11 +60,17 @@ observations:
           windSpeed:
             query: "*/WSPD"
 
-          generatingApplication:
+          windSpeedGeneratingApplication:
             query: "*/GQCPRMS/GNAP[1]"
 
-          percentConfidence:
+          windDirectionGeneratingApplication:
+            query: "*/GQCPRMS/GNAP[2]"
+
+          windSpeedPercentConfidence:
             query: "*/GQCPRMS/PCCF[1]"
+
+          windDirectionPercentConfidence:
+            query: "*/GQCPRMS/PCCF[2]"
 
     ioda:
       backend: netcdf
@@ -140,13 +147,23 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        - name: "MetaData/generatingApplication"
-          source: variables/generatingApplication
-          longName: "Generating Application"
+        - name: "MetaData/windSpeedGeneratingApplication"
+          source: variables/windSpeedGeneratingApplication
+          longName: "Wind Speed Generating Application"
           units: ""
 
-        - name: "MetaData/percentConfidence"
-          source: variables/percentConfidence
-          longName: "Per Cent Confidence"
+        - name: "MetaData/windDirectionGeneratingApplication"
+          source: variables/windDirectionGeneratingApplication
+          longName: "Wind Direction Generating Application"
+          units: ""
+
+        - name: "MetaData/windSpeedPercentConfidence"
+          source: variables/windSpeedPercentConfidence
+          longName: "Wind Speed Per Cent Confidence"
+          units: "percent"
+
+        - name: "MetaData/windDirectionPercentConfidence"
+          source: variables/windDirectionPercentConfidence
+          longName: "Wind Direction Per Cent Confidence"
           units: "percent"
 
