@@ -88,7 +88,7 @@ class smap(object):
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
         sflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['surface_flag'][:].ravel()
         vegop = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['vegetation_opacity'][:].ravel()
-         erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
+        erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
         ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
@@ -122,8 +122,6 @@ class smap(object):
         erowi = erowi.astype('int32')
         ecoli = ecoli.astype('int32')
 
-        AttrData['date_time_string'] = base_date
-
         for i in range(len(lons)):
             dt = base_date + timedelta(seconds=int(refsec[i]))
             times[i] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -148,6 +146,7 @@ class smap(object):
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
+        AttrData['date_time_string'] = times[0]
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
