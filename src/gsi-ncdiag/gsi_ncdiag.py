@@ -347,7 +347,7 @@ geovals_vars = {
     'Lai': 'leaf_area_index',
     'Soil_Moisture': 'volume_fraction_of_condensed_water_in_soil',
     'Soil_Temperature': 'soil_temperature',
-    'Land_Type_Index': 'land_type_index',
+    'Land_Type_Index': 'land_type_index_NPOESS',
     'Vegetation_Type': 'vegetation_type_index',
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
@@ -446,7 +446,7 @@ units_values = {
     'leaf_area_index': '1',
     'volume_fraction_of_condensed_water_in_soil': '1',
     'soil_temperature': 'K',
-    'land_type_index': '1',
+    'land_type_index_NPOESS': '1',
     'vegetation_type_index': '1',
     'soil_type': '1',
     'surface_snow_thickness': 'm',
@@ -533,6 +533,8 @@ gmi_chan_dep_loc_vars = {
     'Sol_Zenith_Angle',
     'Sol_Azimuth_Angle',
     'Scan_Angle',
+    'BC_Cosine_Latitude_times_Node' 
+    'BC_Sine_Latitude'
 }
 
 DimDict = {
