@@ -109,9 +109,8 @@ class smap(object):
             refsec = refsec[mask]
             times = times[mask]
 
-        # get datetime and reference time 12UTC 1Jan2000 (12*3600)
-        hours = 43200
-        base_date = datetime(2000, 1, 1) + timedelta(seconds=int(hours))
+        # get datetime and reference time 12UTC 1Jan2000
+        base_date = datetime(2000, 1, 1, 12, 0)
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
