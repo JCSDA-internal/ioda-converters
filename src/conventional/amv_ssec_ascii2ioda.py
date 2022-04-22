@@ -181,9 +181,9 @@ def read_file(file_name, data):
             try:
                 year = int(row['day'][0:4])
                 month = int(row['day'][4:6])
-                day = int(row['day'][-2:])
-                hour = int(row['hms'][0:1])
-                minute = int(row['hms'][2:3])
+                day = int(row['day'][6:])
+                hour = int(row['hms'][0:2])
+                minute = int(row['hms'][2:])
                 second = 0
                 dtg = datetime(year, month, day, hour, minute, second)
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
