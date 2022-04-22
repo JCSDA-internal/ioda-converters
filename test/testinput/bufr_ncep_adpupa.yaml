@@ -1,0 +1,558 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# 
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.adpupa.tm00.bufr_d"
+
+      exports:
+        variables:
+#          timestamp:
+#            datetime:
+#              year: "*/YEAR"
+#              month: "*/MNTH"
+#              day: "*/DAYS"
+#              hour: "*/HOUR"
+#              minute: "*/MINU"
+
+          wmoBlockNumber:
+            query: "*/WMOB"
+          wmoStationNumber:
+            query: "*/WMOS"
+          wmoRegionNumber:
+            query: "*/WMOR"
+
+          radiosondeStationID:
+            query: "*/RSML"
+          stationElevationQualityMarker:
+            query: "*/QCEVR"
+
+          degreeOfTurbulence:
+            query: "*/DGOT"
+          presentWeather:
+            query: "*/PRWE"
+          horizontalVisibility:
+            query: "*/HOVI"
+          pressureReducedToMeanSeaLevel:
+            query: "*/PMSL"
+          dayOfWeek:
+            query: "*/DAYW"
+
+          dataReceiptTimeSignificance:
+            query: "*/RCPTIM/RCTS"
+          dataReceiptTimeYear:
+            query: "*/RCPTIM/RCYR"
+          dataReceiptTimeMonth:
+            query: "*/RCPTIM/RCMO"
+          dataReceiptTimeDay:
+            query: "*/RCPTIM/RCDY"
+          dataReceiptTimeHour:
+            query: "*/RCPTIM/RCHR"
+          dataReceiptTimeMinute:
+            query: "*/RCPTIM/RCMI"
+
+          channelSequenceNum:
+            query: "*/BID/SEQNUM"
+
+          reportIdentifier:
+            query: "*/RPID"
+          latitude:
+            query: "*/CLAT"
+          longitude:
+            query: "*/CLON"
+          heightOfStation:
+            query: "*/SELV"
+
+          flightLevel:
+            query: "*/FLVL"
+          pressureAltitude:
+            query: "*/PSAL"
+
+          radiosondeType: 
+            query: "*/UARID/RATP"
+
+          verticalSoundingSignificance:
+            query: "[*/UARLV/VSIG, */VSIG]"
+          pressureQualityMarker:
+            query: "*/UARLV/QMPR"
+          pressure:
+            query: "[*/UARLV/PRLC, */PRLC]"
+          geopotentialQualityMarker:
+            query: "*/UARLV/QMGP"
+
+          geopotentialClass7:
+            query: "*/UARLV/UAGP07/GP07"
+          geopotentialClass10:
+            query: "[*/UARLV/UAGP10/GP10, */GP10]"
+
+          airTemperatureQualityMarker:
+            query: "[*/UARLV/UATMP/QMAT, */QMAT]"
+          airTemperature:
+            query: "[*/UARLV/UATMP/TMDB, */TMDB]"
+          moistureQualityMarker:
+            query: "[*/UARLV/UATMP/QMDD, */QMDD]"
+          dewpointTemperature:
+            query: "[*/UARLV/UATMP/TMDP, */TMDP]"
+
+          relativeHumidity:
+            query: "*/REHU"
+
+          windQualityMarker:
+            query: "[*/UARLV/UAWND/QMWN, */QMWN]"
+          windDirection:
+            query: "[*/UARLV/UAWND/WDIR, */WDIR]"
+          windSpeed:
+            query: "[*/UARLV/UAWND/WSPD, */WSPD]"
+
+          surfaceWindDirection:
+            query: "*/ARSWD/WDIR1"
+          surfaceWindSpeed:
+            query: "*/ARSWD/WSPD1"
+
+          windShear1KmLayerAbove:
+            query: "*/UARLV/UAWSH/AWSB"
+          windShear1KmLayerBelow:
+            query: "*/UARLV/UAWSH/AWSA"
+
+          seaSurfaceTemperatureQualityMarker:
+            query: "[*/UASDG/QMST, */QMST]"
+          seaSurfaceTemperature:
+            query: "[*/UASDG/SST1, */SST1]"
+          trackingTechniqueStatusOfSystemUsed:
+            query: "*/UASDG/TTSS"
+          radiosondeLaunchHour:
+            query: "*/UASDG/UALNHR"
+          radiosondeLaunchMinute:
+            query: "*/UASDG/UALNMN"
+
+          cloudType:
+            query: "[*/UACLD/CLTP, */AFCLD/CLTP]"
+          cloudAmount:
+            query: "[*/UACLD/CLAM, */AFCLD/CLAM]"
+          heightAboveSurfaceOfBaseOfLowestCloud:
+            query: "*/UACLD/HBLCS"
+
+          heightOfBaseOfCloud:
+            query: "*/AFCLD/HOCB"
+          heightOfTopOfCloud:
+            query: "*/AFCLD/HOCT"
+
+
+          airframeIcing:
+            query: "*/AFICG/AFIC"
+          heightOfBaseOfIcing:
+            query: "*/AFICG/HBOI"
+          heightOfTopOfIcing:
+            query: "*/AFICG/HTOI"
+
+          windDirectionForSurface1500MLayer:
+            query: "*/UAADF/MWDL"
+          windSpeedForSurface1500MLayer:
+            query: "*/UAADF/MWSL"
+          windDirectionFor1500M3000MLayer:
+            query: "*/UAADF/MWDH"
+          windSpeedFor1500M3000MLayer:
+            query: "*/UAADF/MWSH"
+          mandatoryLevelPressure:
+            query: "*/UAADF/XMPRLC"
+          mandatoryLevelGeopotential:
+            query: "*/UAADF/XMGP10"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/bufr_ncep_adpupa.nc"
+
+#      dimensions:
+#        - name: rcptim_Dim
+#          path: "*/RCPTIM"
+#        - name: bid_Dim
+#          path: "*/BID"
+#        - name: uarid_Dim
+#          path: "*/UARID"
+#        - name: uarlv_Dim
+#          path: "*/UARLV"
+#        - name: uardcs_Dim
+#          path: "*/UARDCS"
+#        - name: rawrpt_Dim
+#          path: "*/RAWRPT"
+#        - name: uacld_Dim
+#          path: "*/UACLD"
+#        - name: afcld_Dim
+#          path: "*/AFCLD"
+
+      variables:
+
+#        - name: "MetaData/dateTime"
+#          coordinates: "longitude latitude"
+#          source: variables/timestamp
+#          longName: "Datetime"
+#          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/wmoBlockNumber"
+          coordinates: "longitude latitude"
+          source: variables/wmoBlockNumber
+          longName: "WMO Block Number"
+          units: ""
+
+        - name: "MetaData/wmoStationNumber"
+          coordinates: "longitude latitude"
+          source: variables/wmoStationNumber
+          longName: "WMO Station Number"
+          units: ""
+
+        - name: "MetaData/wmoRegionNumber"
+          coordinates: "longitude latitude"
+          source: variables/wmoRegionNumber
+          longName: "WMO Region Number"
+          units: ""
+
+        - name: "MetaData/radiosondeStationID"
+          coordinates: "longitude latitude"
+          source: variables/radiosondeStationID
+          longName: "Radiosonde Station ID"
+          units: ""
+
+        - name: "MetaData/stationElevationQualityMarker"
+          coordinates: "longitude latitude"
+          source: variables/stationElevationQualityMarker
+          longName: "Station Elevation Quality Marker (For Mobil Stations)"
+          units: ""
+
+        - name: "MetaData/degreeOfTurbulence"
+          coordinates: "longitude latitude"
+          source: variables/degreeOfTurbulence
+          longName: "Degree Of Turbulence"
+          units: ""
+
+        - name: "MetaData/presentWeather"
+          coordinates: "longitude latitude"
+          source: variables/presentWeather
+          longName: "Present weather"
+          units: ""
+
+        - name: "ObsValue/horizontalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/horizontalVisibility
+          longName: "Horizontal Visibility"
+          units: "m"
+
+        - name: "ObsValue/pressureReducedToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureReducedToMeanSeaLevel
+          longName: "Mean Sea-Level Pressure"
+          units: "Pa"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
+          units: ""
+
+        - name: "MetaData/dataReceiptTimeYear"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeYear
+          longName: "Receipt Time (Year)"
+          units: "Year"
+
+        - name: "MetaData/dataReceiptTimeMonth"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMonth
+          longName: "Data Receipt Time (Month)"
+          units: "Month"
+
+        - name: "MetaData/dataReceiptTimeDay"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeDay
+          longName: "Data Receipt Time (Day)"
+          units: "Day"
+
+        - name: "MetaData/dataReceiptTimeHour"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          coordinates: "longitude latitude"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/channelSequenceNum"
+          coordinates: "longitude latitude"
+          source: variables/channelSequenceNum
+          longName: "Channel Sequence Number"
+          units: ""
+
+        - name: "MetaData/reportIdentifier"
+          coordinates: "longitude latitude"
+          source: variables/reportIdentifier
+          longName: "Report Identifier"
+          units: ""
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [0, 360]
+
+        - name: "MetaData/heightOfStation"
+          coordinates: "longitude latitude"
+          source: variables/heightOfStation
+          longName: "Height of Station"
+          units: "Meter"
+
+        - name: "MetaData/flightLevel"
+          coordinates: "longitude latitude"
+          source: variables/flightLevel
+          longName: "Flight Level"
+          units: "Meters"
+
+        - name: "MetaData/pressureAltitude"
+          coordinates: "longitude latitude"
+          source: variables/pressureAltitude
+          longName: "Pressure Altitude Relative to Mean Sea Level"
+          units: "Meters"
+
+        - name: "MetaData/radiosondeType"
+          coordinates: "longitude latitude"
+          source: variables/radiosondeType
+          longName: "Radiosonde Type"
+          units: ""
+
+        - name: "MetaData/verticalSoundingSignificance"
+          coordinates: "longitude latitude"
+          source: variables/verticalSoundingSignificance
+          longName: "Vertical Sounding Significance"
+          units: ""
+ 
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQualityMarker
+          longName: "Sdmedit Quality Mark for Pressure"
+          units: ""
+
+        - name: "ObsValue/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pascals"
+
+        - name: "QualityMarker/geopotential"
+          coordinates: "longitude latitude"
+          source: variables/geopotentialQualityMarker
+          longName: "Sdmedit Quality Mark for Geopotential"
+          units: ""
+
+        - name: "ObsValue/geopotentialClass7"
+          coordinates: "longitude latitude"
+          source: variables/geopotentialClass7
+          longName: "Geopotential"
+          units: "(m/s)^2"
+
+        - name: "ObsValue/geopotentialClass10"
+          coordinates: "longitude latitude"
+          source: variables/geopotentialClass10
+          longName: "Geopotential"
+          units: "(m/s)^2"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQualityMarker
+          longName: "Sdmedit Quality Mark for Temperature"
+          units: ""
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "Kelvin"
+
+        - name: "QualityMarker/moisture"
+          coordinates: "longitude latitude"
+          source: variables/moistureQualityMarker
+          longName: "Sdmedit Quality Mark for Moisture"
+          units: ""
+
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dew Point"
+          units: "Kelvin"
+
+        - name: "ObsValue/relativeHumidity"
+          coordinates: "longitude latitude"
+          source: variables/relativeHumidity
+          longName: "Relative Humidity"
+          units: "Percent"
+
+        - name: "QualityMarker/wind"
+          coordinates: "longitude latitude"
+          source: variables/windQualityMarker
+          longName: "Sdmedit Quality Mark for Wind"
+          units: ""
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "degree"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "m s-1"
+
+        - name: "ObsValue/surfaceWindDirection"
+          coordinates: "longitude latitude"
+          source: variables/surfaceWindDirection
+          longName: "Surface Wind Direction"
+          units: "degree"
+
+        - name: "ObsValue/surfaceWindSpeed"
+          coordinates: "longitude latitude"
+          source: variables/surfaceWindSpeed
+          longName: "Surface Wind Speed"
+          units: "m s-1"
+
+        - name: "ObsValue/windShear1KmLayerAbove"
+          coordinates: "longitude latitude"
+          source: variables/windShear1KmLayerAbove
+          longName: "Wind Shear 1 Km Layer Above"
+          units: "m s-1"
+
+        - name: "ObsValue/windShear1KmLayerBelow"
+          coordinates: "longitude latitude"
+          source: variables/windShear1KmLayerBelow
+          longName: "Wind Shear 1 Km Layer Below"
+          units: "m s-1"
+
+        - name: "QualityMarker/seaSurfaceTemperature"
+          coordinates: "longitude latitude"
+          source: variables/seaSurfaceTemperatureQualityMarker
+          longName: "Sdmedit Quality Mark For Sea Surface Temperature"
+          units: ""
+
+        - name: "ObsValue/seaSurfaceTemperature"
+          coordinates: "longitude latitude"
+          source: variables/seaSurfaceTemperature
+          longName: "Sea/Water Temperature"
+          units: "Kelvin"
+
+        - name: "MetaData/trackingTechniqueStatusOfSystemUsed"
+          coordinates: "longitude latitude"
+          source: variables/trackingTechniqueStatusOfSystemUsed
+          longName: "Tracking Technique Status Of System Used"
+          units: ""
+
+        - name: "MetaData/radiosondeLaunchHour"
+          coordinates: "longitude latitude"
+          source: variables/radiosondeLaunchHour
+          longName: "Radiosonde Launch Hour"
+          units: "Hour"
+
+        - name: "MetaData/radiosondeLaunchMinute"
+          coordinates: "longitude latitude"
+          source: variables/radiosondeLaunchMinute
+          longName: "Radiosonde Launch Minute"
+          units: "Minute"
+
+        - name: "MetaData/cloudType"
+          coordinates: "longitude latitude"
+          source: variables/cloudType
+          longName: "Cloud Type"
+          units: ""
+
+        - name: "ObsValue/cloudAmount"
+          coordinates: "longitude latitude"
+          source: variables/cloudAmount
+          longName: "Cloud Amount"
+          units: ""
+
+        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightAboveSurfaceOfBaseOfLowestCloud
+          longName: "Height Above Surface of Base of Lowest Cloud Seen"
+          units: "m"
+
+        - name: "ObsValue/heightOfBaseOfCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightOfBaseOfCloud
+          longName: "Height of Base of Cloud"
+          units: "m"
+
+        - name: "ObsValue/heightOfTopOfCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightOfTopOfCloud
+          longName: "Height of Top of Cloud"
+          units: "m"
+
+
+        - name: "MetaData/airframeIcing"
+          coordinates: "longitude latitude"
+          source: variables/airframeIcing
+          longName: "Airframe Icing"
+          units: ""
+
+        - name: "ObsValue/heightOfBaseOfIcing"
+          coordinates: "longitude latitude"
+          source: variables/heightOfBaseOfIcing
+          longName: "Height of Base of Icing"
+          units: "m"
+
+        - name: "ObsValue/heightOfTopOfIcing"
+          coordinates: "longitude latitude"
+          source: variables/heightOfTopOfIcing
+          longName: "Height of Top of Icing"
+          units: "m"
+
+        - name: "ObsValue/windDirectionForSurface1500MLayer"
+          coordinates: "longitude latitude"
+          source: variables/windDirectionForSurface1500MLayer
+          longName: "Wind Direction For Surface-1500M Layer"
+          units: "degree"
+
+        - name: "ObsValue/windSpeedForSurface1500MLayer"
+          coordinates: "longitude latitude"
+          source: variables/windSpeedForSurface1500MLayer
+          longName: "Wind Speed For Surface-1500M Layer"
+          units: "m/s"
+
+        - name: "ObsValue/windDirectionFor1500M3000MLayer"
+          coordinates: "longitude latitude"
+          source: variables/windDirectionFor1500M3000MLayer
+          longName: "Wind Direction For 1500M-3000M Layer"
+          units: "degree"
+
+        - name: "ObsValue/windSpeedFor1500M3000MLayer"
+          coordinates: "longitude latitude"
+          source: variables/windSpeedFor1500M3000MLayer
+          longName: "Wind Speed For 1500M-3000M Layer"
+          units: "m/s"
+
+        - name: "ObsValue/mandatoryLevelPressure"
+          coordinates: "longitude latitude"
+          source: variables/mandatoryLevelPressure
+          longName: "Mandatory Level Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/mandatoryLevelGeopotential"
+          coordinates: "longitude latitude"
+          source: variables/mandatoryLevelGeopotential
+          longName: "Mandatory Level Geopotential"
+          units: "(m/s)^2"
+
