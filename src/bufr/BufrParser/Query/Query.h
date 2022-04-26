@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <map>
+#include <unordered_map>
 
 #include "QuerySet.h"
 #include "ResultSet.h"
@@ -78,8 +78,9 @@ namespace bufr {
         ResultSet& resultSet_;
         const DataProvider& dataProvider_;
 
-        std::map<std::string, std::shared_ptr<std::vector<__details::Target>>> targetCache_;
-        std::map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
+        std::unordered_map<std::string, std::shared_ptr<std::vector<__details::Target>>>
+        targetCache_;
+        std::unordered_map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
 
 
         /// \brief Look for the list of targets for the currently active BUFR message subset that

@@ -9,7 +9,6 @@
 
 #include <vector>
 #include <string>
-#include <map>
 
 namespace Ingester {
 namespace bufr

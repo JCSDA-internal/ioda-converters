@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "IngesterTypes.h"
@@ -28,7 +29,7 @@ namespace Ingester
         /// \brief Split the data according to internal rules
         /// \param dataMap Data to be split
         /// \result map of split data where the category is the key
-        virtual std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) = 0;
+        virtual std::unordered_map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) = 0;
 
         /// \brief Get the split name
         inline std::string getName() const { return name_; }
