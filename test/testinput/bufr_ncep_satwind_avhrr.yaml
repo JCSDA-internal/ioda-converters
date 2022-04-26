@@ -10,8 +10,8 @@
 observations:
   - obs space:
       name: bufr
-      #obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
       obsdatain: "./testinput/bufr_ncep_satwind_avhrr.bufr_d"
+      #obsdatain: "/scratch1/NCEPDEV/da/Ashley.Stanfield/IODA/ioda-bundle/iodaconv/test/testinput/bufr_ncep_satwind_avhrr.bufr_d"
 
       exports:
         variables:
@@ -33,22 +33,22 @@ observations:
               minute: "*/MINU"
               second: "*/SECO"
 
-          satelliteDerivedWindComputationMethod:
+          windComputationMethod:
             query: "*/SWCM"
 
           satelliteZenithAngle:
             query: "*/SAZA"
 
-          originatingCenter:
+          dataProviderOrigin:
             query: "*/OGCE"
 
-          satelliteChannelCentreFrequency:
+          sensorCentralFrequency:
             query: "*/SCCF"
 
-          sdmeditSatWindQualMark:
+          qualityFlags:
             query: "*/SWQM"
 
-          heightAssignmentMethod:
+          windHeightAssignMethod:
             query: "*/HAMD"
 
           pressure:
@@ -102,8 +102,8 @@ observations:
           longName: "Datetime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "MetaData/satelliteDerivedWindComputationMethod"
-          source: variables/satelliteDerivedWindComputationMethod
+        - name: "MetaData/windComputationMethod"
+          source: variables/windComputationMethod
           longName: "Satellite Derived Wind Computation Method"
           units: ""
 
@@ -112,24 +112,24 @@ observations:
           longName: "Satellite Zenith Angle"
           units: "degree"
 
-        - name: "MetaData/originatingCenter"
-          source: variables/originatingCenter
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/dataProviderOrigin
           longName: "Identification of Originating/Generating Center"
           units: ""
 
-        - name: "MetaData/satelliteChannelCentreFrequency"
-          source: variables/satelliteChannelCentreFrequency
-          longName: "Satellite Channel Centre Frequency"
+        - name: "MetaData/sensorCentralFrequency"
+          source: variables/sensorCentralFrequency
+          longName: "Satellite Channel Center Frequency"
           units: "Hz"
 
-        - name: "QualityMarker/sdmeditSatWindQualMark"
-          source: variables/sdmeditSatWindQualMark
+        - name: "MetaData/qualityFlags"
+          source: variables/qualityFlags
           longName: "SDMEDIT Satellite Wind Quality Mark"
           units: ""
 
-        - name: "MetaData/heightAssignmentMethod"
-          source: variables/heightAssignmentMethod
-          longName: "Height Assignment Method"
+        - name: "MetaData/windHeightAssignMethod"
+          source: variables/windHeightAssignMethod
+          longName: "Wind Height Assignment Method"
           units: ""
 
         - name: "MetaData/pressure"
