@@ -532,9 +532,7 @@ gmi_chan_dep_loc_vars = {
     'Sat_Azimuth_Angle',
     'Sol_Zenith_Angle',
     'Sol_Azimuth_Angle',
-    'Scan_Angle',
-    'BC_Cosine_Latitude_times_Node' 
-    'BC_Sine_Latitude'
+    'Scan_Angle'
 }
 
 DimDict = {
