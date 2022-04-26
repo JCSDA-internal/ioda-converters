@@ -11,7 +11,6 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/bufr_ncep_satwind_avhrr.bufr_d"
-      #obsdatain: "/scratch1/NCEPDEV/da/Ashley.Stanfield/IODA/ioda-bundle/iodaconv/test/testinput/bufr_ncep_satwind_avhrr.bufr_d"
 
       exports:
         variables:
