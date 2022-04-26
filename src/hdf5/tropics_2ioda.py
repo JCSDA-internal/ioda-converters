@@ -167,8 +167,7 @@ def get_data(f, obs_data):
     k = 'brightness_temperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
     obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
-        np.where(f['tempBrightE_K'] == f['tempBrightE_K'].fillvalue,
-        float_missing_value, f['tempBrightE_K']), axis=2)), dtype='float32')
+        np.where(f['tempBrightE_K'] == f['tempBrightE_K'].fillvalue, float_missing_value, f['tempBrightE_K']), axis=2)), dtype='float32')
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
@@ -348,7 +347,7 @@ if __name__ == "__main__":
     optional.add_argument(
         '-o', '--output',
         help='path to output ioda file',
-        type=str, default=os.path.join(os.getcwd(),'output.nc4'))
+        type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
 
     args = parser.parse_args()
 
