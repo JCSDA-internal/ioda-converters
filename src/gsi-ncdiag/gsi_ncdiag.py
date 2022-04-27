@@ -761,6 +761,7 @@ class Conv(BaseGSI):
                     if outvars[o] == 'surface_pressure':
                         if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
+                        obsdata[obsdata > 4e8] = self.FLOAT_FILL # 1e11 is fill value for surface_pressure
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
@@ -768,6 +769,9 @@ class Conv(BaseGSI):
                     obserr[mask] = 1e8
                     # obserr[mask] = self.FLOAT_FILL
                     # obserr[obserr > 4e8] = self.FLOAT_FILL
+                    # convert surface_pressure error to Pa from hPa
+                    if v == 'ps' and np.nanmin(tmp) < 10:
+                        obserr = obserr * 100
                     try:
                         obsqc = self.var('Prep_QC_Mark')[idx]
                     except BaseException:
@@ -793,6 +797,9 @@ class Conv(BaseGSI):
                                 # below is a temporary hack
                                 tmp[mask] = 1e8
                                 # tmp[mask] = self.FLOAT_FILL
+                                # convert surface_pressure error to Pa from hPa
+                                if v == 'ps' and np.nanmin(tmp) < 10:
+                                    tmp = tmp * 100
                             elif "Obs_Minus_" in key:
                                 if 'u_Forecast_adjusted' in self.df.variables:
                                     continue
