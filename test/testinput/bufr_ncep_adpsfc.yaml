@@ -55,7 +55,7 @@ observations:
             query: "*/QMPR"
           reportIdentifier:
             query: "*/RPID"
-          heightOfStation:
+          stationElevation:
             query: "*/SELV"
           oceanographicWaterTemperature:
             query: "*/SST1"
@@ -203,10 +203,10 @@ observations:
           longName: "Report Identifier"
           units: ""
 
-        - name: "MetaData/heightOfStation"
+        - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
-          source: variables/heightOfStation
-          longName: "Height of Station"
+          source: variables/stationElevation
+          longName: "Station Elevation"
           units: "m"
 
         - name: "ObsValue/oceanographicWaterTemperature"
