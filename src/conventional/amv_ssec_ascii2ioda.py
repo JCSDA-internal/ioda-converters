@@ -186,13 +186,7 @@ def read_file(file_name, data):
 
         for row in reader:
             try:
-                year = int(row['day'][0:4])
-                month = int(row['day'][4:6])
-                day = int(row['day'][6:])
-                hour = int(row['hms'][0:2])
-                minute = int(row['hms'][2:])
-                second = 0
-                dtg = datetime(year, month, day, hour, minute, second)
+                dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
                 data['dateTime'] = np.append(data['dateTime'], time_offset)
                 data['longitude'] = np.append(data['longitude'], float(row['lon']))
