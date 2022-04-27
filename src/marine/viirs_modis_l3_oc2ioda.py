@@ -26,7 +26,7 @@ from orddicts import DefaultOrderedDict
 
 
 vName = {
-    'chlor_a': "mass_concentration_of_chlorophyll_in_sea_water",
+    'chlor_a': "chlorophyllMassConcentration",
 }
 
 VarDims = {
@@ -38,7 +38,7 @@ DimDict = {}
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {}
