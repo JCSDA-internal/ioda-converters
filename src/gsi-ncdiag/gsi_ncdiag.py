@@ -770,7 +770,7 @@ class Conv(BaseGSI):
                     # obserr[mask] = self.FLOAT_FILL
                     # obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
-                    if v == 'ps' and np.nanmin(tmp) < 10:
+                    if v == 'ps' and np.nanmin(obserr) < 10:
                         obserr = obserr * 100
                     try:
                         obsqc = self.var('Prep_QC_Mark')[idx]
