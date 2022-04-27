@@ -27,7 +27,7 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 output_var_names = [
-    "OrganicMatterMassContentAsCarbon",
+    "organicMatterMassContentAsCarbon",
     "chlorophyllMassConcentration"]
 
 DimDict = {}
@@ -261,7 +261,7 @@ def main():
             -32767.
         VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = \
             -32767
-        VarDims["OrganicMatterMassContentAsCarbon"] = ['Location']
+        VarDims["organicMatterMassContentAsCarbon"] = ['Location']
 
     if args.chl:
         VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
