@@ -27,8 +27,8 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 output_var_names = [
-    "oceanMassContentOfParticulateOrganicMatterExpressedAsCarbon",
-    "massConcentrationOfChlorophyllInSeaWater"]
+    "OrganicMatterMassContentAsCarbon",
+    "chlorophyllMassConcentration"]
 
 DimDict = {}
 
@@ -261,7 +261,7 @@ def main():
             -32767.
         VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = \
             -32767
-        VarDims["oceanMassContentOfParticulateOrganicMatterExpressedAsCarbon"] = ['Location']
+        VarDims["OrganicMatterMassContentAsCarbon"] = ['Location']
 
     if args.chl:
         VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
@@ -274,7 +274,7 @@ def main():
             -32767.
         VarAttrs[output_var_names[1], global_config['opqc_name']]['_FillValue'] = \
             -32767
-        VarDims["massConcentrationOfChlorophyllInSeaWater"] = ['Location']
+        VarDims["chlorophyllMassConcentration"] = ['Location']
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
