@@ -815,6 +815,10 @@ class Conv(BaseGSI):
                                 tmp = self.var(key1)[idx] - df_key[idx]
                             else:
                                 tmp = df_key[idx]
+                            # convert surface_pressure hofx to Pa from hPa
+                            if "Forecast_" in key and v == 'ps':
+                                if np.median(tmp) < 1100.:
+                                    tmp = tmp * 100.
                             if value in gsiint:
                                 tmp = tmp.astype(np.int32)
                                 tmp[tmp > 4e4] = self.INT_FILL
