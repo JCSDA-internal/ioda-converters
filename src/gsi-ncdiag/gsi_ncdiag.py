@@ -761,7 +761,7 @@ class Conv(BaseGSI):
                     if outvars[o] == 'surface_pressure':
                         if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
-                        obsdata[obsdata > 4e8] = self.FLOAT_FILL # 1e11 is fill value for surface_pressure
+                        obsdata[obsdata > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for surface_pressure
                     obserr = self.var('Errinv_Input')[idx]
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
