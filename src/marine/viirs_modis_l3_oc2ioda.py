@@ -73,9 +73,9 @@ class OCL3(object):
         GlobalAttrs['platform'] = ncd.getncattr('platform')
         GlobalAttrs['sensor'] = ncd.getncattr('instrument')
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
-        GlobalAttrs['time_coverage_start'] = ncd.getncattr('time_coverage_start')
 
-        timevar=GlobalAttrs['time_coverage_start'][:19]+'Z'
+        timevar= ncd.getncattr('time_coverage_start')
+        obstime=GlobalAttrs['time_coverage_start'][:19]+'Z'
 
         ncd.close()
 
@@ -88,7 +88,7 @@ class OCL3(object):
         self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
         self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
         self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
-        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
+#        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -98,7 +98,7 @@ class OCL3(object):
             vals = vals[mask_thin]
 
         for i in range(len(vals)):
-            locKey = lats[i], lons[i], timevar
+            locKey = lats[i], lons[i], obstime 
             self.data[locKey][valKey] = vals[i]
             self.data[locKey][errKey] = vals[i] * 0.25
             self.data[locKey][qcKey] = 0
