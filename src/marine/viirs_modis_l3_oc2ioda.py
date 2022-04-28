@@ -75,7 +75,7 @@ class OCL3(object):
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
 
         timevar= ncd.getncattr('time_coverage_start')
-        obstime=GlobalAttrs['time_coverage_start'][:19]+'Z'
+        obstime=timevar[:19]+'Z'
 
         ncd.close()
 
