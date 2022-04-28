@@ -73,6 +73,7 @@ class OCL3(object):
         GlobalAttrs['platform'] = ncd.getncattr('platform')
         GlobalAttrs['sensor'] = ncd.getncattr('instrument')
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
+        GlobalAttrs['time_coverage_start'] = ncd.getncattr('time_coverage_start')
 
 
         ncd.close()
@@ -95,11 +96,11 @@ class OCL3(object):
             lats = lats[mask_thin]
             vals = vals[mask_thin]
 
-#        for i in range(len(vals)):
-#            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
-#            self.data[locKey][valKey] = vals[i]
-#            self.data[locKey][errKey] = vals[i] * 0.25
-#            self.data[locKey][qcKey] = 0
+        for i in range(len(vals)):
+            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
+            self.data[locKey][valKey] = vals[i]
+            self.data[locKey][errKey] = vals[i] * 0.25
+            self.data[locKey][qcKey] = 0
 
 
 def main():
