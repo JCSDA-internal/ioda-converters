@@ -30,7 +30,7 @@ vName = {
 }
 
 VarDims = {
-    vName['chlor_a']: ['nlocs']
+    vName['chlor_a']: ['Location']
 }
 
 DimDict = {}
@@ -67,9 +67,14 @@ class OCL3(object):
         lats = lats.ravel()[mask]
 
         # get global attributes
-        for v in ('platform', 'instrument', 'processing_version',
-                  'time_coverage_start'):
-            GlobalAttrs[v] = ncd.getncattr(v)
+#        for v in ('platform', 'instrument', 'processing_version',
+#                  'time_coverage_start'):
+#            GlobalAttrs[v] = ncd.getncattr(v)
+        GlobalAttrs['platform'] = ncd.getncattr('platform')
+        GlobalAttrs['sensor'] = ncd.getncattr('instrument')
+        GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
+
+
         ncd.close()
 
         valKey = vName['chlor_a'], iconv.OvalName()
@@ -90,11 +95,11 @@ class OCL3(object):
             lats = lats[mask_thin]
             vals = vals[mask_thin]
 
-        for i in range(len(vals)):
-            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
-            self.data[locKey][valKey] = vals[i]
-            self.data[locKey][errKey] = vals[i] * 0.25
-            self.data[locKey][qcKey] = 0
+#        for i in range(len(vals)):
+#            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
+#            self.data[locKey][valKey] = vals[i]
+#            self.data[locKey][errKey] = vals[i] * 0.25
+#            self.data[locKey][qcKey] = 0
 
 
 def main():
@@ -123,12 +128,12 @@ def main():
     chl = OCL3(args.input, fdate, args.thin)
 
     # Extract the obs data
-    ObsVars, nlocs = iconv.ExtractObsData(chl.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(chl.data, locationKeyList)
 
     # Set Attributes
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    DimDict['nlocs'] = nlocs
+    DimDict['Location'] = Location
 
     # Set up the writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
