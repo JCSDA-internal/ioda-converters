@@ -66,10 +66,6 @@ class OCL3(object):
         lons = lons.ravel()[mask]
         lats = lats.ravel()[mask]
 
-        # get global attributes
-#        for v in ('platform', 'instrument', 'processing_version',
-#                  'time_coverage_start'):
-#            GlobalAttrs[v] = ncd.getncattr(v)
         GlobalAttrs['platform'] = ncd.getncattr('platform')
         GlobalAttrs['sensor'] = ncd.getncattr('instrument')
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
@@ -88,7 +84,6 @@ class OCL3(object):
         self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
         self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
         self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
-#        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
 
         # apply thinning mask
         if self.thin > 0.0:
