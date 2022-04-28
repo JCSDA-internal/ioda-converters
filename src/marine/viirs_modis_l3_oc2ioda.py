@@ -75,6 +75,7 @@ class OCL3(object):
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
         GlobalAttrs['time_coverage_start'] = ncd.getncattr('time_coverage_start')
 
+        timevar=GlobalAttrs['time_coverage_start'][:19]+':00Z'
 
         ncd.close()
 
@@ -97,7 +98,7 @@ class OCL3(object):
             vals = vals[mask_thin]
 
         for i in range(len(vals)):
-            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
+            locKey = lats[i], lons[i], timevar
             self.data[locKey][valKey] = vals[i]
             self.data[locKey][errKey] = vals[i] * 0.25
             self.data[locKey][qcKey] = 0
