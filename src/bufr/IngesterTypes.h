@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <memory>
@@ -18,5 +18,5 @@
 namespace Ingester
 {
     typedef Eigen::Array<float, Eigen::Dynamic, 1, Eigen::RowMajor> RawData;
-    typedef std::map<std::string, std::shared_ptr<DataObjectBase> > BufrDataMap;
+    typedef std::unordered_map<std::string, std::shared_ptr<DataObjectBase> > BufrDataMap;
 }

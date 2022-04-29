@@ -8,7 +8,6 @@
 #pragma once
 
 #include <memory>
-#include <map>
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
