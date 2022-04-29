@@ -7,8 +7,8 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/gdas.t12z.adpupa.tm00.bufr_d"
-#     obsdatain: "./testinput/NC004005"
+      obsdatain: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testinput/gdas.t12z.adpupa_thinned.tm00.bufr_d"
+#     obsdatain: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testinput/NC004005"
 
       exports:
         variables:
@@ -32,24 +32,6 @@ observations:
             query: "NC004005/QMST"
           seaSurfaceTemperature:
             query: "NC004005/SST1"
-          dayOfWeek:
-            query: "NC004005/DAYW"
-
-          dataReceiptTimeSignificance:
-            query: "NC004005/RCTS"
-          dataReceiptTimeYear:
-            query: "NC004005/RCYR"
-          dataReceiptTimeMonth:
-            query: "NC004005/RCMO"
-          dataReceiptTimeDay:
-            query: "NC004005/RCDY"
-          dataReceiptTimeHour:
-            query: "NC004005/RCHR"
-          dataReceiptTimeMinute:
-            query: "NC004005/RCMI"
-
-          channelSequenceNum:
-            query: "NC004005/SEQNUM"
 
           reportIdentifier:
             query: "NC004005/RPID"
@@ -57,13 +39,6 @@ observations:
             query: "NC004005/CLAT"
           longitude:
             query: "NC004005/CLON"
-          flightLevel:
-            query: "NC004005/FLVL"
-          pressureAltitude:
-            query: "NC004005/PSAL"
-
-#          rawReportString:
-#            query: "NC004005/RAWRPT/RRSTG"
 
           airTemperatureQualityMarker:
             query: "NC004005/QMAT"
@@ -109,13 +84,11 @@ observations:
             query: "NC004005/VSIG"
           pressure:
             query: "NC004005/PRLC"
-          geopotentialClass10:
-            query: "NC004005/GP10"
 
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/bufr_ncep_adpupa_nc004005.nc"
+      obsdataout: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testoutput/bufr_ncep_adpupa_nc004005.nc"
 
 #      dimensions:
 #        - name: rawrpt_Dim
@@ -168,48 +141,6 @@ observations:
           longName: "Sea/Water Temperature"
           units: "Kelvin"
 
-        - name: "MetaData/dataReceiptTimeSignificance"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeSignificance
-          longName: "Data Receipt Time Significance"
-          units: ""
-
-        - name: "MetaData/dataReceiptTimeYear"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeYear
-          longName: "Receipt Time (Year)"
-          units: "Year"
-
-        - name: "MetaData/dataReceiptTimeMonth"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeMonth
-          longName: "Data Receipt Time (Month)"
-          units: "Month"
-
-        - name: "MetaData/dataReceiptTimeDay"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeDay
-          longName: "Data Receipt Time (Day)"
-          units: "Day"
-
-        - name: "MetaData/dataReceiptTimeHour"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeHour
-          longName: "Receipt Time (Hour)"
-          units: "Hour"
-
-        - name: "MetaData/dataReceiptTimeMinute"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeMinute
-          longName: "Data Receipt Time (Minute)"
-          units: "Minute"
-
-        - name: "MetaData/channelSequenceNum"
-          coordinates: "longitude latitude"
-          source: variables/channelSequenceNum
-          longName: "Channel Sequence Number"
-          units: ""
-
         - name: "MetaData/reportIdentifier"
           coordinates: "longitude latitude"
           source: variables/reportIdentifier
@@ -229,18 +160,6 @@ observations:
           longName: "Longitude"
           units: "degrees_east"
           range: [0, 360]
-
-        - name: "MetaData/flightLevel"
-          coordinates: "longitude latitude"
-          source: variables/flightLevel
-          longName: "Flight Level"
-          units: "Meters"
-
-        - name: "MetaData/pressureAltitude"
-          coordinates: "longitude latitude"
-          source: variables/pressureAltitude
-          longName: "Pressure Altitude Relative to Mean Sea Level"
-          units: "Meters"
 
         - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
@@ -355,10 +274,4 @@ observations:
           source: variables/pressure
           longName: "Pressure"
           units: "Pascals"
-
-        - name: "ObsValue/geopotentialClass10"
-          coordinates: "longitude latitude"
-          source: variables/geopotentialClass10
-          longName: "Geopotential"
-          units: "(m/s)^2"
 

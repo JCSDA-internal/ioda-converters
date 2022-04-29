@@ -7,8 +7,8 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/gdas.t12z.adpupa.tm00.bufr_d"
-#     obsdatain: "./testinput/NC002002"
+      obsdatain: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testinput/gdas.t12z.adpupa_thinned.tm00.bufr_d"
+#     obsdatain: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testinput/NC002002"
 
       exports:
         variables:
@@ -19,26 +19,8 @@ observations:
 #              day: "NC002002/DAYS"
 #              hour: "NC002002/HOUR"
 
-          radiosondeStationID:
-            query: "NC002002/RSML"
           stationElevationQualityMarker:
             query: "NC002002/QCEVR"
-
-          dataReceiptTimeSignificance:
-            query: "NC002002/RCPTIM/RCTS"
-          dataReceiptTimeYear:
-            query: "NC002002/RCPTIM/RCYR"
-          dataReceiptTimeMonth:
-            query: "NC002002/RCPTIM/RCMO"
-          dataReceiptTimeDay:
-            query: "NC002002/RCPTIM/RCDY"
-          dataReceiptTimeHour:
-            query: "NC002002/RCPTIM/RCHR"
-          dataReceiptTimeMinute:
-            query: "NC002002/RCPTIM/RCMI"
-
-          channelSequenceNum:
-            query: "NC002002/BID/SEQNUM"
 
           reportIdentifier:
             query: "NC002002/RPID"
@@ -46,11 +28,8 @@ observations:
             query: "NC002002/CLAT"
           longitude:
             query: "NC002002/CLON"
-          heightOfStation:
+          stationElevation:
             query: "NC002002/SELV"
-
-          radiosondeType: 
-            query: "NC002002/UARID/RATP"
 
           verticalSoundingSignificance:
             query: "NC002002/UARLV/VSIG"
@@ -60,11 +39,6 @@ observations:
             query: "NC002002/UARLV/PRLC"
           geopotentialQualityMarker:
             query: "NC002002/UARLV/QMGP"
-
-          geopotentialClass7:
-            query: "NC002002/UARLV/UAGP07/GP07"
-          geopotentialClass10:
-            query: "NC002002/UARLV/UAGP10/GP10"
 
           airTemperatureQualityMarker:
             query: "NC002002/UARLV/UATMP/QMAT"
@@ -82,21 +56,10 @@ observations:
           windSpeed:
             query: "NC002002/UARLV/UAWND/WSPD"
 
-          windShear1KmLayerAbove:
-            query: "NC002002/UARLV/UAWSH/AWSB"
-          windShear1KmLayerBelow:
-            query: "NC002002/UARLV/UAWSH/AWSA"
-
           seaSurfaceTemperatureQualityMarker:
             query: "NC002002/UASDG/QMST"
           seaSurfaceTemperature:
             query: "NC002002/UASDG/SST1"
-          trackingTechniqueStatusOfSystemUsed:
-            query: "NC002002/UASDG/TTSS"
-          radiosondeLaunchHour:
-            query: "NC002002/UASDG/UALNHR"
-          radiosondeLaunchMinute:
-            query: "NC002002/UASDG/UALNMN"
 
           cloudType:
             query: "NC002002/UACLD/CLTP"
@@ -108,7 +71,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/bufr_ncep_adpupa_nc002002.nc"
+      obsdataout: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testoutput/bufr_ncep_adpupa_nc002002.nc"
 
 #      dimensions:
 #        - name: rcptim_Dim
@@ -135,58 +98,10 @@ observations:
 #          longName: "Datetime"
 #          units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "MetaData/radiosondeStationID"
-          coordinates: "longitude latitude"
-          source: variables/radiosondeStationID
-          longName: "Radiosonde Station ID"
-          units: ""
-
         - name: "MetaData/stationElevationQualityMarker"
           coordinates: "longitude latitude"
           source: variables/stationElevationQualityMarker
           longName: "Station Elevation Quality Marker (For Mobil Stations)"
-          units: ""
-
-        - name: "MetaData/dataReceiptTimeSignificance"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeSignificance
-          longName: "Data Receipt Time Significance"
-          units: ""
-
-        - name: "MetaData/dataReceiptTimeYear"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeYear
-          longName: "Receipt Time (Year)"
-          units: "Year"
-
-        - name: "MetaData/dataReceiptTimeMonth"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeMonth
-          longName: "Data Receipt Time (Month)"
-          units: "Month"
-
-        - name: "MetaData/dataReceiptTimeDay"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeDay
-          longName: "Data Receipt Time (Day)"
-          units: "Day"
-
-        - name: "MetaData/dataReceiptTimeHour"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeHour
-          longName: "Receipt Time (Hour)"
-          units: "Hour"
-
-        - name: "MetaData/dataReceiptTimeMinute"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeMinute
-          longName: "Data Receipt Time (Minute)"
-          units: "Minute"
-
-        - name: "MetaData/channelSequenceNum"
-          coordinates: "longitude latitude"
-          source: variables/channelSequenceNum
-          longName: "Channel Sequence Number"
           units: ""
 
         - name: "MetaData/reportIdentifier"
@@ -210,17 +125,11 @@ observations:
           range: [0, 360]
 #         range: [-180, 180]
 
-        - name: "MetaData/heightOfStation"
+        - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
-          source: variables/heightOfStation
-          longName: "Height of Station"
+          source: variables/stationElevation
+          longName: "Station Elevation"
           units: "Meter"
-
-        - name: "MetaData/radiosondeType"
-          coordinates: "longitude latitude"
-          source: variables/radiosondeType
-          longName: "Radiosonde Type"
-          units: ""
 
         - name: "MetaData/verticalSoundingSignificance"
           coordinates: "longitude latitude"
@@ -245,18 +154,6 @@ observations:
           source: variables/geopotentialQualityMarker
           longName: "Sdmedit Quality Mark for Geopotential"
           units: ""
-
-        - name: "ObsValue/geopotentialClass7"
-          coordinates: "longitude latitude"
-          source: variables/geopotentialClass7
-          longName: "Geopotential"
-          units: "(m/s)^2"
-
-        - name: "ObsValue/geopotentialClass10"
-          coordinates: "longitude latitude"
-          source: variables/geopotentialClass10
-          longName: "Geopotential"
-          units: "(m/s)^2"
 
         - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
@@ -301,18 +198,6 @@ observations:
           longName: "Wind Speed"
           units: "Meter Second-1"
 
-        - name: "ObsValue/windShear1KmLayerAbove"
-          coordinates: "longitude latitude"
-          source: variables/windShear1KmLayerAbove
-          longName: "Wind Shear 1 Km Layer Above"
-          units: "m/s"
-
-        - name: "ObsValue/windShear1KmLayerBelow"
-          coordinates: "longitude latitude"
-          source: variables/windShear1KmLayerBelow
-          longName: "Wind Shear 1 Km Layer Below"
-          units: "m/s"
-
         - name: "QualityMarker/seaSurfaceTemperature"
           coordinates: "longitude latitude"
           source: variables/seaSurfaceTemperatureQualityMarker
@@ -324,24 +209,6 @@ observations:
           source: variables/seaSurfaceTemperature
           longName: "Sea/Water Temperature"
           units: "Kelvin"
-
-        - name: "MetaData/trackingTechniqueStatusOfSystemUsed"
-          coordinates: "longitude latitude"
-          source: variables/trackingTechniqueStatusOfSystemUsed
-          longName: "Tracking Technique Status Of System Used"
-          units: ""
-
-        - name: "MetaData/radiosondeLaunchHour"
-          coordinates: "longitude latitude"
-          source: variables/radiosondeLaunchHour
-          longName: "Radiosonde Launch Hour"
-          units: "Hour"
-
-        - name: "MetaData/radiosondeLaunchMinute"
-          coordinates: "longitude latitude"
-          source: variables/radiosondeLaunchMinute
-          longName: "Radiosonde Launch Minute"
-          units: "Minute"
 
         - name: "MetaData/cloudType"
           coordinates: "longitude latitude"
