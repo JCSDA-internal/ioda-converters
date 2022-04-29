@@ -18,7 +18,7 @@ from multiprocessing import Pool
 import os
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
@@ -40,7 +40,6 @@ locationKeyList = [
     ("longitude", "float"),
     ("datetime", "string"),
 ]
-
 
 def read_input(input_args):
     """
@@ -121,9 +120,9 @@ def read_input(input_args):
     obs_dim = (len(lons))
     obs_data = {}
 
-    obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim)
-    obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim)
-    obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim)
+    obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
+    obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
+    obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
 
     # Add the metadata
     obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
@@ -132,9 +131,9 @@ def read_input(input_args):
     obs_data[('longitude', 'MetaData')] = lons
 
 
-    obs_data[output_var_names[1], global_config['oval_name']] = data_in['chlor_a']
-    obs_data[output_var_names[1], global_config['oerr_name']] = data_in['chlor_a']*0.0
-    obs_data[output_var_names[1], global_config['opqc_name']] = data_in['l2_flags']
+    obs_data[output_var_names[0], global_config['oval_name']] = data_in['chlor_a']
+    obs_data[output_var_names[0], global_config['oerr_name']] = data_in['chlor_a']*0.0
+    obs_data[output_var_names[0], global_config['opqc_name']] = data_in['l2_flags']
 
     return (obs_data, GlobalAttrs)
 
@@ -179,9 +178,6 @@ def main():
 
     args = parser.parse_args()
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
-    if not args.chl and not args.poc:
-        args.chl = True
-        args.poc = True
 
     # Setup the configuration that is passed to each worker process
     global_config = {}
@@ -218,12 +214,12 @@ def main():
     GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
 
 
-    VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = 'mg ^m-3'
-    VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = 'mg ^m-3'
-    VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = 'unitless'
-    VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = -32767.
-    VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = -32767.
-    VarAttrs[output_var_names[1], global_config['opqc_name']]['_FillValue'] = -32767
+    VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = 'mg ^m-3'
+    VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = 'mg ^m-3'
+    VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = 'unitless'
+    VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = -32767.
+    VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = -32767.
+    VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = -32767
     VarDims["mass_concentration_of_chlorophyll_in_sea_water"] = ['nlocs']
 
     # setup the IODA writer
