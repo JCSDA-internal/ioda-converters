@@ -57,7 +57,7 @@ observations:
             query: "*/RPID"
           stationElevation:
             query: "*/SELV"
-          oceanographicWaterTemperature:
+          waterTemperature:
             query: "*/SST1"
           airTemperature:
             query: "*/TMDB"
@@ -209,10 +209,10 @@ observations:
           longName: "Station Elevation"
           units: "m"
 
-        - name: "ObsValue/oceanographicWaterTemperature"
+        - name: "ObsValue/waterTemperature"
           coordinates: "longitude latitude"
-          source: variables/oceanographicWaterTemperature
-          longName: "Oceanographic Water Temperature"
+          source: variables/waterTemperature
+          longName: "Water Temperature"
           units: "K"
 
         - name: "ObsValue/airTemperature"
