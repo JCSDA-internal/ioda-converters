@@ -22,7 +22,7 @@ observations:
           altimeterSettingQnh:
             query: "*/ALSE"
           cloudAmount:
-            query: "*/CLAM"
+            query: "[*/CLDSQ1/CLAM, */MTRCLD/CLAM, */CLAM]"
           latitude:
             query: "[*/CLAT, */CLATH]"
           longitude:
@@ -30,23 +30,23 @@ observations:
           heightAboveSurfaceOfBaseOfLowestCloudSeen:
             query: "*/HBLCS"
           heightOfBaseOfCloud:
-            query: "*/HOCB"
+            query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, */HOCB]"
           horizontalVisibility:
             query: "*/HOVI"
           heightOfStationGroundAboveMeanSeaLevel:
             query: "*/HSMSL"
           minimumTemperatureAtHeightAndOverPeriodSpecified:
-            query: "*/MITM"
+            query: "[*/TMPSQ3/MITM, */MTTPSQ/MITM, */BSYEXTM/MITM[1]]"
           maximumWindGustSpeed:
-            query: "*/MXGS"
+            query: "[*/WNDSQ2/MXGS, */BSYWND2/MXGS]"
           maximumTemperatureAtHeightAndOverPeriodSpecified:
-            query: "*/MXTM"
+            query: "[*/TMPSQ3/MXTM, */MTTPSQ/MXTM, */BSYEXTM/MXTM]"
           pressureReducedToMeanSeaLevel:
             query: "*/PMSL"
           pressure:
             query: "*/PRES"
           presentWeather:
-            query: "*/PRWE"
+            query: "[*/PPWSQ1/PRWE, */MTRPRW/PRWE, */PWEATHER/PRWE]"
           airTemperatureQM:
             query: "*/QMAT"
           moistureQM:
@@ -74,7 +74,7 @@ observations:
           verticalSignificanceSurfaceObservationsBelowStation:
             query: "*/BSYBCLD/VSSO"
           verticalVisibility:
-            query: "*/VTVI"
+            query: "[*/RPSEC3/VTVI, */VTVI]"
           windDirection:
             query: "*/WDIR"
           windSpeed:
