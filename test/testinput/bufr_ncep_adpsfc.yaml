@@ -128,7 +128,7 @@ observations:
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
           source: variables/heightOfBaseOfCloud
-          longName: "Height of Base of Cloud"
+          longName: "Cloud Base Altitude"
           units: "m"
 
         - name: "ObsValue/horizontalVisibility"
