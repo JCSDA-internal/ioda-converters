@@ -41,6 +41,7 @@ locationKeyList = [
     ("datetime", "string"),
 ]
 
+
 def read_input(input_args):
     """
     Reads/converts a single input file, performing optional thinning also.
@@ -130,7 +131,6 @@ def read_input(input_args):
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
 
-
     obs_data[output_var_names[0], global_config['oval_name']] = data_in['chlor_a']
     obs_data[output_var_names[0], global_config['oerr_name']] = data_in['chlor_a']*0.0
     obs_data[output_var_names[0], global_config['opqc_name']] = data_in['l2_flags']
@@ -187,7 +187,6 @@ def main():
     global_config['oerr_name'] = iconv.OerrName()
     global_config['opqc_name'] = iconv.OqcName()
 
-
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
     # the iterable object together with argument array passed in (args.input)
@@ -212,7 +211,6 @@ def main():
     GlobalAttrs['converter'] = os.path.basename(__file__)
     DimDict['nlocs'] = nlocs
     GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
-
 
     VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = 'mg ^m-3'
     VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = 'mg ^m-3'
