@@ -22,7 +22,7 @@ observations:
           altimeterSettingQnh:
             query: "*/ALSE"
           cloudAmount:
-            query: "[*/CLDSQ1/CLAM, */MTRCLD/CLAM, */CLAM]"
+            query: "[*/CLDSQ1/CLAM, */MTRCLD/CLAM, NC000100/CLAM[1], NC000101/CLAM[1], NC000102/CLAM[1]]"
           latitude:
             query: "[*/CLAT, */CLATH]"
           longitude:
@@ -30,13 +30,13 @@ observations:
           heightAboveSurfaceOfBaseOfLowestCloudSeen:
             query: "*/HBLCS"
           heightOfBaseOfCloud:
-            query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, */HOCB]"
+            query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, NC000100/HOCB, NC000101/HOCB, NC000102/HOCB]"
           horizontalVisibility:
             query: "*/HOVI"
           heightOfStationGroundAboveMeanSeaLevel:
             query: "*/HSMSL"
           minimumTemperatureAtHeightAndOverPeriodSpecified:
-            query: "[*/TMPSQ3/MITM, */MTTPSQ/MITM, */BSYEXTM/MITM[1]]"
+            query: "[*/TMPSQ3/MITM, */MTTPSQ/MITM, NC000100/BSYEXTM/MITM[1], NC000101/BSYEXTM/MITM[1], NC000102/BSYEXTM/MITM[1]]"
           maximumWindGustSpeed:
             query: "[*/WNDSQ2/MXGS, */BSYWND2/MXGS]"
           maximumTemperatureAtHeightAndOverPeriodSpecified:
