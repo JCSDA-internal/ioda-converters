@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/test/testoutput/aeronet_aaod.nc

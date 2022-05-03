@@ -1,0 +1,1 @@
+/usr/local/bin/mpifort     -Wl,--disable-new-dtags  -g -fbacktrace -fallow-argument-mismatch -O2 -g -DNDEBUG CMakeFiles/gnssro_bufr2ioda.dir/gnssro_bufr2ioda.f90.o -o ../../bin/gnssro_bufr2ioda  -Wl,-rpath,"\$ORIGIN/../lib" /usr/local/lib/libbufr_4_DA.a /usr/local/lib/libnetcdff.so 

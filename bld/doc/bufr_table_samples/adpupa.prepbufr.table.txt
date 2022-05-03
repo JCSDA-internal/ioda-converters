@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/doc/bufr_table_samples/adpupa.prepbufr.table.txt

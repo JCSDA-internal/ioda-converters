@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/test/testinput/modis_aod.nc

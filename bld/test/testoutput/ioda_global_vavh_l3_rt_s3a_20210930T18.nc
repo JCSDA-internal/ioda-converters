@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/test/testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc

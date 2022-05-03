@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/test/testinput/gsidiag_amsua_aqua_radiance_test.nc

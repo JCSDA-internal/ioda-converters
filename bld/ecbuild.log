@@ -1,0 +1,1273 @@
+2022-05-02T21:50:17 -  - DEBUG - ecbuild project(iodaconv) 
+2022-05-02T21:50:17 - iodaconv - DEBUG - ---------------------------------------------------------
+2022-05-02T21:50:17 - iodaconv - DEBUG - Environment:
+2022-05-02T21:50:17 - iodaconv - DEBUG - ---------------------------------------------------------
+SHELL=/bin/bash
+SERIAL_CXX=g++
+PIO=/usr/local
+SINGULARITY_NAME=jedi-gnu-openmpi-dev_latest.sif
+MPI_CC=mpicc
+SERIAL_CC=gcc
+SINGULARITY_ENVIRONMENT=/.singularity.d/env/91-environment.sh
+PWD=/home/ubuntu/jedi/ioda-bundle/iodaconv/bld
+CXX=/usr/local/bin/mpicxx
+SERIAL_FC=gfortran
+LAPACK_LIBRARIES=/lib/liblapack.a /lib/libblas.a
+HOME=/home/ubuntu
+LANG=C
+LAPACK_PATH=/usr/local
+LS_COLORS=rs=0:di=01 34:ln=01 36:mh=00:pi=40 33:so=01 35:do=01 35:bd=40 33 01:cd=40 33 01:or=40 31 01:mi=00:su=37 41:sg=30 43:ca=30 41:tw=30 42:ow=34 42:st=37 44:ex=01 32:*.tar=01 31:*.tgz=01 31:*.arc=01 31:*.arj=01 31:*.taz=01 31:*.lha=01 31:*.lz4=01 31:*.lzh=01 31:*.lzma=01 31:*.tlz=01 31:*.txz=01 31:*.tzo=01 31:*.t7z=01 31:*.zip=01 31:*.z=01 31:*.dz=01 31:*.gz=01 31:*.lrz=01 31:*.lz=01 31:*.lzo=01 31:*.xz=01 31:*.zst=01 31:*.tzst=01 31:*.bz2=01 31:*.bz=01 31:*.tbz=01 31:*.tbz2=01 31:*.tz=01 31:*.deb=01 31:*.rpm=01 31:*.jar=01 31:*.war=01 31:*.ear=01 31:*.sar=01 31:*.rar=01 31:*.alz=01 31:*.ace=01 31:*.zoo=01 31:*.cpio=01 31:*.7z=01 31:*.rz=01 31:*.cab=01 31:*.wim=01 31:*.swm=01 31:*.dwm=01 31:*.esd=01 31:*.jpg=01 35:*.jpeg=01 35:*.mjpg=01 35:*.mjpeg=01 35:*.gif=01 35:*.bmp=01 35:*.pbm=01 35:*.pgm=01 35:*.ppm=01 35:*.tga=01 35:*.xbm=01 35:*.xpm=01 35:*.tif=01 35:*.tiff=01 35:*.png=01 35:*.svg=01 35:*.svgz=01 35:*.mng=01 35:*.pcx=01 35:*.mov=01 35:*.mpg=01 35:*.mpeg=01 35:*.m2v=01 35:*.mkv=01 35:*.webm=01 35:*.ogm=01 35:*.mp4=01 35:*.m4v=01 35:*.mp4v=01 35:*.vob=01 35:*.qt=01 35:*.nuv=01 35:*.wmv=01 35:*.asf=01 35:*.rm=01 35:*.rmvb=01 35:*.flc=01 35:*.avi=01 35:*.fli=01 35:*.flv=01 35:*.gl=01 35:*.dl=01 35:*.xcf=01 35:*.xwd=01 35:*.yuv=01 35:*.cgm=01 35:*.emf=01 35:*.ogv=01 35:*.ogx=01 35:*.aac=00 36:*.au=00 36:*.flac=00 36:*.m4a=00 36:*.mid=00 36:*.midi=00 36:*.mka=00 36:*.mp3=00 36:*.mpc=00 36:*.ogg=00 36:*.ra=00 36:*.wav=00 36:*.oga=00 36:*.opus=00 36:*.spx=00 36:*.xspf=00 36:
+SINGULARITY_CONTAINER=/home/ubuntu/jedi-gnu-openmpi-dev_latest.sif
+MPI_FC=mpifort
+EIGEN3_INCLUDE_DIR=/usr/local
+LAPACK_DIR=
+LESSCLOSE=/usr/bin/lesspipe %s %s
+MPI_CXX=mpicxx
+PYTHONPATH=/usr/local/lib
+TERM=xterm-256color
+LESSOPEN=| /usr/bin/lesspipe %s
+LIBRARY_PATH=/usr/local/ucx/lib:/usr/local/xpmem/lib:
+SHLVL=1
+SINGULARITY_BIND=
+PNETCDF=/usr/local
+NETCDF=/usr/local
+LD_LIBRARY_PATH=/usr/local/lib:/usr/local/ucx/lib:/usr/local/xpmem/lib::/.singularity.d/libs
+PS1=\[\e]0 \u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01 32m\]\u@\h\[\033[00m\]:\[\033[01 34m\]\w\[\033[00m\]\$ 
+FC=/usr/local/bin/mpifort
+BOOST_ROOT=/usr/local
+PATH=/home/ubuntu/.local/bin:/usr/local/go/bin:/home/ubuntu/bin:/usr/local/bin:/usr/local/ucx/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/ubuntu/go/bin
+CC=mpicc
+HDF5_ROOT=/usr/local
+SINGULARITY_COMMAND=shell
+CPATH=/usr/local/ucx/include:/usr/local/xpmem/include:/usr/local/knem/include:
+GOPATH=/home/ubuntu/go
+_=/usr/local/bin/cmake
+OLDPWD=/home/ubuntu/jedi/ioda-bundle/iodaconv
+LC_ALL=
+LC_MESSAGES=
+
+2022-05-02T21:50:17 - iodaconv - DEBUG - ---------------------------------------------------------
+2022-05-02T21:50:17 - iodaconv - INFO - ecbuild   3.6.1	/usr/local/share/ecbuild/cmake
+2022-05-02T21:50:17 - iodaconv - INFO - cmake     3.20.0	/usr/local/bin/cmake
+2022-05-02T21:50:17 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:17 - iodaconv - DEBUG - ecbuild_compiler_flags(CXX): try include /usr/local/share/ecbuild/cmake/compiler_flags/GNU_CXX.cmake 
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS : 
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_NONE : 
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_DEBUG : -O0 -g
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_BIT : -O2 -DNDEBUG
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_PRODUCTION : -O2 -g
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_RELEASE : -O3 -DNDEBUG
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_RELWITHDEBINFO : -O2 -g -DNDEBUG
+2022-05-02T21:50:17 - iodaconv - DEBUG - ecbuild_compiler_flags(Fortran): try include /usr/local/share/ecbuild/cmake/compiler_flags/GNU_Fortran.cmake 
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS : 
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_NONE : 
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_DEBUG : -O0 -g -fcheck=bounds -fbacktrace -finit-real=snan
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_BIT : -O2 -DNDEBUG -fno-range-check -fconvert=big-endian
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_PRODUCTION : -O2 -g
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_RELEASE : -O3 -DNDEBUG -funroll-all-loops -finline-functions
+2022-05-02T21:50:17 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_RELWITHDEBINFO : -O2 -g -DNDEBUG
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_compiler_flags(C): try include /usr/local/share/ecbuild/cmake/compiler_flags/GNU_C.cmake 
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS : 
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS_NONE : 
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS_DEBUG : -O0 -g
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS_BIT : -O2 -DNDEBUG
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS_PRODUCTION : -O2 -g
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS_RELEASE : -O3 -DNDEBUG
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_FLAGS_RELWITHDEBINFO : -O2 -g -DNDEBUG
+2022-05-02T21:50:18 - iodaconv - DEBUG - call ecbuild_add_c_flags( -pipe NO_FAIL )
+2022-05-02T21:50:18 - iodaconv - DEBUG - call ecbuild_add_lang_flags( -pipe NO_FAIL LANG C )
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_C_COMPILER_LOADED [1]
+2022-05-02T21:50:18 - iodaconv - DEBUG - check_c_compiler_flag( -pipe iodaconv_C_FLAG_TEST_1 )
+2022-05-02T21:50:18 - iodaconv - DEBUG - C flag [-pipe] check resulted [1]
+2022-05-02T21:50:18 - iodaconv - INFO - Added C flag [-pipe]
+2022-05-02T21:50:18 - iodaconv - DEBUG - call ecbuild_add_cxx_flags( -pipe NO_FAIL )
+2022-05-02T21:50:18 - iodaconv - DEBUG - call ecbuild_add_lang_flags( -pipe NO_FAIL LANG CXX )
+2022-05-02T21:50:18 - iodaconv - DEBUG - CMAKE_CXX_COMPILER_LOADED [1]
+2022-05-02T21:50:18 - iodaconv - DEBUG - check_cxx_compiler_flag( -pipe iodaconv_CXX_FLAG_TEST_1 )
+2022-05-02T21:50:18 - iodaconv - DEBUG - CXX flag [-pipe] check resulted [1]
+2022-05-02T21:50:18 - iodaconv - INFO - Added CXX flag [-pipe]
+2022-05-02T21:50:18 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:18 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:18 - iodaconv - INFO - [32m[iodaconv] (0.0.1) [1d9d29f][m
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_add_option(TESTS): defaults to ON
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_TESTS_condition): checking condition '' -> TRUE
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_add_option(TESTS): ENABLE_TESTS not found in cache
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_add_option(TESTS): defining option ENABLE_TESTS 'Enable the unit tests' ON
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_add_option(TESTS): ENABLE_TESTS=ON
+2022-05-02T21:50:18 - iodaconv - DEBUG - ecbuild_add_option(TESTS): feature requested to be enabled
+2022-05-02T21:50:18 - iodaconv - INFO - Feature TESTS enabled
+2022-05-02T21:50:18 - iodaconv - DEBUG - MEMORYCHECK_COMMAND : /usr/bin/valgrind
+2022-05-02T21:50:18 - iodaconv - DEBUG - MEMORYCHECK_COMMAND_OPTIONS : --trace-children=yes --leak-check=full --error-exitcode=1
+2022-05-02T21:50:18 - iodaconv - DEBUG - MEMORYCHECK_SUPPRESSIONS_FILE : 
+2022-05-02T21:50:19 - iodaconv - DEBUG - ecbuild_find_package(eckit): find_package( eckit 1.13.0 QUIET  CONFIG )
+2022-05-02T21:50:19 - iodaconv - DEBUG - ecbuild_find_package(oops): find_package( oops 1.0.0 QUIET  CONFIG )
+2022-05-02T21:50:19 - iodaconv - DEBUG - iodaconv FAILED to find OPTIONAL package oops
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_compo_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_compo_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_gsi-ncdiag_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_gsi-ncdiag_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_goes_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_goes_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_hdf5_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_hdf5_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_lib-python_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_lib-python_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_marine_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_marine_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_conventional_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_conventional_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_ncep_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_ncep_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_ssec_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_ssec_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_wrfda-ncdiag_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_wrfda-ncdiag_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_singleob_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_singleob_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:21 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_gnssro_bufr2ioda_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_bufr2ioda): linking with [bufr::bufr_4_DA NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_bufr2ioda): [] not found - not linking
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_bufr2ioda): installing to bin
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_gnssro_gsidiag2ioda_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_gsidiag2ioda): linking with [NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_gsidiag2ioda): [] not found - not linking
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_gsidiag2ioda): installing to bin
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_gnssro_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_gnssro_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_bufr2nc_fortran.x_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(bufr2nc_fortran.x): linking with [bufr::bufr_4_DA NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(bufr2nc_fortran.x): [] not found - not linking
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(bufr2nc_fortran.x): installing to bin
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_obserror2ioda.x_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(obserror2ioda.x): linking with [NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(obserror2ioda.x): [] not found - not linking
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_executable(obserror2ioda.x): installing to bin
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gds2_sst_l2p_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gds2_sst_l2p): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gds2_sst_l3u_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gds2_sst_l3u): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smap_sss_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smap_sss): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_rads_adt_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_rads_adt): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_prof_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_prof): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_ship_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_ship): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_trak_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_trak): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hgodas_adt_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hgodas_adt): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hgodas_insitu_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hgodas_insitu): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hgodas_sst_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hgodas_sst): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_glider_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_glider): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hfradar_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hfradar): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_argoclim_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_argoclim): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_cryosat2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_cryosat2): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_emc_ice_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_emc_ice): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smos_sss_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smos_sss): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_copernicus_l4adt_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_copernicus_l4adt): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_copernicus_l3swh_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_copernicus_l3swh): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_avhrr_radiance_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_avhrr_radiance): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_satwinds_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_satwinds): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_metar_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_metar): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_viirs_jpss1_oc_l2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_viirs_jpss1_oc_l2): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_modis_aqua_oc_l2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_modis_aqua_oc_l2): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_viirs_jpss1_oc_l3_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_viirs_jpss1_oc_l3): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_bgc_argo_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_bgc_argo): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_ncep_bufr_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_ncep_bufr): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gen_singleob_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gen_singleob): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_giirs_ssec2ioda_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_giirs_ssec2ioda): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_giirs_lw_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_giirs_lw): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gsidiag_conv_uv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gsidiag_conv_uv): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gsidiag_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gsidiag_conv): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gsidiag_rad_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gsidiag_rad): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_wrfdadiag_rad_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_wrfdadiag_rad): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gnssro_bufr_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gnssro_bufr_conv): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_viirs_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_viirs_aod): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_satbias_viirs_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_satbias_viirs_aod): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_tropomi_no2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_tropomi_no2): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_mopitt_co_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_mopitt_co): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_modis_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_modis_aod): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_aeronet_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_aeronet_aod): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_aeronet_aaod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_aeronet_aaod): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_airnow_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_airnow): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_atms_nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_atms_nc4): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gnssro_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gnssro_conv): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_prepbufr_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_prepbufr_conv): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_mhs_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_mhs_conv): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_obserror_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_obserror): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_ghcn_snod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_ghcn_snod): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smap_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smap_ssm): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smos_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smos_ssm): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_ascat_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_ascat_ssm): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_imsfv3_scf_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_imsfv3_scf): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smap9km_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smap9km_ssm): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_land_owp_snow_obs_dup_thin_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_land_owp_snow_obs_dup_thin): assign labels iodaconv script
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_2020100106_metars_small.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_2020100106_metars_small.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_2021120600_atms_sdr.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_2021120600_atms_sdr.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_NC005031.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_NC005031.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_NC005066.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_NC005066.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_Rcov_iasi_metop-b_sea.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_Rcov_iasi_metop-b_sea.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_abi_g16_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_abi_g16_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_aeronet_aaod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_aeronet_aaod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_aeronet_aod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_aeronet_aod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_afwa_snod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_afwa_snod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_airep_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_airep_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_airnow_2020081306.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_airnow_2020081306.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amdar_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amdar_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amdar_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amdar_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amdar_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amdar_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amsua_aqua_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amsua_aqua_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_aod_viirs_obs_2018041500_s.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_aod_viirs_obs_2018041500_s.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_argoclim.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_argoclim.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ascat_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ascat_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_avhrr_radiance.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_avhrr_radiance.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_bufr_read_2_dim_blocks.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_bufr_read_2_dim_blocks.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_bufr_read_wmo_radiosonde.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_bufr_read_wmo_radiosonde.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_buoy_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_buoy_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_buoy_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_buoy_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_buoy_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_buoy_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_cryosat2_L2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_cryosat2_L2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_emc_ice_ioda2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_emc_ice_ioda2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.aircar.t00z.20210801.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.aircar.t00z.20210801.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t00z.1bhrs4.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t00z.1bhrs4.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t06z.adpsfc.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t06z.adpsfc.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t06z.adpsfc_snow.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t06z.adpsfc_snow.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.7.filter_split.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.7.filter_split.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.seven.split.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.seven.split.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.filtering.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.filtering.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gds2_sst_l2p.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gds2_sst_l2p.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gds2_sst_l3u.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gds2_sst_l3u.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ghcn_snod_20200228.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ghcn_snod_20200228.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_giirs_fy4a_obs_2017030208.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_giirs_fy4a_obs_2017030208.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_giirs_ssec_ioda.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_giirs_ssec_ioda.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_2020-306-2358C2E6.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_2020-306-2358C2E6.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_cosmic2_2021080212.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_cosmic2_2021080212.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_kompsat5_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_kompsat5_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_bgc_argo.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_bgc_argo.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_prof.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_prof.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_ship.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_ship.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_trak.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_trak.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_hgodas_adt.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_hgodas_adt.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_hgodas_insitu.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_hgodas_insitu.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_hgodas_sst.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_hgodas_sst.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_imsfv3_scf.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_imsfv3_scf.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_imssnow_scf.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_imssnow_scf.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ioda.NC001007.2020031012.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ioda.NC001007.2020031012.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ioda_global_vavh_l3_rt_s3a_20210930T18.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ioda_global_vavh_l3_rt_s3a_20210930T18.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_mhs_metop-b_obs_2020101215.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_mhs_metop-b_obs_2020101215.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_modis_aod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_modis_aod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_modis_aqua_oc_l2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_modis_aqua_oc_l2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_mopitt_co.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_mopitt_co.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ndbc_hfradar_out.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ndbc_hfradar_out.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_odb_sonde_16019.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_odb_sonde_16019.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_owp_snow_obs_dup_thin_err_fn.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_owp_snow_obs_dup_thin_err_fn.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_rads_adt.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_rads_adt.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_rass_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_rass_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satbias_amsua_n18.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satbias_amsua_n18.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satbias_cris_npp.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satbias_cris_npp.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satbias_ssmis_f16.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satbias_ssmis_f16.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_EUMet.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_EUMet.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_Himawari.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_Himawari.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_Insat.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_Insat.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwinds_ssec2021080103.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwinds_ssec2021080103.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_sfc_tv_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_sfc_tv_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ship_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ship_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ship_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ship_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ship_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ship_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_singleob.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_singleob.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smap9km_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smap9km_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smap_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smap_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smap_sss_rss.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smap_sss_rss.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smos_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smos_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smos_sss_l2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smos_sss_l2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_sondes_obs_2020093018.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_sondes_obs_2020093018.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_synop_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_synop_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_synop_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_synop_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_synop_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_synop_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_test_glider.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_test_glider.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_tropomi_no2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_tropomi_no2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_vadwinds_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_vadwinds_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_aod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_aod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_bias.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_bias.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_jpss1_oc_l2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_jpss1_oc_l2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_jpss1_oc_l3.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_jpss1_oc_l3.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_wmo_raob_double.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_wmo_raob_double.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_wmo_raob_quadruple.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:22 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_wmo_raob_quadruple.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:22 - iodaconv - DEBUG - No iodaconv-import.cmake found in /home/ubuntu/jedi/ioda-bundle/iodaconv
+2022-05-02T21:50:22 - iodaconv - DEBUG - No cmake/iodaconv-import.cmake found in /home/ubuntu/jedi/ioda-bundle/iodaconv
+2022-05-02T21:50:22 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:22 - iodaconv - INFO - Build summary
+2022-05-02T21:50:22 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:22 - iodaconv - INFO - system : [ip-172-31-31-111] [Linux-5.4.0-1072-aws] [linux.64]
+2022-05-02T21:50:22 - iodaconv - INFO - processor        : [x86_64]
+2022-05-02T21:50:22 - iodaconv - INFO - endiness         : Little Endian -- IEEE []
+2022-05-02T21:50:22 - iodaconv - INFO - build type       : [RelWithDebInfo]
+2022-05-02T21:50:22 - iodaconv - INFO - timestamp        : [20220502215018]
+2022-05-02T21:50:22 - iodaconv - INFO - install prefix   : [/usr/local]
+2022-05-02T21:50:22 - iodaconv - INFO -   bin dir        : [/usr/local/bin]
+2022-05-02T21:50:22 - iodaconv - INFO -   lib dir        : [/usr/local/lib]
+2022-05-02T21:50:22 - iodaconv - INFO -   include dir    : [/usr/local/include]
+2022-05-02T21:50:22 - iodaconv - INFO -   data dir       : [/usr/local/share/iodaconv]
+2022-05-02T21:50:22 - iodaconv - INFO -   cmake dir      : [/usr/local/lib/cmake/iodaconv]
+2022-05-02T21:50:22 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:22 - iodaconv - INFO - C -- GNU 10.3.0
+2022-05-02T21:50:22 - iodaconv - INFO -     compiler   : /usr/local/bin/mpicc
+2022-05-02T21:50:22 - iodaconv - INFO -     flags      :  -pipe -O2 -g -DNDEBUG  
+2022-05-02T21:50:22 - iodaconv - INFO -     link flags : 
+2022-05-02T21:50:22 - iodaconv - INFO - CXX -- GNU 10.3.0
+2022-05-02T21:50:22 - iodaconv - INFO -     compiler   : /usr/local/bin/mpicxx
+2022-05-02T21:50:22 - iodaconv - INFO -     flags      :  -pipe -g -Wall -Wno-deprecated-declarations -O2 -g -DNDEBUG  
+2022-05-02T21:50:22 - iodaconv - INFO -     link flags : 
+2022-05-02T21:50:22 - iodaconv - INFO - Fortran -- GNU 10.3.0
+2022-05-02T21:50:22 - iodaconv - INFO -     compiler   : /usr/local/bin/mpifort
+2022-05-02T21:50:22 - iodaconv - INFO -     flags      :  -g -fbacktrace -fallow-argument-mismatch -O2 -g -DNDEBUG  
+2022-05-02T21:50:22 - iodaconv - INFO -     link flags : 
+2022-05-02T21:50:22 - iodaconv - INFO - linker : /usr/bin/ld
+2022-05-02T21:50:22 - iodaconv - INFO - ar     : /usr/bin/ar
+2022-05-02T21:50:22 - iodaconv - INFO - ranlib : /usr/bin/ranlib
+2022-05-02T21:50:22 - iodaconv - INFO - link flags
+2022-05-02T21:50:22 - iodaconv - INFO -     executable [    -Wl,--disable-new-dtags ]
+2022-05-02T21:50:22 - iodaconv - INFO -     shared lib [ -Wl,--disable-new-dtags ]
+2022-05-02T21:50:22 - iodaconv - INFO -     static lib [ -Wl,--disable-new-dtags ]
+2022-05-02T21:50:22 - iodaconv - INFO - install rpath  : $ORIGIN/../lib
+2022-05-02T21:50:22 - iodaconv - INFO - common definitions: NDEBUG
+2022-05-02T21:50:22 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:22 - iodaconv - INFO - Feature summary
+2022-05-02T21:50:22 - iodaconv - INFO - ---------------------------------------------------------
+The following features have been enabled:
+
+ * TESTS, iodaconv: Enable the unit tests
+
+-- The following OPTIONAL packages have been found:
+
+ * Git
+ * Eigen3
+ * eckit (required version >= 1.13.0)
+ * gsl-lite
+ * MPI
+ * bufr
+ * NetCDF
+ * Perl
+
+-- The following REQUIRED packages have been found:
+
+ * ecbuild (required version >= 3)
+ * Python3
+
+-- The following OPTIONAL packages have not been found:
+
+ * oops (required version >= 1.0.0)
+ * ioda
+2022-05-02T21:50:33 -  - DEBUG - ecbuild project(iodaconv) 
+2022-05-02T21:50:33 - iodaconv - DEBUG - ---------------------------------------------------------
+2022-05-02T21:50:33 - iodaconv - DEBUG - Environment:
+2022-05-02T21:50:33 - iodaconv - DEBUG - ---------------------------------------------------------
+SHELL=/bin/bash
+SERIAL_CXX=g++
+PIO=/usr/local
+SINGULARITY_NAME=jedi-gnu-openmpi-dev_latest.sif
+MPI_CC=mpicc
+cmake=cmake
+src=
+SERIAL_CC=gcc
+INSTALL_DIR=/usr/local/bin
+SINGULARITY_ENVIRONMENT=/.singularity.d/env/91-environment.sh
+PWD=/home/ubuntu/jedi/ioda-bundle/iodaconv/bld
+CXX=mpicxx
+dryrun=no
+cmake_prefix=/home/ubuntu/jedi/ioda-bundle/iodaconv/bld/.local
+SERIAL_FC=gfortran
+CMAKE_BUILD_VERSION=3.18.3
+LAPACK_LIBRARIES=/lib/liblapack.a /lib/libblas.a
+HOME=/home/ubuntu
+LANG=C
+LAPACK_PATH=/usr/local
+LS_COLORS=rs=0:di=01 34:ln=01 36:mh=00:pi=40 33:so=01 35:do=01 35:bd=40 33 01:cd=40 33 01:or=40 31 01:mi=00:su=37 41:sg=30 43:ca=30 41:tw=30 42:ow=34 42:st=37 44:ex=01 32:*.tar=01 31:*.tgz=01 31:*.arc=01 31:*.arj=01 31:*.taz=01 31:*.lha=01 31:*.lz4=01 31:*.lzh=01 31:*.lzma=01 31:*.tlz=01 31:*.txz=01 31:*.tzo=01 31:*.t7z=01 31:*.zip=01 31:*.z=01 31:*.dz=01 31:*.gz=01 31:*.lrz=01 31:*.lz=01 31:*.lzo=01 31:*.xz=01 31:*.zst=01 31:*.tzst=01 31:*.bz2=01 31:*.bz=01 31:*.tbz=01 31:*.tbz2=01 31:*.tz=01 31:*.deb=01 31:*.rpm=01 31:*.jar=01 31:*.war=01 31:*.ear=01 31:*.sar=01 31:*.rar=01 31:*.alz=01 31:*.ace=01 31:*.zoo=01 31:*.cpio=01 31:*.7z=01 31:*.rz=01 31:*.cab=01 31:*.wim=01 31:*.swm=01 31:*.dwm=01 31:*.esd=01 31:*.jpg=01 35:*.jpeg=01 35:*.mjpg=01 35:*.mjpeg=01 35:*.gif=01 35:*.bmp=01 35:*.pbm=01 35:*.pgm=01 35:*.ppm=01 35:*.tga=01 35:*.xbm=01 35:*.xpm=01 35:*.tif=01 35:*.tiff=01 35:*.png=01 35:*.svg=01 35:*.svgz=01 35:*.mng=01 35:*.pcx=01 35:*.mov=01 35:*.mpg=01 35:*.mpeg=01 35:*.m2v=01 35:*.mkv=01 35:*.webm=01 35:*.ogm=01 35:*.mp4=01 35:*.m4v=01 35:*.mp4v=01 35:*.vob=01 35:*.qt=01 35:*.nuv=01 35:*.wmv=01 35:*.asf=01 35:*.rm=01 35:*.rmvb=01 35:*.flc=01 35:*.avi=01 35:*.fli=01 35:*.flv=01 35:*.gl=01 35:*.dl=01 35:*.xcf=01 35:*.xwd=01 35:*.yuv=01 35:*.cgm=01 35:*.emf=01 35:*.ogv=01 35:*.ogx=01 35:*.aac=00 36:*.au=00 36:*.flac=00 36:*.m4a=00 36:*.mid=00 36:*.midi=00 36:*.mka=00 36:*.mp3=00 36:*.mpc=00 36:*.ogg=00 36:*.ra=00 36:*.wav=00 36:*.oga=00 36:*.opus=00 36:*.spx=00 36:*.xspf=00 36:
+cmakebin=cmake
+srcARG=
+SINGULARITY_CONTAINER=/home/ubuntu/jedi-gnu-openmpi-dev_latest.sif
+MPI_FC=mpifort
+ECBUILD_MODULE_PATH=/usr/local/share/ecbuild/cmake
+EIGEN3_INCLUDE_DIR=/usr/local
+cmake_version_sufficient=yes
+LAPACK_DIR=
+LESSCLOSE=/usr/bin/lesspipe %s %s
+MPI_CXX=mpicxx
+PYTHONPATH=/usr/local/lib
+cmake_found=yes
+TERM=xterm-256color
+ecbuild_DIR=/usr/local
+val=
+LESSOPEN=| /usr/bin/lesspipe %s
+LIBRARY_PATH=/usr/local/ucx/lib:/usr/local/xpmem/lib:
+SHLVL=2
+SINGULARITY_BIND=
+PNETCDF=/usr/local
+NETCDF=/usr/local
+opt=
+LD_LIBRARY_PATH=/usr/local/lib:/usr/local/ucx/lib:/usr/local/xpmem/lib::/.singularity.d/libs
+CMAKE_MIN_REQUIRED=3.11
+ADD_ECBUILD_OPTIONS=-DCMAKE_MODULE_PATH=/usr/local/share/ecbuild/cmake
+FC=mpifort
+BOOST_ROOT=/usr/local
+cmake_version=3.20.0
+PATH=/home/ubuntu/.local/bin:/usr/local/go/bin:/home/ubuntu/bin:/usr/local/bin:/usr/local/ucx/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/ubuntu/go/bin
+get_cmake=
+CC=mpicc
+ecbuild_ROOT=/usr/local
+HDF5_ROOT=/usr/local
+SINGULARITY_COMMAND=shell
+CPATH=/usr/local/ucx/include:/usr/local/xpmem/include:/usr/local/knem/include:
+OLDPWD=/home/ubuntu/jedi/ioda-bundle/iodaconv
+GOPATH=/home/ubuntu/go
+BASH_FUNC_version_gte%%=() {  [ "$2" = "$(echo -e "$1\n$2" | sort -t '.' -k 1,1 -k 2,2 -k 3,3 -k 4,4 -g | head -n1)" ]
+}
+BASH_FUNC_toolchain%%=() {  arg=${1/#\~\//$HOME/} 
+ if [ -f $arg ]  then
+ toolchain_file=$arg 
+ else
+ if [ -f $ECBUILD_TOOLCHAIN_DIR/$arg.cmake ]  then
+ toolchain_file=$ECBUILD_TOOLCHAIN_DIR/$arg.cmake 
+ fi 
+ fi 
+ if [ -z ${toolchain_file+x} ]  then
+ echo "Error:" 
+ echo "   Toolchain [$arg] is not valid: [$arg.cmake] cannot be" 
+ echo "   found in [$ECBUILD_TOOLCHAIN_DIR]" 
+ exit 1 
+ else
+ ADD_ECBUILD_OPTIONS="$ADD_ECBUILD_OPTIONS -DCMAKE_TOOLCHAIN_FILE=${toolchain_file}" 
+ fi
+}
+BASH_FUNC_prefix%%=() {  ADD_ECBUILD_OPTIONS="$ADD_ECBUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=${1/#\~\//$HOME/}"
+}
+BASH_FUNC_download_cmake%%=() {  tarball=cmake-$1${2:-""}.tar.gz 
+ if [[ ! -r $tarball ]]  then
+ shortver=$(echo $1 | cut -d. -f1-2) 
+ url=http://www.cmake.org/files/v$shortver/$tarball 
+ wget -N --continue -T 60 -t 3 $url || { 
+ echo "Failed to download CMake release $1." 1>&2 
+ echo "Please download from $url" 1>&2 
+ echo "and place $tarball in $PWD" 1>&2 
+ exit 1
+ } 
+ fi 
+ echo $tarball
+}
+BASH_FUNC_usage%%=() {  echo "Usage: ecbuild [--help] [--version]" 
+ exit $1
+}
+BASH_FUNC_toolchains%%=() {  if [ -d $ECBUILD_TOOLCHAIN_DIR ]  then
+ cd $ECBUILD_TOOLCHAIN_DIR 
+ echo "Available toolchains:" 
+ ls | while read fname  do
+ echo "  - ${fname%%.*}" 
+ done 
+ exit 0 
+ else
+ echo "No toolchains available." 
+ exit 1 
+ fi
+}
+BASH_FUNC_log%%=() {  log_level=$(tr "[a-z]" "[A-Z]" <<< "$1") 
+ ADD_ECBUILD_OPTIONS="$ADD_ECBUILD_OPTIONS -DECBUILD_LOG_LEVEL=${log_level}"
+}
+BASH_FUNC_cache%%=() {  arg=$1 
+ if [ -f $arg ]  then
+ cache_file=$arg 
+ cache_file="$( cd $( dirname "${cache_file}" ) && pwd -P )/$( basename ${cache_file} )" 
+ else
+ echo "Error:" 
+ echo "   Cache file [$arg] is not found or is not a file." 
+ exit 1 
+ fi 
+ ADD_ECBUILD_OPTIONS="$ADD_ECBUILD_OPTIONS -DECBUILD_CACHE=${cache_file}"
+}
+BASH_FUNC_version%%=() {  ecbuild_version=$(cat ${ECBUILD_MODULE_PATH}/VERSION) 
+ echo "ecbuild version ${ecbuild_version}" 
+ command -v cmake > /dev/null 2>&1 || { 
+ exit 0
+ } 
+ cmake --version | head -1 
+ exit 0
+}
+BASH_FUNC_help%%=() {  cat <<EOF
+USAGE:
+
+  ecbuild [--help] [--version] [--toolchains]
+  ecbuild [option...] [--] [cmake-argument...] <path-to-source>
+  ecbuild [option...] [--] [cmake-argument...] <path-to-existing-build>
+
+DESCRIPTION:
+
+  ecbuild is a build system based on CMake, but providing a lot of macro's
+  to make it easier to work with. Upon execution,
+  the equivalent cmake command is printed.
+
+  ecbuild/cmake must be called from an out-of-source build directory and
+  forbids in-source builds.
+
+SYNOPSIS:
+
+    --help         Display this help
+    --version      Display ecbuild version
+    --toolchains   Display list of pre-installed toolchains (see below)
+
+
+Available values for "option":
+
+    --cmakebin=<path>
+          Set which cmake binary to use. Default is 'cmake'
+
+    --prefix=<prefix>
+          Set the install path to <prefix>.
+          Equivalent to cmake argument "-DCMAKE_INSTALL_PREFIX=<prefix>"
+
+    --build=<build-type>
+          Set the build-type to <build-type>.
+          Equivalent to cmake argument "-DCMAKE_BUILD_TYPE=<build-type>"
+          <build-type> can be any of:
+             - debug : Lowest optimization level, useful for debugging
+             - release : Highest optimization level, for best performance
+             - bit : Highest optimization level while staying bit-reproducible
+             - ...others depending on project
+
+    --log=<log-level>
+          Set the ecbuild log-level
+          Equivalent to "-DECBUILD_LOG_LEVEL=<log-level>"
+          <log-level> can be any of:
+             - DEBUG
+             - INFO
+             - WARN
+             - ERROR
+             - CRITICAL
+             - OFF
+          Every choice outputs also the log-levels listed below itself
+
+    --static
+          Build static libraries.
+          Equivalent to "-DBUILD_SHARED_LIBS=OFF"
+
+    --dynamic, --shared
+          Build dynamic libraries (usually the default).
+          Equivalent to "-DBUILD_SHARED_LIBS=ON"
+
+    --config=<config>
+          Configuration file using CMake syntax that gets included
+          Equivalent to cmake argument "-DECBUILD_CONFIG=<config-file>"
+
+    --toolchain=<toolchain>
+          Use a platform specific toolchain, containing settings such
+          as compilation flags, locations of commonly used dependencies.
+          <toolchain> can be the path to a custom toolchain file, or a
+          pre-installed toolchain provided with ecbuild. For a list of
+          pre-installed toolchains, run "ecbuild --toolchains".
+          Equivalent to cmake argument "-DCMAKE_TOOLCHAIN_FILE=<toolchain-file>"
+
+    --cache=<ecbuild-cache-file>    (advanced)
+          A file called "ecbuild-cache.cmake" is generated during configuration.
+          This file can be moved to a safe location, and specified for future
+          builds to speed up checking of compiler/platform capabilities. Note
+          that this is only accelerating fresh builds, as cmake internally
+          caches also. Therefore this option is *not* recommended.
+
+    --get-cmake[=<prefix>]
+          Automatically download CMake binaries from version $CMAKE_BUILD_VERSION.
+          Requires an internet connection. If no prefix is given, install into
+          $PWD/.local/.
+
+    --build-cmake[=<prefix>]
+          Automatically download and build CMake version $CMAKE_BUILD_VERSION.
+          Requires an internet connection and may take a while. If no prefix
+          is given, install into $PWD/.local/.
+
+    --dryrun
+          Don't actually execute the cmake call, just print what would have
+          been executed.
+
+
+Available values for "cmake-argument":
+
+    Any value that can be usually passed to cmake to (re)configure the build.
+    Typically these values start with "-D".
+        example:  -DENABLE_TESTS=ON  -DENABLE_MPI=OFF  -DECKIT_PATH=...
+
+    They can be explicitly separated from [option...] with a "--", for the case
+    there is a conflicting option with the "cmake" executable, and the latter's
+    option is requested.
+
+------------------------------------------------------------------------
+
+NOTE: When reconfiguring a build, it is only necessary to change the relevant
+options, as everything stays cached. For example:
+  > ecbuild --prefix=PREFIX .
+  > ecbuild -DENABLE_TESTS=ON .
+
+------------------------------------------------------------------------
+
+Compiling:
+
+  To compile the project with <N> threads:
+    > make -j<N>
+
+  To get verbose compilation/linking output:
+    > make VERBOSE=1
+
+Testing:
+
+  To run the project's tests
+    > ctest
+
+  Also check the ctest manual/help for more options on running tests
+
+Installing:
+
+  To install the project in location PREFIX with
+       "--prefix=PREFIX" or
+       "-DCMAKE_INSTALL_PREFIX=PREFIX"
+    > make install
+
+------------------------------------------------------------------------
+ECMWF"
+
+EOF
+
+ exit $1
+}
+BASH_FUNC_config%%=() {  arg=${1/#\~\//$HOME/} 
+ if [ -f $arg ]  then
+ config_file=$arg 
+ config_file="$( cd $( dirname "${config_file}" ) && pwd -P )/$( basename ${config_file} )" 
+ else
+ echo "Error:" 
+ echo "   Config file [$arg] is not found or is not a file." 
+ exit 1 
+ fi 
+ ADD_ECBUILD_OPTIONS="$ADD_ECBUILD_OPTIONS -DECBUILD_CONFIG=${config_file}"
+}
+_=/usr/local/bin/cmake
+
+2022-05-02T21:50:33 - iodaconv - DEBUG - ---------------------------------------------------------
+2022-05-02T21:50:33 - iodaconv - INFO - ecbuild   3.6.1	/usr/local/share/ecbuild/cmake
+2022-05-02T21:50:33 - iodaconv - INFO - cmake     3.20.0	/usr/local/bin/cmake
+2022-05-02T21:50:33 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_compiler_flags(CXX): try include /usr/local/share/ecbuild/cmake/compiler_flags/GNU_CXX.cmake 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_NONE : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_DEBUG : -O0 -g
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_BIT : -O2 -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_PRODUCTION : -O2 -g
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_RELEASE : -O3 -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_FLAGS_RELWITHDEBINFO : -O2 -g -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_compiler_flags(Fortran): try include /usr/local/share/ecbuild/cmake/compiler_flags/GNU_Fortran.cmake 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_NONE : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_DEBUG : -O0 -g -fcheck=bounds -fbacktrace -finit-real=snan
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_BIT : -O2 -DNDEBUG -fno-range-check -fconvert=big-endian
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_PRODUCTION : -O2 -g
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_RELEASE : -O3 -DNDEBUG -funroll-all-loops -finline-functions
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_Fortran_FLAGS_RELWITHDEBINFO : -O2 -g -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_compiler_flags(C): try include /usr/local/share/ecbuild/cmake/compiler_flags/GNU_C.cmake 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS_NONE : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS_DEBUG : -O0 -g
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS_BIT : -O2 -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS_PRODUCTION : -O2 -g
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS_RELEASE : -O3 -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_FLAGS_RELWITHDEBINFO : -O2 -g -DNDEBUG
+2022-05-02T21:50:33 - iodaconv - DEBUG - call ecbuild_add_c_flags( -pipe NO_FAIL )
+2022-05-02T21:50:33 - iodaconv - DEBUG - call ecbuild_add_lang_flags( -pipe NO_FAIL LANG C )
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_C_COMPILER_LOADED [1]
+2022-05-02T21:50:33 - iodaconv - DEBUG - check_c_compiler_flag( -pipe iodaconv_C_FLAG_TEST_1 )
+2022-05-02T21:50:33 - iodaconv - DEBUG - C flag [-pipe] check resulted [1]
+2022-05-02T21:50:33 - iodaconv - INFO - Added C flag [-pipe]
+2022-05-02T21:50:33 - iodaconv - DEBUG - call ecbuild_add_cxx_flags( -pipe NO_FAIL )
+2022-05-02T21:50:33 - iodaconv - DEBUG - call ecbuild_add_lang_flags( -pipe NO_FAIL LANG CXX )
+2022-05-02T21:50:33 - iodaconv - DEBUG - CMAKE_CXX_COMPILER_LOADED [1]
+2022-05-02T21:50:33 - iodaconv - DEBUG - check_cxx_compiler_flag( -pipe iodaconv_CXX_FLAG_TEST_1 )
+2022-05-02T21:50:33 - iodaconv - DEBUG - CXX flag [-pipe] check resulted [1]
+2022-05-02T21:50:33 - iodaconv - INFO - Added CXX flag [-pipe]
+2022-05-02T21:50:33 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:33 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:33 - iodaconv - INFO - [32m[iodaconv] (0.0.1) [1d9d29f][m
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_add_option(TESTS): defaults to ON
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_TESTS_condition): checking condition '' -> TRUE
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_add_option(TESTS): ENABLE_TESTS=ON was found in cache
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_add_option(TESTS): defining option ENABLE_TESTS 'Enable the unit tests' ON
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_add_option(TESTS): ENABLE_TESTS=ON
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_add_option(TESTS): feature requested to be enabled
+2022-05-02T21:50:33 - iodaconv - INFO - Feature TESTS enabled
+2022-05-02T21:50:33 - iodaconv - DEBUG - MEMORYCHECK_COMMAND : /usr/bin/valgrind
+2022-05-02T21:50:33 - iodaconv - DEBUG - MEMORYCHECK_COMMAND_OPTIONS : --trace-children=yes --leak-check=full --error-exitcode=1
+2022-05-02T21:50:33 - iodaconv - DEBUG - MEMORYCHECK_SUPPRESSIONS_FILE : 
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_find_package_search_hints(eckit): Detected variables that could influence find_package() :
+             - eckit_DIR: /usr/local/lib/cmake/eckit
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_find_package(eckit): find_package( eckit 1.13.0 QUIET  CONFIG )
+2022-05-02T21:50:33 - iodaconv - DEBUG - ecbuild_find_package(oops): find_package( oops 1.0.0 QUIET  CONFIG )
+2022-05-02T21:50:33 - iodaconv - DEBUG - iodaconv FAILED to find OPTIONAL package oops
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_compo_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_compo_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_gsi-ncdiag_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_gsi-ncdiag_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_goes_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_goes_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_hdf5_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_hdf5_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_lib-python_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_lib-python_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_marine_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_marine_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_conventional_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_conventional_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_ncep_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_ncep_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_ssec_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_ssec_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_wrfda-ncdiag_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_wrfda-ncdiag_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_singleob_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_singleob_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_gnssro_bufr2ioda_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_bufr2ioda): linking with [bufr::bufr_4_DA NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_bufr2ioda): [] not found - not linking
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_bufr2ioda): installing to bin
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_gnssro_gsidiag2ioda_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_gsidiag2ioda): linking with [NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_gsidiag2ioda): [] not found - not linking
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(gnssro_gsidiag2ioda): installing to bin
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_gnssro_coding_norms_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_gnssro_coding_norms): assign labels iodaconv script
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_bufr2nc_fortran.x_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(bufr2nc_fortran.x): linking with [bufr::bufr_4_DA NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(bufr2nc_fortran.x): [] not found - not linking
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(bufr2nc_fortran.x): installing to bin
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_obserror2ioda.x_condition): checking condition '' -> TRUE
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_find_perl: found perl version 5.30.0 as /usr/bin/perl
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_persistent: adding persistent layer for []
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(obserror2ioda.x): linking with [NetCDF::NetCDF_Fortran]
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(obserror2ioda.x): [] not found - not linking
+2022-05-02T21:50:35 - iodaconv - DEBUG - ecbuild_add_executable(obserror2ioda.x): installing to bin
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gds2_sst_l2p_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gds2_sst_l2p): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gds2_sst_l3u_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gds2_sst_l3u): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smap_sss_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smap_sss): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_rads_adt_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_rads_adt): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_prof_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_prof): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_ship_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_ship): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_trak_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_trak): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hgodas_adt_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hgodas_adt): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hgodas_insitu_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hgodas_insitu): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hgodas_sst_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hgodas_sst): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_glider_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_glider): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_hfradar_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_hfradar): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_argoclim_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_argoclim): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_cryosat2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_cryosat2): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_emc_ice_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_emc_ice): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smos_sss_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smos_sss): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_copernicus_l4adt_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_copernicus_l4adt): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_copernicus_l3swh_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_copernicus_l3swh): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_avhrr_radiance_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_avhrr_radiance): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_satwinds_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_satwinds): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_metar_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_metar): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_viirs_jpss1_oc_l2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_viirs_jpss1_oc_l2): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_modis_aqua_oc_l2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_modis_aqua_oc_l2): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_viirs_jpss1_oc_l3_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_viirs_jpss1_oc_l3): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_godae_bgc_argo_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_godae_bgc_argo): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_ncep_bufr_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_ncep_bufr): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gen_singleob_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gen_singleob): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_giirs_ssec2ioda_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_giirs_ssec2ioda): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_giirs_lw_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_giirs_lw): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gsidiag_conv_uv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gsidiag_conv_uv): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gsidiag_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gsidiag_conv): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gsidiag_rad_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gsidiag_rad): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_wrfdadiag_rad_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_wrfdadiag_rad): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gnssro_bufr_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gnssro_bufr_conv): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_viirs_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_viirs_aod): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_satbias_viirs_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_satbias_viirs_aod): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_tropomi_no2_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_tropomi_no2): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_mopitt_co_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_mopitt_co): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_modis_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_modis_aod): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_aeronet_aod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_aeronet_aod): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_aeronet_aaod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_aeronet_aaod): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_airnow_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_airnow): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_atms_nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_atms_nc4): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_gnssro_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_gnssro_conv): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_prepbufr_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_prepbufr_conv): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_mhs_conv_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_mhs_conv): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_obserror_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_obserror): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_ghcn_snod_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_ghcn_snod): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smap_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smap_ssm): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smos_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smos_ssm): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_ascat_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_ascat_ssm): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_imsfv3_scf_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_imsfv3_scf): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_smap9km_ssm_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_smap9km_ssm): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_test_iodaconv_land_owp_snow_obs_dup_thin_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(test_iodaconv_land_owp_snow_obs_dup_thin): assign labels iodaconv script
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_2020100106_metars_small.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_2020100106_metars_small.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_2021120600_atms_sdr.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_2021120600_atms_sdr.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_NC005031.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_NC005031.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_NC005066.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_NC005066.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_Rcov_iasi_metop-b_sea.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_Rcov_iasi_metop-b_sea.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_abi_g16_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_abi_g16_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_aeronet_aaod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_aeronet_aaod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_aeronet_aod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_aeronet_aod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_afwa_snod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_afwa_snod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_airep_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_airep_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_airnow_2020081306.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_airnow_2020081306.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amdar_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amdar_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amdar_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amdar_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amdar_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amdar_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_amsua_aqua_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_amsua_aqua_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_aod_viirs_obs_2018041500_s.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_aod_viirs_obs_2018041500_s.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_argoclim.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_argoclim.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ascat_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ascat_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_avhrr_radiance.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_avhrr_radiance.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_bufr_read_2_dim_blocks.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_bufr_read_2_dim_blocks.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_bufr_read_wmo_radiosonde.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_bufr_read_wmo_radiosonde.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_buoy_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_buoy_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_buoy_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_buoy_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_buoy_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_buoy_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_cryosat2_L2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_cryosat2_L2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_emc_ice_ioda2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_emc_ice_ioda2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.aircar.t00z.20210801.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.aircar.t00z.20210801.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t00z.1bhrs4.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t00z.1bhrs4.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t06z.adpsfc.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t06z.adpsfc.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t06z.adpsfc_snow.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t06z.adpsfc_snow.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.7.filter_split.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.7.filter_split.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.seven.split.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.15.seven.split.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.filtering.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.filtering.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gdas.t18z.1bmhs.tm00.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gds2_sst_l2p.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gds2_sst_l2p.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gds2_sst_l3u.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gds2_sst_l3u.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ghcn_snod_20200228.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ghcn_snod_20200228.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_giirs_fy4a_obs_2017030208.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_giirs_fy4a_obs_2017030208.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_giirs_ssec_ioda.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_giirs_ssec_ioda.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_2020-306-2358C2E6.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_2020-306-2358C2E6.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_cosmic2_2021080212.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_cosmic2_2021080212.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_kompsat5_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_kompsat5_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_gnssro_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_gnssro_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_bgc_argo.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_bgc_argo.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_prof.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_prof.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_ship.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_ship.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_godae_trak.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_godae_trak.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_hgodas_adt.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_hgodas_adt.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_hgodas_insitu.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_hgodas_insitu.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_hgodas_sst.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_hgodas_sst.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_imsfv3_scf.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_imsfv3_scf.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_imssnow_scf.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_imssnow_scf.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ioda.NC001007.2020031012.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ioda.NC001007.2020031012.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ioda_global_vavh_l3_rt_s3a_20210930T18.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ioda_global_vavh_l3_rt_s3a_20210930T18.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_mhs_metop-b_obs_2020101215.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_mhs_metop-b_obs_2020101215.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_modis_aod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_modis_aod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_modis_aqua_oc_l2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_modis_aqua_oc_l2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_mopitt_co.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_mopitt_co.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ndbc_hfradar_out.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ndbc_hfradar_out.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_odb_sonde_16019.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_odb_sonde_16019.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_owp_snow_obs_dup_thin_err_fn.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_owp_snow_obs_dup_thin_err_fn.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_rads_adt.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_rads_adt.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_rass_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_rass_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satbias_amsua_n18.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satbias_amsua_n18.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satbias_cris_npp.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satbias_cris_npp.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satbias_ssmis_f16.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satbias_ssmis_f16.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_EUMet.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_EUMet.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_Himawari.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_Himawari.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_Insat.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_Insat.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwind_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwind_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_satwinds_ssec2021080103.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_satwinds_ssec2021080103.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_sfc_tv_obs_2018041500.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_sfc_tv_obs_2018041500.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ship_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ship_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ship_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ship_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_ship_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_ship_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_singleob.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_singleob.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smap9km_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smap9km_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smap_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smap_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smap_sss_rss.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smap_sss_rss.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smos_ssm.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smos_ssm.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_smos_sss_l2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_smos_sss_l2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_sondes_obs_2020093018.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_sondes_obs_2020093018.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_synop_single.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_synop_single.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_synop_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_synop_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_synop_wmo_multi2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_synop_wmo_multi2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_test_glider.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_test_glider.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_tropomi_no2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_tropomi_no2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_vadwinds_wmo_multi.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_vadwinds_wmo_multi.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_aod.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_aod.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_bias.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_bias.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_jpss1_oc_l2.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_jpss1_oc_l2.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_viirs_jpss1_oc_l3.nc_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_viirs_jpss1_oc_l3.nc): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_wmo_raob_double.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_wmo_raob_double.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_evaluate_dynamic_condition(_iodaconv_validate_testoutput_wmo_raob_quadruple.nc4_condition): checking condition '' -> TRUE
+2022-05-02T21:50:36 - iodaconv - DEBUG - ecbuild_add_test(iodaconv_validate_testoutput_wmo_raob_quadruple.nc4): assign labels iodaconv script iodaconv_validate
+2022-05-02T21:50:36 - iodaconv - DEBUG - No iodaconv-import.cmake found in /home/ubuntu/jedi/ioda-bundle/iodaconv
+2022-05-02T21:50:36 - iodaconv - DEBUG - No cmake/iodaconv-import.cmake found in /home/ubuntu/jedi/ioda-bundle/iodaconv
+2022-05-02T21:50:36 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:36 - iodaconv - INFO - Build summary
+2022-05-02T21:50:36 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:36 - iodaconv - INFO - system : [ip-172-31-31-111] [Linux-5.4.0-1072-aws] [linux.64]
+2022-05-02T21:50:36 - iodaconv - INFO - processor        : [x86_64]
+2022-05-02T21:50:36 - iodaconv - INFO - endiness         : Little Endian -- IEEE []
+2022-05-02T21:50:36 - iodaconv - INFO - build type       : [RelWithDebInfo]
+2022-05-02T21:50:36 - iodaconv - INFO - timestamp        : [20220502215018]
+2022-05-02T21:50:36 - iodaconv - INFO - install prefix   : [/usr/local]
+2022-05-02T21:50:36 - iodaconv - INFO -   bin dir        : [/usr/local/bin]
+2022-05-02T21:50:36 - iodaconv - INFO -   lib dir        : [/usr/local/lib]
+2022-05-02T21:50:36 - iodaconv - INFO -   include dir    : [/usr/local/include]
+2022-05-02T21:50:36 - iodaconv - INFO -   data dir       : [/usr/local/share/iodaconv]
+2022-05-02T21:50:36 - iodaconv - INFO -   cmake dir      : [/usr/local/lib/cmake/iodaconv]
+2022-05-02T21:50:36 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:36 - iodaconv - INFO - C -- GNU 10.3.0
+2022-05-02T21:50:36 - iodaconv - INFO -     compiler   : /usr/local/bin/mpicc
+2022-05-02T21:50:36 - iodaconv - INFO -     flags      :  -pipe -O2 -g -DNDEBUG  
+2022-05-02T21:50:36 - iodaconv - INFO -     link flags : 
+2022-05-02T21:50:36 - iodaconv - INFO - CXX -- GNU 10.3.0
+2022-05-02T21:50:36 - iodaconv - INFO -     compiler   : /usr/local/bin/mpicxx
+2022-05-02T21:50:36 - iodaconv - INFO -     flags      :  -pipe -g -Wall -Wno-deprecated-declarations -O2 -g -DNDEBUG  
+2022-05-02T21:50:36 - iodaconv - INFO -     link flags : 
+2022-05-02T21:50:36 - iodaconv - INFO - Fortran -- GNU 10.3.0
+2022-05-02T21:50:36 - iodaconv - INFO -     compiler   : /usr/local/bin/mpifort
+2022-05-02T21:50:36 - iodaconv - INFO -     flags      :  -g -fbacktrace -fallow-argument-mismatch -O2 -g -DNDEBUG  
+2022-05-02T21:50:36 - iodaconv - INFO -     link flags : 
+2022-05-02T21:50:36 - iodaconv - INFO - linker : /usr/bin/ld
+2022-05-02T21:50:36 - iodaconv - INFO - ar     : /usr/bin/ar
+2022-05-02T21:50:36 - iodaconv - INFO - ranlib : /usr/bin/ranlib
+2022-05-02T21:50:36 - iodaconv - INFO - link flags
+2022-05-02T21:50:36 - iodaconv - INFO -     executable [    -Wl,--disable-new-dtags ]
+2022-05-02T21:50:36 - iodaconv - INFO -     shared lib [ -Wl,--disable-new-dtags ]
+2022-05-02T21:50:36 - iodaconv - INFO -     static lib [ -Wl,--disable-new-dtags ]
+2022-05-02T21:50:36 - iodaconv - INFO - install rpath  : $ORIGIN/../lib
+2022-05-02T21:50:36 - iodaconv - INFO - common definitions: NDEBUG
+2022-05-02T21:50:36 - iodaconv - INFO - ---------------------------------------------------------
+2022-05-02T21:50:36 - iodaconv - INFO - Feature summary
+2022-05-02T21:50:36 - iodaconv - INFO - ---------------------------------------------------------
+The following features have been enabled:
+
+ * TESTS, iodaconv: Enable the unit tests
+
+-- The following OPTIONAL packages have been found:
+
+ * Git
+ * Eigen3
+ * eckit (required version >= 1.13.0)
+ * gsl-lite
+ * MPI
+ * bufr
+ * NetCDF
+ * Perl
+
+-- The following REQUIRED packages have been found:
+
+ * ecbuild (required version >= 3)
+ * Python3
+
+-- The following OPTIONAL packages have not been found:
+
+ * oops (required version >= 1.0.0)
+ * ioda

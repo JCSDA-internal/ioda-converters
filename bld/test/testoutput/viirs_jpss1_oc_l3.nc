@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/test/testoutput/viirs_jpss1_oc_l3.nc

@@ -1,0 +1,1 @@
+/home/ubuntu/jedi/ioda-bundle/iodaconv/test/testinput/wrfdadiags_goes-16-abi_2018041500.nc
