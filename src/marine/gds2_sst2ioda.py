@@ -167,9 +167,8 @@ def read_input(input_args):
     dates = []
     data_in['sst_dtime'] = data_in['sst_dtime'][mask]
     for i in range(len(lons)):
-        obs_date = basetime + \
-            timedelta(seconds=float(time[i]+data_in['sst_dtime'][i]))
-        obs_date = int(timedelta(seconds=obs_date+epoch))
+        obs_date = basetime + timedelta(seconds=float(time[i]+data_in['sst_dtime'][i]))
+        obs_date = int((obs_date - epoch).total_seconds())
         dates.append(np.int64(obs_date))
 
     # calculate output values
@@ -195,14 +194,14 @@ def read_input(input_args):
         obs_data[('sst', qcName)] = qc.astype('int32')
 
     if global_config['output_skin_sst']:
-        obs_data[('skin_sst', obsValName)] = val_sst.astype('float32')
+        obs_data[('skin_sst', obsValName)] = val_sst_skin.astype('float32')
         obs_data[('skin_sst', obsErrName)] = err.astype('float32')
         obs_data[('skin_sst', qcName)] = qc.astype('int32')
 
     return (obs_data, GlobalAttrs)
 
 
-def IODA(filename, global_config, nlocs, obs_data):
+def IODA(filename, GlobalAttrs, nlocs, obs_data):
 
     DimDict = {'Location': nlocs}
     varDims = {}
@@ -211,7 +210,7 @@ def IODA(filename, global_config, nlocs, obs_data):
 
     # Set units and FillValue attributes for groups associated with observed variable.
     for key in var_keys:
-        if obs_data[(key, obsValName)]:
+        if (key, obsValName) in obs_data:
             var_name = varInfo[var_keys.index(key)][1]
             varDims[var_name] = 'Location'
             varAttrs[(var_name, obsValName)]['units'] = varInfo[var_keys.index(key)][2]
@@ -220,9 +219,13 @@ def IODA(filename, global_config, nlocs, obs_data):
             varAttrs[(var_name, obsErrName)]['_FillValue'] = varInfo[var_keys.index(key)][3]
             varAttrs[(var_name, qcName)]['_FillValue'] = int_missing_value
 
-            data[(var_name, obsValName)] = np.array(obs_data[(var_name, obsValName)], dtype=float)
-            data[(var_name, obsErrName)] = np.array(obs_data[(var_name, obsErrName)], dtype=float)
-            data[(var_name, qcName)] = np.array(obs_data[(var_name, qcName)], dtype=np.int32)
+            data[(var_name, obsValName)] = np.array(obs_data[(key, obsValName)], dtype=np.float32)
+            data[(var_name, obsErrName)] = np.array(obs_data[(key, obsErrName)], dtype=np.float32)
+            data[(var_name, qcName)] = np.array(obs_data[(key, qcName)], dtype=np.int32)
+
+            print(f"DEBUG: {var_name}")
+            for n in range(len(data[(var_name, obsValName)])):
+                print(f"  data: {data[(var_name, obsValName)][n]}, {data[(var_name, obsErrName)][n]}, {data[(var_name, qcName)][n]}")
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
@@ -230,7 +233,11 @@ def IODA(filename, global_config, nlocs, obs_data):
         if locationKeyList[meta_keys.index(key)][2]:
             varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
-        data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
+        data[(key, metaDataName)] = np.array(obs_data[(key, metaDataName)], dtype=dtypes[dtypestr])
+
+        print(f"DEBUG: meta, {key}")
+        for n in range(len(data[(key, metaDataName)])):
+            print(f"  data: {data[(key, metaDataName)][n]}")
 
     # Initialize the writer, then write the file.
     writer = iconv.IodaWriter(filename, locationKeyList, DimDict)
@@ -293,11 +300,6 @@ def main():
         args.sst = True
         args.skin_sst = True
 
-    # prepare global attributes we want to output in the file,
-    GlobalAttrs['sourceFiles'] = ", ".join(args.input)
-    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    GlobalAttrs['thinning'] = args.thin
-
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
@@ -316,6 +318,11 @@ def main():
     # concatenate the data from the files
     obs_data, GlobalAttrs = obs[0]
 
+    # Add additional global attributes we want to output in the file.
+    GlobalAttrs['sourceFiles'] = ", ".join(args.input)
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['thinning'] = args.thin
+
     for i in range(1, len(obs)):
         for k in obs_data:
             axis = len(obs[i][0][k].shape)-1
@@ -328,7 +335,7 @@ def main():
     print (f"Preparing to write {nlocs} observations to {args.output}")
 
     # Write out the file.
-    IODA(args.output, global_config, nlocs, obs_data)
+    IODA(args.output, GlobalAttrs, nlocs, obs_data)
 
 
 if __name__ == '__main__':
