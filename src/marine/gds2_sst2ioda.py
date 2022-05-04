@@ -212,7 +212,7 @@ def IODA(filename, GlobalAttrs, nlocs, obs_data):
     for key in var_keys:
         if (key, obsValName) in obs_data:
             var_name = varInfo[var_keys.index(key)][1]
-            varDims[var_name] = 'Location'
+            varDims[var_name] = ['Location']
             varAttrs[(var_name, obsValName)]['units'] = varInfo[var_keys.index(key)][2]
             varAttrs[(var_name, obsErrName)]['units'] = varInfo[var_keys.index(key)][2]
             varAttrs[(var_name, obsValName)]['_FillValue'] = varInfo[var_keys.index(key)][3]
