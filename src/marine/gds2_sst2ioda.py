@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019-2021 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -26,23 +26,59 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
-output_var_names = [
-    "sea_surface_temperature",
-    "sea_surface_skin_temperature"]
+os.environ["TZ"] = "UTC"
+
+# The first section of three variables are related to the IODA output file.
+
+varInfo = [('sst', 'seaSurfaceTemperature', 'K', 999.0),
+           ('skin_sst', 'seaSurfaceSkinTemperature', 'K', 999.0)]
+var_keys = [var_key[0] for var_key in varInfo]
 
 locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("datetime", "string")
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
 ]
+meta_keys = [m_item[0] for m_item in locationKeyList]
 
-GlobalAttrs = {}
+GlobalAttrs = {
+    'odb_version': 1,
+    'converter': os.path.basename(__file__),
+    'ioda_version': 2,
+    'description': "Sea-surface temperature from GHRRST Data Specification (GDS2.0) L2/3 formatted"
+}
 
-VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+# This list of variables is from the input file.
 
-DimDict = {}
+incoming_vars = ['quality_level',
+                 'sses_bias',
+                 'sses_standard_deviation',
+                 'sea_surface_temperature']
 
-VarDims = {}
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
+float_missing_value = 999.0   # More typically nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 def read_input(input_args):
@@ -62,7 +98,7 @@ def read_input(input_args):
     input_file = input_args[0]
     global_config = input_args[1]
 
-    print("Reading ", input_file)
+    print(f"Reading input file: {input_file}")
     ncd = nc.Dataset(input_file, 'r')
 
     # get the base time (should only have 1 or 2 time slots)
@@ -100,14 +136,11 @@ def read_input(input_args):
     # calculate the basetime offsets
     time = np.tile(np.atleast_2d(time_base).T, (1, len_grid)).ravel()[mask]
 
+    # Determine the observed time.
+    data_in['sst_dtime'] = ncd.variables['sst_dtime'][:].ravel()[mask]
+
     # load in all the other data and apply the missing value mask
-    input_vars = (
-        'quality_level',
-        'sst_dtime',
-        'sses_bias',
-        'sses_standard_deviation',
-        'sea_surface_temperature')
-    for v in input_vars:
+    for v in incoming_vars:
         if v not in data_in:
             data_in[v] = ncd.variables[v][:].ravel()[mask]
     ncd.close()
@@ -119,7 +152,7 @@ def read_input(input_args):
 
     # also, sometimes certain input variables have their own mask due to
     # missing values
-    for v in input_vars:
+    for v in incoming_vars:
         if np.ma.is_masked(data_in[v]):
             mask = np.logical_and(mask, np.logical_not(data_in[v].mask))
 
@@ -127,55 +160,83 @@ def read_input(input_args):
     time = time[mask]
     lons = lons[mask]
     lats = lats[mask]
-    for v in input_vars:
+    for v in incoming_vars:
         data_in[v] = data_in[v][mask]
 
     # create a string version of the date for each observation
     dates = []
+    data_in['sst_dtime'] = data_in['sst_dtime'][mask]
     for i in range(len(lons)):
         obs_date = basetime + \
             timedelta(seconds=float(time[i]+data_in['sst_dtime'][i]))
-        dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        obs_date = int(timedelta(seconds=obs_date+epoch))
+        dates.append(np.int64(obs_date))
 
     # calculate output values
     # Note: the qc flags in GDS2.0 run from 0 to 5, with higher numbers
     # being better. IODA typically expects 0 to be good, and higher numbers
     # are bad, so the qc flags flipped here.
-    # TODO change everything in soca to handle K instead of C ?
-    val_sst_skin = data_in['sea_surface_temperature'] - 273.15
+    val_sst_skin = data_in['sea_surface_temperature']
     val_sst = val_sst_skin - data_in['sses_bias']
     err = data_in['sses_standard_deviation']
     qc = 5 - data_in['quality_level']
 
-    # allocate space for output depending on which variables are to be saved
-
-    obs_dim = (len(lons))
     obs_data = {}
+
+    # First, populate the MetaData.
+    obs_data[('dateTime', metaDataName)] = dates
+    obs_data[('latitude', metaDataName)] = lats
+    obs_data[('longitude', metaDataName)] = lons
+
+    # Next, populate the observed variables.
     if global_config['output_sst']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
+        obs_data[('sst', obsValName)] = val_sst.astype('float32')
+        obs_data[('sst', obsErrName)] = err.astype('float32')
+        obs_data[('sst', qcName)] = qc.astype('int32')
 
     if global_config['output_skin_sst']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = np.zeros(obs_dim)
-
-    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
-    obs_data[('datetime', 'MetaData')][:] = dates
-    obs_data[('latitude', 'MetaData')] = lats
-    obs_data[('longitude', 'MetaData')] = lons
-
-    if global_config['output_sst']:
-        obs_data[output_var_names[0], global_config['oval_name']] = val_sst
-        obs_data[output_var_names[0], global_config['oerr_name']] = err
-        obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
-    if global_config['output_skin_sst']:
-        obs_data[output_var_names[1], global_config['oval_name']] = val_sst_skin
-        obs_data[output_var_names[1], global_config['oerr_name']] = err
-        obs_data[output_var_names[1], global_config['opqc_name']] = qc.astype('int32')
+        obs_data[('skin_sst', obsValName)] = val_sst.astype('float32')
+        obs_data[('skin_sst', obsErrName)] = err.astype('float32')
+        obs_data[('skin_sst', qcName)] = qc.astype('int32')
 
     return (obs_data, GlobalAttrs)
+
+
+def IODA(filename, global_config, nlocs, obs_data):
+
+    DimDict = {'Location': nlocs}
+    varDims = {}
+    varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+    # Set units and FillValue attributes for groups associated with observed variable.
+    for key in var_keys:
+        if obs_data[(key, obsValName)]:
+            var_name = varInfo[var_keys.index(key)][1]
+            varDims[var_name] = 'Location'
+            varAttrs[(var_name, obsValName)]['units'] = varInfo[var_keys.index(key)][2]
+            varAttrs[(var_name, obsErrName)]['units'] = varInfo[var_keys.index(key)][2]
+            varAttrs[(var_name, obsValName)]['_FillValue'] = varInfo[var_keys.index(key)][3]
+            varAttrs[(var_name, obsErrName)]['_FillValue'] = varInfo[var_keys.index(key)][3]
+            varAttrs[(var_name, qcName)]['_FillValue'] = int_missing_value
+
+            data[(var_name, obsValName)] = np.array(obs_data[(var_name, obsValName)], dtype=float)
+            data[(var_name, obsErrName)] = np.array(obs_data[(var_name, obsErrName)], dtype=float)
+            data[(var_name, qcName)] = np.array(obs_data[(var_name, qcName)], dtype=np.int32)
+
+    # Set units of the MetaData variables and all _FillValues.
+    for key in meta_keys:
+        dtypestr = locationKeyList[meta_keys.index(key)][1]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+        data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
+
+    # Initialize the writer, then write the file.
+    writer = iconv.IodaWriter(filename, locationKeyList, DimDict)
+    writer.BuildIoda(data, varDims, varAttrs, GlobalAttrs)
+
+    return
 
 
 def main():
@@ -232,6 +293,11 @@ def main():
         args.sst = True
         args.skin_sst = True
 
+    # prepare global attributes we want to output in the file,
+    GlobalAttrs['sourceFiles'] = ", ".join(args.input)
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['thinning'] = args.thin
+
     # Setup the configuration that is passed to each worker process
     # Note: Pool.map creates separate processes, and can only take iterable
     # objects. Rather than using global variables, embed them into
@@ -239,9 +305,6 @@ def main():
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
-    global_config['oval_name'] = iconv.OvalName()
-    global_config['oerr_name'] = iconv.OerrName()
-    global_config['opqc_name'] = iconv.OqcName()
     global_config['output_sst'] = args.sst
     global_config['output_skin_sst'] = args.skin_sst
     pool_inputs = [(i, global_config) for i in args.input]
@@ -259,46 +322,13 @@ def main():
             obs_data[k] = np.concatenate(
                 (obs_data[k], obs[i][0][k]), axis=axis)
 
-    # prepare global attributes we want to output in the file,
-    # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    GlobalAttrs['thinning'] = args.thin
-    GlobalAttrs['converter'] = os.path.basename(__file__)
+    # Total number of observations.
+    nlocs = len(obs_data[('dateTime', metaDataName)])
 
-    # determine which variables we are going to output
-    selected_names = []
-    if args.sst:
-        selected_names.append(output_var_names[0])
-    if args.skin_sst:
-        selected_names.append(output_var_names[1])
+    print (f"Preparing to write {nlocs} observations to {args.output}")
 
-    # pass parameters to the IODA writer
-    # (needed because we are bypassing ExtractObsData within BuildNetcdf)
-    VarDims = {
-        'sea_surface_temperature': ['nlocs'],
-        'sea_surface_skin_temperature': ['nlocs'],
-    }
-
-    nlocs = len(obs_data[('longitude', 'MetaData')])
-
-    DimDict = {'nlocs': nlocs}
-
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-
-    VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['units'] = 'celsius'
-    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_temperature', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_temperature', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_temperature', 'PreQC')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_skin_temperature', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_skin_temperature', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_skin_temperature', 'PreQC')]['_FillValue'] = 999
-
-    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+    # Write out the file.
+    IODA(args.output, global_config, nlocs, obs_data)
 
 
 if __name__ == '__main__':
