@@ -9,7 +9,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <set>
 
 #include "DataProvider.h"
@@ -46,7 +46,7 @@ namespace bufr {
 
      private:
         const DataProvider& dataProvider_;
-        std::map<std::string, QueryData> queryMap_;
+        std::unordered_map<std::string, QueryData> queryMap_;
         std::vector<std::string> queryMapKeys_;
 
         void initialize();

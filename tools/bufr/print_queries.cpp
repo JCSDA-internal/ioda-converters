@@ -1,19 +1,17 @@
 
-
+#include <algorithm>
 #include <iostream>
-#include <sstream>
+#include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <algorithm>
+
 
 #include "../../src/bufr/BufrParser/Query/DataProvider.h"
 #include "../../src/bufr/BufrParser/Query/SubsetTable.h"
 
 #include "bufr_interface.h"
-
-
-static const char Esc = 27;
 
 
 std::set<std::string> getSubsets(int fileUnit)
@@ -30,6 +28,34 @@ std::set<std::string> getSubsets(int fileUnit)
     }
 
     return subsets;
+}
+
+
+std::vector<std::pair<int, std::string>>
+getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
+{
+    std::map<std::string, std::pair<int, std::string>> dimPathMap;
+    for (auto& query : queryData)
+    {
+        std::stringstream pathStream;
+        pathStream << query.pathComponents[0];
+        for (auto idx=1; idx <= query.dimIdxs[query.dimIdxs.size() - 1]; idx++)
+        {
+            pathStream << "/" << query.pathComponents[idx];
+        }
+
+        dimPathMap[pathStream.str()] =
+                std::make_pair(query.dimIdxs.size(),
+                               pathStream.str());
+    }
+
+    std::vector<std::pair<int, std::string>> result;
+    for (auto& dimPath : dimPathMap)
+    {
+        result.push_back(dimPath.second);
+    }
+
+    return result;
 }
 
 
@@ -72,8 +98,6 @@ void printHelp()
     std::cout << "Arguments: " << std::endl;
     std::cout << "  -h          (Optional) Print out the help message." << std::endl;
     std::cout << "  -s <subset> (Optional) Print paths only for this subset." << std::endl;
-    std::cout << "  -m          (Optional) Remove the colors (monotone)." << std::endl;
-    std::cout << "              Use this when piping to text file." << std::endl;
     std::cout << "  input_file  Path to the BUFR file." << std::endl;
     std::cout << "  output_file  (Optional) Save the output. " << std::endl;
     std::cout << "Examples: " << std::endl;
@@ -81,63 +105,34 @@ void printHelp()
     std::cout << "  ./print_queries.x -s NC005066 ../data/bufr_satwnd_old_format.bufr" << std::endl;
 }
 
-std::string dimStyledStr(int dims, bool colorize)
+std::string dimStyledStr(int dims)
 {
     std::ostringstream ostr;
-    if (colorize)
-    {
-        ostr << Esc << "[1m" << dims << "d" << Esc << "[0m";
-    }
-    else
-    {
-        ostr << dims << "d";
-    }
+    ostr << dims << "d";
 
     return ostr.str();
 }
 
-std::string subsetStyledStr(const std::string& str, bool colorize)
+void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
 {
-    std::ostringstream ostr;
-    if (colorize)
+    for (auto& dimPath : dimPaths)
     {
-        ostr << Esc << "[1;34m" << str << Esc << "[0m";
+        std::cout << "  " << dimPath.first << "d " << dimPath.second << std::endl;
     }
-    else
-    {
-        ostr << str;
-    }
-
-    return ostr.str();
 }
 
-std::string dimPathStyledStr(const std::string& str, bool colorize)
-{
-    std::ostringstream ostr;
-    if (colorize)
-    {
-        ostr << Esc << "[1;31m" << str << Esc << "[0m";
-    }
-    else
-    {
-        ostr << str;
-    }
-
-    return ostr.str();
-}
-
-void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries, bool colorize)
+void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
 {
     for (auto query : queries)
     {
         std::ostringstream ostr;
-        ostr << dimStyledStr(query.dimIdxs.size(), colorize) << " ";
-        ostr << subsetStyledStr(query.pathComponents[0], colorize);
+        ostr << dimStyledStr(query.dimIdxs.size()) << " ";
+        ostr << query.pathComponents[0];
         for (size_t pathIdx = 1; pathIdx < query.pathComponents.size(); pathIdx++)
         {
             if (std::find(query.dimIdxs.begin(), query.dimIdxs.end(), pathIdx) != query.dimIdxs.end())
             {
-                ostr << "/" << dimPathStyledStr(query.pathComponents[pathIdx], colorize);
+                ostr << "/" << query.pathComponents[pathIdx];
             }
             else
             {
@@ -150,14 +145,13 @@ void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries, bool 
             ostr << "[" << query.idx << "]";
         }
 
-        std::cout << ostr.str() << std::endl;
+        std::cout << "  " << ostr.str() << std::endl;
     }
 }
 
 void printQueries(const std::string& filePath,
                   const std::string& subset,
-                  const std::string& tablePath,
-                  bool colorize)
+                  const std::string& tablePath)
 {
     const static int FileUnit = 12;
     const static int FileUnitTable1 = 13;
@@ -179,8 +173,13 @@ void printQueries(const std::string& filePath,
     if (!subset.empty())
     {
         auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);
-        std::cout << "Possible queries for subset: " << subset << std::endl;
-        printQueryList(queries, colorize);
+        std::cout << subset << std::endl;
+        std::cout << " Dimensioning Sub-paths: " << std::endl;
+        printDimPaths(getDimPaths(queries));
+        std::cout << std::endl;
+        std::cout << " Queries: " << std::endl;
+        printQueryList(queries);
+        std::cout << std::endl;
     }
     else
     {
@@ -195,7 +194,7 @@ void printQueries(const std::string& filePath,
         std::cout << "Available subsets: " << std::endl;
         for (auto subset : subsets)
         {
-            std::cout << subsetStyledStr(subset, colorize) << std::endl;
+            std::cout << subset << std::endl;
         }
         std::cout << "Total number of subsets found: " << subsets.size() << std::endl << std::endl;
 
@@ -217,13 +216,14 @@ void printQueries(const std::string& filePath,
                 mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
             }
 
-            std::cout << "Possible queries for subset: "
-                      << subsetStyledStr(subset, colorize)
-                      << std::endl;
-
             auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);
-            printQueryList(queries, colorize);
 
+            std::cout << subset << std::endl;
+            std::cout << " Dimensioning Sub-paths: " << std::endl;
+            printDimPaths(getDimPaths(queries));
+            std::cout << std::endl;
+            std::cout << " Queries: " << std::endl;
+            printQueryList(queries);
             std::cout << std::endl;
         }
     }
@@ -238,18 +238,12 @@ int main(int argc, char** argv)
     std::string inputFile = "";
     std::string tablePath = "";
     std::string subset = "";
-    bool colorize = true;
 
     int idx = 1;
     while (idx < argc)
     {
         std::string arg = argv[idx];
-        if (arg == "-m")
-        {
-            colorize = false;
-            idx++;
-        }
-        else if (arg.substr(0,2) == "-s")
+        if (arg.substr(0,2) == "-s")
         {
             if (arg.size() == 2)
             {
@@ -286,7 +280,7 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    printQueries(inputFile, subset, tablePath, colorize);
+    printQueries(inputFile, subset, tablePath);
 
     return 0;
 }

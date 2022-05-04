@@ -62,7 +62,7 @@ namespace bufr {
         std::vector<std::string> currentPathElements;
 
         std::vector<std::shared_ptr<QueryData>> allQueries;
-        std::map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
+        std::unordered_map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
 
         seqPath.push_back(dataProvider_.getInode());
         for (auto nodeIdx = dataProvider_.getInode();
