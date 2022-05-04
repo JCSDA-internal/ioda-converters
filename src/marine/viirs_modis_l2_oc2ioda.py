@@ -27,8 +27,8 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 output_var_names = [
-    "ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon",
-    "mass_concentration_of_chlorophyll_in_sea_water"]
+    "organicMatterMassContentAsCarbon",
+    "chlorophyllMassConcentration"]
 
 DimDict = {}
 
@@ -39,7 +39,7 @@ VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "string"),
 ]
 
 
@@ -64,8 +64,9 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
 
     # get global attributes
-    for v in ('platform', 'instrument', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+    GlobalAttrs['platform'] = ncd.getncattr('platform')
+    GlobalAttrs['sensor'] = ncd.getncattr('instrument')
+    GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
@@ -137,8 +138,8 @@ def read_input(input_args):
             np.zeros(obs_dim)
 
     # Add the metadata
-    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
-    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('dateTime', 'MetaData')] = np.empty(len(dates), dtype=object)
+    obs_data[('dateTime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
 
@@ -238,47 +239,42 @@ def main():
     obs_data, GlobalAttrs = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
-    # Get the nlocs
-    nlocs = len(obs_data[('longitude', 'MetaData')])
+    # Get the Location
+    Location = len(obs_data[('longitude', 'MetaData')])
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    DimDict['nlocs'] = nlocs
-    GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict['Location'] = Location
 
     # determine which variables we are going to output
     if args.poc:
         VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = \
-            'mg ^m-3'
+            'mg m-3'
         VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
-            'mg ^m-3'
-        VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = \
-            'unitless'
+            'mg m-3'
         VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = \
             -32767
-        VarDims["ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon"] = ['nlocs']
+        VarDims["organicMatterMassContentAsCarbon"] = ['Location']
 
     if args.chl:
         VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
-            'mg ^m-3'
+            'mg m-3'
         VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
-            'mg ^m-3'
-        VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = \
-            'unitless'
+            'mg m-3'
         VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = \
             -32767.
         VarAttrs[output_var_names[1], global_config['opqc_name']]['_FillValue'] = \
             -32767
-        VarDims["mass_concentration_of_chlorophyll_in_sea_water"] = ['nlocs']
+        VarDims["chlorophyllMassConcentration"] = ['Location']
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

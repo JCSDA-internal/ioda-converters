@@ -227,6 +227,7 @@ def main():
 
     argo = argoClim(filename, begindate=bdate, enddate=edate)
 
+
     varDict = {
         'ob_tem': 'temperature',
     }
