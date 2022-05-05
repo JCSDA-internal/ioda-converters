@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/SFCSHP.prepbufr.s"
+      obsdatain: "./testinput/SFCSHP.prepbufr"
 
       exports:
         variables:
@@ -97,7 +97,7 @@ observations:
           windError:
             query: "*/W___INFO/W__BACKG/WOE"
 
-          methodofTemperatureSeaSurfaceMeasurement:
+          waterTemperatureMethod:
             query: "*/SST_INFO/MSST"
           seaSurfaceTemperature:
             query: "*/SST_INFO/SSTEVENT/SST1"
@@ -114,6 +114,8 @@ observations:
 
           pressureReducedToMeanSeaLevel:
             query: "*/PMSL_SEQ/PMO"
+            transforms:
+              - scale: 100
           pressureReducedToMeanSeaLevelQualityMarker:
             query: "*/PMSL_SEQ/PMQ"
           pressureReducedToMeanSeaLevelIndicator:
@@ -157,7 +159,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "./testrun/bufr_ncep_prepbufr_sfcshp.s.nc"
+      obsdataout: "./testrun/bufr_ncep_prepbufr_sfcshp.nc"
 
 #      dimensions:
 #        - name: Level
@@ -208,7 +210,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/stationElevation
           longName: "Height of Station"
-          units: "Meter"
+          units: "m"
 
         - name: "MetaData/prepbufrReportType"
           coordinates: "longitude latitude"
@@ -222,9 +224,9 @@ observations:
           longName: "Data Dump Report Type"
           units: ""
 
-        - name: "MetaData/methodofTemperatureSeaSurfaceMeasurement"
+        - name: "MetaData/waterTemperatureMethod"
           coordinates: "longitude latitude"
-          source: variables/methodofTemperatureSeaSurfaceMeasurement
+          source: variables/waterTemperatureMethod
           longName: "Method of Sea Surface Measurement"
           units: ""
 
@@ -244,7 +246,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/cloudAmount
           longName: "Cloud Amount"
-          units: ""
+          units: "1"
 
         - name: "MetaData/cloudType"
           coordinates: "longitude latitude"
@@ -256,13 +258,13 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightOfBaseOfCloud
           longName: "Height of Base of Cloud"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude"
           source: variables/cloudCoverTotal
-          longName: "Cloud Cover"
-          units: "Percent"
+          longName: "Total Cloud Coverage"
+          units: "1"
 
         - name: "ObsValue/heightAboveSurfaceofBaseofLowestCloud"
           coordinates: "longitude latitude"
@@ -274,14 +276,14 @@ observations:
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
           longName: "Dew Point"
-          units: "Kelvin"
+          units: "K"
 #         range: [193, 325]
 
         - name: "ObsValue/virtualTemperature"
           coordinates: "longitude latitude"
           source: variables/virtualTemperature
           longName: "Virtual Temperature Non-Q Controlled"
-          units: "Kelvin"
+          units: "K"
 #         range: [193, 325]
 
         - name: "ObsValue/pressure"
@@ -301,7 +303,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/specificHumidity
           longName: "Specific Humidity"
-          units: "Kilogram Kilogram-1"
+          units: "kg kg-1"
 
         - name: "QualityMarker/specificHumidity"
           coordinates: "longitude latitude"
@@ -313,7 +315,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Temperature"
-          units: "Kelvin"
+          units: "K"
 #         range: [193, 325]
 
         - name: "QualityMarker/airTemperature"
@@ -326,7 +328,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightOfObservation
           longName: "Height of Observation"
-          units: "Meter"
+          units: "m"
 
         - name: "QualityMarker/height"
           coordinates: "longitude latitude"
@@ -338,14 +340,14 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windEastward
           longName: "Eastward Wind"
-          units: "Meter Second-1"
+          units: "m s-1"
 #         range: [-50, 50]
 
         - name: "ObsValue/windNorthward"
           coordinates: "longitude latitude"
           source: variables/windNorthward
           longName: "Northward Wind"
-          units: "Meter Second-1"
+          units: "m s-1"
 #         range: [-50, 50]
 
         - name: "QualityMarker/wind"
@@ -364,26 +366,25 @@ observations:
           coordinates: "longitude latitude"
           source: variables/relativeHumidityError
           longName: "Relative Humidity Error"
-          units: "Percent"
-#         units: "Percent divided by 10"
+          units: "1"
 
         - name: "ObsError/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperatureError
           longName: "Temperature Error"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsError/wind"
           coordinates: "longitude latitude"
           source: variables/windError
           longName: "East and Northward wind error"
-          units: "Meter Second-1"
+          units: "m s-1"
 
         - name: "ObsValue/seaSurfaceTemperature"
           coordinates: "longitude latitude"
           source: variables/seaSurfaceTemperature
           longName: "Sea Surface Temperature"
-          units: "Kelvin"
+          units: "K"
 
         - name: "QualityMarker/seaSurfaceTemperature"
           coordinates: "longitude latitude"
@@ -395,20 +396,20 @@ observations:
           coordinates: "longitude latitude"
           source: variables/seaSurfaceTemperatureError
           longName: "Sea Surface Temperature Obs Error"
-          units: "Kelvin"
+          units: "K"
 
         - name: "ObsValue/depthBelowSeaSurface"
           coordinates: "longitude latitude"
           source: variables/depthBelowSeaSurface
           longName: "Depth Below Sea Surface"
-          units: "Meter"
+          units: "m"
 #         range: [-2000, 0]
 
         - name: "ObsValue/pressureReducedToMeanSeaLevel"
           coordinates: "longitude latitude"
           source: variables/pressureReducedToMeanSeaLevel
           longName: "Pressure Reduced To Mean Sea Level"
-          units: "MB"
+          units: "Pa"
 
         - name: "QualityMarker/pressureReducedToMeanSeaLevel"
           coordinates: "longitude latitude"
@@ -420,70 +421,70 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightOfWaves
           longName: "Height Of Waves"
-          units: "Meter"
+          units: "m"
 #         range: [0, 20]   
 
         - name: "ObsValue/periodOfWaves"
           coordinates: "longitude latitude"
           source: variables/periodOfWaves
           longName: "Period Of Waves"
-          units: "Seconds"
+          units: "s"
 
         - name: "ObsValue/heightOfWindWaves"
           coordinates: "longitude latitude"
           source: variables/heightOfWindWaves
           longName: "Height Of Wind Waves"
-          units: "Meter"
+          units: "m"
 #         range: [0, 20]
 #
         - name: "ObsValue/periodOfWindWaves"
           coordinates: "longitude latitude"
           source: variables/periodOfWindWaves
           longName: "Period Of Wind Waves"
-          units: "Seconds"
+          units: "s"
 
         - name: "ObsValue/heightOfSwellWaves"
           coordinates: "longitude latitude"
           source: variables/heightOfSwellWaves
           longName: "Height Of Swell Waves"
-          units: "Meter"
+          units: "m"
 #         range: [0, 20]
 #
         - name: "ObsValue/periodOfSwellWaves"
           coordinates: "longitude latitude"
           source: variables/periodOfSwellWaves
           longName: "Period Of Swell Waves"
-          units: "Seconds"
+          units: "s"
 
-        - name: "ObsValue/trueDirectionOfShip"
-          coordinates: "longitude latitude"
-          source: variables/trueDirectionOfShip
-          longName: "True Direction Of Ship During Past 3 Hours"
-          units: ""
+#        - name: "ObsValue/trueDirectionOfShip"
+#          coordinates: "longitude latitude"
+#          source: variables/trueDirectionOfShip
+#          longName: "True Direction Of Ship During Past 3 Hours"
+#          units: ""
 
-        - name: "ObsValue/averageSpeedOfShip"
-          coordinates: "longitude latitude"
-          source: variables/averageSpeedOfShip
-          longName: "Average Speed Of Ship During Past 3 Hours"
-          units: ""
+#        - name: "ObsValue/averageSpeedOfShip"
+#          coordinates: "longitude latitude"
+#          source: variables/averageSpeedOfShip
+#          longName: "Average Speed Of Ship During Past 3 Hours"
+#          units: ""
 
         - name: "ObsValue/horizontalVisibility"
           coordinates: "longitude latitude"
           source: variables/horizontalVisibility
           longName: "Horizontal Visibility"
-          units: "Meter"
+          units: "m"
 
         - name: "ObsValue/peakWindSpeed"
           coordinates: "longitude latitude"
           source: variables/peakWindSpeed
           longName: "Peak Wind Speed"
-          units: "M/S"
+          units: "m s-1"
 
         - name: "ObsValue/peakWindDirection"
           coordinates: "longitude latitude"
           source: variables/peakWindDirection
           longName: "Peak Wind Direction"
-          units: "Degrees"
+          units: "degree"
 
         - name: "ObsValue/restrictionsOnRedistribution"
           coordinates: "longitude latitude"
