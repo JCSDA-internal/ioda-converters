@@ -26,11 +26,11 @@ from orddicts import DefaultOrderedDict
 
 
 vName = {
-    'chlor_a': "mass_concentration_of_chlorophyll_in_sea_water",
+    'chlor_a': "chlorophyllMassConcentration",
 }
 
 VarDims = {
-    vName['chlor_a']: ['nlocs']
+    vName['chlor_a']: ['Location']
 }
 
 DimDict = {}
@@ -38,7 +38,7 @@ DimDict = {}
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {}
@@ -66,10 +66,13 @@ class OCL3(object):
         lons = lons.ravel()[mask]
         lats = lats.ravel()[mask]
 
-        # get global attributes
-        for v in ('platform', 'instrument', 'processing_version',
-                  'time_coverage_start'):
-            GlobalAttrs[v] = ncd.getncattr(v)
+        GlobalAttrs['platform'] = ncd.getncattr('platform')
+        GlobalAttrs['sensor'] = ncd.getncattr('instrument')
+        GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
+
+        timevar= ncd.getncattr('time_coverage_start')
+        obstime=timevar[:19]+'Z'
+
         ncd.close()
 
         valKey = vName['chlor_a'], iconv.OvalName()
@@ -81,7 +84,6 @@ class OCL3(object):
         self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
         self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
         self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
-        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -91,7 +93,7 @@ class OCL3(object):
             vals = vals[mask_thin]
 
         for i in range(len(vals)):
-            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
+            locKey = lats[i], lons[i], obstime 
             self.data[locKey][valKey] = vals[i]
             self.data[locKey][errKey] = vals[i] * 0.25
             self.data[locKey][qcKey] = 0
@@ -123,12 +125,12 @@ def main():
     chl = OCL3(args.input, fdate, args.thin)
 
     # Extract the obs data
-    ObsVars, nlocs = iconv.ExtractObsData(chl.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(chl.data, locationKeyList)
 
     # Set Attributes
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    DimDict['nlocs'] = nlocs
+    DimDict['Location'] = Location
 
     # Set up the writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
