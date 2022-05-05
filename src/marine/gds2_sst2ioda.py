@@ -16,7 +16,6 @@ import dateutil.parser
 import numpy as np
 from multiprocessing import Pool
 import os
-import re
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
