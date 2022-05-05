@@ -27,7 +27,6 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 # globals
-TROPICS_WMO_sat_IDs = [691, 895, 896, 897, 898]
 TROPICS01_WMO_sat_ID = 691
 TROPICS02_WMO_sat_ID = 895
 TROPICS03_WMO_sat_ID = 896
@@ -167,7 +166,8 @@ def get_data(f, obs_data):
     k = 'brightnessTemperature'
     k = 'brightness_temperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(f['tempBrightE_K'], axis=2)), dtype='float32')
+    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
+        np.where(f['tempBrightE_K'] == f['tempBrightE_K'].fillvalue, float_missing_value, f['tempBrightE_K']), axis=2)), dtype='float32')
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
@@ -182,14 +182,10 @@ def get_data(f, obs_data):
     quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
     obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
 
-    # check some satellite geometry will compress all data using this
+    # check some global satellite geometry will compress all data using this
     chk_geolocation = (obs_data[('latitude', 'MetaData')] > 90) | (obs_data[('latitude', 'MetaData')] < -90) | \
         (obs_data[('longitude', 'MetaData')] > 180) | (obs_data[('longitude', 'MetaData')] < -180) | \
         (obs_data[('sensor_zenith_angle', 'MetaData')] > 80) | (obs_data[('sensor_zenith_angle', 'MetaData')] < 0)
-    # sanity check -- returns null dictionary
-    if np.sum(chk_geolocation) == 0:
-        obs_data = {}
-        return obs_data
 
     obs_data[('latitude', 'MetaData')][chk_geolocation] = float_missing_value
     obs_data[('longitude', 'MetaData')][chk_geolocation] = float_missing_value
@@ -351,7 +347,7 @@ if __name__ == "__main__":
     optional.add_argument(
         '-o', '--output',
         help='path to output ioda file',
-        type=str, default=os.getcwd())
+        type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
 
     args = parser.parse_args()
 
