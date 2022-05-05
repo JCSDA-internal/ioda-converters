@@ -16,6 +16,7 @@ import dateutil.parser
 import numpy as np
 from multiprocessing import Pool
 import os
+import re
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -108,7 +109,11 @@ def read_input(input_args):
     # get some of the global attributes that we are interested in
 
     for v in ('platform', 'sensor', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+        if v == 'processing_level':
+            v2 = 'processingLevel'
+        else:
+            v2 = v
+        GlobalAttrs[v2] = ncd.getncattr(v)
 
     # get the QC flags, and calculate a mask from the non-missing values
     # (since L3 files are mostly empty, fields need a mask applied immediately
@@ -123,7 +128,7 @@ def read_input(input_args):
     # If len(time) > 1, also need to repeat the lat/lon vals
     lons = ncd.variables['lon'][:].ravel()
     lats = ncd.variables['lat'][:].ravel()
-    if GlobalAttrs['processing_level'][:2] == 'L3':
+    if GlobalAttrs['processingLevel'][:2] == 'L3':
         len_grid = len(lons)*len(lats)
         lons, lats = np.meshgrid(lons, lats, copy=False)
         lons = np.tile(lons.ravel(), len(time_base)).ravel()[mask]
@@ -223,10 +228,6 @@ def IODA(filename, GlobalAttrs, nlocs, obs_data):
             data[(var_name, obsErrName)] = np.array(obs_data[(key, obsErrName)], dtype=np.float32)
             data[(var_name, qcName)] = np.array(obs_data[(key, qcName)], dtype=np.int32)
 
-            print(f"DEBUG: {var_name}")
-            for n in range(len(data[(var_name, obsValName)])):
-                print(f"  data: {data[(var_name, obsValName)][n]}, {data[(var_name, obsErrName)][n]}, {data[(var_name, qcName)][n]}")
-
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
@@ -234,10 +235,6 @@ def IODA(filename, GlobalAttrs, nlocs, obs_data):
             varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
         data[(key, metaDataName)] = np.array(obs_data[(key, metaDataName)], dtype=dtypes[dtypestr])
-
-        print(f"DEBUG: meta, {key}")
-        for n in range(len(data[(key, metaDataName)])):
-            print(f"  data: {data[(key, metaDataName)][n]}")
 
     # Initialize the writer, then write the file.
     writer = iconv.IodaWriter(filename, locationKeyList, DimDict)
