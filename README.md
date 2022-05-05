@@ -7,7 +7,7 @@ CLANG:[![AWS-clang](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbm
 The converters can be built and tested using ioda-bundle. In ioda-bundle the build of the converters is disabled by default (for now) so you must enable the build using the BUILD_IODA_CONVERTERS directive. Here is an example:
 
 ```
-git clone https://github.com/jcsda-internal/ioda-bundle
+git clone https://github.com/jcsda/ioda-bundle
 cd ioda-bundle
 mkdir build
 cd build
