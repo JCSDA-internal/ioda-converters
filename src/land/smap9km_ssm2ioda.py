@@ -88,6 +88,9 @@ class smap(object):
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
         sflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['surface_flag'][:].ravel()
         vegop = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['vegetation_opacity'][:].ravel()
+        erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
+        ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
+        refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
         times = np.empty_like(vals, dtype=object)
 
@@ -101,13 +104,13 @@ class smap(object):
             qflg = qflg[mask]
             sflg = sflg[mask]
             vegop = vegop[mask]
+            erowi = erowi[mask]
+            ecoli = ecoli[mask]
+            refsec = refsec[mask]
             times = times[mask]
 
-        # get datetime from filename
-        str_split = self.filename.split("_")
-        str_datetime = str_split[7]
-        my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
-        base_datetime = my_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+        # get datetime and reference time 12UTC 1Jan2000
+        base_date = datetime(2000, 1, 1, 12, 0)
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
@@ -115,10 +118,12 @@ class smap(object):
         qflg = qflg.astype('int32')
         sflg = sflg.astype('int32')
         vegop = vegop.astype('int32')
-        AttrData['date_time_string'] = base_datetime
+        erowi = erowi.astype('int32')
+        ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
-            times[i] = base_datetime
+            dt = base_date + timedelta(seconds=int(refsec[i]))
+            times[i] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             errs[i] = 0.04
         # add metadata variables
         self.outdata[('datetime', 'MetaData')] = times
@@ -130,12 +135,17 @@ class smap(object):
         self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
         self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
+        self.outdata[('easeRowIndex', 'MetaData')] = erowi
+        self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
+        self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
+        self.varAttrs[('easeColumnIndex', 'MetaData')]['units'] = '1'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
+        AttrData['date_time_string'] = times[0]
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
