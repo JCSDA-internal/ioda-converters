@@ -329,7 +329,7 @@ def main():
     # Total number of observations.
     nlocs = len(obs_data[('dateTime', metaDataName)])
 
-    print (f"Preparing to write {nlocs} observations to {args.output}")
+    print(f"Preparing to write {nlocs} observations to {args.output}")
 
     # Write out the file.
     IODA(args.output, GlobalAttrs, nlocs, obs_data)
