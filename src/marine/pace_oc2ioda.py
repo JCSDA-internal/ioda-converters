@@ -72,8 +72,8 @@ def read_input(input_args):
     gpd = ncd.groups['geophysical_data']
     data_in = {}
     data_in['l2_flags'] = gpd.variables['l2_flags'][:].ravel()
-    # As per definition https://oceancolor.gsfc.nasa.gov/atbd/ocl2flags/                                                                                                             
-    # "PRODFAIL" or "Failure in any product" flaq is equal to 1073741824 (bit 30)                                                                                                    
+    # As per definition https://oceancolor.gsfc.nasa.gov/atbd/ocl2flags/                                          
+    # "PRODFAIL" or "Failure in any product" flaq is equal to 1073741824 (bit 30)
     # we keep all the data with QC less than this number
     mask = data_in['l2_flags'] < 1073741824
     data_in['l2_flags'] = data_in['l2_flags'][mask]
@@ -135,7 +135,7 @@ def read_input(input_args):
     obs_data[('longitude', 'MetaData')] = lons
 
     obs_data[output_var_names[0], global_config['oval_name']] = data_in['chlor_a']
-    # There is not any obs error in the dataset. we need to come up with a reasonable obs error later  
+    # There is not any obs error in the dataset. we need to come up with a reasonable obs error later
     obs_data[output_var_names[0], global_config['oerr_name']] = data_in['chlor_a']*0.0
     obs_data[output_var_names[0], global_config['opqc_name']] = data_in['l2_flags']
 
