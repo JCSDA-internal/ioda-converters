@@ -163,13 +163,13 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
-    testinput/bufr_ncep_esamua.yaml
     testinput/bufr_ncep_1bmhs.yaml
+    testinput/bufr_ncep_esamua.yaml
     testinput/bufr_ncep_esmhs.yaml
+    testinput/bufr_ncep_satwind_avhrr.yaml
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
-    testinput/bufr_ncep_satwind_avhrr.yaml
     testinput/bufr_sevcrs_v2.yaml
     testinput/bufr_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
