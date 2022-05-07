@@ -1014,7 +1014,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_satwind_avhrr.yaml"
-                    Out_NC005080.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    bufr_ncep_satwind_avhrr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_mtiasi
