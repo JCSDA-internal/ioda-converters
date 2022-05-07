@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/ADPUPA.prepbufr"
+      obsdatain: "./testinput/gdas.t12z.adpupa.prepbufr"
 
       exports:
         variables:
@@ -151,7 +151,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "./testrun/bufr_ncep_prepbufr_adpupa.nc"
+      obsdataout: "./testrun/gdas.t12z.adpupa.prepbufr.nc"
 
 
       dimensions:

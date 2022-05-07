@@ -135,6 +135,7 @@ endif()
 if( iodaconv_bufr_ENABLED )
   list( APPEND test_input
     testinput/bufr_tables
+    testinput/gdas.t12z.adpupa.prepbufr
     testinput/gdas.t12z.1bamua.tm00.bufr_d
     testinput/gdas.t12z.esamua.tm00.bufr_d
     testinput/gdas.t12z.1bmhs.tm00.bufr_d
@@ -163,13 +164,14 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
-    testinput/bufr_ncep_esamua.yaml
     testinput/bufr_ncep_1bmhs.yaml
+    testinput/bufr_ncep_esamua.yaml
     testinput/bufr_ncep_esmhs.yaml
+    testinput/bufr_ncep_prepbufr_adpupa.yaml
+    testinput/bufr_ncep_satwind_avhrr.yaml
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
-    testinput/bufr_ncep_satwind_avhrr.yaml
     testinput/bufr_sevcrs_v2.yaml
     testinput/bufr_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
@@ -204,6 +206,7 @@ if( iodaconv_bufr_ENABLED )
   )
 
   list( APPEND test_output
+    testoutput/gdas.t12z.adpupa.prepbufr.nc
     testoutput/gdas.t18z.1bmhs.tm00.nc
     testoutput/gdas.t00z.1bhrs4.tm00.nc
     testoutput/gdas.t18z.1bmhs.tm00.filtering.nc
@@ -1065,6 +1068,13 @@ if(iodaconv_bufr_ENABLED)
                     adpupa_prepbufr_group_by.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa_prepbufr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpupa.yaml"
+                    gdas.t12z.adpupa.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
