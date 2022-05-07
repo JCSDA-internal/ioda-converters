@@ -10,7 +10,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t00z.satwnd_avhrr.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t18z.satwnd_avhrr.tm00.bufr_d"
 
       exports:
         variables:
@@ -73,7 +73,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.satwnd_avhrr.tm00.nc"
+      obsdataout: "./testrun/gdas.t18z.satwnd_avhrr.tm00.nc"
       dimensions:
         - name: Confidence
           paths:
