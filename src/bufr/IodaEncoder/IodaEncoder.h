@@ -45,15 +45,21 @@ namespace Ingester
         std::string makeStrWithSubstitions(const std::string& prototype,
                                            const std::map<std::string, std::string>& subMap);
 
-        /// \brief Used to find indecies of { and } by the makeStrWithSubstitions method.
+        /// \brief Used to find indicies of { and } by the makeStrWithSubstitions method.
         /// \param str Template string to search.
         std::vector<std::pair<std::string, std::pair<int, int>>>
         findSubIdxs(const std::string& str);
 
-        bool isInteger(const std::string& str) const;
-
+        /// \brief Check if the subquery string is a named dimension.
+        /// \param path The subquery string to check.
+        /// \param pathMap The map of named dimensions.
+        /// \return True if the subquery string is a named dimension.
         bool existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const;
 
+        /// \brief Get the name associated with the named dimension.
+        /// \param path The subquery string for the dimension.
+        /// \param pathMap The map of named dimensions.
+        /// \return The name associated with the named dimension.
         std::string nameForDimPath(const std::string& path, const NamedPathDims& pathMap) const;
     };
 }  // namespace Ingester

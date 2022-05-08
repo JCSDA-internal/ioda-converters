@@ -1,0 +1,1101 @@
+
+Found BUFR message #      1
+  
+        Message length:         978
+      Section 0 length:           8
+          BUFR edition:           3
+  
+      Section 1 length:          18
+          Master table:           0
+    Originating center:         215 (= Zürich)
+ Originating subcenter:         215
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           6 (= Radar data)
+     Local subcategory:           0
+ Internatl subcategory:          -1
+  Master table version:          11
+   Local table version:           0
+                  Year:        2021
+                 Month:           7
+                   Day:          31
+                  Hour:          18
+                Minute:           0
+                Second:          -1
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:          15
+        1: 301001
+        2: 301011
+        3: 301012
+        4: 301022
+        5: 002003
+        6: 002121
+        7: 002125
+        8: 106000
+        9: 031001
+       10: 007007
+       11: 011001
+       12: 011002
+       13: 033002
+       14: 011006
+       15: 033002
+
+BUFR message #      1 of type MSTTB001 and date 2021073118 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001001  WMOB                         6.0  NUMERIC                       WMO block number                                
+001002  WMOS                       776.0  NUMERIC                       WMO station number                              
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         7.0  MONTH                         Month                                           
+004003  DAYS                        31.0  DAY                           Day                                             
+004004  HOUR                        18.0  HOUR                          Hour                                            
+004005  MINU                         0.0  MINUTE                        Minute                                          
+005001  CLATH                   46.83800  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                    9.79460  DEGREE                        Longitude (high accuracy)                       
+007001  SELV                      2840.0  M                             Height of station                               
+002003  A4ME                         3.0  CODE TABLE                    Type of measuring equipment used                
+                                      3 = Radar
+002121  MEFR                         0.0  HZ                            Mean frequency                                  
+002125  PRFR                       600.0  HZ                            Pulse repetition frequency                      
+           {RPSEQ001}   129 REPLICATIONS
+    ++++++  RPSEQ001  REPLICATION #     1  ++++++
+007007  HEIT                      3136.0  M                             Height                                          
+011001  WDIR                       196.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        15.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.16  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     2  ++++++
+007007  HEIT                      3184.0  M                             Height                                          
+011001  WDIR                       199.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        16.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.84  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     3  ++++++
+007007  HEIT                      3232.0  M                             Height                                          
+011001  WDIR                       201.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        15.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.22  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     4  ++++++
+007007  HEIT                      3280.0  M                             Height                                          
+011001  WDIR                       201.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        16.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.04  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     5  ++++++
+007007  HEIT                      3327.0  M                             Height                                          
+011001  WDIR                       202.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        16.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.92  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     6  ++++++
+007007  HEIT                      3375.0  M                             Height                                          
+011001  WDIR                       203.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        14.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.04  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     7  ++++++
+007007  HEIT                      3423.0  M                             Height                                          
+011001  WDIR                       205.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        14.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.16  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     8  ++++++
+007007  HEIT                      3471.0  M                             Height                                          
+011001  WDIR                       206.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        14.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.58  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #     9  ++++++
+007007  HEIT                      3519.0  M                             Height                                          
+011001  WDIR                       210.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        14.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.51  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    10  ++++++
+007007  HEIT                      3566.0  M                             Height                                          
+011001  WDIR                       211.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        12.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.80  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    11  ++++++
+007007  HEIT                      3614.0  M                             Height                                          
+011001  WDIR                       212.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        11.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.19  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    12  ++++++
+007007  HEIT                      3662.0  M                             Height                                          
+011001  WDIR                       216.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.86  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    13  ++++++
+007007  HEIT                      3710.0  M                             Height                                          
+011001  WDIR                       216.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                        0.06  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    14  ++++++
+007007  HEIT                      3758.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.74  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    15  ++++++
+007007  HEIT                      3805.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        11.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.61  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    16  ++++++
+007007  HEIT                      3853.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        11.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.59  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    17  ++++++
+007007  HEIT                      3901.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.54  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    18  ++++++
+007007  HEIT                      3949.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        11.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.87  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    19  ++++++
+007007  HEIT                      3996.0  M                             Height                                          
+011001  WDIR                       219.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.79  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    20  ++++++
+007007  HEIT                      4044.0  M                             Height                                          
+011001  WDIR                       222.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.7  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.70  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    21  ++++++
+007007  HEIT                      4092.0  M                             Height                                          
+011001  WDIR                       224.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.7  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.63  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    22  ++++++
+007007  HEIT                      4140.0  M                             Height                                          
+011001  WDIR                       225.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.44  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    23  ++++++
+007007  HEIT                      4188.0  M                             Height                                          
+011001  WDIR                       227.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.46  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    24  ++++++
+007007  HEIT                      4235.0  M                             Height                                          
+011001  WDIR                       229.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.57  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    25  ++++++
+007007  HEIT                      4283.0  M                             Height                                          
+011001  WDIR                       229.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.68  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    26  ++++++
+007007  HEIT                      4331.0  M                             Height                                          
+011001  WDIR                       230.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.45  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    27  ++++++
+007007  HEIT                      4379.0  M                             Height                                          
+011001  WDIR                       232.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.40  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    28  ++++++
+007007  HEIT                      4427.0  M                             Height                                          
+011001  WDIR                       235.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.10  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    29  ++++++
+007007  HEIT                      4474.0  M                             Height                                          
+011001  WDIR                       235.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.17  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    30  ++++++
+007007  HEIT                      4522.0  M                             Height                                          
+011001  WDIR                       237.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.54  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    31  ++++++
+007007  HEIT                      4570.0  M                             Height                                          
+011001  WDIR                       238.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.53  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    32  ++++++
+007007  HEIT                      4618.0  M                             Height                                          
+011001  WDIR                       239.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.68  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    33  ++++++
+007007  HEIT                      4666.0  M                             Height                                          
+011001  WDIR                       239.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.81  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    34  ++++++
+007007  HEIT                      4714.0  M                             Height                                          
+011001  WDIR                       237.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    35  ++++++
+007007  HEIT                      4761.0  M                             Height                                          
+011001  WDIR                       237.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.35  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    36  ++++++
+007007  HEIT                      4809.0  M                             Height                                          
+011001  WDIR                       236.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.03  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    37  ++++++
+007007  HEIT                      4857.0  M                             Height                                          
+011001  WDIR                       237.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.33  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    38  ++++++
+007007  HEIT                      4905.0  M                             Height                                          
+011001  WDIR                       235.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    39  ++++++
+007007  HEIT                      4953.0  M                             Height                                          
+011001  WDIR                       233.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.46  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    40  ++++++
+007007  HEIT                      5000.0  M                             Height                                          
+011001  WDIR                       231.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.79  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    41  ++++++
+007007  HEIT                      5048.0  M                             Height                                          
+011001  WDIR                       228.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.97  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    42  ++++++
+007007  HEIT                      5096.0  M                             Height                                          
+011001  WDIR                       226.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.81  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    43  ++++++
+007007  HEIT                      5144.0  M                             Height                                          
+011001  WDIR                       225.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         9.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.16  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    44  ++++++
+007007  HEIT                      5192.0  M                             Height                                          
+011001  WDIR                       225.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.86  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    45  ++++++
+007007  HEIT                      5239.0  M                             Height                                          
+011001  WDIR                       225.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.57  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    46  ++++++
+007007  HEIT                      5287.0  M                             Height                                          
+011001  WDIR                       227.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        10.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.54  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    47  ++++++
+007007  HEIT                      5335.0  M                             Height                                          
+011001  WDIR                       230.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        11.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.76  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    48  ++++++
+007007  HEIT                      5383.0  M                             Height                                          
+011001  WDIR                       232.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        11.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.41  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    49  ++++++
+007007  HEIT                      5431.0  M                             Height                                          
+011001  WDIR                       233.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        12.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.41  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    50  ++++++
+007007  HEIT                      5478.0  M                             Height                                          
+011001  WDIR                       235.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        12.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.22  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    51  ++++++
+007007  HEIT                      5526.0  M                             Height                                          
+011001  WDIR                       236.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        13.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.03  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    52  ++++++
+007007  HEIT                      5574.0  M                             Height                                          
+011001  WDIR                       236.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        13.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.94  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    53  ++++++
+007007  HEIT                      5622.0  M                             Height                                          
+011001  WDIR                       236.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        14.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.78  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    54  ++++++
+007007  HEIT                      5670.0  M                             Height                                          
+011001  WDIR                       237.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        15.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.76  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    55  ++++++
+007007  HEIT                      5717.0  M                             Height                                          
+011001  WDIR                       238.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        15.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.73  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    56  ++++++
+007007  HEIT                      5765.0  M                             Height                                          
+011001  WDIR                       239.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        16.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.58  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    57  ++++++
+007007  HEIT                      5813.0  M                             Height                                          
+011001  WDIR                       240.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        17.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    58  ++++++
+007007  HEIT                      5861.0  M                             Height                                          
+011001  WDIR                       241.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        17.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    59  ++++++
+007007  HEIT                      5909.0  M                             Height                                          
+011001  WDIR                       242.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        17.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.80  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    60  ++++++
+007007  HEIT                      5956.0  M                             Height                                          
+011001  WDIR                       243.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        18.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.58  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    61  ++++++
+007007  HEIT                      6005.0  M                             Height                                          
+011001  WDIR                       244.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        18.7  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.58  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    62  ++++++
+007007  HEIT                      6052.0  M                             Height                                          
+011001  WDIR                       244.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        19.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.39  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    63  ++++++
+007007  HEIT                      6100.0  M                             Height                                          
+011001  WDIR                       245.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        19.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.43  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    64  ++++++
+007007  HEIT                      6148.0  M                             Height                                          
+011001  WDIR                       245.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        19.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.47  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    65  ++++++
+007007  HEIT                      6196.0  M                             Height                                          
+011001  WDIR                       246.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        19.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.40  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    66  ++++++
+007007  HEIT                      6244.0  M                             Height                                          
+011001  WDIR                       246.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        20.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.41  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    67  ++++++
+007007  HEIT                      6291.0  M                             Height                                          
+011001  WDIR                       247.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        20.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.66  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    68  ++++++
+007007  HEIT                      6339.0  M                             Height                                          
+011001  WDIR                       247.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        20.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.67  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    69  ++++++
+007007  HEIT                      6387.0  M                             Height                                          
+011001  WDIR                       247.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        20.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.85  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    70  ++++++
+007007  HEIT                      6435.0  M                             Height                                          
+011001  WDIR                       247.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        21.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.10  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    71  ++++++
+007007  HEIT                      6483.0  M                             Height                                          
+011001  WDIR                       248.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        21.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.40  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    72  ++++++
+007007  HEIT                      6531.0  M                             Height                                          
+011001  WDIR                       248.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        21.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    73  ++++++
+007007  HEIT                      6579.0  M                             Height                                          
+011001  WDIR                       248.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        21.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.16  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    74  ++++++
+007007  HEIT                      6626.0  M                             Height                                          
+011001  WDIR                       248.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        22.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.52  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    75  ++++++
+007007  HEIT                      6674.0  M                             Height                                          
+011001  WDIR                       247.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        22.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.85  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    76  ++++++
+007007  HEIT                      6722.0  M                             Height                                          
+011001  WDIR                       246.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.88  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    77  ++++++
+007007  HEIT                      6770.0  M                             Height                                          
+011001  WDIR                       244.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -3.04  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    78  ++++++
+007007  HEIT                      6817.0  M                             Height                                          
+011001  WDIR                       243.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -3.07  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    79  ++++++
+007007  HEIT                      6865.0  M                             Height                                          
+011001  WDIR                       241.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.79  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    80  ++++++
+007007  HEIT                      6913.0  M                             Height                                          
+011001  WDIR                       239.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.71  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    81  ++++++
+007007  HEIT                      6961.0  M                             Height                                          
+011001  WDIR                       237.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.45  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    82  ++++++
+007007  HEIT                      7009.0  M                             Height                                          
+011001  WDIR                       235.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.19  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    83  ++++++
+007007  HEIT                      7056.0  M                             Height                                          
+011001  WDIR                       233.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.00  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    84  ++++++
+007007  HEIT                      7105.0  M                             Height                                          
+011001  WDIR                       232.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.92  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    85  ++++++
+007007  HEIT                      7152.0  M                             Height                                          
+011001  WDIR                       231.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    86  ++++++
+007007  HEIT                      7200.0  M                             Height                                          
+011001  WDIR                       230.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.68  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    87  ++++++
+007007  HEIT                      7248.0  M                             Height                                          
+011001  WDIR                       229.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.60  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    88  ++++++
+007007  HEIT                      7296.0  M                             Height                                          
+011001  WDIR                       229.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.55  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    89  ++++++
+007007  HEIT                      7344.0  M                             Height                                          
+011001  WDIR                       229.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.45  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    90  ++++++
+007007  HEIT                      7391.0  M                             Height                                          
+011001  WDIR                       227.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.34  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    91  ++++++
+007007  HEIT                      7439.0  M                             Height                                          
+011001  WDIR                       226.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.36  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    92  ++++++
+007007  HEIT                      7487.0  M                             Height                                          
+011001  WDIR                       225.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.39  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    93  ++++++
+007007  HEIT                      7535.0  M                             Height                                          
+011001  WDIR                       224.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.37  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    94  ++++++
+007007  HEIT                      7583.0  M                             Height                                          
+011001  WDIR                       222.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.34  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    95  ++++++
+007007  HEIT                      7631.0  M                             Height                                          
+011001  WDIR                       221.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.23  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    96  ++++++
+007007  HEIT                      7679.0  M                             Height                                          
+011001  WDIR                       220.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.11  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    97  ++++++
+007007  HEIT                      7726.0  M                             Height                                          
+011001  WDIR                       219.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.03  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    98  ++++++
+007007  HEIT                      7774.0  M                             Height                                          
+011001  WDIR                       219.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.90  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #    99  ++++++
+007007  HEIT                      7822.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.7  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.50  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   100  ++++++
+007007  HEIT                      7870.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.7  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.33  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   101  ++++++
+007007  HEIT                      7918.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.32  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   102  ++++++
+007007  HEIT                      7966.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.26  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   103  ++++++
+007007  HEIT                      8013.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.28  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   104  ++++++
+007007  HEIT                      8061.0  M                             Height                                          
+011001  WDIR                       219.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.17  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   105  ++++++
+007007  HEIT                      8109.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.06  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   106  ++++++
+007007  HEIT                      8157.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.10  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   107  ++++++
+007007  HEIT                      8205.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.09  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   108  ++++++
+007007  HEIT                      8253.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.27  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   109  ++++++
+007007  HEIT                      8301.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.06  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   110  ++++++
+007007  HEIT                      8348.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.48  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   111  ++++++
+007007  HEIT                      8396.0  M                             Height                                          
+011001  WDIR                       216.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   112  ++++++
+007007  HEIT                      8444.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -0.94  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   113  ++++++
+007007  HEIT                      8492.0  M                             Height                                          
+011001  WDIR                       216.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.42  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   114  ++++++
+007007  HEIT                      8540.0  M                             Height                                          
+011001  WDIR                       216.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        25.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.37  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   115  ++++++
+007007  HEIT                      8588.0  M                             Height                                          
+011001  WDIR                       215.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.67  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   116  ++++++
+007007  HEIT                      8635.0  M                             Height                                          
+011001  WDIR                       215.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.4  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.76  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   117  ++++++
+007007  HEIT                      8683.0  M                             Height                                          
+011001  WDIR                       216.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.47  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   118  ++++++
+007007  HEIT                      8731.0  M                             Height                                          
+011001  WDIR                       213.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.1  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.45  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   119  ++++++
+007007  HEIT                      8779.0  M                             Height                                          
+011001  WDIR                       214.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        25.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -1.10  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   120  ++++++
+007007  HEIT                      8827.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.2  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.44  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   121  ++++++
+007007  HEIT                      8875.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.72  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   122  ++++++
+007007  HEIT                      8923.0  M                             Height                                          
+011001  WDIR                       218.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        23.9  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.48  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   123  ++++++
+007007  HEIT                      8970.0  M                             Height                                          
+011001  WDIR                       221.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        22.3  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -3.86  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   124  ++++++
+007007  HEIT                      9018.0  M                             Height                                          
+011001  WDIR                       219.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -3.48  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   125  ++++++
+007007  HEIT                      9066.0  M                             Height                                          
+011001  WDIR                       221.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        22.0  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -4.13  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   126  ++++++
+007007  HEIT                      9114.0  M                             Height                                          
+011001  WDIR                       221.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.67  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   127  ++++++
+007007  HEIT                      9162.0  M                             Height                                          
+011001  WDIR                       221.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        24.6  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.49  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   128  ++++++
+007007  HEIT                      9210.0  M                             Height                                          
+011001  WDIR                       217.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        18.8  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.95  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+    ++++++  RPSEQ001  REPLICATION #   129  ++++++
+007007  HEIT                      9258.0  M                             Height                                          
+011001  WDIR                       223.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        19.5  M S⁻¹                      Wind speed                                      
+033002  QMRK                         0.0  CODE TABLE                    Quality information                             
+                                      0 = Data not suspect
+011006  WCMP                       -2.68  M S⁻¹                      w-component                                     
+033002  QMRK                     MISSING  CODE TABLE                    Quality information                             
+
+ >>> END OF SUBSET <<< 
+
+
+End of BUFR message #      1

@@ -58,7 +58,7 @@ observations:
           value: "Moored Buoy"
 
       dimensions:
-        - name: nlevs
+        - name: Levels
           paths:
             - "*/IDMSMDBS/BBYSTSL"
 
@@ -93,13 +93,13 @@ observations:
           range: [250, 320]
 
         - name: "depthBelowWaterSurface@MetaData"
-          coordinates: "longitude latitude nlevs"
+          coordinates: "longitude latitude Levels"
           source: variables/depth
           longName: "Water Depth Below Surface"
           units: "m"
 
         - name: "waterTemperature@ObsValue"
-          coordinates: "longitude latitude nlevs"
+          coordinates: "longitude latitude Levels"
           source: variables/t-profile
           longName: "Sea Water Temperature"
           units: "K"

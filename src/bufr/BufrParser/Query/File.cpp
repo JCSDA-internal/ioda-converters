@@ -1,10 +1,12 @@
-//
-// Created by rmclaren on 7/1/21.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "File.h"
 
-#include "FortranObject.h"
 #include "bufr_interface.h"
 
 #include "Query.h"
@@ -15,19 +17,13 @@
 namespace Ingester {
 namespace bufr {
     File::File(const std::string &filename, bool isWmoFormat, const std::string &wmoTablePath) :
-            fileUnit_(nextFileUnit()),
-            fileUnitTable1_(0),
-            fileUnitTable2_(0),
             filename_(filename),
+            fileUnit_(nextFileUnit()),
+            fileUnitTable1_(nextFileUnit()),
+            fileUnitTable2_(nextFileUnit()),
             isWmoFormat_(isWmoFormat),
             wmoTablePath_(wmoTablePath)
     {
-        if (isWmoFormat && !wmoTablePath_.empty())
-        {
-            fileUnitTable1_ = nextFileUnit();
-            fileUnitTable2_ = nextFileUnit();
-        }
-
         open();
     }
 
@@ -61,7 +57,7 @@ namespace bufr {
         open();
     }
 
-    ResultSet File::execute(const QuerySet &querySet, int next)
+    ResultSet File::execute(const QuerySet &querySet, size_t next)
     {
         static int SubsetLen = 9;
         unsigned int messageNum = 0;
@@ -69,35 +65,33 @@ namespace bufr {
         int iddate;
 
         int bufrLoc;
-        int il, im; // throw away
+        int il, im;  // throw away
 
-        auto dataProvider = DataProvider::instance();
-        dataProvider->loadTableInfo();
+        auto dataProvider = DataProvider();
 
         auto resultSet = ResultSet(querySet.names());
-        auto query = Query(querySet, resultSet);
+        auto query = Query(querySet, resultSet, dataProvider);
 
         while (ireadmg_f(fileUnit_, subset, &iddate, SubsetLen) == 0)
         {
             while (ireadsb_f(fileUnit_) == 0)
             {
                 status_f(fileUnit_, &bufrLoc, &il, &im);
-
-                dataProvider->loadDataInfo(bufrLoc);
-                query.query(std::string(subset), bufrLoc);
+                dataProvider.updateData(bufrLoc);
+                query.query();
             }
 
             if (next > 0 && ++messageNum >= next) break;
         }
 
-        dataProvider->deleteTableInfo();
+        dataProvider.deleteData();
 
         return resultSet;
     }
 
     int File::nextFileUnit()
     {
-        static int lastFileUnit = 11; //  Numbers 12 and above are valid.
+        static int lastFileUnit = 11;  // Numbers 12 and above are valid.
         return ++lastFileUnit;
     }
 }  // namespace bufr

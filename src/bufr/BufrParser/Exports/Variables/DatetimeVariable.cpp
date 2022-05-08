@@ -137,7 +137,7 @@ namespace Ingester
             timeOffsets.push_back(diff_time);
         }
 
-        Dimensions dims = {timeOffsets.size()};
+        Dimensions dims = {static_cast<int>(timeOffsets.size())};
 
         return std::make_shared<DataObject<int64_t>>(
                 timeOffsets,

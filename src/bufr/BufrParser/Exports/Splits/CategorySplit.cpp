@@ -14,7 +14,8 @@
 
 namespace Ingester
 {
-    CategorySplit::CategorySplit(const std::string& name, const std::string& variable,
+    CategorySplit::CategorySplit(const std::string& name,
+                                 const std::string& variable,
                                  const NameMap& nameMap) :
         Split(name),
         variable_(variable),
@@ -35,11 +36,11 @@ namespace Ingester
         return categories;
     }
 
-    std::map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
+    std::unordered_map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
     {
         updateNameMap(dataMap);
 
-        std::map<std::string, BufrDataMap> dataMaps;
+        std::unordered_map<std::string, BufrDataMap> dataMaps;
 
         const auto& dataObject = dataMap.at(variable_);
 
@@ -47,7 +48,7 @@ namespace Ingester
         {
             // Find matching rows
             std::vector<size_t> indexVec;
-            for (size_t rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
+            for (auto rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
             {
                 auto location = Location(dataObject->getDims().size(), 0);
                 location[0] = rowIdx;

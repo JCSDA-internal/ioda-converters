@@ -11,8 +11,6 @@
 #include <string>
 #include <memory>
 
-#include "ResultSet.h"
-
 #include "IngesterTypes.h"
 #include "DataObject.h"
 

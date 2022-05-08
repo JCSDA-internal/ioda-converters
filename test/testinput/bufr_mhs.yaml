@@ -48,7 +48,7 @@ observations:
       obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
 
       dimensions:
-        - name: nchans
+        - name: Channel 
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
@@ -126,7 +126,7 @@ observations:
           range: [-180, 180]
 
         - name: "brightnessTemperature@ObsValue"
-          coordinates: "longitude latitude nchans"
+          coordinates: "longitude latitude Channel"
           source: variables/radiance
           longName: "Brightness Temperature"
           units: "K"

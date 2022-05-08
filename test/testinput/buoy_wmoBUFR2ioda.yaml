@@ -97,6 +97,12 @@ observations:
           longName: "Station Elevation"
           units: "m"
 
+        - name: "MetaData/height"
+          source: variables/stationElevation
+          dimensions: [ "nlocs" ]
+          longName: "Height"
+          units: "m"
+
         - name: "ObsValue/air_temperature"
           coordinates: "longitude latitude"
           source: variables/temperatureAir
