@@ -10,7 +10,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/bufr_ncep_satwind_avhrr.bufr_d"
+      obsdatain: "./testinput/gdas.t18z.satwnd_avhrr.tm00.bufr_d"
 
       exports:
         variables:
@@ -73,7 +73,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testoutput/bufr_ncep_satwind_avhrr.nc"
+      obsdataout: "./testrun/gdas.t18z.satwnd_avhrr.tm00.nc"
       dimensions:
         - name: Confidence
           paths:
@@ -83,7 +83,6 @@ observations:
         - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteIdentifier
           longName: "Satellite Identifier"
-          units: ""
 
         - name: "MetaData/latitude"
           source: variables/latitude
@@ -104,7 +103,6 @@ observations:
         - name: "MetaData/windComputationMethod"
           source: variables/windComputationMethod
           longName: "Satellite Derived Wind Computation Method"
-          units: ""
 
         - name: "MetaData/satelliteZenithAngle"
           source: variables/satelliteZenithAngle
@@ -114,7 +112,6 @@ observations:
         - name: "MetaData/dataProviderOrigin"
           source: variables/dataProviderOrigin
           longName: "Identification of Originating/Generating Center"
-          units: ""
 
         - name: "MetaData/sensorCentralFrequency"
           source: variables/sensorCentralFrequency
@@ -124,12 +121,10 @@ observations:
         - name: "MetaData/qualityFlags"
           source: variables/qualityFlags
           longName: "SDMEDIT Satellite Wind Quality Mark"
-          units: ""
 
         - name: "MetaData/windHeightAssignMethod"
           source: variables/windHeightAssignMethod
           longName: "Wind Height Assignment Method"
-          units: ""
 
         - name: "MetaData/pressure"
           source: variables/pressure
@@ -139,7 +134,7 @@ observations:
         - name: "ObsValue/windDirection"
           source: variables/windDirection
           longName: "Wind Direction"
-          units: "deg"
+          units: "degree"
 
         - name: "ObsValue/windSpeed"
           source: variables/windSpeed
@@ -149,12 +144,10 @@ observations:
         - name: "MetaData/windSpeedGeneratingApplication"
           source: variables/windSpeedGeneratingApplication
           longName: "Wind Speed Generating Application"
-          units: ""
 
         - name: "MetaData/windDirectionGeneratingApplication"
           source: variables/windDirectionGeneratingApplication
           longName: "Wind Direction Generating Application"
-          units: ""
 
         - name: "MetaData/windSpeedPercentConfidence"
           source: variables/windSpeedPercentConfidence
