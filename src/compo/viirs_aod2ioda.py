@@ -124,29 +124,10 @@ class AOD(object):
                 obs_time = obs_time[mask_thin]
 
             # defined surface type and uncertainty
-            sfctyp = 0*qcall
-            uncertainty = 0.0*errs
-            uncertainty1 = 0.0*errs
-            uncertainty2 = 0.0*errs
-
             if self.method == "nesdis":
-                # Case of water high quality
-                uncertainty = 0.00784394 + 0.219923*vals
-                # case of bright land high quality
-                uncertainty1 = 0.0550472 + 0.299558*vals
-                # case of dark land high quality
-                uncertainty2 = 0.111431 + 0.128699*vals
-
-            for i in range(len(lons)):
-
-                # convert byte to integer
-                sfctyp[i] = int.from_bytes(qcpath[i], byteorder='big')
-                if self.method == "nesdis":
-                    if sfctyp[i] == 1:   # case of bright land high quality
-                        uncertainty[i] = uncertainty1[i]
-                    else:   # case of dark land high quality
-                        uncertainty[i] = uncertainty2[i]
-                    errs[i] = uncertainty[i]
+                errs = 0.00784394 + 0.219923*vals
+                errs[qcpath == 1] = 0.0550472 + 0.299558*vals[qcpath == 1]
+                errs[qcpath != 1] = 0.111431 + 0.128699*vals[qcpath != 1]
 
             #  Write out data
 
