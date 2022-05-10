@@ -201,16 +201,15 @@ def main():
         '-o', '--output',
         help="name of ioda-v2 output file",
         type=str, required=True)
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument(
+    parser.add_argument(
         '-m', '--method',
         help="calculation error method: nesdis/default, default=none",
         type=str, required=True)
-    optional.add_argument(
+    parser.add_argument(
         '-k', '--mask',
         help="maskout missing values: maskout/default, default=none",
         type=str, required=True)
-    optional.add_argument(
+    parser.add_argument(
         '-n', '--thin',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
