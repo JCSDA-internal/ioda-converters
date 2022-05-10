@@ -80,10 +80,10 @@ class AOD(object):
         first = True
         for f in self.filenames:
             hdf = SD(f, SDC.READ)
-            #there's absolutely no difference in the hdf4 files attributes
-            #between Terra and Aqua files. So it is user specified 
+            # there's absolutely no difference in the hdf4 files attributes
+            # between Terra and Aqua files. So it is user specified
             AttrData['platform'] = self.pltfrm
-            #sensor would be always MODIS for this converter
+            # sensor would be always MODIS for this converter
             AttrData['sensor'] = 'MODIS'
 
             obstime = self.obs_time
@@ -110,12 +110,12 @@ class AOD(object):
             pos_index = np.where(aod > 0)
             lats = lats[pos_index]
             lons = lons[pos_index]
-            aod = aod[pos_index] * 1E-3 #see scale factor
+            aod = aod[pos_index] * 1E-3  # see scale factor
             land_sea_flag = land_sea_flag[pos_index]
             QC_flag = QC_flag[pos_index]
             sol_zen = sol_zen[pos_index]
             sen_zen = sen_zen[pos_index]
-            unc_land = unc_land[pos_index] * 1E-3 #see scale factor
+            unc_land = unc_land[pos_index] * 1E-3  # see scale factor
             modis_time = modis_time[pos_index]
             obs_time = np.empty_like(QC_flag, dtype=object)
             obs_time_2 = [datetime.fromisoformat('1993-01-01') + timedelta(seconds=x) for x in modis_time]
