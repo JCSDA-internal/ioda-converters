@@ -176,6 +176,11 @@ def main(file_names, output_file, datetimeRef):
 
 
 def read_file(file_name, data):
+    local_data = {}              # Before assigning the output types into the above.
+    for key in varDict.keys():
+        local_data[key] = []
+    for key in meta_keys:
+        local_data[key] = []
 
     local_data = {} # Before assigning the output types into the above.
     for key in varDict.keys():
@@ -199,6 +204,7 @@ def read_file(file_name, data):
 
                 pres = float(row['pre'])*100.
                 local_data['pressure'] = np.append(local_data['pressure'], pres)
+                
                 wdir = float(row['dir'])*1.0
                 wspd = float(row['spd'])*1.0
                 if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
