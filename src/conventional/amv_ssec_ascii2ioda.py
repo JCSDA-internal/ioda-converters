@@ -177,6 +177,11 @@ def main(file_names, output_file, datetimeRef):
 
 def read_file(file_name, data):
 
+    local_data = {} # Before assigning the output types into the above.
+    for key in varDict.keys():
+        local_data[key] = []
+    for key in meta_keys:
+        local_data[key] = []
     with open(file_name, newline='') as f:
         reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
         keyerr = False  # no key errors in file
@@ -188,12 +193,12 @@ def read_file(file_name, data):
             try:
                 dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
-                data['dateTime'] = np.append(data['dateTime'], time_offset)
-                data['longitude'] = np.append(data['longitude'], float(row['lon']))
-                data['latitude'] = np.append(data['latitude'], float(row['lat']))
+                local_data['dateTime'] = np.append(local_data['dateTime'], time_offset)
+                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon']))
+                local_data['latitude'] = np.append(local_data['latitude'], float(row['lat']))
 
                 pres = float(row['pre'])*100.
-                data['pressure'] = np.append(data['pressure'], pres)
+                local_data['pressure'] = np.append(local_data['pressure'], pres)
                 wdir = float(row['dir'])*1.0
                 wspd = float(row['spd'])*1.0
                 if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
@@ -202,15 +207,15 @@ def read_file(file_name, data):
                     uwnd = float_missing_value
                     vwnd = float_missing_value
 
-                data['windEastward'] = np.append(data['windEastward'], uwnd)
-                data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+                local_data['windEastward'] = np.append(local_data['windEastward'], uwnd)
+                local_data['windNorthward'] = np.append(local_data['windNorthward'], vwnd)
 
                 if row['type'] in known_freq.keys():
                     freq = known_freq[row['type']]
                 else:
                     freq = float_missing_value
                     unk_freq.append(row['type'])
-                data['sensorCentralFrequency'] = np.append(data['sensorCentralFrequency'], freq)
+                local_data['sensorCentralFrequency'] = np.append(local_data['sensorCentralFrequency'], freq)
 
                 if row['sat'] in known_sat.keys():
                     satid = known_sat[row['sat']]
@@ -218,10 +223,10 @@ def read_file(file_name, data):
                     satid = int_missing_value
                     unk_sat.append(row['sat'])
 
-                data['satelliteIdentifier'] = np.append(data['satelliteIdentifier'], satid)
-                data['sensorZenithAngle'] = np.append(data['sensorZenithAngle'], float(row['rff']))
-                data['windTrackingCorrelation'] = np.append(data['windTrackingCorrelation'], float(row['qi']))
-                data['windHeightAssignMethod'] = np.append(data['windHeightAssignMethod'], int(row['int']))
+                local_data['satelliteIdentifier'] = np.append(local_data['satelliteIdentifier'], satid)
+                local_data['sensorZenithAngle'] = np.append(local_data['sensorZenithAngle'], float(row['rff']))
+                local_data['windTrackingCorrelation'] = np.append(local_data['windTrackingCorrelation'], float(row['qi']))
+                local_data['windHeightAssignMethod'] = np.append(local_data['windHeightAssignMethod'], int(row['int']))
 
             except KeyError as e:
                 if not keyerr:
@@ -229,10 +234,10 @@ def read_file(file_name, data):
                 keyerr = True
 
                 if (e.args[0] == 'dir') or (e.args[0] == 'spd'):
-                    data['eastward_wind'] = np.append(data['eastward_wind'], float_missing_value)
-                    data['northward_wind'] = np.append(data['northward_wind'], float_missing_value)
+                    local_data['windEastward'] = np.append(local_data['windEastward'], float_missing_value)
+                    local_data['windNorthward'] = np.append(local_data['windNorthward'], float_missing_value)
                 else:
-                    data[known_var[e.args[0]][0]] = np.append(data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
+                    local_data[known_var[e.args[0]][0]] = np.append(local_data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
 
         for f in unk_freq:
             logging.warning(file_name + ' contains unknown frequency ' + f)
@@ -244,6 +249,11 @@ def read_file(file_name, data):
             for k in row.keys():
                 if k not in known_var.keys():
                     logging.warning(file_name + ' contains unknown variable ' + k)
+
+    for key in varDict.keys():
+        data[key] = np.append(data[key], local_data[key])
+    for key in meta_keys:
+        data[key] = np.append(data[key], local_data[key])
 
     return data
 
