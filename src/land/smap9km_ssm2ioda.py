@@ -10,7 +10,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 import re
-from datetime import, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -143,7 +143,7 @@ class smap(object):
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
-        
+
 def main():
 
     parser = argparse.ArgumentParser(

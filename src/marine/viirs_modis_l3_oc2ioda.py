@@ -70,8 +70,8 @@ class OCL3(object):
         GlobalAttrs['sensor'] = ncd.getncattr('instrument')
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
 
-        timevar= ncd.getncattr('time_coverage_start')
-        obstime=timevar[:19]+'Z'
+        timevar = ncd.getncattr('time_coverage_start')
+        obstime = timevar[:19]+'Z'
 
         ncd.close()
 
@@ -93,7 +93,7 @@ class OCL3(object):
             vals = vals[mask_thin]
 
         for i in range(len(vals)):
-            locKey = lats[i], lons[i], obstime 
+            locKey = lats[i], lons[i], obstime
             self.data[locKey][valKey] = vals[i]
             self.data[locKey][errKey] = vals[i] * 0.25
             self.data[locKey][qcKey] = 0
