@@ -1389,12 +1389,12 @@ class Radiances(BaseGSI):
         for key, value2 in chan_metadata_dict.items():
             try:
                 if value2 in chan_metadata_int:
-                    outdata[(value2, 'MetaData')] = self.var(key).astype(np.int32)
+                    outdata[(value2, 'VarMetaData')] = self.var(key).astype(np.int32)
                 else:
-                    outdata[(value2, 'MetaData')] = self.var(key).astype(np.float32)
-                VarDims[(value2, 'MetaData')] = ['nchans']
+                    outdata[(value2, 'VarMetaData')] = self.var(key).astype(np.float32)
+                VarDims[(value2, 'VarMetaData')] = ['nvars']
                 if value2 in units_values.keys():
-                    varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
+                    varAttrs[(value2, 'VarMetaData')]['units'] = units_values[value2]
             except IndexError:
                 pass
 
@@ -1406,6 +1406,7 @@ class Radiances(BaseGSI):
         # ExtractObsData
         DimDict['nlocs'] = nlocs
         DimDict['nchans'] = chanlist
+        DimDict['nvars'] = chanlist
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
