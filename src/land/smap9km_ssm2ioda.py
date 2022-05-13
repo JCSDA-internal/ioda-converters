@@ -130,7 +130,6 @@ class smap(object):
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
         self.outdata[('earthSurfaceType', 'MetaData')] = sflg
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
-        self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
         self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
         self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
