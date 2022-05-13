@@ -127,7 +127,12 @@ namespace Ingester
             variable.name = varConf.getString(ConfKeys::Variable::Name);
             variable.source = varConf.getString(ConfKeys::Variable::Source);
             variable.longName = varConf.getString(ConfKeys::Variable::LongName);
-            variable.units = varConf.getString(ConfKeys::Variable::Units);
+
+            variable.units = "";
+            if (varConf.has(ConfKeys::Variable::Units))
+            {
+                    variable.units = varConf.getString(ConfKeys::Variable::Units);
+            }
 
             if (varConf.has(ConfKeys::Variable::Coords))
             {
