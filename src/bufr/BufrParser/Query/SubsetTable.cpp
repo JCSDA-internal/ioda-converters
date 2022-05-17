@@ -79,7 +79,7 @@ namespace bufr {
             }
             else if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary)
             {
-                seqPath.push_back(nodeIdx + 1); // push the node idx for the embedded sequence
+                seqPath.push_back(nodeIdx + 1);  // push the node idx for the embedded sequence
                 currentPathElements.push_back({});
             }
             else if (dataProvider_.getTyp(nodeIdx) == Typ::Number ||
