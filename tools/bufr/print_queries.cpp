@@ -39,7 +39,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
     {
         std::stringstream pathStream;
         pathStream << query.pathComponents[0];
-        for (auto idx=1; idx <= query.dimIdxs[query.dimIdxs.size() - 1]; idx++)
+        for (auto idx=1; idx <= query.dimIdxs.back(); idx++)
         {
             pathStream << "/" << query.pathComponents[idx];
         }

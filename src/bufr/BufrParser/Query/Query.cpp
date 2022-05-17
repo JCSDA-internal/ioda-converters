@@ -172,12 +172,6 @@ namespace bufr {
                 }
             }
 
-            if (index > static_cast<int>(targetNodes.size())) {
-                std::ostringstream errMsg;
-                errMsg << "Invalid index in query str " << query << ".";
-                throw eckit::BadParameter(errMsg.str());
-            }
-
             if (index > 0 && index <= static_cast<int>(targetNodes.size())) {
                 targetNodes = {targetNodes[index - 1]};
             }
