@@ -36,11 +36,11 @@ namespace Ingester
         return categories;
     }
 
-    std::map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
+    std::unordered_map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
     {
         updateNameMap(dataMap);
 
-        std::map<std::string, BufrDataMap> dataMaps;
+        std::unordered_map<std::string, BufrDataMap> dataMaps;
 
         const auto& dataObject = dataMap.at(variable_);
 

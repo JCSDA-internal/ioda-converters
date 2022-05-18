@@ -7,7 +7,6 @@
 
 #include "BufrParser.h"
 
-#include <map>
 #include <ostream>
 #include <iostream>
 #include <chrono>  // NOLINT
