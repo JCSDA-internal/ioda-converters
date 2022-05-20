@@ -129,38 +129,31 @@ observations:
           coordinates: "longitude latitude"
           source: variables/stationIdentification
           longName: "Station ID"
-          units: ""
 
         - name: "MetaData/prepbufrDataLvlCat"
           coordinates: "longitude latitude"
           source: variables/prepbufrDataLvlCat
           longName: "Prepbufr Data Level Category"
-          units: ""
 
         - name: "MetaData/prepbufrReportType"
           coordinates: "longitude latitude"
           source: variables/prepbufrReportType
           longName: "Prepbufr Report Type"
-          units: ""
 
         - name: "MetaData/dumpReportType"
           coordinates: "longitude latitude"
           source: variables/dumpReportType
           longName: "Data Dump Report Type"
-          units: ""
 
         - name: "MetaData/ObsTimeMinusCycleTime"
           coordinates: "longitude latitude"
           source: variables/ObsTimeMinusCycleTime
           longName: "Present weather"
-          units: ""
 
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
           source: variables/presentWeather
           longName: "Present weather"
-          units: "unitless"
-
 
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
@@ -312,7 +305,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/waterTemperatureMethod
           longName: "Method of Water Temperature Measurement"
-          units: ""
 
         - name: "ObsValue/windEastward"
           coordinates: "longitude latitude"
@@ -332,7 +324,6 @@ observations:
           longName: "East and Northward wind error"
           units: "m s-1"
 
-
         - name: "ObsValue/windSpeedPeak"
           coordinates: "longitude latitude"
           source: variables/windSpeedPeak
@@ -343,53 +334,44 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightQualityMarker
           longName: "Height Quality Marker"
-          units: ""
 
         - name: "QualityMarker/pressure"
           coordinates: "longitude latitude"
           source: variables/pressureQualityMarker
           longName: "Pressure Quality Marker"
-          units: ""
 
         - name: "QualityMarker/pressureReducedToMeanSeaLevel"
           coordinates: "longitude latitude"
           source: variables/pressureReducedToMeanSeaLevelQualityMarker
           longName: "Mean Sea Level Pressure Quality Marker"
-          units: ""
 
         - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperatureQualityMarker
           longName: "Temperature Quality Marker"
-          units: ""
 
         - name: "QualityMarker/specificHumidity"
           coordinates: "longitude latitude"
           source: variables/specificHumidityQualityMarker
           longName: "Specific Humidity Quality Marker"
-          units: ""
 
         - name: "ObsValue/verticalSignificanceSurfaceObservations"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
           longName: "Vertical Significance (Surface Observations)"
-          units: ""
 
         - name: "QualityMarker/waterTemperature"
           coordinates: "longitude latitude"
           source: variables/waterTemperatureQualityMarker
           longName: "Water Temperature Quality Marker"
-          units: ""
 
         - name: "QualityMarker/windNorthward"
           coordinates: "longitude latitude"
           source: variables/windNorthwardQualityMarker
           longName: "U, V-Component of Wind Quality Marker"
-          units: ""
 
         - name: "QualityMarker/windEastward"
           coordinates: "longitude latitude"
           source: variables/windEastwardQualityMarker
           longName: "U, V-Component of Wind Quality Marker"
-          units: ""
 

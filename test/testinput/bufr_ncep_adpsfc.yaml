@@ -95,7 +95,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/altimeterSettingQnh
           longName: "Altimeter Setting Qnh"
-          units: ""
+
 
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude"
@@ -169,31 +169,31 @@ observations:
           coordinates: "longitude latitude"
           source: variables/presentWeather
           longName: "Present weather"
-          units: ""
+
 
         - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Atmospheric Temperature"
-          units: ""
+
 
         - name: "QualityMarker/moisture"
           coordinates: "longitude latitude"
           source: variables/moistureQM
           longName: "Quality Indicator for Moisture"
-          units: ""
+
 
         - name: "QualityMarker/pressure"
           coordinates: "longitude latitude"
           source: variables/pressureQM
           longName: "Quality Indicator for Pressure"
-          units: ""
+
 
         - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
           source: variables/stationIdentification
           longName: "Station Identification"
-          units: ""
+
 
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
@@ -229,25 +229,25 @@ observations:
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations1
           longName: "Vertical Significance of Observations 1"
-          units: ""
+
 
         - name: "ObsValue/verticalSignificanceSurfaceObservations2"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations2
           longName: "Vertical Significance of Observations 2"
-          units: ""
+
 
         - name: "ObsValue/verticalSignificanceSurfaceObservationsBelowStation"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservationsBelowStation
           longName: "Vertical Significance of Observations for Clouds Below Station"
-          units: ""
+
 
         - name: "ObsValue/verticalSignificanceSurfaceObservationsSupplemental"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservationsSupplemental
           longName: "Supplemental Vertical Significance of Observations"
-          units: ""
+
 
         - name: "ObsValue/verticalVisibility"
           coordinates: "longitude latitude"
