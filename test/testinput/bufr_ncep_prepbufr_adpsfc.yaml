@@ -246,7 +246,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/relativeHumidityError
           longName: "Relative Humidity Error"
-          units: "percent"
+          units: "1"
 
         - name: "ObsValue/horizontalVisibility"
           coordinates: "longitude latitude"

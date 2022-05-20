@@ -33,8 +33,6 @@ observations:
             query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, NC000100/HOCB, NC000101/HOCB, NC000102/HOCB]"
           horizontalVisibility:
             query: "*/HOVI"
-          heightOfStationGroundAboveMeanSeaLevel:
-            query: "*/HSMSL"
           minimumTemperatureAtHeightAndOverPeriodSpecified:
             query: "[*/TMPSQ3/MITM, */MTTPSQ/MITM, NC000100/BSYEXTM/MITM[1], NC000101/BSYEXTM/MITM[1], NC000102/BSYEXTM/MITM[1]]"
           maximumWindGustSpeed:
@@ -56,7 +54,7 @@ observations:
           stationIdentification:
             query: "*/RPID"
           stationElevation:
-            query: "*/SELV"
+            query: "[*/SELV, */HSMSL]"
           waterTemperature:
             query: "*/SST1"
           airTemperature:
@@ -135,12 +133,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/horizontalVisibility
           longName: "Horizontal Visibility"
-          units: "m"
-
-        - name: "MetaData/heightOfStationGroundAboveMeanSeaLevel"
-          coordinates: "longitude latitude"
-          source: variables/heightOfStationGroundAboveMeanSeaLevel
-          longName: "Height of Station Ground Above Mean Sea Level"
           units: "m"
 
         - name: "ObsValue/minimumTemperatureAtHeightAndOverPeriodSpecified"
