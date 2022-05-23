@@ -8,7 +8,7 @@
 #pragma once
 
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -84,7 +84,7 @@ namespace bufr {
         std::string group_by_field_name;
         std::vector<int> dims;
         std::vector<std::string> dimPaths;
-        std::map<std::string, int> fieldIdxMap_;
+        std::unordered_map<std::string, int> fieldIdxMap_;
 
         virtual ~ResultBase() {}
         virtual void print() = 0;

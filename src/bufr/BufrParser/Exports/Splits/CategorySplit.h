@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 
 namespace Ingester
@@ -53,7 +53,7 @@ namespace Ingester
         /// \brief Split the data according to internal rules
         /// \param dataMap Data to be split
         /// \result map of split data where the category is the key
-        std::map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) final;
+        std::unordered_map<std::string, BufrDataMap> split(const BufrDataMap& dataMap) final;
 
      private:
         const std::string variable_;

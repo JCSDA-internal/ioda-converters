@@ -8,8 +8,10 @@
 #include "SubsetTable.h"
 
 #include <algorithm>
-#include <sstream>
+#include <iostream>
 #include <memory>
+#include <sstream>
+
 
 namespace Ingester {
 namespace bufr {
@@ -59,31 +61,35 @@ namespace bufr {
     void SubsetTable::initialize()
     {
         std::vector<size_t> seqPath;
-        std::vector<std::string> currentPathElements;
+        std::vector<std::vector<std::string>> currentPathElements = {{}};
 
         std::vector<std::shared_ptr<QueryData>> allQueries;
-        std::map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
+        std::unordered_map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
 
         seqPath.push_back(dataProvider_.getInode());
         for (auto nodeIdx = dataProvider_.getInode();
              nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
              nodeIdx++)
         {
-            if (dataProvider_.getTyp(nodeIdx) == Typ::Sequence ||
-                dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
+            if (dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
                 dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat)
             {
                 seqPath.push_back(nodeIdx);
-                currentPathElements.clear();
+                currentPathElements.push_back({});
+            }
+            else if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary)
+            {
+                seqPath.push_back(nodeIdx + 1);  // push the node idx for the embedded sequence
+                currentPathElements.push_back({});
             }
             else if (dataProvider_.getTyp(nodeIdx) == Typ::Number ||
                      dataProvider_.getTyp(nodeIdx) == Typ::Character)
             {
                 auto elementTag = dataProvider_.getTag(nodeIdx);
-                currentPathElements.push_back(elementTag);
+                currentPathElements.back().push_back(elementTag);
 
-                auto numElements = std::count(currentPathElements.begin(),
-                                                currentPathElements.end(),
+                auto numElements = std::count(currentPathElements.back().begin(),
+                                                currentPathElements.back().end(),
                                                elementTag);
 
                 auto pathComponents = makePathComponents(seqPath, nodeIdx);
@@ -123,14 +129,14 @@ namespace bufr {
                         for (size_t rewindIdx = 0; rewindIdx < numToRewind; rewindIdx++)
                         {
                             seqPath.pop_back();
-                            currentPathElements.clear();
+                            currentPathElements.pop_back();
                         }
                     }
                 }
             }
         }
 
-        for (auto query : allQueries)
+        for (const auto& query : allQueries)
         {
             auto queryStr = mapKey(query);
             queryMapKeys_.push_back(queryStr);
