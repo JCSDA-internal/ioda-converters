@@ -9,7 +9,15 @@ observations:
       obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
 
       exports:
+
         variables:
+
+          latitude:
+            query: "*/CLAT"
+
+          longitude:
+            query: "*/CLON"
+
           originatingGeneratingCenter:
             query: "*/OGCE"
 
@@ -42,55 +50,60 @@ observations:
       obsdataout: "./testrun/bufr_read_2_dim_blocks.nc"
 
       dimensions:
-        - name: "ncols_conf"
+        - name: "Confidence"
           paths:
             - "*/QCPRMS"
 
       variables:
-        - name: "MetaData/originatingGeneratingCenter"
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude (Coarse Accuracy)"
+          units: "degree_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude (Coarse Accuracy)"
+          units: "degree_east"
+
+        - name: "MetaData/dataProviderOrigin"
           source: variables/originatingGeneratingCenter
           longName: "Originating Generating Center"
-          units: "id"
 
-        - name: "GeneratingApplication/pressure"
+        - name: "MetaData/pressureGeneratingApplication"
           source: variables/pressure
-          longName: "air pressure"
-          units: "id"
+          longName: "Generating Application for Pressure"
 
-        - name: "GeneratingApplication/windDirection"
+        - name: "MetaData/windDirectionGeneratingApplication"
           source: variables/windDirection
-          longName: "wind direction"
-          units: "id"
+          longName: "Generating Application for Wind Direction"
 
-        - name: "GeneratingApplication/windSpeed"
+        - name: "MetaData/windSpeedGeneratingApplication"
           source: variables/windSpeed
-          longName: "wind speed"
-          units: "id"
+          longName: "Generating Application for Wind Speed"
 
-        - name: "GeneratingApplication/coldClusterTemperature"
+        - name: "MetaData/coldClusterTemperatureGeneratingApplication"
           source: variables/coldClusterTemperature
-          longName: "cold cluster temperature"
-          units: "id"
+          longName: "Generating Application for Cold Cluster Temperature"
 
-        - name: "PercentConfidence/pressure"
+        - name: "MetaData/pressurePercentConfidence"
           coordinates: "longitude latitude"
           source: variables/percentConfidencePressure
           longName: "Percent Confidence of Pressure"
           units: "percent"
 
-        - name: "PercentConfidence/windDirection"
+        - name: "MetaData/windDirectionPercentConfidence"
           coordinates: "longitude latitude"
           source: variables/percentConfidenceWindDirection
           longName: "Percent Confidence of Wind Direction"
           units: "percent"
 
-        - name: "PercentConfidence/windSpeed"
+        - name: "MetaData/windSpeedPercentConfidence"
           coordinates: "longitude latitude"
           source: variables/percentConfidenceWindSpeed
           longName: "Percent Confidence of Wind Speed"
           units: "percent"
 
-        - name: "PercentConfidence/coldClusterTemperature"
+        - name: "MetaData/coldClusterTemperaturePercentConfidence"
           coordinates: "longitude latitude"
           source: variables/percentConfidenceColdClusterTemperature
           longName: "Percent Confidence of Clod Cluster Temperature"
