@@ -25,7 +25,6 @@ namespace Ingester
     {
      public:
         explicit IodaEncoder(const eckit::Configuration& conf);
-        explicit IodaEncoder(const IodaDescription& description);
 
         /// \brief Encode the data into an ioda::ObsGroup object
         /// \param data The data container to use

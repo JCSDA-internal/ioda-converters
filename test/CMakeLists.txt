@@ -176,7 +176,6 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_empty_fields.yaml
     testinput/bufr_sfcshp.yaml
     testinput/adpupa_prepbufr.yaml
-    testinput/adpupa_prepbufr_group_by.yaml
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
@@ -226,7 +225,6 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
     testoutput/adpupa_prepbufr.nc
-    testoutput/adpupa_prepbufr_group_by.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc

@@ -54,6 +54,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
 
 ```yaml
       exports:
+        group_by_variable: longitude  # Optional
         variables:
           timestamp:
             datetime:
@@ -63,7 +64,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               hour: "*/HOUR"
               minute: "*/MINU"
               second: "*/SECO"  # default assumed zero if skipped or found as missing
-              hoursFromUtc: 0  # optional
+              hoursFromUtc: 0  # Optional
           satellite_id:
             query: "*/SAID"
           longitude:
@@ -93,6 +94,8 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
 Exports is a dictionary of key value pairs which define a name to the data element to expose the 
 ioda encoder. It has the following sections:
 
+* `group_by_variable` _(optional)_ String value that defines the name of the variable to group 
+   observations by. If this field is missing then observations will not be grouped.
 
 * `variables`
   * **keys** are arbitrary strings (anything you want). They can be referenced in the ioda section.
