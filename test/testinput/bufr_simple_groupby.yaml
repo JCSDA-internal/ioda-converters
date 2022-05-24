@@ -9,6 +9,7 @@ observations:
       obsdatain: "./testinput/bufr_simple_groupby.bufr"
 
       exports:
+        group_by_variable: depth
         variables:
           timestamp:
             datetime:
@@ -17,22 +18,16 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
-              group_by: depth
           longitude:
             query: "*/CLON"
-            group_by: depth
           latitude:
             query: "*/CLAT"
-            group_by: depth
           depth:
             query: "*/DTSCUR/DBSS"
-            group_by: depth
           temp:
             query: "*/DTSCUR/STMP"
-            group_by: depth
           saln:
             query: "*/DTSCUR/SALN"
-            group_by: depth
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_simple_groupby.nc"
