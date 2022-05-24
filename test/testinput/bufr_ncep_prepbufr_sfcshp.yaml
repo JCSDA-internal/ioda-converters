@@ -40,6 +40,9 @@ observations:
 
           cloudCoverTotal:
             query: "*/CLOU2SEQ/TOCC"
+            transforms:
+              - scale: 0.01
+
           heightAboveSurfaceofBaseofLowestCloud:
             query: "*/CLOU2SEQ/HBLCS"
 
