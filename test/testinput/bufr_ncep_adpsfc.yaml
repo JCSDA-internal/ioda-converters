@@ -47,7 +47,7 @@ observations:
             query: "[*/PPWSQ1/PRWE, */MTRPRW/PRWE, */PWEATHER/PRWE]"
           airTemperatureQM:
             query: "*/QMAT"
-          moistureQM:
+          dewpointTemperatureQM:
             query: "*/QMDD"
           pressureQM:
             query: "*/QMPR"
@@ -192,10 +192,10 @@ observations:
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Atmospheric Temperature"
 
-        - name: "QualityMarker/moisture"
+        - name: "QualityMarker/dewpointTemperature"
           coordinates: "longitude latitude"
-          source: variables/moistureQM
-          longName: "Quality Indicator for Moisture"
+          source: variables/dewpointTemperatureQM
+          longName: "Quality Indicator for Dewpoint Temperature"
 
         - name: "QualityMarker/pressure"
           coordinates: "longitude latitude"
