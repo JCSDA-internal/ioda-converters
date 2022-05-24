@@ -60,6 +60,39 @@ namespace Ingester
         return dataSets_.at(categoryId).at(fieldName);
     }
 
+    std::shared_ptr<DataObjectBase> DataContainer::getGroupByObject(
+        const std::string& fieldName,
+        const SubCategory& categoryId) const
+    {
+        if (!hasKey(fieldName, categoryId))
+        {
+            std::ostringstream errStr;
+            errStr << "ERROR: Either field called " << fieldName;
+            errStr << " or category " << makeSubCategoryStr(categoryId);
+            errStr << " does not exist.";
+
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        auto& dataObject = dataSets_.at(categoryId).at(fieldName);
+        const auto& groupByFieldName = dataObject->getGroupByFieldName();
+
+        std::shared_ptr<DataObjectBase> groupByObject = dataObject;
+        if (!groupByFieldName.empty())
+        {
+            for (const auto &obj : dataSets_.at(categoryId))
+            {
+                if (obj.second->getFieldName() == groupByFieldName)
+                {
+                    groupByObject = obj.second;
+                    break;
+                }
+            }
+        }
+
+        return groupByObject;
+    }
+
     bool DataContainer::hasKey(const std::string& fieldName,
                                const SubCategory& categoryId) const
     {
