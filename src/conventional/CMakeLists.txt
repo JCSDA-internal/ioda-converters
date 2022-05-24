@@ -1,4 +1,5 @@
 list(APPEND programs
+  amv_ssec_ascii2ioda.py
   amdar_bufr2ioda.py
   buoy_bufr2ioda.py
   metar_csv2ioda.py
