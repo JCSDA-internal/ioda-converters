@@ -93,8 +93,8 @@ observations:
           coordinates: "longitude latitude Channel"
           source: variables/cloudAmount
           longName: "Amount of cloud coverage"
-          units: "percent"
-          range: [0, 100]
+          units: "1"
+          range: [0, 1]
           chunks: [1000, 15]
 
         - name: "ObsValue/brightnessTemperature"
