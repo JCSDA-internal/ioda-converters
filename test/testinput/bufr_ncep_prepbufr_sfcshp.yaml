@@ -103,7 +103,7 @@ observations:
             query: "*/SST_INFO/SSTEVENT/SST1"
           seaSurfaceTemperatureQualityMarker:
             query: "*/SST_INFO/SSTEVENT/SSTQM"
-          depthBelowSeaSurface:
+          depthBelowWaterSurface:
             query: "*/SST_INFO/DBSS_SEQ/DBSS"
           seaSurfaceTemperatureError:
             query: "*/SST_INFO/SSTBACKG/SSTOE"
@@ -398,10 +398,10 @@ observations:
           longName: "Sea Surface Temperature Obs Error"
           units: "K"
 
-        - name: "ObsValue/depthBelowSeaSurface"
+        - name: "ObsValue/depthBelowWaterSurface"
           coordinates: "longitude latitude"
-          source: variables/depthBelowSeaSurface
-          longName: "Depth Below Sea Surface"
+          source: variables/depthBelowWaterSurface
+          longName: "Depth Below Water Surface"
           units: "m"
 #         range: [-2000, 0]
 
