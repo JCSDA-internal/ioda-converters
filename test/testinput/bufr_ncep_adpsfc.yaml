@@ -118,7 +118,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/cloudAmountObserved
           longName: "Cloud Amount Observed"
-          units: "1"
 
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
