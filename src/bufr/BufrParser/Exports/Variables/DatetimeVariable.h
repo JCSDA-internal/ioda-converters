@@ -23,7 +23,9 @@ namespace Ingester
     {
      public:
         DatetimeVariable() = delete;
-        DatetimeVariable(const std::string& exportName, const eckit::Configuration &conf);
+        DatetimeVariable(const std::string& exportName,
+                         const std::string& groupByField,
+                         const eckit::Configuration& conf);
         ~DatetimeVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into datetime strings

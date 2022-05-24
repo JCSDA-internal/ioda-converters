@@ -64,6 +64,7 @@ list( APPEND test_input
   testinput/avhrr_radiance.nc
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
   testinput/satwinds_ssec2021080103.txt
+  testinput/pace_oc_l2.nc
 )
 
 list( APPEND test_output
@@ -122,6 +123,7 @@ list( APPEND test_output
   testoutput/avhrr_radiance.nc
   testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
+  testoutput/pace_oc_l2.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -182,7 +184,6 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_empty_fields.yaml
     testinput/bufr_sfcshp.yaml
     testinput/adpupa_prepbufr.yaml
-    testinput/adpupa_prepbufr_group_by.yaml
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
@@ -234,7 +235,6 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
     testoutput/adpupa_prepbufr.nc
-    testoutput/adpupa_prepbufr_group_by.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/amdar_wmo_multi.nc
@@ -586,6 +586,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
                           -o testrun/avhrr_radiance.nc                               
                           -d 2015010100"
                           avhrr_radiance.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_oc_l2
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_oc2ioda.py                                                       
+                          -i testinput/pace_oc_l2.nc                                                                                             
+                          -o testrun/pace_oc_l2.nc                                                                                               
+                          -d 2019032112                                                                                                               
+                          -t 0.5"
+                          pace_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
@@ -1097,15 +1110,6 @@ if(iodaconv_bufr_ENABLED)
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr.yaml"
                     adpupa_prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
-
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa_groupby
-                    TYPE    SCRIPT
-                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                    ARGS    netcdf
-                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr_group_by.yaml"
-                    adpupa_prepbufr_group_by.nc ${IODA_CONV_COMP_TOL_ZERO}
-                    DEPENDS bufr2ioda.x )
-
 
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
