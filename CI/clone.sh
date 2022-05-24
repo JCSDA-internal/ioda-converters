@@ -1,65 +1,58 @@
-#!/bin/bash 
+#!/bin/bash
 
 # clones specific branch of a given repo
-# if branch does not exist clones develop
- 
-git_user=$1
-git_token=$2
-org_repo_name=$3
-branch_name=$4
-save_name=$5
-save_dir=$6
-branch_name_default=$7
+# if branch does not exist checks the fallback branch
+# if fallback branch does not exist clones default branch
+
+org_repo_name=$1
+branch_name=$2
+save_dir=$3
+save_name=$4
+fallback_branch=$5
+default_branch=$6
 
 repo_name="$(cut -d'/' -f2 <<<$org_repo_name)"
 org_name="$(cut -d'/' -f1 <<<$org_repo_name)"
 
-
 if [ "${branch_name}" = "develop" ] || [ "${branch_name}" = "master" ]; then
 
   echo "merging into develop or master"
-  branch_name_clone=${branch_name_default}
+  branch_name_clone=${branch_name}  #always clone develop/master of all repos when merging into develop/master
   org_repo_name_clone=${org_name}
   echo "==============================================================================="
-  echo "  Merge into develop or master"
-  echo "  Clone " $org_repo_name_clone "/" $repo_name
+  echo "  Merge into develop/master"
+  echo "  Clone ${branch_name_clone} branch of ${org_repo_name} "
   echo "==============================================================================="
-  git clone -b $branch_name_clone https://$git_user:$git_token@github.com/$org_repo_name_clone/$repo_name $save_dir/$save_name
+  git clone --depth 1 -b $branch_name_clone https://github.com/$org_repo_name_clone/$repo_name $save_dir/$save_name
 
 else
 
-  # check jcsda-internal for branch
-  git ls-remote --heads --exit-code https://$git_user:$git_token@github.com/jcsda-internal/$repo_name $branch_name
-  exit_code_internal=$?
-
-  git ls-remote --heads --exit-code https://$git_user:$git_token@github.com/jcsda/$repo_name $branch_name
+  # check org_name/repo_name for branch
+  git ls-remote --heads --exit-code https://github.com/$org_name/$repo_name $branch_name
   exit_code=$?
 
-  # if branch exists in both jcsda-internal and jcsda it will clone jcsda-internal
-  # it searches in jcsda only if org_name is jcsda
+  # if branch exists in org_name/repo_name clone it
+  # if not check fallback branch and clone if available
+  # if fallback doesn't exist then clone default branch
 
-  if test "${exit_code_internal}" == "0"; then
-    echo ${branch_name} " branch found in jcsda-internal"
+  if test "${exit_code}" == "0"; then
+    echo "${branch_name} branch found in ${org_repo_name}"
     branch_name_clone=${branch_name}
-    org_repo_name_clone="jcsda-internal"
-
-  # search in jcsda only if cloning from jcsda
-  elif [ "${exit_code}" == "0" ] && [ "${org_name}" == "jcsda" ]; then
-    echo ${branch_name} " branch found in jcsda"
-    branch_name_clone=${branch_name}
-    org_repo_name_clone="jcsda"
-
   else
-    echo ${branch_name} " branch does not exist in jcsda-internal or jcsda"
-    echo "clone " ${branch_name_clone}
-    branch_name_clone=${branch_name_default}
-    org_repo_name_clone=${org_name}
+    git ls-remote --heads --exit-code https://github.com/$org_name/$repo_name $fallback_branch
+    exit_code_fallback=$?
+    if test "${exit_code_fallback}" == "0"; then
+      echo "${branch_name} does not exist in ${org_repo_name}"
+      echo "${fallback_branch} branch found in ${org_repo_name}"
+      branch_name_clone=${fallback_branch}
+    else
+      echo "${branch_name} or ${fallback_branch} branches do not exist in ${org_repo_name}"
+      echo "clone default ${default_branch} branch"
+      branch_name_clone=${default_branch}
+    fi
   fi
-  echo "==============================================================================="
-  echo "Clone " $org_repo_name_clone "/" $repo_name " branch " $branch_name_clone
-  echo "==============================================================================="
-  git clone --depth 1 -b $branch_name_clone https://$git_user:$git_token@github.com/$org_repo_name_clone/$repo_name $save_dir/$save_name
-
+  echo "======================================================"
+  echo "Clone ${branch_name_clone} branch of ${org_repo_name} "
+  echo "======================================================"
+  git clone --depth 1 -b $branch_name_clone https://github.com/$org_name/$repo_name $save_dir/$save_name
 fi
-
-
