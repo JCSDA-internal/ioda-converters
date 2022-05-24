@@ -25,13 +25,8 @@ namespace Ingester
     static const char* DefualtLocationName = "Location";
     static const char* DefualtDimName = "dim";
 
-    IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
+    IodaEncoder::IodaEncoder(const eckit::Configuration& conf):
         description_(IodaDescription(conf))
-    {
-    }
-
-    IodaEncoder::IodaEncoder(const IodaDescription& description) :
-        description_(description)
     {
     }
 
@@ -73,11 +68,6 @@ namespace Ingester
             }
         }
 
-        if (!existsInNamedPath("*", namedExtraDims))
-        {
-            namedLocDims.insert({{"*"}, DefualtLocationName});
-        }
-
         for (const auto& categories : dataContainer->allSubCategories())
         {
             // Create the dimensions variables
@@ -103,12 +93,10 @@ namespace Ingester
                         else
                         {
                             auto newDimStr = std::ostringstream();
-                            newDimStr << DefualtLocationName << "_"
-                                      << dataObject->getGroupByFieldName();
+                            newDimStr << DefualtLocationName;
 
                             dimName = newDimStr.str();
                             namedLocDims[{dimPath}] = dimName;
-                            autoGenDimNumber++;
                         }
 
                         if (dataObject->getDims()[dimIdx] == 0)

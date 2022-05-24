@@ -9,6 +9,7 @@ observations:
       obsdatain: "./testinput/bufr_sfcshp.bufr"
 
       exports:
+        group_by_variable: depth
         variables:
           timestamp:
             datetime:
@@ -18,35 +19,27 @@ observations:
               hour: "*/HOUR"
               minute: "*/MINU"
               second: ""
-              group_by: depth
 
           stationID:
             query: "*/RPID"
-            group_by: depth
 
           longitude:
             query: "*/CLONH"
-            group_by: depth
 
           latitude:
             query: "*/CLATH"
-            group_by: depth
 
           sst:
             query: "*/SST0"
-            group_by: depth
 
           t-profile:
             query: "*/IDMSMDBS/BBYSTSL/SST1"
-            group_by: depth
 
           s-profile:
             query: "*/IDMSMDBS/BBYSTSL/SALN"
-            group_by: depth
 
           depth:
             query: "*/IDMSMDBS/BBYSTSL/DBSS"
-            group_by: depth
 
     ioda:
       backend: netcdf

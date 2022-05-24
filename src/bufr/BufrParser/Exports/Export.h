@@ -42,7 +42,8 @@ namespace Ingester
         Filters filters_;
 
         /// \brief Create Variables exports from config.
-        void addVariables(const eckit::Configuration &conf);
+        void addVariables(const eckit::Configuration &conf,
+                          const std::string& groupByVariable = "");
 
         /// \brief Create Splits exports from config.
         void addSplits(const eckit::Configuration &conf);

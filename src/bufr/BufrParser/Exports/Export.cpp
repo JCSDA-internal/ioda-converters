@@ -27,13 +27,14 @@ namespace
         const char* Filters = "filters";
         const char* Splits = "splits";
         const char* Variables = "variables";
+        const char* GroupByVariable = "group_by_variable";
 
         namespace Variable
         {
             const char* Datetime = "datetime";
             const char* Mnemonic = "mnemonic";
             const char* Query = "query";
-            const char* GroupByField = "group_by";
+            const char* GroupByField = "group_by";  // Deprecated
         }  // namespace Variable
 
         namespace Split
@@ -68,17 +69,44 @@ namespace Ingester
             addSplits(conf.getSubConfiguration(ConfKeys::Splits));
         }
 
+        std::string groupByVariable;
+        if (conf.has(ConfKeys::GroupByVariable))  // Optional
+        {
+            groupByVariable = conf.getString(ConfKeys::GroupByVariable);
+        }
+
         if (conf.has(ConfKeys::Variables))
         {
-            addVariables(conf.getSubConfiguration(ConfKeys::Variables));
+            addVariables(conf.getSubConfiguration(ConfKeys::Variables),
+                         groupByVariable);
         }
         else
         {
             throw eckit::BadParameter("Missing export::variables section in configuration.");
         }
+
+        //  Make sure the groupByVariable field is valid.
+        if (conf.has(ConfKeys::GroupByVariable))
+        {
+            auto groupByFound = false;
+            for (const auto &var : variables_)
+            {
+                if (var->getExportName() == groupByVariable)
+                {
+                    groupByFound = true;
+                    break;
+                }
+            }
+
+            if (!groupByFound)
+            {
+                throw eckit::BadParameter(
+                    "Group by variable not found in export::variables section.");
+            }
+        }
     }
 
-    void Export::addVariables(const eckit::Configuration &conf)
+    void Export::addVariables(const eckit::Configuration &conf, const std::string& groupByField)
     {
         if (conf.keys().size() == 0)
         {
@@ -95,7 +123,7 @@ namespace Ingester
             if (subConf.has(ConfKeys::Variable::Datetime))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
-                variable = std::make_shared<DatetimeVariable>(key, dtconf);
+                variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
             }
             else if (subConf.has(ConfKeys::Variable::Mnemonic))
             {
@@ -109,10 +137,13 @@ namespace Ingester
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
                 const auto& query = subConf.getString(ConfKeys::Variable::Query);
 
-                std::string groupByField = "";
                 if (subConf.has(ConfKeys::Variable::GroupByField))
                 {
-                    groupByField = subConf.getString(ConfKeys::Variable::GroupByField);
+                    std::ostringstream errMsg;
+                    errMsg << "Obsolete format::exports::variable of group_by field for key";
+                    errMsg << key << std::endl;
+                    errMsg << "Use \"query:\" instead.";
+                    throw eckit::BadParameter(errMsg.str());
                 }
 
                 variable = std::make_shared<QueryVariable>(key,
