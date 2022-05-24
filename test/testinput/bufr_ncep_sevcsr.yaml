@@ -28,7 +28,7 @@ observations:
             query: "*/SOZA"
           sensorZenithAngle:
             query: "*/SAZA"
-          cloudAmount:
+          cloudCoverTotal:
             query: "*/RPSEQ7/CLDMNT"
             transforms:
               - scale: 0.01
@@ -89,10 +89,10 @@ observations:
           units: "degrees"
           range: [0, 90]
 
-        - name: "ObsValue/cloudAmount"
+        - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude Channel"
-          source: variables/cloudAmount
-          longName: "Amount of cloud coverage"
+          source: variables/cloudCoverTotal
+          longName: "total cloud coverage"
           units: "1"
           range: [0, 1]
           chunks: [1000, 15]
