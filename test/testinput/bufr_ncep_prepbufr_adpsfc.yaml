@@ -77,7 +77,7 @@ observations:
               - scale: 0.01
           cloudCeiling:
             query: "*/CLOU3SEQ/CEILING"
-          heightAboveSurfaceofBaseofLowestCloud:
+          heightAboveSurfaceOfBaseOfLowestCloud:
             query: "*/CLOU2SEQ/HBLCS"
           heightOfBaseOfCloud:
             query: "*/CLOUDSEQ/HOCB"
@@ -288,9 +288,9 @@ observations:
           longName: "Cloud Ceiling"
           units: "m"
 
-        - name: "ObsValue/heightAboveSurfaceofBaseofLowestCloud"
+        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
           coordinates: "longitude latitude"
-          source: variables/heightAboveSurfaceofBaseofLowestCloud
+          source: variables/heightAboveSurfaceOfBaseOfLowestCloud
           longName: "Height above Surface of Base of Lowest Cloud"
           units: "m"
 

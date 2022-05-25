@@ -92,7 +92,7 @@ observations:
           path: "*/MTTPSQ"
         - name: SynopticWindSequence 
           path: "*/BSYWND2"
-        - name: MetarSequence
+        - name: PresentWeatherSequence
           path: "*/MTRPRW"
         - name: VSSOSupplementalSequence
           path: "*/BSYSCLD"
