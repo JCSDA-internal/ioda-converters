@@ -405,7 +405,6 @@ def read_bufr_message(f, count, start_pos, data):
     try:
         ecc.codes_set(bufr, 'skipExtraKeyAttributes', 1)   # Supposedly this is ~25 percent faster
         ecc.codes_set(bufr, 'unpack', 1)
-        numberOfSubsets = ecc.codes_get(bufr, 'numberOfSubsets')
     except ecc.CodesInternalError:
         ecc.codes_release(bufr)
         logging.info(f"INCOMPLETE BUFR message, skipping ({msg_size} bytes)")
@@ -416,7 +415,7 @@ def read_bufr_message(f, count, start_pos, data):
     # Some BUFR messages have subsets (multiple) soundings in a single message (China especially).
     # Therefore we have to loop through a vector of the delayedDescriptorReplicationFactor.
     try:
-        nsubsets = ecc.codes_get(bufr, 'subsetNumber')
+        nsubsets = ecc.codes_get(bufr, 'numberOfSubsets')
     except ecc.KeyValueNotFoundError:
         nsubsets = 1
         pass
@@ -427,10 +426,15 @@ def read_bufr_message(f, count, start_pos, data):
         repfacs = ecc.codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor')
     except ecc.KeyValueNotFoundError:
         try:
-            repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
+            repfacs = ecc.codes_get_array(bufr, 'extendedDelayedDescriptorAndDataRepetitionFactor')
         except ecc.KeyValueNotFoundError:
-            pass
-        pass
+            try:
+                repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
+            except ecc.KeyValueNotFoundError:
+                try:
+                    repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorAndDataRepetitionFactor')
+                except ecc.KeyValueNotFoundError:
+                    pass
 
     # Make begin/end indicies for single or multiple soundings.
     nbeg = []
@@ -446,6 +450,8 @@ def read_bufr_message(f, count, start_pos, data):
                                 f"the length of repfacs vector, {len(repfacs)}")
             nend = np.cumsum(repfacs)
             nbeg = np.insert(nend[:-1],0,0)
+            for n in range(len(repfacs)):
+                print(f" pair of beg:end is {nbeg[n] : nend[n]}")
         else:
             nbeg.append(0)
             nend.append(repfacs[0]-1)
@@ -530,6 +536,8 @@ def read_bufr_message(f, count, start_pos, data):
             else:
                 if len(temp_data[k]) < target_number:
                     print(f"what is happening? {k}, {target_number}, {len(temp_data[k])}")
+                    for n in range(len(temp_data[k])):
+                        print(f"   var {k}, {n}, {temp_data[k][n]}")
                     meta_data[k] = np.full(target_number, temp_data[k][obnum])
                 else:
                     try:
@@ -601,9 +609,7 @@ def read_bufr_message(f, count, start_pos, data):
         # And now processing the observed variables we care about.
         for variable in raw_obsvars:
             vals[variable] = np.full(target_number, float_missing_value)
-            if not any(temp_data[variable]):
-                vals[variable] = np.full(target_number, float_missing_value)
-            else:
+            if temp_data[variable] is not None:
                 try:
                     vals[variable] = temp_data[variable][b:e]
                 except Exception:
