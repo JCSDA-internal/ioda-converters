@@ -465,6 +465,8 @@ def read_bufr_message(f, count, start_pos, data):
                     except ecc.KeyValueNotFoundError:
                         logging.warning("Caution: unable to find requested BUFR key: " + var)
                         temp_data[k] = None
+                else:
+                    temp_data[k] = None
         else:
             if (v[0] != 'Constructed'):
                 try:
@@ -474,6 +476,8 @@ def read_bufr_message(f, count, start_pos, data):
                 except ecc.KeyValueNotFoundError:
                     logging.warning("Caution, unable to find requested BUFR key: " + v[0])
                     temp_data[k] = None
+            else:
+                temp_data[k] = None
 
 
     # Next, get the raw observed weather variables we want.
@@ -518,21 +522,21 @@ def read_bufr_message(f, count, start_pos, data):
         # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
         empty = []
         for k, v in metaDataKeyList.items():
-            meta_data[k] = []
-            if temp_data[k] is None or len(temp_data[k]) == 0:
-                meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
+            meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
+            if temp_data[k] is None:
+                next
             elif b == 0 and len(temp_data[k]) == 1:
                 meta_data[k] = np.full(target_number, temp_data[k][0])
             else:
                 if len(temp_data[k]) < target_number:
+                    print(f"what is happening? {k}, {target_number}, {len(temp_data[k])}")
                     meta_data[k] = np.full(target_number, temp_data[k][obnum])
                 else:
                     try:
                         meta_data[k] = temp_data[k][b:e]
                     except Exception:
-                        meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
-            if len(meta_data[k]) != target_number:
-                logging.warning(f"Variable {k} expected {target_number}, found {len(meta_data[k])}.")
+                        logging.warning(f"Something wrong copying temp_data to meta_data, var: {k}.")
+                        pass
 
         # Sondes are special with a launch time and time displacement.
         if temp_data['timeDisplacement'] is not None:
@@ -596,19 +600,14 @@ def read_bufr_message(f, count, start_pos, data):
 
         # And now processing the observed variables we care about.
         for variable in raw_obsvars:
-            vals[variable] = []
-            if temp_data[variable] is None:
-                vals[variable] = np.full(target_number, float_missing_value)
-            elif not any(temp_data[variable]):
+            vals[variable] = np.full(target_number, float_missing_value)
+            if not any(temp_data[variable]):
                 vals[variable] = np.full(target_number, float_missing_value)
             else:
                 try:
                     vals[variable] = temp_data[variable][b:e]
                 except Exception:
                     logging.warning(f"Unable to copy data, either index [{b},{e}] must be out of range.")
-                    vals[variable] = np.full(target_number, float_missing_value)
-            if len(vals[variable]) != target_number:
-                logging.warning(f"Variable {variable} expected {target_number}, found {len(vals[variable])}.")
 
         # Need to transform some variables to others (wind speed/direction to components for example).
         uwnd = np.full(target_number, float_missing_value)
