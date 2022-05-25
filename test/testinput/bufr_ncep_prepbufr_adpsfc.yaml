@@ -172,6 +172,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/obsTimeMinusCycleTime
           longName: "Present weather"
+          units: "Hour"
 
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
@@ -323,7 +324,7 @@ observations:
           longName: "Depth Below Water Surface"
           units: "m"
 
-        - name: "MetaData/waterTemperatureMethod"
+        - name: "ObsValue/waterTemperatureMethod"
           coordinates: "longitude latitude"
           source: variables/waterTemperatureMethod
           longName: "Method of Water Temperature Measurement"

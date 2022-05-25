@@ -27,7 +27,7 @@ observations:
             query: "[*/CLAT, */CLATH]"
           longitude:
             query: "[*/CLON, */CLONH]"
-          heightAboveSurfaceOfBaseOfLowestCloudSeen:
+          heightAboveSurfaceOfBaseOfLowestCloud:
             query: "*/HBLCS"
           heightOfBaseOfCloud:
             query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, NC000100/HOCB, NC000101/HOCB, NC000102/HOCB]"
@@ -88,7 +88,7 @@ observations:
       dimensions:
         - name: CloudSequence
           path: "*/CLDSQ1"
-        - name: MaxMinTempSequence
+        - name: MaxMinTemperatureSequence
           path: "*/MTTPSQ"
         - name: SynopticWindSequence 
           path: "*/BSYWND2"
@@ -133,10 +133,10 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloudSeen"
+        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
           coordinates: "longitude latitude"
-          source: variables/heightAboveSurfaceOfBaseOfLowestCloudSeen
-          longName: "Height Above Surface of Base of Lowest Cloud Seen"
+          source: variables/heightAboveSurfaceOfBaseOfLowestCloud
+          longName: "Height Above Surface of Base of Lowest Cloud"
           units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
