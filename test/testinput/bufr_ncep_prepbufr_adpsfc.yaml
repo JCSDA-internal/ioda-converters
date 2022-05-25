@@ -19,7 +19,7 @@ observations:
             query: "*/TYP"
           dumpReportType:
             query: "*/T29"
-          ObsTimeMinusCycleTime:
+          obsTimeMinusCycleTime:
             query: "*/DHR"
           presentWeather:
             query: "*/PREWXSEQ/PRWE"
@@ -168,9 +168,9 @@ observations:
           source: variables/dumpReportType
           longName: "Data Dump Report Type"
 
-        - name: "MetaData/ObsTimeMinusCycleTime"
+        - name: "MetaData/obsTimeMinusCycleTime"
           coordinates: "longitude latitude"
-          source: variables/ObsTimeMinusCycleTime
+          source: variables/obsTimeMinusCycleTime
           longName: "Present weather"
 
         - name: "ObsValue/presentWeather"
