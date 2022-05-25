@@ -420,6 +420,13 @@ def read_bufr_message(f, count, start_pos, data):
         nsubsets = 1
         pass
 
+    # This will print absolutely every BUFR key in the message.
+    #print(" ")
+    #iterid = ecc.codes_keys_iterator_new(bufr)
+    #while ecc.codes_keys_iterator_next(iterid):
+    #    keyname = ecc.codes_keys_iterator_get_name(iterid)
+    #    print(f" name: {keyname}")
+
     # If multiple soundings repfacs will be vector of length of each sounding.
     repfacs = None
     try:
@@ -434,24 +441,26 @@ def read_bufr_message(f, count, start_pos, data):
                 try:
                     repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorAndDataRepetitionFactor')
                 except ecc.KeyValueNotFoundError:
-                    pass
+                    try:
+                        repfacs = ecc.codes_get_array(bufr, 'shortDelayedDescriptorReplicationFactor')
+                    except ecc.KeyValueNotFoundError:
+                        pass
 
     # Make begin/end indicies for single or multiple soundings.
     nbeg = []
     nend = []
     if repfacs is None:
+        if nsubsets > 1:
+            logging.warning(f" ########### Nonsense, how do we separate {nsubsets} soundings? #########")
         nbeg.append(0)
         nend.append(int(1E6))
     else:
-        logging.debug(f"nsubsets: {nsubsets} and repfacs: {repfacs}")
         if nsubsets > 1:
             if nsubsets != len(repfacs):
                 logging.warning(f"Nonsense: number of subsets, {nsubsets} is not equal to "
                                 f"the length of repfacs vector, {len(repfacs)}")
             nend = np.cumsum(repfacs)
             nbeg = np.insert(nend[:-1],0,0)
-            for n in range(len(repfacs)):
-                print(f" pair of beg:end is {nbeg[n] : nend[n]}")
         else:
             nbeg.append(0)
             nend.append(repfacs[0]-1)
@@ -509,7 +518,7 @@ def read_bufr_message(f, count, start_pos, data):
             return data, count, start_pos
         logging.info(f"Within BUFR msg, processing obs with bounds: [{b},{e}]")
         if e < 99999:
-            target_number = e - b + 1
+            target_number = e - b
         else:
             logging.debug("Msg did not contain repfacs, trying to determine target number of obs")
             if len(temp_data['vertSignificance']) > 0:
@@ -518,12 +527,12 @@ def read_bufr_message(f, count, start_pos, data):
                 target_number = len(temp_data['timeDisplacement'])
             elif len(temp_data['latDisplacement']) > 0:
                 target_number = len(temp_data['latDisplacement'])
-            elif len(temp_data['latitude']) > 0:
-                target_number = len(temp_data['latitude'])
+            elif len(temp_data['pressure']) > 0:
+                target_number = len(temp_data['pressure'])
             else:
                 print("HOW on earth is target_number zero?  BUFR sucks!")
                 return data, count, start_pos
-            e = target_number - 1
+            e = target_number
 
         # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
         empty = []
@@ -535,9 +544,6 @@ def read_bufr_message(f, count, start_pos, data):
                 meta_data[k] = np.full(target_number, temp_data[k][0])
             else:
                 if len(temp_data[k]) < target_number:
-                    print(f"what is happening? {k}, {target_number}, {len(temp_data[k])}")
-                    for n in range(len(temp_data[k])):
-                        print(f"   var {k}, {n}, {temp_data[k][n]}")
                     meta_data[k] = np.full(target_number, temp_data[k][obnum])
                 else:
                     try:
