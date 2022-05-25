@@ -13,7 +13,7 @@ observations:
         variables:
           stationIdentification:
             query: "*/SID"
-          prepbufrDataLvlCat:
+          prepbufrDataLevelCategory:
             query: "*/CAT"
           prepbufrReportType:
             query: "*/TYP"
@@ -30,7 +30,7 @@ observations:
           stationElevation:
             query: "*/ELV"
 
-          heightOfObservation:
+          heightOfStation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
           pressureReducedToMeanSeaLevel:
             query: "*/PMSL_SEQ/PMO"
@@ -65,14 +65,16 @@ observations:
           relativeHumidityError:
             query: "*/Q___INFO/Q__BACKG/QOE"
             transforms:
-              - scale: 10
+              - scale: 0.1 
 
           horizontalVisibility:
             query: "*/VISB1SEQ/HOVI"
-          cloudAmount:
+          cloudAmountObserved:
             query: "*/CLOUDSEQ/CLAM"
           cloudCoverTotal:
             query: "*/CLOU2SEQ/TOCC"
+            transforms:
+              - scale: 0.01
           cloudCeiling:
             query: "*/CLOU3SEQ/CEILING"
           heightAboveSurfaceofBaseofLowestCloud:
@@ -95,7 +97,7 @@ observations:
             query: "*/W___INFO/W__EVENT/UOB"
           windNorthward:
             query: "*/W___INFO/W__EVENT/VOB"
-          windError:
+          windSpeedError:
             query: "*/W___INFO/W__BACKG/WOE"
           windSpeedPeak:
             query: "*/GUST1SEQ/MXGS"
@@ -123,6 +125,27 @@ observations:
       backend: netcdf 
       obsdataout: "testrun/gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc"
 
+      dimensions:
+        - name: PresentWeatherSequence
+          path: "*/PREWXSEQ"
+        - name: HeightEvent
+          path: "*/Z___INFO/Z__EVENT"
+        - name: PressureEvent
+          path: "*/P___INFO/P__EVENT"
+        - name: TemperatureEvent
+          path: "*/T___INFO/T__EVENT"
+        - name: HumidityEvent
+          path: "*/Q___INFO/Q__EVENT"
+        - name: CloudSequence 
+          path: "*/CLOUDSEQ"
+        - name: WaterTemperatureEvent
+          path: "*/SST_INFO/SSTEVENT"
+        - name: WindEvent
+          path: "*/W___INFO/W__EVENT"
+        - name: MaxMinTemperatureSequence
+          path: "*/TMXMNSEQ" 
+
+
       variables:
 
         - name: "MetaData/stationIdentification"
@@ -130,9 +153,9 @@ observations:
           source: variables/stationIdentification
           longName: "Station ID"
 
-        - name: "MetaData/prepbufrDataLvlCat"
+        - name: "MetaData/prepbufrDataLevelCategory"
           coordinates: "longitude latitude"
-          source: variables/prepbufrDataLvlCat
+          source: variables/prepbufrDataLevelCategory
           longName: "Prepbufr Data Level Category"
 
         - name: "MetaData/prepbufrReportType"
@@ -175,10 +198,10 @@ observations:
           longName: "Height of Station"
           units: "m"
 
-        - name: "ObsValue/heightOfObservation"
+        - name: "ObsValue/heightOfStation"
           coordinates: "longitude latitude"
-          source: variables/heightOfObservation
-          longName: "Height of Observation"
+          source: variables/heightOfStation
+          longName: "Height of Station"
           units: "m"
 
         - name: "ObsValue/pressureReducedToMeanSeaLevel"
@@ -247,11 +270,10 @@ observations:
           longName: "Horizontal Visibility"
           units: "m"
 
-        - name: "ObsValue/cloudAmount"
+        - name: "ObsValue/cloudAmountObserved"
           coordinates: "longitude latitude"
-          source: variables/cloudAmount
-          longName: "Cloud Amount"
-          units: "1"
+          source: variables/cloudAmountObserved
+          longName: "Cloud Amount Observed"
 
         - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude"
@@ -318,9 +340,9 @@ observations:
           longName: "Northward Wind"
           units: "m s-1"
 
-        - name: "ObsError/wind"
+        - name: "ObsError/windSpeed"
           coordinates: "longitude latitude"
-          source: variables/windError
+          source: variables/windSpeedError
           longName: "East and Northward wind error"
           units: "m s-1"
 
