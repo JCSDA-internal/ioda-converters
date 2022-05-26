@@ -77,7 +77,8 @@ namespace bufr {
                 seqPath.push_back(nodeIdx);
                 currentPathElements.push_back({});
             }
-            else if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary)
+            else if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary ||
+                     dataProvider_.getTyp(nodeIdx) == Typ::FixedRep)
             {
                 seqPath.push_back(nodeIdx + 1);  // push the node idx for the embedded sequence
                 currentPathElements.push_back({});
