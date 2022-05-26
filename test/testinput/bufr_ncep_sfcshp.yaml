@@ -83,7 +83,8 @@ observations:
 
           cloudCoverTotal:
             query: "*/TOCC"
-
+            transforms: 
+               - scale: 0.01
           heightAboveSurfaceofBaseofLowestCloud:
             query: "*/HBLCS"
     
@@ -123,7 +124,6 @@ observations:
         - name: "MetaData/reportIdentifier"
           source: variables/reportIdentifier
           longName: "Report Identifier"
-          units: ""
 
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
@@ -142,7 +142,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/presentWeather
           longName: "Present Weather"
-          units: ""
 
         - name: "ObsValue/airTemperature"
           source: variables/airTemperature
@@ -161,7 +160,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/waterTemperatureMethod
           longName: "Method of Sea Surface Measurement"
-          units: ""
 
         - name: "ObsValue/seaSurfaceTemperature"
           coordinates: "longitude latitude"
@@ -188,7 +186,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
           longName: "Vertical Significance (Surface Observations)"
-          units: ""
 
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude"
@@ -200,7 +197,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/cloudType
           longName: "Cloud Type"
-          units: ""
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
@@ -218,5 +214,4 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceofBaseofLowestCloud
           longName: "Height above Surface of Base of Lowest Cloud"
-          units: ""
 
