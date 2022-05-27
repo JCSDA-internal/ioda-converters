@@ -11,6 +11,7 @@ observations:
 
       exports:
         variables:
+          # MetaData
           stationIdentification:
             query: "*/SID"
           prepbufrDataLevelCategory:
@@ -30,6 +31,7 @@ observations:
           stationElevation:
             query: "*/ELV"
 
+          # ObsValue
           heightOfStation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
           pressureReducedToMeanSeaLevel:
@@ -40,33 +42,24 @@ observations:
             query: "*/P___INFO/P__EVENT/POB"
             transforms:
               - scale: 100
-          pressureError:
-            query: "*/P___INFO/P__BACKG/POE"
-            transforms:
-              - scale: 100
           airTemperature:
             query: "*/T___INFO/T__EVENT/TOB"
             transforms:
               - offset: 273.15
-          airTemperatureError:
-            query: "*/T___INFO/T__BACKG/TOE"
           dewpointTemperature:
             query: "*/Q___INFO/TDO"
             transforms:
               - offset: 273.15
-          minimumTemperature:
-            query: "*/TMXMNSEQ/MITM"
-          maximumTemperature:
-            query: "*/TMXMNSEQ/MXTM"
           specificHumidity:
             query: "*/Q___INFO/Q__EVENT/QOB"
             transforms:
               - scale: 0.000001
-          relativeHumidityError:
-            query: "*/Q___INFO/Q__BACKG/QOE"
-            transforms:
-              - scale: 0.1 
+          windEastward:
+            query: "*/W___INFO/W__EVENT/UOB"
+          windNorthward:
+            query: "*/W___INFO/W__EVENT/VOB"
 
+          # ObsValue - cloud, visibility, gust wind, min/max temperature, weather  
           horizontalVisibility:
             query: "*/VISB1SEQ/HOVI"
           cloudAmountObserved:
@@ -83,11 +76,16 @@ observations:
             query: "*/CLOUDSEQ/HOCB"
           verticalSignificanceSurfaceObservations:
             query: "*/CLOUDSEQ/VSSO"
+          minimumTemperature:
+            query: "*/TMXMNSEQ/MITM"
+          maximumTemperature:
+            query: "*/TMXMNSEQ/MXTM"
+          windSpeedPeak:
+            query: "*/GUST1SEQ/MXGS"
 
+          # ObsValue - ocean 
           waterTemperature:
             query: "*/SST_INFO/SSTEVENT/SST1"
-          waterTemperatureError:
-            query: "*/SST_INFO/SSTBACKG/SSTOE"
           heightOfWaves:
             query: "*/WAVE_SEQ/HOWV"
           depthBelowWaterSurface:
@@ -95,15 +93,7 @@ observations:
           waterTemperatureMethod:
             query: "*/SST_INFO/MSST"
 
-          windEastward:
-            query: "*/W___INFO/W__EVENT/UOB"
-          windNorthward:
-            query: "*/W___INFO/W__EVENT/VOB"
-          windSpeedError:
-            query: "*/W___INFO/W__BACKG/WOE"
-          windSpeedPeak:
-            query: "*/GUST1SEQ/MXGS"
-
+          # QualityMarker
           heightQualityMarker:
             query: "*/Z___INFO/Z__EVENT/ZQM"
           pressureQualityMarker:
@@ -120,6 +110,22 @@ observations:
             query: "*/W___INFO/W__EVENT/WQM"
           windNorthwardQualityMarker:
             query: "*/W___INFO/W__EVENT/WQM"
+
+          # ObsError
+          pressureError:
+            query: "*/P___INFO/P__BACKG/POE"
+            transforms:
+              - scale: 100
+          airTemperatureError:
+            query: "*/T___INFO/T__BACKG/TOE"
+          relativeHumidityError:
+            query: "*/Q___INFO/Q__BACKG/QOE"
+            transforms:
+              - scale: 0.1
+          waterTemperatureError:
+            query: "*/SST_INFO/SSTBACKG/SSTOE"
+          windSpeedError:
+            query: "*/W___INFO/W__BACKG/WOE"
 
     ioda:
       backend: netcdf 
@@ -148,6 +154,7 @@ observations:
 
       variables:
 
+        # MetaData
         - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
           source: variables/stationIdentification
@@ -174,11 +181,6 @@ observations:
           longName: "Present weather"
           units: "Hour"
 
-        - name: "ObsValue/presentWeather"
-          coordinates: "longitude latitude"
-          source: variables/presentWeather
-          longName: "Present weather"
-
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
           source: variables/latitude
@@ -199,6 +201,7 @@ observations:
           longName: "Height of Station"
           units: "m"
 
+        # ObsValue
         - name: "ObsValue/heightOfStation"
           coordinates: "longitude latitude"
           source: variables/heightOfStation
@@ -217,22 +220,10 @@ observations:
           longName: "Pressure"
           units: "Pa"
 
-        - name: "ObsError/pressure"
-          coordinates: "longitude latitude"
-          source: variables/pressureError
-          longName: "Pressure Error"
-          units: "Pa"
-
         - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Temperature"
-          units: "K"
-
-        - name: "ObsError/airTemperature"
-          coordinates: "longitude latitude"
-          source: variables/airTemperatureError
-          longName: "Temperature Error"
           units: "K"
 
         - name: "ObsValue/dewpointTemperature"
@@ -241,30 +232,13 @@ observations:
           longName: "Dew Point"
           units: "K"
 
-        - name: "ObsValue/minimumTemperature"
-          coordinates: "longitude latitude"
-          source: variables/minimumTemperature
-          longName: "Minimum Temperature"
-          units: "K"
-
-        - name: "ObsValue/maximumTemperature"
-          coordinates: "longitude latitude"
-          source: variables/maximumTemperature
-          longName: "Maximum Temperature"
-          units: "K"
-
         - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude"
           source: variables/specificHumidity
           longName: "Specific Humidity"
           units: "kg kg-1"
-
-        - name: "ObsError/relativeHumidity"
-          coordinates: "longitude latitude"
-          source: variables/relativeHumidityError
-          longName: "Relative Humidity Error"
-          units: "1"
-
+   
+        # Observation - cloud, visibility, gust wind, min/max temperature
         - name: "ObsValue/horizontalVisibility"
           coordinates: "longitude latitude"
           source: variables/horizontalVisibility
@@ -300,16 +274,32 @@ observations:
           longName: "Height of Base of Cloud"
           units: "m" 
 
+        - name: "ObsValue/verticalSignificanceSurfaceObservations"
+          coordinates: "longitude latitude"
+          source: variables/verticalSignificanceSurfaceObservations
+          longName: "Vertical Significance (Surface Observations)"
+        - name: "ObsValue/minimumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/minimumTemperature
+          longName: "Minimum Temperature"
+          units: "K"
+
+        - name: "ObsValue/maximumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/maximumTemperature
+          longName: "Maximum Temperature"
+          units: "K"
+
+        - name: "ObsValue/presentWeather"
+          coordinates: "longitude latitude"
+          source: variables/presentWeather
+          longName: "Present weather"
+
+        # Observation - ocean
         - name: "ObsValue/waterTemperature"
           coordinates: "longitude latitude"
           source: variables/waterTemperature
           longName: "Water Temperature"
-          units: "K"
-
-        - name: "ObsError/waterTemperature"
-          coordinates: "longitude latitude"
-          source: variables/waterTemperatureError
-          longName: "Water Temperature Obs Error"
           units: "K"
 
         - name: "ObsValue/heightOfWaves"
@@ -329,6 +319,7 @@ observations:
           source: variables/waterTemperatureMethod
           longName: "Method of Water Temperature Measurement"
 
+        # Observation - wind
         - name: "ObsValue/windEastward"
           coordinates: "longitude latitude"
           source: variables/windEastward
@@ -341,18 +332,13 @@ observations:
           longName: "Northward Wind"
           units: "m s-1"
 
-        - name: "ObsError/windSpeed"
-          coordinates: "longitude latitude"
-          source: variables/windSpeedError
-          longName: "East and Northward wind error"
-          units: "m s-1"
-
         - name: "ObsValue/windSpeedPeak"
           coordinates: "longitude latitude"
           source: variables/windSpeedPeak
           longName: "Maximum Wind Speed (Gusts)"
           units: "m s-1"
 
+        # QualityMarker
         - name: "QualityMarker/height"
           coordinates: "longitude latitude"
           source: variables/heightQualityMarker
@@ -378,11 +364,6 @@ observations:
           source: variables/specificHumidityQualityMarker
           longName: "Specific Humidity Quality Marker"
 
-        - name: "ObsValue/verticalSignificanceSurfaceObservations"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservations
-          longName: "Vertical Significance (Surface Observations)"
-
         - name: "QualityMarker/waterTemperature"
           coordinates: "longitude latitude"
           source: variables/waterTemperatureQualityMarker
@@ -398,3 +379,33 @@ observations:
           source: variables/windEastwardQualityMarker
           longName: "U, V-Component of Wind Quality Marker"
 
+        # ObsError
+        - name: "ObsError/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureError
+          longName: "Pressure Error"
+          units: "Pa"
+
+        - name: "ObsError/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureError
+          longName: "Temperature Error"
+          units: "K"
+
+        - name: "ObsError/relativeHumidity"
+          coordinates: "longitude latitude"
+          source: variables/relativeHumidityError
+          longName: "Relative Humidity Error"
+          units: "1"
+
+        - name: "ObsError/waterTemperature"
+          coordinates: "longitude latitude"
+          source: variables/waterTemperatureError
+          longName: "Water Temperature Obs Error"
+          units: "K"
+
+        - name: "ObsError/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeedError
+          longName: "East and Northward wind error"
+          units: "m s-1"
