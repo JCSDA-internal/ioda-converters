@@ -22,8 +22,6 @@ observations:
             query: "*/T29"
           obsTimeMinusCycleTime:
             query: "*/DHR"
-          presentWeather:
-            query: "*/PREWXSEQ/PRWE"
           longitude:
             query: "*/XOB"
           latitude:
@@ -82,6 +80,8 @@ observations:
             query: "*/TMXMNSEQ/MXTM"
           windSpeedPeak:
             query: "*/GUST1SEQ/MXGS"
+          presentWeather:
+            query: "*/PREWXSEQ/PRWE"
 
           # ObsValue - ocean 
           waterTemperature:
