@@ -87,7 +87,6 @@ observations:
           presentWeather:
             query: "[*/PPWSQ1/PRWE, */MTRPRW/PRWE, */PWEATHER/PRWE]"
 
-
     ioda:
       backend: netcdf
       obsdataout: "testrun/gdas.t12z.adpsfc_bufr_thinned.tm00.nc"
