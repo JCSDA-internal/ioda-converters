@@ -131,7 +131,7 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-       - name: "MetaData/stationIdentification"
+        - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
           source: variables/stationIdentification
           longName: "Station Identification"
