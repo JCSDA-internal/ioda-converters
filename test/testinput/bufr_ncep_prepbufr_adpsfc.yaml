@@ -81,6 +81,8 @@ observations:
             query: "*/CLOU2SEQ/HBLCS"
           heightOfBaseOfCloud:
             query: "*/CLOUDSEQ/HOCB"
+          verticalSignificanceSurfaceObservations:
+            query: "*/CLOUDSEQ/VSSO"
 
           waterTemperature:
             query: "*/SST_INFO/SSTEVENT/SST1"
@@ -112,8 +114,6 @@ observations:
             query: "*/T___INFO/T__EVENT/TQM"
           specificHumidityQualityMarker:
             query: "*/Q___INFO/Q__EVENT/QQM"
-          verticalSignificanceSurfaceObservations:
-            query: "*/CLOUDSEQ/VSSO"
           waterTemperatureQualityMarker:
             query: "*/SST_INFO/SSTEVENT/SSTQM"
           windEastwardQualityMarker:
