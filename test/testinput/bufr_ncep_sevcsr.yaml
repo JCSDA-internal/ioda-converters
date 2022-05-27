@@ -1,4 +1,4 @@
-# (C) Copyright 2021 UCAR1:wq
+# (C) Copyright 2021-2022 UCAR
 
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
@@ -30,9 +30,11 @@ observations:
             query: "*/SAZA"
           cloudAmount:
             query: "*/RPSEQ7/CLDMNT"
+            transforms:
+              - scale: 0.01
           brightnessTemperature:
             query: "*/RPSEQ7/TMBRST"
-          brightnessTemperatureStdDev:
+          brightnessTemperatureStandardDeviation:
             query: "*/RPSEQ7/SDTB"
 
     ioda:
@@ -45,11 +47,11 @@ observations:
             - "*/RPSEQ7"
 
       globals:
-        - name: "MetaData/platformCommonName"
+        - name: "platformCommonName"
           type: string
           value: "MSG-SEVIRI"
 
-        - name: "MetaData/platformLongDescription"
+        - name: "platformLongDescription"
           type: string
           value: "MTYP 021-043 PROC. MSG SEVIRI CLEAR SKY RADIANCES (CSR)"
 
@@ -57,7 +59,6 @@ observations:
         - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteIdentifier
           longName: "Satellite identifier"
-          units: ""
 
         - name: "MetaData/latitude"
           source: variables/latitude
@@ -91,9 +92,9 @@ observations:
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude Channel"
           source: variables/cloudAmount
-          longName: "Amount of cloud coverage"
-          units: "%"
-          range: [0, 100]
+          longName: "Cloud amount in segment"
+          units: "1"
+          range: [0, 1]
           chunks: [1000, 15]
 
         - name: "ObsValue/brightnessTemperature"
@@ -104,9 +105,9 @@ observations:
           range: [150, 350]
           chunks: [1000, 15]
 
-        - name: "ObsValue/brightnessTemperatureStdDev"
+        - name: "ObsValue/brightnessTemperatureStandardDeviation"
           coordinates: "longitude latitude Channel"
-          source: variables/brightnessTemperatureStdDev
+          source: variables/brightnessTemperatureStandardDeviation
           longName: "Brightness temperature standard deviation"
           units: "K"
           chunks: [1000, 15]

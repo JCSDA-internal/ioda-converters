@@ -168,7 +168,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_adpsfc.yaml
     testinput/gdas.t12z.adpsfc_thinned.tm00.prepbufr
     testinput/gdas.t12z.adpsfc_thinned.tm00.bufr_d
-    testinput/bufr_snow_adpsfc.yaml
+    testinput/bufr_ncep_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
     testinput/bufr_ncep_1bmhs.yaml
@@ -178,7 +178,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
-    testinput/bufr_sevcrs_v2.yaml
+    testinput/bufr_ncep_sevcsr.yaml
     testinput/bufr_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
     testinput/bufr_empty_fields.yaml
@@ -1016,12 +1016,12 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_snowadpsfc2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_snowadpsfc2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_snow_adpsfc.yaml"
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_snow_adpsfc.yaml"
                             gdas.t06z.adpsfc_snow.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
@@ -1109,6 +1109,22 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr.yaml"
                     adpupa_prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa_groupby
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr_group_by.yaml"
+                    adpupa_prepbufr_group_by.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+ ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
+                    TYPE    SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_sevcsr.yaml"
+                    gdas.t00z.sevcsr.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
