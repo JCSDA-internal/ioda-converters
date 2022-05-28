@@ -7,7 +7,8 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/gdas.t12z.adpsfc_thinned.tm00.prepbufr"
+#     obsdatain: "./testinput/gdas.t12z.adpsfc_thinned.tm00.prepbufr"
+      obsdatain: "./testinput/gdas.t12z.prepbufr_adpsfc"
 
       exports:
         variables:
@@ -28,8 +29,9 @@ observations:
             query: "*/YOB"
           stationElevation:
             query: "*/ELV"
+          waterTemperatureMethod:
+            query: "*/SST_INFO/MSST"
 
-          # ObsValue
           heightOfStation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
           pressureReducedToMeanSeaLevel:
@@ -60,7 +62,7 @@ observations:
           # ObsValue - cloud, visibility, gust wind, min/max temperature, weather  
           horizontalVisibility:
             query: "*/VISB1SEQ/HOVI"
-          cloudAmountObserved:
+          cloudAmountDescription:
             query: "*/CLOUDSEQ/CLAM"
           cloudCoverTotal:
             query: "*/CLOU2SEQ/TOCC"
@@ -90,8 +92,6 @@ observations:
             query: "*/WAVE_SEQ/HOWV"
           depthBelowWaterSurface:
             query: "*/SST_INFO/DBSS_SEQ/DBSS"
-          waterTemperatureMethod:
-            query: "*/SST_INFO/MSST"
 
           # QualityMarker
           heightQualityMarker:
@@ -129,7 +129,8 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "testrun/gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc"
+#     obsdataout: "testrun/gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc"
+      obsdataout: "testrun/gdas.t12z.prepbufr_adpsfc.nc"
 
       dimensions:
         - name: PresentWeatherSequence
@@ -158,7 +159,7 @@ observations:
         - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
           source: variables/stationIdentification
-          longName: "Station ID"
+          longName: "Station Identification"
 
         - name: "MetaData/prepbufrDataLevelCategory"
           coordinates: "longitude latitude"
@@ -178,7 +179,7 @@ observations:
         - name: "MetaData/obsTimeMinusCycleTime"
           coordinates: "longitude latitude"
           source: variables/obsTimeMinusCycleTime
-          longName: "Present weather"
+          longName: "Observation Time Minus Cycle Time"
           units: "Hour"
 
         - name: "MetaData/latitude"
@@ -198,8 +199,13 @@ observations:
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          longName: "Height of Station"
+          longName: "Elevation of Observing Location"
           units: "m"
+
+        - name: "MetaData/waterTemperatureMethod"
+          coordinates: "longitude latitude"
+          source: variables/waterTemperatureMethod
+          longName: "Method of Water Temperature Measurement"
 
         # ObsValue
         - name: "ObsValue/heightOfStation"
@@ -229,7 +235,7 @@ observations:
         - name: "ObsValue/dewpointTemperature"
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
-          longName: "Dew Point"
+          longName: "Dewpoint Temperature"
           units: "K"
 
         - name: "ObsValue/specificHumidity"
@@ -245,15 +251,15 @@ observations:
           longName: "Horizontal Visibility"
           units: "m"
 
-        - name: "ObsValue/cloudAmountObserved"
+        - name: "ObsValue/cloudAmountDescription"
           coordinates: "longitude latitude"
-          source: variables/cloudAmountObserved
-          longName: "Cloud Amount Observed"
+          source: variables/cloudAmountDescription
+          longName: "Description of Cloud Amount"
 
         - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude"
           source: variables/cloudCoverTotal
-          longName: "Cloud Cover"
+          longName: "Total Cloud Coverage"
           units: "1"
 
         - name: "ObsValue/cloudCeiling"
@@ -265,7 +271,7 @@ observations:
         - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceOfBaseOfLowestCloud
-          longName: "Height above Surface of Base of Lowest Cloud"
+          longName: "Height above Surface of Base of Lowest Cloud Seen"
           units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
@@ -277,23 +283,24 @@ observations:
         - name: "ObsValue/verticalSignificanceSurfaceObservations"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
-          longName: "Vertical Significance (Surface Observations)"
+          longName: "Description of Vertical Significance (Surface Observations)"
+
         - name: "ObsValue/minimumTemperature"
           coordinates: "longitude latitude"
           source: variables/minimumTemperature
-          longName: "Minimum Temperature"
+          longName: "Minimum Temperature at Height and Over Period Specified"
           units: "K"
 
         - name: "ObsValue/maximumTemperature"
           coordinates: "longitude latitude"
           source: variables/maximumTemperature
-          longName: "Maximum Temperature"
+          longName: "Maximum Temperature at Height and Over Period Specified"
           units: "K"
 
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
           source: variables/presentWeather
-          longName: "Present weather"
+          longName: "Description of Present Weather"
 
         # Observation - ocean
         - name: "ObsValue/waterTemperature"
@@ -305,7 +312,7 @@ observations:
         - name: "ObsValue/heightOfWaves"
           coordinates: "longitude latitude"
           source: variables/heightOfWaves
-          longName: "Wave Height"
+          longName: "Height of Waves"
           units: "m"
 
         - name: "ObsValue/depthBelowWaterSurface"
@@ -313,11 +320,6 @@ observations:
           source: variables/depthBelowWaterSurface
           longName: "Depth Below Water Surface"
           units: "m"
-
-        - name: "ObsValue/waterTemperatureMethod"
-          coordinates: "longitude latitude"
-          source: variables/waterTemperatureMethod
-          longName: "Method of Water Temperature Measurement"
 
         # Observation - wind
         - name: "ObsValue/windEastward"

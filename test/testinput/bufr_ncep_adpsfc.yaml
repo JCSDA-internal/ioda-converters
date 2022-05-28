@@ -8,10 +8,12 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "testinput/gdas.t12z.adpsfc_thinned.tm00.bufr_d"
+#     obsdatain: "testinput/gdas.t12z.adpsfc_thinned.tm00.bufr_d"
+      obsdatain: "testinput/gdas.t12z.adpsfc.tm00.bufr_d"
 
       exports:
         variables:
+
           # MetaData
           timestamp:
             datetime:
@@ -28,6 +30,8 @@ observations:
             query: "*/RPID"
           stationElevation:
             query: "[*/SELV, */HSMSL]"
+          waterTemperatureMethod:
+            query: "*/MSST"
 
           # ObsValue
           pressure:
@@ -58,7 +62,9 @@ observations:
           # ObsValue - cloud, visibility, gust wind, min/max temperature, weather 
           cloudCoverTotal:
             query: "*/TOCC"
-          cloudAmountObserved:
+            transforms:
+              - scale: 0.01
+          cloudAmountDescription:
             query: "[*/CLDSQ1/CLAM, */MTRCLD/CLAM, NC000100/CLAM, NC000101/CLAM, NC000102/CLAM]"
           heightAboveSurfaceOfBaseOfLowestCloud:
             query: "*/HBLCS"
@@ -66,14 +72,14 @@ observations:
             query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, NC000100/HOCB, NC000101/HOCB, NC000102/HOCB]"
           verticalSignificanceSurfaceObservations:
             query: "[*/CLDSQ1/VSSO, */MTRCLD/VSSO, NC000100/VSSO[1], NC000101/VSSO[1], NC000102/VSSO[1]]"
-          verticalSignificanceSurfaceObservations2:
-            query: "[NC000100/VSSO[2], NC000101/VSSO[2], NC000102/VSSO[2]]"
-          verticalSignificanceSurfaceObservationsSupplemental:
-            query: "*/BSYSCLD/VSSO"
-          verticalSignificanceSurfaceObservationsBelowStation:
-            query: "*/BSYBCLD/VSSO"
-          verticalSignificanceSurfaceObservationsCloudDrift:
-            query: "*/DIRCLDFT/BSYDCLD/VSSO"
+#          verticalSignificanceSurfaceObservations2:
+#            query: "[NC000100/VSSO[2], NC000101/VSSO[2], NC000102/VSSO[2]]"
+#          verticalSignificanceSurfaceObservationsSupplemental:
+#            query: "*/BSYSCLD/VSSO"
+#          verticalSignificanceSurfaceObservationsBelowStation:
+#            query: "*/BSYBCLD/VSSO"
+#          verticalSignificanceSurfaceObservationsCloudDrift:
+#            query: "*/DIRCLDFT/BSYDCLD/VSSO"
           verticalVisibility:
             query: "[*/RPSEC3/VTVI, */VTVI]"
           horizontalVisibility:
@@ -81,7 +87,7 @@ observations:
           minimumTemperatureAtHeightAndOverPeriodSpecified:
             query: "[*/TMPSQ3/MITM, */MTTPSQ/MITM, NC000100/BSYEXTM/MITM[1], NC000101/BSYEXTM/MITM[1], NC000102/BSYEXTM/MITM[1]]"
           maximumWindGustSpeed:
-            query: "[*/WNDSQ2/MXGS, */BSYWND2/MXGS]"
+            query: "[*/WNDSQ2/MXGS, */MTGUST/MXGS, */BSYWND2/MXGS]"
           maximumTemperatureAtHeightAndOverPeriodSpecified:
             query: "[*/TMPSQ3/MXTM, */MTTPSQ/MXTM, */BSYEXTM/MXTM]"
           presentWeather:
@@ -89,7 +95,8 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.adpsfc_bufr_thinned.tm00.nc"
+#     obsdataout: "testrun/gdas.t12z.adpsfc_bufr_thinned.tm00.nc"
+      obsdataout: "testrun/gdas.t12z.adpsfc.tm00.bufr_d.nc"
 
       dimensions:
         - name: CloudSequence
@@ -138,8 +145,13 @@ observations:
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          longName: "Station Elevation"
+          longName: "Elevation of Observing Location"
           units: "m"
+
+        - name: "MetaData/waterTemperatureMethod"
+          coordinates: "longitude latitude"
+          source: variables/waterTemperatureMethod
+          longName: "Method of Water Temperature Measurement"
 
         # ObsValue
         - name: "ObsValue/altimeterSettingQnh"
@@ -174,7 +186,7 @@ observations:
         - name: "ObsValue/dewpointTemperature"
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
-          longName: "Dew Point"
+          longName: "Dewpoint Temperature"
           units: "K"
 
         - name: "ObsValue/windDirection"
@@ -206,15 +218,15 @@ observations:
           longName: "Quality Indicator for Pressure"
 
         # ObsValue - cloud, visibility, gust wind, min/max temperature, weather 
-        - name: "ObsValue/cloudAmountObserved"
+        - name: "ObsValue/cloudAmountDescription"
           coordinates: "longitude latitude"
-          source: variables/cloudAmountObserved
-          longName: "Cloud Amount Observed"
+          source: variables/cloudAmountDescription
+          longName: "Description of Cloud Amount"
 
         - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceOfBaseOfLowestCloud
-          longName: "Height Above Surface of Base of Lowest Cloud"
+          longName: "Height Above Surface of Base of Lowest Cloud Seen"
           units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
@@ -229,10 +241,16 @@ observations:
           longName: "Horizontal Visibility"
           units: "m"
 
-        - name: "ObsValue/minimumTemperatureAtHeightAndOverPeriodSpecified"
+        - name: "ObsValue/minimumTemperature"
           coordinates: "longitude latitude"
           source: variables/minimumTemperatureAtHeightAndOverPeriodSpecified
-          longName: "Minimum Temperature At Height and Over Period Specified"
+          longName: "Minimum Temperature at Height and Over Period Specified"
+          units: "K"
+
+        - name: "ObsValue/maximumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/maximumTemperatureAtHeightAndOverPeriodSpecified
+          longName: "Maximum Temperature at Height and Over Period Specified"
           units: "K"
 
         - name: "ObsValue/maximumWindGustSpeed"
@@ -241,47 +259,41 @@ observations:
           longName: "Maximum Wind Gust Speed"
           units: "m s-1"
 
-        - name: "ObsValue/maximumTemperatureAtHeightAndOverPeriodSpecified"
-          coordinates: "longitude latitude"
-          source: variables/maximumTemperatureAtHeightAndOverPeriodSpecified
-          longName: "Maximum Temperature At Height and Over Period Specified"
-          units: "K"
-
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
           source: variables/presentWeather
-          longName: "Present weather"
+          longName: "Description of Present Weather"
 
         - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude"
           source: variables/cloudCoverTotal
-          longName: "Cloud Cover"
+          longName: "Total Cloud Coverage"
           units: "1"
 
         - name: "ObsValue/verticalSignificanceSurfaceObservations"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
-          longName: "Vertical Significance of Observations"
+          longName: "Description of Vertical Significance (Surface Observations)"
 
-        - name: "ObsValue/verticalSignificanceSurfaceObservations2"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservations2
-          longName: "Vertical Significance of Observations 2"
+#        - name: "ObsValue/verticalSignificanceSurfaceObservations2"
+#          coordinates: "longitude latitude"
+#          source: variables/verticalSignificanceSurfaceObservations2
+#          longName: "Vertical Significance of Observations 2"
 
-        - name: "ObsValue/verticalSignificanceSurfaceObservationsBelowStation"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservationsBelowStation
-          longName: "Vertical Significance of Observations for Clouds Below Station"
+#        - name: "ObsValue/verticalSignificanceSurfaceObservationsBelowStation"
+#          coordinates: "longitude latitude"
+#          source: variables/verticalSignificanceSurfaceObservationsBelowStation
+#          longName: "Vertical Significance of Observations for Clouds Below Station"
 
-        - name: "ObsValue/verticalSignificanceSurfaceObservationsSupplemental"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservationsSupplemental
-          longName: "Supplemental Vertical Significance of Observations"
+#        - name: "ObsValue/verticalSignificanceSurfaceObservationsSupplemental"
+#          coordinates: "longitude latitude"
+#          source: variables/verticalSignificanceSurfaceObservationsSupplemental
+#          longName: "Supplemental Vertical Significance of Observations"
 
-        - name: "ObsValue/verticalSignificanceSurfaceObservationsCloudDrift"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservationsCloudDrift
-          longName: "Cloud Drift Vertical Significance of Observations"
+#        - name: "ObsValue/verticalSignificanceSurfaceObservationsCloudDrift"
+#          coordinates: "longitude latitude"
+#          source: variables/verticalSignificanceSurfaceObservationsCloudDrift
+#          longName: "Cloud Drift Vertical Significance of Observations"
 
         - name: "ObsValue/verticalVisibility"
           coordinates: "longitude latitude"
