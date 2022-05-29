@@ -459,7 +459,7 @@ def read_bufr_message(f, count, start_pos, data):
                 if (var != 'Constructed'):
                     try:
                         avals = ecc.codes_get_array(bufr, var)
-                        logging.info(f" var {k} has len: {len(avals)}")
+                        # logging.info(f" var {k} has len: {len(avals)}")
                         max_mlen = max(max_mlen, len(avals))
                         temp_data[k] = assign_values(avals, k)
                         if not is_all_missing(temp_data[k]):
@@ -473,7 +473,7 @@ def read_bufr_message(f, count, start_pos, data):
             if (v[0] != 'Constructed'):
                 try:
                     avals = ecc.codes_get_array(bufr, v[0])
-                    logging.info(f" var {k} has len: {len(avals)}")
+                    # logging.info(f" var {k} has len: {len(avals)}")
                     max_mlen = max(max_mlen, len(avals))
                     temp_data[k] = assign_values(avals, k)
                 except ecc.KeyValueNotFoundError:
@@ -547,8 +547,8 @@ def read_bufr_message(f, count, start_pos, data):
     # Loop over each pair of beginning and ending indices and transfer data
     obnum = 0
     for b,e in tuple(zip(nbeg,nend)):
-        if b < 0 or e < 0:
-            logging.warning("Skipping nonsense BUFR msg with a negative index [{b},{e}]")
+        if b < 0 or e < 0 or e <= b:
+            logging.warning(f"Skipping nonsense BUFR msg with a negative index [{b},{e}]")
             return data, count, start_pos
         logging.info(f"Within BUFR msg, processing ob {obnum+1} with bounds: [{b},{e-1}]")
         if e < 999999:
@@ -665,6 +665,9 @@ def read_bufr_message(f, count, start_pos, data):
                 except Exception:
                     logging.warning(f"Unable to copy {variable} data, "
                                     f"either index [{b},{e}] must be out of range.")
+            else:
+                nbad += 1
+
         if nbad == len(raw_obsvars):
             logging.warning(f"No usable data in this ob, skipping it.")
             count[2] += target_number
@@ -681,19 +684,22 @@ def read_bufr_message(f, count, start_pos, data):
         vwnd = np.full(target_number, float_missing_value)
         for n, wdir in enumerate(vals['windDirection']):
             wspd = vals['windSpeed'][n]
-            if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
-                uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, wspd)
+            if wdir and wspd:
+                if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
+                    uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, wspd)
 
         spfh = np.full(target_number, float_missing_value)
         for n, dewpoint in enumerate(vals['dewpointTemperature']):
             pres = meta_data['pressure'][n]
-            if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
-                spfh[n] = met_utils.specific_humidity(dewpoint, pres)
+            if dewpoint and pres:
+                if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
+                    spfh[n] = met_utils.specific_humidity(dewpoint, pres)
 
         airt = np.full(target_number, float_missing_value)
         for n, temp in enumerate(vals['airTemperature']):
-            if (temp > 50 and temp < 345):
-                airt[n] = temp
+            if temp:
+                if (temp > 50 and temp < 345):
+                    airt[n] = temp
 
         # Finally fill up the output data dictionary with observed variables.
         data['windEastward'] = np.append(data['windEastward'], uwnd)
