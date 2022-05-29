@@ -13,8 +13,8 @@ observations:
 
       exports:
         variables:
-
           # MetaData
+          # MSST added
           timestamp:
             datetime:
               year: "*/YEAR[1]"
@@ -40,8 +40,6 @@ observations:
             query: "*/PMSL"
           altimeterSettingQnh:
             query: "*/ALSE"
-          waterTemperature:
-            query: "*/SST1"
           airTemperature:
             query: "*/TMDB"
           dewpointTemperature:
@@ -51,15 +49,16 @@ observations:
           windSpeed:
             query: "*/WSPD"
 
-          # QualityMarker
-          airTemperatureQM:
-            query: "*/QMAT"
-          dewpointTemperatureQM:
-            query: "*/QMDD"
-          pressureQM:
-            query: "*/QMPR"
+          # ObsValue - ocean
+          # HOWV (hight of waves) added 
+          # DBSS (depth below water surface) not found 
+          waterTemperature:
+            query: "*/SST1"
+          heightOfWaves:
+            query: "*/WAVSQ1/HOWV"
 
           # ObsValue - cloud, visibility, gust wind, min/max temperature, weather 
+          # CEILING (cloud ceiling) not found
           cloudCoverTotal:
             query: "*/TOCC"
             transforms:
@@ -93,6 +92,14 @@ observations:
           presentWeather:
             query: "[*/PPWSQ1/PRWE, */MTRPRW/PRWE, */PWEATHER/PRWE]"
 
+          # QualityMarker
+          airTemperatureQM:
+            query: "*/QMAT"
+          dewpointTemperatureQM:
+            query: "*/QMDD"
+          pressureQM:
+            query: "*/QMPR"
+
     ioda:
       backend: netcdf
 #     obsdataout: "testrun/gdas.t12z.adpsfc_bufr_thinned.tm00.nc"
@@ -107,12 +114,12 @@ observations:
           path: "*/BSYWND2"
         - name: PresentWeatherSequence
           path: "*/MTRPRW"
-        - name: VSSOSupplementalSequence
-          path: "*/BSYSCLD"
-        - name: VSSOBelowStationSequence
-          path: "*/BSYBCLD"
-        - name: VSSOCloudDriftSequence
-          path: "*/DIRCLDFT/BSYDCLD"
+#        - name: VSSOSupplementalSequence
+#          path: "*/BSYSCLD"
+#        - name: VSSOBelowStationSequence
+#          path: "*/BSYBCLD"
+#        - name: VSSOCloudDriftSequence
+#          path: "*/DIRCLDFT/BSYDCLD"
 
       variables:
 
@@ -159,23 +166,17 @@ observations:
           source: variables/altimeterSettingQnh
           longName: "Altimeter Setting Qnh"
 
-        - name: "ObsValue/pressureReducedToMeanSeaLevel"
-          coordinates: "longitude latitude"
-          source: variables/pressureReducedToMeanSeaLevel
-          longName: "Mean Sea-Level Pressure"
-          units: "Pa"
-
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
           units: "Pa"
 
-        - name: "ObsValue/waterTemperature"
+        - name: "ObsValue/pressureReducedToMeanSeaLevel"
           coordinates: "longitude latitude"
-          source: variables/waterTemperature
-          longName: "Water Temperature"
-          units: "K"
+          source: variables/pressureReducedToMeanSeaLevel
+          longName: "Mean Sea-Level Pressure"
+          units: "Pa"
 
         - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
@@ -201,23 +202,25 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        # QualityMarker
-        - name: "QualityMarker/airTemperature"
+        # ObsValue - ocean
+        - name: "ObsValue/waterTemperature"
           coordinates: "longitude latitude"
-          source: variables/airTemperatureQM
-          longName: "Quality Indicator for Atmospheric Temperature"
+          source: variables/waterTemperature
+          longName: "Water Temperature"
+          units: "K"
 
-        - name: "QualityMarker/dewpointTemperature"
+        - name: "ObsValue/heightOfWaves"
           coordinates: "longitude latitude"
-          source: variables/dewpointTemperatureQM
-          longName: "Quality Indicator for Dewpoint Temperature"
-
-        - name: "QualityMarker/pressure"
-          coordinates: "longitude latitude"
-          source: variables/pressureQM
-          longName: "Quality Indicator for Pressure"
+          source: variables/heightOfWaves
+          longName: "Height of Waves"
+          units: "m"
 
         # ObsValue - cloud, visibility, gust wind, min/max temperature, weather 
+        - name: "ObsValue/cloudCoverTotal"
+          coordinates: "longitude latitude"
+          source: variables/cloudCoverTotal
+          longName: "Total Cloud Coverage"
+          units: "1"
         - name: "ObsValue/cloudAmountDescription"
           coordinates: "longitude latitude"
           source: variables/cloudAmountDescription
@@ -234,41 +237,6 @@ observations:
           source: variables/heightOfBaseOfCloud
           longName: "Cloud Base Altitude"
           units: "m"
-
-        - name: "ObsValue/horizontalVisibility"
-          coordinates: "longitude latitude"
-          source: variables/horizontalVisibility
-          longName: "Horizontal Visibility"
-          units: "m"
-
-        - name: "ObsValue/minimumTemperature"
-          coordinates: "longitude latitude"
-          source: variables/minimumTemperatureAtHeightAndOverPeriodSpecified
-          longName: "Minimum Temperature at Height and Over Period Specified"
-          units: "K"
-
-        - name: "ObsValue/maximumTemperature"
-          coordinates: "longitude latitude"
-          source: variables/maximumTemperatureAtHeightAndOverPeriodSpecified
-          longName: "Maximum Temperature at Height and Over Period Specified"
-          units: "K"
-
-        - name: "ObsValue/maximumWindGustSpeed"
-          coordinates: "longitude latitude"
-          source: variables/maximumWindGustSpeed
-          longName: "Maximum Wind Gust Speed"
-          units: "m s-1"
-
-        - name: "ObsValue/presentWeather"
-          coordinates: "longitude latitude"
-          source: variables/presentWeather
-          longName: "Description of Present Weather"
-
-        - name: "ObsValue/cloudCoverTotal"
-          coordinates: "longitude latitude"
-          source: variables/cloudCoverTotal
-          longName: "Total Cloud Coverage"
-          units: "1"
 
         - name: "ObsValue/verticalSignificanceSurfaceObservations"
           coordinates: "longitude latitude"
@@ -295,8 +263,53 @@ observations:
 #          source: variables/verticalSignificanceSurfaceObservationsCloudDrift
 #          longName: "Cloud Drift Vertical Significance of Observations"
 
+        - name: "ObsValue/horizontalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/horizontalVisibility
+          longName: "Horizontal Visibility"
+          units: "m"
+
         - name: "ObsValue/verticalVisibility"
           coordinates: "longitude latitude"
           source: variables/verticalVisibility
           longName: "Vertical Visibility"
           units: "m"
+
+        - name: "ObsValue/minimumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/minimumTemperature
+          longName: "Minimum Temperature at Height and Over Period Specified"
+          units: "K"
+
+        - name: "ObsValue/maximumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/maximumTemperature
+          longName: "Maximum Temperature at Height and Over Period Specified"
+          units: "K"
+
+        - name: "ObsValue/maximumWindGustSpeed"
+          coordinates: "longitude latitude"
+          source: variables/maximumWindGustSpeed
+          longName: "Maximum Wind Gust Speed"
+          units: "m s-1"
+
+        - name: "ObsValue/presentWeather"
+          coordinates: "longitude latitude"
+          source: variables/presentWeather
+          longName: "Description of Present Weather"
+
+        # QualityMarker
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Atmospheric Temperature"
+
+        - name: "QualityMarker/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperatureQM
+          longName: "Quality Indicator for Dewpoint Temperature"
+
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQM
+          longName: "Quality Indicator for Pressure"

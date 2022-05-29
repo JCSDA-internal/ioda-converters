@@ -13,20 +13,20 @@ observations:
       exports:
         variables:
           # MetaData
-          stationIdentification:
-            query: "*/SID"
+          obsTimeMinusCycleTime:
+            query: "*/DHR"
           prepbufrDataLevelCategory:
             query: "*/CAT"
           prepbufrReportType:
             query: "*/TYP"
           dumpReportType:
             query: "*/T29"
-          obsTimeMinusCycleTime:
-            query: "*/DHR"
           longitude:
             query: "*/XOB"
           latitude:
             query: "*/YOB"
+          stationIdentification:
+            query: "*/SID"
           stationElevation:
             query: "*/ELV"
           waterTemperatureMethod:
@@ -35,12 +35,12 @@ observations:
           # ObsValue
           heightOfStation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
-          pressureReducedToMeanSeaLevel:
-            query: "*/PMSL_SEQ/PMO"
-            transforms:
-              - scale: 100
           pressure:
             query: "*/P___INFO/P__EVENT/POB"
+            transforms:
+              - scale: 100
+          pressureReducedToMeanSeaLevel:
+            query: "*/PMSL_SEQ/PMO"
             transforms:
               - scale: 100
           airTemperature:
@@ -60,15 +60,23 @@ observations:
           windNorthward:
             query: "*/W___INFO/W__EVENT/VOB"
 
-          # ObsValue - cloud, visibility, gust wind, min/max temperature, weather  
-          horizontalVisibility:
-            query: "*/VISB1SEQ/HOVI"
-          cloudAmountDescription:
-            query: "*/CLOUDSEQ/CLAM"
+          # ObsValue - ocean 
+          waterTemperature:
+            query: "*/SST_INFO/SSTEVENT/SST1"
+          heightOfWaves:
+            query: "*/WAVE_SEQ/HOWV"
+          depthBelowWaterSurface:
+            query: "*/SST_INFO/DBSS_SEQ/DBSS"
+
+          # ObsValue - cloud, cloud ceiling, visibility, gust wind, min/max temperature, weather  
+          # note: cloud ceiling is a derivative of HOCB, the height of cloud base
+          # VTVI added
           cloudCoverTotal:
             query: "*/CLOU2SEQ/TOCC"
             transforms:
               - scale: 0.01
+          cloudAmountDescription:
+            query: "*/CLOUDSEQ/CLAM"
           cloudCeiling:
             query: "*/CLOU3SEQ/CEILING"
           heightAboveSurfaceOfBaseOfLowestCloud:
@@ -77,22 +85,21 @@ observations:
             query: "*/CLOUDSEQ/HOCB"
           verticalSignificanceSurfaceObservations:
             query: "*/CLOUDSEQ/VSSO"
+          verticalVisibility:
+            query: "*/VISB1SEQ/VTVI_SEQ/VTVI"
+          horizontalVisibility:
+            query: "*/VISB1SEQ/HOVI"
+#         minimumTemperatureAtHeightOverPeriodOfTime:
           minimumTemperature:
             query: "*/TMXMNSEQ/MITM"
+#         maximumTemperatureAtHeightOverPeriodOfTime:
           maximumTemperature:
             query: "*/TMXMNSEQ/MXTM"
-          windSpeedPeak:
+#         windSpeedPeak:
+          maximumWindGustSpeed:
             query: "*/GUST1SEQ/MXGS"
           presentWeather:
             query: "*/PREWXSEQ/PRWE"
-
-          # ObsValue - ocean 
-          waterTemperature:
-            query: "*/SST_INFO/SSTEVENT/SST1"
-          heightOfWaves:
-            query: "*/WAVE_SEQ/HOWV"
-          depthBelowWaterSurface:
-            query: "*/SST_INFO/DBSS_SEQ/DBSS"
 
           # QualityMarker
           heightQualityMarker:
@@ -134,6 +141,10 @@ observations:
       obsdataout: "testrun/gdas.t12z.prepbufr_adpsfc.nc"
 
       dimensions:
+        - name: CloudSequence 
+          path: "*/CLOUDSEQ"
+        - name: MaxMinTemperatureSequence
+          path: "*/TMXMNSEQ" 
         - name: PresentWeatherSequence
           path: "*/PREWXSEQ"
         - name: HeightEvent
@@ -144,23 +155,19 @@ observations:
           path: "*/T___INFO/T__EVENT"
         - name: HumidityEvent
           path: "*/Q___INFO/Q__EVENT"
-        - name: CloudSequence 
-          path: "*/CLOUDSEQ"
         - name: WaterTemperatureEvent
           path: "*/SST_INFO/SSTEVENT"
         - name: WindEvent
           path: "*/W___INFO/W__EVENT"
-        - name: MaxMinTemperatureSequence
-          path: "*/TMXMNSEQ" 
-
 
       variables:
 
         # MetaData
-        - name: "MetaData/stationIdentification"
+        - name: "MetaData/obsTimeMinusCycleTime"
           coordinates: "longitude latitude"
-          source: variables/stationIdentification
-          longName: "Station Identification"
+          source: variables/obsTimeMinusCycleTime
+          longName: "Observation Time Minus Cycle Time"
+          units: "Hour"
 
         - name: "MetaData/prepbufrDataLevelCategory"
           coordinates: "longitude latitude"
@@ -177,12 +184,6 @@ observations:
           source: variables/dumpReportType
           longName: "Data Dump Report Type"
 
-        - name: "MetaData/obsTimeMinusCycleTime"
-          coordinates: "longitude latitude"
-          source: variables/obsTimeMinusCycleTime
-          longName: "Observation Time Minus Cycle Time"
-          units: "Hour"
-
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
           source: variables/latitude
@@ -196,6 +197,11 @@ observations:
           longName: "Longitude"
           units: "degrees_east"
           range: [0, 360]
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station Identification"
 
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
@@ -215,16 +221,16 @@ observations:
           longName: "Height of Station"
           units: "m"
 
-        - name: "ObsValue/pressureReducedToMeanSeaLevel"
-          coordinates: "longitude latitude"
-          source: variables/pressureReducedToMeanSeaLevel
-          longName: "Mean Sea-Level Pressure"
-          units: "Pa"
-
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/pressureReducedToMeanSeaLevel"
+          coordinates: "longitude latitude"
+          source: variables/pressureReducedToMeanSeaLevel
+          longName: "Mean Sea-Level Pressure"
           units: "Pa"
 
         - name: "ObsValue/airTemperature"
@@ -244,24 +250,49 @@ observations:
           source: variables/specificHumidity
           longName: "Specific Humidity"
           units: "kg kg-1"
-   
-        # Observation - cloud, visibility, gust wind, min/max temperature
-        - name: "ObsValue/horizontalVisibility"
+
+        - name: "ObsValue/windEastward"
           coordinates: "longitude latitude"
-          source: variables/horizontalVisibility
-          longName: "Horizontal Visibility"
+          source: variables/windEastward
+          longName: "Eastward Wind"
+          units: "m s-1"
+
+        - name: "ObsValue/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windNorthward
+          longName: "Northward Wind"
+          units: "m s-1"
+
+        # ObsValue - ocean
+        - name: "ObsValue/waterTemperature"
+          coordinates: "longitude latitude"
+          source: variables/waterTemperature
+          longName: "Water Temperature"
+          units: "K"
+
+        - name: "ObsValue/heightOfWaves"
+          coordinates: "longitude latitude"
+          source: variables/heightOfWaves
+          longName: "Height of Waves"
           units: "m"
 
-        - name: "ObsValue/cloudAmountDescription"
+        - name: "ObsValue/depthBelowWaterSurface"
           coordinates: "longitude latitude"
-          source: variables/cloudAmountDescription
-          longName: "Description of Cloud Amount"
+          source: variables/depthBelowWaterSurface
+          longName: "Depth Below Water Surface"
+          units: "m"
 
+        # Observation - cloud, visibility, gust wind, min/max temperature
         - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude"
           source: variables/cloudCoverTotal
           longName: "Total Cloud Coverage"
           units: "1"
+
+        - name: "ObsValue/cloudAmountDescription"
+          coordinates: "longitude latitude"
+          source: variables/cloudAmountDescription
+          longName: "Description of Cloud Amount"
 
         - name: "ObsValue/cloudCeiling"
           coordinates: "longitude latitude"
@@ -285,61 +316,44 @@ observations:
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
           longName: "Description of Vertical Significance (Surface Observations)"
+ 
+        - name: "ObsValue/horizontalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/horizontalVisibility
+          longName: "Horizontal Visibility"
+          units: "m"
 
+        - name: "ObsValue/verticalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/verticalVisibility
+          longName: "Vertical Visibility"
+          units: "m"
+
+#       - name: "ObsValue/minimumTemperatureAtHeightAndOverPeriodSpecified"
         - name: "ObsValue/minimumTemperature"
           coordinates: "longitude latitude"
           source: variables/minimumTemperature
           longName: "Minimum Temperature at Height and Over Period Specified"
           units: "K"
 
+#       - name: "ObsValue/maximumTemperatureAtHeightAndOverPeriodSpecified"
         - name: "ObsValue/maximumTemperature"
           coordinates: "longitude latitude"
           source: variables/maximumTemperature
           longName: "Maximum Temperature at Height and Over Period Specified"
           units: "K"
 
+#       - name: "ObsValue/windSpeedPeak"
+        - name: "ObsValue/maximumWindGustSpeed"
+          coordinates: "longitude latitude"
+          source: variables/maximumWindGustSpeed
+          longName: "Maximum Wind Gust Speed"
+          units: "m s-1"
+
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
           source: variables/presentWeather
           longName: "Description of Present Weather"
-
-        # Observation - ocean
-        - name: "ObsValue/waterTemperature"
-          coordinates: "longitude latitude"
-          source: variables/waterTemperature
-          longName: "Water Temperature"
-          units: "K"
-
-        - name: "ObsValue/heightOfWaves"
-          coordinates: "longitude latitude"
-          source: variables/heightOfWaves
-          longName: "Height of Waves"
-          units: "m"
-
-        - name: "ObsValue/depthBelowWaterSurface"
-          coordinates: "longitude latitude"
-          source: variables/depthBelowWaterSurface
-          longName: "Depth Below Water Surface"
-          units: "m"
-
-        # Observation - wind
-        - name: "ObsValue/windEastward"
-          coordinates: "longitude latitude"
-          source: variables/windEastward
-          longName: "Eastward Wind"
-          units: "m s-1"
-
-        - name: "ObsValue/windNorthward"
-          coordinates: "longitude latitude"
-          source: variables/windNorthward
-          longName: "Northward Wind"
-          units: "m s-1"
-
-        - name: "ObsValue/windSpeedPeak"
-          coordinates: "longitude latitude"
-          source: variables/windSpeedPeak
-          longName: "Maximum Wind Speed (Gusts)"
-          units: "m s-1"
 
         # QualityMarker
         - name: "QualityMarker/height"
