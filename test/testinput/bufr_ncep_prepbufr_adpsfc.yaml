@@ -33,7 +33,7 @@ observations:
             query: "*/SST_INFO/MSST"
 
           # ObsValue
-          heightOfStation:
+          heightOfObservation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
           pressure:
             query: "*/P___INFO/P__EVENT/POB"
@@ -215,10 +215,10 @@ observations:
           longName: "Method of Water Temperature Measurement"
 
         # ObsValue
-        - name: "ObsValue/heightOfStation"
+        - name: "ObsValue/heightOfObservation"
           coordinates: "longitude latitude"
-          source: variables/heightOfStation
-          longName: "Height of Station"
+          source: variables/heightOfObservation
+          longName: "Height of Observation (Station)"
           units: "m"
 
         - name: "ObsValue/pressure"
