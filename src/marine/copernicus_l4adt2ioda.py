@@ -128,7 +128,7 @@ def main():
         type=str, required=True)
     required.add_argument(
         '-d', '--date',
-        help="date of the file",
+        help="provide date in the format %Y-%m-%dT%H:%M:%SZ",
         type=str, required=False)
 
     args = parser.parse_args()
