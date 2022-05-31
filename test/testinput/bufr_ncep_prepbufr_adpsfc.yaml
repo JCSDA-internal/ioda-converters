@@ -7,7 +7,6 @@ observations:
   - obs space:
       name: bufr
 
-#     obsdatain: "./testinput/gdas.t12z.adpsfc_thinned.tm00.prepbufr"
       obsdatain: "./testinput/gdas.t12z.prepbufr_adpsfc"
 
       exports:
@@ -70,7 +69,6 @@ observations:
 
           # ObsValue - cloud, cloud ceiling, visibility, gust wind, min/max temperature, weather  
           # note: cloud ceiling is a derivative of HOCB, the height of cloud base
-          # VTVI added
           cloudCoverTotal:
             query: "*/CLOU2SEQ/TOCC"
             transforms:
@@ -89,13 +87,10 @@ observations:
             query: "*/VISB1SEQ/VTVI_SEQ/VTVI"
           horizontalVisibility:
             query: "*/VISB1SEQ/HOVI"
-#         minimumTemperatureAtHeightOverPeriodOfTime:
           minimumTemperature:
             query: "*/TMXMNSEQ/MITM"
-#         maximumTemperatureAtHeightOverPeriodOfTime:
           maximumTemperature:
             query: "*/TMXMNSEQ/MXTM"
-#         windSpeedPeak:
           maximumWindGustSpeed:
             query: "*/GUST1SEQ/MXGS"
           presentWeather:
@@ -137,7 +132,6 @@ observations:
 
     ioda:
       backend: netcdf 
-#     obsdataout: "testrun/gdas.t12z.adpsfc_thinned.tm00.prepbufr.nc"
       obsdataout: "testrun/gdas.t12z.prepbufr_adpsfc.nc"
 
       dimensions:
@@ -329,21 +323,18 @@ observations:
           longName: "Vertical Visibility"
           units: "m"
 
-#       - name: "ObsValue/minimumTemperatureAtHeightAndOverPeriodSpecified"
         - name: "ObsValue/minimumTemperature"
           coordinates: "longitude latitude"
           source: variables/minimumTemperature
           longName: "Minimum Temperature at Height and Over Period Specified"
           units: "K"
 
-#       - name: "ObsValue/maximumTemperatureAtHeightAndOverPeriodSpecified"
         - name: "ObsValue/maximumTemperature"
           coordinates: "longitude latitude"
           source: variables/maximumTemperature
           longName: "Maximum Temperature at Height and Over Period Specified"
           units: "K"
 
-#       - name: "ObsValue/windSpeedPeak"
         - name: "ObsValue/maximumWindGustSpeed"
           coordinates: "longitude latitude"
           source: variables/maximumWindGustSpeed

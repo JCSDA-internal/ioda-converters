@@ -8,13 +8,11 @@ observations:
   - obs space:
       name: bufr
 
-#     obsdatain: "testinput/gdas.t12z.adpsfc_thinned.tm00.bufr_d"
       obsdatain: "testinput/gdas.t12z.adpsfc.tm00.bufr_d"
 
       exports:
         variables:
           # MetaData
-          # MSST added
           timestamp:
             datetime:
               year: "*/YEAR[1]"
@@ -50,7 +48,6 @@ observations:
             query: "*/WSPD"
 
           # ObsValue - ocean
-          # HOWV (hight of waves) added 
           # DBSS (depth below water surface) not found 
           waterTemperature:
             query: "*/SST1"
@@ -71,14 +68,6 @@ observations:
             query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, NC000100/HOCB, NC000101/HOCB, NC000102/HOCB]"
           verticalSignificanceSurfaceObservations:
             query: "[*/CLDSQ1/VSSO, */MTRCLD/VSSO, NC000100/VSSO[1], NC000101/VSSO[1], NC000102/VSSO[1]]"
-#          verticalSignificanceSurfaceObservations2:
-#            query: "[NC000100/VSSO[2], NC000101/VSSO[2], NC000102/VSSO[2]]"
-#          verticalSignificanceSurfaceObservationsSupplemental:
-#            query: "*/BSYSCLD/VSSO"
-#          verticalSignificanceSurfaceObservationsBelowStation:
-#            query: "*/BSYBCLD/VSSO"
-#          verticalSignificanceSurfaceObservationsCloudDrift:
-#            query: "*/DIRCLDFT/BSYDCLD/VSSO"
           verticalVisibility:
             query: "[*/RPSEC3/VTVI, */VTVI]"
           horizontalVisibility:
@@ -102,7 +91,6 @@ observations:
 
     ioda:
       backend: netcdf
-#     obsdataout: "testrun/gdas.t12z.adpsfc_bufr_thinned.tm00.nc"
       obsdataout: "testrun/gdas.t12z.adpsfc.tm00.nc"
 
       dimensions:
@@ -114,12 +102,6 @@ observations:
           path: "*/BSYWND2"
         - name: PresentWeatherSequence
           path: "*/MTRPRW"
-#        - name: VSSOSupplementalSequence
-#          path: "*/BSYSCLD"
-#        - name: VSSOBelowStationSequence
-#          path: "*/BSYBCLD"
-#        - name: VSSOCloudDriftSequence
-#          path: "*/DIRCLDFT/BSYDCLD"
 
       variables:
 
@@ -242,26 +224,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
           longName: "Description of Vertical Significance (Surface Observations)"
-
-#        - name: "ObsValue/verticalSignificanceSurfaceObservations2"
-#          coordinates: "longitude latitude"
-#          source: variables/verticalSignificanceSurfaceObservations2
-#          longName: "Vertical Significance of Observations 2"
-
-#        - name: "ObsValue/verticalSignificanceSurfaceObservationsBelowStation"
-#          coordinates: "longitude latitude"
-#          source: variables/verticalSignificanceSurfaceObservationsBelowStation
-#          longName: "Vertical Significance of Observations for Clouds Below Station"
-
-#        - name: "ObsValue/verticalSignificanceSurfaceObservationsSupplemental"
-#          coordinates: "longitude latitude"
-#          source: variables/verticalSignificanceSurfaceObservationsSupplemental
-#          longName: "Supplemental Vertical Significance of Observations"
-
-#        - name: "ObsValue/verticalSignificanceSurfaceObservationsCloudDrift"
-#          coordinates: "longitude latitude"
-#          source: variables/verticalSignificanceSurfaceObservationsCloudDrift
-#          longName: "Cloud Drift Vertical Significance of Observations"
 
         - name: "ObsValue/horizontalVisibility"
           coordinates: "longitude latitude"
