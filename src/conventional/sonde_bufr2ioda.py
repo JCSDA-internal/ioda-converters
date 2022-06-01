@@ -366,7 +366,17 @@ def specialty_time(tvals, year, month, day, hour, minute, second):
 
     # This should be the launch or release time of sonde.
     logging.debug(f"Launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
-    this_datetime = datetime(year, month, day, hour, minute, second)
+    try:
+        this_datetime = datetime(year, month, day, hour, minute, second)
+    except Exception:
+        logging.critical(f"Bogus launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
+        year = 1900
+        month = 1
+        day = 1
+        hour = 0
+        minute = 0
+        this_datetime = datetime(year, month, day, hour, minute, second)
+
     time_offset = round((this_datetime - epoch).total_seconds())
 
     result = np.full(len(tvals), time_offset)
@@ -424,12 +434,14 @@ def read_bufr_message(f, count, start_pos, data):
     # have to do things differently.
     compressed = ecc.codes_get(bufr, 'compressedData')
 
-    # This will print absolutely every BUFR key in the message.
-    #print(" ")
-    #iterid = ecc.codes_keys_iterator_new(bufr)
-    #while ecc.codes_keys_iterator_next(iterid):
-    #    keyname = ecc.codes_keys_iterator_get_name(iterid)
-    #    print(f" name: {keyname}")
+    '''
+        This will print absolutely every BUFR key in the message.
+            print(" ")
+            iterid = ecc.codes_keys_iterator_new(bufr)
+            while ecc.codes_keys_iterator_next(iterid):
+                keyname = ecc.codes_keys_iterator_get_name(iterid)
+                print(f" name: {keyname}")
+    '''
 
     # If multiple soundings repfacs will be vector of length of each sounding.
     repfacs = []
@@ -482,10 +494,10 @@ def read_bufr_message(f, count, start_pos, data):
 
     # These meta data elements are so critical that we should quit quickly if lacking them:
     if (temp_data['year'] is None) and (temp_data['month'] is None) and \
-                (temp_data['day'] is None) and (temp_data['hour'] is None):
+            (temp_data['day'] is None) and (temp_data['hour'] is None):
         logging.warning("Useless ob without date info.")
     if (temp_data['wmoBlockNumber'] is None) and (temp_data['wmoStationNumber'] is None) and \
-                (temp_data['latitude'] is None) and (temp_data['longitude'] is None):
+            (temp_data['latitude'] is None) and (temp_data['longitude'] is None):
         logging.warning("Useless ob without lat,lon or station number info.")
 
     # Next, get the raw observed weather variables we want.
@@ -531,7 +543,7 @@ def read_bufr_message(f, count, start_pos, data):
                 logging.warning(f"Nonsense: number of subsets, {nsubsets} is not equal to "
                                 f"the length of repfacs vector, {len(repfacs)}")
             nend = np.cumsum(repfacs)
-            nbeg = np.insert(nend[:-1],0,0)
+            nbeg = np.insert(nend[:-1], 0, 0)
         else:
             nbeg.append(0)
             nend.append(repfacs[0]-1)
@@ -544,7 +556,7 @@ def read_bufr_message(f, count, start_pos, data):
 
     # Loop over each pair of beginning and ending indices and transfer data
     obnum = 0
-    for b,e in tuple(zip(nbeg,nend)):
+    for b, e in tuple(zip(nbeg, nend)):
         if b < 0 or e < 0 or e <= b:
             logging.warning(f"Skipping nonsense BUFR msg with a negative index [{b},{e}]")
             return data, count, start_pos
@@ -594,13 +606,13 @@ def read_bufr_message(f, count, start_pos, data):
         # Sondes are special with a launch time and time displacement.
         if temp_data['timeDisplacement'] is not None:
             meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
-                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],
-                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])
+                        meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],
+                        meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])
             meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
         else:
             meta_data['dateTime'][0] = specialty_time([0],
-                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],
-                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])
+                        meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],
+                        meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
             meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
 
