@@ -91,6 +91,7 @@ observations:
           value: "MTYP 021-036 RARS(EARS,AP,SA) MHS 1C Tb DATA (N18-19, METOP-1,2,3)"
 
       variables:
+        # MetaData
         - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteIdentifier
           longName: "Satellite Identifier"
@@ -105,13 +106,13 @@ observations:
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          longName: "Latitude (high accuracy)"
+          longName: "Latitude"
           units: "degree_north"
           range: [-90, 90]
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          longName: "Longitude (high accuracy)"
+          longName: "Longitude"
           units: "degree_east"
           range: [-180, 180]
 
@@ -134,7 +135,7 @@ observations:
 
         - name: "MetaData/heightOfStation"
           source: variables/heightOfStation
-          longName: "Altitude of Satellite (above earth's surface)"
+          longName: "Altitude of Satellite"
           units: "m"
 
         - name: "MetaData/solarZenithAngle"
@@ -161,6 +162,7 @@ observations:
           units: "degree"
           range: [0, 360]
 
+        # ObsValue
         - name: "ObsValue/brightnessTemperature"
           coordinates: "longitude latitude Channel"
           source: variables/brightnessTemperature
