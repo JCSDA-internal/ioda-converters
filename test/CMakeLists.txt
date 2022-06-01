@@ -165,6 +165,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_prepbufr_adpsfc.yaml
     testinput/bufr_ncep_adpsfc.yaml
     testinput/gdas.t12z.prepbufr_adpsfc
+    testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t12z.adpsfc.tm00.bufr_d
     testinput/bufr_ncep_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
