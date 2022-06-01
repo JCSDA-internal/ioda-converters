@@ -43,7 +43,7 @@ observations:
             transforms:
                - scale: 0.01
 
-          heightAboveSurfaceofBaseofLowestCloud:
+          heightAboveSurfaceOfBaseOfLowestCloud:
             query: "*/CLOU2SEQ/HBLCS"
 
           dewpointTemperature:
@@ -83,10 +83,11 @@ observations:
               - scale: 0.000001
           specificHumidityQualityMarker:
             query: "*/Q___INFO/Q__EVENT/QQM"
+
           relativeHumidityError:
             query: "*/Q___INFO/Q__BACKG/QOE"
 
-          heightOfObservation:
+          heightOfStation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
           heightQualityMarker:
             query: "*/Z___INFO/Z__EVENT/ZQM"
@@ -110,10 +111,10 @@ observations:
             query: "*/SST_INFO/DBSS_SEQ/DBSS"
           seaSurfaceTemperatureError:
             query: "*/SST_INFO/SSTBACKG/SSTOE"
-          seaSurfaceTemperatureForecastValue:
-            query: "*/SST_INFO/SSTBACKG/SSTFC"
-          seaSurfaceTemperatureAnalyzedValue:
-            query: "*/SST_INFO/SSTPOSTP/SSTAN"
+#          seaSurfaceTemperatureForecastValue:
+#            query: "*/SST_INFO/SSTBACKG/SSTFC"
+#          seaSurfaceTemperatureAnalyzedValue:
+#            query: "*/SST_INFO/SSTPOSTP/SSTAN"
 
           pressureReducedToMeanSeaLevel:
             query: "*/PMSL_SEQ/PMO"
@@ -121,8 +122,8 @@ observations:
               - scale: 100
           pressureReducedToMeanSeaLevelQualityMarker:
             query: "*/PMSL_SEQ/PMQ"
-          pressureReducedToMeanSeaLevelIndicator:
-            query: "*/PMSL_SEQ/PMIN"
+#          pressureReducedToMeanSeaLevelIndicator:
+#            query: "*/PMSL_SEQ/PMIN"
 
           heightOfWaves:
             query: "*/WAVE_SEQ/HOWV"
@@ -132,7 +133,6 @@ observations:
             query: "*/WAVE_SEQ/HOWW"
           periodOfWindWaves:
             query: "*/WAVE_SEQ/POWW"
-
           heightOfSwellWaves:
             query: "*/SWELLSEQ/HOSW"
           directionOfSwellWaves:
@@ -140,18 +140,18 @@ observations:
           periodOfSwellWaves:
             query: "*/SWELLSEQ/POSW"
       
-          trueDirectionOfShip:
+          shipHeading:
             query: "*/SHIP_SEQ/TDMP"
-          averageSpeedOfShip:
+          shipVelocity:
             query: "*/SHIP_SEQ/ASMP"
           horizontalVisibility:
             query: "*/VISB2SEQ/HOVI"
           verticalVisibility:
             query: "*/VISB2SEQ/VTVI_SEQ/VTVI"
 
-          peakWindSpeed:
+          windSpeedPeak:
             query: "*/PKWNDSEQ/PKWDSP"
-          peakWindDirection:
+          windDirectionPeak:
             query: "*/PKWNDSEQ/PKWDDR"
 
           restrictionsOnRedistribution:
@@ -259,9 +259,9 @@ observations:
           longName: "Total Cloud Coverage"
           units: "1"
 
-        - name: "ObsValue/heightAboveSurfaceofBaseofLowestCloud"
+        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
           coordinates: "longitude latitude"
-          source: variables/heightAboveSurfaceofBaseofLowestCloud
+          source: variables/heightAboveSurfaceOfBaseOfLowestCloud
           longName: "Height above Surface of Base of Lowest Cloud"
 
         - name: "ObsValue/dewpointTemperature"
@@ -313,10 +313,10 @@ observations:
           source: variables/airTemperatureQualityMarker
           longName: "Temperature Quality Marker"
 
-        - name: "ObsValue/heightOfObservation"
+        - name: "ObsValue/heightOfStation"
           coordinates: "longitude latitude"
-          source: variables/heightOfObservation
-          longName: "Height of Observation"
+          source: variables/heightOfStation
+          longName: "Height of Station"
           units: "m"
 
         - name: "QualityMarker/height"
@@ -441,17 +441,23 @@ observations:
           longName: "Period Of Swell Waves"
           units: "s"
 
-#        - name: "ObsValue/trueDirectionOfShip"
-#          coordinates: "longitude latitude"
-#          source: variables/trueDirectionOfShip
-#          longName: "True Direction Of Ship During Past 3 Hours"
-#          units: ""
+        - name: "ObsValue/directionOfSwellWaves"
+          coordinates: "longitude latitude"
+          source: variables/directionOfSwellWaves
+          longName: "Direction Of Swell Waves"
+          units: "degree"
 
-#        - name: "ObsValue/averageSpeedOfShip"
-#          coordinates: "longitude latitude"
-#          source: variables/averageSpeedOfShip
-#          longName: "Average Speed Of Ship During Past 3 Hours"
-#          units: ""
+        - name: "ObsValue/shipHeading"
+          coordinates: "longitude latitude"
+          source: variables/shipHeading
+          longName: "True Direction Of Ship During Past 3 Hours"
+          units: ""
+
+        - name: "ObsValue/shipVelocity"
+          coordinates: "longitude latitude"
+          source: variables/shipVelocity
+          longName: "Average Speed Of Ship During Past 3 Hours"
+          units: ""
 
         - name: "ObsValue/horizontalVisibility"
           coordinates: "longitude latitude"
@@ -459,20 +465,20 @@ observations:
           longName: "Horizontal Visibility"
           units: "m"
 
-        - name: "ObsValue/peakWindSpeed"
+        - name: "ObsValue/windSpeedPeak"
           coordinates: "longitude latitude"
-          source: variables/peakWindSpeed
+          source: variables/windSpeedPeak
           longName: "Peak Wind Speed"
           units: "m s-1"
 
-        - name: "ObsValue/peakWindDirection"
+        - name: "ObsValue/windDirectionPeak"
           coordinates: "longitude latitude"
-          source: variables/peakWindDirection
+          source: variables/windDirectionPeak
           longName: "Peak Wind Direction"
           units: "degree"
 
-        - name: "MetaData/restrictionsOnRedistribution"
+        - name: "MetaData/redistributionRestriction"
           coordinates: "longitude latitude"
-          source: variables/restrictionsOnRedistribution
+          source: variables/redistributionRestriction
           longName: "Restrictions On Redistribution"
 
