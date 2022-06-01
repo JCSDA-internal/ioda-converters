@@ -107,13 +107,13 @@ observations:
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          longName: "Latitude (High Accuracy)"
+          longName: "Latitude"
           units: "degree_north"
           range: [-90, 90]
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          longName: "Longitude (High Accuracy)"
+          longName: "Longitude"
           units: "degree_east"
           range: [-180, 180]
 
@@ -136,7 +136,7 @@ observations:
 
         - name: "MetaData/heightOfStation"
           source: variables/heightOfStation
-          longName: "Altitude of Satellite (above earth's surface)"
+          longName: "Altitude of Satellite"
           units: "m"
 
         - name: "MetaData/solarZenithAngle"
