@@ -365,7 +365,7 @@ def specialty_time(tvals, year, month, day, hour, minute, second):
         minute = 0
 
     # This should be the launch or release time of sonde.
-    logging.info(f"Launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
+    logging.debug(f"Launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
     this_datetime = datetime(year, month, day, hour, minute, second)
     time_offset = round((this_datetime - epoch).total_seconds())
 
@@ -459,13 +459,12 @@ def read_bufr_message(f, count, start_pos, data):
                 if (var != 'Constructed'):
                     try:
                         avals = ecc.codes_get_array(bufr, var)
-                        # logging.info(f" var {k} has len: {len(avals)}")
                         max_mlen = max(max_mlen, len(avals))
                         temp_data[k] = assign_values(avals, k)
                         if not is_all_missing(temp_data[k]):
                             break
                     except ecc.KeyValueNotFoundError:
-                        logging.warning("Caution: unable to find requested BUFR key: " + var)
+                        logging.debug("Caution: unable to find requested BUFR key: " + var)
                         temp_data[k] = None
                 else:
                     temp_data[k] = None
@@ -473,11 +472,10 @@ def read_bufr_message(f, count, start_pos, data):
             if (v[0] != 'Constructed'):
                 try:
                     avals = ecc.codes_get_array(bufr, v[0])
-                    # logging.info(f" var {k} has len: {len(avals)}")
                     max_mlen = max(max_mlen, len(avals))
                     temp_data[k] = assign_values(avals, k)
                 except ecc.KeyValueNotFoundError:
-                    logging.warning("Caution, unable to find requested BUFR key: " + v[0])
+                    logging.debug("Caution, unable to find requested BUFR key: " + v[0])
                     temp_data[k] = None
             else:
                 temp_data[k] = None
@@ -505,7 +503,7 @@ def read_bufr_message(f, count, start_pos, data):
                     repfactors[variable].append(len(avals))
                     temp_data[variable] = np.append(temp_data[variable], assign_values(avals, variable))
                 except ecc.KeyValueNotFoundError:
-                    logging.warning("Caution, unable to find requested BUFR variable: " + variable)
+                    logging.debug("Caution, unable to find requested BUFR variable: " + variable)
                     temp_data[variable] = None
         else:
             repfactors[variable] = []
@@ -515,7 +513,7 @@ def read_bufr_message(f, count, start_pos, data):
                 max_dlen = max(max_dlen, len(avals))
                 temp_data[variable] = assign_values(avals, variable)
             except ecc.KeyValueNotFoundError:
-                logging.warning("Caution, unable to find requested BUFR variable: " + variable)
+                logging.debug("Caution, unable to find requested BUFR variable: " + variable)
                 temp_data[variable] = None
 
     if not repfacs:
@@ -550,11 +548,11 @@ def read_bufr_message(f, count, start_pos, data):
         if b < 0 or e < 0 or e <= b:
             logging.warning(f"Skipping nonsense BUFR msg with a negative index [{b},{e}]")
             return data, count, start_pos
-        logging.info(f"Within BUFR msg, processing ob {obnum+1} with bounds: [{b},{e-1}]")
+        logging.debug(f"Within BUFR msg, processing ob {obnum+1} with bounds: [{b},{e-1}]")
         if e < 999999:
             target_number = e - b
         else:
-            logging.info("Msg did not contain repfacs, trying to determine target number of obs")
+            logging.debug("Msg did not contain repfacs, trying to determine target number of obs")
             if temp_data['vertSignificance'] is not None:
                 target_number = len(temp_data['vertSignificance'])
             elif temp_data['timeDisplacement'] is not None:
