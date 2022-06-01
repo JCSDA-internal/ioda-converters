@@ -10,6 +10,7 @@ observations:
 
       exports:
         variables:
+
           # MetaData
           timestamp:
             datetime:
