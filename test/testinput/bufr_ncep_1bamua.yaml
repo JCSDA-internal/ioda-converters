@@ -10,7 +10,6 @@ observations:
 
       exports:
         variables:
-
           # MetaData
           timestamp:
             datetime:
@@ -41,7 +40,7 @@ observations:
           heightOfLandSurface:
             query: "*/HOLS"
 
-          altitude:
+          heightOfStation:
             query: "*/HMSL"
 
           solarZenithAngle:
@@ -139,8 +138,8 @@ observations:
           longName: "Height of Land Surface"
           units: "m"
 
-        - name: "MetaData/height"
-          source: variables/altitude
+        - name: "MetaData/heightOfStation"
+          source: variables/heightOfStation
           longName: "Altitude of Satellite (above earth's surface)"
           units: "m"
 

@@ -10,7 +10,6 @@ observations:
 
       exports:
         variables:
-
           # MetaData
           timestamp:
             datetime:
@@ -137,7 +136,7 @@ observations:
 
         - name: "MetaData/heightOfStation"
           source: variables/heightOfStation
-          longName: "Height of Station"
+          longName: "Altitude of Satellite (above earth's surface)"
           units: "m"
 
         - name: "MetaData/solarZenithAngle"
