@@ -22,16 +22,11 @@
 
 namespace Ingester
 {
-    static const char* DefualtLocationName = "Location";
+    static const char* LocationName = "Location";
     static const char* DefualtDimName = "dim";
 
-    IodaEncoder::IodaEncoder(const eckit::Configuration& conf) :
+    IodaEncoder::IodaEncoder(const eckit::Configuration& conf):
         description_(IodaDescription(conf))
-    {
-    }
-
-    IodaEncoder::IodaEncoder(const IodaDescription& description) :
-        description_(description)
     {
     }
 
@@ -73,64 +68,41 @@ namespace Ingester
             }
         }
 
-        if (!existsInNamedPath("*", namedExtraDims))
-        {
-            namedLocDims.insert({{"*"}, DefualtLocationName});
-        }
-
         for (const auto& categories : dataContainer->allSubCategories())
         {
             // Create the dimensions variables
             std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> dimMap;
 
-            bool primaryDimIsZero = false;
+            auto dataObjectGroupBy = dataContainer->getGroupByObject(
+                description_.getVariables()[0].source, categories);
+
+            dimMap[LocationName] = ioda::NewDimensionScale<int>(
+                LocationName, dataObjectGroupBy->getDims()[0]);
+
+            namedLocDims[{dataObjectGroupBy->getDimPaths()[0]}] = LocationName;
+
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
                 auto dataObject = dataContainer->get(varDesc.source, categories);
 
-                for (std::size_t dimIdx  = 0; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
+                for (std::size_t dimIdx  = 1; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
                 {
                     auto dimPath = dataObject->getDimPaths()[dimIdx];
                     std::string dimName = "";
 
-                    if (dimIdx == 0)
+                    if (existsInNamedPath(dimPath, namedExtraDims))
                     {
-                        if (existsInNamedPath(dimPath, namedLocDims))
-                        {
-                            dimName = nameForDimPath(dimPath, namedLocDims);
-                        }
-                        else
-                        {
-                            auto newDimStr = std::ostringstream();
-                            newDimStr << DefualtLocationName << "_"
-                                      << dataObject->getGroupByFieldName();
-
-                            dimName = newDimStr.str();
-                            namedLocDims[{dimPath}] = dimName;
-                            autoGenDimNumber++;
-                        }
-
-                        if (dataObject->getDims()[dimIdx] == 0)
-                        {
-                            primaryDimIsZero = true;
-                        }
+                        dimName = nameForDimPath(dimPath, namedExtraDims);
                     }
                     else
                     {
-                        if (existsInNamedPath(dimPath, namedExtraDims))
-                        {
-                            dimName = nameForDimPath(dimPath, namedExtraDims);
-                        }
-                        else
-                        {
-                            auto newDimStr = std::ostringstream();
-                            newDimStr << DefualtDimName << "_" << autoGenDimNumber;
+                        auto newDimStr = std::ostringstream();
+                        newDimStr << DefualtDimName << "_" << autoGenDimNumber;
 
-                            dimName = newDimStr.str();
-                            namedExtraDims[{dimPath}] = dimName;
-                            autoGenDimNumber++;
-                        }
+                        dimName = newDimStr.str();
+                        namedExtraDims[{dimPath}] = dimName;
+                        autoGenDimNumber++;
                     }
 
                     if (dimMap.find(dimName) == dimMap.end())
@@ -142,7 +114,7 @@ namespace Ingester
             }
 
             // When we find that the primary index is zero we need to skip this category
-            if (primaryDimIsZero)
+            if (dataObjectGroupBy->getDims()[0] == 0)
             {
                 for (auto category : categories)
                 {
@@ -235,7 +207,11 @@ namespace Ingester
                                                 varDesc.compressionLevel);
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
-                var.atts.add<std::string>("units", { varDesc.units }, {1});
+
+                if (!varDesc.units.empty())
+                {
+                    var.atts.add<std::string>("units", { varDesc.units }, {1});
+                }
 
                 if (varDesc.coordinates)
                 {

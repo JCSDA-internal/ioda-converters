@@ -61,6 +61,12 @@ namespace Ingester
         std::shared_ptr<DataObjectBase> get(const std::string& fieldName,
                                             const SubCategory& categoryId = {}) const;
 
+        /// \brief Get a DataObject for the group by field
+        /// \param fieldName The name of the data object ot get
+        /// \param categoryId The vector<string> for the subcategory
+        std::shared_ptr<DataObjectBase> getGroupByObject(const std::string& fieldName,
+                                                         const SubCategory& categoryId = {}) const;
+
         /// \brief Check if DataObject with name is available
         /// \param fieldName The name of the object
         /// \param categoryId The vector<string> for the subcategory
