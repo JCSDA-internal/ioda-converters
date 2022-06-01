@@ -18,6 +18,7 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
+
           latitude:
             query: "*/CLATH"
 
