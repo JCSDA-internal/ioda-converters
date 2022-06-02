@@ -689,7 +689,12 @@ def read_bufr_message(f, count, start_pos, data):
         for key in meta_keys:
             data[key] = np.append(data[key], meta_data[key])
 
-        # Need to transform some variables to others (wind speed/direction to components for example).
+        '''
+          Need to transform some variables (wind speed/direction to components for example).
+          In the ideal world, we could assume that the meteorological variables were given
+          well-bounded values, but in BUFR, they could be garbage, so ensure that values
+          are all sensible before calling the transformation functions.
+        '''
         uwnd = np.full(target_number, float_missing_value)
         vwnd = np.full(target_number, float_missing_value)
         for n, wdir in enumerate(vals['windDirection']):
