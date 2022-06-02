@@ -6,7 +6,7 @@
  */
 
 #include "ScalingTransform.h"
-
+#include "IngesterTypes.h"
 
 namespace Ingester
 {
@@ -15,8 +15,17 @@ namespace Ingester
     {
     }
 
-    void ScalingTransform::apply(IngesterArray& array)
+    void ScalingTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-        array = array * scaling_;
+      if (auto object = std::dynamic_pointer_cast<DataObject<float>>(dataObject))
+      {
+        auto data = object->getRawData();
+        for (auto& val : data)
+        {
+            if (val != MissingValue) val *= scaling_;
+        }
+
+        object->setRawData(data);
+      }
     }
 }  // namespace Ingester
