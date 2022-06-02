@@ -95,7 +95,6 @@ namespace Ingester
             int day = static_cast<int>(map.at(getExportKey(ConfKeys::Day))->getAsFloat(idx));
             int hour = static_cast<int>(map.at(getExportKey(ConfKeys::Hour))->getAsFloat(idx));
             int minutes = 0;
-//          int minute = static_cast<int>(map.at(getExportKey(ConfKeys::Minute))->getAsFloat(idx));
             int seconds = 0;
 
             diff_time = missing_int;
@@ -103,8 +102,6 @@ namespace Ingester
                 month != missing &&
                 day != missing &&
                 hour != missing)
-//              hour != missing &&
-//              minute != missing)
             {
                 tm.tm_year = year - 1900;
                 tm.tm_mon = month - 1;
@@ -124,10 +121,6 @@ namespace Ingester
                         tm.tm_min = minutes;
                     }
                 }
-
-//              tm.tm_min = minute;
-//              tm.tm_sec = 0;
-//              tm.tm_isdst = 0;
 
                 if (!secondQuery_.empty())
                 {
