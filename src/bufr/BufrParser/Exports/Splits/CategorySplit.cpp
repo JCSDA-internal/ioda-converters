@@ -11,14 +11,15 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "../RowSlice.h"
-
 
 namespace Ingester
 {
-    CategorySplit::CategorySplit(const std::string& mnemonic, const NameMap& nameMap) :
-      nameMap_(nameMap),
-      mnemonic_(mnemonic)
+    CategorySplit::CategorySplit(const std::string& name,
+                                 const std::string& variable,
+                                 const NameMap& nameMap) :
+        Split(name),
+        variable_(variable),
+        nameMap_(nameMap)
     {
     }
 
@@ -35,23 +36,24 @@ namespace Ingester
         return categories;
     }
 
-    std::map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
+    std::unordered_map<std::string, BufrDataMap> CategorySplit::split(const BufrDataMap &dataMap)
     {
         updateNameMap(dataMap);
 
-        std::map<std::string, BufrDataMap> dataMaps;
+        std::unordered_map<std::string, BufrDataMap> dataMaps;
 
-        const IngesterArray& mnemonicArr = dataMap.at(mnemonic_);
+        const auto& dataObject = dataMap.at(variable_);
 
         for (const auto& mapPair : nameMap_)
         {
             // Find matching rows
             std::vector<size_t> indexVec;
-            for (int rowIdx = 0;
-                 rowIdx < static_cast<int>(dataMap.at(mnemonic_).rows());
-                 rowIdx++)
+            for (auto rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
             {
-                if (mnemonicArr.row(rowIdx)[0] == mapPair.first)
+                auto location = Location(dataObject->getDims().size(), 0);
+                location[0] = rowIdx;
+
+                if (dataObject->getAsInt(location) == mapPair.first)
                 {
                     indexVec.push_back(rowIdx);
                 }
@@ -61,7 +63,7 @@ namespace Ingester
             BufrDataMap newDataMap;
             for (const auto& dataPair : dataMap)
             {
-                const auto newArr = rowSlice(dataPair.second, indexVec);
+                const auto newArr = dataPair.second->slice(indexVec);
                 newDataMap.insert({dataPair.first, newArr});
             }
 
@@ -75,10 +77,13 @@ namespace Ingester
     {
         if (nameMap_.empty())
         {
-            auto& array = dataMap.at(mnemonic_);
-            for (auto rowIdx = 0; rowIdx < array.rows(); rowIdx++)
+            const auto& dataObject = dataMap.at(variable_);
+            for (auto rowIdx = 0; rowIdx < dataObject->getDims()[0]; rowIdx++)
             {
-                auto itemVal =  array.row(rowIdx)[0];
+                auto location = Location(dataObject->getDims().size(), 0);
+                location[0] = rowIdx;
+
+                auto itemVal =  dataObject->getAsFloat(location);
                 if (trunc(itemVal) == itemVal)
                 {
                     nameMap_.insert({static_cast<int> (itemVal),
@@ -87,7 +92,7 @@ namespace Ingester
                 else
                 {
                     std::stringstream errStr;
-                    errStr << "Can't turn " << mnemonic_  << " into a category as it contains ";
+                    errStr << "Can't turn " << variable_ << " into a category as it contains ";
                     errStr << "non-integer values.";
                     throw eckit::BadParameter(errStr.str());
                 }
@@ -97,7 +102,7 @@ namespace Ingester
         if (nameMap_.empty())
         {
             std::stringstream errStr;
-            errStr << "No categories could be identified for " << mnemonic_ << ".";
+            errStr << "No categories could be identified for " << variable_ << ".";
             throw eckit::BadParameter(errStr.str());
         }
     }
