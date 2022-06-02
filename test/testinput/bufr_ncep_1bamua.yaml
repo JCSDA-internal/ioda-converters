@@ -10,6 +10,7 @@ observations:
 
       exports:
         variables:
+          # MetaData
           timestamp:
             datetime:
               year: "*/YEAR"
@@ -17,33 +18,51 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
+
           latitude:
             query: "*/CLAT"
+
           longitude:
             query: "*/CLON"
+
           satelliteIdentifier:
             query: "*/SAID"
+
           satelliteInstrument:
             query: "*/SIID"
+
           fieldOfViewNumber:
             query: "*/FOVN"
-          landORSeaQualifier:
+
+          landOrSeaQualifier:
             query: "*/LSQL"
+
           heightOfLandSurface:
             query: "*/HOLS"
-          altitude:
+
+          heightOfStation:
             query: "*/HMSL"
+
           solarZenithAngle:
             query: "*/SOZA"
+
           solarAzimuthAngle:
             query: "*/SOLAZI"
+
           sensorZenithAngle:
             query: "*/SAZA"
+
           sensorAzimuthAngle:
             query: "*/BEARAZ"
-          channelNumber:
+
+          sensorChannelNumber:
             query: "*/BRITCSTC/CHNM"
-          brightnessTemperature:
+
+          # ObsValue
+          # Note 1: BUFR Dump contains Antenna Temperature for all normal-feed AMSUAs except NOAA-15/16
+          #         NOAA-15/16 contain Brightness Temperature
+          # Note 2: Need a way to export brightness tempraturee for NOAA-15 
+          antennaTemperature:
             query: "*/BRITCSTC/TMBR"
 
         splits:
@@ -67,101 +86,92 @@ observations:
           path: "*/BRITCSTC"
 
       globals:
-        - name: "MetaData/platformCommonName"
+        - name: "platformCommonName"
           type: string
           value: "AMSU-A"
 
-        - name: "MetaData/platformLongDescription"
+        - name: "platformLongDescription"
           type: string
           value: "MTYP 021-023 PROC AMSU-A 1B Tb"
 
-        - name: "MetaData/sensorCentralFrequency"
-          type: floatVector
-          value: [23.800, 31.400, 50.300, 52.800, 53.596, 54.400, 54.940, 55.500, 57.290,
-                  57.290, 57.290, 57.290, 57.290, 57.290, 89.000]
-
       variables:
+        # MetaData
         - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteIdentifier
-          longName: "SATELLITE IDENTIFIER"
-          units: ""
+          longName: "Satellite Identifier"
 
         - name: "MetaData/satelliteInstrument"
           source: variables/satelliteInstrument
-          longName: "SATELLITE INSTRUMENT"
-          units: ""
+          longName: "Satellite Instrument"
 
-        - name: "MetaData/channelNumber"
-          source: variables/channelNumber
-          longName: "CHANNEL NUMBER"
-          units: ""
+        - name: "MetaData/sensorChannelNumber"
+          source: variables/sensorChannelNumber
+          longName: "Sensor Channel Number"
 
         - name: "MetaData/latitude"
           source: variables/latitude
-          longName: "LATITUDE (COARSE ACCURACY)"
-          units: "degree (north)"
+          longName: "Latitude"
+          units: "degree_north"
           range: [-90, 90]
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          longName: "LONGITUDE (COARSE ACCURACY)"
-          units: "degree (east)"
+          longName: "Longitude"
+          units: "degree_east"
           range: [-180, 180]
 
         - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "yyyy-mm-ddThh:mm:ssZ"
+          units: "seconds since 1970-01-01T00:00:00Z" 
 
         - name: "MetaData/fieldOfViewNumber"
           source: variables/fieldOfViewNumber
-          longName: "FIELD OF VIEW NUMBER"
-          units: ""
+          longName: "Field of View Number"
 
-        - name: "MetaData/landORSeaQualifier"
-          source: variables/landORSeaQualifier
-          longName: "LAND/SEA QUALIFIER"
-          units: ""
+        - name: "MetaData/landOrSeaQualifier"
+          source: variables/landOrSeaQualifier
+          longName: "Land/Sea Qualifier"
 
         - name: "MetaData/heightOfLandSurface"
           source: variables/heightOfLandSurface
-          longName: "HEIGHT OF LAND SURFACE"
+          longName: "Height of Land Surface"
           units: "m"
 
-        - name: "MetaData/altitude"
-          source: variables/altitude
-          longName: "ALTITUDE"
+        - name: "MetaData/heightOfStation"
+          source: variables/heightOfStation
+          longName: "Altitude of Satellite"
           units: "m"
 
         - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
-          longName: "SOLAR ZENITH ANGLE"
+          longName: "Solar Zenith Angle"
           units: "degree"
           range: [0, 180]
 
         - name: "MetaData/solarAzimuthAngle"
           source: variables/solarAzimuthAngle
-          longName: "SOLAR AZIMUTH ANGLE"
-          units: "degree (truth)"
+          longName: "Solar Azimuth Angle"
+          units: "degree"
           range: [0, 360]
 
         - name: "MetaData/sensorZenithAngle"
           source: variables/sensorZenithAngle
-          longName: "SENSOR ZENITH ANGLE"
+          longName: "Sensor Zenith Angle"
           units: "degree"
           range: [0, 90]
 
         - name: "MetaData/sensorAzimuthAngle"
           source: variables/sensorAzimuthAngle
-          longName: "SENSOR AZIMUTH ANGLE"
-          units: "degree (truth)"
+          longName: "Sensor Azimuth Angle"
+          units: "degree"
           range: [0, 360]
 
-        - name: "ObsValue/brightnessTemperature"
+        - name: "ObsValue/antennaTemperature"
           coordinates: "longitude latitude Channel"
-          source: variables/brightnessTemperature
-          longName: "BRIGHTNESS TEMPERATURE (HIGH ACCURACY)"
+          source: variables/antennaTemperature
+          longName: "Antenna Temperature (high accuracy)"
           units: "K"
-          range: [120, 500]
+          range: [100, 500]
           chunks: [1000, 15]
           compressionLevel: 4
