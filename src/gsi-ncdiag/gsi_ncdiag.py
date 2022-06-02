@@ -15,7 +15,7 @@ import datetime as dt
 import netCDF4 as nc
 
 import ioda_conv_engines as iconv
-
+o3_conv = 603447.6
 __ALL__ = ['conv_platforms']
 
 conv_platforms = {
@@ -323,6 +323,7 @@ geovals_vars = {
     'atmosphere_absorber_01': 'humidity_mixing_ratio',
     'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
     'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
+    'mass_concentration_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
     'atmosphere_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_01': 'effective_radius_of_cloud_liquid_water_particle',
@@ -1476,13 +1477,19 @@ class Ozone(BaseGSI):
         nlocs = self.nobs
         ncout.createDimension("nlocs", nlocs)
         # other dims
-        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        if "mole_fraction_of_ozone_in_air_arr_dim" in self.df.dimensions.keys():
+            ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        else:
+            ncout.createDimension("nlevs", self.df.dimensions["mass_concentration_of_ozone_in_air_arr_dim"].size)
         if (self.sensor not in ["ompslp", "mls55"]):
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("nlocs",)
+                if(len(var.dimensions) == 1):
+                    dims = ("nlocs",)
+                else:
+                    dims = ("nlocs","nlevs")
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
@@ -1495,6 +1502,8 @@ class Ozone(BaseGSI):
                     dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
+                if(vname == "mass_concentration_of_ozone_in_air"):
+                    vdata = o3_conv*vdata 
                 var_out[...] = vdata
             else:
                 pass
