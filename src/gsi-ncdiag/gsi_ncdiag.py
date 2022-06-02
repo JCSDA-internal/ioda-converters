@@ -1486,10 +1486,6 @@ class Ozone(BaseGSI):
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                if(len(var.dimensions) == 1):
-                    dims = ("nlocs",)
-                else:
-                    dims = ("nlocs","nlevs")
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
