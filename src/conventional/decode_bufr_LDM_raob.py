@@ -32,8 +32,8 @@ locationKeyList = [
     ("longitude", "float", "degrees_east", "keep"),
     ("station_elevation", "float", "m", "keep"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-    ("launchtime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-    ("pressure", "float", "Pa", "keep"),
+    ("LaunchTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
+    ("air_pressure", "float", "Pa", "keep"),
     ("geopotential_height", "float", "m", "keep"),
     ("vertSignificance", "integer", "", "toss"),
     ("latDisplacement", "float", "degrees", "toss"),
@@ -57,8 +57,8 @@ metaDataKeyList = {
     'station_elevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
                          'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
-    'launchtime': ['Constructed'],
-    'pressure': ['pressure', 'nonCoordinatePressure'],
+    'LaunchTime': ['Constructed'],
+    'air_pressure': ['pressure', 'nonCoordinatePressure'],
     'geopotential_height': ['nonCoordinateGeopotentialHeight', 'geopotentialHeight'],
     'vertSignificance': ['extendedVerticalSoundingSignificance', 'verticalSoundingSignificance'],
     'latDisplacement': ['latitudeDisplacement'],
@@ -571,8 +571,8 @@ def read_bufr_message(f, count, start_pos, data):
                 target_number = len(temp_data['timeDisplacement'])
             elif temp_data['latDisplacement'] is not None:
                 target_number = len(temp_data['latDisplacement'])
-            elif temp_data['pressure'] is not None:
-                target_number = len(temp_data['pressure'])
+            elif temp_data['air_pressure'] is not None:
+                target_number = len(temp_data['air_pressure'])
             elif temp_data['airTemperature'] is not None:
                 target_number = len(temp_data['airTemperature'])
             elif temp_data['windSpeed'] is not None:
@@ -608,13 +608,13 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
                         meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],
                         meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])
-            meta_data['launchtime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['LaunchTime'] = np.full(target_number, meta_data['dateTime'][0])
         else:
             meta_data['dateTime'][0] = specialty_time([0],
                         meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],
                         meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
-            meta_data['launchtime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['LaunchTime'] = np.full(target_number, meta_data['dateTime'][0])
 
         # Sondes also have lat/lon displacement from launch/release location.
         if temp_data['latDisplacement'] is not None and temp_data['lonDisplacement'] is not None:
@@ -656,9 +656,9 @@ def read_bufr_message(f, count, start_pos, data):
                 logging.info(f"Processing sonde for station: {meta_data['station_id'][n]}")
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
-        if (meta_data['geopotential_height'][0] == 0 or meta_data['pressure'][0] == 0):
+        if (meta_data['geopotential_height'][0] == 0 or meta_data['air_pressure'][0] == 0):
             meta_data['geopotential_height'][0] = float_missing_value
-            meta_data['pressure'][0] = float_missing_value
+            meta_data['air_pressure'][0] = float_missing_value
 
         # And now processing the observed variables we care about.
         nbad = 0
@@ -705,7 +705,7 @@ def read_bufr_message(f, count, start_pos, data):
 
         spfh = np.full(target_number, float_missing_value)
         for n, dewpoint in enumerate(vals['dewpointTemperature']):
-            pres = meta_data['pressure'][n]
+            pres = meta_data['air_pressure'][n]
             if dewpoint and pres:
                 if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
                     spfh[n] = met_utils.specific_humidity(dewpoint, pres)
