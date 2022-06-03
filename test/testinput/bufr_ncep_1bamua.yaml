@@ -78,7 +78,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.1bamua.tm00.{splits/satId}.nc"
+      obsdataout: "./testrun/gdas.t12z.1bamua.{splits/satId}.tm00.nc"
 
       dimensions:
         - name: Channel 
