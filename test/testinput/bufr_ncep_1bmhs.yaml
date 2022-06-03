@@ -10,7 +10,7 @@ observations:
 
       exports:
         variables:
-          # Metadata
+          # MetaData
           timestamp:
             datetime:
               year: "*/YEAR"
@@ -55,10 +55,10 @@ observations:
           sensorAzimuthAngle:
             query: "*/BEARAZ"
 
-          # ObsValue 
           sensorChannelNumber:
             query: "*/BRITCSTC/CHNM"
 
+          # ObsValue 
           antennaTemperature:
             query: "*/BRITCSTC/TMBR"
 
@@ -70,7 +70,7 @@ observations:
                 _3: metop-b
                 _4: metop-a
                 _5: metop-c
-#               _209: noaa-18
+                _209: noaa-18
                 _223: noaa-19
 
     ioda:
@@ -93,17 +93,10 @@ observations:
       variables:
 
         # MetaData
-        - name: "MetaData/satelliteIdentifier"
-          source: variables/satelliteIdentifier
-          longName: "SatelliteIdentifier"
-
-        - name: "MetaData/satelliteInstrument"
-          source: variables/satelliteInstrument
-          longName: "Satellite Instrument"
-
-        - name: "MetaData/sensorChannelNumber"
-          source: variables/sensorChannelNumber
-          longName: "Sensor Channel Number"
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
@@ -117,10 +110,13 @@ observations:
           units: "degree_east"
           range: [-180, 180]
 
-        - name: "MetaData/dateTime"
-          source: variables/timestamp
-          longName: "Datetime"
-          units: "seconds since 1970-01-01T00:00:00Z"
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          longName: "SatelliteIdentifier"
+
+        - name: "MetaData/satelliteInstrument"
+          source: variables/satelliteInstrument
+          longName: "Satellite Instrument"
 
         - name: "MetaData/fieldOfViewNumber"
           source: variables/fieldOfViewNumber
@@ -163,6 +159,10 @@ observations:
           longName: "Sensor Azimuth Angle"
           units: "degree"
           range: [0, 360]
+
+        - name: "MetaData/sensorChannelNumber"
+          source: variables/sensorChannelNumber
+          longName: "Sensor Channel Number"
 
         # ObsValue
         - name: "ObsValue/antennaTemperature"
