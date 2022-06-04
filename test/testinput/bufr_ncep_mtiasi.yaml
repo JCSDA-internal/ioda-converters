@@ -55,9 +55,6 @@ observations:
           heightOfStation:
             query: "*/SELV"
 
-          fractionOfClearPixelsInFov:
-            query: "*/IASIL1CS/FCPH"
-
           startChannel:
             query: "*/IASIL1CB/STCH"
 
@@ -71,8 +68,13 @@ observations:
             query: "*/IASICHN/CHNM"
 
           # ObsValue
-          scaledRadiance:
+          scaledSpectralRadiance:
             query: "*/IASICHN/SCRA"
+
+          fractionOfClearPixelsInFov:
+            query: "*/IASIL1CS/FCPH"
+            transforms:
+               - scale: 0.01
 
         splits:
           satId:
@@ -121,6 +123,7 @@ observations:
         - name: "MetaData/longitude"
           source: variables/longitude
           longName: "Longitude"
+          type: float 
           units: "degrees_east"
           range: [ -180, 180 ]
 
@@ -174,12 +177,6 @@ observations:
           units: "m"
           range: [ 0, 360 ]
 
-        - name: "MetaData/fractionOfClearPixelsInFov"
-          source: variables/fractionOfClearPixelsInFov
-          longName: "Fraction of Clear Pixels in FOV"
-          units: "%"
-          range: [0, 100]
-
         - name: "MetaData/startChannel"
           source: variables/startChannel
           longName: "Start Channel"
@@ -197,7 +194,13 @@ observations:
           longName: "Sensor Channel Number"
 
         # ObsValue
-        - name: "ObsValue/scaledRadiance"
-          source: variables/scaledRadiance
-          longName: "Scaled IASI Radiance"
+        - name: "ObsValue/scaledSpectralRadiance"
+          source: variables/scaledSpectralRadiance
+          longName: "Scaled IASI Spectral Radiance"
           units: "W m-2 sr-1 m"
+
+        - name: "MetaData/fractionOfClearPixelsInFov"
+          source: variables/fractionOfClearPixelsInFov
+          longName: "Fraction of Clear Pixels in a Field of View"
+          units: "1"
+          range: [0, 1]
