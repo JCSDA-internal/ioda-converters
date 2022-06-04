@@ -153,7 +153,6 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_read_wmo_radiosonde.bufr
     testinput/bufr_satwnd_new_format.bufr
     testinput/bufr_satwnd_old_format.bufr
-    testinput/bufr_mtiasi.bufr
     testinput/bufr_simple_groupby.bufr
     testinput/bufr_empty_fields.bufr_d
     testinput/bufr_sfcshp.bufr
@@ -175,7 +174,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
     testinput/bufr_ncep_sevcsr.yaml
-    testinput/bufr_mtiasi.yaml
+    testinput/bufr_ncep_mtiasi.yaml
     testinput/bufr_simple_groupby.yaml
     testinput/bufr_empty_fields.yaml
     testinput/bufr_sfcshp.yaml
@@ -224,7 +223,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005031.nc
     testoutput/NC005066.nc
     testoutput/gdas.t18z.satwnd_avhrr.tm00.nc
-    testoutput/bufr_mtiasi.nc
+    testoutput/gdas.t12z.mtiasi.metop-c.tm00.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
@@ -290,7 +289,7 @@ if( iodaconv_pbfortran_ENABLED )
     testoutput/mhs_n19_obs_2020110112.nc4
     testoutput/amsua_metop-b_obs_2020110112.nc4
     testoutput/amsua_n18_obs_2020110112.nc4
-    testoutput/iasi_metop-b_obs_2020110112.nc4
+    testoutput/iasi_metop-b_obs_2022021912.nc4
   )
 endif()
 
@@ -1047,12 +1046,12 @@ if(iodaconv_bufr_ENABLED)
                     gdas.t18z.satwnd_avhrr.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_mtiasi
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_mtiasi
                     TYPE    SCRIPT
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
-                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_mtiasi.yaml"
-                    bufr_mtiasi.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_mtiasi.yaml"
+                    gdas.t12z.mtiasi.metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby
@@ -1342,7 +1341,7 @@ if( iodaconv_pbfortran_ENABLED )
                     ARGS    netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun gdas.t12z.mtiasi.tm00.bufr_d"
-                            iasi_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            iasi_metop-b_obs_2022021912.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2nc_fortran.x)
 
 endif()
