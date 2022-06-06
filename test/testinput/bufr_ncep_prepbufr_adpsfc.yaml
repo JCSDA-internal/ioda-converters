@@ -132,7 +132,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "testrun/gdas.t12z.adsfc.prepbufr.nc"
+      obsdataout: "testrun/gdas.t12z.adpsfc.prepbufr.nc"
 
       dimensions:
         - name: CloudSequence 
