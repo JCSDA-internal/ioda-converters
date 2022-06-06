@@ -149,8 +149,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
     testinput/gdas.t12z.aircar.nc004004_thinned.tm00.bufr_d
-    testinput/gdas.t12z.aircft_thinned.tm00.bufr_d
-    testinput/gdas.t12z.prepbufr.acft_profiles_thinned
+    testinput/gdas.t12z.aircft.tm00.bufr_d
+    testinput/gdas.t12z.aircar.tm00.bufr_d
+    testinput/gdas.t12z.acft_profiles.prepbufr
     testinput/gdas.t18z.satwnd_avhrr.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
     testinput/bufr_read_wmo_radiosonde.bufr
@@ -226,9 +227,9 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t06z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
     testoutput/gdas.t00z.sevcsr.tm00.nc
-    testoutput/gdas.t12z.aircar_bufr_thinned.tm00.nc
-    testoutput/gdas.t12z.aircft_bufr_thinned.tm00.nc
-    testoutput/aircraft_prepbufr_select_thinned.nc
+    testoutput/gdas.t12z.aircar.tm00.nc
+    testoutput/gdas.t12z.aircft.tm00.nc
+    testoutput/gdas.t12z.acft_profiles.prepbufr.nc
     testoutput/bufr_read_2_dim_blocks.nc
     testoutput/bufr_read_wmo_radiosonde.nc
     testoutput/NC005031.nc
