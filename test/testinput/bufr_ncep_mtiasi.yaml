@@ -117,23 +117,23 @@ observations:
         - name: "MetaData/latitude"
           source: variables/latitude
           longName: "Latitude"
-          units: "degrees_north"
+          units: "degree_north"
           range: [ -90, 90 ]
 
         - name: "MetaData/longitude"
           source: variables/longitude
           longName: "Longitude"
           type: float 
-          units: "degrees_east"
+          units: "degree_east"
           range: [ -180, 180 ]
 
         - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteId
           longName: "Satellite Identifier"
 
-        - name: "MetaData/satelliteInstrument"
+        - name: "MetaData/instrumentIdentifier"
           source: variables/sensorId
-          longName: "Satellite Instrument"
+          longName: "Satellite Instrument Identifier"
 
         - name: "MetaData/scanLineNumber"
           source: variables/scanLineNumber
@@ -175,7 +175,6 @@ observations:
           source: variables/heightOfStation
           longName: "Altitude of Satellite"
           units: "m"
-          range: [ 0, 360 ]
 
         - name: "MetaData/startChannel"
           source: variables/startChannel
