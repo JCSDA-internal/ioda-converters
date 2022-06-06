@@ -148,7 +148,6 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
-    testinput/gdas.t12z.aircar.nc004004_thinned.tm00.bufr_d
     testinput/gdas.t12z.aircft.tm00.bufr_d
     testinput/gdas.t12z.aircar.tm00.bufr_d
     testinput/gdas.t12z.acft_profiles.prepbufr
