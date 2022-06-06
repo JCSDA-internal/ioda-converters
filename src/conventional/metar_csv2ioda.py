@@ -39,7 +39,7 @@ locationKeyList = [("stationICAO", "string", ""),
                    ("longitude", "float", "degrees_east"),
                    ("stationElevation", "float", "m"),
                    ("height", "float", "m"),
-                   ("dateTime", "integer", "seconds since 1970-01-01T00:00:00Z")]
+                   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 obsvars = ['airTemperature',
