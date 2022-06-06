@@ -42,7 +42,7 @@ observations:
           dataReceiptTimeSignificance:
             query: "NC004004/RCTS"
 
-          altitudeIndicator:
+          aircraftIndicatedAltitude:
             query: "NC004004/IALT"
 
           #ObsValue
@@ -136,9 +136,9 @@ observations:
           source: variables/dataReceiptTimeSignificance
           longName: "Data Receipt Time Significance"
 
-        - name: "MetaData/altitudeIndicator"
+        - name: "MetaData/aircraftIndicatedAltitude"
           coordinates: "longitude latitude"
-          source: variables/altitudeIndicator
+          source: variables/aircraftIndicatedAltitude
           longName: "Indicated Aircraft Altitude"
           units: "m"
 

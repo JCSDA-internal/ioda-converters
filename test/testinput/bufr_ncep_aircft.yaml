@@ -61,7 +61,7 @@ observations:
             query: "*/HEIT"
           heightOrAltitude:
             query: "*/HMSL"
-          altitudeIndicator:
+          aircraftIndicatedAltitude:
             query: "*/IALT"
           pressureAltitudeRelativeToMeanSeaLevel:
             query: "*/PSAL"
@@ -123,7 +123,8 @@ observations:
           path: "*/AFCLD"
         - name: AmdarSequence
           path: "*/ADRBLSEQ"
-
+        - name: PresentWeatherSequence
+          path: "*/APPWX"
 
       variables:
         - name: "MetaData/dateTime"
@@ -237,9 +238,9 @@ observations:
           longName: "Height or Altitude"
           units: "m"
 
-        - name: "MetaData/altitudeIndicator"
+        - name: "MetaData/aircraftIndicatedAltitude"
           coordinates: "longitude latitude"
-          source: variables/altitudeIndicator
+          source: variables/aircraftIndicatedAltitude
           longName: "Indicated Aircraft Altitude"
           units: "m"
 
