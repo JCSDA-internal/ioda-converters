@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./testinput/gdas.t12z.prepbufr_adpsfc"
+      obsdatain: "./testinput/gdas.t12z.adpsfc.prepbufr"
 
       exports:
         variables:
@@ -132,7 +132,7 @@ observations:
 
     ioda:
       backend: netcdf 
-      obsdataout: "testrun/gdas.t12z.prepbufr_adpsfc.nc"
+      obsdataout: "testrun/gdas.t12z.adsfc.prepbufr.nc"
 
       dimensions:
         - name: CloudSequence 
