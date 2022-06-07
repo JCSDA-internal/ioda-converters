@@ -64,7 +64,7 @@ observations:
             query: "*/PRSLEVLA/W___INFO/W__EVENT/VOB"
 
           #ObsValue cloud and Weather
-          cloudAmount:
+          cloudAmountDescription:
             query: "*/PRSLEVLA/CLOUDSEQ/CLAM"
           heightOfBaseOfCloud:
             query: "*/PRSLEVLA/CLOUDSEQ/HOCB"
@@ -227,10 +227,10 @@ observations:
           longName: "V component of Wind"
           units: "m s-1"
 
-        - name: "ObsValue/cloudAmount"
+        - name: "ObsValue/cloudAmountDescription"
           coordinates: "longitude latitude"
-          source: variables/cloudAmount
-          longName: "Cloud Amount"
+          source: variables/cloudAmountDescription
+          longName: "Cloud Amount Description"
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
