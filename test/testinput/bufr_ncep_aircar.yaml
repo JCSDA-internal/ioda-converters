@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "testinput/gdas.t12z.aircar.nc004004.tm00.bufr_d"
+      obsdatain: "testinput/gdas.t12z.aircar.tm00.bufr_d"
 
       exports:
         group_by_variable: longitude
