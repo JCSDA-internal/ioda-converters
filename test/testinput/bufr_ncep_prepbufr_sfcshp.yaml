@@ -139,7 +139,6 @@ observations:
           #ObsError 
           airTemperatureError:
             query: "*/T___INFO/T__BACKG/TOE"
-            transforms:
           pressureError:
             query: "*/P___INFO/P__BACKG/POE"
             transforms:
