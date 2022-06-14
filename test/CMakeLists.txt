@@ -1015,7 +1015,6 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t12z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-<<<<<<< HEAD
   ecbuild_add_test( TARGET  test_iodaconv_bufr_aircft2ioda
                     TYPE    SCRIPT
                     COMMAND bash
@@ -1043,10 +1042,16 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpsfc2ioda
-=======
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_adpsfc2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_adpsfc.yaml"
+                            gdas.t12z.adpsfc.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_adpsfc2ioda
->>>>>>> feature/query_cxx
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
