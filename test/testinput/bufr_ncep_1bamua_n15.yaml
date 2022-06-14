@@ -61,7 +61,7 @@ observations:
           # ObsValue
           # Note: BUFR Dump contains Antenna Temperature for all normal-feed AMSUAs except NOAA-15/16
           #       NOAA-15/16 contain Brightness Temperature
-          antennaTemperature:
+          brightnessTemperature:
             query: "*/BRITCSTC/TMBR"
 
         splits:
@@ -69,12 +69,7 @@ observations:
             category:
               variable: satelliteIdentifier
               map:
-                _3: metop-b
-                _4: metop-a
-                _5: metop-c
-#               _206: noaa-15
-                _209: noaa-18
-                _223: noaa-19
+                _206: noaa-15
 
     ioda:
       backend: netcdf
@@ -167,10 +162,10 @@ observations:
           longName: "Sensor Channel Number"
 
         # ObsValue
-        - name: "ObsValue/antennaTemperature"
+        - name: "ObsValue/brightnessTemperature"
           coordinates: "longitude latitude Channel"
-          source: variables/antennaTemperature
-          longName: "Antenna Temperature"
+          source: variables/brightnessTemperature
+          longName: "Brightness Temperature"
           units: "K"
           range: [100, 500]
           chunks: [1000, 15]
