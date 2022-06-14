@@ -66,6 +66,12 @@ observations:
           pressureAltitudeRelativeToMeanSeaLevel:
             query: "*/PSAL"
 
+          percentConfidence:
+            query: "*/PCCF"
+            transforms:
+              - scale: .01
+
+
           #ObsValue
           instantaneousAltitudeRate:
             query: "*/IALR"
@@ -109,10 +115,6 @@ observations:
             query: "NC004010/QMRKH[4]"
           windQM:
             query: "*/QMWN"
-          percentConfidence:
-            query: "*/PCCF"
-            transforms:
-              - scale: .01
 
     ioda:
       backend: netcdf
@@ -250,6 +252,12 @@ observations:
           longName: "Pressure Altitude Relative to Mean Sea Level"
           units: "m"
 
+        - name: "MetaData/percentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidence
+          longName: "Percent Confidence"
+          units: "1"
+
         - name: "ObsValue/instantaneousAltitudeRate"
           coordinates: "longitude latitude"
           source: variables/instantaneousAltitudeRate
@@ -261,7 +269,6 @@ observations:
           source: variables/pressure
           longName: "Pressure"
           units: "Pa"
-
 
         - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
@@ -348,10 +355,4 @@ observations:
           coordinates: "longitude latitude"
           source: variables/windQM
           longName: "Quality Indicator for Eastward Wind"
-
-        - name: "QualityMarker/percentConfidence"
-          coordinates: "longitude latitude"
-          source: variables/percentConfidence
-          longName: "Percent Confidence"
-          units: "1"
 
