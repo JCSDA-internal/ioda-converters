@@ -231,6 +231,7 @@ observations:
           source: variables/redistributionRestriction
           longName: "Restrictions On Redistribution"
 
+        #ObsValue
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
           source: variables/presentWeather
@@ -399,6 +400,7 @@ observations:
           longName: "Peak Wind Direction"
           units: "degree"
 
+        #QualityMarker
         - name: "QualityMarker/verticalSignificanceSurfaceObservations"
           coordinates: "longitude latitude"
           source: variables/verticalSignificanceSurfaceObservations
@@ -439,6 +441,7 @@ observations:
           source: variables/pressureReducedToMeanSeaLevelQM
           longName: "Pressure Reduced To Mean Sea Level Quality Marker"
 
+        #ObsError
         - name: "ObsError/seaSurfaceTemperature"
           coordinates: "longitude latitude"
           source: variables/seaSurfaceTemperatureError
