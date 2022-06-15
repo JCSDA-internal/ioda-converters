@@ -38,6 +38,15 @@ namespace Ingester
                                                                     query,
                                                                     result->dimPaths);
         }
+        else if (auto result = std::dynamic_pointer_cast<bufr::Result<uint32_t>>(resultBase))
+        {
+            dataObject = std::make_shared<DataObject<uint32_t>> (result->data,
+                                                                result->field_name,
+                                                                result->group_by_field_name,
+                                                                result->dims,
+                                                                query,
+                                                                result->dimPaths);
+        }
         else
         {
             throw eckit::BadParameter("Encountered unsupported Result Type.");

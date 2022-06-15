@@ -104,7 +104,6 @@ namespace bufr {
         QueryParser::splitQueryStr(query, querySubset, mnemonics, index);
 
         std::vector<int> branches;
-        bool isString = false;
         std::vector<int> targetNodes;
         std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
@@ -139,8 +138,6 @@ namespace bufr {
                            dataProvider_.getTag(nodeIdx) == mnemonics.back()) {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
-                    isString = (dataProvider_.getItp(nodeIdx) == 3);
-
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
                 }
 
@@ -187,16 +184,17 @@ namespace bufr {
         auto target = __details::Target();
         target.name = targetName;
         target.queryStr = query;
-        target.isString = isString;
         target.seqPath = branches;
         target.nodeIds = targetNodes;
 
         if (targetNodes.size() > 0) {
             target.dimPaths = dimPaths;
             target.exportDimIdxs = dimIdxs;
+            target.unit = dataProvider_.getUnit(targetNodes[0]);
         } else {
             target.dimPaths = {"*"};
             target.exportDimIdxs = {0};
+            target.unit = "";
         }
 
         return target;
@@ -353,9 +351,11 @@ namespace bufr {
             auto &dataField = dataFrame.fieldAtIdx(targetIdx);
             dataField.name = targ.name;
             dataField.queryStr = targ.queryStr;
-            dataField.isString = targ.isString;
-            if (targ.isString)
-                resultSet.indicateFieldIsString(targetIdx);  // Whole column is string.
+            dataField.unit = targ.unit;
+            if (resultSet.fieldUnit(targetIdx).empty()) {
+                resultSet.setFieldUnit(targetIdx, targ.unit);  // Whole column unit
+            }
+
             dataField.dimPaths = targ.dimPaths;
             dataField.seqPath.resize(targ.seqPath.size() + 1);
             dataField.seqPath[0] = 1;
@@ -373,10 +373,12 @@ namespace bufr {
                     dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
                 }
 
-                if (resultSet.isFieldStr(targetIdx) != targ.isString) {
+                // This protects you incases where you combine queries but the units are not the
+                // same.
+                if (resultSet.fieldUnit(targetIdx) != targ.unit) {
                     std::ostringstream errMsg;
-                    errMsg << "Different subsets don't agree whether " << dataField.name
-                           << "is a string or not (there is a type mismatch).";
+                    errMsg << "Different subsets units don't agree for field " << dataField.name
+                           << ". " << resultSet.fieldUnit(targetIdx) << " vs " << targ.unit;
                     throw eckit::BadParameter(errMsg.str());
                 }
 

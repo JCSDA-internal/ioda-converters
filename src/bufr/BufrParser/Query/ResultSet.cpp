@@ -38,9 +38,8 @@ namespace bufr {
                      dims,
                      dimPaths);
 
-
         std::shared_ptr<ResultBase> result;
-        if (isString(fieldName))
+        if (unit(fieldName) == "CCITT IA5")
         {
             auto strData = std::vector<std::string>();
 
@@ -50,7 +49,7 @@ namespace bufr {
                 if (data.data()[row_idx] != MissingValue)
                 {
                     std::string str = std::string(
-                            charPtr + row_idx * sizeof(double), sizeof(double));
+                        charPtr + row_idx * sizeof(double), sizeof(double));
 
                     // trim trailing whitespace from str
                     str.erase(std::find_if(str.rbegin(), str.rend(),
@@ -66,28 +65,28 @@ namespace bufr {
             }
 
             auto strResult = std::make_shared<Result<std::string>>();
-            strResult->field_name = fieldName;
-            strResult->group_by_field_name = groupByFieldName;
             strResult->data = strData;
-            strResult->dims.push_back(dims[0]);
+            result->dims.push_back(dims[0]);
             result = strResult;
+        }
+        else if (unit(fieldName) == "CODE TABLE" || unit(fieldName) == "FLAG TABLE")
+        {
+            auto intResult = std::make_shared<Result<uint32_t>>();
+            intResult->data = std::vector<uint32_t>(data.begin(), data.end());
+            intResult->dims = dims;
+            result = intResult;
         }
         else
         {
-            // Compute product of dimensions
-            int tot_elements = 1;
-            for (const auto& dim : dims)
-            {
-                tot_elements *= dim;
-            }
-
             auto floatResult = std::make_shared<Result<float>>();
-            floatResult->field_name = fieldName;
-            floatResult->group_by_field_name = groupByFieldName;
-            floatResult->data = std::vector<float>(data.data(), data.data() + tot_elements);
+            floatResult->data = std::vector<float>(data.begin(), data.end());
             floatResult->dims = dims;
             result = floatResult;
         }
+
+        result->field_name = fieldName;
+        result->group_by_field_name = groupByFieldName;
+
 
         // Add dim path strings
         const char* ws = " \t\n\r\f\v";
@@ -404,10 +403,10 @@ namespace bufr {
         }
     }
 
-    bool ResultSet::isString(const std::string& fieldName) const
+    std::string ResultSet::unit(const std::string& fieldName) const
     {
         auto fieldIdx = dataFrames_.front().fieldIndexForNodeNamed(fieldName);
-        return dataFrames_.front().fieldAtIdx(fieldIdx).isString;
+        return dataFrames_.front().fieldAtIdx(fieldIdx).unit;
     }
 }  // namespace bufr
 }  // namespace Ingester

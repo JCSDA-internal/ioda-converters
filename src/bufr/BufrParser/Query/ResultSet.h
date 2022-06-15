@@ -27,7 +27,7 @@ namespace bufr {
     {
         std::string name;
         std::string queryStr;
-        bool isString;
+        std::string unit;
         bool missing = false;
         std::vector<double> data;
         std::vector<size_t> seqPath;
@@ -85,6 +85,7 @@ namespace bufr {
         std::vector<int> dims;
         std::vector<std::string> dimPaths;
         std::unordered_map<std::string, int> fieldIdxMap_;
+        std::string unit;
 
         virtual ~ResultBase() {}
         virtual void print() = 0;
@@ -143,17 +144,17 @@ namespace bufr {
         /// \brief Sets the first dataframe attribute to indicate that a DataField is the string
         /// type.
         /// \param fieldIdx The index of the field to set.
-        void indicateFieldIsString(int fieldIdx)
+        void setFieldUnit(int fieldIdx, const std::string& unit)
         {
-            dataFrames_.front().fieldAtIdx(fieldIdx).isString = true;
+            dataFrames_.front().fieldAtIdx(fieldIdx).unit = unit;
         }
 
         /// \brief Checks if a DataField is the string type.
         /// \param fieldIdx The index of the field.
         /// \return True if the field is the string type.
-        bool isFieldStr(int fieldIdx)
+        std::string fieldUnit(int fieldIdx)
         {
-            return dataFrames_.front().fieldAtIdx(fieldIdx).isString;
+            return dataFrames_.front().fieldAtIdx(fieldIdx).unit;
         }
 
      private:
@@ -188,7 +189,7 @@ namespace bufr {
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.
-        bool isString(const std::string& fieldName) const;
+        std::string unit(const std::string& fieldName) const;
     };
 }  // namespace bufr
 }  // namespace Ingester

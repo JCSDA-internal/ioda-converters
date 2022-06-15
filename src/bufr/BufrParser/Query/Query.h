@@ -26,7 +26,7 @@ namespace bufr {
         struct Target {
             std::string name;
             std::string queryStr;
-            bool isString;
+            std::string unit;
             std::vector<int> seqPath;
             std::vector<int> nodeIds;
             std::vector<std::string> dimPaths;
@@ -81,6 +81,7 @@ namespace bufr {
         std::unordered_map<std::string, std::shared_ptr<std::vector<__details::Target>>>
         targetCache_;
         std::unordered_map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
+        std::unordered_map<std::string, std::unordered_map<std::string, std::string>> unitCache_;
 
 
         /// \brief Look for the list of targets for the currently active BUFR message subset that

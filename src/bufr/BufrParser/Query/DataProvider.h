@@ -64,6 +64,8 @@ namespace bufr {
         inline FortranIdx getInv(FortranIdx idx) const { return inv_[idx - 1]; }
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
 
+        std::string getUnit(FortranIdx idx) const;
+
      private:
         std::string subset_;
 
@@ -78,6 +80,7 @@ namespace bufr {
         // Subset data
         int inode_;
         int nval_;
+        int bufrLoc_;
         gsl::span<const double> val_;
         gsl::span<const int> inv_;
 
