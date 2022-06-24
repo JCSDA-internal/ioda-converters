@@ -39,7 +39,7 @@ def OqcName():
     return _oqc_name
 
 
-def get_default_fill_val(mydtype):
+def get_default_fill_val(mydtype, isDateTime=False):
     dtype_tmp = np.array([], dtype=mydtype)
     NumpyDtype = dtype_tmp.dtype
     if (NumpyDtype == np.dtype('float64')):
@@ -59,7 +59,10 @@ def get_default_fill_val(mydtype):
     elif (NumpyDtype == np.dtype('U1')):
         fillval = '\x00'
     elif (NumpyDtype == np.dtype('object')):
-        fillval = '\x00'
+        if (isDateTime):
+            fillval = dt.datetime(2200, 1, 1, tzinfo=dt.timezone.utc)
+        else:
+            fillval = '\x00'
     else:
         print("ERROR: Unrecognized data type", NumpyDtype)
         exit(-2)
@@ -94,7 +97,7 @@ class IodaWriter(object):
             else:
                 # assume it is just nlocs
                 dims = ['Location']
-            fillval = get_default_fill_val(Vvals.dtype)
+            fillval = get_default_fill_val(Vvals.dtype, isinstance(Vvals[0], dt.datetime))
             # get fill value
             if VarName in GeoVarAttrs.keys():
                 if '_FillValue' in GeoVarAttrs[VarName].keys():
@@ -123,7 +126,7 @@ class IodaWriter(object):
             else:
                 # assume it is just nlocs
                 dims = ['Location']
-            fillval = get_default_fill_val(Vvals.dtype)
+            fillval = get_default_fill_val(Vvals.dtype, isinstance(Vvals[0], dt.datetime))
             # get fill value
             if VarKey in VarAttrs.keys():
                 if '_FillValue' in VarAttrs[VarKey].keys():
@@ -199,6 +202,7 @@ def ExtractObsData(ObsData, loc_key_list):
     # can be preallocated, and variable numbers can be assigned
     ObsVarList = []
     ObsVarExamples = []
+    ObsVarTypes = []
     for LocKey, LocDict in ObsData.items():
         _nlocs += 1
         for VarKey, VarVal in LocDict.items():
@@ -207,6 +211,7 @@ def ExtractObsData(ObsData, loc_key_list):
             if (VarKey not in ObsVarList):
                 ObsVarList.append(VarKey)
                 ObsVarExamples.append(VarVal)
+                ObsVarTypes.append(type(VarVal))
         # Extract the locations metadata encoded in the keys
         for i in range(len(loc_key_list)):
             (LocVname, LocVtype) = loc_key_list[i]
@@ -214,15 +219,23 @@ def ExtractObsData(ObsData, loc_key_list):
             if (locvar not in ObsVarList):
                 ObsVarList.append(locvar)
                 ObsVarExamples.append(LocKey[i])
+                if (LocVtype == "long"):
+                    # For case where MetaData/dateTime is directly assigned 64-bit integers
+                    ObsVarTypes.append(np.int64)
+                else:
+                    ObsVarTypes.append(type(LocKey[i]))
 
     # Preallocate arrays and fill them up with data from the dictionary
     ObsVars = OrderedDict()
     for o in range(len(ObsVarList)):
-        VarType = type(ObsVarExamples[o])
+        VarType = ObsVarTypes[o]
         if (VarType in [float, np.float32, np.float64]):
             defaultval = get_default_fill_val(np.float32)
             defaultvaltype = np.float32
-        elif (VarType in [int, np.int64, np.int32, np.int8]):
+        elif (VarType in [np.int64]):
+            defaultval = get_default_fill_val(np.int64)
+            defaultvaltype = np.int64
+        elif (VarType in [int, np.int32, np.int8]):
             defaultval = get_default_fill_val(np.int32)
             defaultvaltype = np.int32
         elif (VarType in [str, np.str_]):
