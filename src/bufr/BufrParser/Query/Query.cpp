@@ -373,15 +373,6 @@ namespace bufr {
                     dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
                 }
 
-                // This protects you incases where you combine queries but the units are not the
-                // same.
-                if (resultSet.fieldUnit(targetIdx) != targ.unit) {
-                    std::ostringstream errMsg;
-                    errMsg << "Different subsets units don't agree for field " << dataField.name
-                           << ". " << resultSet.fieldUnit(targetIdx) << " vs " << targ.unit;
-                    throw eckit::BadParameter(errMsg.str());
-                }
-
                 dataField.data = dataTable[targ.nodeIds[0]].values;
                 if (dataField.data.size() == 0) dataField.missing = true;
             }
