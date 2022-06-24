@@ -40,9 +40,11 @@ find_package( Eigen3 QUIET NO_MODULE HINTS
 if( ecbuild_VERSION VERSION_LESS 3.4 )
   find_package( eckit QUIET )
   find_package( oops QUIET )
+  find_package( ioda QUIET )
 else()
   ecbuild_find_package( eckit VERSION 1.13.0 QUIET )
   ecbuild_find_package( oops VERSION 1.0.0 QUIET )
+  ecbuild_find_package( ioda VERSION 1.0.0 QUIET )
 endif()
 # Optional: pygrib for python for GRIB1/GRIB2 input files
 if ( USE_PYGRIB )
