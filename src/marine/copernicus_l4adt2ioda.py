@@ -97,7 +97,9 @@ class copernicus_l4adt2ioda(object):
         adt = copernicus(self.filename)
         # put the time at 00 between start and end coverage time
         if self.datetime is not None:
-            adt.datetime[:]=self.datetime
+            ymdh=datetime.strptime(self.datetime, "%Y%m%d")
+            ymdhm=ymdh.strftime("%Y-%m-%dT%H:%M:%SZ")
+            adt.datetime[:]=ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = adt.datetime
         self.outdata[('latitude', 'MetaData')] = adt.lats
