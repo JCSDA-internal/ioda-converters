@@ -80,7 +80,7 @@ class mls(object):
         self.startTAI = sTAI
         self.endTAI = eTAI
         self.nrt = nrt
-
+        print(self.startTAI,self.endTAI)
 
         self.outdata[('dateTime', 'MetaData')] = []
         self.outdata[('latitude', 'MetaData')] = []
@@ -172,19 +172,21 @@ class mls(object):
     def _just_flatten(self,d):
         #only output desired levels (lmin through lmax)
         dd = {}
-        dd['valKey'] = d['valKey'][:,self.lmin:self.lmax]
-        dd['Precision'] = d['Precision'][:,self.lmin:self.lmax]
-        lvec = np.arange(self.lmin+1,self.lmax+1)
-        dd['Level'],dd['Status'] = np.meshgrid(np.arange(self.lmin+1,self.lmax+1),d['Status'])
-        dd['air_pressure'],dd['dateTime'] = np.meshgrid(d['air_pressure'][self.lmin:self.lmax],d['dateTime'])
-        _,dd['Quality'] = np.meshgrid(lvec,d['Quality'])
-        _,dd['Convergence'] = np.meshgrid(lvec,d['Convergence'])
-        _,dd['Status'] = np.meshgrid(lvec,d['Status'])
-        _,dd['latitude'] = np.meshgrid(lvec,d['latitude'])
-        _,dd['longitude'] = np.meshgrid(lvec,d['longitude'])
-        _,dd['Solar_Zenith_Angle'] = np.meshgrid(lvec,d['Solar_Zenith_Angle'])
+        idx, = np.where( ( np.asarray(d['dateTime'])>=self.startTAI ) & ( np.asarray(d['dateTime'])<=self.endTAI ) )
+        dd['valKey'] = d['valKey'][idx,self.lmin:self.lmax+1]
+        dd['Precision'] = d['Precision'][idx,self.lmin:self.lmax+1]
+        lvec = np.arange(self.lmin+1,self.lmax+2)
+        dd['Level'],dd['Status'] = np.meshgrid(np.arange(self.lmin+1,self.lmax+2),d['Status'][idx])
+
+        dd['air_pressure'],dd['dateTime'] = np.meshgrid(d['air_pressure'][self.lmin:self.lmax+1],d['dateTime'][idx])
+        _,dd['Quality'] = np.meshgrid(lvec,d['Quality'][idx])
+        _,dd['Convergence'] = np.meshgrid(lvec,d['Convergence'][idx])
+        _,dd['Status'] = np.meshgrid(lvec,d['Status'][idx])
+        _,dd['latitude'] = np.meshgrid(lvec,d['latitude'][idx])
+        _,dd['longitude'] = np.meshgrid(lvec,d['longitude'][idx])
+        _,dd['Solar_Zenith_Angle'] = np.meshgrid(lvec,d['Solar_Zenith_Angle'][idx])
         for k in list(dd.keys()):
-            
+            dd[k] = np.asarray(dd[k])
             dd[k] = dd[k].flatten().tolist() 
         return dd
  
@@ -213,6 +215,7 @@ class mls(object):
         lat = d['latitude']
         lon = d['longitude']
         pressure = d['air_pressure']
+        cnt=0
         for irec in range(nrec):
             if( status[irec]%2 != 0 or convergence[irec]>=1.03 or quality[irec]<= 1.0 ):
                 continue
@@ -245,6 +248,8 @@ class mls(object):
         d['Precision'] = oPrec
         d['Status'] = oStat 
         d['Level'] = oLevel
+        d['Solar_Zenith_Angle'] = oSza
+        print(cnt)
         return d
                 
     def _read(self):
@@ -276,6 +281,7 @@ class mls(object):
         # run a time duplicate check to see if NRT works.
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
+            print(k,self.outdata[k].shape)
             if(self.outdata[k].dtype =='float64'):
                 self.outdata[k] = self.outdata[k].astype('float32')
             elif(self.outdata[k].dtype == 'int64' and k != ('dateTime','MetaData')):
