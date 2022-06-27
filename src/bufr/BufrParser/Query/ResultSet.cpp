@@ -66,7 +66,7 @@ namespace bufr {
 
             auto strResult = std::make_shared<Result<std::string>>();
             strResult->data = strData;
-            result->dims.push_back(dims[0]);
+            strResult->dims.push_back(dims[0]);
             result = strResult;
         }
         else if (unit(fieldName) == "CODE TABLE" || unit(fieldName) == "FLAG TABLE")
