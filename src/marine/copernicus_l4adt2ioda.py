@@ -73,10 +73,12 @@ class copernicus(object):
         self.datetime = np.empty_like(self.adt, dtype=object)
         self.datetime[:] = self.date
 
+
 class copernicus_l4adt2ioda(object):
+
     def __init__(self, filename, datetime=None):
         self.filename = filename
-        self.datetime=datetime
+        self.datetime = datetime
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -97,9 +99,9 @@ class copernicus_l4adt2ioda(object):
         adt = copernicus(self.filename)
         # put the time at 00 between start and end coverage time
         if self.datetime is not None:
-            ymdh=datetime.strptime(self.datetime, "%Y%m%d")
-            ymdhm=ymdh.strftime("%Y-%m-%dT%H:%M:%SZ")
-            adt.datetime[:]=ymdhm
+            ymdh = datetime.strptime(self.datetime, "%Y%m%d")
+            ymdhm = ymdh.strftime("%Y-%m-%dT%H:%M:%SZ")
+            adt.datetime[:] = ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = adt.datetime
         self.outdata[('latitude', 'MetaData')] = adt.lats
