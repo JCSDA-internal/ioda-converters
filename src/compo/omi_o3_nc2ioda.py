@@ -37,6 +37,18 @@ locationKeyList = [
     ("dateTime", "integer"),
 ]
 
+ioda2nc = {}
+ioda2nc['latitude'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Latitude'
+ioda2nc['longitude'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Longitude'
+ioda2nc['dateTime'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Time'
+ioda2nc['Solar_Zenith_Angle'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/SolarZenithAngle'
+ioda2nc['Prior_O3'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/APrioriLayerO3'
+#ioda2nc['Layer_Efficiency'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/LayerEfficiency'
+ioda2nc['valKey'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/ColumnAmountO3'
+ioda2nc['Quality_Flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/QualityFlags'
+ioda2nc['Algorithm_Flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/AlgorithmFlags'
+ 
+
 obsvars = {
     'integrated_layer_ozone_in_air': 'integrated_layer_ozone_in_air',
 }
@@ -55,18 +67,22 @@ VarDims = {
 
 
 class omi(object):
-    def __init__(self, filenames,sTAI,eTAI):
+    def __init__(self, filenames, sTAI, eTAI, qcOn):
         self.filenames = filenames
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.startTAI = sTAI
         self.endTAI = eTAI
+        self.qcOn = qcOn
         self.outdata[('dateTime', 'MetaData')] = []
         self.outdata[('latitude', 'MetaData')] = []
         self.outdata[('longitude', 'MetaData')] = []
         self.outdata[('scan_position', 'MetaData')] = []
         self.outdata[('Solar_Zenith_Angle', 'MetaData')] = []
+        self.outdata[('Prior_O3','MetaData')] = [] 
+        self.outdata[('Quality_Flag','MetaData')] = [] 
+        self.outdata[('Algorithm_Flag','MetaData')] = [] 
         self._setVarDict('integrated_layer_ozone_in_air')
         self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
         #self.outdata[self.varDict['integrated_layer_ozone_in_air']['errKey']] = []
@@ -92,25 +108,36 @@ class omi(object):
     def _read_nc(self,filename):
         print("Reading: {}".format(filename))
         ncd = nc.Dataset(filename, 'r')
-        lat = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Geolocation Fields'].variables['Latitude'][:,:] 
-        lon = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Geolocation Fields'].variables['Longitude'][:,:]
-        time =  ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Geolocation Fields'].variables['Time'][:]
-        solZA = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Geolocation Fields'].variables['SolarZenithAngle'][:,:]
-        
-        priorO3 = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Data Fields'].variables['APrioriLayerO3'][:,:,:]
-        print('prior shape',priorO3.shape)
-        print('lat shape',lat.shape)
-        print('time shape',time.shape)
-        layerEff = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Data Fields'].variables['LayerEfficiency'][:,:,:]
-        o3_du = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Data Fields'].variables['ColumnAmountO3'][:,:]
-        print('du shape',o3_du.shape)
-        quality = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Data Fields'].variables['QualityFlags'][:,:]
-        qualityAlg = ncd.groups['HDFEOS'].groups['SWATHS'].groups['OMI Column Amount O3'].groups['Data Fields'].variables['AlgorithmFlags'][:,:]
+        d = {}
+        # use dictionary above to just read fields we want out of the netcdf.
+        for k in list(ioda2nc.keys()):
+            d[k] = ncd[ ioda2nc[k] ][...]
+            d[k].mask = False
         ncd.close()
-        return lat,lon,time,solZA,priorO3,layerEff,o3_du,quality,qualityAlg
+        return d 
+    def _just_flatten(self,d):
+        dd = {}
+    
+        for k in list(d.keys()):
+            if(k == 'dateTime'):
+                scn = np.arange(1,d['latitude'].shape[1]+1)
+                scn_tmp,tmp = np.meshgrid(scn,d[k])
+                tmp = tmp.astype(np.int64)
+                dd[k] = tmp.flatten().tolist()
+            
+                dd['scan_position'] = scn_tmp.flatten().tolist()
+            elif(k == 'Prior_O3' ):
+                dd[k] = d[k][:,:,0].flatten().tolist()
+            else:
+                dd[k] = d[k].flatten().tolist()
+          
+        idx = np.where( ( np.asarray(dd['dateTime'])>=self.startTAI ) & ( np.asarray(dd['dateTime'])<=self.endTAI ) )
+        for k in list(dd.keys()):
+            dd[k] = np.asarray(dd[k])[idx]
+            dd[k] = dd[k].tolist()
+        return dd
 
-
-    def _do_qc(self,lat,lon,time,solZA,priorO3,layerEff,o3_du,quality,qualityAlg):
+    def _do_qc(self,d):
         oScanPos = []
         oLat = []
         oLon = []
@@ -119,6 +146,17 @@ class omi(object):
         oSza = []
         oPrior = []
         oLayerEff = []
+        oQC = []
+        oAC = []
+        lat = d['latitude']
+        lon = d['longitude']
+        time = d['dateTime']
+        solZA = d['Solar_Zenith_Angle']
+        priorO3 = d['Prior_O3']
+        #layerEff = d['Layer_Efficiency']
+        o3_du = d['valKey']
+        quality = d['Quality_Flag']
+        qualityAlg = d['Algorithm_Flag']
  
         for itime in range(lat.shape[0]):
             for iscan in range(lat.shape[1]):
@@ -131,7 +169,6 @@ class omi(object):
                 #!! without having to change the GSI code
                 #!! use any alqf as long as it's not 0
                 #!! The GSI will reject alqf = 3 so if alqf=0 set it to 3, otherwise set it to 1
-                # We don't GAF about the GSI, or these silly flags, just chuck it. 
                 if ( (qualityAlg[itime,iscan] == 0) or (qualityAlg[itime,iscan] == 3) ):
                     continue
                 # Code from Kris' Fortran########################
@@ -165,11 +202,26 @@ class omi(object):
                 oLat.append(lat[itime,iscan])
                 oLon.append(lon[itime,iscan])
                 oO3.append(o3_du[itime,iscan])
-                oTime.append(time[itime])
+                oTime.append(int(time[itime]))
                 oSza.append(solZA[itime,iscan])
-                oPrior.append(np.flip(priorO3[itime,iscan,:],axis=0))
-                oLayerEff.append(np.flip(layerEff[itime,iscan,:],axis=0))
-        return oScanPos,oLat,oLon,oO3,oTime,oSza,oPrior,oLayerEff
+                oPrior.append(priorO3[itime,iscan,0])
+                oQC.append(quality[itime,iscan])
+                oAC.append(qualityAlg[itime,iscan])
+                #oPrior.append(np.flip(priorO3[itime,iscan,:],axis=0))
+                #oLayerEff.append(np.flip(layerEff[itime,iscan,:],axis=0))
+        d['latitude'] = oLat
+        d['longitude'] = oLon
+        d['scan_position'] = oScanPos
+        d['dateTime'] = oTime
+        d['Solar_Zenith_Angle'] = oSza
+        d['Prior_O3'] = oPrior
+        #layerEff = d['Layer_Efficiency']
+        d['valKey'] = oO3
+        d['Quality_Flag'] = oQC
+        d['Algorithm_Flag'] = oAC
+ 
+
+        return d
                 
     def _read(self):
         # set up variable names for IODA
@@ -178,29 +230,40 @@ class omi(object):
             self._setVarAttr(iodavar)
        # loop through input filenames
         for f in self.filenames:
-            lat,lon,time,solZA,priorO3,layerEff,o3_du,quality,qualityAlg = self._read_nc(f)
-            vpos,vlat,vlon,vo3,vtime,vsza,arrPrior,arrLayerEff = self._do_qc(lat,lon,time,solZA,
-                                                                             priorO3,layerEff,o3_du,
-                                                                             quality,qualityAlg)
+            nc_data = self._read_nc(f)
+            if(self.qcOn):
+                print('Doing QC.')
+                d = self._do_qc(nc_data)
+            else:
+                print('Not doing QC.')
+                d = self._just_flatten(nc_data)
             # add metadata variables
-            self.outdata[('dateTime', 'MetaData')].extend(vtime)
-            self.outdata[('latitude', 'MetaData')].extend(vlat)
-            self.outdata[('longitude', 'MetaData')].extend(vlon)
-            self.outdata[('scan_position', 'MetaData')].extend(vpos)
-            self.outdata[('Solar_Zenith_Angle', 'MetaData')].extend(vsza)
-
+            for v in list(d.keys()):
+                if(v != 'valKey'):
+                    self.outdata[(v, 'MetaData')].extend(d[v])
             for ncvar, iodavar in obsvars.items():
-                self.outdata[self.varDict[iodavar]['valKey']].extend(vo3)
+                self.outdata[self.varDict[iodavar]['valKey']].extend(d['valKey'])
                 #self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
-        DimDict['nlocs'] = len(self.outdata[('dateTime', 'MetaData')])
+        DimDict['nlocs'] = len(self.outdata[('longitude', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
+            if(self.outdata[k].dtype =='float64'):
+                self.outdata[k] = self.outdata[k].astype('float32')
+            elif(self.outdata[k].dtype == 'int64' and k != ('dateTime','MetaData')):
+                self.outdata[k] = self.outdata[k].astype('int32') 
+            elif(self.outdata[k].dtype == 'uint16' or self.outdata[k].dtype == 'uint8'):
+                self.outdata[k] = self.outdata[k].astype(int)
+
+
+
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
+         
         self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]\
-                                                + (datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds()
-        self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]*1e9 #convert to nano seconds
-        self.outdata[('dateTime','MetaData')].astype(np.int64) 
+                                                + int((datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds())
+        self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]*int(1e9) #convert to nano seconds
+        self.outdata[('dateTime','MetaData')].astype('int64') 
+        
 # end omi object.
 
 def main():
@@ -244,11 +307,10 @@ def main():
         '-p', '--prefix',
         help="omi filename prefix (default=OMI-Aura_L2-OMTO3)",
         type=str, required=False, default="OMI-Aura_L2-OMTO3",dest='prefix')
- 
 
+    optional.add_argument('--qc', dest='qc', action='store_true',default=True)
+    optional.add_argument('--no-qc', dest='qc', action='store_false')
     args = parser.parse_args()
-
-
     #Get Day of year for current cycle and associated file(s)     
     cycle_time = datetime(args.year,args.month,args.day,args.hour)
     year = cycle_time.year
@@ -256,7 +318,6 @@ def main():
     day = cycle_time.day
     rawFiles = glob.glob( os.path.join(args.input, args.prefix+"_{}m{}{}".format(year,month,day)+"*.he5") )
     
-    print('raw',rawFiles)
     # if 00z cycle add previous day's file(s)
     if (args.hour == 0):
         previous_cycle = cycle_time - timedelta(days=1) 
@@ -264,16 +325,26 @@ def main():
         month = previous_cycle.month
         day = previous_cycle.day
         rawFiles.extend( glob.glob( os.path.join(args.input, args.prefix+"_{}m{}{}".format(year,month,day)+"*.he5") ) )
-    print('mor raw',rawFiles) 
-    rawFiles.sort()
-     
 
+    rawFiles.sort()
+    rawFilesOut = []
+    startDateWindow = cycle_time - timedelta(hours=3)
+    endDateWindow = cycle_time + timedelta(hours=3)
+
+    for f in rawFiles:
+        vv = f.split('_')
+        #v003-2020m1214t060743.he5 2020m1214t0003-o87313        
+        startDateFile = datetime.strptime(vv[-2][0:-7],"%Ym%m%dt%H%M")
+        endDateFile = datetime.strptime(vv[-1][5:-6],"%Ym%m%dt%H%M")
+        if( startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
+            rawFilesOut.append(f)
+    rawFiles = rawFilesOut
     # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)    
     startTAI = ( ( cycle_time - timedelta(hours=3) ) - datetime(1993,1,1,0) ).total_seconds()
     endTAI = ( ( cycle_time + timedelta(hours=3) ) - datetime(1993,1,1,0) ).total_seconds()
 
     # Read in the O3 data in window 
-    o3 = omi(rawFiles, startTAI, endTAI)
+    o3 = omi(rawFiles, startTAI, endTAI,args.qc)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

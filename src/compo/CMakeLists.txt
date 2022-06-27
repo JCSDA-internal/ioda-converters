@@ -1,4 +1,5 @@
 list(APPEND programs
+  ompsnm_o3_nc2ioda.py
   omi_o3_nc2ioda.py
   mls_o3_nc2ioda.py
   viirs_aod2ioda.py
