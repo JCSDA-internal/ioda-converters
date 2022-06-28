@@ -17,24 +17,16 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
-#include "BufrParser/Query/ResultSet.h"
-
 namespace Ingester
 {
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
-
-    const float MissingValue = 10e10;
 
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
     class DataObjectBase
     {
      public:
-        static std::shared_ptr<DataObjectBase>
-            fromResult(const std::shared_ptr<bufr::ResultBase>& resultBase,
-                       const std::string& query);
-
         explicit DataObjectBase(const std::string& fieldName,
                                 const std::string& groupByFieldName,
                                 const Dimensions& dims,
@@ -48,7 +40,16 @@ namespace Ingester
             dimPaths_(dimPaths)
         {};
 
+        DataObjectBase() = default;
         virtual ~DataObjectBase() = default;
+
+        // Setters
+        void setFieldName(const std::string& fieldName) { fieldName_ = fieldName; }
+        void setGroupByFieldName(const std::string& fieldName) { groupByFieldName_ = fieldName; }
+        void setDims(const std::vector<int> dims) { dims_ = dims; }
+        void setQuery(const std::string& query) { query_ = query; }
+        void setDimPaths(const std::vector<std::string>& dimPaths) { dimPaths_ = dimPaths; }
+        virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -113,9 +114,12 @@ namespace Ingester
     {
      public:
         typedef T value_type;
+        constexpr T missingValue() const { return std::numeric_limits<T>::max(); }
 
         /// \brief Constructor.
         /// \param dimensions The dimensions of the data object.
+        DataObject() = default;
+
         DataObject(const std::vector<T>& data,
                    const std::string& field_name,
                    const std::string& group_by_field_name,
@@ -127,6 +131,12 @@ namespace Ingester
         {};
 
         ~DataObject() = default;
+
+        void setData(const std::vector<T>& data) { data_ = data; }
+        void setData(const std::vector<double>& data, double dataMissingValue) final
+        {
+            _setData(data, dataMissingValue);
+        }
 
         /// \brief Makes an ioda::Variable and ads it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
@@ -269,7 +279,7 @@ namespace Ingester
             params.chunk = true;
             params.chunks = chunks;
             params.compressWithGZIP(compressionLevel);
-            params.setFillValue<T>(static_cast<T>(MissingValue));
+            params.setFillValue<T>(static_cast<T>(missingValue()));
 
             return params;
         }
@@ -365,6 +375,46 @@ namespace Ingester
         {
             throw std::runtime_error("The stored value was is not a number");
             return 0.0f;
+        }
+
+        template<typename U = void>
+        void _setData(const std::vector<double>& data,
+                      double dataMissingValue,
+                      typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            data_ =std::vector<T>(data.begin(), data.end());
+            std::replace(data_.begin(),
+                         data_.end(),
+                         static_cast<T>(dataMissingValue),
+                         missingValue());
+        }
+
+        template<typename U = void>
+        void _setData(const std::vector<double>& data,
+                      double dataMissingValue,
+                      typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            data_ = std::vector<std::string>();
+            auto charPtr = reinterpret_cast<const char*>(data.data());
+            for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
+            {
+                if (data[row_idx] != dataMissingValue)
+                {
+                    std::string str = std::string(
+                        charPtr + row_idx * sizeof(double), sizeof(double));
+
+                    // trim trailing whitespace from str
+                    str.erase(std::find_if(str.rbegin(), str.rend(),
+                                           [](char c){ return !std::isspace(c); }).base(),
+                              str.end());
+
+                    data_.push_back(str);
+                }
+                else
+                {
+                    data_.push_back("");
+                }
+            }
         }
     };
 }  // namespace Ingester

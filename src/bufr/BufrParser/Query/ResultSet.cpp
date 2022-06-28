@@ -25,8 +25,8 @@ namespace bufr {
     {
     }
 
-    std::shared_ptr<ResultBase> ResultSet::get(const std::string& fieldName,
-                                               const std::string& groupByFieldName) const
+    std::shared_ptr<Ingester::DataObjectBase>
+        ResultSet::get(const std::string& fieldName, const std::string& groupByFieldName) const
     {
         std::vector<double> data;
         std::vector<int> dims;
@@ -38,68 +38,42 @@ namespace bufr {
                      dims,
                      dimPaths);
 
-        std::shared_ptr<ResultBase> result;
+        std::shared_ptr<Ingester::DataObjectBase> object;
         if (unit(fieldName) == "CCITT IA5")
         {
-            auto strData = std::vector<std::string>();
-
-            const char* charPtr = reinterpret_cast<char*>(data.data());
-            for (int row_idx = 0; row_idx < dims[0]; row_idx++)
-            {
-                if (data.data()[row_idx] != MissingValue)
-                {
-                    std::string str = std::string(
-                        charPtr + row_idx * sizeof(double), sizeof(double));
-
-                    // trim trailing whitespace from str
-                    str.erase(std::find_if(str.rbegin(), str.rend(),
-                                           [](char c){ return !std::isspace(c); }).base(),
-                              str.end());
-
-                    strData.push_back(str);
-                }
-                else
-                {
-                    strData.push_back("");
-                }
-            }
-
-            auto strResult = std::make_shared<Result<std::string>>();
-            strResult->data = strData;
-            strResult->dims.push_back(dims[0]);
-            result = strResult;
+            object =  std::make_shared<Ingester::DataObject<std::string>>();
         }
-        else if (unit(fieldName) == "CODE TABLE" || unit(fieldName) == "FLAG TABLE")
+        else if (unit(fieldName) == "CODE TABLE" ||
+                 unit(fieldName) == "FLAG TABLE" ||
+                 unit(fieldName) == "NUMERIC")
         {
-            auto intResult = std::make_shared<Result<uint32_t>>();
-            intResult->data = std::vector<uint32_t>(data.begin(), data.end());
-            intResult->dims = dims;
-            result = intResult;
+            object =  std::make_shared<Ingester::DataObject<uint32_t>>();
         }
         else
         {
-            auto floatResult = std::make_shared<Result<float>>();
-            floatResult->data = std::vector<float>(data.begin(), data.end());
-            floatResult->dims = dims;
-            result = floatResult;
+            object = std::make_shared<Ingester::DataObject<float>>();
         }
 
-        result->field_name = fieldName;
-        result->group_by_field_name = groupByFieldName;
-
+        object->setData(data, MissingValue);
+        object->setDims(dims);
+        object->setFieldName(fieldName);
+        object->setGroupByFieldName(groupByFieldName);
 
         // Add dim path strings
         const char* ws = " \t\n\r\f\v";
+        std::vector<std::string> paths(dims.size());
         for (size_t dimIdx = 0; dimIdx < dims.size(); dimIdx++)
         {
             auto path_str = dimPaths[dimIdx];
 
             // Trim extra chars from the path str
             path_str.erase(path_str.find_last_not_of(ws) + 1);
-            result->dimPaths.push_back(path_str);
+            paths[dimIdx] = path_str;
         }
 
-        return result;
+        object->setDimPaths(paths);
+
+        return object;
     }
 
 

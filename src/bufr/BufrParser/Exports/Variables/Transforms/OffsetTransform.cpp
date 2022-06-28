@@ -23,7 +23,7 @@ namespace Ingester
         auto data = object->getRawData();
         for (auto& val : data)
         {
-            if (val != MissingValue) val += offset_;
+            if (val != object->missingValue()) val += static_cast<float> (offset_);
         }
 
         object->setRawData(data);

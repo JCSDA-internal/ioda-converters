@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "DataObject.h"
+
 
 namespace Ingester {
 namespace bufr {
@@ -76,39 +78,6 @@ namespace bufr {
         std::vector<DataField> fields_;
     };
 
-
-    /// \brief The base class for all Results.
-    struct ResultBase
-    {
-        std::string field_name;
-        std::string group_by_field_name;
-        std::vector<int> dims;
-        std::vector<std::string> dimPaths;
-        std::unordered_map<std::string, int> fieldIdxMap_;
-        std::string unit;
-
-        virtual ~ResultBase() {}
-        virtual void print() = 0;
-    };
-
-    /// \brief The resulting data created by the ResultSet.
-    template <typename T>
-    struct Result : ResultBase
-    {
-        typedef T value_type;
-        std::vector<T> data;
-
-        /// \brief Print the data to stdout.
-        void print() final
-        {
-            std::cout << data.size() << std::endl;
-            for (auto val : data)
-            {
-                std::cout << val << ", ";
-            }
-        }
-    };
-
     /// \brief This class acts as the container for all the data that is collected during the
     /// the BUFR querying process. Internally it arranges the data as DataFrames for each message
     /// subset observation. Each DataFrame contains a list of DataFields, one for each named element
@@ -134,8 +103,8 @@ namespace bufr {
         /// \param fieldName The name of the field to get the data for.
         /// \param groupByFieldName The name of the field to group the data by.
         /// \return A Result object containing the data.
-        std::shared_ptr<ResultBase> get(const std::string& fieldName,
-                                        const std::string& groupByFieldName = "") const;
+        std::shared_ptr<Ingester::DataObjectBase>
+            get(const std::string& fieldName, const std::string& groupByFieldName = "") const;
 
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
         /// \return A reference to the new DataFrame.
