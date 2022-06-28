@@ -554,7 +554,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_oc_l2
                           -d 2019032112                                                                                                               
                           -t 0.5"
                           pace_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
-
 #===============================================================================
 # Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
 #===============================================================================
