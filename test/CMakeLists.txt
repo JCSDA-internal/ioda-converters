@@ -371,8 +371,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_profile2ioda.py
                           -i testinput/godae_prof.bin
-                          -o testrun/godae_prof.nc
-                          -d 1998092212"
+                          -o testoutput/godae_prof.nc
+                          -d 2000033112"
                           godae_prof.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_ship
@@ -383,8 +383,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_ship
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/godae_ship2ioda.py
                           -i testinput/godae_ship.bin
-                          -o testrun/godae_ship.nc
-                          -d 1998090112"
+                          -o testoutput/godae_ship.nc
+                          -d 2000033112"
                           godae_ship.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_trak
