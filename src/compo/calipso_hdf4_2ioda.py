@@ -103,10 +103,10 @@ def main(args):
 
     # pass parameters to the IODA writer
     VarDims = {
-        'BackscatterCoeff_532': ['nlocs', 'nlevs'],
+        #'BackscatterCoeff_532': ['nlocs', 'nlevs'],
         'ExtinctionCoeff_532': ['nlocs', 'nlevs'],
         'Extinction_QC_Flag_532': ['nlocs', 'nlevs'],
-        'BackscatterCoeff_1064': ['nlocs', 'nlevs'],
+        #'BackscatterCoeff_1064': ['nlocs', 'nlevs'],
         'ExtinctionCoeff_1064': ['nlocs', 'nlevs'],
         'Extinction_QC_Flag_1064': ['nlocs', 'nlevs'],
         'Pressure': ['nlocs', 'nlevs'],
@@ -124,24 +124,24 @@ def main(args):
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    VarAttrs[('BackscatterCoeff_532',  'ObsValue')]['_FillValue'] = float_missing_value
-    VarAttrs[('BackscatterCoeff_1064', 'ObsValue')]['_FillValue'] = float_missing_value
+    #VarAttrs[('BackscatterCoeff_532',  'ObsValue')]['_FillValue'] = float_missing_value
+    #VarAttrs[('BackscatterCoeff_1064', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_532',   'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_1064',  'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('Extinction_QC_Flag_532',   'ObsValue')]['_FillValue'] = int_missing_value
     VarAttrs[('Extinction_QC_Flag_1064',  'ObsValue')]['_FillValue'] = int_missing_value
-    VarAttrs[('BackscatterCoeff_532',  'ObsError')]['_FillValue'] = float_missing_value
-    VarAttrs[('BackscatterCoeff_1064', 'ObsError')]['_FillValue'] = float_missing_value
+    #VarAttrs[('BackscatterCoeff_532',  'ObsError')]['_FillValue'] = float_missing_value
+    #VarAttrs[('BackscatterCoeff_1064', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_532',   'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_1064',  'ObsError')]['_FillValue'] = float_missing_value
     #VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
 
-    VarAttrs[('BackscatterCoeff_532',  'ObsValue')]['units'] = 'km-1 sr-1'
-    VarAttrs[('BackscatterCoeff_1064', 'ObsValue')]['units'] = 'km-1 sr-1'
+    #VarAttrs[('BackscatterCoeff_532',  'ObsValue')]['units'] = 'km-1 sr-1'
+    #VarAttrs[('BackscatterCoeff_1064', 'ObsValue')]['units'] = 'km-1 sr-1'
     VarAttrs[('ExtinctionCoeff_532',   'ObsValue')]['units'] = 'km-1'
     VarAttrs[('ExtinctionCoeff_1064',  'ObsValue')]['units'] = 'km-1'
-    VarAttrs[('BackscatterCoeff_532',  'ObsError')]['units'] = 'km-1 sr-1'
-    VarAttrs[('BackscatterCoeff_1064', 'ObsError')]['units'] = 'km-1 sr-1'
+    #VarAttrs[('BackscatterCoeff_532',  'ObsError')]['units'] = 'km-1 sr-1'
+    #VarAttrs[('BackscatterCoeff_1064', 'ObsError')]['units'] = 'km-1 sr-1'
     VarAttrs[('ExtinctionCoeff_532',   'ObsError')]['units'] = 'km-1'
     VarAttrs[('ExtinctionCoeff_1064',  'ObsError')]['units'] = 'km-1'
     #VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
@@ -197,10 +197,11 @@ def get_data(f, obs_data, meta_dict):
     obs_data[('Pressure', 'MetaData')] = np.array(f.select('Pressure').get(), dtype='float32')
     obs_data[('Temperature', 'MetaData')] = np.array(f.select('Temperature').get(), dtype='float32')
 
-    obs_data[('BackscatterCoeff_532', "ObsValue")] = np.array(f.select("Total_Backscatter_Coefficient_532").get(),dtype='float32')
-    obs_data[('BackscatterCoeff_1064',"ObsValue")] = np.array(f.select("Backscatter_Coefficient_1064").get(),dtype='float32')
-    obs_data[('BackscatterCoeff_532', "ObsError")] = np.array(f.select("Total_Backscatter_Coefficient_Uncertainty_532").get(),dtype='float32')
-    obs_data[('BackscatterCoeff_1064',"ObsError")] = np.array(f.select("Backscatter_Coefficient_Uncertainty_1064").get(),dtype='float32')
+    # Backscatter for Level 1 data 
+    #obs_data[('BackscatterCoeff_532', "ObsValue")] = np.array(f.select("Total_Backscatter_Coefficient_532").get(),dtype='float32')
+    #obs_data[('BackscatterCoeff_1064',"ObsValue")] = np.array(f.select("Backscatter_Coefficient_1064").get(),dtype='float32')
+    #obs_data[('BackscatterCoeff_532', "ObsError")] = np.array(f.select("Total_Backscatter_Coefficient_Uncertainty_532").get(),dtype='float32')
+    #obs_data[('BackscatterCoeff_1064',"ObsError")] = np.array(f.select("Backscatter_Coefficient_Uncertainty_1064").get(),dtype='float32')
 
     obs_data[('ExtinctionCoeff_532', "ObsValue")] = np.array(f.select("Extinction_Coefficient_532").get(),dtype='float32')
     obs_data[('ExtinctionCoeff_1064',"ObsValue")] = np.array(f.select("Extinction_Coefficient_1064").get(),dtype='float32')
@@ -313,13 +314,13 @@ def get_string_dtg(f):
 
 def init_obs_loc():
     obs = {
-        ('BackscatterCoeff_532', "ObsValue"): [],
+        #('BackscatterCoeff_532', "ObsValue"): [],
         ( 'ExtinctionCoeff_532', "ObsValue"): [],
-        ('BackscatterCoeff_1064', "ObsValue"): [],
+        #('BackscatterCoeff_1064', "ObsValue"): [],
         ( 'ExtinctionCoeff_1064', "ObsValue"): [],
-        ('BackscatterCoeff_532', "ObsError"): [],
+        #('BackscatterCoeff_532', "ObsError"): [],
         ( 'ExtinctionCoeff_532', "ObsError"): [],
-        ('BackscatterCoeff_1064', "ObsError"): [],
+        #('BackscatterCoeff_1064', "ObsError"): [],
         ( 'ExtinctionCoeff_1064', "ObsError"): [],
         ( 'Extinction_QC_Flag_532', "ObsValue"): [],
         ( 'Extinction_QC_Flag_1064', "ObsValue"): [],
