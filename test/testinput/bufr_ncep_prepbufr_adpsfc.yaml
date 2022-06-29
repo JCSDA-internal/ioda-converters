@@ -298,7 +298,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceOfBaseOfLowestCloud
           longName: "Height above Surface of Base of Lowest Cloud Seen"
-          units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"

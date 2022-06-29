@@ -203,6 +203,7 @@ observations:
           source: variables/cloudCoverTotal
           longName: "Total Cloud Coverage"
           units: "1"
+
         - name: "ObsValue/cloudAmountDescription"
           coordinates: "longitude latitude"
           source: variables/cloudAmountDescription
@@ -212,7 +213,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceOfBaseOfLowestCloud
           longName: "Height Above Surface of Base of Lowest Cloud Seen"
-          units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
