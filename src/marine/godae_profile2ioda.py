@@ -211,7 +211,7 @@ class IODA(object):
                         val = obs.data[key][n][ilev]
                         err = obs.data[key+'_err'][n][ilev]
                         qc = (100 * obs.data[key+'_qc'][n]).astype('i4')
-                        if obs.data [key+'_prb'][n][ilev] >= 1.000:
+                        if obs.data[key+'_prb'][n][ilev] >= 1.000:
                             val = -999.00
                         valKey = self.keyDict[key]['valKey']
                         errKey = self.keyDict[key]['errKey']
