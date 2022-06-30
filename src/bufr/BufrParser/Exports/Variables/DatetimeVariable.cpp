@@ -229,7 +229,7 @@ namespace Ingester
             info.groupByField = groupByField_;
             queries.push_back(info);
         }
-      
+
         {  // Minute
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Minute);
