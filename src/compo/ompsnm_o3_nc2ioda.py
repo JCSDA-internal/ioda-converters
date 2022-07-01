@@ -32,7 +32,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "integer"),
+    ("dateTime", "long"),
 ]
 
  
@@ -41,13 +41,13 @@ ioda2nc = {}
 ioda2nc['latitude'] = 'GeolocationData/Latitude'
 ioda2nc['longitude'] = 'GeolocationData/Longitude'
 ioda2nc['dateTime'] = 'GeolocationData/Time'
-ioda2nc['Solar_Zenith_Angle'] = 'GeolocationData/SolarZenithAngle'
+ioda2nc['solar_zenith_angle'] = 'GeolocationData/SolarZenithAngle'
 ioda2nc['valKey'] = 'ScienceData/ColumnAmountO3'
-ioda2nc['Ground_Pixel_Quality'] = 'GeolocationData/GroundPixelQualityFlags'
-ioda2nc['Quality_Flags'] = 'ScienceData/QualityFlags'
-ioda2nc['Algorithm_Flags'] = 'ScienceData/AlgorithmFlags'
-ioda2nc['Measurement_Quality_Flags'] = 'ScienceData/MeasurementQualityFlags'
-ioda2nc['Instrument_Quality_Flags'] = 'GeolocationData/InstrumentQualityFlags'
+ioda2nc['ground_pixel_quality'] = 'GeolocationData/GroundPixelQualityFlags'
+ioda2nc['quality_flags'] = 'ScienceData/QualityFlags'
+ioda2nc['algorithm_flags'] = 'ScienceData/AlgorithmFlags'
+ioda2nc['measurement_quality_flags'] = 'ScienceData/MeasurementQualityFlags'
+ioda2nc['instrument_quality_flags'] = 'GeolocationData/InstrumentQualityFlags'
 
 
 obsvars = {
@@ -57,6 +57,8 @@ obsvars = {
 AttrData = {
     'converter': os.path.basename(__file__),
     'nvars': np.int32(len(obsvars)),
+    'satellite': 'npp',
+    'sensor': 'ompsnm',
 }
 
 DimDict = {
@@ -76,16 +78,15 @@ class ompsnm(object):
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.startTAI = sTAI
         self.endTAI = eTAI
-        self.outdata[('dateTime', 'MetaData')] = []
-        self.outdata[('latitude', 'MetaData')] = []
-        self.outdata[('longitude', 'MetaData')] = []
-        self.outdata[('Solar_Zenith_Angle', 'MetaData')] = []
-        self.outdata[('Ground_Pixel_Quality','MetaData')] = []
-        self.outdata[('Quality_Flags','MetaData')] = []
-        self.outdata[('Algorithm_Flags','MetaData')] = []
-        self.outdata[('Measurement_Quality_Flags','MetaData')] = []
-        self.outdata[('Instrument_Quality_Flags','MetaData')] = []
-        self.outdata[('FOV','MetaData')] = []
+        self._setVarDict('integrated_layer_ozone_in_air')
+
+        vars2output = list(ioda2nc.keys())
+        vars2output.append('fov')
+        for v in vars2output:
+            if(v != 'valKey'):
+                self.outdata[(v, 'MetaData')] = []
+        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
+
  
         self._setVarDict('integrated_layer_ozone_in_air')
         self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
@@ -104,9 +105,28 @@ class ompsnm(object):
         self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
         #self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
         #self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        #following current output from gsi converter mol mol-1, this seems wrong when it's times 1e6
+
+        varsToAddUnits = list(ioda2nc.keys())
+        varsToAddUnits.append('fov')
+        for v in varsToAddUnits:
+            if(v != 'valKey'):
+                vkey = (v,'MetaData')
+                if( 'pressure' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'Pa'
+                elif(v == 'dateTime'):
+                    self.varAttrs[vkey]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                elif('angle' in v.lower()): 
+                    self.varAttrs[vkey]['units'] = 'degrees'
+                elif('flag' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'unitless'
+                elif('prior' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'ppmv'
+                else:
+                    self.varAttrs[vkey]['units'] = 'unitless'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU' 
-        #self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol mol-1'
+
+        vkey = ('air_pressure', 'MetaData')
+        self.varAttrs[vkey]['units'] = 'Pa'
 
     # Read data needed from raw MLS file.
     def _read_nc(self,filename):
@@ -118,13 +138,13 @@ class ompsnm(object):
             #print("Reading Field: {}"ioda2nc[k])
             d[k] = ncd[ ioda2nc[k] ][...]
         # unmask ground pixel quality to pass fill value.
-        d['Ground_Pixel_Quality'].mask = False
+        d['ground_pixel_quality'].mask = False
         # mesh time and FOV to get flattened array instead of using loops
         time_vec =  d['dateTime']
         fov_vec = np.arange(1,d['valKey'].shape[1]+1)
-        d['FOV'], d['dateTime'] = np.meshgrid(fov_vec,time_vec)
-        _,d['Measurement_Quality_Flags'] = np.meshgrid(fov_vec,d['Measurement_Quality_Flags'])
-        _,d['Instrument_Quality_Flags'] = np.meshgrid(fov_vec, d['Instrument_Quality_Flags'])
+        d['fov'], d['dateTime'] = np.meshgrid(fov_vec,time_vec)
+        _,d['measurement_quality_flags'] = np.meshgrid(fov_vec,d['measurement_quality_flags'])
+        _,d['instrument_quality_flags'] = np.meshgrid(fov_vec, d['instrument_quality_flags'])
         idx = np.where(~d['valKey'].mask)
         ncd.close()
         return d,idx
@@ -138,12 +158,17 @@ class ompsnm(object):
         for f in self.filenames:
             fileData,idx = self._read_nc(f)
             for v in list(fileData.keys()):
-                if(v != 'valKey' and v != 'Ozone_Apriori' and v != 'Layer_Efficiency'):
+                if(v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
                     #  add metadata variables
                     self.outdata[(v, 'MetaData')].extend( fileData[v][idx].flatten().tolist() )
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]['valKey']].extend(fileData['valKey'][idx].flatten().tolist())
                 #self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
+
+        # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
+        nloc = len(self.outdata[('dateTime', 'MetaData')])
+        self.outdata[('air_pressure','MetaData')] = np.zeros(nloc).tolist()
+
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
             if(self.outdata[k].dtype =='float64'):
@@ -155,7 +180,6 @@ class ompsnm(object):
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
         self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]\
                                                 + (datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds()
-        self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]*1e9 #convert to nano seconds
         self.outdata[('dateTime','MetaData')].astype(np.int64) 
 # end ompsnm object.
 
