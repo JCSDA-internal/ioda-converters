@@ -29,16 +29,14 @@ observations:
             query: "*/ACID"
           aircraftNavigationalSystem:
             query: "*/ACNS"
-          aircraftRegistrationNumberOrOtherIdentification:
-            query: "*/ACRN"
+          stationIdentification:
+            query: "[*/RPID, */ACRN]"
           commercialAircraftType:
             query: "*/ACTP"
           detailedPhaseOfFlight:
             query: "*/DPOF"
           aircraftFlightPhase:
             query: "*/POAF"
-          reportIdentifier:
-            query: "*/RPID"
           observerIdentification:
             query: "*/OBSVR"
 
@@ -158,10 +156,10 @@ observations:
           source: variables/aircraftNavigationalSystem
           longName: "Aircraft Navigational System"
 
-        - name: "MetaData/aircraftRegistrationNumberOrOtherIdentification"
+        - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
-          source: variables/aircraftRegistrationNumberOrOtherIdentification
-          longName: "Aircraft Registration Number Or Other Identification"
+          source: variables/stationIdentification
+          longName: "Station Identification"
 
         - name: "MetaData/commercialAircraftType"
           coordinates: "longitude latitude"
@@ -177,11 +175,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/aircraftFlightPhase
           longName: "Aircraft Flight Phase"
-
-        - name: "MetaData/reportIdentifier"
-          coordinates: "longitude latitude"
-          source: variables/reportIdentifier
-          longName: "Report Identifier"
 
         - name: "MetaData/observerIdentification"
           coordinates: "longitude latitude"

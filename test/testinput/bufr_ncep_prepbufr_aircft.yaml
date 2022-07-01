@@ -20,6 +20,8 @@ observations:
             query: "*/PRSLEVLA/DRFTINFO/YDR"
           stationIdentification:
             query: "*/SID"
+          aircraftFlightNumber:
+            query: "[*/ACID]"
           prepbufrDataLevelCategory:
             query: "*/PRSLEVLA/CAT"
           prepbufrReportType:
@@ -36,8 +38,6 @@ observations:
             query: "*/ELV"
           height:
             query: "*/PRSLEVLA/Z___INFO/Z__EVENT/ZOB"
-
-
 
           #ObsValue
           instantaneousAltitudeRate:
@@ -70,7 +70,6 @@ observations:
             query: "*/PRSLEVLA/CLOUDSEQ/HOCB"
           presentWeather:
             query: "*/PRSLEVLA/PREWXSEQ/PRWE"
-
 
           #QualityMarker
           heightQM:
@@ -140,6 +139,11 @@ observations:
           coordinates: "longitude latitude"
           source: variables/stationIdentification
           longName: "Station ID"
+
+        - name: "MetaData/aircraftFlightNumber"
+          coordinates: "longitude latitude"
+          source: variables/aircraftFlightNumber
+          longName: "Aircraft Flight Number"
 
         - name: "MetaData/prepbufrDataLevelCategory"
           coordinates: "longitude latitude"

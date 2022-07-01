@@ -26,6 +26,8 @@ observations:
           latitude:
             query: "NC004004/CLAT"
 
+          stationIdentification:
+            query: "NC004004/ACRN"
           detailedPhaseOfFlight:
             query: "NC004004/DPOF"
           aircraftFlightPhase:
@@ -97,6 +99,11 @@ observations:
           longName: "Longitude"
           units: "degree_east"
           range: [-180, 180]
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station Identification"
 
         - name: "MetaData/detailedPhaseOfFlight"
           coordinates: "longitude latitude"
