@@ -10,7 +10,7 @@ observations:
       obsdatain: "./testinput/gdas.t12z.acft_profiles.prepbufr"
 
       exports:
-        group_by_variable: prepbufrDataLevelCategory
+        group_by: prepbufrDataLevelCategory
         variables:
 
           #MetaData
@@ -21,7 +21,7 @@ observations:
           stationIdentification:
             query: "*/SID"
           aircraftFlightNumber:
-            query: "[*/ACID]"
+            query: "*/ACID"
           prepbufrDataLevelCategory:
             query: "*/PRSLEVLA/CAT"
           prepbufrReportType:
