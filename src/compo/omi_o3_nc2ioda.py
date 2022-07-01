@@ -41,12 +41,12 @@ ioda2nc = {}
 ioda2nc['latitude'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Latitude'
 ioda2nc['longitude'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Longitude'
 ioda2nc['dateTime'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Time'
-ioda2nc['Solar_Zenith_Angle'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/SolarZenithAngle'
-ioda2nc['Prior_O3'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/APrioriLayerO3'
+ioda2nc['solar_zenith_angle'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/SolarZenithAngle'
+ioda2nc['prior_o3'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/APrioriLayerO3'
 #ioda2nc['Layer_Efficiency'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/LayerEfficiency'
 ioda2nc['valKey'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/ColumnAmountO3'
-ioda2nc['Quality_Flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/QualityFlags'
-ioda2nc['Algorithm_Flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/AlgorithmFlags'
+ioda2nc['quality_flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/QualityFlags'
+ioda2nc['algorithm_flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/AlgorithmFlags'
  
 
 obsvars = {
@@ -56,6 +56,8 @@ obsvars = {
 AttrData = {
     'converter': os.path.basename(__file__),
     'nvars': np.int32(len(obsvars)),
+    'satellite': 'aura',
+    'sensor': 'omi',
 }
 
 DimDict = {
@@ -75,18 +77,15 @@ class omi(object):
         self.startTAI = sTAI
         self.endTAI = eTAI
         self.qcOn = qcOn
-        self.outdata[('dateTime', 'MetaData')] = []
-        self.outdata[('latitude', 'MetaData')] = []
-        self.outdata[('longitude', 'MetaData')] = []
-        self.outdata[('scan_position', 'MetaData')] = []
-        self.outdata[('Solar_Zenith_Angle', 'MetaData')] = []
-        self.outdata[('Prior_O3','MetaData')] = [] 
-        self.outdata[('Quality_Flag','MetaData')] = [] 
-        self.outdata[('Algorithm_Flag','MetaData')] = [] 
         self._setVarDict('integrated_layer_ozone_in_air')
-        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
-        #self.outdata[self.varDict['integrated_layer_ozone_in_air']['errKey']] = []
 
+        # initialize dictionary with  empty list for MetaData variable to populate later.
+        vars2output = list(ioda2nc.keys())
+        vars2output.append('scan_position')
+        for v in vars2output:
+            if(v != 'valKey'):
+                self.outdata[(v, 'MetaData')] = []
+        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
         self._read()
 
     # set ioda variable keys
@@ -98,12 +97,27 @@ class omi(object):
     #set variable attributes for IODA
     def _setVarAttr(self,iodavar):
         self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-        #self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-        #self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        #following current output from gsi converter mol mol-1, this seems wrong when it's times 1e6
+        missing_value = 9.96921e+36
+        int_missing_value = -2147483647
+        self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = missing_value
+        #self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = missing_value
+        #self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = int_missing_value
+        varsToAddUnits = list(ioda2nc.keys())
+        varsToAddUnits.append('scan_position')
+        for v in varsToAddUnits:
+            if(v != 'valKey'):
+                vkey = (v,'MetaData')
+                if( 'pressure' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'Pa'
+                elif(v == 'dateTime'):
+                    self.varAttrs[vkey]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                elif('angle' in v.lower()): 
+                    self.varAttrs[vkey]['units'] = 'degrees'
+                elif('flag' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'unitless'
+                elif('prior' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'ppmv'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU' 
-        #self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol mol-1'
-
     # Read data needed from raw MLS file.
     def _read_nc(self,filename):
         print("Reading: {}".format(filename))
@@ -116,60 +130,47 @@ class omi(object):
         ncd.close()
         return d 
     def _just_flatten(self,d):
+        # make a temporary data dictionary to transfer things into.
         dd = {}
-    
         for k in list(d.keys()):
             if(k == 'dateTime'):
+                # for flat array need to make it 2d to match other arrays before flattening again.
                 scn = np.arange(1,d['latitude'].shape[1]+1)
                 scn_tmp,tmp = np.meshgrid(scn,d[k])
                 tmp = tmp.astype(np.int64)
                 dd[k] = tmp.flatten().tolist()
-            
                 dd['scan_position'] = scn_tmp.flatten().tolist()
             elif(k == 'Prior_O3' ):
                 dd[k] = d[k][:,:,0].flatten().tolist()
             else:
                 dd[k] = d[k].flatten().tolist()
-          
-        idx = np.where( ( np.asarray(dd['dateTime'])>=self.startTAI ) & ( np.asarray(dd['dateTime'])<=self.endTAI ) )
+        dtA = np.asarray(dd['dateTime']) 
+        idx = np.where( ( self.startTAI <= dtA) & (dtA<=self.endTAI ) )
         for k in list(dd.keys()):
             dd[k] = np.asarray(dd[k])[idx]
             dd[k] = dd[k].tolist()
         return dd
 
     def _do_qc(self,d):
-        oScanPos = []
-        oLat = []
-        oLon = []
-        oO3 = []
-        oTime = []
-        oSza = []
-        oPrior = []
-        oLayerEff = []
-        oQC = []
-        oAC = []
-        lat = d['latitude']
-        lon = d['longitude']
-        time = d['dateTime']
-        solZA = d['Solar_Zenith_Angle']
-        priorO3 = d['Prior_O3']
-        #layerEff = d['Layer_Efficiency']
-        o3_du = d['valKey']
-        quality = d['Quality_Flag']
-        qualityAlg = d['Algorithm_Flag']
+        #intialize dictonary of qc'd variables
+        dd = {}
+        flatVars = list(ioda2nc.keys())
+        flatVars.append('scan_position')
+        for v in flatVars:
+            dd[v] = []
  
-        for itime in range(lat.shape[0]):
-            for iscan in range(lat.shape[1]):
-                if(time[itime] < self.startTAI or time[itime] > self.endTAI):
+        for itime in range(d['latitude'].shape[0]):
+            for iscan in range(d['latitude'].shape[1]):
+                if(d['dateTime'][itime] < self.startTAI or d['dateTime'][itime] > self.endTAI):
                     continue
-                if (priorO3[itime,iscan, 0] <= 0.0 or o3_du[itime, iscan] <= 0.0):
+                if (d['prior_o3'][itime,iscan, 0] <= 0.0 or d['valKey'][itime, iscan] <= 0.0):
                     continue
                 # from Kris' fortran shenanigans:
                 #!! A hack to use the quality flags as recommended by the OMI team (Jul 2019)
                 #!! without having to change the GSI code
                 #!! use any alqf as long as it's not 0
                 #!! The GSI will reject alqf = 3 so if alqf=0 set it to 3, otherwise set it to 1
-                if ( (qualityAlg[itime,iscan] == 0) or (qualityAlg[itime,iscan] == 3) ):
+                if ( (d['algorithm_flag'][itime,iscan] == 0) or (d['algorithm_flag'][itime,iscan] == 3) ):
                     continue
                 # Code from Kris' Fortran########################
                 #!! Bits 0-3 combined into an integer: use 0 or 1 only
@@ -190,38 +191,28 @@ class omi(object):
                 # 2. lets not deal with weird QC flags in JEDI, let's just kick it out here.
                 #
                 # Python helps us here because 0 is an index (as it should be) 
-                if ( is_bit_set(quality[itime,iscan],1) or \
-                     is_bit_set(quality[itime,iscan],2) or \
-                     is_bit_set(quality[itime,iscan],3)  ): continue
+                if ( is_bit_set(d['quality_flag'][itime,iscan],1) or \
+                     is_bit_set(d['quality_flag'][itime,iscan],2) or \
+                     is_bit_set(d['quality_flag'][itime,iscan],3)  ): continue
                 # break out second condition, just because it's mentioned that way for bits 6,8,9                
-                if ( is_bit_set(quality[itime,iscan],6) or \
-                     is_bit_set(quality[itime,iscan],8) or \
-                     is_bit_set(quality[itime,iscan],9)  ): continue
+                if ( is_bit_set(d['quality_flag'][itime,iscan],6) or \
+                     is_bit_set(d['quality_flag'][itime,iscan],8) or \
+                     is_bit_set(d['quality_flag'][itime,iscan],9)  ): continue
                 # could simply this further with one if statement possibly more clever use of a bit masking.
-                oScanPos.append(iscan+1)
-                oLat.append(lat[itime,iscan])
-                oLon.append(lon[itime,iscan])
-                oO3.append(o3_du[itime,iscan])
-                oTime.append(int(time[itime]))
-                oSza.append(solZA[itime,iscan])
-                oPrior.append(priorO3[itime,iscan,0])
-                oQC.append(quality[itime,iscan])
-                oAC.append(qualityAlg[itime,iscan])
+                #FUN! MetaData/scan_position must be a float with IODA (little green jerk)!
+                dd['scan_position'].append( float(iscan+1) )                 
+                for v in flatVars:
+                    if(v == 'dateTime'):
+                        dd[v].append(d[v][itime]) 
+                    elif( v == 'prior_o3' ):
+                        dd[v].append(d[v][itime,iscan,0])
+                    elif( v!= 'scan_position'):
+                        dd[v].append(d[v][itime,iscan])
+                        
                 #oPrior.append(np.flip(priorO3[itime,iscan,:],axis=0))
                 #oLayerEff.append(np.flip(layerEff[itime,iscan,:],axis=0))
-        d['latitude'] = oLat
-        d['longitude'] = oLon
-        d['scan_position'] = oScanPos
-        d['dateTime'] = oTime
-        d['Solar_Zenith_Angle'] = oSza
-        d['Prior_O3'] = oPrior
-        #layerEff = d['Layer_Efficiency']
-        d['valKey'] = oO3
-        d['Quality_Flag'] = oQC
-        d['Algorithm_Flag'] = oAC
- 
 
-        return d
+        return dd
                 
     def _read(self):
         # set up variable names for IODA
@@ -239,13 +230,19 @@ class omi(object):
                 d = self._just_flatten(nc_data)
             # add metadata variables
             for v in list(d.keys()):
-                if(v != 'valKey'):
+                if(v != 'valKey' ):
                     self.outdata[(v, 'MetaData')].extend(d[v])
+            
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]['valKey']].extend(d['valKey'])
-                #self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
+                #self.outdata[self.varDict[iodavar]['qcKey']].extend(d['qcKey'])
+                #self.outdata[self.varDict[iodavar]['errKey']].extend(np.zeros( len(d['valKey']) ).tolist() )
         DimDict['nlocs'] = len(self.outdata[('longitude', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
+        self.outdata[('air_pressure','MetaData')] = np.zeros(DimDict['nlocs']).tolist()
+        self.varAttrs[('air_pressure','MetaData')]['units'] = 'Pa'
+
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
             if(self.outdata[k].dtype =='float64'):
@@ -255,17 +252,13 @@ class omi(object):
             elif(self.outdata[k].dtype == 'uint16' or self.outdata[k].dtype == 'uint8'):
                 self.outdata[k] = self.outdata[k].astype(int)
 
-
-
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
          
         self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]\
                                                 + int((datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds())
-        self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]*int(1e9) #convert to nano seconds
         self.outdata[('dateTime','MetaData')].astype('int64') 
-        
-# end omi object.
-
+        #ensure lon is 0-360
+        self.outdata[('longitude','MetaData')] = self.outdata[('longitude','MetaData')] % 360
 def main():
 
     # get command line arguments
