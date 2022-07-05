@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "integer")
+    ("dateTime", "long")
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -52,9 +52,9 @@ long_missing_value = nc.default_fillvals['i8']
 
 
 class AOD(object):
-    def __init__(self, filenames, obs_time):
+    def __init__(self, filenames, obs_time_arg):
         self.filenames = filenames
-        self.obs_time = obs_time
+        self.obs_time = obs_time_arg
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -79,13 +79,13 @@ class AOD(object):
         self.varAttrs[('dateTime', metaDataName)]['units'] = 'seconds since 1993-01-01T00:00:00Z'
 
         # Make empty lists for the output vars
-        self.outdata[('latitude', metaDataName)] = []
-        self.outdata[('longitude', metaDataName)] = []
-        self.outdata[('dateTime', metaDataName)] = []
+        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float64)
+        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float64)
+        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = []
-            self.outdata[self.varDict[iodavar]['errKey']] = []
-            self.outdata[self.varDict[iodavar]['qcKey']] = []
+            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float64)
+            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float64)
+            self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         # loop through input filenames
         for f in self.filenames:
