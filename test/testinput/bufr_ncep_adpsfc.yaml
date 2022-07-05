@@ -88,6 +88,9 @@ observations:
             query: "*/QMDD"
           pressureQM:
             query: "*/QMPR"
+          windQM:
+            query: "*/QMWN"
+
 
     ioda:
       backend: netcdf
@@ -275,3 +278,9 @@ observations:
           coordinates: "longitude latitude"
           source: variables/pressureQM
           longName: "Quality Indicator for Pressure"
+
+        - name: "QualityMarker/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind Direction"
+
