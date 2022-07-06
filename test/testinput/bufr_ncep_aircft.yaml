@@ -29,7 +29,7 @@ observations:
             query: "*/ACID"
           aircraftNavigationalSystem:
             query: "*/ACNS"
-          stationIdentification:
+          aircraftIdentifier:
             query: "[*/RPID, */ACRN]"
           commercialAircraftType:
             query: "*/ACTP"
@@ -39,17 +39,6 @@ observations:
             query: "*/POAF"
           observerIdentification:
             query: "*/OBSVR"
-
-          dataProviderRestricted:
-            query: "*/RSRD"
-          dataRestrictedExpiration:
-            query: "*/EXPRSRD"
-          dataReceiptTimeHour:
-            query: "*/RCHR"
-          dataReceiptTimeMinute:
-            query: "*/RCMI"
-          dataReceiptTimeSignificance:
-            query: "*/RCTS"
 
           flightLevel:
             query: "*/FLVL"
@@ -63,6 +52,8 @@ observations:
             query: "*/IALT"
           pressureAltitudeRelativeToMeanSeaLevel:
             query: "*/PSAL"
+          instantaneousAltitudeRate:
+            query: "*/IALR"
 
           percentConfidence:
             query: "*/PCCF"
@@ -71,14 +62,10 @@ observations:
 
 
           #ObsValue
-          instantaneousAltitudeRate:
-            query: "*/IALR"
           pressure:
             query: "*/PRLC"
           airTemperature:
             query: "[*/TMDB, */ADRBLSEQ/TMDB, */TMDBST]"
-          temperatureObservationPrecision:
-            query: "*/PCAT"
           relativeHumidity:
             query: "[*/AFMST/REHU, */ACMST2/REHU, */RAWHU]"
             transforms:
@@ -90,14 +77,6 @@ observations:
           windSpeed:
             query: "[*/WSPD, */ADRBLSEQ/WSPD]"
 
-          #ObsValue - Cloud and Weather
-          cloudAmountDescription:
-            query: "*/AFCLD/CLAM"
-          cloudType:
-            query: "*/AFCLD/CLTP"
-          presentWeather:
-            query: "*/APPWX/PRWE"
-
           #Quality Marker
           airTemperatureQualityInformation:
             query: "NC004010/QMRKH[2]"
@@ -105,8 +84,6 @@ observations:
             query: "*/QMAT"
           moistureQM:
             query: "[*/QMDD, */AFMST/QMDD, */ACMST2/QMDD]"
-          moistureQuality:
-            query: "*/MSTQ"
           windDirectionQualityInformation:
             query: "NC004010/QMRKH[3]"
           windSpeedQualityInformation:
@@ -118,15 +95,8 @@ observations:
       backend: netcdf
       obsdataout: "testrun/gdas.t12z.aircft.tm00.nc"
 
-      dimensions:
-        - name: CloudSequence
-          path: "*/AFCLD"
-        - name: AmdarSequence
-          path: "*/ADRBLSEQ"
-        - name: PresentWeatherSequence
-          path: "*/APPWX"
-
       variables:
+        #MetaData
         - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
@@ -156,20 +126,15 @@ observations:
           source: variables/aircraftNavigationalSystem
           longName: "Aircraft Navigational System"
 
-        - name: "MetaData/stationIdentification"
+        - name: "MetaData/aircraftIdentifier"
           coordinates: "longitude latitude"
-          source: variables/stationIdentification
-          longName: "Station Identification"
+          source: variables/aircraftIdentifier
+          longName: "Aircraft Identifier"
 
         - name: "MetaData/commercialAircraftType"
           coordinates: "longitude latitude"
           source: variables/commercialAircraftType
           longName: "Commercial Aircraft Type"
-
-        - name: "MetaData/detailedPhaseOfFlight"
-          coordinates: "longitude latitude"
-          source: variables/detailedPhaseOfFlight
-          longName: "Detailed Phase of Flight"
 
         - name: "MetaData/aircraftFlightPhase"
           coordinates: "longitude latitude"
@@ -180,34 +145,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/observerIdentification
           longName: "Observer Identification"
-
-        - name: "MetaData/dataProviderRestricted"
-          coordinates: "longitude latitude"
-          source: variables/dataProviderRestricted
-          longName: "Data Provider Restricted"
-
-        - name: "MetaData/dataRestrictedExpiration"
-          coordinates: "longitude latitude"
-          source: variables/dataRestrictedExpiration
-          longName: "Restricted Data Expiration"
-          units: "Hour"
-
-        - name: "MetaData/dataReceiptTimeHour"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeHour
-          longName: "Receipt Time (Hour)"
-          units: "Hour"
-
-        - name: "MetaData/dataReceiptTimeMinute"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeMinute
-          longName: "Data Receipt Time (Minute)"
-          units: "Minute"
-
-        - name: "MetaData/dataReceiptTimeSignificance"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeSignificance
-          longName: "Data Receipt Time Significance"
 
         - name: "MetaData/flightLevel"
           coordinates: "longitude latitude"
@@ -245,18 +182,19 @@ observations:
           longName: "Pressure Altitude Relative to Mean Sea Level"
           units: "m"
 
-        - name: "MetaData/percentConfidence"
-          coordinates: "longitude latitude"
-          source: variables/percentConfidence
-          longName: "Percent Confidence"
-          units: "1"
-
         - name: "ObsValue/instantaneousAltitudeRate"
           coordinates: "longitude latitude"
           source: variables/instantaneousAltitudeRate
           longName: "Instantaneous Altitude Rate"
           units: "m s-1"
 
+        - name: "MetaData/percentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidence
+          longName: "Percent Confidence"
+          units: "1"
+
+        #ObsValue
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
@@ -267,12 +205,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Air Temperature"
-          units: "K"
-
-        - name: "ObsValue/temperatureObservationPrecision"
-          coordinates: "longitude latitude"
-          source: variables/temperatureObservationPrecision
-          longName: "Temperature Observation Precision"
           units: "K"
 
         - name: "ObsValue/relativeHumidity"
@@ -299,21 +231,7 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        - name: "ObsValue/cloudAmountDescription"
-          coordinates: "longitude latitude"
-          source: variables/cloudAmountDescription
-          longName: "Cloud Amount Description"
-
-        - name: "ObsValue/cloudType"
-          coordinates: "longitude latitude"
-          source: variables/cloudType
-          longName: "Cloud Type"
-
-        - name: "ObsValue/presentWeather"
-          coordinates: "longitude latitude"
-          source: variables/presentWeather
-          longName: "Description of Present Weather"
-
+        #QualityMarker
         - name: "QualityMarker/airTemperatureQualityInformation"
           coordinates: "longitude latitude"
           source: variables/airTemperatureQualityInformation
@@ -328,11 +246,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/moistureQM
           longName: "Quality Indicator for Moisture"
-
-        - name: "QualityMarker/moistureQuality"
-          coordinates: "longitude latitude"
-          source: variables/moistureQuality
-          longName: "Moisture Quality"
 
         - name: "QualityMarker/windDirectionQualityInformation"
           coordinates: "longitude latitude"

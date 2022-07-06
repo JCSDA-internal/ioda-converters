@@ -10,7 +10,7 @@ observations:
       obsdatain: "./testinput/gdas.t12z.acft_profiles.prepbufr"
 
       exports:
-        group_by: prepbufrDataLevelCategory
+        group_by_variable: prepbufrDataLevelCategory
         variables:
 
           #MetaData
@@ -18,7 +18,7 @@ observations:
             query: "*/PRSLEVLA/DRFTINFO/XDR"
           latitude:
             query: "*/PRSLEVLA/DRFTINFO/YDR"
-          stationIdentification:
+          aircraftIdentifier:
             query: "*/SID"
           aircraftFlightNumber:
             query: "*/ACID"
@@ -36,12 +36,13 @@ observations:
             query: "*/PRSLEVLA/ACFT_SEQ/POAF"
           stationElevation:
             query: "*/ELV"
-          height:
+          aircraftFlightLevel:
             query: "*/PRSLEVLA/Z___INFO/Z__EVENT/ZOB"
-
-          #ObsValue
           instantaneousAltitudeRate:
             query: "*/PRSLEVLA/IALR"
+
+
+          #ObsValue
           pressure:
             query: "*/PRSLEVLA/P___INFO/P__EVENT/POB"
             transforms:
@@ -63,14 +64,6 @@ observations:
           windNorthward:
             query: "*/PRSLEVLA/W___INFO/W__EVENT/VOB"
 
-          #ObsValue cloud and Weather
-          cloudAmountDescription:
-            query: "*/PRSLEVLA/CLOUDSEQ/CLAM"
-          heightOfBaseOfCloud:
-            query: "*/PRSLEVLA/CLOUDSEQ/HOCB"
-          presentWeather:
-            query: "*/PRSLEVLA/PREWXSEQ/PRWE"
-
           #QualityMarker
           heightQM:
             query: "*/PRSLEVLA/Z___INFO/Z__EVENT/ZQM"
@@ -80,8 +73,6 @@ observations:
             query: "*/PRSLEVLA/T___INFO/T__EVENT/TQM"
           specificHumidityQM:
             query: "*/PRSLEVLA/Q___INFO/Q__EVENT/QQM"
-          verticalSignificanceSurfaceObservations:
-            query: "*/PRSLEVLA/CLOUDSEQ/VSSO"
           windQM:
             query: "*/PRSLEVLA/W___INFO/W__EVENT/WQM"
 
@@ -104,10 +95,6 @@ observations:
       obsdataout: "testrun/gdas.t12z.acft_profiles.prepbufr.nc"
 
       dimensions:
-        - name: CloudSequence
-          path: "*/PRSLEVLA/CLOUDSEQ"
-        - name: PresentWeatherSequence
-          path: "*/PRSLEVLA/PREWXSEQ"
         - name: PressureEvent
           path: "*/PRSLEVLA/P___INFO/P__EVENT"
         - name: TemperatureEvent
@@ -121,6 +108,7 @@ observations:
 
 
       variables:
+        #MetaData
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
           source: variables/latitude
@@ -135,9 +123,9 @@ observations:
           units: "degree_east"
           range: [0, 360]
 
-        - name: "MetaData/stationIdentification"
+        - name: "MetaData/aircraftIdentifier"
           coordinates: "longitude latitude"
-          source: variables/stationIdentification
+          source: variables/aircraftIdentifier
           longName: "Station ID"
 
         - name: "MetaData/aircraftFlightNumber"
@@ -183,18 +171,19 @@ observations:
           longName: "Height of Station"
           units: "m"
 
-        - name: "MetaData/height"
+        - name: "MetaData/aircraftFlightLevel"
           coordinates: "longitude latitude"
-          source: variables/height
-          longName: "Height of Observation"
+          source: variables/aircraftFlightLevel
+          longName: "Aircraft Flight Level"
           units: "m"
 
-        - name: "ObsValue/instantaneousAltitudeRate"
+        - name: "MetaData/instantaneousAltitudeRate"
           coordinates: "longitude latitude"
           source: variables/instantaneousAltitudeRate
           longName: "Instantaneous Rate Altitue"
           units: "m s-1"
 
+        #ObsValue
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
@@ -231,22 +220,7 @@ observations:
           longName: "V component of Wind"
           units: "m s-1"
 
-        - name: "ObsValue/cloudAmountDescription"
-          coordinates: "longitude latitude"
-          source: variables/cloudAmountDescription
-          longName: "Cloud Amount Description"
-
-        - name: "ObsValue/heightOfBaseOfCloud"
-          coordinates: "longitude latitude"
-          source: variables/heightOfBaseOfCloud
-          longName: "Height of base of cloud"
-          units: "m"
-
-        - name: "ObsValue/presentWeather"
-          coordinates: "longitude latitude"
-          source: variables/presentWeather
-          longName: "Present weather"
-
+        #QualityMarker
         - name: "QualityMarker/height"
           coordinates: "longitude latitude"
           source: variables/heightQM
@@ -267,11 +241,6 @@ observations:
           source: variables/specificHumidityQM
           longName: "specific Humidity Quality Marker"
 
-        - name: "QualityMarker/verticalSignificanceSurfaceObservations"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificanceSurfaceObservations
-          longName: "Vertical Significance (Surface Observations)"
-
         - name: "QualityMarker/windEastward"
           coordinates: "longitude latitude"
           source: variables/windQM
@@ -282,6 +251,7 @@ observations:
           source: variables/windQM
           longName: "V Component of Wind Quality Marker"
 
+        #ObsError
         - name: "ObsError/pressure"
           coordinates: "longitude latitude"
           source: variables/pressureError

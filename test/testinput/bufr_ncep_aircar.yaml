@@ -26,23 +26,10 @@ observations:
           latitude:
             query: "NC004004/CLAT"
 
-          stationIdentification:
+          aircraftIdentifier:
             query: "NC004004/ACRN"
-          detailedPhaseOfFlight:
-            query: "NC004004/DPOF"
           aircraftFlightPhase:
             query: "NC004004/POAF"
-
-          dataRestrictedExpiration:
-            query: "NC004004/EXPRSRD"
-          dataProviderRestricted:
-            query: "NC004004/RSRD"
-          dataReceiptTimeHour:
-            query: "NC004004/RCHR"
-          dataReceiptTimeMinute:
-            query: "NC004004/RCMI"
-          dataReceiptTimeSignificance:
-            query: "NC004004/RCTS"
 
           aircraftIndicatedAltitude:
             query: "NC004004/IALT"
@@ -52,8 +39,6 @@ observations:
             query: "NC004004/PRLC"
           airTemperature:
             query: "NC004004/TMDB"
-          temperatureObservationPrecision:
-            query: "NC004004/PCAT"
           relativeHumidity:
             query: "NC004004/ACMST2/REHU"
             transforms:
@@ -70,8 +55,6 @@ observations:
             query: "NC004004/QMAT"
           moistureQM:
             query: "NC004004/ACMST2/QMDD"
-          moistureQuality:
-            query: "NC004004/MSTQ"
           windQM:
             query: "NC004004/QMWN"
 
@@ -80,7 +63,7 @@ observations:
       obsdataout: "testrun/gdas.t12z.aircar.tm00.nc"
 
       variables:
-
+        #MetaData
         - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
@@ -100,48 +83,15 @@ observations:
           units: "degree_east"
           range: [-180, 180]
 
-        - name: "MetaData/stationIdentification"
+        - name: "MetaData/aircraftIdentifier"
           coordinates: "longitude latitude"
-          source: variables/stationIdentification
-          longName: "Station Identification"
-
-        - name: "MetaData/detailedPhaseOfFlight"
-          coordinates: "longitude latitude"
-          source: variables/detailedPhaseOfFlight
-          longName: "Detailed Phase of Flight"
+          source: variables/aircraftIdentifier
+          longName: "Aircraft Identifier"
 
         - name: "MetaData/aircraftFlightPhase"
           coordinates: "longitude latitude"
           source: variables/aircraftFlightPhase
           longName: "Aircraft Flight Phase"
-
-        - name: "MetaData/dataRestrictedExpiration"
-          coordinates: "longitude latitude"
-          source: variables/dataRestrictedExpiration
-          longName: "Restricted Data Expiration"
-          units: "Hour"
-
-        - name: "MetaData/dataProviderRestricted"
-          coordinates: "longitude latitude"
-          source: variables/dataProviderRestricted
-          longName: "Data Provider Restricted"
-
-        - name: "MetaData/dataReceiptTimeHour"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeHour
-          longName: "Receipt Time (Hour)"
-          units: "Hour"
-
-        - name: "MetaData/dataReceiptTimeMinute"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeMinute
-          longName: "Data Receipt Time (Minute)"
-          units: "Minute"
-
-        - name: "MetaData/dataReceiptTimeSignificance"
-          coordinates: "longitude latitude"
-          source: variables/dataReceiptTimeSignificance
-          longName: "Data Receipt Time Significance"
 
         - name: "MetaData/aircraftIndicatedAltitude"
           coordinates: "longitude latitude"
@@ -149,6 +99,7 @@ observations:
           longName: "Indicated Aircraft Altitude"
           units: "m"
 
+        #ObsValue
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
@@ -159,12 +110,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Air Temperature"
-          units: "K"
-
-        - name: "ObsValue/temperatureObservationPrecision"
-          coordinates: "longitude latitude"
-          source: variables/temperatureObservationPrecision
-          longName: "Temperature Observation Precision"
           units: "K"
 
         - name: "ObsValue/relativeHumidity"
@@ -200,11 +145,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/moistureQM
           longName: "Quality Indicator for Moisture"
-
-        - name: "QualityMarker/moistureQuality"
-          coordinates: "longitude latitude"
-          source: variables/moistureQuality
-          longName: "Moisture Quality"
 
         - name: "QualityMarker/windEastward"
           coordinates: "longitude latitude"
