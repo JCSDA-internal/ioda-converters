@@ -81,7 +81,7 @@ class ompsnm(object):
         self._setVarDict('integrated_layer_ozone_in_air')
 
         vars2output = list(ioda2nc.keys())
-        vars2output.append('fov')
+        vars2output.append('scan_position')
         for v in vars2output:
             if(v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
@@ -107,7 +107,7 @@ class ompsnm(object):
         #self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
 
         varsToAddUnits = list(ioda2nc.keys())
-        varsToAddUnits.append('fov')
+        varsToAddUnits.append('scan_position')
         for v in varsToAddUnits:
             if(v != 'valKey'):
                 vkey = (v,'MetaData')
@@ -139,13 +139,14 @@ class ompsnm(object):
             d[k] = ncd[ ioda2nc[k] ][...]
         # unmask ground pixel quality to pass fill value.
         d['ground_pixel_quality'].mask = False
-        # mesh time and FOV to get flattened array instead of using loops
+        # mesh time and scan_position to get flattened array instead of using loops
         time_vec =  d['dateTime']
-        fov_vec = np.arange(1,d['valKey'].shape[1]+1)
-        d['fov'], d['dateTime'] = np.meshgrid(fov_vec,time_vec)
-        _,d['measurement_quality_flags'] = np.meshgrid(fov_vec,d['measurement_quality_flags'])
-        _,d['instrument_quality_flags'] = np.meshgrid(fov_vec, d['instrument_quality_flags'])
-        idx = np.where(~d['valKey'].mask)
+        scan_position_vec = np.arange(1,d['valKey'].shape[1]+1)
+        d['scan_position'], d['dateTime'] = np.meshgrid(scan_position_vec,time_vec)
+        d['scan_position'] = d['scan_position'].astype('float32')
+        _,d['measurement_quality_flags'] = np.meshgrid(scan_position_vec,d['measurement_quality_flags'])
+        _,d['instrument_quality_flags'] = np.meshgrid(scan_position_vec, d['instrument_quality_flags'])
+        idx = np.where( (~d['valKey'].mask) )# & (d['dateTime']<=self.endTAI) & (d['dateTime']>=self.startTAI) )
         ncd.close()
         return d,idx
                 
@@ -157,6 +158,7 @@ class ompsnm(object):
        # loop through input filenames
         for f in self.filenames:
             fileData,idx = self._read_nc(f)
+            # add metadata variables
             for v in list(fileData.keys()):
                 if(v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
                     #  add metadata variables
@@ -181,6 +183,7 @@ class ompsnm(object):
         self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]\
                                                 + (datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds()
         self.outdata[('dateTime','MetaData')].astype(np.int64) 
+        self.outdata[('longitude','MetaData')] = self.outdata[('longitude','MetaData')] % 360
 # end ompsnm object.
 
 def main():
@@ -265,6 +268,8 @@ def main():
     # Read in the O3 data in window 
     o3 = ompsnm(rawFiles, startTAI, endTAI)
 
+    #for k in o3.outdata.keys():
+    #    print(k, o3.outdata[k].shape)
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 

@@ -137,6 +137,7 @@ class omi(object):
                 # for flat array need to make it 2d to match other arrays before flattening again.
                 scn = np.arange(1,d['latitude'].shape[1]+1)
                 scn_tmp,tmp = np.meshgrid(scn,d[k])
+                scn_tmp = scn_tmp.astype('float32')
                 tmp = tmp.astype(np.int64)
                 dd[k] = tmp.flatten().tolist()
                 dd['scan_position'] = scn_tmp.flatten().tolist()
@@ -228,7 +229,7 @@ class omi(object):
             else:
                 print('Not doing QC.')
                 d = self._just_flatten(nc_data)
-            # add metadata variables
+            # add MetaData variables.
             for v in list(d.keys()):
                 if(v != 'valKey' ):
                     self.outdata[(v, 'MetaData')].extend(d[v])
