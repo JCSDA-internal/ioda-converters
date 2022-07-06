@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -252,7 +251,6 @@ def main():
 
     for f in rawFiles:
         vv = f.split('_')
-        # print(vv[-1],vv[-3])
         # 2020m1216t011958.h5 2020m1215t222840
         startDateFile = datetime.strptime(vv[-3][0:-2],"%Ym%m%dt%H%M")
         endDateFile = datetime.strptime(vv[-1][0:-5],"%Ym%m%dt%H%M")

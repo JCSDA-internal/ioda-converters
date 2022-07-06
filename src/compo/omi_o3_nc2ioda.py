@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -166,7 +165,7 @@ class omi(object):
                     continue
                 if (d['prior_o3'][itime,iscan, 0] <= 0.0 or d['valKey'][itime, iscan] <= 0.0):
                     continue
-                # from Kris' fortran shenanigans:
+                # from Kris' fortran 
                 #!! A hack to use the quality flags as recommended by the OMI team (Jul 2019)
                 #!! without having to change the GSI code
                 #!! use any alqf as long as it's not 0
@@ -185,13 +184,12 @@ class omi(object):
                 #!  print *, 'quality DEBUG ', first3, bintoq(:)
                 ###############################################
 
-                # this logic is a little squirelly, let's simplify the above statements:
+                #  let's simplify the above statements:
                 #
-                # 1. first3 is silly. bits 0-3 Bit 0 is a don't care (can be 0 or 1) 
+                #    bits 0-3 Bit 0 is a don't care (can be 0 or 1) 
                 #    we do care if bit 1, 2 or 3 are set. Sooo, if those are set, kick out.
-                # 2. lets not deal with weird QC flags in JEDI, let's just kick it out here.
                 #
-                # Python helps us here because 0 is an index (as it should be) 
+                # remember things start at zero, since we're in python not fortran
                 if ( is_bit_set(d['quality_flag'][itime,iscan],1) or \
                      is_bit_set(d['quality_flag'][itime,iscan],2) or \
                      is_bit_set(d['quality_flag'][itime,iscan],3)  ): continue
@@ -200,7 +198,6 @@ class omi(object):
                      is_bit_set(d['quality_flag'][itime,iscan],8) or \
                      is_bit_set(d['quality_flag'][itime,iscan],9)  ): continue
                 # could simply this further with one if statement possibly more clever use of a bit masking.
-                #FUN! MetaData/scan_position must be a float with IODA (little green jerk)!
                 dd['scan_position'].append( float(iscan+1) )                 
                 for v in flatVars:
                     if(v == 'dateTime'):
@@ -210,8 +207,6 @@ class omi(object):
                     elif( v!= 'scan_position'):
                         dd[v].append(d[v][itime,iscan])
                         
-                #oPrior.append(np.flip(priorO3[itime,iscan,:],axis=0))
-                #oLayerEff.append(np.flip(layerEff[itime,iscan,:],axis=0))
 
         return dd
                 

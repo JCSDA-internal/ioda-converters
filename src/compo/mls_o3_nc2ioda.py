@@ -266,7 +266,6 @@ class mls(object):
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
         self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]\
                                                 + (datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds()
-        #self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]*1e9 #convert to nano seconds
         self.outdata[('dateTime','MetaData')].astype(np.int64) 
 # end mls object.
 
