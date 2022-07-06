@@ -348,6 +348,8 @@ def specialty_time(tvals, year, month, day, hour, minute, second):
 
     if minute == int_missing_value:
         minute = 0
+    elif minute < 0 or minute > 59:
+        minute = 0
 
     if second == int_missing_value:
         second = 0
@@ -555,6 +557,9 @@ def read_bufr_message(f, count, start_pos, data):
     ecc.codes_release(bufr)
 
     # Loop over each pair of beginning and ending indices and transfer data
+    # In some circumstances, we have no idea how many vertical levels of data in a sonde are
+    # upcoming, so we use 1E6 as largest possible number and hope to discover the true
+    # number from some other variable (the multi-IF-block test below).
     obnum = 0
     for b, e in tuple(zip(nbeg, nend)):
         if b < 0 or e < 0 or e <= b:
