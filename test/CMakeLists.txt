@@ -541,7 +541,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sst_ostia
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ostia_l4sst2ioda.py
                           -i testinput/sst_ostia_in_20190101.nc
                           -o testrun/sst_ostia_out_20190101.nc"
-                          sst_ostia_in_20190101.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          sst_ostia_out_20190101.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
                   TYPE    SCRIPT
