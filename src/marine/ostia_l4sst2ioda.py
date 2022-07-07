@@ -66,7 +66,7 @@ class ostia(object):
         self.datetime = np.empty_like(self.sst, dtype=object)
         base_date = datetime(1981, 1, 1)
         dt = base_date + timedelta(days=float(self.time/86400.0))
-        self.datetime[:] = dt.strftime("%Y-%m-%dT%H:%M:%SZ") 
+        self.datetime[:] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Remove observations out of sane bounds
         qci = np.where(np.abs(self.sst) < 99.0)
