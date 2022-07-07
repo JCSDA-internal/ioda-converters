@@ -88,22 +88,16 @@ class ompsnm(object):
         self._setVarDict('integrated_layer_ozone_in_air')
         self.outdata[self.varDict['integrated_layer_ozone_in_air']
                      ['valKey']] = []
-        #self.outdata[self.varDict['integrated_layer_ozone_in_air']['errKey']] = []
 
         self._read()
 
     # set ioda variable keys
     def _setVarDict(self, iodavar):
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-        #self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-        #self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
 
     # set variable attributes for IODA
     def _setVarAttr(self, iodavar):
-        self.varAttrs[iodavar, iconv.OvalName(
-        )]['coordinates'] = 'longitude latitude'
-        #self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-        #self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
 
         varsToAddUnits = list(ioda2nc.keys())
         varsToAddUnits.append('scan_position')
@@ -148,8 +142,8 @@ class ompsnm(object):
             scan_position_vec, d['measurement_quality_flags'])
         _, d['instrument_quality_flags'] = np.meshgrid(
             scan_position_vec, d['instrument_quality_flags'])
-        # & (d['dateTime']<=self.endTAI) & (d['dateTime']>=self.startTAI) )
-        idx = np.where((~d['valKey'].mask))
+        idx = np.where((~d['valKey'].mask) & (d['dateTime'] <= self.endTAI) & (d['dateTime'] >= self.startTAI))
+
         ncd.close()
         return d, idx
 
@@ -158,7 +152,7 @@ class ompsnm(object):
         for iodavar in ['integrated_layer_ozone_in_air', ]:
             # self._setVarDict(var)
             self._setVarAttr(iodavar)
-       # loop through input filenames
+        # loop through input filenames
         for f in self.filenames:
             fileData, idx = self._read_nc(f)
             # add metadata variables
@@ -170,7 +164,6 @@ class ompsnm(object):
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]['valKey']].extend(
                     fileData['valKey'][idx].flatten().tolist())
-                #self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
 
         # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
         nloc = len(self.outdata[('dateTime', 'MetaData')])
@@ -185,9 +178,8 @@ class ompsnm(object):
         DimDict['nlocs'] = self.outdata[('dateTime', 'MetaData')].shape[0]
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')]\
-            + (datetime(1993, 1, 1, 0, 0) -
-               datetime(1970, 1, 1, 0, 0)).total_seconds()
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +
+        (datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds()
         self.outdata[('dateTime', 'MetaData')].astype(np.int64)
         self.outdata[('longitude', 'MetaData')] = self.outdata[(
             'longitude', 'MetaData')] % 360
@@ -216,7 +208,7 @@ def main():
     required.add_argument(
         '-m', '--month',
         help="syn. time month",
-        type=int,  required=True)
+        type=int, required=True)
     required.add_argument(
         '-d', '--day',
         help="syn. time day",
@@ -271,10 +263,8 @@ def main():
     if(len(rawFiles) == 0):
         sys.exit("No Raw Files Found!!!")
     # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)
-    startTAI = ((cycle_time - timedelta(hours=3)) -
-                datetime(1993, 1, 1, 0)).total_seconds()
-    endTAI = ((cycle_time + timedelta(hours=3)) -
-              datetime(1993, 1, 1, 0)).total_seconds()
+    startTAI = ((cycle_time - timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
+    endTAI = ((cycle_time + timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
 
     # Read in the O3 data in window
     o3 = ompsnm(rawFiles, startTAI, endTAI)
