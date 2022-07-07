@@ -60,14 +60,13 @@ class ostia(object):
         self.sst = self.sst-273.15
         self.err = np.squeeze(ncd.variables['analysis_error'][:]).ravel()
         self.time = ncd.variables['time'][:]
-        #self.base_date = datetime(1981, 1, 1)
         ncd.close()
 
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.sst, dtype=object)
         base_date = datetime(1981, 1, 1)
         dt = base_date + timedelta(days=float(self.time/86400.0))
-        self.datetime[:] = dt.strftime("%Y-%m-%dT%H:%M:%SZ") #self.date
+        self.datetime[:] = dt.strftime("%Y-%m-%dT%H:%M:%SZ") 
 
         # Remove observations out of sane bounds
         qci = np.where(np.abs(self.sst) < 99.0)
@@ -77,6 +76,7 @@ class ostia(object):
         self.sst = self.sst[qci].astype(np.single)
         self.err = self.err[qci].astype(np.single)
         self.datetime = self.datetime[qci]
+
 
 class ostia_l4sst2ioda(object):
     def __init__(self, filename):
