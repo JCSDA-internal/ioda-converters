@@ -6,6 +6,8 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 # Standard Python library imports.
+from orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
 import os
 import sys
 import argparse
@@ -14,19 +16,17 @@ import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
 from pathlib import Path
-from collections import defaultdict, OrderedDict,Counter
+from collections import defaultdict, OrderedDict, Counter
 
-#pyIoda libraries.
-#Append pyioda paths so ioda_conv_engines can be loaded
+# pyIoda libraries.
+# Append pyioda paths so ioda_conv_engines can be loaded
 IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
 
-#Global Dictionaries.
+# Global Dictionaries.
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
@@ -45,7 +45,6 @@ ioda2nc['convergence'] = 'HDFEOS/SWATHS/O3/Data Fields/Convergence'
 ioda2nc['status'] = 'HDFEOS/SWATHS/O3/Data Fields/Status'
 ioda2nc['quality'] = 'HDFEOS/SWATHS/O3/Data Fields/Quality'
 ioda2nc['solar_zenith_angle'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/SolarZenithAngle'
- 
 
 
 obsvars = {
@@ -65,56 +64,59 @@ VarDims = {
 }
 
 
-
-
 class mls(object):
-    def __init__(self, filenames,lvmin,lvmax,sTAI,eTAI,nrt,qcOn):
+    def __init__(self, filenames, lvmin, lvmax, sTAI, eTAI, nrt, qcOn):
         self.filenames = filenames
         self.qcOn = qcOn
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.lmin = lvmin
-        self.lmax = lvmax 
+        self.lmax = lvmax
         self.startTAI = sTAI
         self.endTAI = eTAI
         self.nrt = nrt
-        for v in list( ioda2nc.keys() ):
-            if(v != 'valKey' and v !='errKey'):
-                self.outdata[ (v,'MetaData')] = []
-        self.outdata[('level','MetaData')] = [] 
+        for v in list(ioda2nc.keys()):
+            if(v != 'valKey' and v != 'errKey'):
+                self.outdata[(v, 'MetaData')] = []
+        self.outdata[('level', 'MetaData')] = []
         self._setVarDict('mole_fraction_of_ozone_in_air')
-        self.outdata[self.varDict['mole_fraction_of_ozone_in_air']['valKey']] = []
-        if(self.qcOn): 
-            self.outdata[self.varDict['mole_fraction_of_ozone_in_air']['errKey']] = []
+        self.outdata[self.varDict['mole_fraction_of_ozone_in_air']
+                     ['valKey']] = []
+        if(self.qcOn):
+            self.outdata[self.varDict['mole_fraction_of_ozone_in_air']
+                         ['errKey']] = []
 
         self._read()
 
     # set ioda variable keys
-    def _setVarDict(self,iodavar):
+    def _setVarDict(self, iodavar):
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         if(self.qcOn):
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
 
-    #set variable attributes for IODA
-    def _setVarAttr(self,iodavar):
-        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'ppmv' 
+    # set variable attributes for IODA
+    def _setVarAttr(self, iodavar):
+        self.varAttrs[iodavar, iconv.OvalName(
+        )]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OerrName(
+        )]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OqcName(
+        )]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'ppmv'
         self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'ppmv'
 
         varsToAddUnits = list(ioda2nc.keys())
         varsToAddUnits.append('level')
         for v in varsToAddUnits:
             if(v != 'valKey' and v != 'errKey'):
-                vkey = (v,'MetaData')
-                if( 'pressure' in v.lower()):
+                vkey = (v, 'MetaData')
+                if('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1970-01-01T00:00:00Z'
-                elif('angle' in v.lower() or 'latitude' in v.lower() or 'longitude' in v.lower()): 
+                elif('angle' in v.lower() or 'latitude' in v.lower() or 'longitude' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degrees'
                 elif('flag' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'unitless'
@@ -122,122 +124,123 @@ class mls(object):
                     self.varAttrs[vkey]['units'] = 'ppmv'
                 else:
                     self.varAttrs[vkey]['units'] = 'unitless'
- 
-
 
     # Read data needed from raw MLS file.
-    def _read_nc(self,filename,ifile,maxfile):
+    def _read_nc(self, filename, ifile, maxfile):
         print("Reading: {}".format(filename))
         ncd = nc.Dataset(filename, 'r')
-        end_of_file = len(ncd[ ioda2nc['latitude'] ][:]) 
+        end_of_file = len(ncd[ioda2nc['latitude']][:])
         # unles nrt, use all profiles in file.
         start = 0
         end = end_of_file
         # if it is nrt, and the last file use all but first two and last 3 profiles
-        if( ifile == maxfile and self.nrt == True):
+        if(ifile == maxfile and self.nrt == True):
             print("last file:{}".format(filename))
             start = 2
             end = end_of_file - 3
         # otherwise if nrt skip first 2 and last 8 profiles to avoid duplicates.
-        elif( self.nrt == True ):
+        elif(self.nrt == True):
             start = 2
             end = end_of_file - 8
         else:
-            start = 0 
+            start = 0
             end = end_of_file
         d = {}
         for k in list(ioda2nc.keys()):
             if (k == 'air_pressure'):
-                d[k] = ncd[ ioda2nc[k] ][...]*100. #convert to Pa
+                d[k] = ncd[ioda2nc[k]][...]*100.  # convert to Pa
                 d[k].mask = False
             else:
-                d[k] = ncd[ ioda2nc[k] ][start:end,...]
+                d[k] = ncd[ioda2nc[k]][start:end, ...]
                 d[k].mask = False
-              
-            if(k == 'valKey' or k =='precision'):
-                d[k] = d[k]*1e6 #convert mol/mol to PPMV
-        return d 
 
-    def _calc_error(self,o3,o3_prec,lev):
-        #Observation error estimates from MLS.
-        oe =['na','na','na','na','na','na','na', 0.02, 0.02, 0.02, 0.02, 0.035, 0.05, 0.05, 0.05, \
-             0.125, 0.2, 0.2, 0.2, 0.2, 0.2, 0.225, 0.25, 0.275, \
-              0.3, 0.3, 0.3, 0.3, 0.3, 0.275, 0.25, 0.225, 0.2, 0.2, \
-              0.2, 0.2, 0.2, 0.15, 0.1, 0.1, 0.1, 0.15, 0.2, 0.2, 0.2, \
-              0.3, 0.3, 0.3, 0.3 ]
+            if(k == 'valKey' or k == 'precision'):
+                d[k] = d[k]*1e6  # convert mol/mol to PPMV
+        return d
+
+    def _calc_error(self, o3, o3_prec, lev):
+        # Observation error estimates from MLS.
+        oe = ['na', 'na', 'na', 'na', 'na', 'na', 'na', 0.02, 0.02, 0.02, 0.02, 0.035, 0.05, 0.05, 0.05,
+              0.125, 0.2, 0.2, 0.2, 0.2, 0.2, 0.225, 0.25, 0.275,
+              0.3, 0.3, 0.3, 0.3, 0.3, 0.275, 0.25, 0.225, 0.2, 0.2,
+              0.2, 0.2, 0.2, 0.15, 0.1, 0.1, 0.1, 0.15, 0.2, 0.2, 0.2,
+              0.3, 0.3, 0.3, 0.3]
         ooe = oe[lev]
         # inflate errors for specific levels. (note zero based index)
         if (lev == 7):  # 261 hPa
-            ooe = ooe + (0.30 * abs(o3)) # 0.3 is my conservative guess
+            ooe = ooe + (0.30 * abs(o3))  # 0.3 is my conservative guess
         elif (lev == 8):  # 215 hPa
             ooe = ooe + (0.20 * abs(o3))
-        elif (lev == 9 ): #177 hPa
+        elif (lev == 9):  # 177 hPa
             ooe = ooe + (0.125 * abs(o3))
-        elif (lev == 10 or lev == 11 or lev == 12 ):# 150-100 hPa
+        elif (lev == 10 or lev == 11 or lev == 12):  # 150-100 hPa
             ooe = ooe + (0.05 * abs(o3))
 
-        ooe = np.sqrt(max( (0.5*ooe)**2+(o3_prec)**2, 1.e-6))
+        ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-6))
         return ooe
 
-    def _just_flatten(self,d):
-        #only output desired levels (lmin through lmax)
+    def _just_flatten(self, d):
+        # only output desired levels (lmin through lmax)
         dd = {}
-        idx, = np.where( ( np.asarray(d['dateTime'])>=self.startTAI ) & ( np.asarray(d['dateTime'])<=self.endTAI ) )
-        dd['valKey'] = d['valKey'][idx,self.lmin:self.lmax+1]
-        dd['precision'] = d['precision'][idx,self.lmin:self.lmax+1]
-        lvec = np.arange(self.lmin+1,self.lmax+2)
-        dd['level'],dd['status'] = np.meshgrid(np.arange(self.lmin+1,self.lmax+2),d['status'][idx])
+        idx, = np.where((np.asarray(d['dateTime']) >= self.startTAI) & (
+            np.asarray(d['dateTime']) <= self.endTAI))
+        dd['valKey'] = d['valKey'][idx, self.lmin:self.lmax+1]
+        dd['precision'] = d['precision'][idx, self.lmin:self.lmax+1]
+        lvec = np.arange(self.lmin+1, self.lmax+2)
+        dd['level'], dd['status'] = np.meshgrid(
+            np.arange(self.lmin+1, self.lmax+2), d['status'][idx])
 
-        dd['air_pressure'],dd['dateTime'] = np.meshgrid(d['air_pressure'][self.lmin:self.lmax+1],d['dateTime'][idx])
-        _,dd['quality'] = np.meshgrid(lvec,d['quality'][idx])
-        _,dd['convergence'] = np.meshgrid(lvec,d['convergence'][idx])
-        _,dd['status'] = np.meshgrid(lvec,d['status'][idx])
-        _,dd['latitude'] = np.meshgrid(lvec,d['latitude'][idx])
-        _,dd['longitude'] = np.meshgrid(lvec,d['longitude'][idx])
-        _,dd['solar_zenith_angle'] = np.meshgrid(lvec,d['solar_zenith_angle'][idx])
+        dd['air_pressure'], dd['dateTime'] = np.meshgrid(
+            d['air_pressure'][self.lmin:self.lmax+1], d['dateTime'][idx])
+        _, dd['quality'] = np.meshgrid(lvec, d['quality'][idx])
+        _, dd['convergence'] = np.meshgrid(lvec, d['convergence'][idx])
+        _, dd['status'] = np.meshgrid(lvec, d['status'][idx])
+        _, dd['latitude'] = np.meshgrid(lvec, d['latitude'][idx])
+        _, dd['longitude'] = np.meshgrid(lvec, d['longitude'][idx])
+        _, dd['solar_zenith_angle'] = np.meshgrid(
+            lvec, d['solar_zenith_angle'][idx])
         for k in list(dd.keys()):
             dd[k] = np.asarray(dd[k])
-            dd[k] = dd[k].flatten().tolist() 
+            dd[k] = dd[k].flatten().tolist()
         return dd
- 
 
-
-    def _do_qc(self,d):
+    def _do_qc(self, d):
         dd = {}
         for k in list(d.keys()):
             dd[k] = []
         dd['errKey'] = []
         dd['level'] = []
         nrec = d['latitude'].shape[0]
-        cnt=0
+        cnt = 0
         for irec in range(nrec):
-            if( d['status'][irec]%2 != 0 or d['convergence'][irec]>=1.03 or d['quality'][irec]<= 1.0 ):
+            if(d['status'][irec] % 2 != 0 or d['convergence'][irec] >= 1.03 or d['quality'][irec] <= 1.0):
                 continue
-            for ilev in range(self.lmin,self.lmax+1):
-                if( d['precision'][irec,ilev] < 0.0):
+            for ilev in range(self.lmin, self.lmax+1):
+                if(d['precision'][irec, ilev] < 0.0):
                     continue
-                #if outside the window, don't inculde data
+                # if outside the window, don't inculde data
                 if(d['dateTime'][irec] < self.startTAI or d['dateTime'][irec] > self.endTAI):
                     continue
                 for k in list(d.keys()):
-                    if ( len(d[k].shape) == 1 and k!='air_pressure' ):
+                    if (len(d[k].shape) == 1 and k != 'air_pressure'):
                         dd[k].append(d[k][irec])
                     elif (k == 'air_pressure'):
                         dd[k].append(d[k][ilev])
-                    elif k !='errKey':
-                        dd[k].append(d[k][irec,ilev])
-                    
-                dd['level'].append( ilev+1 )
-                dd['errKey'].append( self._calc_error(d['valKey'][irec,ilev],d['valKey'][irec,ilev],ilev) )
+                    elif k != 'errKey':
+                        dd[k].append(d[k][irec, ilev])
+
+                dd['level'].append(ilev+1)
+                dd['errKey'].append(self._calc_error(
+                    d['valKey'][irec, ilev], d['valKey'][irec, ilev], ilev))
         return dd
-                
+
     def _read(self):
         # set up variable names for IODA
         self._setVarAttr('mole_fraction_of_ozone_in_air')
 
        # loop through input filenames
-        for i,f in enumerate(self.filenames):
-            nc_data = self._read_nc(f,i,len(self.filenames)-1)
+        for i, f in enumerate(self.filenames):
+            nc_data = self._read_nc(f, i, len(self.filenames)-1)
             #dups = [item for item, count in Counter(time).items() if count > 1]
             if(self.qcOn):
                 print("Performing QC.")
@@ -247,27 +250,32 @@ class mls(object):
                 d = self._just_flatten(nc_data)
             for v in list(d.keys()):
                 if(v != 'valKey' and v != 'errKey'):
-                    self.outdata[(v,'MetaData')].extend(d[v]) 
+                    self.outdata[(v, 'MetaData')].extend(d[v])
             for ncvar, iodavar in obsvars.items():
-                self.outdata[self.varDict[iodavar]['valKey']].extend(d['valKey'])
+                self.outdata[self.varDict[iodavar]
+                             ['valKey']].extend(d['valKey'])
                 if(self.qcOn):
-                    self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
+                    self.outdata[self.varDict[iodavar]
+                                 ['errKey']].extend(d['errKey'])
                 #self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
-        DimDict['nlocs'] = np.float32(len(self.outdata[('dateTime', 'MetaData')]))
+        DimDict['nlocs'] = np.float32(
+            len(self.outdata[('dateTime', 'MetaData')]))
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
         # run a time duplicate check to see if NRT works.
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
-            if(self.outdata[k].dtype =='float64'):
+            if(self.outdata[k].dtype == 'float64'):
                 self.outdata[k] = self.outdata[k].astype('float32')
-            elif(self.outdata[k].dtype == 'int64' and k != ('dateTime','MetaData')):
-                self.outdata[k] = self.outdata[k].astype('int32') 
+            elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
+                self.outdata[k] = self.outdata[k].astype('int32')
 
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime','MetaData')] = self.outdata[('dateTime','MetaData')]\
-                                                + (datetime(1993,1,1,0,0) - datetime(1970,1,1,0,0)).total_seconds()
-        self.outdata[('dateTime','MetaData')].astype(np.int64) 
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')]\
+            + (datetime(1993, 1, 1, 0, 0) -
+               datetime(1970, 1, 1, 0, 0)).total_seconds()
+        self.outdata[('dateTime', 'MetaData')].astype(np.int64)
 # end mls object.
+
 
 def main():
 
@@ -309,18 +317,17 @@ def main():
     optional.add_argument(
         '-s', '--level-start',
         help="mls level to start 1 based index (default=8)",
-        type=int, required=False,default=8,dest='lmin')
+        type=int, required=False, default=8, dest='lmin')
     optional.add_argument(
         '-e', '--level-end',
         help="mls level to end 1 based index (default=49)",
-        type=int, required=False,default=49,dest='lmax')
+        type=int, required=False, default=49, dest='lmax')
     optional.add_argument(
         '-p', '--prefix',
         help="mls filename prefix (default=MLS-Aura_L2GP-O3_v05-01)",
-        type=str, required=False, default="MLS-Aura_L2GP-O3_v05-01",dest='prefix')
-    optional.add_argument('--qc', dest='qc', action='store_true',default=True)
+        type=str, required=False, default="MLS-Aura_L2GP-O3_v05-01", dest='prefix')
+    optional.add_argument('--qc', dest='qc', action='store_true', default=True)
     optional.add_argument('--no-qc', dest='qc', action='store_false')
- 
 
     args = parser.parse_args()
 
@@ -340,53 +347,60 @@ def main():
     else:
         nrt = False
 
-    #Get Day of year for current cycle and associated file(s)     
-    cycle_time = datetime(args.year,args.month,args.day,args.hour)
+    # Get Day of year for current cycle and associated file(s)
+    cycle_time = datetime(args.year, args.month, args.day, args.hour)
     current_doy = cycle_time.strftime('%j')
     current_year = cycle_time.year
     current_hour = cycle_time.hour
     # if 00z cycle add previous day's file(s)
     if (args.hour == 0):
-        previous_3hr = cycle_time - timedelta(hours=3) 
+        previous_3hr = cycle_time - timedelta(hours=3)
         prev_doy = previous_3hr.strftime('%j')
         prev_year = previous_3hr.year
         if(nrt):
-            rawFiles = glob.glob( os.path.join(args.input, args.prefix+"*{}d".format(prev_year)+prev_doy+"*.he5") ) 
-            rawFiles.extend( glob.glob( os.path.join(args.input, args.prefix+"*{}d".format(current_year)+current_doy+"*.he5") ) )
+            rawFiles = glob.glob(os.path.join(
+                args.input, args.prefix+"*{}d".format(prev_year)+prev_doy+"*.he5"))
+            rawFiles.extend(glob.glob(os.path.join(
+                args.input, args.prefix+"*{}d".format(current_year)+current_doy+"*.he5")))
         else:
-            rawFiles = glob.glob( os.path.join(args.input, args.prefix+"*{}d".format(prev_year)+prev_doy+"*.he5") ) 
-            rawFiles.extend( glob.glob( os.path.join(args.input, args.prefix+"*{}d".format(current_year)+current_doy+".he5") ) )
-    elif( args.hour != 0 and nrt ):
-        rawFiles = glob.glob( os.path.join(args.input, args.prefix+"*{}d".format(current_year)+current_doy+"*.he5") )
+            rawFiles = glob.glob(os.path.join(
+                args.input, args.prefix+"*{}d".format(prev_year)+prev_doy+"*.he5"))
+            rawFiles.extend(glob.glob(os.path.join(
+                args.input, args.prefix+"*{}d".format(current_year)+current_doy+".he5")))
+    elif(args.hour != 0 and nrt):
+        rawFiles = glob.glob(os.path.join(
+            args.input, args.prefix+"*{}d".format(current_year)+current_doy+"*.he5"))
     else:
-        rawFiles = glob.glob( os.path.join(args.input, args.prefix+"*{}d".format(current_year)+current_doy+".he5") )
+        rawFiles = glob.glob(os.path.join(
+            args.input, args.prefix+"*{}d".format(current_year)+current_doy+".he5"))
 
     rawFiles.sort()
     if(nrt):
-        #limit files only between start and end of window.    
+        # limit files only between start and end of window.
         rawFilesOut = []
         startDateWindow = cycle_time - timedelta(hours=3)
         endDateWindow = cycle_time + timedelta(hours=3)
         for f in rawFiles:
-            ftime = datetime.strptime(f[-17::],"%Yd%jt%H%M.he5")
-            if( startDateWindow <= ftime <= endDateWindow ):
+            ftime = datetime.strptime(f[-17::], "%Yd%jt%H%M.he5")
+            if(startDateWindow <= ftime <= endDateWindow):
                 rawFilesOut.append(f)
         rawFiles = rawFilesOut
 
-    if( len(rawFiles) == 0 ):
-        sys.exit('No Raw Files Found!!!')   
-    # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)    
-    startTAI = ( ( cycle_time - timedelta(hours=3) ) - datetime(1993,1,1,0) ).total_seconds()
-    endTAI = ( ( cycle_time + timedelta(hours=3) ) - datetime(1993,1,1,0) ).total_seconds()
-
+    if(len(rawFiles) == 0):
+        sys.exit('No Raw Files Found!!!')
+    # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)
+    startTAI = ((cycle_time - timedelta(hours=3)) -
+                datetime(1993, 1, 1, 0)).total_seconds()
+    endTAI = ((cycle_time + timedelta(hours=3)) -
+              datetime(1993, 1, 1, 0)).total_seconds()
 
     # Read in the O3 data in window over selected levels (if not default 8-49)
-    # if nrt is set, assumes near real-time and will skip first two and last 8 profiles for most files 
+    # if nrt is set, assumes near real-time and will skip first two and last 8 profiles for most files
     # (last 3 profiles skipped if it is the last file in window)
-    # RTM regarding Near Real time (NRT) in 
+    # RTM regarding Near Real time (NRT) in
     # https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aura_NRT/ML2SO2_NRT.005/doc/NRT-user-guide-v5.pdf
-    o3 = mls(rawFiles, lmin-1, lmax-1, startTAI, endTAI, nrt,args.qc)
-    #for k in o3.outdata.keys():
+    o3 = mls(rawFiles, lmin-1, lmax-1, startTAI, endTAI, nrt, args.qc)
+    # for k in o3.outdata.keys():
     #    print(k, o3.outdata[k].shape)
 
     # setup the IODA writer
@@ -395,6 +409,7 @@ def main():
     # write everything out
     print("Writing: {}".format(args.output))
     writer.BuildIoda(o3.outdata, VarDims, o3.varAttrs, AttrData)
-    
+
+
 if __name__ == '__main__':
     main()
