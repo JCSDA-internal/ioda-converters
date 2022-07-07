@@ -18,7 +18,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict, OrderedDict, Counter
 
-# pyIoda libraries.
 # Append pyioda paths so ioda_conv_engines can be loaded
 IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
@@ -45,8 +44,6 @@ ioda2nc['convergence'] = 'HDFEOS/SWATHS/O3/Data Fields/Convergence'
 ioda2nc['status'] = 'HDFEOS/SWATHS/O3/Data Fields/Status'
 ioda2nc['quality'] = 'HDFEOS/SWATHS/O3/Data Fields/Quality'
 ioda2nc['solar_zenith_angle'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/SolarZenithAngle'
-
-
 obsvars = {
     'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
 }
@@ -81,11 +78,9 @@ class mls(object):
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[('level', 'MetaData')] = []
         self._setVarDict('mole_fraction_of_ozone_in_air')
-        self.outdata[self.varDict['mole_fraction_of_ozone_in_air']
-                     ['valKey']] = []
+        self.outdata[self.varDict['mole_fraction_of_ozone_in_air']['valKey']] = []
         if(self.qcOn):
-            self.outdata[self.varDict['mole_fraction_of_ozone_in_air']
-                         ['errKey']] = []
+            self.outdata[self.varDict['mole_fraction_of_ozone_in_air']['errKey']] = []
 
         self._read()
 
@@ -98,12 +93,9 @@ class mls(object):
 
     # set variable attributes for IODA
     def _setVarAttr(self, iodavar):
-        self.varAttrs[iodavar, iconv.OvalName(
-        )]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OerrName(
-        )]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OqcName(
-        )]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'ppmv'
         self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'ppmv'
 
@@ -134,17 +126,15 @@ class mls(object):
         start = 0
         end = end_of_file
         # if it is nrt, and the last file use all but first two and last 3 profiles
-        if(ifile == maxfile and self.nrt == True):
+        if(ifile == maxfile and self.nrt):
             print("last file:{}".format(filename))
             start = 2
             end = end_of_file - 3
         # otherwise if nrt skip first 2 and last 8 profiles to avoid duplicates.
-        elif(self.nrt == True):
+        elif(self.nrt):
             start = 2
             end = end_of_file - 8
-        else:
-            start = 0
-            end = end_of_file
+
         d = {}
         for k in list(ioda2nc.keys()):
             if (k == 'air_pressure'):
@@ -238,10 +228,9 @@ class mls(object):
         # set up variable names for IODA
         self._setVarAttr('mole_fraction_of_ozone_in_air')
 
-       # loop through input filenames
+        # loop through input filenames
         for i, f in enumerate(self.filenames):
             nc_data = self._read_nc(f, i, len(self.filenames)-1)
-            #dups = [item for item, count in Counter(time).items() if count > 1]
             if(self.qcOn):
                 print("Performing QC.")
                 d = self._do_qc(nc_data)
@@ -257,7 +246,6 @@ class mls(object):
                 if(self.qcOn):
                     self.outdata[self.varDict[iodavar]
                                  ['errKey']].extend(d['errKey'])
-                #self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
         DimDict['nlocs'] = np.float32(
             len(self.outdata[('dateTime', 'MetaData')]))
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
@@ -270,9 +258,8 @@ class mls(object):
                 self.outdata[k] = self.outdata[k].astype('int32')
 
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')]\
-            + (datetime(1993, 1, 1, 0, 0) -
-               datetime(1970, 1, 1, 0, 0)).total_seconds()
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +
+        (datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds()
         self.outdata[('dateTime', 'MetaData')].astype(np.int64)
 # end mls object.
 
@@ -299,7 +286,7 @@ def main():
     required.add_argument(
         '-m', '--month',
         help="syn. time month",
-        type=int,  required=True)
+        type=int, required=True)
     required.add_argument(
         '-d', '--day',
         help="syn. time day",
@@ -389,10 +376,8 @@ def main():
     if(len(rawFiles) == 0):
         sys.exit('No Raw Files Found!!!')
     # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)
-    startTAI = ((cycle_time - timedelta(hours=3)) -
-                datetime(1993, 1, 1, 0)).total_seconds()
-    endTAI = ((cycle_time + timedelta(hours=3)) -
-              datetime(1993, 1, 1, 0)).total_seconds()
+    startTAI = ((cycle_time - timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
+    endTAI = ((cycle_time + timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
 
     # Read in the O3 data in window over selected levels (if not default 8-49)
     # if nrt is set, assumes near real-time and will skip first two and last 8 profiles for most files
@@ -400,8 +385,6 @@ def main():
     # RTM regarding Near Real time (NRT) in
     # https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aura_NRT/ML2SO2_NRT.005/doc/NRT-user-guide-v5.pdf
     o3 = mls(rawFiles, lmin-1, lmax-1, startTAI, endTAI, nrt, args.qc)
-    # for k in o3.outdata.keys():
-    #    print(k, o3.outdata[k].shape)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

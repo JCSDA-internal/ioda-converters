@@ -43,7 +43,7 @@ ioda2nc['longitude'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Lo
 ioda2nc['dateTime'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/Time'
 ioda2nc['solar_zenith_angle'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Geolocation Fields/SolarZenithAngle'
 ioda2nc['prior_o3'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/APrioriLayerO3'
-#ioda2nc['Layer_Efficiency'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/LayerEfficiency'
+# ioda2nc['Layer_Efficiency'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/LayerEfficiency'
 ioda2nc['valKey'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/ColumnAmountO3'
 ioda2nc['quality_flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/QualityFlags'
 ioda2nc['algorithm_flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/AlgorithmFlags'
@@ -92,8 +92,6 @@ class omi(object):
     # set ioda variable keys
     def _setVarDict(self, iodavar):
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-        #self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-        #self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
 
     # set variable attributes for IODA
     def _setVarAttr(self, iodavar):
@@ -102,8 +100,6 @@ class omi(object):
         missing_value = 9.96921e+36
         int_missing_value = -2147483647
         self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = missing_value
-        #self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = missing_value
-        #self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = int_missing_value
         varsToAddUnits = list(ioda2nc.keys())
         varsToAddUnits.append('scan_position')
         for v in varsToAddUnits:
@@ -171,22 +167,22 @@ class omi(object):
                 if (d['prior_o3'][itime, iscan, 0] <= 0.0 or d['valKey'][itime, iscan] <= 0.0):
                     continue
                 # from Kris' fortran
-                #!! A hack to use the quality flags as recommended by the OMI team (Jul 2019)
-                #!! without having to change the GSI code
-                #!! use any alqf as long as it's not 0
-                #!! The GSI will reject alqf = 3 so if alqf=0 set it to 3, otherwise set it to 1
+                # !! flags as recommended by the OMI team (Jul 2019)
+                # !! without having to change the GSI code
+                # !! use any alqf as long as it's not 0
+                # !! The GSI will reject alqf = 3 so if alqf=0 set it to 3, otherwise set it to 1
                 if ((d['algorithm_flag'][itime, iscan] == 0) or (d['algorithm_flag'][itime, iscan] == 3)):
                     continue
                 # Code from Kris' Fortran########################
-                #!! Bits 0-3 combined into an integer: use 0 or 1 only
-                #!! Do not use if bits 6, 8 or 9 are set (to 1)
-                #!! counting from bit 1 the bad ones are 7, 9 and 10
-                #!! Use everything else
+                # !! Bits 0-3 combined into an integer: use 0 or 1 only
+                # !! Do not use if bits 6, 8 or 9 are set (to 1)
+                # !! counting from bit 1 the bad ones are 7, 9 and 10
+                # !! Use everything else
                 #  decimal = qf(iscan,itime)
                 #  qf(iscan,itime) = 0
                 #  call dec2bin(decimal,bintoq,16)
                 #  first3 = bintoq(1)+2*bintoq(2)+4*bintoq(3)+8*bintoq(4)
-                #!  print *, 'quality DEBUG ', first3, bintoq(:)
+                # !  print *, 'quality DEBUG ', first3, bintoq(:)
                 ###############################################
 
                 #  let's simplify the above statements:
@@ -195,14 +191,16 @@ class omi(object):
                 #    we do care if bit 1, 2 or 3 are set. Sooo, if those are set, kick out.
                 #
                 # remember things start at zero, since we're in python not fortran
-                if (is_bit_set(d['quality_flag'][itime, iscan], 1) or
-                    is_bit_set(d['quality_flag'][itime, iscan], 2) or
-                        is_bit_set(d['quality_flag'][itime, iscan], 3)):
+                one_set = is_bit_set(d['quality_flag'][itime, iscan], 1)
+                two_set = is_bit_set(d['quality_flag'][itime, iscan], 2)
+                three_set = is_bit_set(d['quality_flag'][itime, iscan], 3)
+                if (one_set or two_set or three_set):
                     continue
+                six_set = is_bit_set(d['quality_flag'][itime, iscan], 6)
+                eight_set = is_bit_set(d['quality_flag'][itime, iscan], 8)
+                nine_set = is_bit_set(d['quality_flag'][itime, iscan], 9)
                 # break out second condition, just because it's mentioned that way for bits 6,8,9
-                if (is_bit_set(d['quality_flag'][itime, iscan], 6) or
-                    is_bit_set(d['quality_flag'][itime, iscan], 8) or
-                        is_bit_set(d['quality_flag'][itime, iscan], 9)):
+                if (six_set or eight_set or nine_set):
                     continue
                 # could simply this further with one if statement possibly more clever use of a bit masking.
                 dd['scan_position'].append(float(iscan+1))
@@ -221,7 +219,7 @@ class omi(object):
         for iodavar in ['integrated_layer_ozone_in_air', ]:
             # self._setVarDict(var)
             self._setVarAttr(iodavar)
-       # loop through input filenames
+        # loop through input filenames
         for f in self.filenames:
             nc_data = self._read_nc(f)
             if(self.qcOn):
@@ -238,8 +236,6 @@ class omi(object):
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
                              ['valKey']].extend(d['valKey'])
-                # self.outdata[self.varDict[iodavar]['qcKey']].extend(d['qcKey'])
-                #self.outdata[self.varDict[iodavar]['errKey']].extend(np.zeros( len(d['valKey']) ).tolist() )
         DimDict['nlocs'] = len(self.outdata[('longitude', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
         # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
@@ -258,9 +254,9 @@ class omi(object):
 
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
 
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')]\
-            + int((datetime(1993, 1, 1, 0, 0) -
-                  datetime(1970, 1, 1, 0, 0)).total_seconds())
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +
+        int((datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds())
+
         self.outdata[('dateTime', 'MetaData')].astype('int64')
         # ensure lon is 0-360
         self.outdata[('longitude', 'MetaData')] = self.outdata[(
@@ -289,7 +285,7 @@ def main():
     required.add_argument(
         '-m', '--month',
         help="syn. time month",
-        type=int,  required=True)
+        type=int, required=True)
     required.add_argument(
         '-d', '--day',
         help="syn. time day",
@@ -343,10 +339,8 @@ def main():
             rawFilesOut.append(f)
     rawFiles = rawFilesOut
     # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)
-    startTAI = ((cycle_time - timedelta(hours=3)) -
-                datetime(1993, 1, 1, 0)).total_seconds()
-    endTAI = ((cycle_time + timedelta(hours=3)) -
-              datetime(1993, 1, 1, 0)).total_seconds()
+    startTAI = ((cycle_time - timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
+    endTAI = ((cycle_time + timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
 
     # Read in the O3 data in window
     o3 = omi(rawFiles, startTAI, endTAI, args.qc)
