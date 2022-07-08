@@ -6,8 +6,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 # Standard Python library imports.
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
 import os
 import sys
 import argparse
@@ -23,6 +21,8 @@ IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
+from orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
 
 
 # Global Dictionaries.
@@ -172,23 +172,18 @@ class mls(object):
     def _just_flatten(self, d):
         # only output desired levels (lmin through lmax)
         dd = {}
-        idx, = np.where((np.asarray(d['dateTime']) >= self.startTAI) & (
-            np.asarray(d['dateTime']) <= self.endTAI))
+        idx, = np.where((np.asarray(d['dateTime']) >= self.startTAI) & (np.asarray(d['dateTime']) <= self.endTAI))
         dd['valKey'] = d['valKey'][idx, self.lmin:self.lmax+1]
         dd['precision'] = d['precision'][idx, self.lmin:self.lmax+1]
         lvec = np.arange(self.lmin+1, self.lmax+2)
-        dd['level'], dd['status'] = np.meshgrid(
-            np.arange(self.lmin+1, self.lmax+2), d['status'][idx])
-
-        dd['air_pressure'], dd['dateTime'] = np.meshgrid(
-            d['air_pressure'][self.lmin:self.lmax+1], d['dateTime'][idx])
-        _, dd['quality'] = np.meshgrid(lvec, d['quality'][idx])
-        _, dd['convergence'] = np.meshgrid(lvec, d['convergence'][idx])
-        _, dd['status'] = np.meshgrid(lvec, d['status'][idx])
-        _, dd['latitude'] = np.meshgrid(lvec, d['latitude'][idx])
-        _, dd['longitude'] = np.meshgrid(lvec, d['longitude'][idx])
-        _, dd['solar_zenith_angle'] = np.meshgrid(
-            lvec, d['solar_zenith_angle'][idx])
+        dd['level'], dd['status'] = np.meshgrid(np.arange(self.lmin+1, self.lmax+2), d['status'][idx])
+        dd['air_pressure'], dd['dateTime'] = np.meshgrid( d['air_pressure'][self.lmin:self.lmax+1], d['dateTime'][idx] )
+        dd['quality'] = np.tile(d['quality'][idx],(lvec.shape[0],1)).T
+        dd['convergence'] = np.tile(d['convergence'][idx],(lvec.shape[0],1)).T
+        dd['status'] = np.tile(d['status'][idx],(lvec.shape[0],1)).T  
+        dd['latitude'] = np.tile(d['latitude'][idx],(lvec.shape[0],1)).T  
+        dd['longitude'] = np.tile(d['longitude'][idx],(lvec.shape[0],1)).T  
+        dd['solar_zenith_angle'] = np.tile(d['solar_zenith_angle'][idx],(lvec.shape[0],1)).T  
         for k in list(dd.keys()):
             dd[k] = np.asarray(dd[k])
             dd[k] = dd[k].flatten().tolist()
@@ -258,7 +253,7 @@ class mls(object):
                 self.outdata[k] = self.outdata[k].astype('int32')
 
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +\
         (datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds()
         self.outdata[('dateTime', 'MetaData')].astype(np.int64)
 # end mls object.

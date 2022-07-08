@@ -6,8 +6,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 # Standard Python library imports.
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
 import os
 import sys
 import argparse
@@ -18,13 +16,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict, OrderedDict
 
-# pyIoda libraries.
 # Append pyioda paths so ioda_conv_engines can be loaded
 IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-
+from orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
 
 def is_bit_set(integer_value, bit_position):
     return (integer_value & (1 << bit_position)) != 0
@@ -85,8 +83,7 @@ class omi(object):
         for v in vars2output:
             if(v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
-        self.outdata[self.varDict['integrated_layer_ozone_in_air']
-                     ['valKey']] = []
+        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
         self._read()
 
     # set ioda variable keys
@@ -95,8 +92,7 @@ class omi(object):
 
     # set variable attributes for IODA
     def _setVarAttr(self, iodavar):
-        self.varAttrs[iodavar, iconv.OvalName(
-        )]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
         missing_value = 9.96921e+36
         int_missing_value = -2147483647
         self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = missing_value
@@ -116,7 +112,6 @@ class omi(object):
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
-    # Read data needed from raw MLS file.
 
     def _read_nc(self, filename):
         print("Reading: {}".format(filename))
@@ -254,7 +249,7 @@ class omi(object):
 
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
 
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +\
         int((datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds())
 
         self.outdata[('dateTime', 'MetaData')].astype('int64')

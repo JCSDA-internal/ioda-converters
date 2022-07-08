@@ -6,8 +6,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 # Standard Python library imports.
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
 import os
 import sys
 import argparse
@@ -24,6 +22,8 @@ IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
+from orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
 
 
 # Global Dictionaries.
@@ -82,12 +82,10 @@ class ompsnm(object):
         for v in vars2output:
             if(v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
-        self.outdata[self.varDict['integrated_layer_ozone_in_air']
-                     ['valKey']] = []
+        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
 
         self._setVarDict('integrated_layer_ozone_in_air')
-        self.outdata[self.varDict['integrated_layer_ozone_in_air']
-                     ['valKey']] = []
+        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
 
         self._read()
 
@@ -135,13 +133,10 @@ class ompsnm(object):
         # mesh time and scan_position to get flattened array instead of using loops
         time_vec = d['dateTime']
         scan_position_vec = np.arange(1, d['valKey'].shape[1]+1)
-        d['scan_position'], d['dateTime'] = np.meshgrid(
-            scan_position_vec, time_vec)
+        d['scan_position'], d['dateTime'] = np.meshgrid( scan_position_vec, time_vec)
         d['scan_position'] = d['scan_position'].astype('float32')
-        _, d['measurement_quality_flags'] = np.meshgrid(
-            scan_position_vec, d['measurement_quality_flags'])
-        _, d['instrument_quality_flags'] = np.meshgrid(
-            scan_position_vec, d['instrument_quality_flags'])
+        d['measurement_quality_flags']= np.tile(d['measurement_quality_flags'],(scan_position_vec.shape[0],1)).T
+        d['instrument_quality_flags']= np.tile(d['instrument_quality_flags'],(scan_position_vec.shape[0],1)).T
         idx = np.where((~d['valKey'].mask) & (d['dateTime'] <= self.endTAI) & (d['dateTime'] >= self.startTAI))
 
         ncd.close()
@@ -178,7 +173,7 @@ class ompsnm(object):
         DimDict['nlocs'] = self.outdata[('dateTime', 'MetaData')].shape[0]
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
         # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +\
         (datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds()
         self.outdata[('dateTime', 'MetaData')].astype(np.int64)
         self.outdata[('longitude', 'MetaData')] = self.outdata[(
