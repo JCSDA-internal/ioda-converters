@@ -65,6 +65,7 @@ list( APPEND test_input
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
+  testinput/sst_ostia_in_20190101.nc
 )
 
 list( APPEND test_output
@@ -124,6 +125,7 @@ list( APPEND test_output
   testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
+  testoutput/sst_ostia.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -529,6 +531,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
                           -i testinput/global_vavh_l3_rt_s3a_20210930T18.nc
                           -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
                           ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sst_ostia
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ostia_l4sst2ioda.py
+                          -i testinput/sst_ostia.nc
+                          -o testrun/sst_ostia.nc"
+                          sst_ostia.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_avhrr_radiance
                   TYPE    SCRIPT
