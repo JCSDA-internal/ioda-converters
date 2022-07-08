@@ -24,11 +24,13 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 from orddicts import DefaultOrderedDict
 import ioda_conv_engines as iconv
 
+
 def is_bit_set(integer_value, bit_position):
     return (integer_value & (1 << bit_position)) != 0
 
 
 # Global Dictionaries.
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
@@ -104,7 +106,7 @@ class omi(object):
                 if('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
-                    self.varAttrs[vkey]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                    self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
                 elif('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degrees'
                 elif('flag' in v.lower()):
@@ -246,16 +248,9 @@ class omi(object):
                 self.outdata[k] = self.outdata[k].astype('int32')
             elif(self.outdata[k].dtype == 'uint16' or self.outdata[k].dtype == 'uint8'):
                 self.outdata[k] = self.outdata[k].astype(int)
-
-        # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +\
-        int((datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds())
-
         self.outdata[('dateTime', 'MetaData')].astype('int64')
         # ensure lon is 0-360
-        self.outdata[('longitude', 'MetaData')] = self.outdata[(
-            'longitude', 'MetaData')] % 360
+        self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 
 
 def main():
@@ -302,29 +297,32 @@ def main():
 
     optional.add_argument('--qc', dest='qc', action='store_true', default=True)
     optional.add_argument('--no-qc', dest='qc', action='store_false')
+
+    optional.add_argument(
+        '-w', '--window',
+        help="assimilation window size in hours",
+        type=int, required=False, default=6, dest='window')
+
     args = parser.parse_args()
     # Get Day of year for current cycle and associated file(s)
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    year = cycle_time.year
-    month = cycle_time.month
-    day = cycle_time.day
-    rawFiles = glob.glob(os.path.join(
-        args.input, args.prefix+"_{}m{}{}".format(year, month, day)+"*.he5"))
-
-    # if 00z cycle add previous day's file(s)
-    if (args.hour == 0):
-        previous_cycle = cycle_time - timedelta(days=1)
-        year = previous_cycle.year
-        month = previous_cycle.month
-        day = previous_cycle.day
-        rawFiles.extend(glob.glob(os.path.join(
-            args.input, args.prefix+"_{}m{}{}".format(year, month, day)+"*.he5")))
-
+    startDateWindow = cycle_time - timedelta(hours=args.window/2)
+    endDateWindow = cycle_time + timedelta(hours=args.window/2)
+    # effectively round off so we get the number of days between
+    startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
+    endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
+    dT = endDayWindow - startDayWindow
+    daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
+    # iterate over the number of days in window
+    rawFiles = []
+    for now in daysToGo:
+        year = now.year
+        month = now.month
+        day = now.day
+        rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"_{}m{}{}".format(year, month, day)+"*.he5")))
     rawFiles.sort()
+    # only read files in window
     rawFilesOut = []
-    startDateWindow = cycle_time - timedelta(hours=3)
-    endDateWindow = cycle_time + timedelta(hours=3)
-
     for f in rawFiles:
         vv = f.split('_')
         # v003-2020m1214t060743.he5 2020m1214t0003-o87313

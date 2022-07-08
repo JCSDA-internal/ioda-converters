@@ -105,7 +105,7 @@ class ompsnm(object):
                 if('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
-                    self.varAttrs[vkey]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                    self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
                 elif('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degrees'
                 elif('flag' in v.lower()):
@@ -119,7 +119,7 @@ class ompsnm(object):
         vkey = ('air_pressure', 'MetaData')
         self.varAttrs[vkey]['units'] = 'Pa'
 
-    # Read data needed from raw MLS file.
+    # Read data needed from raw OMPSNM file.
     def _read_nc(self, filename):
         print("Reading: {}".format(filename))
         d = {}
@@ -133,10 +133,12 @@ class ompsnm(object):
         # mesh time and scan_position to get flattened array instead of using loops
         time_vec = d['dateTime']
         scan_position_vec = np.arange(1, d['valKey'].shape[1]+1)
-        d['scan_position'], d['dateTime'] = np.meshgrid( scan_position_vec, time_vec)
+        d['scan_position'], d['dateTime'] = np.meshgrid(scan_position_vec, time_vec)
         d['scan_position'] = d['scan_position'].astype('float32')
-        d['measurement_quality_flags']= np.tile(d['measurement_quality_flags'],(scan_position_vec.shape[0],1)).T
-        d['instrument_quality_flags']= np.tile(d['instrument_quality_flags'],(scan_position_vec.shape[0],1)).T
+        d['measurement_quality_flags'].mask = False
+        d['instrument_quality_flags'].mask = False
+        d['measurement_quality_flags'] = np.tile(d['measurement_quality_flags'], (scan_position_vec.shape[0], 1)).T
+        d['instrument_quality_flags'] = np.tile(d['instrument_quality_flags'], (scan_position_vec.shape[0], 1)).T
         idx = np.where((~d['valKey'].mask) & (d['dateTime'] <= self.endTAI) & (d['dateTime'] >= self.startTAI))
 
         ncd.close()
@@ -154,11 +156,9 @@ class ompsnm(object):
             for v in list(fileData.keys()):
                 if(v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
                     #  add metadata variables
-                    self.outdata[(v, 'MetaData')].extend(
-                        fileData[v][idx].flatten().tolist())
+                    self.outdata[(v, 'MetaData')].extend(fileData[v][idx].flatten().tolist())
             for ncvar, iodavar in obsvars.items():
-                self.outdata[self.varDict[iodavar]['valKey']].extend(
-                    fileData['valKey'][idx].flatten().tolist())
+                self.outdata[self.varDict[iodavar]['valKey']].extend(fileData['valKey'][idx].flatten().tolist())
 
         # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
         nloc = len(self.outdata[('dateTime', 'MetaData')])
@@ -172,12 +172,8 @@ class ompsnm(object):
                 self.outdata[k] = self.outdata[k].astype('int32')
         DimDict['nlocs'] = self.outdata[('dateTime', 'MetaData')].shape[0]
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-        # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +\
-        (datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds()
         self.outdata[('dateTime', 'MetaData')].astype(np.int64)
-        self.outdata[('longitude', 'MetaData')] = self.outdata[(
-            'longitude', 'MetaData')] % 360
+        self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 # end ompsnm object.
 
 
@@ -222,31 +218,33 @@ def main():
         '-p', '--prefix',
         help="ompsnm filename prefix (default=OMPS-NPP_NMTO3-L2_v2.1)",
         type=str, required=False, default="OMPS-NPP_NMTO3-L2_v2.1", dest='prefix')
+    optional.add_argument(
+        '-w', '--window',
+        help="assimilation window size in hours",
+        type=int, required=False, default=6, dest='window')
 
     args = parser.parse_args()
+
     # Get Day of year for current cycle and associated file(s)
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    year = cycle_time.year
-    month = cycle_time.month
-    day = cycle_time.day
-    rawFiles = glob.glob(os.path.join(
-        args.input, args.prefix+"_{}m{}{}".format(year, month, day)+"*.h5"))
-
-    # if 00z cycle add previous day's file(s)
-    if (args.hour == 0):
-        previous_cycle = cycle_time - timedelta(days=1)
-        year = previous_cycle.year
-        month = previous_cycle.month
-        day = previous_cycle.day
-        rawFiles.extend(glob.glob(os.path.join(
-            args.input, args.prefix+"_{}m{}{}".format(year, month, day)+"*.h5")))
+    startDateWindow = cycle_time - timedelta(hours=args.window/2)
+    endDateWindow = cycle_time + timedelta(hours=args.window/2)
+    # effectively round off so we get the number of days between
+    startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
+    endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
+    dT = endDayWindow - startDayWindow
+    daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
+    # iterate over the number of days in window
+    rawFiles = []
+    for now in daysToGo:
+        year = now.year
+        month = now.month
+        day = now.day
+        rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"_{}m{}{}".format(year, month, day)+"*.h5")))
     rawFiles.sort()
 
     # only read files in the window.
     rawFilesOut = []
-    startDateWindow = cycle_time - timedelta(hours=3)
-    endDateWindow = cycle_time + timedelta(hours=3)
-
     for f in rawFiles:
         vv = f.split('_')
         # 2020m1216t011958.h5 2020m1215t222840
@@ -264,8 +262,6 @@ def main():
     # Read in the O3 data in window
     o3 = ompsnm(rawFiles, startTAI, endTAI)
 
-    # for k in o3.outdata.keys():
-    #    print(k, o3.outdata[k].shape)
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 

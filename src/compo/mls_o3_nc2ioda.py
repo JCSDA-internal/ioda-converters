@@ -107,7 +107,7 @@ class mls(object):
                 if('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
-                    self.varAttrs[vkey]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+                    self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
                 elif('angle' in v.lower() or 'latitude' in v.lower() or 'longitude' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degrees'
                 elif('flag' in v.lower()):
@@ -177,13 +177,13 @@ class mls(object):
         dd['precision'] = d['precision'][idx, self.lmin:self.lmax+1]
         lvec = np.arange(self.lmin+1, self.lmax+2)
         dd['level'], dd['status'] = np.meshgrid(np.arange(self.lmin+1, self.lmax+2), d['status'][idx])
-        dd['air_pressure'], dd['dateTime'] = np.meshgrid( d['air_pressure'][self.lmin:self.lmax+1], d['dateTime'][idx] )
-        dd['quality'] = np.tile(d['quality'][idx],(lvec.shape[0],1)).T
-        dd['convergence'] = np.tile(d['convergence'][idx],(lvec.shape[0],1)).T
-        dd['status'] = np.tile(d['status'][idx],(lvec.shape[0],1)).T  
-        dd['latitude'] = np.tile(d['latitude'][idx],(lvec.shape[0],1)).T  
-        dd['longitude'] = np.tile(d['longitude'][idx],(lvec.shape[0],1)).T  
-        dd['solar_zenith_angle'] = np.tile(d['solar_zenith_angle'][idx],(lvec.shape[0],1)).T  
+        dd['air_pressure'], dd['dateTime'] = np.meshgrid(d['air_pressure'][self.lmin:self.lmax+1], d['dateTime'][idx])
+        dd['quality'] = np.tile(d['quality'][idx], (lvec.shape[0], 1)).T
+        dd['convergence'] = np.tile(d['convergence'][idx], (lvec.shape[0], 1)).T
+        dd['status'] = np.tile(d['status'][idx], (lvec.shape[0], 1)).T
+        dd['latitude'] = np.tile(d['latitude'][idx], (lvec.shape[0], 1)).T
+        dd['longitude'] = np.tile(d['longitude'][idx], (lvec.shape[0], 1)).T
+        dd['solar_zenith_angle'] = np.tile(d['solar_zenith_angle'][idx], (lvec.shape[0], 1)).T
         for k in list(dd.keys()):
             dd[k] = np.asarray(dd[k])
             dd[k] = dd[k].flatten().tolist()
@@ -251,11 +251,8 @@ class mls(object):
                 self.outdata[k] = self.outdata[k].astype('float32')
             elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
-
-        # EOS AURA uses TAI93 so add seconds offset from UNIX time for IODA
-        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')] +\
-        (datetime(1993, 1, 1, 0, 0) - datetime(1970, 1, 1, 0, 0)).total_seconds()
         self.outdata[('dateTime', 'MetaData')].astype(np.int64)
+        self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 # end mls object.
 
 
@@ -310,10 +307,14 @@ def main():
         type=str, required=False, default="MLS-Aura_L2GP-O3_v05-01", dest='prefix')
     optional.add_argument('--qc', dest='qc', action='store_true', default=True)
     optional.add_argument('--no-qc', dest='qc', action='store_false')
+    optional.add_argument(
+        '-w', '--window',
+        help="assimilation window size in hours",
+        type=int, required=False, default=6, dest='window')
 
     args = parser.parse_args()
 
-    # check for probably somewhat useless option to modify levels output
+    # check for option to modify levels output
     if(args.lmin < 8):
         print("Sorry, level 8 is low as I go! Setting lmin=8.")
         lmin = 8
@@ -328,34 +329,21 @@ def main():
         nrt = True
     else:
         nrt = False
-
-    # Get Day of year for current cycle and associated file(s)
+    # get current cycle time and start/end of the window
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    current_doy = cycle_time.strftime('%j')
-    current_year = cycle_time.year
-    current_hour = cycle_time.hour
-    # if 00z cycle add previous day's file(s)
-    if (args.hour == 0):
-        previous_3hr = cycle_time - timedelta(hours=3)
-        prev_doy = previous_3hr.strftime('%j')
-        prev_year = previous_3hr.year
-        if(nrt):
-            rawFiles = glob.glob(os.path.join(
-                args.input, args.prefix+"*{}d".format(prev_year)+prev_doy+"*.he5"))
-            rawFiles.extend(glob.glob(os.path.join(
-                args.input, args.prefix+"*{}d".format(current_year)+current_doy+"*.he5")))
-        else:
-            rawFiles = glob.glob(os.path.join(
-                args.input, args.prefix+"*{}d".format(prev_year)+prev_doy+"*.he5"))
-            rawFiles.extend(glob.glob(os.path.join(
-                args.input, args.prefix+"*{}d".format(current_year)+current_doy+".he5")))
-    elif(args.hour != 0 and nrt):
-        rawFiles = glob.glob(os.path.join(
-            args.input, args.prefix+"*{}d".format(current_year)+current_doy+"*.he5"))
-    else:
-        rawFiles = glob.glob(os.path.join(
-            args.input, args.prefix+"*{}d".format(current_year)+current_doy+".he5"))
-
+    startDateWindow = cycle_time - timedelta(hours=args.window/2)
+    endDateWindow = cycle_time + timedelta(hours=args.window/2)
+    # effectively round off so we get the number of days between
+    startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
+    endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
+    dT = endDayWindow - startDayWindow
+    daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
+    # iterate over the number of days in window
+    rawFiles = []
+    for now in daysToGo:
+        year = now.year
+        doy = now.strftime('%j')
+        rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"*{}d".format(year)+doy+"*.he5")))
     rawFiles.sort()
     if(nrt):
         # limit files only between start and end of window.
