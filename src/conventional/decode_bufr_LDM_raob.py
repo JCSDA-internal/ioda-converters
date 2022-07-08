@@ -55,7 +55,7 @@ metaDataKeyList = {
     'latitude': ['latitude'],
     'longitude': ['longitude'],
     'station_elevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
-                         'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
+                          'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
     'LaunchTime': ['Constructed'],
     'air_pressure': ['pressure', 'nonCoordinatePressure'],
@@ -611,13 +611,13 @@ def read_bufr_message(f, count, start_pos, data):
         # Sondes are special with a launch time and time displacement.
         if temp_data['timeDisplacement'] is not None:
             meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
-                        meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],     # noqa
-                        meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0]) # noqa
+                      meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
+                      meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
             meta_data['LaunchTime'] = np.full(target_number, meta_data['dateTime'][0])
         else:
             meta_data['dateTime'][0] = specialty_time([0],
-                        meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],     # noqa
-                        meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0]) # noqa
+                      meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
+                      meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
             meta_data['LaunchTime'] = np.full(target_number, meta_data['dateTime'][0])
 
