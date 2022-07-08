@@ -44,6 +44,7 @@ ioda2nc['convergence'] = 'HDFEOS/SWATHS/O3/Data Fields/Convergence'
 ioda2nc['status'] = 'HDFEOS/SWATHS/O3/Data Fields/Status'
 ioda2nc['quality'] = 'HDFEOS/SWATHS/O3/Data Fields/Quality'
 ioda2nc['solar_zenith_angle'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/SolarZenithAngle'
+
 obsvars = {
     'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
 }
@@ -239,12 +240,11 @@ class mls(object):
                 self.outdata[self.varDict[iodavar]
                              ['valKey']].extend(d['valKey'])
                 if(self.qcOn):
-                    self.outdata[self.varDict[iodavar]
-                                 ['errKey']].extend(d['errKey'])
-        DimDict['nlocs'] = np.float32(
-            len(self.outdata[('dateTime', 'MetaData')]))
+                    self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
+
+        DimDict['nlocs'] = np.float32(len(self.outdata[('dateTime', 'MetaData')]))
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-        # run a time duplicate check to see if NRT works.
+
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
             if(self.outdata[k].dtype == 'float64'):

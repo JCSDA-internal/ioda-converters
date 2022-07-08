@@ -126,7 +126,6 @@ class ompsnm(object):
         ncd = nc.Dataset(filename, 'r')
         # use dictionary above to just read fields we want out of the netcdf.
         for k in list(ioda2nc.keys()):
-            # print("Reading Field: {}"ioda2nc[k])
             d[k] = ncd[ioda2nc[k]][...]
         # unmask ground pixel quality to pass fill value.
         d['ground_pixel_quality'].mask = False
@@ -140,7 +139,6 @@ class ompsnm(object):
         d['measurement_quality_flags'] = np.tile(d['measurement_quality_flags'], (scan_position_vec.shape[0], 1)).T
         d['instrument_quality_flags'] = np.tile(d['instrument_quality_flags'], (scan_position_vec.shape[0], 1)).T
         idx = np.where((~d['valKey'].mask) & (d['dateTime'] <= self.endTAI) & (d['dateTime'] >= self.startTAI))
-
         ncd.close()
         return d, idx
 
