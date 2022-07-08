@@ -906,6 +906,7 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
      end do
    end if
 
+   ! Superobbing code is based on WRFDA's AHI superobbing code from https://github.com/wrf-model/WRF/blob/develop/var/da/da_radiance/da_read_obs_netcdf4ahi_jaxa.inc
    if ( do_superob ) then
       nlocs = 0
       superob_width = 2*superob_halfwidth+1
