@@ -3,15 +3,15 @@
 #------------
 #GNU compiler
 #------------
-FC = gfortran
-GNU10 = #-fallow-argument-mismatch -fallow-invalid-boz
-FFLAGS = -ffree-line-length-none ${GNU10} #-fbacktrace -ggdb -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
+#FC = gfortran
+#GNU10 = #-fallow-argument-mismatch -fallow-invalid-boz
+#FFLAGS = -ffree-line-length-none ${GNU10} #-fbacktrace -ggdb -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
 
 #--------------
 #INTEL compiler
 #--------------
-#FC = ifort
-#FFLAGS = -mcmodel medium # needed for intel error message "failed to convert GOTPCREL relocation"
+FC = ifort
+FFLAGS = -mcmodel medium -g -traceback -debug all -check all # needed for intel error message "failed to convert GOTPCREL relocation"
 
 LIBS = -L$(NETCDF)/lib -lnetcdff -lnetcdf
 INCS = -I$(NETCDF)/include

@@ -79,9 +79,12 @@ program Goes_ReBroadcast_converter
    character(len=18)               :: data_id
    character(len=3)                :: sat_id
    integer(i_kind)                 :: n_subsample
+   logical                         :: do_superob
+   integer(i_kind)                 :: superob_halfwidth
+   logical                         :: do_thinning
    logical                         :: write_iodav1
 
-   namelist /data_nml/ nc_list_file, data_dir, data_id, sat_id, n_subsample
+   namelist /data_nml/ nc_list_file, data_dir, data_id, sat_id, do_thinning, n_subsample, do_superob, superob_halfwidth
 
    real(r_kind)                    :: sdtb ! to be done
    integer(i_kind)                 :: istat
@@ -110,12 +113,16 @@ program Goes_ReBroadcast_converter
    !
    ! initialize namelist variables
    !
-   nc_list_file   = 'flist.txt'
-   data_dir       = '.'
-   data_id        = 'OR_ABI-L1b-RadC-M3'
-   sat_id         = 'G16'
-   n_subsample    = 1
-   write_iodav1   = .true.
+   nc_list_file      = 'flist.txt'
+   data_dir          = '.'
+   data_id           = 'OR_ABI-L1b-RadC-M3'
+   sat_id            = 'G16'
+   do_thinning       = .false.
+   n_subsample       = 1
+   do_superob        = .false.
+   superob_halfwidth = 1
+   !
+   write_iodav1      = .true.
    !
    ! read namelist
    !
@@ -827,69 +834,197 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
 
    character(len=60), parameter :: var_tb = "brightness_temperature"
 
+   integer            :: superob_width ! Must be ≥ 0
+   integer            :: first_boxcenter, last_boxcenter_x, last_boxcenter_y, box_bottom, box_upper, box_left, box_right
+   integer            :: isup, jsup, ixsup, iysup, ibox, jbox, nkeep, ix, iy, tb, k
+   real(r_kind)       :: temp1 = 0.0
+   real(r_kind),    allocatable :: bt_sup(:,:,:)   ! superobbed brightness temperature(nband,nx,ny)
+
    nvars = nband
 
-   nlocs = 0
-   do iline = 1, ny, n_subsample
-      do isample = 1, nx, n_subsample
-         if ( .not. got_latlon(isample,iline) ) cycle
-         if ( sat_zen(isample,iline) > 80.0 ) cycle
-         ! qf (DQF, Data Quality Flag)
-         ! 0:good, 1:conditionally_usable, 2:out_of_range, 3:no_value
-         ! keep only qf=0,1 pixels
-         if ( all(qf(:,isample,iline) > 1) ) cycle
-         if ( all(bt(:,isample,iline)<0.0) ) cycle
-         nlocs = nlocs + 1
-      end do
-   end do
+   if ( do_thinning ) then
+     nlocs = 0
+     do iline = 1, ny, n_subsample
+        do isample = 1, nx, n_subsample
+           if ( .not. got_latlon(isample,iline) ) cycle
+           if ( sat_zen(isample,iline) > 80.0 ) cycle
+           ! qf (DQF, Data Quality Flag)
+           ! 0:good, 1:conditionally_usable, 2:out_of_range, 3:no_value
+           ! keep only qf=0,1 pixels
+           if ( all(qf(:,isample,iline) > 1) ) cycle
+           if ( all(bt(:,isample,iline)<0.0) ) cycle
+           nlocs = nlocs + 1
+        end do
+     end do
 
-   write(0,*) 'nlocs = ', nlocs
-   if ( nlocs <= 0 ) then
-      return
+     write(0,*) 'nlocs = ', nlocs
+     if ( nlocs <= 0 ) then
+        return
+     end if
+
+     allocate (name_var_tb(1:nband))
+     allocate (datetime(nlocs))
+     allocate (lat_out(nlocs))
+     allocate (lon_out(nlocs))
+     allocate (scan_pos_out(nlocs))
+     allocate (sat_zen_out(nlocs))
+     allocate (sat_azi_out(nlocs))
+     allocate (sun_zen_out(nlocs))
+     allocate (sun_azi_out(nlocs))
+     allocate (bt_out(nband,nlocs))
+     allocate (err_out(nband,nlocs))
+     allocate (qf_out(nband,nlocs))
+
+     read(time_start( 1: 4), '(i4)') iyear
+     read(time_start( 6: 7), '(i2)') imonth
+     read(time_start( 9:10), '(i2)') iday
+     read(time_start(12:13), '(i2)') ihour
+     read(time_start(15:16), '(i2)') imin
+     read(time_start(18:19), '(i2)') isec
+
+     iloc = 0
+     do iline = 1, ny, n_subsample
+        do isample = 1, nx, n_subsample
+           if ( .not. got_latlon(isample,iline) ) cycle
+           if ( sat_zen(isample,iline) > 80.0 ) cycle
+           if ( all(qf(:,isample,iline) > 1) ) cycle
+           if ( all(bt(:,isample,iline)<0.0) ) cycle
+           iloc = iloc + 1
+           write(unit=datetime(iloc), fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+                 iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+           lat_out(iloc) = lat(isample,iline)
+           lon_out(iloc) = lon(isample,iline)
+           sat_zen_out(iloc) = sat_zen(isample,iline)
+           sun_zen_out(iloc) = sun_zen(isample,iline)
+           bt_out(1:nband,iloc) = bt(1:nband,isample,iline)
+           qf_out(1:nband,iloc) = qf(1:nband,isample,iline)
+           scan_pos_out(iloc) = isample
+           sat_azi_out(iloc) = missing_r
+           sun_azi_out(iloc) = missing_r
+           err_out(1:nband,iloc) = 1.0 !missing_r
+        end do
+     end do
    end if
 
-   allocate (name_var_tb(1:nband))
-   allocate (datetime(nlocs))
-   allocate (lat_out(nlocs))
-   allocate (lon_out(nlocs))
-   allocate (scan_pos_out(nlocs))
-   allocate (sat_zen_out(nlocs))
-   allocate (sat_azi_out(nlocs))
-   allocate (sun_zen_out(nlocs))
-   allocate (sun_azi_out(nlocs))
-   allocate (bt_out(nband,nlocs))
-   allocate (err_out(nband,nlocs))
-   allocate (qf_out(nband,nlocs))
+   if ( do_superob ) then
+      nlocs = 0
+      superob_width = 2*superob_halfwidth+1
 
-   read(time_start( 1: 4), '(i4)') iyear
-   read(time_start( 6: 7), '(i2)') imonth
-   read(time_start( 9:10), '(i2)') iday
-   read(time_start(12:13), '(i2)') ihour
-   read(time_start(15:16), '(i2)') imin
-   read(time_start(18:19), '(i2)') isec
+      ! start scan_loop
 
-   iloc = 0
-   do iline = 1, ny, n_subsample
-      do isample = 1, nx, n_subsample
-         if ( .not. got_latlon(isample,iline) ) cycle
-         if ( sat_zen(isample,iline) > 80.0 ) cycle
-         if ( all(qf(:,isample,iline) > 1) ) cycle
-         if ( all(bt(:,isample,iline)<0.0) ) cycle
-         iloc = iloc + 1
-         write(unit=datetime(iloc), fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-               iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
-         lat_out(iloc) = lat(isample,iline)
-         lon_out(iloc) = lon(isample,iline)
-         sat_zen_out(iloc) = sat_zen(isample,iline)
-         sun_zen_out(iloc) = sun_zen(isample,iline)
-         bt_out(1:nband,iloc) = bt(1:nband,isample,iline)
-         qf_out(1:nband,iloc) = qf(1:nband,isample,iline)
-         scan_pos_out(iloc) = isample
-         sat_azi_out(iloc) = missing_r
-         sun_azi_out(iloc) = missing_r
-         err_out(1:nband,iloc) = 1.0 !missing_r
+      first_boxcenter = superob_halfwidth + 1
+      last_boxcenter_y = superob_width * (ny / superob_width) - superob_halfwidth
+      last_boxcenter_x = superob_width * (nx / superob_width) - superob_halfwidth
+
+      ! ix and iy are the center pixels of each box and therefore the superobbed lat/lon
+
+      do iy=first_boxcenter, ny, superob_width
+        lon_loop:      do ix=first_boxcenter, nx, superob_width
+            if ( .not. got_latlon(ix,iy)) cycle
+            if ( sat_zen(ix,iy)  > 80.0 ) cycle lon_loop
+            if ( all(qf(:,ix,iy) > 1  ) ) cycle
+            if ( all(bt(:,ix,iy) < 0.0) ) cycle
+            nlocs = nlocs + 1
+        end do lon_loop
       end do
-   end do
+
+     write(0,*) 'nlocs = ', nlocs
+     if ( nlocs <= 0 ) then
+        return
+     end if
+
+     allocate (name_var_tb(1:nband))
+     allocate (datetime(nlocs))
+     allocate (lat_out(nlocs))
+     allocate (lon_out(nlocs))
+     allocate (scan_pos_out(nlocs))
+     allocate (sat_zen_out(nlocs))
+     allocate (sat_azi_out(nlocs))
+     allocate (sun_zen_out(nlocs))
+     allocate (sun_azi_out(nlocs))
+     allocate (bt_out(nband,nlocs))
+     allocate (err_out(nband,nlocs))
+     allocate (qf_out(nband,nlocs))
+     allocate (bt_sup(nband,nx,ny))
+
+     read(time_start( 1: 4), '(i4)') iyear
+     read(time_start( 6: 7), '(i2)') imonth
+     read(time_start( 9:10), '(i2)') iday
+     read(time_start(12:13), '(i2)') ihour
+     read(time_start(15:16), '(i2)') imin
+     read(time_start(18:19), '(i2)') isec
+
+      iloc = 0
+      scan_loop:     do iy=first_boxcenter, ny, superob_width
+      ! start fov_loop
+         jbox = iy/superob_width + 1
+         if ( superob_halfwidth .gt. 0 ) then
+            box_bottom = superob_width * (jbox-1) +1
+            box_upper  = superob_width * jbox
+         else
+            box_bottom = superob_width * (jbox-1)
+            box_upper  = superob_width * (jbox-1)
+         end if
+
+         fov_loop:      do ix=first_boxcenter, nx, superob_width
+            if ( .not. got_latlon(ix,iy)) cycle
+            if ( sat_zen(ix,iy)  > 80.0 ) cycle fov_loop
+            if ( all(qf(:,ix,iy) > 1  ) ) cycle
+            if ( all(bt(:,ix,iy) < 0.0) ) cycle
+
+            ibox = ix/superob_width + 1
+            if ( superob_halfwidth .gt. 0 ) then
+               box_left  = superob_width * (ibox-1) +1 ! will exceed nlatitude/nlongitude if superob_halfwidth = 0
+               box_right = superob_width * ibox
+            else
+               box_left  = superob_width * (ibox-1)
+               box_right = superob_width * (ibox-1)
+            end if
+
+            if ( box_right .gt. nx ) then
+               box_right = nx
+            end if
+
+            if ( box_upper .gt. ny ) then
+               box_upper = ny
+            end if
+
+            iloc = iloc + 1
+            write(unit=datetime(iloc), fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
+                  iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+
+            ! Super-ob BT for this channel
+            do k = 1, nband
+               nkeep = count(bt(k,box_left:box_right,box_bottom:box_upper) > 0.0 )
+               temp1 = sum  (bt(k,box_left:box_right,box_bottom:box_upper), &
+                             bt(k,box_left:box_right,box_bottom:box_upper) > 0.0 )
+
+               if (superob_halfwidth .gt.0 .and. nkeep .gt. 0) then
+                  tb = temp1 / real(nkeep,8)
+               else
+                  ! Extract single pixel BT and radiance value for this channel
+                  tb = bt(k,ix,iy)
+               end if
+
+               if (tb > 0.0) then
+                  bt_sup(k,ix,iy) = tb
+               end if
+             end do
+
+             lat_out(iloc) = lat(ix,iy)
+             lon_out(iloc) = lon(ix,iy)
+             sat_zen_out(iloc) = sat_zen(ix,iy)
+             sun_zen_out(iloc) = sun_zen(ix,iy)
+             bt_out(1:nband,iloc) = bt_sup(1:nband,ix,iy)
+             qf_out(1:nband,iloc) = qf(1:nband,ix,iy)
+             scan_pos_out(iloc) = ix
+             sat_azi_out(iloc) = missing_r
+             sun_azi_out(iloc) = missing_r
+             err_out(1:nband,iloc) = 1.0 !missing_r
+
+         end do fov_loop
+      end do scan_loop
+   end if
 
    call open_netcdf_for_write(trim(fname),ncfileid)
    call def_netcdf_dims(ncfileid,'nvars',nvars,ncid_nvars)

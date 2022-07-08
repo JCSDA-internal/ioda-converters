@@ -12,8 +12,10 @@
 #INTEL compiler
 #--------------
 FC = ifort
-BUFR_LIB = -L/glade/u/home/hclin/extlib/intel -lbufr
-FFLAGS = -mcmodel medium # needed for intel error message "failed to convert GOTPCREL relocation"
+#BUFR_LIB = -L/glade/u/home/hclin/extlib/intel -lbufr
+#FFLAGS = -mcmodel medium # needed for intel error message "failed to convert GOTPCREL relocation"
+BUFR_LIB = -L/glade/p/mmm/parc/ivette/pandac/converters/WRFDA_3DVAR_dmpar/var/external/bufr -lbufr #-L/glade/u/home/hclin/extlib/intel -lbufr
+FFLAGS = -mcmodel medium -g -traceback -debug all -check all # needed for intel error message "failed to convert GOTPCREL relocation"
 
 LIBS = -L$(NETCDF)/lib -lnetcdff -lnetcdf ${BUFR_LIB}
 INCS = -I$(NETCDF)/include
