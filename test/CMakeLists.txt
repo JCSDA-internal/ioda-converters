@@ -65,7 +65,7 @@ list( APPEND test_input
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
-  testinput/sst_ostia_in_20190101.nc
+  testinput/sst_ostia.nc
 )
 
 list( APPEND test_output
