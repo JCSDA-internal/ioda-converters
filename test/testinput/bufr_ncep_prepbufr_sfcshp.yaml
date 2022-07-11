@@ -154,23 +154,23 @@ observations:
       backend: netcdf 
       obsdataout: "./testrun/gdas.t12z.sfcshp.prepbufr.nc"
 
-#      dimensions:
-#        - name: CloudSequence 
-#          path: "*/CLOUDSEQ"
-#        - name: SwellSequence
-#          path: "*/SWELLSEQ"
-#        - name: HeightEvent
-#          path: "*/Z___INFO/Z__EVENT"
-#        - name: PressureEvent
-#          path: "*/P___INFO/P__EVENT"
-#        - name: TemperatureEvent
-#          path: "*/T___INFO/T__EVENT"
-#        - name: HumidityEvent
-#          path: "*/Q___INFO/Q__EVENT"
-#        - name: WaterTemperatureEvent
-#          path: "*/SST_INFO/SSTEVENT"
-#        - name: WindEvent
-#          path: "*/W___INFO/W__EVENT"
+      dimensions:
+        - name: CloudSequence 
+          path: "*/CLOUDSEQ"
+        - name: SwellSequence
+          path: "*/SWELLSEQ"
+        - name: HeightEvent
+          path: "*/Z___INFO/Z__EVENT"
+        - name: PressureEvent
+          path: "*/P___INFO/P__EVENT"
+        - name: TemperatureEvent
+          path: "*/T___INFO/T__EVENT"
+        - name: HumidityEvent
+          path: "*/Q___INFO/Q__EVENT"
+        - name: WaterTemperatureEvent
+          path: "*/SST_INFO/SSTEVENT"
+        - name: WindEvent
+          path: "*/W___INFO/W__EVENT"
 
       variables:
 
