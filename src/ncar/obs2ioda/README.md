@@ -29,3 +29,8 @@ File types that obs2ioda can handle:
 * https://rda.ucar.edu/datasets/ds735.0/
 * https://registry.opendata.aws/noaa-goes/
 * https://registry.opendata.aws/noaa-himawari/
+
+## Contributors
+* Primary original developer: Jamie Bresch (@jamiebresch)
+
+Original repository can be found at https://github.com/jamiebresch/obs2ioda
