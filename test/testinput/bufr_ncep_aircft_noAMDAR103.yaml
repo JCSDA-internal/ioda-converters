@@ -29,21 +29,36 @@ observations:
             query: "*/ACID"
           aircraftNavigationalSystem:
             query: "*/ACNS"
-          aircraftIdentifier:
-            query: "[*/RPID, */ACRN]"
+          aircraftRegistrationNumber:
+            query: "*/ACRN"
           commercialAircraftType:
             query: "*/ACTP"
-          detailedPhaseOfFlight:
-            query: "*/DPOF"
           aircraftFlightPhase:
             query: "*/POAF"
+          reportIdentifier:
+            query: "*/RPID"
           observerIdentification:
             query: "*/OBSVR"
+          aircraftIdentifier:
+            query: "[*/RPID, */ACRN]"
+          instantaneousAltitudeRate:
+            query: "*/IALR"
+
+          dataProviderRestricted:
+            query: "*/RSRD"
+          dataRestrictedExpiration:
+            query: "*/EXPRSRD"
+          dataReceiptTimeHour:
+            query: "*/RCHR"
+          dataReceiptTimeMinute:
+            query: "*/RCMI"
+          dataReceiptTimeSignificance:
+            query: "*/RCTS"
 
           flightLevel:
             query: "*/FLVL"
           flightLevelST:
-            query: "[*/FLVLST, */ADRBLSEQ/FLVLST]"
+            query: "*/FLVLST"
           height:
             query: "*/HEIT"
           heightOrAltitude:
@@ -52,32 +67,29 @@ observations:
             query: "*/IALT"
           pressureAltitudeRelativeToMeanSeaLevel:
             query: "*/PSAL"
-          instantaneousAltitudeRate:
-            query: "*/IALR"
 
           percentConfidence:
             query: "*/PCCF"
             transforms:
               - scale: .01
 
-
           #ObsValue
           pressure:
             query: "*/PRLC"
           airTemperature:
-            query: "[*/TMDB, */ADRBLSEQ/TMDB, */TMDBST]"
+            query: "[*/TMDB, */TMDBST]"
           relativeHumidity:
             query: "[*/AFMST/REHU, */ACMST2/REHU, */RAWHU]"
             transforms:
               - scale: .01
           waterVaporMixingRatio:
-            query: "[*/ACMST2/MIXR, */MIXR, */ADRBLSEQ/MIXR]"
+            query: "[*/ACMST2/MIXR, */MIXR]"
           windDirection:
-            query: "[*/WDIR, */ADRBLSEQ/WDIR]"
+            query: "*/WDIR"
           windSpeed:
-            query: "[*/WSPD, */ADRBLSEQ/WSPD]"
+            query: "*/WSPD"
 
-          #Quality Marker
+          #QualityMarker
           airTemperatureQualityInformation:
             query: "NC004010/QMRKH[2]"
           airTemperatureQM:
@@ -93,10 +105,10 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.aircft.tm00.nc"
+      obsdataout: "testrun/gdas.t12z.aircft_noAMDAR103.tm00.nc"
 
+      #MetaData
       variables:
-        #MetaData
         - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
@@ -122,9 +134,9 @@ observations:
           source: variables/aircraftNavigationalSystem
           longName: "Aircraft Navigational System"
 
-        - name: "MetaData/aircraftIdentifier"
-          source: variables/aircraftIdentifier
-          longName: "Aircraft Identifier"
+        - name: "MetaData/aircraftRegistrationNumber"
+          source: variables/aircraftRegistrationNumber
+          longName: "Aircraft Registration Number"
 
         - name: "MetaData/commercialAircraftType"
           source: variables/commercialAircraftType
@@ -134,9 +146,40 @@ observations:
           source: variables/aircraftFlightPhase
           longName: "Aircraft Flight Phase"
 
+        - name: "MetaData/reportIdentifier"
+          source: variables/reportIdentifier
+          longName: "Report Identifier"
+
+        - name: "MetaData/aircraftIdentifier"
+          source: variables/aircraftIdentifier
+          longName: "Aircraft Identifier (Station Identification)"
+
         - name: "MetaData/observerIdentification"
           source: variables/observerIdentification
           longName: "Observer Identification"
+
+        - name: "MetaData/dataProviderRestricted"
+          source: variables/dataProviderRestricted
+          longName: "Data Provider Restricted"
+
+        - name: "MetaData/dataRestrictedExpiration"
+          source: variables/dataRestrictedExpiration
+          longName: "Restricted Data Expiration"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeHour"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
+
+        - name: "MetaData/dataReceiptTimeMinute"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
+
+        - name: "MetaData/dataReceiptTimeSignificance"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
 
         - name: "MetaData/flightLevel"
           source: variables/flightLevel
@@ -145,7 +188,12 @@ observations:
 
         - name: "MetaData/flightLevelST"
           source: variables/flightLevelST
-          longName: "Flight LevelST"
+          longName: "Flight Level for Automated AMDAR"
+          units: "m"
+
+        - name: "MetaData/aircraftFlightLevel"
+          source: variables/flightLevel
+          longName: "Aircraft Flight Level"
           units: "m"
 
         - name: "MetaData/height"
@@ -168,17 +216,17 @@ observations:
           longName: "Pressure Altitude Relative to Mean Sea Level"
           units: "m"
 
-        - name: "ObsValue/instantaneousAltitudeRate"
-          source: variables/instantaneousAltitudeRate
-          longName: "Instantaneous Altitude Rate"
-          units: "m s-1"
-
         - name: "MetaData/percentConfidence"
           source: variables/percentConfidence
           longName: "Percent Confidence"
           units: "1"
 
-        #ObsValue
+        - name: "MetaData/instantaneousAltitudeRate"
+          source: variables/instantaneousAltitudeRate
+          longName: "Instantaneous Altitude Rate"
+          units: "m s-1"
+
+        # ObsValue
         - name: "ObsValue/pressure"
           source: variables/pressure
           longName: "Pressure"
@@ -209,7 +257,7 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        #QualityMarker
+        # QualityMarker
         - name: "QualityMarker/airTemperatureQualityInformation"
           source: variables/airTemperatureQualityInformation
           longName: "Air Temperature Quality Information"
@@ -237,3 +285,4 @@ observations:
         - name: "QualityMarker/windDirection"
           source: variables/windQM
           longName: "Quality Indicator for Wind Direction"
+

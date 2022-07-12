@@ -149,6 +149,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
     testinput/gdas.t12z.aircft.tm00.bufr_d
     testinput/gdas.t12z.aircar.tm00.bufr_d
+    testinput/gdas.t12z.aircft_AMDAR103.tm00.nc
+    testinput/gdas.t12z.aircft_noAMDAR103.tm00.nc
     testinput/gdas.t12z.acft_profiles.prepbufr
     testinput/gdas.t18z.satwnd_avhrr.tm00.bufr_d
     testinput/bufr_read_2_dim_blocks.bufr
@@ -167,6 +169,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_snow_adpsfc.yaml
     testinput/bufr_ncep_aircar.yaml
     testinput/bufr_ncep_aircft.yaml
+    testinput/bufr_ncep_aircft_noAMDAR103.yaml
+    testinput/bufr_ncep_aircft_AMDAR103.yaml
     testinput/bufr_ncep_prepbufr_aircft.yaml
     testinput/bufr_ncep_prepbufr_adpsfc.yaml
     testinput/bufr_ncep_adpsfc.yaml
@@ -233,6 +237,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t00z.sevcsr.tm00.nc
     testoutput/gdas.t12z.aircar.tm00.nc
     testoutput/gdas.t12z.aircft.tm00.nc
+    testoutput/gdas.t12z.aircft_AMDAR103.tm00.nc
+    testoutput/gdas.t12z.aircft_noAMDAR103.tm00.nc
     testoutput/gdas.t12z.acft_profiles.prepbufr.nc
     testoutput/bufr_read_2_dim_blocks.nc
     testoutput/bufr_read_wmo_radiosonde.nc
@@ -1023,6 +1029,22 @@ if(iodaconv_bufr_ENABLED)
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircar.yaml"
                             gdas.t12z.aircar.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircftamdar2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircft_AMDAR103.yaml"
+                            gdas.t12z.aircft_AMDAR103.nc ${IODA_CONV_COMP_TOL_ZERO}
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_airftnoamdar2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircft_noAMDAR103.yaml"
+                            gdas.t12z.airft_noAMDAR103.nc ${IODA_CONV_COMP_TOL_ZERO}
 
   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_aircft2ioda
                     TYPE    SCRIPT
