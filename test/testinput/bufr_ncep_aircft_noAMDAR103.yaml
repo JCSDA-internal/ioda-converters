@@ -134,9 +134,9 @@ observations:
           source: variables/aircraftNavigationalSystem
           longName: "Aircraft Navigational System"
 
-        - name: "MetaData/aircraftRegistrationNumber"
-          source: variables/aircraftRegistrationNumber
-          longName: "Aircraft Registration Number"
+#        - name: "MetaData/aircraftRegistrationNumber"
+#          source: variables/aircraftRegistrationNumber
+#          longName: "Aircraft Registration Number"
 
         - name: "MetaData/commercialAircraftType"
           source: variables/commercialAircraftType
