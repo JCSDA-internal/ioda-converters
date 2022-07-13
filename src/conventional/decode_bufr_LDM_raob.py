@@ -85,12 +85,13 @@ metaDataKeyList = {
 raw_obsvars = ['airTemperature', 'dewpointTemperature', 'windDirection', 'windSpeed']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature', 'specific_humidity', 'eastward_wind', 'northward_wind']
-obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 0.75E-3, 1.7, 1.7]
+obsvars = ['air_temperature', 'virtual_temperature', 'specific_humidity', 'eastward_wind', 'northward_wind']
+obsvars_units = ['K', 'K', 'kg kg-1', 'm s-1', 'm s-1']
+obserrlist = [1.2, 1.2, 0.75E-3, 1.7, 1.7]
 
 VarDims = {
     'air_temperature': ['nlocs'],
+    'virtual_temperature': ['nlocs'],
     'specific_humidity': ['nlocs'],
     'eastward_wind': ['nlocs'],
     'northward_wind': ['nlocs']
@@ -721,11 +722,19 @@ def read_bufr_message(f, count, start_pos, data):
                 if (temp > 50 and temp < 345):
                     airt[n] = temp
 
+        tvirt = np.full(target_number, float_missing_value)
+        for n, temp in enumerate(airt):
+            pres = meta_data['air_pressure'][n]
+            if (temp != float_missing_value and spfh[n] and pres < 108000 and pres > 10000):
+                qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
+                tvirt[n] = temp*(1.0 + 0.61*qvapor)
+
         # Finally fill up the output data dictionary with observed variables.
         data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
         data['northward_wind'] = np.append(data['northward_wind'], vwnd)
         data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
         data['air_temperature'] = np.append(data['air_temperature'], airt)
+        data['virtual_temperature'] = np.append(data['virtual_temperature'], tvirt)
 
         obnum += 1
 
