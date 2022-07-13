@@ -84,7 +84,6 @@ def main(args):
         else:
             obs_data = file_obs_data
 
-# V2 nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='int32')
     ### Can be used when 3d IODA variables available
     #lid_wav=np.array([532,1064],dtype='float32')
     #speed_light = 2.99792458E8
@@ -103,10 +102,8 @@ def main(args):
 
     # pass parameters to the IODA writer
     VarDims = {
-        #'BackscatterCoeff_532': ['nlocs', 'nlevs'],
         'ExtinctionCoeff_532': ['nlocs', 'nlevs'],
         'Extinction_QC_Flag_532': ['nlocs', 'nlevs'],
-        #'BackscatterCoeff_1064': ['nlocs', 'nlevs'],
         'ExtinctionCoeff_1064': ['nlocs', 'nlevs'],
         'Extinction_QC_Flag_1064': ['nlocs', 'nlevs'],
         'Pressure': ['nlocs', 'nlevs'],
@@ -124,24 +121,16 @@ def main(args):
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    #VarAttrs[('BackscatterCoeff_532',  'ObsValue')]['_FillValue'] = float_missing_value
-    #VarAttrs[('BackscatterCoeff_1064', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_532',   'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_1064',  'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('Extinction_QC_Flag_532',   'ObsValue')]['_FillValue'] = int_missing_value
     VarAttrs[('Extinction_QC_Flag_1064',  'ObsValue')]['_FillValue'] = int_missing_value
-    #VarAttrs[('BackscatterCoeff_532',  'ObsError')]['_FillValue'] = float_missing_value
-    #VarAttrs[('BackscatterCoeff_1064', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_532',   'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('ExtinctionCoeff_1064',  'ObsError')]['_FillValue'] = float_missing_value
     #VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
 
-    #VarAttrs[('BackscatterCoeff_532',  'ObsValue')]['units'] = 'km-1 sr-1'
-    #VarAttrs[('BackscatterCoeff_1064', 'ObsValue')]['units'] = 'km-1 sr-1'
     VarAttrs[('ExtinctionCoeff_532',   'ObsValue')]['units'] = 'km-1'
     VarAttrs[('ExtinctionCoeff_1064',  'ObsValue')]['units'] = 'km-1'
-    #VarAttrs[('BackscatterCoeff_532',  'ObsError')]['units'] = 'km-1 sr-1'
-    #VarAttrs[('BackscatterCoeff_1064', 'ObsError')]['units'] = 'km-1 sr-1'
     VarAttrs[('ExtinctionCoeff_532',   'ObsError')]['units'] = 'km-1'
     VarAttrs[('ExtinctionCoeff_1064',  'ObsError')]['units'] = 'km-1'
     #VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
@@ -197,12 +186,6 @@ def get_data(f, obs_data, meta_dict):
     obs_data[('Pressure', 'MetaData')] = np.array(f.select('Pressure').get(), dtype='float32')
     obs_data[('Temperature', 'MetaData')] = np.array(f.select('Temperature').get(), dtype='float32')
 
-    # Backscatter for Level 1 data 
-    #obs_data[('BackscatterCoeff_532', "ObsValue")] = np.array(f.select("Total_Backscatter_Coefficient_532").get(),dtype='float32')
-    #obs_data[('BackscatterCoeff_1064',"ObsValue")] = np.array(f.select("Backscatter_Coefficient_1064").get(),dtype='float32')
-    #obs_data[('BackscatterCoeff_532', "ObsError")] = np.array(f.select("Total_Backscatter_Coefficient_Uncertainty_532").get(),dtype='float32')
-    #obs_data[('BackscatterCoeff_1064',"ObsError")] = np.array(f.select("Backscatter_Coefficient_Uncertainty_1064").get(),dtype='float32')
-
     obs_data[('ExtinctionCoeff_532', "ObsValue")] = np.array(f.select("Extinction_Coefficient_532").get(),dtype='float32')
     obs_data[('ExtinctionCoeff_1064',"ObsValue")] = np.array(f.select("Extinction_Coefficient_1064").get(),dtype='float32')
     obs_data[('ExtinctionCoeff_532', "ObsError")] = np.array(f.select("Extinction_Coefficient_Uncertainty_532").get(),dtype='float32')
@@ -214,38 +197,8 @@ def get_data(f, obs_data, meta_dict):
     # For PreQC, the value of -9999. and -333. of Extinction and Backscatter can be rejected.
 
     #obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
-
-    #Bit Value Interpretation
-    #0   0     unconstrained retrieval; initial lidar ratio unchanged during solution process
-    #0   1     constrained retrieval
-    #1   2     Initial lidar ratio reduced to achieve successful full-column solutions
-    #2   4     Suspicious retrieval due to layer or overlying integrated attenuated backscatter being too high or excessive lidar ratio reductions
-    #3   8     Lidar ratio has been reduced and has converged, but backscatter uncertainty solution does not exist
-    #4   16    Layer being analyzed has been identified by the feature finder as being totally attenuating (i.e., opaque)
-    #5   32    Estimated optical depth error exceeds the maximum allowable value
-    #6   64    Negative signal anomaly detected
-    #7   128   Retrieval terminated at maximum iterations for a constrained retrieval
-    #8   256   No solution possible within allowable lidar ratio bounds
-    #9   512   Two-way particulate transmittance has converged but constrained retrieval still not achieved
-    #10  1024  Backscatter coefficients not converging and maximum lidar ratio correction iterations reached
-    #11  2048  Uncertainties not converging and maximum lidar ratio correction iterations achieved
-    #12  4096  Lidar ratio converged but retrieval still not converging
-    #13  8192  Unused
-    #14  16384 Complex retrieval failure (see Young et al., 2009 )
-    #15  32768 Fill value or no solution attempted
-
     #quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
     #obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
-
-    # check some global satellite geometry will compress all data using this
-    #chk_geolocation = (obs_data[('latitude', 'MetaData')] > 90) | (obs_data[('latitude', 'MetaData')] < -90) | \
-    #    (obs_data[('longitude', 'MetaData')] > 180) | (obs_data[('longitude', 'MetaData')] < -180) | \
-    #    (obs_data[('sensor_zenith_angle', 'MetaData')] > 80) | (obs_data[('sensor_zenith_angle', 'MetaData')] < 0)
-
-    #obs_data[('latitude', 'MetaData')][chk_geolocation] = float_missing_value
-    #obs_data[('longitude', 'MetaData')][chk_geolocation] = float_missing_value
-    #obs_data[('sensor_zenith_angle', 'MetaData')][chk_geolocation] = float_missing_value
-
     #obs_key = (k, "ObsValue")
     #obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
 
@@ -314,13 +267,9 @@ def get_string_dtg(f):
 
 def init_obs_loc():
     obs = {
-        #('BackscatterCoeff_532', "ObsValue"): [],
         ( 'ExtinctionCoeff_532', "ObsValue"): [],
-        #('BackscatterCoeff_1064', "ObsValue"): [],
         ( 'ExtinctionCoeff_1064', "ObsValue"): [],
-        #('BackscatterCoeff_532', "ObsError"): [],
         ( 'ExtinctionCoeff_532', "ObsError"): [],
-        #('BackscatterCoeff_1064', "ObsError"): [],
         ( 'ExtinctionCoeff_1064', "ObsError"): [],
         ( 'Extinction_QC_Flag_532', "ObsValue"): [],
         ( 'Extinction_QC_Flag_1064', "ObsValue"): [],
