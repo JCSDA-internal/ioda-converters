@@ -1,0 +1,117 @@
+# (C) Copyright 2022 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/vadwinds_wmo_multi.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [WMOB, WMOS]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU]
+        - mnemonics: [CLAT, CLON, SELV]
+        - mnemonics: [HEIT, WDIR, WSPD, QMRK]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          stationIdWMOblock:
+            mnemonic: WMOB
+          stationIdWMOstation:
+            mnemonic: WMOS
+          latitude:
+            mnemonic: CLAT
+          longitude:
+            mnemonic: CLON
+          stationElevation:
+            mnemonic: SELV
+          height:
+            mnemonic: HEIT
+          qualityIndicator:
+            mnemonic: QMRK
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/vadwinds_wmo_multi.nc"
+
+      dimensions:
+        - name: "nlocs"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "nlocs" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "nlocs" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "nlocs" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/stationIdWMOblock"
+          source: variables/stationIdWMOblock
+          dimensions: [ "nlocs" ]
+          longName: "Station Identification WMO block number"
+          units: "none"
+
+        - name: "MetaData/stationIdWMOstation"
+          source: variables/stationIdWMOstation
+          dimensions: [ "nlocs" ]
+          longName: "Station Identification WMO station number"
+          units: "none"
+
+        - name: "MetaData/station_elevation"
+          source: variables/stationElevation
+          dimensions: [ "nlocs" ]
+          longName: "Station Elevation"
+          units: "m"
+
+        - name: "MetaData/height"
+          source: variables/height
+          dimensions: [ "nlocs" ]
+          longName: "Height"
+          units: "m"
+
+        # ADD this in later
+        # - name: "MetaData/qualityIndicator"
+        #   source: variables/qualityIndicator
+        #   dimensions: [ "nlocs" ]
+        #   longName: "Quality Indicator"
+        #   units: "unitless"
+
+        - name: "ObsValue/wind_direction"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          dimensions: [ "nlocs" ]
+          longName: "Wind Direction"
+          units: "degrees"
+
+        - name: "ObsValue/wind_speed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          dimensions: [ "nlocs" ]
+          longName: "Wind Speed"
+          units: "m s-1"

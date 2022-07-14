@@ -1,15 +1,14 @@
-//
-// Created by rmclaren on 6/30/21.
-//
-
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "ResultSet.h"
-#include "query_interface.h"
 
+#include <algorithm>
 #include <string>
-#include <algorithm> 
-#include <iostream>
-#include <sstream>
 
 #include "VectorMath.h"
 
@@ -45,16 +44,25 @@ namespace bufr {
         {
             auto strData = std::vector<std::string>();
 
-            const char* charPtr = (char*) data.data();
+            const char* charPtr = reinterpret_cast<char*>(data.data());
             for (int row_idx = 0; row_idx < dims[0]; row_idx++)
             {
-                std::string str = std::string(charPtr + row_idx * sizeof(double), sizeof(double));
+                if (data.data()[row_idx] != MissingValue)
+                {
+                    std::string str = std::string(
+                            charPtr + row_idx * sizeof(double), sizeof(double));
 
-                // trim trailing whitespace from str
-                str.erase(std::find_if(str.rbegin(), str.rend(),
-                                       [](char c) { return !std::isspace(c); }).base(), str.end());
+                    // trim trailing whitespace from str
+                    str.erase(std::find_if(str.rbegin(), str.rend(),
+                                           [](char c){ return !std::isspace(c); }).base(),
+                              str.end());
 
-                strData.push_back(str);
+                    strData.push_back(str);
+                }
+                else
+                {
+                    strData.push_back("");
+                }
             }
 
             auto strResult = std::make_shared<Result<std::string>>();
@@ -91,8 +99,6 @@ namespace bufr {
             path_str.erase(path_str.find_last_not_of(ws) + 1);
             result->dimPaths.push_back(path_str);
         }
-
-        free_result_get_data_f();
 
         return result;
     }
@@ -169,7 +175,7 @@ namespace bufr {
                     dimPaths = {groupByField.dimPaths.back()};
 
                     int groupbyElementsForFrame = 1;
-                    for (auto &seqCount: groupByField.seqCounts)
+                    for (auto &seqCount : groupByField.seqCounts)
                     {
                         if (!seqCount.empty())
                         {
@@ -182,7 +188,9 @@ namespace bufr {
                 else
                 {
                     dimPaths = {};
-                    for (size_t targetIdx = groupByField.exportDims.size() - 1; targetIdx < targetField.dimPaths.size(); ++targetIdx)
+                    for (size_t targetIdx = groupByField.exportDims.size() - 1;
+                         targetIdx < targetField.dimPaths.size();
+                         ++targetIdx)
                     {
                         dimPaths.push_back(targetField.dimPaths[targetIdx]);
                     }
@@ -222,7 +230,7 @@ namespace bufr {
                     dims[0] *= allDims[dimIdx];
                 }
 
-                for (auto dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
+                for (size_t dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
                 {
                     dims[dimIdx - groupbyIdx + 1] = allDims[dimIdx];
                 }
@@ -324,7 +332,8 @@ namespace bufr {
              ++repIdx)
         {
             inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) - \
-                              targetField.seqCounts[repIdx] * product<int>(dims.begin() + repIdx + 1, dims.end());
+                              targetField.seqCounts[repIdx] * \
+                              product<int>(dims.begin() + repIdx + 1, dims.end());
         }
 
         // Inflate the data, compute the idxs for each data element in the result array
@@ -335,10 +344,11 @@ namespace bufr {
                 size_t num_inserts = inserts[dim_idx][insert_idx];
                 if (num_inserts > 0)
                 {
-                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) * insert_idx +
-                                   product<int>(dims.begin() + dim_idx, dims.end()) - num_inserts - 1;
+                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
+                            insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
+                                    - num_inserts - 1;
 
-                    for (auto i = 0; i < idxs.size(); ++i)
+                    for (size_t i = 0; i < idxs.size(); ++i)
                     {
                         if (static_cast<int>(idxs[i]) > data_idx)
                         {
@@ -350,7 +360,7 @@ namespace bufr {
         }
 
         auto output = std::vector<double>(product(dims), 10.0e10);
-        for (auto i = 0; i < idxs.size(); ++i)
+        for (size_t i = 0; i < idxs.size(); ++i)
         {
             output[idxs[i]] = targetField.data[i];
         }
@@ -376,7 +386,7 @@ namespace bufr {
                 std::vector<int> rowDims;
                 rowDims.assign(dims.begin() + groupbyIdx, dims.end());
 
-                auto numsPerRow = product(rowDims);
+                size_t numsPerRow = static_cast<size_t>(product(rowDims));
                 dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
                 for (size_t i = 0; i < numRows; ++i)
                 {

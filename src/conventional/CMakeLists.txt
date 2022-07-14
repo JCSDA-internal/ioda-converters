@@ -1,6 +1,10 @@
 list(APPEND programs
+  amdar_bufr2ioda.py
+  buoy_bufr2ioda.py
   metar_csv2ioda.py
   decode_bufr_LDM_raob.py
+  ship_bufr2ioda.py
+  synop_bufr2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

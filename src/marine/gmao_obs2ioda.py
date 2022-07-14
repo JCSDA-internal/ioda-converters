@@ -31,8 +31,8 @@ obsIdDict = {
     5521: 'sea_water_salinity',  # Salinity
     3073: 'sea_water_temperature',  # Temperature
     5525: 'sea_surface_temperature',  # SST
-    5526: 'obs_absolute_dynamic_topography',  # SSH (Not used ...)
-    5351: 'obs_absolute_dynamic_topography',  # SSH
+    5526: 'absolute_dynamic_topography',  # SSH (Not used ...)
+    5351: 'absolute_dynamic_topography',  # SSH
     6000: 'sea_ice_area_fraction',  # AICE
     6001: 'sea_ice_thickness'  # HICE
 }
@@ -42,7 +42,7 @@ varDict = {
     'sea_water_salinity': 'sal',
     'sea_water_temperature': 'temp',
     'sea_surface_temperature': 'sst',
-    'obs_absolute_dynamic_topography': 'adt',
+    'absolute_dynamic_topography': 'adt',
     'sea_ice_area_fraction': 'frac',
     'sea_ice_thickness': 'thick'
 }
@@ -246,7 +246,7 @@ def discardOb(varName, obsValue):
     elif varName in ["sea_water_temperature", "sea_surface_temperature"]:
         if -2. <= obsValue <= 100.:
             discardOb = False
-    elif varName in ["obs_absolute_dynamic_topography"]:
+    elif varName in ["absolute_dynamic_topography"]:
         if -5. <= obsValue <= 5.:
             discardOb = False
     elif varName in ["sea_ice_area_fraction"]:

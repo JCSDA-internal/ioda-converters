@@ -62,7 +62,7 @@ observations:
       obsdataout: "./testrun/gdas.t12z.1bmhs.tm00.{splits/satId}.nc"
 
       dimensions:
-        - name: nchans
+        - name: Channel 
           path: "*/BRITCSTC"
 
       globals:
@@ -156,7 +156,7 @@ observations:
           range: [0, 360]
 
         - name: "ObsValue/brightnessTemperature"
-          coordinates: "longitude latitude nchans"
+          coordinates: "longitude latitude Channel"
           source: variables/brightnessTemperature
           longName: "BRIGHTNESS TEMPERATURE (HIGH ACCURACY)"
           units: "K"

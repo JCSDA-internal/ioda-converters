@@ -1,6 +1,9 @@
-//
-// Created by rmclaren on 1/28/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #include "QueryParser.h"
 
@@ -41,12 +44,14 @@ namespace bufr {
             {
                 if (commaIdx < comma_positions.size())
                 {
-                    subqueries.push_back(working_str.substr(last_pos, comma_positions[commaIdx] - last_pos));
+                    subqueries.push_back(
+                            working_str.substr(last_pos, comma_positions[commaIdx] - last_pos));
                     last_pos = comma_positions[commaIdx] + 1;
                 }
                 else
                 {
-                    subqueries.push_back(working_str.substr(last_pos, working_str.length() - last_pos));
+                    subqueries.push_back(
+                            working_str.substr(last_pos, working_str.length() - last_pos));
                 }
             }
         }
@@ -85,10 +90,11 @@ namespace bufr {
         std::vector<std::string> mnemonicStrings(slashPositions.size());
 
         // Capture the sequence mnemonic strings
-        for (size_t mnemonicIdx = 0; mnemonicIdx < mnemonicStrings.size() - 1; ++mnemonicIdx) {
-            mnemonicStrings[mnemonicIdx] = query.substr(slashPositions[mnemonicIdx] + 1,
-                                                  slashPositions[mnemonicIdx + 1] - slashPositions[mnemonicIdx] -
-                                                  1);
+        for (size_t mnemonicIdx = 0; mnemonicIdx < mnemonicStrings.size() - 1; ++mnemonicIdx)
+        {
+            mnemonicStrings[mnemonicIdx] =
+                    query.substr(slashPositions[mnemonicIdx] + 1,
+                                 slashPositions[mnemonicIdx + 1] - slashPositions[mnemonicIdx] - 1);
         }
 
         // Get the last element
@@ -100,7 +106,8 @@ namespace bufr {
         size_t endSubscript = lastElement.find_first_of("]");
         if (startSubscript != std::string::npos && endSubscript != std::string::npos)
         {
-            index = std::stoi(lastElement.substr(startSubscript + 1, endSubscript - startSubscript - 1));
+            index = std::stoi(lastElement.substr(startSubscript + 1,
+                                                  endSubscript - startSubscript - 1));
             mnemonicStrings[mnemonicStrings.size() - 1] = lastElement.substr(0, startSubscript);
         }
         else

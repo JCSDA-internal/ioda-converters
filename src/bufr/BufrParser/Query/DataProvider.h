@@ -1,6 +1,9 @@
-//
-// Created by rmclaren on 1/30/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
@@ -24,20 +27,28 @@ namespace bufr {
         Sequence,
         Repeat,
         StackedRepeat,
+        Number,
+        Character
     };
 
+    /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
     class DataProvider
     {
      public:
-        static std::shared_ptr<DataProvider> instance();
-
         DataProvider() = default;
         ~DataProvider() = default;
 
-        void loadTableInfo();
-        void loadDataInfo(int bufrLoc);
-        void deleteTableInfo();
-        void deleteDataInfo();
+        /// \brief Read the data from the BUFR interface for the current subset and reset the
+        /// internal data structures.
+        ////// \param bufrLoc The Fortran idx for the subset we need to read.
+        void updateData(int bufrLoc);
+
+        /// \brief Tells the Fortran BUFR interface to delete its temporary data structures that are
+        /// are needed to support this class instanc.
+        void deleteData();
+
+        /// \brief Get the subset string for the currently active message subset.
+        std::string getSubset() const { return subset_; }
 
         // Getters to get the raw data by idx. Since fortran indices are 1-based,
         // we need to subtract 1 to get the correct c style index.
@@ -54,6 +65,7 @@ namespace bufr {
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
 
      private:
+        std::string subset_;
 
         // Table data;
         gsl::span<const int> isc_;

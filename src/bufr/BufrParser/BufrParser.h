@@ -17,7 +17,6 @@
 #include "eckit/config/LocalConfiguration.h"
 
 #include "Query/File.h"
-#include "ResultSet.h"
 #include "Parser.h"
 #include "BufrDescription.h"
 
