@@ -870,7 +870,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_calipso_l2
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/calipso_hdf4_2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/calipso_l2_ext_hdf4_2ioda.py
                           -i testinput/calipso_lid_l2_05kmAPro_v4_subset.hdf
                           -o testrun/calipso_l2.nc"
                           calipso_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
