@@ -7,6 +7,7 @@ list(APPEND programs
   aeronet_aod2ioda.py
   aeronet_aaod2ioda.py
   viirs_biaswriter.py
+  calipso_l1_bcksct_hdf4_2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
