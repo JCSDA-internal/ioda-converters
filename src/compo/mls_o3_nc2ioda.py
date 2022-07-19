@@ -335,7 +335,7 @@ def main():
         print('Reading Single File:{}'.format(args.input))
         rawFiles = []
         rawFiles.append(args.input)
-    elif(os.path.isdir(args.input)): 
+    elif(os.path.isdir(args.input)):
         startDateWindow = cycle_time - timedelta(hours=args.window/2)
         endDateWindow = cycle_time + timedelta(hours=args.window/2)
         # effectively round off so we get the number of days between
