@@ -8,6 +8,7 @@ import sys
 import time
 import logging
 
+from itertools import compress
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
@@ -41,6 +42,12 @@ locationKeyList = [
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
     ("stationWMO", "string", "", "keep"),
+    ("year", "integer", "", "toss"),
+    ("month", "integer", "", "toss"),
+    ("day", "integer", "", "toss"),
+    ("hour", "integer", "", "toss"),
+    ("minute", "integer", "", "toss"),
+    ("second", "integer", "", "toss"),
 ]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
@@ -66,6 +73,12 @@ metaDataKeyList = {
     # "instrumentSoftwareVersion": 'softwareVersionNumber',
     # "instrumentHumidityCorrectionInfo": 'correctionAlgorithmsForHumidityMeasurements',
     # "instrumentRadiationCorrectionInfo": 'solarAndInfraredRadiationCorrection',
+    'year': ['year'],
+    'month': ['month'],
+    'day': ['day'],
+    'hour': ['hour'],
+    'minute': ['minute'],
+    'second': ['second'],
 }
 
 # True incoming BUFR observed variables.
@@ -153,7 +166,7 @@ def main(file_names, output_file, datetimeRef):
 
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
-    nlocs = len(data['dateTime'])
+    nlocs = count[1]
     DimDict = {'Location': nlocs}
 
     # Set coordinates and units of the ObsValues.
@@ -322,63 +335,26 @@ def def_significance_table():
     return significance_table
 
 
-def specialty_time(bufr, tvals):
+def specialty_time(tvals, year, month, day, hour, minute, second):
 
     bad_date = False
-    vals = []
     result = []
 
-    try:
-        vals = ecc.codes_get_array(bufr, 'year')
-        year = vals[0]
-        # UGH, some BUFR uses 2-digit year, awful.
-        if (year >= 0 and year <= 50):
-            year += 2000
-        elif (year > 50 and year <= 99):
-            year += 1900
-    except ecc.KeyValueNotFoundError:
-        logging.warning("Caution, no data for year")
-        bad_date = True
+    # UGH, some BUFR uses 2-digit year, awful.
+    if (year >= 0 and year <= 50):
+        year += 2000
+    elif (year > 50 and year <= 99):
+        year += 1900
 
-    try:
-        vals = ecc.codes_get_array(bufr, 'month')
-        month = vals[0]
-    except ecc.KeyValueNotFoundError:
-        logging.warning("Caution, no data for month")
-        bad_date = True
+    if minute == int_missing_value:
+        minute = 0
+    elif minute < 0 or minute > 59:
+        minute = 0
 
-    try:
-        vals = ecc.codes_get_array(bufr, 'day')
-        day = vals[0]
-    except ecc.KeyValueNotFoundError:
-        logging.warning("Caution, no data for day")
-        bad_date = True
-
-    try:
-        vals = ecc.codes_get_array(bufr, 'hour')
-        hour = vals[0]
-    except ecc.KeyValueNotFoundError:
-        logging.warning("Caution, no data for hour")
-        bad_date = True
-
-    minute = 0
-    try:
-        vals = ecc.codes_get_array(bufr, 'minute')
-        minute = vals[0]
-        if (minute < 0 or minute > 59):
-            minute = 0
-    except ecc.KeyValueNotFoundError:
-        logging.warning("Caution, no data for minute")
-        bad_date = True
-
-    second = 0
-    try:
-        vals = ecc.codes_get_array(bufr, 'second')
-        second = vals[0]
-        if (second < 0 or second > 59):
-            second = 0
-    except ecc.KeyValueNotFoundError:
-        logging.info("Caution, no data for second")
+    if second == int_missing_value:
+        second = 0
+    elif second < 0 or second > 59:
+        second = 0
 
     if (year < 1900 or year > 2499 or month < 1 or month > 12 or day < 1 or day > 31 or hour < 0 or hour > 23 or minute < 0 or minute > 59):
         bad_date = True
@@ -391,8 +367,18 @@ def specialty_time(bufr, tvals):
         minute = 0
 
     # This should be the launch or release time of sonde.
-    logging.info(f"Launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
-    this_datetime = datetime(year, month, day, hour, minute, second)
+    logging.debug(f"Launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
+    try:
+        this_datetime = datetime(year, month, day, hour, minute, second)
+    except Exception:
+        logging.critical(f"Bogus launch time info {year}-{month}-{day}T{hour}:{minute}:{second}Z")
+        year = 1900
+        month = 1
+        day = 1
+        hour = 0
+        minute = 0
+        this_datetime = datetime(year, month, day, hour, minute, second)
+
     time_offset = round((this_datetime - epoch).total_seconds())
 
     result = np.full(len(tvals), time_offset)
@@ -407,6 +393,7 @@ def specialty_time(bufr, tvals):
 
 def read_bufr_message(f, count, start_pos, data):
 
+    temp_data = {}         # A temporary dictionary to hold things.
     meta_data = {}         # All the various MetaData go in here.
     vals = {}              # Floating-point ObsValues variables go in here.
     avals = []             # Temporarily hold array of values.
@@ -430,7 +417,6 @@ def read_bufr_message(f, count, start_pos, data):
     try:
         ecc.codes_set(bufr, 'skipExtraKeyAttributes', 1)   # Supposedly this is ~25 percent faster
         ecc.codes_set(bufr, 'unpack', 1)
-        numberOfSubsets = ecc.codes_get(bufr, 'numberOfSubsets')
     except ecc.CodesInternalError:
         ecc.codes_release(bufr)
         logging.info(f"INCOMPLETE BUFR message, skipping ({msg_size} bytes)")
@@ -438,173 +424,310 @@ def read_bufr_message(f, count, start_pos, data):
         f.seek(start_pos)
         return data, count, start_pos
 
-    drepfac = 0
-    krepfac = 0
-    target_number = 0
+    # Some BUFR messages have subsets (multiple) soundings in a single message (China especially).
+    # Therefore we have to loop through a vector of the delayedDescriptorReplicationFactor.
+    try:
+        nsubsets = ecc.codes_get(bufr, 'numberOfSubsets')
+    except ecc.KeyValueNotFoundError:
+        nsubsets = 1
+        pass
+
+    # Are the data compressed or uncompressed?  If the latter, then when nsubsets>1, we
+    # have to do things differently.
+    compressed = ecc.codes_get(bufr, 'compressedData')
+
+    '''
+        This will print absolutely every BUFR key in the message.
+            print(" ")
+            iterid = ecc.codes_keys_iterator_new(bufr)
+            while ecc.codes_keys_iterator_next(iterid):
+                keyname = ecc.codes_keys_iterator_get_name(iterid)
+                print(f" name: {keyname}")
+    '''
+
+    # If multiple soundings repfacs will be vector of length of each sounding.
+    repfacs = []
+    try:
+        repfacs = ecc.codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor').tolist()
+    except ecc.KeyValueNotFoundError:
+        try:
+            repfacs = ecc.codes_get_array(bufr, 'extendedDelayedDescriptorAndDataRepetitionFactor').tolist()
+        except ecc.KeyValueNotFoundError:
+            try:
+                repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorReplicationFactor').tolist()
+            except ecc.KeyValueNotFoundError:
+                try:
+                    repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorAndDataRepetitionFactor').tolist()
+                except ecc.KeyValueNotFoundError:
+                    try:
+                        repfacs = ecc.codes_get_array(bufr, 'shortDelayedDescriptorReplicationFactor').tolist()
+                    except ecc.KeyValueNotFoundError:
+                        pass
 
     # First, get the MetaData we are interested in (list is in metaDataKeyList)
+    max_mlen = 0
     for k, v in metaDataKeyList.items():
-        meta_data[k] = []
+        temp_data[k] = []
         if (len(v) > 1):
             for var in v:
                 if (var != 'Constructed'):
                     try:
                         avals = ecc.codes_get_array(bufr, var)
-                        meta_data[k] = assign_values(avals, k)
-                        if not is_all_missing(meta_data[k]):
+                        max_mlen = max(max_mlen, len(avals))
+                        temp_data[k] = assign_values(avals, k)
+                        if not is_all_missing(temp_data[k]):
                             break
                     except ecc.KeyValueNotFoundError:
-                        logging.warning("Caution: unable to find requested BUFR key: " + var)
+                        logging.debug("Caution: unable to find requested BUFR key: " + var)
+                        temp_data[k] = None
+                else:
+                    temp_data[k] = None
         else:
             if (v[0] != 'Constructed'):
                 try:
                     avals = ecc.codes_get_array(bufr, v[0])
-                    meta_data[k] = assign_values(avals, k)
+                    max_mlen = max(max_mlen, len(avals))
+                    temp_data[k] = assign_values(avals, k)
                 except ecc.KeyValueNotFoundError:
-                    logging.warning("Caution, unable to find requested BUFR key: " + v[0])
+                    logging.debug("Caution, unable to find requested BUFR key: " + v[0])
+                    temp_data[k] = None
+            else:
+                temp_data[k] = None
 
-    # Delay replication numbers most often associated with number of vertical levels in sonde.
-    try:
-        drepfac = ecc.codes_get(bufr, 'delayedDescriptorReplicationFactor')
-    except ecc.KeyValueNotFoundError:
-        pass
-    try:
-        krepfac = ecc.codes_get(bufr, 'extendedDelayedDescriptorReplicationFactor')
-    except ecc.KeyValueNotFoundError:
-        pass
-
-    if krepfac > 0:
-        target_number = krepfac
-    elif drepfac > 0:
-        target_number = drepfac
-    if target_number > 0:
-        logging.debug("Delayed and extendedDelayed replications: " + str(drepfac) + ", " + str(krepfac))
-    else:
-        if len(meta_data['vertSignificance']) > 0:
-            target_number = len(meta_data['vertSignificance'])
-        elif len(meta_data['timeDisplacement']) > 0:
-            target_number = len(meta_data['timeDisplacement'])
-        elif len(meta_data['latDisplacement']) > 0:
-            target_number = len(meta_data['latDisplacement'])
-        elif len(meta_data['latitude']) > 0:
-            target_number = len(meta_data['latitude'])
-    if target_number == 0:
-        print("HOW on earth is target_number zero?  BUFR sucks!")
-        return data, count, start_pos
-
-    count[1] += target_number
-
-    # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
-    empty = []
-    for k, v in metaDataKeyList.items():
-        if not any(meta_data[k]):
-            meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
-        length = len(meta_data[k])
-        if (length == 1):
-            meta_data[k] = np.full(target_number, meta_data[k][0])
-        elif (length < target_number):
-            logging.warning(f"Key called {k} contains only {length} "
-                            f" elements, whereas {target_number} were expected.")
-            meta_data[k] = assign_missing_meta(meta_data[k], k, target_number, length-1)
-        elif (length > target_number):
-            logging.warning(f"Key called {k} contains {length} "
-                            f" elements, whereas {target_number} were expected.")
-            meta_data[k] = meta_data[k][:target_number]
-
-    # Sondes are special with a launch time and time displacement.
-    if meta_data['timeDisplacement'].any():
-        meta_data['dateTime'] = specialty_time(bufr, meta_data['timeDisplacement'])
-        meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
-    else:
-        count[2] += target_number
-        return data, count, start_pos
-
-    # Sondes also have lat/lon displacement from launch/release location.
-    if (meta_data['latDisplacement'].any() and meta_data['lonDisplacement'].any()):
-        for n, delta_lat in enumerate(meta_data['latDisplacement']):
-            delta_lon = meta_data['lonDisplacement'][n]
-            meta_data['latitude'][n] = meta_data['latitude'][0] + delta_lat
-            meta_data['longitude'][n] = meta_data['longitude'][0] + delta_lon
-    else:
-        count[2] += target_number
-        return data, count, start_pos
-
-    # Force longitude into space of -180 to +180 only. Reset both lat/lon missing if either absent.
-    mask_lat = np.logical_or(meta_data['latitude'] < -90.0, meta_data['latitude'] > 90.0)
-    mask_lon = np.logical_or(meta_data['longitude'] < -180.0, meta_data['longitude'] > 360.0)
-    meta_data['latitude'][mask_lat] = float_missing_value
-    meta_data['longitude'][mask_lon] = float_missing_value
-    meta_data['latitude'][mask_lon] = float_missing_value
-    meta_data['longitude'][mask_lat] = float_missing_value
-    for n, longitude in enumerate(meta_data['longitude']):
-        if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 180):
-            meta_data['longitude'][n] = meta_data['longitude'][n] - 360.0
-
-    # It is NOT IDEAL, but if missing a lat or lon, fill with prior known value for now.
-    for n, lon in enumerate(meta_data['longitude']):
-        lat = meta_data['latitude'][n]
-        if (lon < -180 or lon > 180):
-            meta_data['longitude'][n] = meta_data['longitude'][n-1]
-        if (lat < -90 or lat > 90):
-            meta_data['latitude'][n] = meta_data['latitude'][n-1]
-
-    # Forcably create station_id 5-char string from WMO block+station number.
-    meta_data['stationWMO'] = np.full(target_number, string_missing_value, dtype='<S5')
-    for n, block in enumerate(meta_data['wmoBlockNumber']):
-        number = meta_data['wmoStationNumber'][n]
-        if (block > 0 and block < 100 and number > 0 and number < 1000):
-            meta_data['stationWMO'][n] = "{:02d}".format(block) + "{:03d}".format(number)
-        if n == 1:
-            count[3] += 1
-            logging.info(f"Processing sonde for station: {meta_data['stationWMO'][n]}")
+    # These meta data elements are so critical that we should quit quickly if lacking them:
+    if (temp_data['year'] is None) and (temp_data['month'] is None) and \
+            (temp_data['day'] is None) and (temp_data['hour'] is None):
+        logging.warning("Useless ob without date info.")
+    if (temp_data['wmoBlockNumber'] is None) and (temp_data['wmoStationNumber'] is None) and \
+            (temp_data['latitude'] is None) and (temp_data['longitude'] is None):
+        logging.warning("Useless ob without lat,lon or station number info.")
 
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all ObsValue variables are float type, might need integer/other.
+    max_dlen = 0
+    repfactors = {}
     for variable in raw_obsvars:
-        vals[variable] = []
-        try:
-            avals = ecc.codes_get_array(bufr, variable)
-            if (len(avals) != target_number):
-                logging.warning(f"Variable called {variable} contains {len(avals)} "
-                                f" elements, wheras {target_number} were expected.")
-                count[2] += target_number
-                return data, count, start_pos
-            vals[variable] = assign_values(avals, variable)
-        except ecc.KeyValueNotFoundError:
-            logging.warning("Caution, unable to find requested BUFR variable: " + variable)
-            vals[variable] = np.full(target_number, float_missing_value, dtype=np.float32)
+        temp_data[variable] = []
+        if not compressed and nsubsets > 1:
+            repfactors[variable] = []
+            for n in range(nsubsets):
+                var = '/subsetNumber=' + str(n+1) + '/' + variable
+                try:
+                    avals = ecc.codes_get_array(bufr, var)
+                    repfactors[variable].append(len(avals))
+                    temp_data[variable] = np.append(temp_data[variable], assign_values(avals, variable))
+                except ecc.KeyValueNotFoundError:
+                    logging.debug("Caution, unable to find requested BUFR variable: " + variable)
+                    temp_data[variable] = None
+        else:
+            repfactors[variable] = []
+            try:
+                avals = ecc.codes_get_array(bufr, variable)
+                repfactors[variable].append(len(avals))
+                max_dlen = max(max_dlen, len(avals))
+                temp_data[variable] = assign_values(avals, variable)
+            except ecc.KeyValueNotFoundError:
+                logging.debug("Caution, unable to find requested BUFR variable: " + variable)
+                temp_data[variable] = None
+
+    if not repfacs:
+        for variable in raw_obsvars:
+            if repfactors[variable]:
+                repfacs = repfactors[variable]
+                break
+
+    # From repfacs, make begin/end indicies for single or multiple soundings.
+    nbeg = []
+    nend = []
+    if repfacs:
+        if nsubsets > 1:
+            if nsubsets != len(repfacs):
+                logging.warning(f"Nonsense: number of subsets, {nsubsets} is not equal to "
+                                f"the length of repfacs vector, {len(repfacs)}")
+            nend = np.cumsum(repfacs)
+            nbeg = np.insert(nend[:-1], 0, 0)
+        else:
+            nbeg.append(0)
+            nend.append(repfacs[0]-1)
+    else:
+        nbeg.append(0)
+        nend.append(int(1E6))
 
     # Be done with this BUFR message.
     ecc.codes_release(bufr)
 
-    # Need to transform some variables to others (wind speed/direction to components for example).
-    uwnd = np.full(target_number, float_missing_value)
-    vwnd = np.full(target_number, float_missing_value)
-    for n, wdir in enumerate(vals['windDirection']):
-        wspd = vals['windSpeed'][n]
-        if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
-            uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, wspd)
+    # Loop over each pair of beginning and ending indices and transfer data
+    # In some circumstances, we have no idea how many vertical levels of data in a sonde are
+    # upcoming, so we use 1E6 as largest possible number and hope to discover the true
+    # number from some other variable (the multi-IF-block test below).
+    obnum = 0
+    for b, e in tuple(zip(nbeg, nend)):
+        if b < 0 or e < 0 or e <= b:
+            logging.warning(f"Skipping nonsense BUFR msg with a negative index [{b},{e}]")
+            return data, count, start_pos
+        logging.debug(f"Within BUFR msg, processing ob {obnum+1} with bounds: [{b},{e-1}]")
+        if e < 999999:
+            target_number = e - b
+        else:
+            logging.debug("Msg did not contain repfacs, trying to determine target number of obs")
+            if temp_data['vertSignificance'] is not None:
+                target_number = len(temp_data['vertSignificance'])
+            elif temp_data['timeDisplacement'] is not None:
+                target_number = len(temp_data['timeDisplacement'])
+            elif temp_data['latDisplacement'] is not None:
+                target_number = len(temp_data['latDisplacement'])
+            elif temp_data['pressure'] is not None:
+                target_number = len(temp_data['pressure'])
+            elif temp_data['airTemperature'] is not None:
+                target_number = len(temp_data['airTemperature'])
+            elif temp_data['windSpeed'] is not None:
+                target_number = len(temp_data['windSpeed'])
+            else:
+                print("HOW on earth is target_number zero?  BUFR sucks!")
+                return data, count, start_pos
+            e = target_number
 
-    spfh = np.full(target_number, float_missing_value)
-    for n, dewpoint in enumerate(vals['dewpointTemperature']):
-        pres = meta_data['pressure'][n]
-        if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
-            spfh[n] = met_utils.specific_humidity(dewpoint, pres)
+        # For any of the MetaData elements that were totally lacking, fill entire vector with missing.
+        empty = []
+        for k, v in metaDataKeyList.items():
+            meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
+            if temp_data[k] is None:
+                next
+            elif b == 0 and len(temp_data[k]) == 1:
+                meta_data[k] = np.full(target_number, temp_data[k][0])
+            else:
+                if len(temp_data[k]) == nsubsets:
+                    meta_data[k] = np.full(target_number, temp_data[k][obnum])
+                else:
+                    try:
+                        meta_data[k] = temp_data[k][b:e]
+                        if len(meta_data[k]) < target_number:
+                            meta_data[k] = np.full(target_number, meta_data[k][0])
+                    except Exception:
+                        logging.warning(f"Failed copying temp_data to meta_data, var: {k}, ({b},{e}):{target_number}, len:{len(temp_data[k])}")
+                        count[2] += target_number
+                        return data, count, start_pos
 
-    # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
-    if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
-        meta_data['geopotentialHeight'][0] = float_missing_value
-        meta_data['pressure'][0] = float_missing_value
-    mask_T = np.logical_or(vals['airTemperature'] < 50, vals['airTemperature'] > 335)
-    vals['airTemperature'][mask_T] = float_missing_value
+        # Sondes are special with a launch time and time displacement.
+        if temp_data['timeDisplacement'] is not None:
+            meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
+                      meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
+                      meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
+            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
+        else:
+            meta_data['dateTime'][0] = specialty_time([0],
+                      meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
+                      meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
+            meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
 
-    # Move everything into the final data dictionary, including metadata.
-    data['windEastward'] = np.append(data['windEastward'], uwnd)
-    data['windNorthward'] = np.append(data['windNorthward'], vwnd)
-    data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
-    data['airTemperature'] = np.append(data['airTemperature'], vals['airTemperature'])
-    for key in meta_keys:
-        data[key] = np.append(data[key], meta_data[key])
+        # Sondes also have lat/lon displacement from launch/release location.
+        if temp_data['latDisplacement'] is not None and temp_data['lonDisplacement'] is not None:
+            for n, delta_lat in enumerate(temp_data['latDisplacement'][b:e]):
+                delta_lon = temp_data['lonDisplacement'][n+b]
+                meta_data['latitude'][n] = meta_data['latitude'][0] + delta_lat
+                meta_data['longitude'][n] = meta_data['longitude'][0] + delta_lon
+        else:
+            meta_data['latitude'] = np.full(target_number, meta_data['latitude'][0])
+            meta_data['longitude'] = np.full(target_number, meta_data['longitude'][0])
+
+        # Force longitude into space of -180 to +180 only. Reset both lat/lon missing if either absent.
+        mask_lat = np.logical_or(meta_data['latitude'] < -90.0, meta_data['latitude'] > 90.0)
+        mask_lon = np.logical_or(meta_data['longitude'] < -180.0, meta_data['longitude'] > 360.0)
+        meta_data['latitude'][mask_lat] = float_missing_value
+        meta_data['longitude'][mask_lon] = float_missing_value
+        meta_data['latitude'][mask_lon] = float_missing_value
+        meta_data['longitude'][mask_lat] = float_missing_value
+        for n, longitude in enumerate(meta_data['longitude']):
+            if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 180):
+                meta_data['longitude'][n] = meta_data['longitude'][n] - 360.0
+
+        # It is NOT IDEAL, but if missing a lat or lon, fill with prior known value for now.
+        for n, lon in enumerate(meta_data['longitude']):
+            lat = meta_data['latitude'][n]
+            if (lon < -180 or lon > 180):
+                meta_data['longitude'][n] = meta_data['longitude'][n-1]
+            if (lat < -90 or lat > 90):
+                meta_data['latitude'][n] = meta_data['latitude'][n-1]
+
+        # Forcably create station_id 5-char string from WMO block+station number.
+        meta_data['stationWMO'] = np.full(target_number, string_missing_value, dtype='<S5')
+        for n, block in enumerate(meta_data['wmoBlockNumber']):
+            number = meta_data['wmoStationNumber'][n]
+            if (block > 0 and block < 100 and number > 0 and number < 1000):
+                meta_data['stationWMO'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+            if n == 0:
+                count[3] += 1
+                logging.info(f"Processing sonde for station: {meta_data['stationWMO'][n]}")
+
+        # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
+        if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
+            meta_data['geopotentialHeight'][0] = float_missing_value
+            meta_data['pressure'][0] = float_missing_value
+
+        # And now processing the observed variables we care about.
+        nbad = 0
+        for variable in raw_obsvars:
+            vals[variable] = np.full(target_number, float_missing_value)
+            if temp_data[variable] is not None:
+                try:
+                    vals[variable] = temp_data[variable][b:e]
+                    if len(vals[variable]) < target_number:
+                        nbad += 1
+                        logging.warning(f" var {variable} has {len(vals[variable])} "
+                                        f"elements while expecting {target_number}")
+                        vals[variable] = np.full(target_number, float_missing_value)
+                except Exception:
+                    logging.warning(f"Unable to copy {variable} data, "
+                                    f"either index [{b},{e}] must be out of range.")
+            else:
+                nbad += 1
+
+        if nbad == len(raw_obsvars):
+            logging.warning(f"No usable data in this ob, skipping it.")
+            count[2] += target_number
+            return data, count, start_pos
+
+        count[1] += target_number
+
+        # Finally transfer the meta_data to the output array.
+        for key in meta_keys:
+            data[key] = np.append(data[key], meta_data[key])
+
+        '''
+          Need to transform some variables (wind speed/direction to components for example).
+          In the ideal world, we could assume that the meteorological variables were given
+          well-bounded values, but in BUFR, they could be garbage, so ensure that values
+          are all sensible before calling the transformation functions.
+        '''
+        uwnd = np.full(target_number, float_missing_value)
+        vwnd = np.full(target_number, float_missing_value)
+        for n, wdir in enumerate(vals['windDirection']):
+            wspd = vals['windSpeed'][n]
+            if wdir and wspd:
+                if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
+                    uwnd[n], vwnd[n] = met_utils.dir_speed_2_uv(wdir, wspd)
+
+        spfh = np.full(target_number, float_missing_value)
+        for n, dewpoint in enumerate(vals['dewpointTemperature']):
+            pres = meta_data['pressure'][n]
+            if dewpoint and pres:
+                if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
+                    spfh[n] = met_utils.specific_humidity(dewpoint, pres)
+
+        airt = np.full(target_number, float_missing_value)
+        for n, temp in enumerate(vals['airTemperature']):
+            if temp:
+                if (temp > 50 and temp < 345):
+                    airt[n] = temp
+
+        # Finally fill up the output data dictionary with observed variables.
+        data['windEastward'] = np.append(data['windEastward'], uwnd)
+        data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+        data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+        data['airTemperature'] = np.append(data['airTemperature'], airt)
+
+        obnum += 1
 
     logging.info("number of observations so far: " + str(count[1]))
     logging.info("number of invalid or useless observations: " + str(count[2]))
