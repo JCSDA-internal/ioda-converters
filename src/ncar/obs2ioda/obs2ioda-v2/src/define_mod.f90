@@ -418,4 +418,23 @@ subroutine set_brit_obserr(name_inst, nchan, obserrors)
 
 end subroutine set_brit_obserr
 
+subroutine set_ahi_obserr(name_inst, nchan, obserrors)
+   implicit none
+
+   character(len=*), intent(in)  :: name_inst  ! instrument name
+   integer(i_kind),  intent(in)  :: nchan      ! channel number
+   real(r_kind),     intent(out) :: obserrors(nchan)
+   obserrors(:) = missing_r
+   if ( name_inst(1:3) == 'ahi' ) then
+      select case ( trim(name_inst) )
+         case ( 'ahi_himawari8' )
+            obserrors = (/ 2.2, 3.0, 2.5, 2.2, 2.2, 2.2, 2.2, 2.2, 2.2, 2.2 /)
+         case default
+            return
+      end select
+   else
+      return
+   end if
+end subroutine set_ahi_obserr
+
 end module define_mod
