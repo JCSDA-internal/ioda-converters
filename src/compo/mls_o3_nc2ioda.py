@@ -331,36 +331,45 @@ def main():
         nrt = False
     # get current cycle time and start/end of the window
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    startDateWindow = cycle_time - timedelta(hours=args.window/2)
-    endDateWindow = cycle_time + timedelta(hours=args.window/2)
-    # effectively round off so we get the number of days between
-    startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
-    endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
-    dT = endDayWindow - startDayWindow
-    daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
-    # iterate over the number of days in window
-    rawFiles = []
-    for now in daysToGo:
-        year = now.year
-        doy = now.strftime('%j')
-        rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"*{}d".format(year)+doy+"*.he5")))
-    rawFiles.sort()
-    if(nrt):
-        # limit files only between start and end of window.
-        rawFilesOut = []
-        startDateWindow = cycle_time - timedelta(hours=3)
-        endDateWindow = cycle_time + timedelta(hours=3)
-        for f in rawFiles:
-            ftime = datetime.strptime(f[-17::], "%Yd%jt%H%M.he5")
-            if(startDateWindow <= ftime <= endDateWindow):
-                rawFilesOut.append(f)
-        rawFiles = rawFilesOut
+    if(os.path.isfile(args.input)):
+        print('Reading Single File:{}'.format(args.input))
+        rawFiles = []
+        rawFiles.append(args.input)
+    elif(os.path.isdir(args.input)): 
+        startDateWindow = cycle_time - timedelta(hours=args.window/2)
+        endDateWindow = cycle_time + timedelta(hours=args.window/2)
+        # effectively round off so we get the number of days between
+        startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
+        endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
+        dT = endDayWindow - startDayWindow
+        daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
+        # iterate over the number of days in window
+        rawFiles = []
+        for now in daysToGo:
+            year = now.year
+            doy = now.strftime('%j')
+            rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"*{}d".format(year)+doy+"*.he5")))
+        rawFiles.sort()
+        if(nrt):
+            # limit files only between start and end of window.
+            rawFilesOut = []
+            startDateWindow = cycle_time - timedelta(hours=3)
+            endDateWindow = cycle_time + timedelta(hours=3)
+            for f in rawFiles:
+                ftime = datetime.strptime(f[-17::], "%Yd%jt%H%M.he5")
+                if(startDateWindow <= ftime <= endDateWindow):
+                    rawFilesOut.append(f)
+            rawFiles = rawFilesOut
+        if(len(rawFiles) == 0):
+            print("No Raw Files Found in:{}".format(args.input))
+            sys.exit(os.EX_OSFILE)
+    else:
+        print("Could not find input file or directory:{}".format(args.input))
+        sys.exit(os.EX_OSFILE)
 
-    if(len(rawFiles) == 0):
-        sys.exit('No Raw Files Found!!!')
     # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)
-    startTAI = ((cycle_time - timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
-    endTAI = ((cycle_time + timedelta(hours=3)) - datetime(1993, 1, 1, 0)).total_seconds()
+    startTAI = ((cycle_time - timedelta(hours=args.window/2)) - datetime(1993, 1, 1, 0)).total_seconds()
+    endTAI = ((cycle_time + timedelta(hours=args.window/2)) - datetime(1993, 1, 1, 0)).total_seconds()
 
     # Read in the O3 data in window over selected levels (if not default 8-49)
     # if nrt is set, assumes near real-time and will skip first two and last 8 profiles for most files

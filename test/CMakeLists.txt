@@ -65,6 +65,9 @@ list( APPEND test_input
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
+  testinput/mls_o3_l2.nc
+  testinput/omi_o3_l2.nc
+  testinput/ompsnm_o3_l2.nc
 )
 
 list( APPEND test_output
@@ -124,6 +127,9 @@ list( APPEND test_output
   testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
+  testinput/mls_o3_l2.nc
+  testinput/omi_o3_l2.nc
+  testinput/ompsnm_o3_l2.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -554,6 +560,51 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_oc_l2
                           -d 2019032112                                                                                                               
                           -t 0.5"
                           pace_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py                                                       
+                          -i testinput/mls_o3_l2.nc                                                                                             
+                          -o testrun/mls_o3_l2.nc                                                                                               
+                          -y 2022                                                                                                               
+                          -m 06                                                                                                               
+                          -d 21
+                          -z 12"
+                          mls_o3_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omi_o3_l2
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/omi_o3_nc2ioda.py                                                       
+                          -i testinput/omi_o3_l2.nc                                                                                             
+                          -o testrun/omi_o3_l2.nc                                                                                               
+                          -y 2020                                                                                                               
+                          -m 12                                                                                                               
+                          -d 15
+                          -z 12"
+                          omi_o3_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ompsnm_o3_l2
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ompsnm_o3_nc2ioda.py                                                       
+                          -i testinput/ompsnm_o3_l2.nc                                                                                             
+                          -o testrun/ompsnm_o3_l2.nc                                                                                               
+                          -y 2020                                                                                                               
+                          -m 12                                                                                                               
+                          -d 15
+                          -z 12"
+                          ompsnm_o3_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
