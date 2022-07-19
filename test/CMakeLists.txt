@@ -127,9 +127,9 @@ list( APPEND test_output
   testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
-  testinput/mls_o3_l2.he5
-  testinput/omi_o3_l2.he5
-  testinput/ompsnm_o3_l2.he5
+  testoutput/mls_o3_l2.nc
+  testoutput/omi_o3_l2.nc
+  testoutput/ompsnm_o3_l2.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
