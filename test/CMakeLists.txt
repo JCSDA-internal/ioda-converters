@@ -1126,17 +1126,6 @@ if( iodaconv_eccodes_ENABLED )
                            -o testrun/wmo_raob_double.nc4"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
-  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob_multi_files
-                   TYPE    SCRIPT
-                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                   COMMAND bash
-                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                           netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
-                           -i testinput/sonde_wmo_double.bufr testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_quadruple.nc4"
-                           wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
-
 #===============================================================================
 # Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
 #===============================================================================
