@@ -208,15 +208,14 @@ class IODA(object):
                     locKey = lat, lon, lvl, dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
                     for key in self.varDict.keys():
-
                         val = obs.data[key][n][ilev]
                         err = obs.data[key+'_err'][n][ilev]
                         qc = (100 * obs.data[key+'_qc'][n]).astype('i4')
-
+                        if obs.data[key+'_prb'][n][ilev] >= 1.000:
+                            val = -999.00
                         valKey = self.keyDict[key]['valKey']
                         errKey = self.keyDict[key]['errKey']
                         qcKey = self.keyDict[key]['qcKey']
-
                         self.data[locKey][valKey] = val
                         self.data[locKey][errKey] = err
                         self.data[locKey][qcKey] = qc
