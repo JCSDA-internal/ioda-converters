@@ -322,6 +322,8 @@ def read_bufr_message(f, count, start_pos, data):
                             break
                     except ecc.KeyValueNotFoundError:
                         logging.warning("Caution: unable to find requested BUFR key: " + var)
+                    except Exception:
+                        logging.warning("Caution, requested BUFR key: " + v[0] + " is somehow bad")
         else:
             if (v[0] != 'Constructed'):
                 try:
@@ -329,6 +331,8 @@ def read_bufr_message(f, count, start_pos, data):
                     meta_data[k] = assign_values(avals, k)
                 except ecc.KeyValueNotFoundError:
                     logging.warning("Caution, unable to find requested BUFR key: " + v[0])
+                except Exception:
+                    logging.warning("Caution, requested BUFR key: " + v[0] + " is somehow bad")
 
     # Determine the target number of observation points from a critical variable (i.e., latitude).
     target_number = len(meta_data[var_mimic_length])
@@ -450,7 +454,7 @@ def read_bufr_message(f, count, start_pos, data):
                 count[2] += target_number
                 return data, count, start_pos
             vals[variable] = assign_values(avals, variable)
-        except ecc.KeyValueNotFoundError:
+        except Exception:
             logging.warning("Caution, unable to find requested BUFR variable: " + variable)
             vals[variable] = np.full(target_number, float_missing_value, dtype=np.float32)
 
