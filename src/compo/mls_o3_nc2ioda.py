@@ -217,7 +217,7 @@ class mls(object):
 
                 dd['level'].append(ilev+1)
                 dd['errKey'].append(self._calc_error(
-                    d['valKey'][irec, ilev], d['valKey'][irec, ilev], ilev))
+                    d['valKey'][irec, ilev], d['precision'][irec, ilev], ilev))
         return dd
 
     def _read(self):
