@@ -234,9 +234,9 @@ class mls(object):
             if(self.errorOn):
                 print("Calculating Error.")
                 d['errKey'] = []
-                for ival,val in enumerate(d['valKey'])
-                    d['errKey'].append(self.calc_error(
-                        val,d['precision'][ival],d['level'][ival]-1))
+                for ival, val in enumerate(d['valKey']):
+                    d['errKey'].append(self._calc_error(
+                        val, d['precision'][ival], d['level'][ival]-1))
             for v in list(d.keys()):
                 if(v != 'valKey' and v != 'errKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
