@@ -63,9 +63,10 @@ VarDims = {
 
 
 class mls(object):
-    def __init__(self, filenames, lvmin, lvmax, sTAI, eTAI, nrt, qcOn):
+    def __init__(self, filenames, lvmin, lvmax, sTAI, eTAI, nrt, qcOn, errorOn):
         self.filenames = filenames
         self.qcOn = qcOn
+        self.errorOn = errorOn
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -214,10 +215,7 @@ class mls(object):
                         dd[k].append(d[k][ilev])
                     elif k != 'errKey':
                         dd[k].append(d[k][irec, ilev])
-
                 dd['level'].append(ilev+1)
-                dd['errKey'].append(self._calc_error(
-                    d['valKey'][irec, ilev], d['precision'][irec, ilev], ilev))
         return dd
 
     def _read(self):
@@ -233,13 +231,19 @@ class mls(object):
             else:
                 print("Not Performing QC.")
                 d = self._just_flatten(nc_data)
+            if(self.errorOn):
+                print("Calculating Error.")
+                d['errKey'] = []
+                for ival,val in enumerate(d['valKey'])
+                    d['errKey'].append(self.calc_error(
+                        val,d['precision'][ival],d['level'][ival]-1))
             for v in list(d.keys()):
                 if(v != 'valKey' and v != 'errKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
                              ['valKey']].extend(d['valKey'])
-                if(self.qcOn):
+                if(self.errorOn):
                     self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
 
         DimDict['nlocs'] = np.float32(len(self.outdata[('dateTime', 'MetaData')]))
@@ -307,6 +311,8 @@ def main():
         type=str, required=False, default="MLS-Aura_L2GP-O3_v05-01", dest='prefix')
     optional.add_argument('--qc', dest='qc', action='store_true', default=True)
     optional.add_argument('--no-qc', dest='qc', action='store_false')
+    optional.add_argument('--error', dest='error', action='store_true', default=True)
+    optional.add_argument('--no-error', dest='error', action='store_false')
     optional.add_argument(
         '-w', '--window',
         help="assimilation window size in hours",
@@ -376,7 +382,7 @@ def main():
     # (last 3 profiles skipped if it is the last file in window)
     # RTM regarding Near Real time (NRT) in
     # https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aura_NRT/ML2SO2_NRT.005/doc/NRT-user-guide-v5.pdf
-    o3 = mls(rawFiles, lmin-1, lmax-1, startTAI, endTAI, nrt, args.qc)
+    o3 = mls(rawFiles, lmin-1, lmax-1, startTAI, endTAI, nrt, args.qc, args.error)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
