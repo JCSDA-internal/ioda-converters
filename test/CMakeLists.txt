@@ -50,7 +50,7 @@ list( APPEND test_input
   testinput/airnow_sites.dat
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
-  testinput/dt_global_twosat_phy_l4_20150101_vDT2018.nc
+  testinput/dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testinput/global_vavh_l3_rt_s3a_20210930T18.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
@@ -110,7 +110,7 @@ list( APPEND test_output
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
   testoutput/aeronet_aod.nc
-  testoutput/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc
+  testoutput/ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
@@ -515,9 +515,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4adt
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/copernicus_l4adt2ioda.py
-                          -i testinput/dt_global_twosat_phy_l4_20150101_vDT2018.nc
-                          -o testrun/ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc"
-                          ioda_dt_global_twosat_phy_l4_20150101_vDT2018.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          -i testinput/dt_global_twosat_phy_l4_20190101_vDT2021.nc
+                          -o testrun/ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc -d 20190101"
+                          ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
                   TYPE    SCRIPT
@@ -1125,17 +1125,6 @@ if( iodaconv_eccodes_ENABLED )
                            -i testinput/sonde_wmo_double.bufr
                            -o testrun/wmo_raob_double.nc4"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
-
-  ecbuild_add_test(TARGET  test_${PROJECT_NAME}_generic_bufr_raob_multi_files
-                   TYPE    SCRIPT
-                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                   COMMAND bash
-                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                           netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
-                           -i testinput/sonde_wmo_double.bufr testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_quadruple.nc4"
-                           wmo_raob_quadruple.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
