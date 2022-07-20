@@ -14,7 +14,6 @@ import numpy as np
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
-
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -58,7 +57,7 @@ class copernicus(object):
         self.lons = self.lons.ravel()
         self.lats = self.lats.ravel()
         self.adt = np.squeeze(ncd.variables['adt'][:]).ravel()
-        self.err = np.squeeze(ncd.variables['err'][:]).ravel()
+        self.err = np.squeeze(ncd.variables['err_sla'][:]).ravel()
         self.date = ncd.getncattr('time_coverage_start')
         ncd.close()
 
@@ -69,15 +68,16 @@ class copernicus(object):
         self.lats = self.lats[qci]
         self.adt = self.adt[qci].astype(np.single)
         self.err = self.err[qci].astype(np.single)
-
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.adt, dtype=object)
         self.datetime[:] = self.date
 
 
 class copernicus_l4adt2ioda(object):
-    def __init__(self, filename):
+
+    def __init__(self, filename, datetime=None):
         self.filename = filename
+        self.datetime = datetime
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -96,7 +96,11 @@ class copernicus_l4adt2ioda(object):
 
         # read input filename
         adt = copernicus(self.filename)
-
+        # put the time at 00 between start and end coverage time
+        if self.datetime is not None:
+            ymdh = datetime.strptime(self.datetime, "%Y%m%d")
+            ymdhm = ymdh.strftime("%Y-%m-%dT%H:%M:%SZ")
+            adt.datetime[:] = ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = adt.datetime
         self.outdata[('latitude', 'MetaData')] = adt.lats
@@ -110,14 +114,12 @@ class copernicus_l4adt2ioda(object):
 
 
 def main():
-
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
             'Reads L4 ADT provided by COPERNICUS'
             'and converts into IODA formatted output files.')
     )
-
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
@@ -127,11 +129,14 @@ def main():
         '-o', '--output',
         help="path of IODA output file",
         type=str, required=True)
+    required.add_argument(
+        '-d', '--date',
+        help="provide date in the format %Y-%m-%dT%H:%M:%SZ",
+        type=str, required=False)
 
     args = parser.parse_args()
-
     # Read in the ADT data
-    adt = copernicus_l4adt2ioda(args.input)
+    adt = copernicus_l4adt2ioda(args.input, datetime=args.date)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
