@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-
 #include <gsl/gsl-lite.hpp>
 
 namespace Ingester{
@@ -29,6 +28,14 @@ namespace bufr {
         StackedRepeat,
         Number,
         Character
+    };
+
+    struct ElementInfo
+    {
+        int scale = 0;
+        int reference = 0;
+        int bits = 0;
+        std::string unit;
     };
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
@@ -63,8 +70,7 @@ namespace bufr {
         inline FortranIdx getNVal() const { return nval_; }
         inline FortranIdx getInv(FortranIdx idx) const { return inv_[idx - 1]; }
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
-
-        std::string getUnit(FortranIdx idx) const;
+        ElementInfo getElementInfo(FortranIdx idx) const;
 
      private:
         std::string subset_;

@@ -15,24 +15,12 @@
 #include "QuerySet.h"
 #include "ResultSet.h"
 #include "DataProvider.h"
+#include "Target.h"
 
 namespace Ingester {
 namespace bufr {
     namespace __details
     {
-        /// \brief The information or Meta data for a BUFR field whose data we wish to capture when
-        /// we execute a query.
-        /// \note Will be refactored to use the SubsetTable object.
-        struct Target {
-            std::string name;
-            std::string queryStr;
-            std::string unit;
-            std::vector<int> seqPath;
-            std::vector<int> nodeIds;
-            std::vector<std::string> dimPaths;
-            std::vector<int> exportDimIdxs;
-        };
-
         /// \brief BUFR messages are indexed according to start and stop values that are dependant
         /// on the message itself (the indexing is a property of the message). This object allows
         /// lets you make an array where the indexing is offset with respect to the actual position
@@ -73,13 +61,25 @@ namespace bufr {
         Query(const QuerySet& querySet, ResultSet& resultSet, const DataProvider& dataProvider);
         void query();
 
+        Targets getTargets()
+        {
+            Targets targets;
+            for (auto& subset : targetCache_)
+            {
+                for (auto& target : subset.second)
+                {
+                    targets.push_back(target);
+                }
+            }
+            return targets;
+        }
+
      private:
         const QuerySet querySet_;
         ResultSet& resultSet_;
         const DataProvider& dataProvider_;
 
-        std::unordered_map<std::string, std::shared_ptr<std::vector<__details::Target>>>
-        targetCache_;
+        std::unordered_map<std::string, Targets> targetCache_;
         std::unordered_map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
         std::unordered_map<std::string, std::unordered_map<std::string, std::string>> unitCache_;
 
@@ -89,15 +89,15 @@ namespace bufr {
         /// order to make the data collection more efficient.
         /// \param[in, out] targets The list of targets to populate.
         /// \param[in, out] masks The processing masks to populate.
-        void findTargets(std::shared_ptr<std::vector<__details::Target>>& targets,
+        void findTargets(Targets& targets,
                          std::shared_ptr<__details::ProcessingMasks>& masks);
 
 
         /// \brief Find the target associated with a specific user provided query string.
         /// \param[in] targetName The name specified for the target.
         /// \param[in] query The query string to use.
-        __details::Target findTarget(const std::string& targetName,
-                                     const std::string& query) const;
+        std::shared_ptr<Target> findTarget(const std::string& targetName,
+                                           const std::string& query) const;
 
 
         /// \brief Does the node idx correspond to an element you'd find in a query string (repeat
@@ -121,7 +121,7 @@ namespace bufr {
         /// \param[in] targets The list of targets to collect for this subset.
         /// \param[in] masks The processing masks to use.
         /// \param[in, out] resultSet The object used to store the accumulated collected data.
-        void collectData(std::shared_ptr<std::vector<__details::Target>> targets,
+        void collectData(Targets& targets,
                          std::shared_ptr<__details::ProcessingMasks> masks,
                          ResultSet& resultSet) const;
     };

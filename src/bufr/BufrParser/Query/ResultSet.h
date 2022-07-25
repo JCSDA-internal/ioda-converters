@@ -11,9 +11,12 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "DataProvider.h"
 #include "DataObject.h"
+#include "Target.h"
 
 
 namespace Ingester {
@@ -27,15 +30,9 @@ namespace bufr {
     /// results data.
     struct DataField
     {
-        std::string name;
-        std::string queryStr;
-        std::string unit;
-        bool missing = false;
+        std::shared_ptr<Target> target;
         std::vector<double> data;
-        std::vector<size_t> seqPath;
         std::vector<std::vector<int>> seqCounts;
-        std::vector<std::string> dimPaths;
-        std::vector<int> exportDims;
     };
 
     /// \brief Container for a "row" of data (all the collected data for a message subset)., with a
@@ -64,7 +61,7 @@ namespace bufr {
             auto result = -1;
             for (size_t fieldIdx = 0; fieldIdx < fields_.size(); fieldIdx++)
             {
-                if (fields_[fieldIdx].name == name)
+                if (fields_[fieldIdx].target->name == name)
                 {
                     result = fieldIdx;
                     break;
@@ -95,7 +92,7 @@ namespace bufr {
     class ResultSet
     {
      public:
-        explicit ResultSet(const std::vector<std::string>& names);
+        ResultSet(const std::vector<std::string>& names);
         ~ResultSet();
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
@@ -110,23 +107,10 @@ namespace bufr {
         /// \return A reference to the new DataFrame.
         DataFrame& nextDataFrame();
 
-        /// \brief Sets the first dataframe attribute to indicate that a DataField is the string
-        /// type.
-        /// \param fieldIdx The index of the field to set.
-        void setFieldUnit(int fieldIdx, const std::string& unit)
-        {
-            dataFrames_.front().fieldAtIdx(fieldIdx).unit = unit;
-        }
-
-        /// \brief Checks if a DataField is the string type.
-        /// \param fieldIdx The index of the field.
-        /// \return True if the field is the string type.
-        std::string fieldUnit(int fieldIdx)
-        {
-            return dataFrames_.front().fieldAtIdx(fieldIdx).unit;
-        }
+        void setTargets(Targets targets) { targets_ = targets; }
 
      private:
+        Targets targets_;
         std::vector<DataFrame> dataFrames_;
         std::vector<std::string> names_;
         std::vector<int> fieldWidths;
@@ -142,7 +126,8 @@ namespace bufr {
                           const std::string& groupByField,
                           std::vector<double>& data,
                           std::vector<int>& dims,
-                          std::vector<std::string>& dimPaths) const;
+                          std::vector<std::string>& dimPaths,
+                          ElementInfo& info) const;
 
         /// \brief Retrieves the data for the specified target field, one row per message subset.
         /// The dims are used to determine the filling pattern so that that the resulting data can
@@ -159,6 +144,14 @@ namespace bufr {
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.
         std::string unit(const std::string& fieldName) const;
+
+        std::shared_ptr<DataObjectBase> makeDataObject(
+                                const std::string& fieldName,
+                                const std::string& groupByFieldName,
+                                ElementInfo& info,
+                                const std::vector<double> data,
+                                const std::vector<int> dims,
+                                const std::vector<std::string> dimPaths) const;
     };
 }  // namespace bufr
 }  // namespace Ingester

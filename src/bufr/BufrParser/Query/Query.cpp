@@ -24,21 +24,21 @@ namespace bufr {
     Query::Query(const QuerySet &querySet,
                  ResultSet &resultSet,
                  const DataProvider &dataProvider) :
-            querySet_(querySet),
-            resultSet_(resultSet),
-            dataProvider_(dataProvider) {
+        querySet_(querySet),
+        resultSet_(resultSet),
+        dataProvider_(dataProvider)
+    {
     }
 
     void Query::query() {
-        std::shared_ptr<std::vector<__details::Target>> targets;
+        Targets targets;
         std::shared_ptr<__details::ProcessingMasks> masks;
 
         findTargets(targets, masks);
-        return collectData(targets, masks, resultSet_);
+        collectData(targets, masks, resultSet_);
     }
 
-    void Query::findTargets(std::shared_ptr<std::vector<__details::Target>> &targets,
-                            std::shared_ptr<__details::ProcessingMasks> &masks) {
+    void Query::findTargets(Targets &targets, std::shared_ptr<__details::ProcessingMasks> &masks) {
         // Check if the target list for this subset is cached in the targetMap_
         if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end()) {
             targets = targetCache_.at(dataProvider_.getSubset());
@@ -47,7 +47,6 @@ namespace bufr {
         }
 
         masks = std::make_shared<__details::ProcessingMasks>();
-        targets = std::make_shared<std::vector<__details::Target>>();
 
         size_t numNodes = dataProvider_.getIsc(dataProvider_.getInode());
 
@@ -61,20 +60,20 @@ namespace bufr {
             auto subQueries = QueryParser::splitMultiquery(queryStr);
 
             bool foundTarget = false;
-            __details::Target target;
+            std::shared_ptr<Target> target;
             for (size_t subQueryIdx = 0; subQueryIdx < subQueries.size(); ++subQueryIdx) {
                 const std::string &subQuery = subQueries[subQueryIdx];
 
                 target = findTarget(queryName, subQuery);
 
-                if (target.nodeIds.size() > 0) {
+                if (target->nodeIds.size() > 0) {
                     // Collect mask data
-                    masks->valueNodeMask[target.nodeIds[0]] = true;
-                    for (size_t pathIdx = 0; pathIdx < target.seqPath.size(); ++pathIdx) {
-                        masks->pathNodeMask[target.seqPath[pathIdx]] = true;
+                    masks->valueNodeMask[target->nodeIds[0]] = true;
+                    for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx) {
+                        masks->pathNodeMask[target->seqPath[pathIdx]] = true;
                     }
 
-                    targets->push_back(target);
+                    targets.push_back(target);
                     foundTarget = true;
                     break;
                 }
@@ -82,7 +81,7 @@ namespace bufr {
 
             if (!foundTarget) {
                 // Add the last missing target to the list
-                targets->push_back(target);
+                targets.push_back(target);
                 std::cout << "Warning: Query String "
                           << queryStr
                           << " didn't apply to subset "
@@ -95,8 +94,8 @@ namespace bufr {
         maskCache_.insert({dataProvider_.getSubset(), masks});
     }
 
-    __details::Target Query::findTarget(const std::string &targetName,
-                                        const std::string &query) const {
+    std::shared_ptr<Target> Query::findTarget(const std::string &targetName,
+                                              const std::string &query) const {
         std::string querySubset;
         std::vector<std::string> mnemonics;
         int index;
@@ -181,20 +180,20 @@ namespace bufr {
             }
         }
 
-        auto target = __details::Target();
-        target.name = targetName;
-        target.queryStr = query;
-        target.seqPath = branches;
-        target.nodeIds = targetNodes;
+        auto target = std::make_shared<Target>();
+        target->name = targetName;
+        target->queryStr = query;
+        target->seqPath = branches;
+        target->nodeIds = targetNodes;
 
         if (targetNodes.size() > 0) {
-            target.dimPaths = dimPaths;
-            target.exportDimIdxs = dimIdxs;
-            target.unit = dataProvider_.getUnit(targetNodes[0]);
+            target->dimPaths = dimPaths;
+            target->exportDimIdxs = dimIdxs;
+            target->elementInfo = dataProvider_.getElementInfo(targetNodes[0]);
         } else {
-            target.dimPaths = {"*"};
-            target.exportDimIdxs = {0};
-            target.unit = "";
+            target->dimPaths = {"*"};
+            target->exportDimIdxs = {0};
+            target->elementInfo = ElementInfo();
         }
 
         return target;
@@ -248,7 +247,7 @@ namespace bufr {
         }
     }
 
-    void Query::collectData(std::shared_ptr<std::vector<__details::Target>> targets,
+    void Query::collectData(Targets& targets,
                             std::shared_ptr<__details::ProcessingMasks> masks,
                             ResultSet &resultSet) const {
         std::vector<int> currentPath;
@@ -346,35 +345,22 @@ namespace bufr {
             }
         }
 
-        for (size_t targetIdx = 0; targetIdx < targets->size(); targetIdx++) {
-            const auto &targ = targets->at(targetIdx);
+        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++) {
+            const auto &targ = targets.at(targetIdx);
             auto &dataField = dataFrame.fieldAtIdx(targetIdx);
-            dataField.name = targ.name;
-            dataField.queryStr = targ.queryStr;
-            dataField.unit = targ.unit;
-            if (resultSet.fieldUnit(targetIdx).empty()) {
-                resultSet.setFieldUnit(targetIdx, targ.unit);  // Whole column unit
-            }
+            dataField.target = targ;
 
-            dataField.dimPaths = targ.dimPaths;
-            dataField.seqPath.resize(targ.seqPath.size() + 1);
-            dataField.seqPath[0] = 1;
-            std::copy(targ.seqPath.begin(), targ.seqPath.end(), dataField.seqPath.begin() + 1);
-            dataField.exportDims = targ.exportDimIdxs;
-
-            if (targ.nodeIds.size() == 0) {
+            if (targ->nodeIds.size() == 0) {
                 dataField.data = {MissingValue};
-                dataField.missing = true;
                 dataField.seqCounts = {{1}};
             } else {
-                dataField.seqCounts.resize(targ.seqPath.size() + 1);
+                dataField.seqCounts.resize(targ->seqPath.size() + 1);
                 dataField.seqCounts[0] = {1};
-                for (size_t pathIdx = 0; pathIdx < targ.seqPath.size(); pathIdx++) {
-                    dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
+                for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++) {
+                    dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
                 }
 
-                dataField.data = dataTable[targ.nodeIds[0]].values;
-                if (dataField.data.size() == 0) dataField.missing = true;
+                dataField.data = dataTable[targ->nodeIds[0]].values;
             }
         }
     }

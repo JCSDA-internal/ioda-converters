@@ -97,19 +97,27 @@ namespace bufr {
         delete_table_data_f();
     }
 
-    std::string DataProvider::getUnit(FortranIdx idx) const
+    ElementInfo DataProvider::getElementInfo(FortranIdx idx) const
     {
-        static const int UNIT_STR_LEN = 20;
+        char unitCStr[20];
 
-        char res[UNIT_STR_LEN];
-        get_unit_f(bufrLoc_, getTag(idx).c_str(), res, UNIT_STR_LEN);
+        ElementInfo info;
+        get_element_info_f(bufrLoc_,
+                           getTag(idx).c_str(),
+                           &info.scale,
+                           &info.reference,
+                           &info.bits,
+                           unitCStr,
+                           20);
 
-        auto unitStr = std::string(res);
+        // trim the unit string
+        auto unitStr = std::string(unitCStr);
         size_t end = unitStr.find_last_not_of( " \n\r\t\f\v");
-        unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);;
+        unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);
 
+        info.unit = unitStr;
 
-        return unitStr;
+        return info;
     }
 }  // namespace bufr
 }  // namespace Ingester

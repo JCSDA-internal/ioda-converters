@@ -31,33 +31,14 @@ namespace bufr {
         std::vector<double> data;
         std::vector<int> dims;
         std::vector<std::string> dimPaths;
+        ElementInfo info;
 
         getRawValues(fieldName,
                      groupByFieldName,
                      data,
                      dims,
-                     dimPaths);
-
-        std::shared_ptr<Ingester::DataObjectBase> object;
-        if (unit(fieldName) == "CCITT IA5")
-        {
-            object =  std::make_shared<Ingester::DataObject<std::string>>();
-        }
-        else if (unit(fieldName) == "CODE TABLE" ||
-                 unit(fieldName) == "FLAG TABLE" ||
-                 unit(fieldName) == "NUMERIC")
-        {
-            object =  std::make_shared<Ingester::DataObject<uint32_t>>();
-        }
-        else
-        {
-            object = std::make_shared<Ingester::DataObject<float>>();
-        }
-
-        object->setData(data, MissingValue);
-        object->setDims(dims);
-        object->setFieldName(fieldName);
-        object->setGroupByFieldName(groupByFieldName);
+                     dimPaths,
+                     info);
 
         // Add dim path strings
         const char* ws = " \t\n\r\f\v";
@@ -71,7 +52,12 @@ namespace bufr {
             paths[dimIdx] = path_str;
         }
 
-        object->setDimPaths(paths);
+        std::shared_ptr<Ingester::DataObjectBase> object = makeDataObject(fieldName,
+                                                                          groupByFieldName,
+                                                                          info,
+                                                                          data,
+                                                                          dims,
+                                                                          paths);
 
         return object;
     }
@@ -87,7 +73,8 @@ namespace bufr {
                                  const std::string& groupByField,
                                  std::vector<double>& data,
                                  std::vector<int>& dims,
-                                 std::vector<std::string>& dimPaths) const
+                                 std::vector<std::string>& dimPaths,
+                                 ElementInfo& info) const
     {
         // Find the dims based on the largest sequence counts in the fields
 
@@ -109,18 +96,19 @@ namespace bufr {
             }
 
             auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-            dimPaths = targetField.dimPaths;
+            dimPaths = targetField.target->dimPaths;
 
-            exportDims = targetField.exportDims;
+            exportDims = targetField.target->exportDimIdxs;
         }
 
         for (auto& dataFrame : dataFrames_)
         {
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-            if (!targetField.dimPaths.empty() && dimPaths.size() < targetField.dimPaths.size())
+            if (!targetField.target->dimPaths.empty() &&
+                dimPaths.size() < targetField.target->dimPaths.size())
             {
-                dimPaths = targetField.dimPaths;
-                exportDims = targetField.exportDims;
+                dimPaths = targetField.target->dimPaths;
+                exportDims = targetField.target->exportDimIdxs;
             }
 
             size_t dimsLen = targetField.seqCounts.size();
@@ -138,6 +126,16 @@ namespace bufr {
                 }
             }
 
+            info.reference = std::min(info.reference, targetField.target->elementInfo.reference);
+            info.bits = std::max(info.bits, targetField.target->elementInfo.bits);
+
+            if (std::abs(targetField.target->elementInfo.scale) > info.scale)
+            {
+                info.scale = targetField.target->elementInfo.scale;
+            }
+
+            if (info.unit.empty()) info.unit = targetField.target->elementInfo.unit;
+
             if (groupByField != "")
             {
                 auto& groupByField = dataFrame.fieldAtIdx(groupByFieldIdx);
@@ -145,7 +143,7 @@ namespace bufr {
 
                 if (groupbyIdx > static_cast<int>(dimsList.size()))
                 {
-                    dimPaths = {groupByField.dimPaths.back()};
+                    dimPaths = {groupByField.target->dimPaths.back()};
 
                     int groupbyElementsForFrame = 1;
                     for (auto &seqCount : groupByField.seqCounts)
@@ -161,11 +159,11 @@ namespace bufr {
                 else
                 {
                     dimPaths = {};
-                    for (size_t targetIdx = groupByField.exportDims.size() - 1;
-                         targetIdx < targetField.dimPaths.size();
+                    for (size_t targetIdx = groupByField.target->exportDimIdxs.size() - 1;
+                         targetIdx < targetField.target->dimPaths.size();
                          ++targetIdx)
                     {
-                        dimPaths.push_back(targetField.dimPaths[targetIdx]);
+                        dimPaths.push_back(targetField.target->dimPaths[targetIdx]);
                     }
                 }
             }
@@ -249,7 +247,7 @@ namespace bufr {
             std::vector<std::vector<double>> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
-            if (!targetField.missing) {
+            if (!targetField.data.size() == 0) {
                 getRowsForField(targetField,
                                 frameData,
                                 allDims,
@@ -380,7 +378,72 @@ namespace bufr {
     std::string ResultSet::unit(const std::string& fieldName) const
     {
         auto fieldIdx = dataFrames_.front().fieldIndexForNodeNamed(fieldName);
-        return dataFrames_.front().fieldAtIdx(fieldIdx).unit;
+        return dataFrames_.front().fieldAtIdx(fieldIdx).target->unit;
+    }
+
+    std::shared_ptr<DataObjectBase> ResultSet::makeDataObject(
+                                                    const std::string& fieldName,
+                                                    const std::string& groupByFieldName,
+                                                    ElementInfo& info,
+                                                    const std::vector<double> data,
+                                                    const std::vector<int> dims,
+                                                    const std::vector<std::string> dimPaths) const
+    {
+        bool isString = info.unit == "CCITT IA5";
+        bool isSigned = info.reference < 0;
+        bool isInteger = info.scale == 0;
+        bool is64Bit = info.bits > 32;
+
+        std::shared_ptr<DataObjectBase> object;
+
+        if (isString)
+        {
+            object = std::make_shared<DataObject<std::string>>();
+        }
+        else if (isInteger)
+        {
+            if (isSigned)
+            {
+                if (is64Bit)
+                {
+                    object = std::make_shared<DataObject<int64_t>>();
+                }
+                else
+                {
+                    object = std::make_shared<DataObject<int32_t>>();
+                }
+            }
+            else
+            {
+                if (is64Bit)
+                {
+                    object = std::make_shared<DataObject<uint64_t>>();
+                }
+                else
+                {
+                    object = std::make_shared<DataObject<uint32_t>>();
+                }
+            }
+        }
+        else
+        {
+            if (is64Bit)
+            {
+                object = std::make_shared<DataObject<double>>();
+            }
+            else
+            {
+                object = std::make_shared<DataObject<float>>();
+            }
+        }
+
+        object->setData(data, 10e10);
+        object->setDims(dims);
+        object->setFieldName(fieldName);
+        object->setGroupByFieldName(groupByFieldName);
+        object->setDimPaths(dimPaths);
+
+        return object;
     }
 }  // namespace bufr
 }  // namespace Ingester

@@ -84,6 +84,8 @@ namespace bufr {
             if (next > 0 && ++messageNum >= next) break;
         }
 
+        resultSet.setTargets(query.getTargets());
+
         dataProvider.deleteData();
 
         return resultSet;
