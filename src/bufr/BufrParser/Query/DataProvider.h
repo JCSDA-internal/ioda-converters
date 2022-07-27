@@ -36,6 +36,11 @@ namespace bufr {
         int reference = 0;
         int bits = 0;
         std::string unit;
+
+        bool isString() { return unit == "CCITT IA5"; }
+        bool isSigned()  { return reference < 0; }
+        bool isInteger() { return scale == 0; }
+        bool is64Bit() { return bits > 32; }
     };
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.

@@ -99,9 +99,12 @@ namespace bufr {
         /// optional groupByFieldName.
         /// \param fieldName The name of the field to get the data for.
         /// \param groupByFieldName The name of the field to group the data by.
+        /// \param overrideType The name of the override type to convert the data to.
         /// \return A Result object containing the data.
         std::shared_ptr<Ingester::DataObjectBase>
-            get(const std::string& fieldName, const std::string& groupByFieldName = "") const;
+            get(const std::string& fieldName,
+                const std::string& groupByFieldName = "",
+                const std::string& overrideType="") const;
 
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
         /// \return A reference to the new DataFrame.
@@ -122,6 +125,7 @@ namespace bufr {
         /// \param groupByFieldName The name of the field to group the data by.
         /// \param dims The size of the dimensions of the result data (any number of dimensions).
         /// \param dimPaths The dimensioning sub-query path strings.
+        /// \param info The meta data for the element.
         void getRawValues(const std::string& fieldName,
                           const std::string& groupByField,
                           std::vector<double>& data,
@@ -149,9 +153,14 @@ namespace bufr {
                                 const std::string& fieldName,
                                 const std::string& groupByFieldName,
                                 ElementInfo& info,
+                                const std::string& overrideType,
                                 const std::vector<double> data,
                                 const std::vector<int> dims,
                                 const std::vector<std::string> dimPaths) const;
+
+        std::shared_ptr<DataObjectBase> objectByElementInfo(ElementInfo& info) const;
+        std::shared_ptr<DataObjectBase> objectByType(const std::string& overrideType) const;
+
     };
 }  // namespace bufr
 }  // namespace Ingester

@@ -7,8 +7,11 @@
 
 #include "ResultSet.h"
 
+#include "eckit/exception/Exceptions.h"
+
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 #include "VectorMath.h"
 
@@ -26,7 +29,9 @@ namespace bufr {
     }
 
     std::shared_ptr<Ingester::DataObjectBase>
-        ResultSet::get(const std::string& fieldName, const std::string& groupByFieldName) const
+        ResultSet::get(const std::string& fieldName,
+                       const std::string& groupByFieldName,
+                       const std::string& overrideType) const
     {
         std::vector<double> data;
         std::vector<int> dims;
@@ -55,6 +60,7 @@ namespace bufr {
         std::shared_ptr<Ingester::DataObjectBase> object = makeDataObject(fieldName,
                                                                           groupByFieldName,
                                                                           info,
+                                                                          overrideType,
                                                                           data,
                                                                           dims,
                                                                           paths);
@@ -385,55 +391,27 @@ namespace bufr {
                                                     const std::string& fieldName,
                                                     const std::string& groupByFieldName,
                                                     ElementInfo& info,
+                                                    const std::string& overrideType,
                                                     const std::vector<double> data,
                                                     const std::vector<int> dims,
                                                     const std::vector<std::string> dimPaths) const
     {
-        bool isString = info.unit == "CCITT IA5";
-        bool isSigned = info.reference < 0;
-        bool isInteger = info.scale == 0;
-        bool is64Bit = info.bits > 32;
-
         std::shared_ptr<DataObjectBase> object;
-
-        if (isString)
+        if (overrideType.empty())
         {
-            object = std::make_shared<DataObject<std::string>>();
-        }
-        else if (isInteger)
-        {
-            if (isSigned)
-            {
-                if (is64Bit)
-                {
-                    object = std::make_shared<DataObject<int64_t>>();
-                }
-                else
-                {
-                    object = std::make_shared<DataObject<int32_t>>();
-                }
-            }
-            else
-            {
-                if (is64Bit)
-                {
-                    object = std::make_shared<DataObject<uint64_t>>();
-                }
-                else
-                {
-                    object = std::make_shared<DataObject<uint32_t>>();
-                }
-            }
+            object = objectByElementInfo(info);
         }
         else
         {
-            if (is64Bit)
+            object = objectByType(overrideType);
+
+            if ((overrideType == "string" && !info.isString()) ||
+                (overrideType != "string" && info.isString()))
             {
-                object = std::make_shared<DataObject<double>>();
-            }
-            else
-            {
-                object = std::make_shared<DataObject<float>>();
+                std::ostringstream errMsg;
+                errMsg << "Conversions between numbers and strings are not currently supported. ";
+                errMsg << "See the export definition for \"" << fieldName << "\".";
+                throw eckit::BadParameter(errMsg.str());
             }
         }
 
@@ -445,5 +423,96 @@ namespace bufr {
 
         return object;
     }
+
+    std::shared_ptr<DataObjectBase> ResultSet::objectByElementInfo(ElementInfo& info) const
+    {
+        std::shared_ptr<DataObjectBase> object;
+
+        if (info.isString())
+        {
+            object = std::make_shared<DataObject<std::string>>();
+        }
+        else if (info.isInteger())
+        {
+            if (info.isSigned())
+            {
+                if (info.is64Bit())
+                {
+                    object = std::make_shared<DataObject<int64_t>>();
+                }
+                else
+                {
+                    object = std::make_shared<DataObject<int32_t>>();
+                }
+            }
+            else
+            {
+                if (info.is64Bit())
+                {
+                    object = std::make_shared<DataObject<uint64_t>>();
+                }
+                else
+                {
+                    object = std::make_shared<DataObject<uint32_t>>();
+                }
+            }
+        }
+        else
+        {
+            if (info.is64Bit())
+            {
+                object = std::make_shared<DataObject<double>>();
+            }
+            else
+            {
+                object = std::make_shared<DataObject<float>>();
+            }
+        }
+
+        return object;
+    }
+
+    std::shared_ptr<DataObjectBase> ResultSet::objectByType(const std::string& overrideType) const
+    {
+        std::shared_ptr<DataObjectBase> object;
+
+        if (overrideType == "uint" || overrideType == "uint32")
+        {
+            object = std::make_shared<DataObject<uint32_t>>();
+        }
+        else if (overrideType == "int" || overrideType == "int32")
+        {
+            object = std::make_shared<DataObject<int32_t>>();
+        }
+        else if (overrideType == "float")
+        {
+            object = std::make_shared<DataObject<float>>();
+        }
+        else if (overrideType == "double")
+        {
+            object = std::make_shared<DataObject<double>>();
+        }
+        else if (overrideType == "string")
+        {
+            object = std::make_shared<DataObject<std::string>>();
+        }
+        else if (overrideType == "uint64")
+        {
+            object = std::make_shared<DataObject<uint64_t>>();
+        }
+        else if (overrideType == "int64")
+        {
+            object = std::make_shared<DataObject<int64_t>>();
+        }
+        else
+        {
+            std::ostringstream errMsg;
+            errMsg << "Unknown type " << overrideType << ".";
+            throw eckit::BadParameter(errMsg.str());
+        }
+
+        return object;
+    }
+
 }  // namespace bufr
 }  // namespace Ingester

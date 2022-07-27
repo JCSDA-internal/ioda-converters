@@ -39,7 +39,7 @@ namespace bufr {
     }
 
     void Query::findTargets(Targets &targets, std::shared_ptr<__details::ProcessingMasks> &masks) {
-        // Check if the target list for this subset is cached in the targetMap_
+        // Check if the target list for this subset is cached
         if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end()) {
             targets = targetCache_.at(dataProvider_.getSubset());
             masks = maskCache_.at(dataProvider_.getSubset());

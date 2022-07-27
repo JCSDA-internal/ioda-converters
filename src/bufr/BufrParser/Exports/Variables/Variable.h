@@ -21,6 +21,7 @@ namespace Ingester
         std::string name;
         std::string query;
         std::string groupByField;
+        std::string type;
     };
 
     typedef std::string QueryName;
