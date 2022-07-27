@@ -27,6 +27,7 @@ namespace bufr {
         std::vector<size_t> dimIdxs;
         size_t idx;
         bool requiresIdx;
+        TypeInfo typeInfo;
     };
 
     /// \brief Parses the BUFR message subset Meta data tables.

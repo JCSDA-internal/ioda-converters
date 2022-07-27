@@ -189,11 +189,11 @@ namespace bufr {
         if (targetNodes.size() > 0) {
             target->dimPaths = dimPaths;
             target->exportDimIdxs = dimIdxs;
-            target->elementInfo = dataProvider_.getElementInfo(targetNodes[0]);
+            target->typeInfo = dataProvider_.getTypeInfo(targetNodes[0]);
         } else {
             target->dimPaths = {"*"};
             target->exportDimIdxs = {0};
-            target->elementInfo = ElementInfo();
+            target->typeInfo = TypeInfo();
         }
 
         return target;

@@ -36,7 +36,7 @@ namespace bufr {
         std::vector<double> data;
         std::vector<int> dims;
         std::vector<std::string> dimPaths;
-        ElementInfo info;
+        TypeInfo info;
 
         getRawValues(fieldName,
                      groupByFieldName,
@@ -80,7 +80,7 @@ namespace bufr {
                                  std::vector<double>& data,
                                  std::vector<int>& dims,
                                  std::vector<std::string>& dimPaths,
-                                 ElementInfo& info) const
+                                 TypeInfo& info) const
     {
         // Find the dims based on the largest sequence counts in the fields
 
@@ -132,15 +132,15 @@ namespace bufr {
                 }
             }
 
-            info.reference = std::min(info.reference, targetField.target->elementInfo.reference);
-            info.bits = std::max(info.bits, targetField.target->elementInfo.bits);
+            info.reference = std::min(info.reference, targetField.target->typeInfo.reference);
+            info.bits = std::max(info.bits, targetField.target->typeInfo.bits);
 
-            if (std::abs(targetField.target->elementInfo.scale) > info.scale)
+            if (std::abs(targetField.target->typeInfo.scale) > info.scale)
             {
-                info.scale = targetField.target->elementInfo.scale;
+                info.scale = targetField.target->typeInfo.scale;
             }
 
-            if (info.unit.empty()) info.unit = targetField.target->elementInfo.unit;
+            if (info.unit.empty()) info.unit = targetField.target->typeInfo.unit;
 
             if (groupByField != "")
             {
@@ -390,7 +390,7 @@ namespace bufr {
     std::shared_ptr<DataObjectBase> ResultSet::makeDataObject(
                                                     const std::string& fieldName,
                                                     const std::string& groupByFieldName,
-                                                    ElementInfo& info,
+                                                    TypeInfo& info,
                                                     const std::string& overrideType,
                                                     const std::vector<double> data,
                                                     const std::vector<int> dims,
@@ -399,7 +399,7 @@ namespace bufr {
         std::shared_ptr<DataObjectBase> object;
         if (overrideType.empty())
         {
-            object = objectByElementInfo(info);
+            object = objectByTypeInfo(info);
         }
         else
         {
@@ -424,7 +424,7 @@ namespace bufr {
         return object;
     }
 
-    std::shared_ptr<DataObjectBase> ResultSet::objectByElementInfo(ElementInfo& info) const
+    std::shared_ptr<DataObjectBase> ResultSet::objectByTypeInfo(TypeInfo &info) const
     {
         std::shared_ptr<DataObjectBase> object;
 

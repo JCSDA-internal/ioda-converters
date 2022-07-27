@@ -113,6 +113,54 @@ std::string dimStyledStr(int dims)
     return ostr.str();
 }
 
+std::string typeStyledStr(const Ingester::bufr::TypeInfo& info)
+{
+    std::string typeStr;
+
+    if (info.isString())
+    {
+        typeStr = "string";
+    }
+    else if (info.isInteger())
+    {
+        if (info.isSigned())
+        {
+            if (info.is64Bit())
+            {
+                typeStr = "int64 ";
+            }
+            else
+            {
+                typeStr = "int   ";
+            }
+        }
+        else
+        {
+            if (info.is64Bit())
+            {
+                typeStr = "uint64";
+            }
+            else
+            {
+                typeStr = "uint  ";
+            }
+        }
+    }
+    else
+    {
+        if (info.is64Bit())
+        {
+            typeStr = "double";
+        }
+        else
+        {
+            typeStr = "float ";
+        }
+    }
+
+    return typeStr;
+}
+
 void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
 {
     for (auto& dimPath : dimPaths)
@@ -126,7 +174,8 @@ void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
     for (auto query : queries)
     {
         std::ostringstream ostr;
-        ostr << dimStyledStr(query.dimIdxs.size()) << " ";
+        ostr << dimStyledStr(query.dimIdxs.size()) << "  ";
+        ostr << typeStyledStr(query.typeInfo) << "  ";
         ostr << query.pathComponents[0];
         for (size_t pathIdx = 1; pathIdx < query.pathComponents.size(); pathIdx++)
         {

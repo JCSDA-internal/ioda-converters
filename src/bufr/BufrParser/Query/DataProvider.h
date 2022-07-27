@@ -30,17 +30,17 @@ namespace bufr {
         Character
     };
 
-    struct ElementInfo
+    struct TypeInfo
     {
         int scale = 0;
         int reference = 0;
         int bits = 0;
         std::string unit;
 
-        bool isString() { return unit == "CCITT IA5"; }
-        bool isSigned()  { return reference < 0; }
-        bool isInteger() { return scale == 0; }
-        bool is64Bit() { return bits > 32; }
+        bool isString() const { return unit == "CCITT IA5"; }
+        bool isSigned() const  { return reference < 0; }
+        bool isInteger() const { return scale == 0; }
+        bool is64Bit() const { return bits > 32; }
     };
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
@@ -75,7 +75,7 @@ namespace bufr {
         inline FortranIdx getNVal() const { return nval_; }
         inline FortranIdx getInv(FortranIdx idx) const { return inv_[idx - 1]; }
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
-        ElementInfo getElementInfo(FortranIdx idx) const;
+        TypeInfo getTypeInfo(FortranIdx idx) const;
 
      private:
         std::string subset_;

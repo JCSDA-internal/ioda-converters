@@ -97,18 +97,18 @@ namespace bufr {
         delete_table_data_f();
     }
 
-    ElementInfo DataProvider::getElementInfo(FortranIdx idx) const
+    TypeInfo DataProvider::getTypeInfo(FortranIdx idx) const
     {
         char unitCStr[20];
 
-        ElementInfo info;
-        get_element_info_f(bufrLoc_,
-                           getTag(idx).c_str(),
-                           &info.scale,
-                           &info.reference,
-                           &info.bits,
-                           unitCStr,
-                           20);
+        TypeInfo info;
+        get_type_info_f(bufrLoc_,
+                        getTag(idx).c_str(),
+                        &info.scale,
+                        &info.reference,
+                        &info.bits,
+                        unitCStr,
+                        20);
 
         // trim the unit string
         auto unitStr = std::string(unitCStr);

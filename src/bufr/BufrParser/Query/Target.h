@@ -24,7 +24,7 @@ namespace bufr {
         std::vector<int> nodeIds;
         std::vector<std::string> dimPaths;
         std::vector<int> exportDimIdxs;
-        ElementInfo elementInfo;
+        TypeInfo typeInfo;
     };
 
     typedef std::vector<std::shared_ptr<Target>> Targets;
