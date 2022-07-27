@@ -39,7 +39,7 @@ namespace bufr {
 
         bool isString() const { return unit == "CCITT IA5"; }
         bool isSigned() const  { return reference < 0; }
-        bool isInteger() const { return scale == 0; }
+        bool isInteger() const { return scale <= 0; }
         bool is64Bit() const { return bits > 32; }
     };
 
