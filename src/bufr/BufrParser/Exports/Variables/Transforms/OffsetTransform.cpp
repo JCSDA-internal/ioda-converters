@@ -18,16 +18,7 @@ namespace Ingester
 
     void OffsetTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-      if (auto object = std::dynamic_pointer_cast<DataObject<float>>(dataObject))
-      {
-        auto data = object->getRawData();
-        for (auto& val : data)
-        {
-            if (val != object->missingValue()) val += static_cast<float> (offset_);
-        }
-
-        object->setRawData(data);
-      }
+        dataObject->offsetBy(offset_);
     }
 
 }  // namespace Ingester

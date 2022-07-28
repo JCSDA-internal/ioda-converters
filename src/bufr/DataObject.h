@@ -100,6 +100,14 @@ namespace Ingester
         virtual std::shared_ptr<DataObjectBase>
             slice(const std::vector<std::size_t>& rows) const = 0;
 
+        /// \brief Multiply the stored values in this data object by a scalar.
+        /// \param val Scalar to multiply to the data..
+        virtual void multiplyBy(double val) = 0;
+
+        /// \brief Add a scalar to the stored values in this data object.
+        /// \param val Scalar to add to the data..
+        virtual void offsetBy(double val) = 0;
+
      protected:
         std::string fieldName_;
         std::string groupByFieldName_;
@@ -427,6 +435,75 @@ namespace Ingester
                     data_.push_back("");
                 }
             }
+        }
+
+        /// \brief Multiply the stored values in this data object by a scalar.
+        /// \param val Scalar to multiply to the data..
+        void multiplyBy(double val) final
+        {
+            _multiplyBy(val);
+        }
+
+        /// \brief Multiply the stored values in this data object by a scalar (numeric version).
+        /// \param val Scalar to multiply to the data.
+        template<typename U = void>
+        void _multiplyBy(double val,
+                         typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            if (typeid(T) == typeid(float) ||
+                typeid(T) == typeid(double) ||
+                trunc(val) == val)
+            {
+                for (size_t i = 0; i < data_.size(); i++)
+                {
+                    data_[i] = static_cast<T>(static_cast<double>(data_[i]) * val);
+                }
+            }
+            else
+            {
+                std::ostringstream str;
+                str << "Multiplying integer field \"" << fieldName_ << "\" with a non-integer is ";
+                str << "illegal. Please convert it to a float or double.";
+                throw std::runtime_error(str.str());
+            }
+        }
+
+        /// \brief Multiply the stored values in this data object by a scalar (string version).
+        /// \param val Scalar to multiply to the data.
+        template<typename U = void>
+        void _multiplyBy(double val,
+                         typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            throw std::runtime_error("Trying to multiply a string by a number");
+        }
+
+        /// \brief Add a scalar to the stored values in this data object.
+        /// \param val Scalar to add to the data.
+        void offsetBy(double val) final
+        {
+            _offsetBy(val);
+        }
+
+
+        /// \brief Add a scalar to the stored values in this data object (numeric version).
+        /// \param val Scalar to add to the data.
+        template<typename U = void>
+        void _offsetBy(double val,
+                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            for (size_t i = 0; i < data_.size(); i++)
+            {
+                data_[i] = data_[i] + static_cast<T>(val);
+            }
+        }
+
+        /// \brief Add a scalar to the stored values in this data object (string version).
+        /// \param val Scalar to add to the data.
+        template<typename U = void>
+        void _offsetBy(double val,
+                       typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            throw std::runtime_error("Trying to offset a string by a number");
         }
     };
 }  // namespace Ingester
