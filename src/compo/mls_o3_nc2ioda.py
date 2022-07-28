@@ -255,7 +255,7 @@ class mls(object):
                 self.outdata[k] = self.outdata[k].astype('float32')
             elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
-        self.outdata[('dateTime', 'MetaData')].astype(np.int64)
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype(np.int64)
         self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 # end mls object.
 
