@@ -248,7 +248,7 @@ class omi(object):
                 self.outdata[k] = self.outdata[k].astype('int32')
             elif(self.outdata[k].dtype == 'uint16' or self.outdata[k].dtype == 'uint8'):
                 self.outdata[k] = self.outdata[k].astype(int)
-        self.outdata[('dateTime', 'MetaData')].astype('int64')
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype('int64')
         # ensure lon is 0-360
         self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 
