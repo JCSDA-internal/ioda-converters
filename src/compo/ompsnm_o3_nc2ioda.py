@@ -170,7 +170,7 @@ class ompsnm(object):
                 self.outdata[k] = self.outdata[k].astype('int32')
         DimDict['nlocs'] = self.outdata[('dateTime', 'MetaData')].shape[0]
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-        self.outdata[('dateTime', 'MetaData')].astype(np.int64)
+        self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype(np.int64)
         self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 # end ompsnm object.
 
