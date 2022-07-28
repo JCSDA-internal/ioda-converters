@@ -132,7 +132,13 @@ namespace Ingester
 
         ~DataObject() = default;
 
+        /// \brief Set the data for this object
+        /// \param data The data vector
         void setData(const std::vector<T>& data) { data_ = data; }
+
+        /// \brief Set the data for this object
+        /// \param data The data vector
+        /// \param dataMissingValue The missing value used in the raw data
         void setData(const std::vector<double>& data, double dataMissingValue) final
         {
             _setData(data, dataMissingValue);
@@ -377,6 +383,9 @@ namespace Ingester
             return 0.0f;
         }
 
+        /// \brief Set the data associated with this data object (numeric DataObject).
+        /// \param data - double vector of raw data
+        /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(const std::vector<double>& data,
                       double dataMissingValue,
@@ -389,6 +398,9 @@ namespace Ingester
                          missingValue());
         }
 
+        /// \brief Set the data associated with this data object (string DataObject).
+        /// \param data - double vector of raw data
+        /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(const std::vector<double>& data,
                       double dataMissingValue,

@@ -14,7 +14,6 @@ namespace Ingester {
 namespace bufr {
     /// \brief The information or Meta data for a BUFR field whose data we wish to capture when
     /// we execute a query.
-    /// \note Will be refactored to use the SubsetTable object.
     struct Target
     {
         std::string name;
