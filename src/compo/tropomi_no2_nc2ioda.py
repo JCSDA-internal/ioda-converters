@@ -64,7 +64,6 @@ class tropomi(object):
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.varDict[iodavar]['smoothKey'] = iodavar, iconv.SmoothName()
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
@@ -117,15 +116,13 @@ class tropomi(object):
                 self.outdata[('latitude', 'MetaData')] = lats
                 self.outdata[('longitude', 'MetaData')] = lons
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value
-                self.outdata[('troposphere_layer_index', 'MetaData')] = trop_layer
-                self.outdata[('air_mass_factor_total', 'MetaData')] = total_airmass
-                self.outdata[('air_mass_factor_troposphere', 'MetaData')] = trop_airmass
-                self.outdata[('tropospheric_averaging_kernel_precision', 'MetaData')] = kernel_err
-                self.outdata[('averaging_kernel_precision', 'MetaData')] = kernel_err_total
+                self.outdata[('troposphere_layer_index', 'Smoothing')] = trop_layer
+                self.outdata[('air_mass_factor_total', 'Smoothing')] = total_airmass
+                self.outdata[('air_mass_factor_troposphere', 'Smoothing')] = trop_airmass
                 for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
+                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'Smoothing')
                     self.outdata[varname_ak] = avg_kernel[..., k].ravel()
-                    varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
+                    varname_pr = ('pressure_level_'+str(k+1), 'Smoothing')
                     self.outdata[varname_pr] = ak[k] + bk[k]*ps[...].ravel()
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
@@ -136,17 +133,17 @@ class tropomi(object):
                     self.outdata[('longitude', 'MetaData')], lons))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
                     self.outdata[('quality_assurance_value', 'MetaData')], qa_value))
-                self.outdata[('troposphere_layer_index', 'smoothKey')] = np.concatenate((
-                    self.outdata[('troposphere_layer_index', 'smoothKey')], trop_layer))
-                self.outdata[('air_mass_factor_total', 'smoothKey')] = np.concatenate((
-                    self.outdata[('air_mass_factor_total', 'smoothKey')], total_airmass))
-                self.outdata[('air_mass_factor_troposphere', 'smoothKey')] = np.concatenate((
-                    self.outdata[('air_mass_factor_troposphere', 'smoothKey')], trop_airmass))
+                self.outdata[('troposphere_layer_index', 'Smoothing')] = np.concatenate((
+                    self.outdata[('troposphere_layer_index', 'Smoothing')], trop_layer))
+                self.outdata[('air_mass_factor_total', 'Smoothing')] = np.concatenate((
+                    self.outdata[('air_mass_factor_total', 'Smoothing')], total_airmass))
+                self.outdata[('air_mass_factor_troposphere', 'Smoothing')] = np.concatenate((
+                    self.outdata[('air_mass_factor_troposphere', 'Smoothing')], trop_airmass))
                 for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'smoothKey')
+                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'Smoothing')
                     self.outdata[varname_ak] = np.concatenate(
                         (self.outdata[varname_ak], avg_kernel[..., k].ravel()))
-                    varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
+                    varname_pr = ('pressure_level_'+str(k+1), 'Smoothing')
                     self.outdata[varname_pr] = np.concatenate(
                         (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()))
             for ncvar, iodavar in obsvars.items():
@@ -173,7 +170,7 @@ class tropomi(object):
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)
-            vkey = (varname, 'smoothKey')
+            vkey = (varname, 'Smoothing')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
             self.varAttrs[vkey]['units'] = ''
 
