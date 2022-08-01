@@ -12,8 +12,7 @@ _oqc_name = "PreQC"
 # Names assigned to obs bias terms and predictors related to observations
 _obiasterm_name = "GsiObsBiasTerm"
 _obiaspred_name = "GsitObsBiasPredictor"
-# Names assigned to smoothing terms for the averaging kernel based obs
-_smooth_name = "Smoothing"
+
 
 def MetaDataName():
     return _metagroup
@@ -37,10 +36,6 @@ def OerrName():
 
 def OqcName():
     return _oqc_name
-
-
-def SmoothName():
-    return _smooth_name
 
 
 def get_default_fill_val(mydtype):

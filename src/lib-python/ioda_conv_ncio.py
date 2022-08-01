@@ -67,9 +67,6 @@ class NcWriter(object):
         self._obiasterm_name = "GsiObsBiasTerm"
         self._obiaspred_name = "GsitObsBiasPredictor"
 
-        # Names assigned to smoothing for averaging kernel observations
-        self._oval_name = "Smoothing"
-
         # Names assigned to dimensions
         self._nlocs_dim_name = 'nlocs'
         self._nvars_dim_name = 'nvars'
@@ -124,9 +121,6 @@ class NcWriter(object):
 
     def OqcName(self):
         return self._oqc_name
-
-    def SmoothName(self):
-        return self._smooth_name
 
     def NumpyToNcDtype(self, NumpyDtype):
         ############################################################
