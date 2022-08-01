@@ -136,14 +136,14 @@ class tropomi(object):
                     self.outdata[('longitude', 'MetaData')], lons))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
                     self.outdata[('quality_assurance_value', 'MetaData')], qa_value))
-                self.outdata[('troposphere_layer_index', 'Smoothing')] = np.concatenate((
-                    self.outdata[('troposphere_layer_index', 'Smoothing')], trop_layer))
-                self.outdata[('air_mass_factor_total', 'Smoothing')] = np.concatenate((
-                    self.outdata[('air_mass_factor_total', 'Smoothing')], total_airmass))
-                self.outdata[('air_mass_factor_troposphere', 'Smoothing')] = np.concatenate((
-                    self.outdata[('air_mass_factor_troposphere', 'Smoothing')], trop_airmass))
+                self.outdata[('troposphere_layer_index', 'smoothKey')] = np.concatenate((
+                    self.outdata[('troposphere_layer_index', 'smoothKey')], trop_layer))
+                self.outdata[('air_mass_factor_total', 'smoothKey')] = np.concatenate((
+                    self.outdata[('air_mass_factor_total', 'smoothKey')], total_airmass))
+                self.outdata[('air_mass_factor_troposphere', 'smoothKey')] = np.concatenate((
+                    self.outdata[('air_mass_factor_troposphere', 'smoothKey')], trop_airmass))
                 for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'Smoothing')
+                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'smoothKey')
                     self.outdata[varname_ak] = np.concatenate(
                         (self.outdata[varname_ak], avg_kernel[..., k].ravel()))
                     varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
@@ -173,7 +173,7 @@ class tropomi(object):
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)
-            vkey = (varname, 'MetaData')
+            vkey = (varname, 'smoothKey')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
             self.varAttrs[vkey]['units'] = ''
 
