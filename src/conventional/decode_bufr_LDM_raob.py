@@ -444,6 +444,11 @@ def read_bufr_message(f, count, start_pos, data):
     # have to do things differently.
     compressed = ecc.codes_get(bufr, 'compressedData')
 
+    # Unfortunately, there is absolutely no way to handle compressed data with number of subsets>1
+    if compressed and nsubsets > 1:
+        logging.warning(f"CANNOT handle compressed data, skipping ({msg_size} bytes)")
+        return data, count, start_pos
+
     '''
         This will print absolutely every BUFR key in the message.
             print(" ")
