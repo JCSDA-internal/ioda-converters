@@ -72,6 +72,7 @@ end type report_conv
 type(report_conv), pointer :: phead=>null(), plink=>null()
 
 integer(i_kind), parameter :: lim_qm = 4
+character(len=1), parameter :: NULL = char(0)
 
 contains
 
@@ -448,6 +449,7 @@ subroutine read_prepbufr(filename, filedate)
 
       plink % msg_type(1:8) = subset
       plink % stid(1:5)     = csid(1:5)
+      plink % stid(6:)      = NULL
       plink % rptype        = kx
       plink % t29           = t29
       plink % lon           = hdr(2)
@@ -712,7 +714,8 @@ subroutine sort_obs_conv
          allocate (xdata(i)%xinfo_char (nlocs(i), nvar_info))
          xdata(i)%xinfo_int  (:,:) = missing_i
          xdata(i)%xinfo_float(:,:) = missing_r
-         xdata(i)%xinfo_char (:,:) = ''
+         ! xdata(i)%xinfo_char (:,:) = ''
+         xdata(i)%xinfo_char (:,:)(1:nstring) = NULL
 
          if ( nvars(i) > 0 ) then
             allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
