@@ -449,7 +449,9 @@ subroutine read_prepbufr(filename, filedate)
 
       plink % msg_type(1:8) = subset
       plink % stid(1:5)     = csid(1:5)
-      plink % stid(6:)      = CHNULL
+      do n = 6, nstring
+         plink % stid(n:n)  = CHNULL
+      end do
       plink % rptype        = kx
       plink % t29           = t29
       plink % lon           = hdr(2)
@@ -715,7 +717,9 @@ subroutine sort_obs_conv
          xdata(i)%xinfo_int  (:,:) = missing_i
          xdata(i)%xinfo_float(:,:) = missing_r
          ! xdata(i)%xinfo_char (:,:) = ''
-         xdata(i)%xinfo_char (:,:)(1:nstring) = CHNULL
+         do n = 1, nstring
+            xdata(i)%xinfo_char (:,:)(n:n) = CHNULL
+         end do
 
          if ( nvars(i) > 0 ) then
             allocate (xdata(i)%xfield(nlocs(i), nvars(i)))
@@ -1187,13 +1191,16 @@ subroutine init_report(self)
   class (report_conv), intent(inout) :: self
   real(r_kind)    :: rfill
   integer(i_kind) :: ifill
+  integer:: n
 
   rfill = missing_r
   ifill = missing_i
 
    self % msg_type  = ''
-   self % stid      = ''
    self % datetime  = ''
+   do n = 1, nstring
+      self % stid(n:n) = CHNULL
+   end do
    self % lon       = rfill
    self % lat       = rfill
    self % dhr       = rfill
