@@ -653,7 +653,7 @@ subroutine sort_obs_conv
 
    implicit none
 
-   integer(i_kind)                       :: i, iv, k, ii
+   integer(i_kind)                       :: i, iv, k, ii, n
    integer(i_kind)                       :: ityp, irec, ivar
    integer(i_kind), dimension(nobtype)   :: nrecs
    integer(i_kind), dimension(nobtype)   :: nlocs
