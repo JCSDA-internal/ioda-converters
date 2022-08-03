@@ -248,7 +248,7 @@ def main():
 
         # only read files in the window.
         rawFilesOut = []
-        for fi,f in enumerate(rawFiles):
+        for fi, f in enumerate(rawFiles):
             vv = f.split('_')
             # 2020m1216t011958.h5 2020m1215t222840
             startDateFile = datetime.strptime(vv[-3][0:-2], "%Ym%m%dt%H%M")

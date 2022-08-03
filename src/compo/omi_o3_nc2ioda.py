@@ -328,7 +328,7 @@ def main():
         rawFiles.sort()
         # only read files in window
         rawFilesOut = []
-        for fi,f in enumerate(rawFiles):
+        for fi, f in enumerate(rawFiles):
             vv = f.split('_')
             # v003-2020m1214t060743.he5 2020m1214t0003-o87313
             startDateFile = datetime.strptime(vv[-2][0:-7], "%Ym%m%dt%H%M")
