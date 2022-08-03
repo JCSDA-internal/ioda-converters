@@ -199,6 +199,9 @@ def ExtractObsData(ObsData, loc_key_list):
         if (VarType in [float, np.float32, np.float64]):
             defaultval = get_default_fill_val(np.float32)
             defaultvaltype = np.float32
+        elif ((VarType in [np.int64]) and (o == ('dateTime', 'MetaData'))):
+            defaultval = get_default_fill_val(np.int64)
+            defaultvaltype = np.int64
         elif (VarType in [int, np.int64, np.int32, np.int8]):
             defaultval = get_default_fill_val(np.int32)
             defaultvaltype = np.int32
