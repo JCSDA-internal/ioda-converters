@@ -33,7 +33,7 @@ locationKeyList = [
 
 
 obsvars = {
-    'A': "aerosol_optical_depth",
+    'A': "aerosol_optical_depth_4",
 }
 
 AttrData = {
