@@ -456,7 +456,10 @@ namespace Ingester
             {
                 for (size_t i = 0; i < data_.size(); i++)
                 {
-                    data_[i] = static_cast<T>(static_cast<double>(data_[i]) * val);
+                    if (data_[i] != missingValue())
+                    {
+                        data_[i] = static_cast<T>(static_cast<double>(data_[i]) * val);
+                    }
                 }
             }
             else
@@ -493,7 +496,10 @@ namespace Ingester
         {
             for (size_t i = 0; i < data_.size(); i++)
             {
-                data_[i] = data_[i] + static_cast<T>(val);
+                if (data_[i] != missingValue())
+                {
+                    data_[i] = data_[i] + static_cast<T>(val);
+                }
             }
         }
 
