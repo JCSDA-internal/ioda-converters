@@ -331,8 +331,8 @@ namespace bufr {
              repIdx < std::min(dims.size(), targetField.seqCounts.size());
              ++repIdx)
         {
-            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) - \
-                              targetField.seqCounts[repIdx] * \
+            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
+                              targetField.seqCounts[repIdx] *
                               product<int>(dims.begin() + repIdx + 1, dims.end());
         }
 

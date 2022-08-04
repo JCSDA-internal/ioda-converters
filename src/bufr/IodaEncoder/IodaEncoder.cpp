@@ -94,14 +94,11 @@ namespace Ingester
                 {
                     auto dataObject = dataContainer->get(dimDesc.source, categories);
 
-                    for (std::size_t dimIdx  = 1; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
-                    {
-                        dimMap[dimDesc.name] = dataObject->createDimensionData(dimDesc.name,
-                                                                               dimIdx);
-                    }
+                    dimMap[dimDesc.name] = dataObject->createDimensionData(
+                        dimDesc.name,
+                        dataObject->getDimPaths().size() - 1);
                 }
             }
-
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
@@ -135,7 +132,6 @@ namespace Ingester
                             dimMap[dimName] = dataObject->createDimensionData(dimName, dimIdx);
                         }
                     }
-
                 }
             }
 
