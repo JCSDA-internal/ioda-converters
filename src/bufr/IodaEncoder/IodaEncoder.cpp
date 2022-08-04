@@ -17,7 +17,7 @@
 #include "ioda/Layout.h"
 #include "ioda/Misc/DimensionScales.h"
 
-#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string.hpp>
 
 
 namespace Ingester
@@ -64,22 +64,43 @@ namespace Ingester
                     dimPaths.insert(path);
                 }
 
-                namedExtraDims.insert({dim.paths, dim.name});
+                namedExtraDims.insert({dim.paths, dim});
             }
         }
 
         for (const auto& categories : dataContainer->allSubCategories())
         {
             // Create the dimensions variables
-            std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> dimMap;
+            std::map<std::string, std::shared_ptr<DimensionDataBase>> dimMap;
 
             auto dataObjectGroupBy = dataContainer->getGroupByObject(
                 description_.getVariables()[0].source, categories);
 
-            dimMap[LocationName] = ioda::NewDimensionScale<int>(
-                LocationName, dataObjectGroupBy->getDims()[0]);
+            auto rootDim = std::make_shared<DimensionData<uint32_t>>();
+            rootDim->dimScale =
+                ioda::NewDimensionScale<int>(LocationName, dataObjectGroupBy->getDims()[0]);
+            rootDim->data = std::vector<uint32_t>(dataObjectGroupBy->getDims()[0], 0);
+            dimMap[LocationName] = rootDim;
 
-            namedLocDims[{dataObjectGroupBy->getDimPaths()[0]}] = LocationName;
+            auto rootLocation = DimensionDescription();
+            rootLocation.name = LocationName;
+            rootLocation.source = "";
+
+            namedLocDims[{dataObjectGroupBy->getDimPaths()[0]}] = rootLocation;
+
+            for (const auto& dimDesc : description_.getDims())
+            {
+                if (!dimDesc.source.empty())
+                {
+                    auto dataObject = dataContainer->get(dimDesc.source, categories);
+
+                    for (std::size_t dimIdx  = 1; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
+                    {
+                        dimMap[dimDesc.name] = dataObject->createDimensionData(dimDesc.name,
+                                                                               dimIdx);
+                    }
+                }
+            }
 
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
@@ -93,7 +114,7 @@ namespace Ingester
 
                     if (existsInNamedPath(dimPath, namedExtraDims))
                     {
-                        dimName = nameForDimPath(dimPath, namedExtraDims);
+                        dimName = dimForDimPath(dimPath, namedExtraDims).name;
                     }
                     else
                     {
@@ -101,15 +122,20 @@ namespace Ingester
                         newDimStr << DefualtDimName << "_" << autoGenDimNumber;
 
                         dimName = newDimStr.str();
-                        namedExtraDims[{dimPath}] = dimName;
+
+                        auto dimDesc = DimensionDescription();
+                        dimDesc.name = dimName;
+                        dimDesc.source = "";
+
+                        namedExtraDims[{dimPath}] = dimDesc;
                         autoGenDimNumber++;
+
+                        if (dimMap.find(dimName) == dimMap.end())
+                        {
+                            dimMap[dimName] = dataObject->createDimensionData(dimName, dimIdx);
+                        }
                     }
 
-                    if (dimMap.find(dimName) == dimMap.end())
-                    {
-                        dimMap[dimName] = ioda::NewDimensionScale<int>(dimName,
-                                          dataObject->getDims()[dimIdx]);
-                    }
                 }
             }
 
@@ -153,7 +179,7 @@ namespace Ingester
             ioda::NewDimensionScales_t allDims;
             for (auto dimPair : dimMap)
             {
-                allDims.push_back(dimPair.second);
+                allDims.push_back(dimPair.second->dimScale);
             }
 
             auto policy = ioda::detail::DataLayoutPolicy::Policies::ObsGroup;
@@ -171,10 +197,10 @@ namespace Ingester
             {
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
-                auto data = dataContainer->get(varDesc.source, categories);
-                for (size_t dimIdx = 0; dimIdx < data->getDims().size(); dimIdx++)
+                auto dataObject = dataContainer->get(varDesc.source, categories);
+                for (size_t dimIdx = 0; dimIdx < dataObject->getDims().size(); dimIdx++)
                 {
-                    auto dimPath = data->getDimPaths()[dimIdx];
+                    auto dimPath = dataObject->getDimPaths()[dimIdx];
 
                     NamedPathDims namedPathDims;
                     if (dimIdx == 0)
@@ -186,7 +212,9 @@ namespace Ingester
                         namedPathDims = namedExtraDims;
                     }
 
-                    auto dimVar = obsGroup.vars[nameForDimPath(dimPath, namedPathDims)];
+                    auto dimName = dimForDimPath(dimPath, namedPathDims).name;
+                    auto dimVar = obsGroup.vars[dimName];
+                    dimMap[dimName]->writeInto(dimVar);
                     dimensions.push_back(dimVar);
 
                     if (dimIdx < varDesc.chunks.size())
@@ -200,11 +228,11 @@ namespace Ingester
                     }
                 }
 
-                auto var = data->createVariable(obsGroup,
-                                                varDesc.name,
-                                                dimensions,
-                                                chunks,
-                                                varDesc.compressionLevel);
+                auto var = dataObject->createVariable(obsGroup,
+                                                      varDesc.name,
+                                                      dimensions,
+                                                      chunks,
+                                                      varDesc.compressionLevel);
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
 
@@ -305,20 +333,20 @@ namespace Ingester
         return false;
     }
 
-    std::string IodaEncoder::nameForDimPath(const std::string& path,
-                const NamedPathDims& pathMap) const
+    DimensionDescription IodaEncoder::dimForDimPath(const std::string& path,
+                                                    const NamedPathDims& pathMap) const
     {
-        std::string name;
+        DimensionDescription dimDesc;
 
         for (auto paths : pathMap)
         {
             if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
             {
-                name = paths.second;
+                dimDesc = paths.second;
                 break;
             }
         }
 
-        return name;
+        return dimDesc;
     }
 }  // namespace Ingester

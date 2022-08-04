@@ -26,6 +26,24 @@ namespace Ingester
 
     const float MissingValue = 10e10;
 
+    struct DimensionDataBase
+    {
+        std::shared_ptr<ioda::NewDimensionScale_Base> dimScale;
+
+        virtual void writeInto(ioda::Variable& var) = 0;
+    };
+
+    template<typename T>
+    struct DimensionData : public DimensionDataBase
+    {
+        std::vector<T> data;
+
+        void writeInto(ioda::Variable& var)
+        {
+            var.write(data);
+        }
+    };
+
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
     class DataObjectBase
@@ -60,6 +78,10 @@ namespace Ingester
         /// \brief Print the data object to stdout.
         virtual void print() const = 0;
 
+        /// \brief Get the query string.
+        /// \return The query string
+        std::string getQuery() const { return query_; }
+
         /// \brief Get the data at the location as an integer.
         /// \return Integer data.
         virtual int getAsInt(const Location& loc) const = 0;
@@ -92,6 +114,11 @@ namespace Ingester
                                       const std::vector<ioda::Variable>& dimensions,
                                       const std::vector<ioda::Dimensions_t>& chunks,
                                       int compressionLevel) const = 0;
+
+        /// \brief Makes an new dimension scale
+        virtual std::shared_ptr<DimensionDataBase> createDimensionData(
+                                                                    const std::string& name,
+                                                                    std::size_t dimIdx) const = 0;
 
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
@@ -145,6 +172,23 @@ namespace Ingester
             var.write(data_);
             return var;
         };
+
+        /// \brief Makes an new dimension scale
+        virtual std::shared_ptr<DimensionDataBase> createDimensionData(const std::string& name,
+                                                                        std::size_t dimIdx) const
+        {
+            auto dimData = std::make_shared<DimensionData<T>>();
+            dimData->dimScale = ioda::NewDimensionScale<T>(name, getDims()[dimIdx]);
+            dimData->data.resize(getDims()[dimIdx]);
+
+            for (size_t idx = 0; idx < dimData->data.size(); idx++)
+            {
+                dimData->data[idx] = data_[idx];
+                std::cout << dimData->data[idx] << " ";
+            }
+
+            return dimData;
+        }
 
         /// \brief Print data to stdout for debug purposes.
         void print() const final
