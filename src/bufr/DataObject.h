@@ -30,7 +30,7 @@ namespace Ingester
     {
         std::shared_ptr<ioda::NewDimensionScale_Base> dimScale;
 
-        virtual void writeInto(ioda::Variable& var) = 0;
+        virtual void write(ioda::Variable& var) = 0;
     };
 
     template<typename T>
@@ -38,7 +38,7 @@ namespace Ingester
     {
         std::vector<T> data;
 
-        void writeInto(ioda::Variable& var)
+        void write(ioda::Variable& var)
         {
             var.write(data);
         }

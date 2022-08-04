@@ -192,6 +192,33 @@ namespace Ingester
                 global->addTo(rootGroup);
             }
 
+            // Create Dimension Variables
+            for (const auto& dimDesc : description_.getDims())
+            {
+                if (!dimDesc.source.empty())
+                {
+                    auto dataObject = dataContainer->get(dimDesc.source, categories);
+                    for (size_t dimIdx = 0; dimIdx < dataObject->getDims().size(); dimIdx++)
+                    {
+                        auto dimPath = dataObject->getDimPaths()[dimIdx];
+
+                        NamedPathDims namedPathDims;
+                        if (dimIdx == 0)
+                        {
+                            namedPathDims = namedLocDims;
+                        }
+                        else
+                        {
+                            namedPathDims = namedExtraDims;
+                        }
+
+                        auto dimName = dimForDimPath(dimPath, namedPathDims).name;
+                        auto dimVar = obsGroup.vars[dimName];
+                        dimMap[dimName]->write(dimVar);
+                    }
+                }
+            }
+
             // Create Variables
             for (const auto& varDesc : description_.getVariables())
             {
@@ -212,9 +239,7 @@ namespace Ingester
                         namedPathDims = namedExtraDims;
                     }
 
-                    auto dimName = dimForDimPath(dimPath, namedPathDims).name;
-                    auto dimVar = obsGroup.vars[dimName];
-                    dimMap[dimName]->writeInto(dimVar);
+                    auto dimVar = obsGroup.vars[dimForDimPath(dimPath, namedPathDims).name];
                     dimensions.push_back(dimVar);
 
                     if (dimIdx < varDesc.chunks.size())
