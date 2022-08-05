@@ -30,8 +30,8 @@ os.environ["TZ"] = "UTC"
 locationKeyList = [
     ("station_id", "string", "", "keep"),
     # ("station_name", "string", "", "keep"),
-    ("wmoBlockNumber", "integer", "", "keep"),
-    ("wmoStationNumber", "integer", "", "keep"),
+    ("wmoBlockNumber", "integer", "", "toss"),
+    ("wmoStationNumber", "integer", "", "toss"),
     ("latitude", "float", "degrees_north", "keep"),
     ("longitude", "float", "degrees_east", "keep"),
     ("station_elevation", "float", "m", "keep"),
@@ -82,12 +82,13 @@ obsvars = ['air_temperature',
            'eastward_wind',
            'northward_wind',
            'surface_pressure']
-obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1', 'Pa']
-obserrlist = [1.2, 0.75E-3, 1.7, 1.7, 120.0]
+obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
+obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7, 120.0]
 
 VarDims = {
     'air_temperature': ['nlocs'],
     'specific_humidity': ['nlocs'],
+    'virtual_temperature': ['nlocs'],
     'eastward_wind': ['nlocs'],
     'northward_wind': ['nlocs'],
     'surface_pressure': ['nlocs']
@@ -181,9 +182,12 @@ def main(file_names, output_file):
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
         dtypestr = locationKeyList[meta_keys.index(key)][1]
-        varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
-        obs_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
+        keep_or_toss = locationKeyList[meta_keys.index(key)][3]
+        if (keep_or_toss == "keep"):
+            if locationKeyList[meta_keys.index(key)][2]:
+                varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+            obs_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
 
     # Transfer from the 1-D data vectors and ensure output data (obs_data) types using numpy.
     for n, iodavar in enumerate(obsvars):
@@ -340,6 +344,7 @@ def read_file(file_name, count, start_pos, data):
     f = open(file_name, 'rb')
 
     while True:
+        count[0] += 1
         # Use eccodes to decode each bufr message in the file
         data, count, start_pos = read_bufr_message(f, count, start_pos, data)
 
@@ -364,7 +369,7 @@ def read_bufr_message(f, count, start_pos, data):
         bufr = ecc.codes_bufr_new_from_file(f)
         try:
             msg_size = ecc.codes_get_message_size(bufr)
-            logging.info(f"   will attempt to read BUFR msg with size: ({msg_size} bytes)")
+            logging.info(f"Will attempt to read BUFR msg [{count[0]}] with size: ({msg_size} bytes)")
         except:      # noqa
             return data, count, None
     except ecc.CodesInternalError:
@@ -390,30 +395,17 @@ def read_bufr_message(f, count, start_pos, data):
         nsubsets = 1
         pass
 
+    # replication factors make no sense for single ob SYNOP, but just falsify with vector of ones.
+    repfacs = []
+    if nsubsets > 1:
+        for n in range(nsubsets):
+            repfacs.append(1)
+    else:
+        repfacs.append(1)
+
     # Are the data compressed or uncompressed?  If the latter, then when nsubsets>1, we
     # have to do things differently.
     compressed = ecc.codes_get(bufr, 'compressedData')
-
-    # If multiple observations in a single msg, repfacs will be a vector of the obs within.
-    repfacs = []
-    try:
-        repfacs = ecc.codes_get_array(bufr, 'extendedDelayedDescriptorReplicationFactor').tolist()
-    except ecc.KeyValueNotFoundError:
-        try:
-            repfacs = ecc.codes_get_array(bufr, 'extendedDelayedDescriptorAndDataRepetitionFactor').tolist()
-        except ecc.KeyValueNotFoundError:
-            try:
-                repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorReplicationFactor').tolist()
-            except ecc.KeyValueNotFoundError:
-                try:
-                    repfacs = ecc.codes_get_array(bufr, 'delayedDescriptorAndDataRepetitionFactor').tolist()
-                except ecc.KeyValueNotFoundError:
-                    try:
-                        repfacs = ecc.codes_get_array(bufr, 'shortDelayedDescriptorReplicationFactor').tolist()
-                    except ecc.KeyValueNotFoundError:
-                        pass
-    if repfacs or nsubsets > 1:
-        logging.debug(f"Data are compressed {compressed} with subsets={nsubsets} and repfacs: {repfacs}")
 
     # First, get the MetaData we are interested in (list is in metaDataKeyList)
     max_mlen = 0
@@ -436,7 +428,6 @@ def read_bufr_message(f, count, start_pos, data):
         else:
             if (v[0] != 'Constructed'):
                 try:
-                    #print(f"attempting to retrieve: {v[0]}")
                     avals = ecc.codes_get_array(bufr, v[0])
                     max_mlen = max(max_mlen, len(avals))
                     temp_data[k] = assign_values(avals, k)
@@ -457,16 +448,13 @@ def read_bufr_message(f, count, start_pos, data):
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all ObsValue variables are float type, might need integer/other.
     max_dlen = 0
-    repfactors = {}
     for variable in raw_obsvars:
         temp_data[variable] = []
-        repfactors[variable] = []
         if not compressed and nsubsets > 1:
             for n in range(nsubsets):
                 var = '/subsetNumber=' + str(n+1) + '/' + variable
                 try:
                     avals = ecc.codes_get_array(bufr, var)
-                    repfactors[variable].append(len(avals))
                     temp_data[variable] = np.append(temp_data[variable], assign_values(avals, variable))
                 except ecc.KeyValueNotFoundError:
                     logging.debug("Caution, unable to find requested BUFR variable: " + variable)
@@ -474,35 +462,21 @@ def read_bufr_message(f, count, start_pos, data):
         else:
             try:
                 avals = ecc.codes_get_array(bufr, variable)
-                repfactors[variable].append(len(avals))
                 max_dlen = max(max_dlen, len(avals))
                 temp_data[variable] = assign_values(avals, variable)
             except ecc.KeyValueNotFoundError:
                 logging.debug("Caution, unable to find requested BUFR variable: " + variable)
                 temp_data[variable] = None
 
-    if not repfacs:
-        for variable in raw_obsvars:
-            if repfactors[variable]:
-                repfacs = repfactors[variable]
-                break
-
-    # From repfacs, make begin/end indicies for single or multiple soundings.
+    # From repfacs, make begin/end indicies for single or multiple obs in single msg.
     nbeg = []
     nend = []
-    if repfacs:
-        if nsubsets > 1:
-            if nsubsets != len(repfacs):
-                logging.warning(f"Nonsense: number of subsets, {nsubsets} is not equal to "
-                                f"the length of repfacs vector, {len(repfacs)}")
-            nend = np.cumsum(repfacs)
-            nbeg = np.insert(nend[:-1], 0, 0)
-        else:
-            nbeg.append(0)
-            nend.append(repfacs[0]-1)
+    if nsubsets > 1:
+        nend = np.cumsum(repfacs)
+        nbeg = np.insert(nend[:-1], 0, 0)
     else:
         nbeg.append(0)
-        nend.append(int(1E6))
+        nend.append(1)
 
     # Be done with this BUFR message.
     ecc.codes_release(bufr)
@@ -513,16 +487,19 @@ def read_bufr_message(f, count, start_pos, data):
     # number from some other variable (the multi-IF-block test below).
     obnum = 0
     for b, e in tuple(zip(nbeg, nend)):
-        if b < 0 or e < 0 or e <= b:
-            logging.warning(f"Skipping nonsense BUFR msg with a negative index [{b},{e}]")
-            return data, count, start_pos
-        logging.debug(f"Within BUFR msg, processing ob {obnum+1} with bounds: [{b},{e-1}]")
-        if e < 999999:
+        if b <= 0 and e <= 0:
+            b = 0
+            e = 1
+            target_number = 1
+        elif e <= b:
+            e = b + 1
+            target_number = e - b
+        elif e < 999999:
             target_number = e - b
         else:
             logging.debug("Msg did not contain repfacs, trying to determine target number of obs")
             if temp_data[var_mimic_length] is not None:
-                target_number = len(meta_data[var_mimic_length])
+                target_number = len(temp_data[var_mimic_length])
             if temp_data['airTemperature'] is not None:
                 target_number = len(temp_data['airTemperature'])
             elif temp_data['windSpeed'] is not None:
@@ -530,8 +507,10 @@ def read_bufr_message(f, count, start_pos, data):
             else:
                 print("HOW on earth is target_number zero?  BUFR sucks!")
                 return data, count, start_pos
+            b = 0
             e = target_number
-        logging.debug("Target number of obs in this BUFR message: " + str(target_number))
+        logging.debug(f"Within BUFR msg, processing ob {obnum+1} with bounds: [{b},{e-1}]")
+        logging.debug(f"Target number of obs in this BUFR message: {target_number}")
 
         empty = []
         for k, v in metaDataKeyList.items():
@@ -605,9 +584,9 @@ def read_bufr_message(f, count, start_pos, data):
                 nbad += 1
 
         if nbad == len(raw_obsvars):
-            logging.warning(f"No usable data in this ob, skipping it.")
+            logging.warning(f"No usable data in this ob.")
             count[2] += target_number
-            return data, count, start_pos
+            # return data, count, start_pos
 
         count[1] += target_number
 
@@ -647,17 +626,24 @@ def read_bufr_message(f, count, start_pos, data):
                         qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
                         tvirt[n] = temp*(1.0 + 0.61*qvapor)
 
+        psfc = np.full(target_number, float_missing_value)
+        for n, p in enumerate(vals['nonCoordinatePressure']):
+            if p:
+                if (p > 30000 and p < 109900):
+                    psfc[n] = p
+
         # Finally fill up the output data dictionary with observed variables.
         data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
         data['northward_wind'] = np.append(data['northward_wind'], vwnd)
         data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
         data['air_temperature'] = np.append(data['air_temperature'], airt)
         data['virtual_temperature'] = np.append(data['virtual_temperature'], tvirt)
+        data['surface_pressure'] = np.append(data['surface_pressure'], tvirt)
 
         obnum += 1
 
-    logging.info("number of observations so far: " + str(count[1]))
-    logging.info("number of invalid or useless observations: " + str(count[2]))
+    logging.info(f"number of observations so far: {count[1]} from {count[0]} BUFR msgs.")
+    logging.info(f"number of invalid or useless observations: {count[2]}")
     start_pos = f.tell()
     return data, count, start_pos
 
