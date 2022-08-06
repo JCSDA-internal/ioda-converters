@@ -250,7 +250,7 @@ integer(i_kind) :: count, i, ii, jj, ij, iv
 integer(i_kind) :: iband, isegm
 integer(i_kind) :: ierr
 integer(i_kind) :: nlocs, nvars, iloc
-integer(i_kind) :: ihh, imm, idd, jday
+integer(i_kind) :: ihh, imm, idd, jday, flength, rvalue
 integer(i_kind) :: iunit = 21
 real(r_double)  :: lon, lat
 real(r_double)  :: radiance, tbb
@@ -308,7 +308,7 @@ do iband = 1, nband
    do isegm = 1, nsegm
       ifile = isegm + (iband-1) * nsegm
       if ( .not. fexist(ifile) ) cycle
-      open(iunit, file=trim(fnames(ifile)), form='unformatted', access='stream', status='old', convert='little_endian')
+      open(newunit=iunit, file=trim(fnames(ifile)), form='unformatted', action='read', access='stream', status='old', convert='little_endian')
       print*,'Reading from ', trim(fnames(ifile))
 
       read(iunit) header%basic%headerNum, header%basic%blockLen, header%basic%numHeader, header%basic%byteOrder, header%basic%satName, header%basic%procCenter, header%basic%obsArea, header%basic%dummy2, header%basic%hhnn, header%basic%obsStartTime, header%basic%obsEndTime, header%basic%fileCreateTime, header%basic%totalHeaderLen, header%basic%dataLen, header%basic%qcflag1, header%basic%qcflag2, header%basic%qcflag3, header%basic%qcflag4, header%basic%version, header%basic%fileName, header%basic%dummy40
@@ -334,11 +334,19 @@ do iband = 1, nband
          allocate(header%obsTime%obsMJD(numObs))
       end if
       read(iunit) header%obstime%lineNo, header%obstime%obsMJD, header%obstime%dummy40
+      read(iunit) header%error%headerNum, header%error%blockLen, header%error%errorNum, header%error%dummy40
+      read(iunit) header%dummy%headerNum, header%dummy%blockLen, header%dummy%dummy256
+
       npix = header%data%nPix
       nlin = header%data%nLin
       ntotal = npix * nlin
       allocate(idata(ntotal))
-      read(iunit) idata
+
+      inquire(file=trim(fnames(ifile)), size=flength)
+      flength = flength - (npix * nlin *2)
+      call fseek(iunit, flength, 0, rvalue)
+      read(iunit) idata(:)
+
       startLine = header%segm%startLineNo
       endLine = startLine + header%data%nLin - 1
 !print*,ifile, trim(fnames(ifile)), header%data%nPix, header%data%nLin, startLine, endLine
@@ -400,7 +408,6 @@ do iband = 1, nband
 !print*,iband+6, ij, ii, jj, count, tbb, lon, lat, solzen(ipixel, iline), satzen(ipixel, iline)
                brit(ipixel, iline, iband) = tbb
             end if
-
          end do ! pixel
       end do ! line
 
@@ -414,7 +421,6 @@ do iband = 1, nband
          deallocate(header%navicorr%columnShift)
          deallocate(header%navicorr%lineShift)
       end if
-
       close(iunit)
 
    end do
@@ -558,6 +564,7 @@ subroutine pixlin_to_lonlat(pix, lin, lon, lat, ierr)
 
  ! intermediate coordinates (x,y)
  ! Global Specification 4.4.4 Scaling Function
+ ! https://www.cgms-info.org/wp-content/uploads/2021/10/cgms-lrit-hrit-global-specification-(v2-8-of-30-oct-2013).pdf
  !    c = COFF + nint(x * 2^-16 * CFAC)
  !    l = LOFF + nint(y * 2^-16 * LFAC)
  ! The intermediate coordinates (x,y) are as follows :
