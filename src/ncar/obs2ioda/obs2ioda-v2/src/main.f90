@@ -47,13 +47,14 @@ character (len=StrLen)  :: inpdir, outdir, cdatetime
 logical                 :: fexist
 logical                 :: do_radiance
 logical                 :: do_radiance_hyperIR
-logical                 :: do_ahi
+logical                 :: do_ahi, do_superob
 logical                 :: apply_gsi_qc
 logical                 :: time_split
 integer(i_kind)         :: nfgat, hour_fgat
 integer(i_kind)         :: nfile, ifile
 integer(i_kind)         :: itmp
 integer(i_kind)         :: itime
+integer(i_kind)         :: superob_halfwidth
 character (len=DateLen14) :: dtime, datetmp
 
 
@@ -61,6 +62,7 @@ do_tv_to_ts = .true.
 do_radiance = .false. ! initialize
 do_radiance_hyperIR = .false. ! initialize
 do_ahi = .false.
+do_superob = .false.
 apply_gsi_qc = .true. !.false.
 time_split = .false.
 
@@ -260,7 +262,7 @@ if ( do_ahi ) then
       write(*,*) 'Error: -t ccyymmddhhnn not specified for -ahi'
       stop
    end if
-   call read_HSD(cdatetime, inpdir)
+   call read_HSD(cdatetime, inpdir, do_superob, superob_halfwidth)
    filedate = cdatetime(1:10)
    call write_obs(filedate, write_nc_radiance_geo, outdir, 1)
    if ( allocated(xdata) ) deallocate(xdata)
@@ -275,7 +277,7 @@ subroutine parse_files_to_convert
 implicit none
 
 integer(i_kind)       :: iunit = 21
-integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample
+integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample, iarg_superob_halfwidth
 integer(i_kind)       :: itmp
 integer(i_kind)       :: iost, iret, idate
 character(len=StrLen) :: strtmp
@@ -291,6 +293,7 @@ iarg_inpdir = -1
 iarg_outdir = -1
 iarg_datetime = -1
 iarg_subsample = -1
+iarg_superob_halfwidth = -1
 if ( narg > 0 ) then
    do iarg = 1, narg
       call get_command_argument(number=iarg, value=strtmp)
@@ -312,6 +315,9 @@ if ( narg > 0 ) then
          iarg_datetime = iarg + 1
       else if ( trim(strtmp) == '-s' ) then
          iarg_subsample = iarg + 1
+      else if ( trim(strtmp) == '-superob' ) then
+         do_superob = .true.
+         iarg_superob_halfwidth = iarg + 1
       else
          if ( iarg == iarg_inpdir ) then
             call get_command_argument(number=iarg, value=inpdir)
@@ -325,6 +331,13 @@ if ( narg > 0 ) then
               read(strtmp,'(i2)') subsample
             else
               subsample = 1
+            end if
+         else if ( iarg == iarg_superob_halfwidth ) then
+            call get_command_argument(number=iarg, value=strtmp)
+            if ( len_trim(strtmp) > 0 ) then
+              read(strtmp,'(i2)') superob_halfwidth
+            else
+              iarg_superob_halfwidth = 1
             end if
          else
             ifile = ifile + 1
