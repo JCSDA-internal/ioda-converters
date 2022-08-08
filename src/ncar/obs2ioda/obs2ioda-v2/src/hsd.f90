@@ -444,6 +444,7 @@ do iband = 1, nband
       offset = flength - (npix * nlin *2)
       ! Reposition the file to the offset value for reading
       call fseek(iunit, offset, 0, rvalue)
+      read(iunit)idata(:)
 
       startLine = header%segm%startLineNo
       endLine = startLine + header%data%nLin - 1
