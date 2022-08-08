@@ -99,23 +99,32 @@ namespace bufr {
 
     TypeInfo DataProvider::getTypeInfo(FortranIdx idx) const
     {
-        char unitCStr[20];
+        static const unsigned int UNIT_STR_LEN = 24;
+        static const unsigned int DESC_STR_LEN = 55;
+
+        char unitCStr[UNIT_STR_LEN];
+        char descCStr[DESC_STR_LEN];
 
         TypeInfo info;
-        get_type_info_f(bufrLoc_,
-                        getTag(idx).c_str(),
-                        &info.scale,
-                        &info.reference,
-                        &info.bits,
-                        unitCStr,
-                        20);
+        nemdefs_f(fileUnit_,
+                  getTag(idx).c_str(),
+                  unitCStr,
+                  UNIT_STR_LEN,
+                  descCStr,
+                  DESC_STR_LEN);
 
         // trim the unit string
         auto unitStr = std::string(unitCStr);
         size_t end = unitStr.find_last_not_of( " \n\r\t\f\v");
         unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);
-
         info.unit = unitStr;
+
+        nemspecs_f(fileUnit_,
+                   getTag(idx).c_str(),
+                   1,
+                   &info.scale,
+                   &info.reference,
+                   &info.bits);
 
         return info;
     }
