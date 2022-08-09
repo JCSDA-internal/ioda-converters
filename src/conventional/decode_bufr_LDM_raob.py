@@ -42,6 +42,11 @@ locationKeyList = [
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
     ("station_id", "string", "", "keep"),
+    ("instrumentType", "integer", "", "keep"),
+    ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
+    ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
+    ("temperatureSensorType", "integer", "", "keep"),
+    ("humiditySensorType", "integer", "", "keep"),
     ("year", "integer", "", "toss"),
     ("month", "integer", "", "toss"),
     ("day", "integer", "", "toss"),
@@ -68,11 +73,13 @@ metaDataKeyList = {
     'wmoStationNumber': ['stationNumber'],
     'station_id': ['Constructed'],
     # "stationLongName": 'shipOrMobileLandStationIdentifier',
-    # "instrumentType": 'radiosondeType',
+    "instrumentType": ['radiosondeType'],
+    "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
+    "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
+    "temperatureSensorType": ['temperatureSensorType'],
+    "humiditySensorType": ['humiditySensorType'],
     # "instrumentSerialNum": 'radiosondeSerialNumber',
     # "instrumentSoftwareVersion": 'softwareVersionNumber',
-    # "instrumentHumidityCorrectionInfo": 'correctionAlgorithmsForHumidityMeasurements',
-    # "instrumentRadiationCorrectionInfo": 'solarAndInfraredRadiationCorrection',
     'year': ['year'],
     'month': ['month'],
     'day': ['day'],
@@ -436,6 +443,11 @@ def read_bufr_message(f, count, start_pos, data):
     # Are the data compressed or uncompressed?  If the latter, then when nsubsets>1, we
     # have to do things differently.
     compressed = ecc.codes_get(bufr, 'compressedData')
+
+    # Unfortunately, there is absolutely no way to handle compressed data with number of subsets>1
+    if compressed and nsubsets > 1:
+        logging.warning(f"CANNOT handle compressed data, skipping ({msg_size} bytes)")
+        return data, count, start_pos
 
     '''
         This will print absolutely every BUFR key in the message.
