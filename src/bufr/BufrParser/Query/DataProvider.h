@@ -36,6 +36,7 @@ namespace bufr {
         int reference = 0;
         int bits = 0;
         std::string unit;
+        std::string description;
 
         bool isString() const { return unit == "CCITT IA5"; }
         bool isSigned() const  { return reference < 0; }
