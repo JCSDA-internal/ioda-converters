@@ -524,9 +524,7 @@ def read_bufr_message(f, count, start_pos, data):
                     meta_data[k] = np.full(target_number, temp_data[k][obnum])
                 else:
                     try:
-                        meta_data[k] = temp_data[k][b:e]
-                        if len(meta_data[k]) < target_number:
-                            meta_data[k] = np.full(target_number, meta_data[k][0])
+                        meta_data[k][b:e] = temp_data[k][b:e]
                     except Exception:
                         logging.warning(f"Failed copying temp_data to meta_data, var: {k}, ({b},{e}):{target_number}, len:{len(temp_data[k])}")
                         count[2] += target_number
