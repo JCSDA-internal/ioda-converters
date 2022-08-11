@@ -562,22 +562,21 @@ def read_bufr_message(f, count, start_pos, data):
             if (temp > 50 and temp < 345):
                 airt[n] = temp
 
-    spfh = np.full(target_number, float_missing_value)
-    tvirt = np.full(target_number, float_missing_value)
-    for n, dewpoint in enumerate(vals['dewpointTemperature']):
-        psfc = vals['nonCoordinatePressure'][n]
-        if dewpoint and psfc:
-            if (dewpoint > 90 and dewpoint < 325 and psfc > 30000 and psfc < 109900):
-                spfh[n] = met_utils.specific_humidity(dewpoint, psfc)
-                if (airt[n] != float_missing_value):
-                    qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
-                    tvirt[n] = temp*(1.0 + 0.61*qvapor)
-
     psfc = np.full(target_number, float_missing_value)
     for n, p in enumerate(vals['nonCoordinatePressure']):
         if p:
             if (p > 30000 and p < 109900):
                 psfc[n] = p
+
+    spfh = np.full(target_number, float_missing_value)
+    tvirt = np.full(target_number, float_missing_value)
+    for n, dewpoint in enumerate(vals['dewpointTemperature']):
+        if dewpoint:
+            if (dewpoint > 90 and dewpoint < 325 and psfc[n] != float_missing_value):
+                spfh[n] = met_utils.specific_humidity(dewpoint, psfc[n])
+                if (airt[n] != float_missing_value):
+                    qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
+                    tvirt[n] = airt[n]*(1.0 + 0.61*qvapor)
 
     # Finally fill up the output data dictionary with observed variables.
     data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
@@ -585,7 +584,7 @@ def read_bufr_message(f, count, start_pos, data):
     data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
     data['air_temperature'] = np.append(data['air_temperature'], airt)
     data['virtual_temperature'] = np.append(data['virtual_temperature'], tvirt)
-    data['surface_pressure'] = np.append(data['surface_pressure'], tvirt)
+    data['surface_pressure'] = np.append(data['surface_pressure'], psfc)
 
     logging.info(f"number of observations so far: {count[1]} from {count[0]} BUFR msgs.")
     logging.info(f"number of invalid or useless observations: {count[2]}")
