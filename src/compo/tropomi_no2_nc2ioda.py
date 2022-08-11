@@ -84,6 +84,9 @@ class tropomi(object):
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
             times = np.empty_like(qa_value, dtype=object)
             qa_value = qa_value.ravel()
+            # adding ability to pre filter the data using the qa value
+            # documentation recommends using > 0.75
+            flg = qa_value > 0.75
             qc_flag = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS']\
                 .variables['processing_quality_flags'][:]
             qc_flag = qc_flag.ravel().astype('int32')
@@ -104,66 +107,74 @@ class tropomi(object):
             ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
                 variables['surface_pressure'][:]
             # bottom of layer is vertice 0, very top layer is TOA (0hPa)
-            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, 0]
-            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, 0]
+            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:,:]
+            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:,:]
             # grab the averaging kernel
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
             if first:
                 # add metadata variables
-                self.outdata[('datetime', 'MetaData')] = times
-                self.outdata[('latitude', 'MetaData')] = lats
-                self.outdata[('longitude', 'MetaData')] = lons
-                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value
-                self.outdata[('troposphere_layer_index', 'RtrvlAncData')] = trop_layer
-                self.outdata[('air_mass_factor_total', 'RtrvlAncData')] = total_airmass
-                self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')] = trop_airmass
+                self.outdata[('datetime', 'MetaData')] = times[flg]
+                self.outdata[('latitude', 'MetaData')] = lats[flg]
+                self.outdata[('longitude', 'MetaData')] = lons[flg]
+                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
+                self.outdata[('troposphere_layer_index', 'RtrvlAncData')] = trop_layer[flg]
+                self.outdata[('air_mass_factor_total', 'RtrvlAncData')] = total_airmass[flg]
+                self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')] = trop_airmass[flg]
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_ak] = avg_kernel[..., k].ravel()
+                    self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg]
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_pr] = ak[k] + bk[k]*ps[...].ravel()
+                    self.outdata[varname_pr] = ak[k,0] + bk[k,0]*ps[...].ravel()[flg]
+                # add top vertice in IODA file, here it is 0hPa but can be different
+                # for other obs stream
+                varname_pr = ('pressure_level'+str(nlevs), 'RtrvlAncData')
+                self.outdata[varname_pr] = ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
-                    self.outdata[('datetime', 'MetaData')], times))
+                    self.outdata[('datetime', 'MetaData')], times[flg]))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('latitude', 'MetaData')], lats))
+                    self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('longitude', 'MetaData')], lons))
+                    self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value))
+                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
                 self.outdata[('troposphere_layer_index', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('troposphere_layer_index', 'RtrvlAncData')], trop_layer))
+                    self.outdata[('troposphere_layer_index', 'RtrvlAncData')], trop_layer[flg]))
                 self.outdata[('air_mass_factor_total', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('air_mass_factor_total', 'RtrvlAncData')], total_airmass))
+                    self.outdata[('air_mass_factor_total', 'RtrvlAncData')], total_airmass[flg]))
                 self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')], trop_airmass))
+                    self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')], trop_airmass[flg]))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = np.concatenate(
-                        (self.outdata[varname_ak], avg_kernel[..., k].ravel()))
+                        (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg]))
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()))
+                        (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()[flg]))
+                varname_pr = ('pressure_level_'+str(nles), 'RtrvlAncData')
+                self.outdata[varname_pr] = np.concatenate(
+                    (self.outdata[varname_pr], ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()[flg]))
+
             for ncvar, iodavar in obsvars.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
-                    data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()
-                    err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()
+                    data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()[flg]
+                    err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()[flg]
                 else:
-                    data = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar][:].ravel()
-                    err = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar+'_precision'][:].ravel()
+                    data = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar][:].ravel()[flg]
+                    err = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar+'_precision'][:].ravel()[flg]
                 if first:
                     self.outdata[self.varDict[iodavar]['valKey']] = data
                     self.outdata[self.varDict[iodavar]['errKey']] = err
-                    self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
+                    self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
                 else:
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['valKey']], data))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['errKey']], err))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
+                        (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
             first = False
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
