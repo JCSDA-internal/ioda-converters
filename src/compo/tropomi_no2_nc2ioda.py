@@ -129,7 +129,7 @@ class tropomi(object):
                     self.outdata[varname_pr] = ak[k,0] + bk[k,0]*ps[...].ravel()[flg]
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
-                varname_pr = ('pressure_level'+str(nlevs), 'RtrvlAncData')
+                varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 self.outdata[varname_pr] = ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
@@ -153,7 +153,7 @@ class tropomi(object):
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
                         (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()[flg]))
-                varname_pr = ('pressure_level_'+str(nles), 'RtrvlAncData')
+                varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 self.outdata[varname_pr] = np.concatenate(
                     (self.outdata[varname_pr], ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()[flg]))
 
