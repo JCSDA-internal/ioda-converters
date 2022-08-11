@@ -30,28 +30,19 @@ locationKeyList = [
     ("datetime", "string"),
 ]
 
-obsvars = {
-    'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
-    'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column',
-}
-
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'nvars': np.int32(1),
 }
 
 DimDict = {
 }
 
-VarDims = {
-    'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
-    'nitrogen_dioxide_in_total_column': ['nlocs'],
-}
-
 
 class tropomi(object):
-    def __init__(self, filenames):
+    def __init__(self, filenames,columnType):
         self.filenames = filenames
+        self.columnType = columnType
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -73,10 +64,12 @@ class tropomi(object):
         first = True
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
+
             # get global attributes
             AttrData['date_time_string'] = ncd.getncattr('time_reference')[0:19]+'Z'
             AttrData['sensor'] = ncd.getncattr('sensor')
             AttrData['platform'] = ncd.getncattr('platform')
+
             # many variables are time, scanline, ground_pixel
             # but others are just time, scanline
             lats = ncd.groups['PRODUCT'].variables['latitude'][:].ravel()
@@ -84,6 +77,7 @@ class tropomi(object):
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
             times = np.empty_like(qa_value, dtype=object)
             qa_value = qa_value.ravel()
+
             # adding ability to pre filter the data using the qa value
             # documentation recommends using > 0.75
             flg = qa_value > 0.75
@@ -94,25 +88,34 @@ class tropomi(object):
             for t in range(len(time1[0])):
                 times[0, t, :] = time1[0, t][0:19]+'Z'
             times = times.ravel()
-            # need additional variable to use the averaging kernel for DA
-            kernel_err = ncd.groups['PRODUCT'].\
-                variables['nitrogendioxide_tropospheric_column_precision_kernel'][:].ravel()
-            kernel_err_total = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].\
-                variables['nitrogendioxide_total_column_precision_kernel'][:].ravel()
             trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
             total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
             trop_airmass = ncd.groups['PRODUCT'].\
                 variables['air_mass_factor_troposphere'][:].ravel()
+            strat_airmass = ncd.groups['PRODUCT'].\
+                variables['air_mass_factor_stratosphere'][:].ravel()
+
             # get info to construct the pressure level array
             ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
                 variables['surface_pressure'][:]
+
             # bottom of layer is vertice 0, very top layer is TOA (0hPa)
             ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:,:]
             bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:,:]
+
             # grab the averaging kernel
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
+ 
+            # scale the avk using AMF ratio and tropopause level for trop or 
+            # strato columns
+            if self.columnType == 'tropo':
+              airMassRatio = total_airmass / trop_airmass
+            if self.columnType == 'total': 
+              obsvar =  
+            
+
             if first:
                 # add metadata variables
                 self.outdata[('datetime', 'MetaData')] = times[flg]
@@ -131,6 +134,7 @@ class tropomi(object):
                 # for other obs stream
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 self.outdata[varname_pr] = ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()
+
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
                     self.outdata[('datetime', 'MetaData')], times[flg]))
@@ -191,7 +195,7 @@ def main():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads TROPOMI NO2 netCDF files provided by NESDIS'
+            'Reads TROPOMI NO2 netCDF files: official Copernicus product'
             'and converts into IODA formatted output files. Multiple'
             'files are able to be concatenated.')
     )
@@ -205,11 +209,36 @@ def main():
         '-o', '--output',
         help="path of IODA output file",
         type=str, required=True)
+    required.add_argument(
+        '-c', '--column',
+        help="type of column: total or tropo",
+        type=str, required=True)
 
     args = parser.parse_args()
 
+
+    if args.column == "tropo":
+
+      obsvars = {
+        'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
+      }
+
+      VarDims = {
+        'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
+      }
+
+    else if args.column == "total":
+
+      obsvars = {
+        'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column',
+      }
+
+      VarDims = {
+        'nitrogen_dioxide_in_total_column': ['nlocs'],
+      }
+
     # Read in the NO2 data
-    no2 = tropomi(args.input)
+    no2 = tropomi(args.input,args.column)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
