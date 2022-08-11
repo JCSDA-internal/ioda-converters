@@ -248,11 +248,15 @@ def main():
 
         # only read files in the window.
         rawFilesOut = []
-        for f in rawFiles:
+        for fi, f in enumerate(rawFiles):
             vv = f.split('_')
             # 2020m1216t011958.h5 2020m1215t222840
             startDateFile = datetime.strptime(vv[-3][0:-2], "%Ym%m%dt%H%M")
-            endDateFile = datetime.strptime(vv[-1][0:-5], "%Ym%m%dt%H%M")
+            endDateFile = startDateFile
+            # Check the the start time for the next file to get the end time of current file.
+            if(fi != len(rawFiles)-1):
+                vv = rawFiles[fi+1].split('_')
+                endDateFile = datetime.strptime(vv[-2][0:-7], "%Ym%m%dt%H%M")
             if(startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
                 rawFilesOut.append(f)
         rawFiles = rawFilesOut

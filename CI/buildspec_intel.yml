@@ -33,6 +33,7 @@ phases:
       - CDASH_URL=$(cat cdash_url.txt)
 
       - pip install xarray
+      - pip install pyhdf
 
   pre_build:
     commands:
