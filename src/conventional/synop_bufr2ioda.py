@@ -480,8 +480,8 @@ def read_bufr_message(f, count, start_pos, data):
     if temp_data['year'] is not None:
         for n in range(nsubsets):
             meta_data['dateTime'][n] = specialty_time(meta_data['year'][n], meta_data['month'][n],
-                                       meta_data['day'][n], meta_data['hour'][n],
-                                       meta_data['minute'][n], meta_data['second'][n])
+                                       meta_data['day'][n], meta_data['hour'][n],            # noqa
+                                       meta_data['minute'][n], meta_data['second'][n])       # noqa
 
     # Force longitude into space of -180 to +180 only. Reset both lat/lon missing if either absent.
     mask_lat = np.logical_or(meta_data['latitude'] < -90.0, meta_data['latitude'] > 90.0)
