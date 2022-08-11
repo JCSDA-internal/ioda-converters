@@ -15,6 +15,7 @@ phases:
       - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - pip install xarray
+      - pip install pyhdf
       - echo $PATH
       - echo $LD_LIBRARY_PATH
       - echo $LIBRARY_PATH
