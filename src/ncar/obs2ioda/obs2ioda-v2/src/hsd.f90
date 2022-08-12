@@ -561,7 +561,6 @@ if ( do_superob ) then
         if ( satzen(ix,iy)  > 65.0 ) cycle valid_loop
         if ( all(brit(ix,iy,:) < 0.0) ) cycle
         nlocs = nlocs + 1
-        print*, 'ix,iy, nlocs = ', ix,iy,nlocs
     end do valid_loop
   end do
 
