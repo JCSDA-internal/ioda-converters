@@ -250,11 +250,12 @@ integer(i_kind) :: count, i, ii, jj, ij, iv
 integer(i_kind) :: iband, isegm
 integer(i_kind) :: ierr
 integer(i_kind) :: nlocs, nvars, iloc
-integer(i_kind) :: ihh, imm, idd, jday
+integer(i_kind) :: ihh, imm, idd, jday, flength, rvalue, offset
 integer(i_kind) :: iunit = 21
 real(r_double)  :: lon, lat
 real(r_double)  :: radiance, tbb
 real(r_double)  :: lon_sat, h_sat, r_eq
+integer(i_kind) :: nodivisionsegm = 1
 ! end of declaration
 continue
 
@@ -294,6 +295,11 @@ do iband = 1, nband
 !write(33,*) 'wget -np -nd -nc http://noaa-himawari8.s3.amazonaws.com/AHI-L1b-FLDK/' &
 !& //ccyy//'/'//mm//'/'//dd//'/'//hhnn//'/'//trim(fnames(ij))//'.bz2'
       inquire(file=trim(fnames(ij)), exist=fexist(ij))
+      if ( fexist(ij) == .false. ) then
+         write(segment,'(a,i2.2,i2.2)') 'S', isegm, nodivisionsegm
+         fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
+         inquire(file=trim(fnames(ij)), exist=fexist(ij))
+      end if
 !print*,iband, isegm, trim(fnames(ij)), fexist(ij)
    end do
 end do
@@ -302,85 +308,143 @@ do iband = 1, nband
    do isegm = 1, nsegm
       ifile = isegm + (iband-1) * nsegm
       if ( .not. fexist(ifile) ) cycle
-      open(iunit, file=trim(fnames(ifile)), form='unformatted', access='stream', status='old')
+      open(iunit, file=trim(fnames(ifile)), form='unformatted', action='read', access='stream', status='old', convert='little_endian')
+      print*,'Reading from ', trim(fnames(ifile))
 
-print*,'Reading from ', trim(fnames(ifile))
-      read(iunit) header%basic, &
-                  header%data,  &
-                  header%proj,  &
-                  header%navi,  &
-                  header%calib, &
-                  header%interCalib, &
-                  header%segm,  &
-                  header%navicorr%headerNum, &
-             header%navicorr%blockLen, &
-             header%navicorr%RoCenterColumn, &
-             header%navicorr%RoCenterLine, &
-             header%navicorr%RoCorrection, &
-             header%navicorr%correctNum
+      read(iunit) header%basic%headerNum, &
+                  header%basic%blockLen, &
+                  header%basic%numHeader, &
+                  header%basic%byteOrder, &
+                  header%basic%satName, &
+                  header%basic%procCenter, &
+                  header%basic%obsArea, &
+                  header%basic%dummy2, &
+                  header%basic%hhnn, &
+                  header%basic%obsStartTime, &
+                  header%basic%obsEndTime, &
+                  header%basic%fileCreateTime, &
+                  header%basic%totalHeaderLen, &
+                  header%basic%dataLen, &
+                  header%basic%qcflag1, &
+                  header%basic%qcflag2, &
+                  header%basic%qcflag3, &
+                  header%basic%qcflag4, &
+                  header%basic%version, &
+                  header%basic%fileName, &
+                  header%basic%dummy40
+      read(iunit) header%data%headerNum, &
+                  header%data%blockLen,&
+                  header%data%bitPix, &
+                  header%data%nPix, &
+                  header%data%nLin, &
+                  header%data%compression, &
+                  header%data%dummy40
+      read(iunit) header%proj%headerNum, &
+                  header%proj%blockLen, &
+                  header%proj%subLon, &
+                  header%proj%cfac, &
+                  header%proj%lfac, &
+                  header%proj%coff, &
+                  header%proj%loff, &
+                  header%proj%satDis, &
+                  header%proj%eqtrRadius, &
+                  header%proj%polrRadius, &
+                  header%proj%projParam1, &
+                  header%proj%projParam2, &
+                  header%proj%projParam3, &
+                  header%proj%projParamSd, &
+                  header%proj%resampleKind, &
+                  header%proj%resampleSize, &
+                  header%proj%dummy40
+      read(iunit) header%navi%headerNum, &
+                  header%navi%blockLen, &
+                  header%navi%navTime, &
+                  header%navi%sspLon, &
+                  header%navi%sspLat, &
+                  header%navi%satDis, &
+                  header%navi%nadirLon, &
+                  header%navi%nadirLat, &
+                  header%navi%sunPos_x, &
+                  header%navi%sunPos_y, &
+                  header%navi%sunPos_z, &
+                  header%navi%moonPos_x, &
+                  header%navi%moonPos_y, &
+                  header%navi%moonPos_z, &
+                  header%navi%dummy40
+      read(iunit) header%calib%headerNum, &
+                  header%calib%blockLen, &
+                  header%calib%bandNo, &
+                  header%calib%waveLen, &
+                  header%calib%bitPix, &
+                  header%calib%errorCount, &
+                  header%calib%outCount, &
+                  header%calib%gain_cnt2rad, &
+                  header%calib%cnst_cnt2rad, &
+                  header%calib%rad2btp_c0, &
+                  header%calib%rad2btp_c1, &
+                  header%calib%rad2btp_c2, &
+                  header%calib%btp2rad_c0, &
+                  header%calib%btp2rad_c1, &
+                  header%calib%btp2rad_c2, &
+                  header%calib%lightSpeed, &
+                  header%calib%planckConst, &
+                  header%calib%bolzConst, &
+                  header%calib%dummy40
+      read(iunit) header%interCalib%headerNum, &
+                  header%interCalib%blockLen, &
+                  header%interCalib%dummy256
+      read(iunit) header%segm%headerNum, &
+                  header%segm%blockLen, &
+                  header%segm%totalSegNum, &
+                  header%segm%segSeqNo, &
+                  header%segm%startLineNo, &
+                  header%segm%dummy40
+      read(iunit) header%navicorr%headerNum, &
+                  header%navicorr%blockLen, &
+                  header%navicorr%RoCenterColumn, &
+                  header%navicorr%RoCenterLine, &
+                  header%navicorr%RoCorrection, &
+                  header%navicorr%correctNum
       if ( header%navicorr%correctNum > 0 ) then
          numCorrect = header%navicorr%correctNum
          allocate(header%navicorr%lineNo(numCorrect))
          allocate(header%navicorr%columnShift(numCorrect))
          allocate(header%navicorr%lineShift(numCorrect))
       end if
+      read(iunit) header%navicorr%lineNo(numCorrect), &
+                  header%navicorr%columnShift(numCorrect), &
+                  header%navicorr%lineShift(numCorrect), &
+                  header%navicorr%dummy40
       rewind(iunit)
-      read(iunit) header%basic, &
-                  header%data,  &
-                  header%proj,  &
-                  header%navi,  &
-                  header%calib, &
-                  header%interCalib, &
-                  header%segm,  &
-                  header%navicorr%headerNum, &
-                  header%navicorr%blockLen, &
-                  header%navicorr%RoCenterColumn, &
-                  header%navicorr%RoCenterLine, &
-                  header%navicorr%RoCorrection, &
-                  header%navicorr%correctNum, &
-                  header%navicorr%lineNo, &
-                  header%navicorr%columnShift, &
-                  header%navicorr%lineShift, &
-                  header%navicorr%dummy40, &
-                  header%obsTime%headerNum, &
-                  header%obsTime%blockLen, &
-                  header%obsTime%obsNum
+      read(iunit) header%obstime%headerNum, &
+                  header%obstime%blockLen, &
+                  header%obstime%obsNum
       if ( header%obsTime%obsNum > 0 ) then
          numObs = header%obsTime%obsNum
          allocate(header%obsTime%lineNo(numObs))
          allocate(header%obsTime%obsMJD(numObs))
       end if
+      read(iunit) header%obstime%lineNo, &
+                  header%obstime%obsMJD, &
+                  header%obstime%dummy40
+      read(iunit) header%error%headerNum, &
+                  header%error%blockLen, &
+                  header%error%errorNum, &
+                  header%error%dummy40
+      read(iunit) header%dummy%headerNum, &
+                  header%dummy%blockLen, &
+                  header%dummy%dummy256
       npix = header%data%nPix
       nlin = header%data%nLin
       ntotal = npix * nlin
       allocate(idata(ntotal))
-      rewind(iunit)
-      read(iunit) header%basic, &
-                  header%data,  &
-                  header%proj,  &
-                  header%navi,  &
-                  header%calib, &
-                  header%interCalib, &
-                  header%segm,  &
-                  header%navicorr%headerNum, &
-                  header%navicorr%blockLen, &
-                  header%navicorr%RoCenterColumn, &
-                  header%navicorr%RoCenterLine, &
-                  header%navicorr%RoCorrection, &
-                  header%navicorr%correctNum, &
-                  header%navicorr%lineNo, &
-                  header%navicorr%columnShift, &
-                  header%navicorr%lineShift, &
-                  header%navicorr%dummy40, &
-                  header%obsTime%headerNum, &
-                  header%obsTime%blockLen, &
-                  header%obsTime%obsNum, &
-                  header%obsTime%lineNo, &
-                  header%obsTime%obsMJD, &
-                  header%obsTime%dummy40, &
-                  header%error, &
-                  header%dummy, &
-                  idata
+
+      inquire(file=trim(fnames(ifile)), size=flength)
+      ! Offset relative to the beginning of the file
+      offset = flength - (npix * nlin *2)
+      ! Reposition the file to the offset value for reading
+      call fseek(iunit, offset, 0, rvalue)
+      read(iunit)idata(:)
 
       startLine = header%segm%startLineNo
       endLine = startLine + header%data%nLin - 1
@@ -457,7 +521,6 @@ print*,'Reading from ', trim(fnames(ifile))
          deallocate(header%navicorr%columnShift)
          deallocate(header%navicorr%lineShift)
       end if
-
       close(iunit)
 
    end do
@@ -488,11 +551,13 @@ allocate (xdata(1,1)%xinfo_int  (nlocs, nvar_info))
 allocate (xdata(1,1)%xinfo_char (nlocs, nvar_info))
 allocate (xdata(1,1)%xseninfo_float(nlocs, nsen_info))
 allocate (xdata(1,1)%xseninfo_int  (nvars, nsen_info))
+allocate (xdata(1,1)%xinfo_int64(nlocs, nvar_info))
 xdata(1,1)%xinfo_float   (:,:) = missing_r
 xdata(1,1)%xinfo_int     (:,:) = missing_i
 xdata(1,1)%xinfo_char    (:,:) = ''
 xdata(1,1)%xseninfo_float(:,:) = missing_r
 xdata(1,1)%xseninfo_int  (:,:) = missing_i
+xdata(1,1)%xinfo_int64   (:,:) = 0
 if ( nvars > 0 ) then
    allocate (xdata(1,1)%xfield(nlocs, nvars))
    xdata(1,1)%xfield(:,:)%val = missing_r
@@ -599,6 +664,7 @@ subroutine pixlin_to_lonlat(pix, lin, lon, lat, ierr)
 
  ! intermediate coordinates (x,y)
  ! Global Specification 4.4.4 Scaling Function
+ ! https://www.cgms-info.org/wp-content/uploads/2021/10/cgms-lrit-hrit-global-specification-(v2-8-of-30-oct-2013).pdf
  !    c = COFF + nint(x * 2^-16 * CFAC)
  !    l = LOFF + nint(y * 2^-16 * LFAC)
  ! The intermediate coordinates (x,y) are as follows :
