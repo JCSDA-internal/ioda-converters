@@ -12,6 +12,7 @@
 #include <chrono>  // NOLINT
 
 #include "eckit/exception/Exceptions.h"
+#include "oops/util/Logger.h"
 
 #include "DataContainer.h"
 #include "DataObject.h"
@@ -47,7 +48,7 @@ namespace Ingester {
     {
         auto startTime = std::chrono::steady_clock::now();
 
-        std::cout << "Start" << std::endl;
+        oops::Log::info() << "Start" << std::endl;
         auto querySet = bufr::QuerySet();
         for (const auto &var : description_.getExport().getVariables())
         {
@@ -57,10 +58,10 @@ namespace Ingester {
             }
         }
 
-        std::cout << "Executing Queries" << std::endl;
+        oops::Log::info() << "Executing Queries" << std::endl;
         const auto resultSet = file_.execute(querySet, maxMsgsToParse);
 
-        std::cout << "Building Bufr Data" << std::endl;
+        oops::Log::info() << "Building Bufr Data" << std::endl;
         auto srcData = BufrDataMap();
         for (const auto& var : description_.getExport().getVariables())
         {
@@ -71,15 +72,15 @@ namespace Ingester {
             }
         }
 
-        std::cout << "Exporting Data" << std::endl;
+        oops::Log::info()  << "Exporting Data" << std::endl;
         auto exportedData = exportData(srcData);
 
         auto timeElapsed = std::chrono::steady_clock::now() - startTime;
         auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::milliseconds>
                 (timeElapsed);
-        std::cout << "Finished "
-                  << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
-                  << std::endl;
+        oops::Log::info()  << "Finished "
+                           << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
+                           << std::endl;
 
         return exportedData;
     }
