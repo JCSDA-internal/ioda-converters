@@ -107,22 +107,16 @@ namespace bufr {
         char unitCStr[UNIT_STR_LEN];
         char descCStr[DESC_STR_LEN];
 
-        int iret;
         TypeInfo info;
-        nemdefs_f(fileUnit_,
-                  getTag(idx).c_str(),
-                  unitCStr,
-                  UNIT_STR_LEN,
-                  descCStr,
-                  DESC_STR_LEN,
-                  &iret);
-
-        if (iret != 0)
-        {
-            std::ostringstream errMsg;
-            errMsg << "Call to nembdefs_f failed for " << getTag(idx) << ".";
-            throw eckit::BadParameter(errMsg.str());
-        }
+        get_tabb_info_f(bufrLoc_,
+                        getTag(idx).c_str(),
+                        &info.scale,
+                        &info.reference,
+                        &info.bits,
+                        unitCStr,
+                        UNIT_STR_LEN,
+                        descCStr,
+                        DESC_STR_LEN);
 
         // trim the unit string
         auto unitStr = std::string(unitCStr);
@@ -130,26 +124,11 @@ namespace bufr {
         unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);
         info.unit = unitStr;
 
-        // trim the description string
+        // trim the unit string
         auto descStr = std::string(descCStr);
         end = descStr.find_last_not_of( " \n\r\t\f\v");
         descStr = (end == std::string::npos) ? "" : descStr.substr(0, end + 1);
-        info.unit = descStr;
-
-        nemspecs_f(fileUnit_,
-                   getTag(idx).c_str(),
-                   1,
-                   &info.scale,
-                   &info.reference,
-                   &info.bits,
-                   &iret);
-
-        if (iret != 0)
-        {
-            std::ostringstream errMsg;
-            errMsg << "Call to nemspecs_f failed for " << getTag(idx) << ".";
-            throw eckit::BadParameter(errMsg.str());
-        }
+        info.description = descStr;
 
         return info;
     }

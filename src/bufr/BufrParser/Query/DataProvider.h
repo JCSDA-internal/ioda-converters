@@ -48,7 +48,7 @@ namespace bufr {
     class DataProvider
     {
      public:
-        DataProvider(int fileUnit) : fileUnit_(fileUnit) {}
+        DataProvider() {}
         ~DataProvider() = default;
 
         /// \brief Read the data from the BUFR interface for the current subset and reset the
@@ -80,7 +80,6 @@ namespace bufr {
 
      private:
         std::string subset_;
-        int fileUnit_;
 
         // Table data;
         gsl::span<const int> isc_;

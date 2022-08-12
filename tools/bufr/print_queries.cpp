@@ -76,23 +76,15 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
 
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
     {
-        bool foundSubset = false;
+        status_f(fileUnit, &bufrLoc, &il, &im);
+        dataProvider.updateData(bufrLoc);
 
-        while (ireadsb_f(fileUnit) == 0)
+        msgNum++;
+        if (std::string(current_subset) == subset)
         {
-            status_f(fileUnit, &bufrLoc, &il, &im);
-            dataProvider.updateData(bufrLoc);
-
-            msgNum++;
-            if (std::string(current_subset) == subset)
-            {
-                foundSubset = true;
-                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
-                break;
-            }
+            queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
+            break;
         }
-
-        if (foundSubset) break;
     }
 
     return queryData;
@@ -226,7 +218,7 @@ void printQueries(const std::string& filePath,
         mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
     }
 
-    auto dataProvider = Ingester::bufr::DataProvider(FileUnit);
+    auto dataProvider = Ingester::bufr::DataProvider();
     if (!subset.empty())
     {
         auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);

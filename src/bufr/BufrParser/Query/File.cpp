@@ -67,7 +67,7 @@ namespace bufr {
         int bufrLoc;
         int il, im;  // throw away
 
-        auto dataProvider = DataProvider(fileUnit_);
+        auto dataProvider = DataProvider();
 
         auto resultSet = ResultSet(querySet.names());
         auto query = Query(querySet, resultSet, dataProvider);
