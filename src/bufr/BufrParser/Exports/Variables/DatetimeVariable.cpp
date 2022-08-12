@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
+#include "oops/util/Logger.h"
 
 #include "DataObject.h"
 #include "DatetimeVariable.h"
@@ -136,10 +137,10 @@ namespace Ingester
                 this_time = std::mktime(&tm);
                 if (this_time < 0)
                 {
-                    std::cout << "Caution, date suspicious date (year, month, day): "
-                              << year << ", "
-                              << month << ", "
-                              << day << std::endl;
+                     oops::Log::warning() << "Caution, date suspicious date (year, month, day): "
+                                          << year << ", "
+                                          << month << ", "
+                                          << day << std::endl;
                 }
                 diff_time = static_cast<std::int64_t>(difftime(this_time, epochDt)
                                                       + hoursFromUtc_*3600);

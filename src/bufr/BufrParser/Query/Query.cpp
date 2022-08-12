@@ -7,6 +7,7 @@
 #include "Query.h"
 
 #include "eckit/exception/Exceptions.h"
+#include "oops/util/Logger.h"
 
 #include <string>
 #include <iostream>
@@ -83,11 +84,11 @@ namespace bufr {
             if (!foundTarget) {
                 // Add the last missing target to the list
                 targets->push_back(target);
-                std::cout << "Warning: Query String "
-                          << queryStr
-                          << " didn't apply to subset "
-                          << dataProvider_.getSubset()
-                          << std::endl;
+                oops::Log::warning() << "Warning: Query String "
+                                     << queryStr
+                                     << " didn't apply to subset "
+                                     << dataProvider_.getSubset()
+                                     << std::endl;
             }
         }
 
