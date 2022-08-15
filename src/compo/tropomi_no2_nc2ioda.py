@@ -40,9 +40,10 @@ DimDict = {
 
 
 class tropomi(object):
-    def __init__(self, filenames,columnType):
+    def __init__(self, filenames, columnType, obsVar):
         self.filenames = filenames
         self.columnType = columnType
+        self.obsVar = obsVar
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -51,15 +52,18 @@ class tropomi(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        for iodavar in ['nitrogen_dioxide_in_tropospheric_column', 'nitrogen_dioxide_in_total_column']:
-            self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-            self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-            self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mol m-2'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol m-2'
+        if self.columnType == 'total':
+           iodavar = self.obsVar['nitrogendioxide_total_column']
+        elif self.columnType == 'tropo':
+           iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
+        self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+        self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
+        self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mol m-2'
+        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol m-2'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -92,8 +96,6 @@ class tropomi(object):
             total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
             trop_airmass = ncd.groups['PRODUCT'].\
                 variables['air_mass_factor_troposphere'][:].ravel()
-            strat_airmass = ncd.groups['PRODUCT'].\
-                variables['air_mass_factor_stratosphere'][:].ravel()
 
             # get info to construct the pressure level array
             ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
@@ -108,13 +110,13 @@ class tropomi(object):
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
  
-            # scale the avk using AMF ratio and tropopause level for trop or 
-            # strato columns
+            # scale the avk using AMF ratio and tropopause level for tropo column 
+            nlocf = len(trop_layer[flg])
+            scaleAK = np.ones((nlocf,nlevs))
             if self.columnType == 'tropo':
-              airMassRatio = total_airmass / trop_airmass
-            if self.columnType == 'total': 
-              obsvar =  
-            
+              for l in range(nlocf):
+                scaleAK[l,...][trop_layer[flg][l]+1:] = 0
+                scaleAK[l,...] *= total_airmass[flg][l] / trop_airmass[flg][l]
 
             if first:
                 # add metadata variables
@@ -127,7 +129,7 @@ class tropomi(object):
                 self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')] = trop_airmass[flg]
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg]
+                    self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = ak[k,0] + bk[k,0]*ps[...].ravel()[flg]
                 # add top vertice in IODA file, here it is 0hPa but can be different
@@ -153,7 +155,7 @@ class tropomi(object):
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = np.concatenate(
-                        (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg]))
+                        (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]))
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
                         (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()[flg]))
@@ -161,7 +163,7 @@ class tropomi(object):
                 self.outdata[varname_pr] = np.concatenate(
                     (self.outdata[varname_pr], ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()[flg]))
 
-            for ncvar, iodavar in obsvars.items():
+            for ncvar, iodavar in self.obsVar.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()[flg]
                     err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()[flg]
@@ -219,32 +221,32 @@ def main():
 
     if args.column == "tropo":
 
-      obsvars = {
-        'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column',
+      obsVar = {
+        'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column'
       }
 
-      VarDims = {
-        'nitrogen_dioxide_in_tropospheric_column': ['nlocs'],
+      varDims = {
+        'nitrogen_dioxide_in_tropospheric_column': ['nlocs']
       }
 
-    else if args.column == "total":
+    elif args.column == "total":
 
-      obsvars = {
-        'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column',
+      obsVar = {
+        'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column'
       }
 
-      VarDims = {
-        'nitrogen_dioxide_in_total_column': ['nlocs'],
+      varDims = {
+        'nitrogen_dioxide_in_total_column': ['nlocs']
       }
 
     # Read in the NO2 data
-    no2 = tropomi(args.input,args.column)
+    no2 = tropomi(args.input, args.column, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildIoda(no2.outdata, VarDims, no2.varAttrs, AttrData)
+    writer.BuildIoda(no2.outdata, varDims, no2.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
