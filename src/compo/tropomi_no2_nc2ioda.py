@@ -53,9 +53,9 @@ class tropomi(object):
     def _read(self):
         # set up variable names for IODA
         if self.columnType == 'total':
-           iodavar = self.obsVar['nitrogendioxide_total_column']
+            iodavar = self.obsVar['nitrogendioxide_total_column']
         elif self.columnType == 'tropo':
-           iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
+            iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -102,21 +102,20 @@ class tropomi(object):
                 variables['surface_pressure'][:]
 
             # bottom of layer is vertice 0, very top layer is TOA (0hPa)
-            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:,:]
-            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:,:]
+            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
+            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
 
             # grab the averaging kernel
             avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
- 
-            # scale the avk using AMF ratio and tropopause level for tropo column 
+            # scale the avk using AMF ratio and tropopause level for tropo column
             nlocf = len(trop_layer[flg])
-            scaleAK = np.ones((nlocf,nlevs))
+            scaleAK = np.ones((nlocf, nlevs))
             if self.columnType == 'tropo':
-              for l in range(nlocf):
-                scaleAK[l,...][trop_layer[flg][l]+1:] = 0
-                scaleAK[l,...] *= total_airmass[flg][l] / trop_airmass[flg][l]
+                for ll in range(nlocf):
+                    scaleAK[ll, ...][trop_layer[flg][ll]+1:] = 0
+                    scaleAK[ll, ...] *= total_airmass[flg][ll] / trop_airmass[flg][ll]
 
             if first:
                 # add metadata variables
@@ -131,11 +130,11 @@ class tropomi(object):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_pr] = ak[k,0] + bk[k,0]*ps[...].ravel()[flg]
+                    self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
-                self.outdata[varname_pr] = ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()
+                self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
 
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
@@ -161,7 +160,7 @@ class tropomi(object):
                         (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()[flg]))
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 self.outdata[varname_pr] = np.concatenate(
-                    (self.outdata[varname_pr], ak[nlevs-1,1] + bk[nlevs-1,1]*ps[...].ravel()[flg]))
+                    (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
 
             for ncvar, iodavar in self.obsVar.items():
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
@@ -218,26 +217,25 @@ def main():
 
     args = parser.parse_args()
 
-
     if args.column == "tropo":
 
-      obsVar = {
-        'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column'
-      }
+        obsVar = {
+            'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column'
+        }
 
-      varDims = {
-        'nitrogen_dioxide_in_tropospheric_column': ['nlocs']
-      }
+        varDims = {
+            'nitrogen_dioxide_in_tropospheric_column': ['nlocs']
+        }
 
     elif args.column == "total":
 
-      obsVar = {
-        'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column'
-      }
+        obsVar = {
+            'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column'
+        }
 
-      varDims = {
-        'nitrogen_dioxide_in_total_column': ['nlocs']
-      }
+        varDims = {
+            'nitrogen_dioxide_in_total_column': ['nlocs']
+        }
 
     # Read in the NO2 data
     no2 = tropomi(args.input, args.column, obsVar)
