@@ -125,9 +125,6 @@ class tropomi(object):
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
-                self.outdata[('troposphere_layer_index', 'RtrvlAncData')] = trop_layer[flg]
-                self.outdata[('air_mass_factor_total', 'RtrvlAncData')] = total_airmass[flg]
-                self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')] = trop_airmass[flg]
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]
@@ -147,12 +144,6 @@ class tropomi(object):
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
                     self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
-                self.outdata[('troposphere_layer_index', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('troposphere_layer_index', 'RtrvlAncData')], trop_layer[flg]))
-                self.outdata[('air_mass_factor_total', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('air_mass_factor_total', 'RtrvlAncData')], total_airmass[flg]))
-                self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('air_mass_factor_troposphere', 'RtrvlAncData')], trop_airmass[flg]))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = np.concatenate(
@@ -165,12 +156,14 @@ class tropomi(object):
                     (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
 
             for ncvar, iodavar in self.obsVar.items():
+
                 if ncvar in ['nitrogendioxide_tropospheric_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()[flg]
                     err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()[flg]
                 else:
                     data = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar][:].ravel()[flg]
                     err = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].variables[ncvar+'_precision'][:].ravel()[flg]
+
                 if first:
                     self.outdata[self.varDict[iodavar]['valKey']] = data
                     self.outdata[self.varDict[iodavar]['errKey']] = err
@@ -182,7 +175,9 @@ class tropomi(object):
                         (self.outdata[self.varDict[iodavar]['errKey']], err))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
+
             first = False
+
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
 
