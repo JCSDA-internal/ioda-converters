@@ -115,7 +115,9 @@ class tropomi(object):
             if self.columnType == 'tropo':
                 for ll in range(nlocf):
                     scaleAK[ll, ...][trop_layer[flg][ll]+1:] = 0
-                    scaleAK[ll, ...] *= total_airmass[flg][ll] / trop_airmass[flg][ll]
+                #do not loop over nlocs here this makes the execution very slow
+                for k in range(nlevs):
+                    scaleAK[..., k] *= total_airmass[flg] / trop_airmass[flg]
 
             if first:
                 # add metadata variables
