@@ -10,7 +10,7 @@ observations:
       obsdatain: "./testinput/gdas.t12z.adpupa.prepbufr"
 
       exports:
-        group_by_variable: prepbufrDataLvlCategory
+        group_by_variable: prepbufrDataLevelCategory
         variables:
           # MetaData        
           stationIdentification:
@@ -23,7 +23,7 @@ observations:
             query: "*/TYP"
           dumpReportType:
             query: "*/T29"
-          prepbufrDataLvlCategory:
+          prepbufrDataLevelCategory:
             query: "*/PRSLEVEL/CAT"
           longitude:
             query: "*/PRSLEVEL/DRFTINFO/XDR"
@@ -108,7 +108,7 @@ observations:
         - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
           source: variables/stationIdentification
-          longName: "Station ID"
+          longName: "Station Identification"
 
         - name: "MetaData/obsTimeMinusCycleTime"
           coordinates: "longitude latitude"
@@ -119,7 +119,7 @@ observations:
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          longName: "Height of Station"
+          longName: "Elevation of Observing Location"
           units: "m"
 
         - name: "MetaData/prepbufrReportType"
@@ -132,9 +132,9 @@ observations:
           source: variables/dumpReportType
           longName: "Data Dump Report Type"
 
-        - name: "MetaData/prepbufrDataLvlCategory"
+        - name: "MetaData/prepbufrDataLevelCategory"
           coordinates: "longitude latitude"
-          source: variables/prepbufrDataLvlCategory
+          source: variables/prepbufrDataLevelCategory
           longName: "Prepbufr Data Level Category"
 
         - name: "MetaData/longitude"
