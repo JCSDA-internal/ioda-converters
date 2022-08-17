@@ -113,10 +113,9 @@ class tropomi(object):
             nlocf = len(trop_layer[flg])
             scaleAK = np.ones((nlocf, nlevs))
             if self.columnType == 'tropo':
-                for ll in range(nlocf):
-                    scaleAK[ll, ...][trop_layer[flg][ll]+1:] = 0
                 #do not loop over nlocs here this makes the execution very slow
                 for k in range(nlevs):
+                    scaleAK[..., k][np.full((nlocf),k,dtype=int)>trop_layer[flg]] = 0
                     scaleAK[..., k] *= total_airmass[flg] / trop_airmass[flg]
 
             if first:
