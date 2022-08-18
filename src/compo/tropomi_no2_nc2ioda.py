@@ -111,7 +111,7 @@ class tropomi(object):
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
             # scale the avk using AMF ratio and tropopause level for tropo column
             nlocf = len(trop_layer[flg])
-            scaleAK = np.ones((nlocf, nlevs))
+            scaleAK = np.ones((nlocf, nlevs),dtype=np.float32)
             if self.columnType == 'tropo':
                 #do not loop over nlocs here this makes the execution very slow
                 for k in range(nlevs):
