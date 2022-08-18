@@ -37,7 +37,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
-  testinput/modis_aod.nc
+  testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
   testinput/afwa_snod_24km.grib
@@ -887,8 +887,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
-                          -i testinput/modis_aod.nc
-                          -t 2016060100
+                          -i testinput/modis_aod.hdf
+                          -t 2021080100
+			  -p Terra
                           -o testrun/modis_aod.nc"
                           modis_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
