@@ -48,7 +48,7 @@ namespace bufr {
     class DataProvider
     {
      public:
-        DataProvider() {}
+        DataProvider(int fileUnit) : fileUnit_(fileUnit) {}
         ~DataProvider() = default;
 
         /// \brief Read the data from the BUFR interface for the current subset and reset the
@@ -79,6 +79,7 @@ namespace bufr {
         TypeInfo getTypeInfo(FortranIdx idx) const;
 
      private:
+        int fileUnit_;
         std::string subset_;
 
         // Table data;

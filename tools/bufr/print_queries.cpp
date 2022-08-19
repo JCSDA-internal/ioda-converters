@@ -39,7 +39,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
     {
         std::stringstream pathStream;
         pathStream << query.pathComponents[0];
-        for (auto idx=1; idx <= query.dimIdxs.back(); idx++)
+        for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
         {
             pathStream << "/" << query.pathComponents[idx];
         }
@@ -65,26 +65,28 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
 {
     static const int SubsetLen = 9;
 
-    size_t msgNum = 0;
-
     int iddate;
     int bufrLoc;
     int il, im; // throw away
     char current_subset[9];
+    bool subsetFound = false;
 
     std::vector<Ingester::bufr::QueryData> queryData;
 
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
     {
-        status_f(fileUnit, &bufrLoc, &il, &im);
-        dataProvider.updateData(bufrLoc);
-
-        msgNum++;
         if (std::string(current_subset) == subset)
         {
-            queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
-            break;
+            while (ireadsb_f(fileUnit) == 0)
+            {
+                status_f(fileUnit, &bufrLoc, &il, &im);
+                dataProvider.updateData(bufrLoc);
+                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
+                subsetFound = true;
+            }
         }
+
+        if (subsetFound) break;
     }
 
     return queryData;
@@ -218,7 +220,7 @@ void printQueries(const std::string& filePath,
         mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
     }
 
-    auto dataProvider = Ingester::bufr::DataProvider();
+    auto dataProvider = Ingester::bufr::DataProvider(FileUnit);
     if (!subset.empty())
     {
         auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);

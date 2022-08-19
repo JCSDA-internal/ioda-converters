@@ -107,16 +107,26 @@ namespace bufr {
         char unitCStr[UNIT_STR_LEN];
         char descCStr[DESC_STR_LEN];
 
+        int retVal;
         TypeInfo info;
-        get_tabb_info_f(bufrLoc_,
-                        getTag(idx).c_str(),
-                        &info.scale,
-                        &info.reference,
-                        &info.bits,
-                        unitCStr,
-                        UNIT_STR_LEN,
-                        descCStr,
-                        DESC_STR_LEN);
+//        get_tabb_info_f(bufrLoc_,
+//                        getTag(idx).c_str(),
+//                        &info.scale,
+//                        &info.reference,
+//                        &info.bits,
+//                        unitCStr,
+//                        UNIT_STR_LEN,
+//                        descCStr,
+//                        DESC_STR_LEN);
+
+        nemdefs_f(fileUnit_,
+                  getTag(idx).c_str(),
+                   unitCStr,
+                   UNIT_STR_LEN,
+                   descCStr,
+                   DESC_STR_LEN,
+                   &retVal);
+
 
         // trim the unit string
         auto unitStr = std::string(unitCStr);
@@ -129,6 +139,24 @@ namespace bufr {
         end = descStr.find_last_not_of( " \n\r\t\f\v");
         descStr = (end == std::string::npos) ? "" : descStr.substr(0, end + 1);
         info.description = descStr;
+
+        int descriptor;
+        int table_idx;
+        char table_type;
+
+        nemtab_f(bufrLoc_,
+                 getTag(idx).c_str(),
+                 &descriptor,
+                 &table_type,
+                 &table_idx);
+
+        nemtbb_f(bufrLoc_,
+                 table_idx,
+                 unitCStr,
+                 UNIT_STR_LEN,
+                 &info.scale,
+                 &info.reference,
+                 &info.bits);
 
         return info;
     }
