@@ -9,7 +9,7 @@
 
 #include <ostream>
 #include <iostream>
-#include <chrono>  // NOLINT
+#include <chrono>
 
 #include "eckit/exception/Exceptions.h"
 #include "oops/util/Logger.h"
@@ -77,10 +77,10 @@ namespace Ingester {
         auto exportedData = exportData(srcData);
 
         auto timeElapsed = std::chrono::steady_clock::now() - startTime;
-        auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::milliseconds>
+        auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::seconds>
                 (timeElapsed);
         oops::Log::info()  << "Finished "
-                           << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
+                           << "[" << timeElapsedDuration.count() << "s]"
                            << std::endl;
 
         return exportedData;
