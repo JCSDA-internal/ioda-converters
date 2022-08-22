@@ -360,7 +360,9 @@ namespace bufr {
             dataField.dimPaths = targ.dimPaths;
             dataField.seqPath.resize(targ.seqPath.size() + 1);
             dataField.seqPath[0] = 1;
-            std::copy(targ.seqPath.begin(), targ.seqPath.end(), dataField.seqPath.begin() + 1);
+            std::copy(targ.seqPath.begin(),
+                      targ.seqPath.end(),
+                      std::back_inserter(dataField.seqPath));
             dataField.exportDims = targ.exportDimIdxs;
 
             if (targ.nodeIds.size() == 0) {
