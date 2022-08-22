@@ -337,7 +337,6 @@ namespace bufr {
         }
 
         // Inflate the data, compute the idxs for each data element in the result array
-        for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
         {
             for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
             {
@@ -359,7 +358,7 @@ namespace bufr {
             }
         }
 
-        auto output = std::vector<double>(product(dims), 10.0e10);
+        auto output = std::vector<double>(product(dims), MissingValue);
         for (size_t i = 0; i < idxs.size(); ++i)
         {
             output[idxs[i]] = targetField.data[i];
