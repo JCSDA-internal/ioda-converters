@@ -83,8 +83,9 @@ namespace bufr {
         }
 
         if (slashPositions.size() < 1) {
-            std::cerr << "Query Parser: Not a valid query string." << std::endl;
-            exit(1);
+            std::stringstream errMsg;
+            errMsg << "Query Parser: Not a valid query string." << std::endl;
+            throw eckit::BadParameter(errMsg.str());
         }
 
         // Capture the subset string
