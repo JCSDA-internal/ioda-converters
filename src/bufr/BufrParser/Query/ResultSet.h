@@ -87,7 +87,7 @@ namespace bufr {
         std::unordered_map<std::string, int> fieldIdxMap_;
 
         virtual ~ResultBase() {}
-        virtual void print() = 0;
+        virtual void print(std::ostream &out = std::cout) = 0;
     };
 
     /// \brief The resulting data created by the ResultSet.
@@ -98,12 +98,12 @@ namespace bufr {
         std::vector<T> data;
 
         /// \brief Print the data to stdout.
-        void print() final
+        void print(std::ostream &out = std::cout) final
         {
             std::cout << data.size() << std::endl;
             for (auto val : data)
             {
-                std::cout << val << ", ";
+                out << val << ", ";
             }
         }
     };
