@@ -9,7 +9,7 @@
 
 #include <ostream>
 #include <iostream>
-#include <chrono>
+#include <chrono>  // NOLINT
 
 #include "eckit/exception/Exceptions.h"
 #include "oops/util/Logger.h"
