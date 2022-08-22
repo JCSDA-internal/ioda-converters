@@ -101,9 +101,10 @@ namespace bufr {
         void print(std::ostream &out = std::cout) final
         {
             std::cout << data.size() << std::endl;
-            for (auto val : data)
+            for (auto val = data.cbegin(); val != data.cend(); ++val)
             {
-                out << val << ", ";
+                if (val != data.cbegin()) out << ", ";
+                out << *val;
             }
         }
     };

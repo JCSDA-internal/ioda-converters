@@ -77,10 +77,10 @@ namespace Ingester {
         auto exportedData = exportData(srcData);
 
         auto timeElapsed = std::chrono::steady_clock::now() - startTime;
-        auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::seconds>
+        auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::milliseconds>
                 (timeElapsed);
         oops::Log::info()  << "Finished "
-                           << "[" << timeElapsedDuration.count() << "s]"
+                           << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
                            << std::endl;
 
         return exportedData;
