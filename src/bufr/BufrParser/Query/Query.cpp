@@ -173,7 +173,7 @@ namespace bufr {
                 }
             }
 
-            if (index > 0 && index <= static_cast<int>(targetNodes.size())) {
+            if (index > 0 && index <= gsl::narrow<int>(targetNodes.size())) {
                 targetNodes = {targetNodes[index - 1]};
             }
 
