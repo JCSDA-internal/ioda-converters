@@ -118,8 +118,9 @@ namespace bufr {
         {
             if (endSubscript != std::string::npos || startSubscript != std::string::npos)
             {
-                std::cerr << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
-                exit(1);
+                std::stringstream errMsg;
+                errMsg << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
+                throw eckit::BadParameter(errMsg.str());
             }
 
             mnemonicStrings.back() = lastElement;
