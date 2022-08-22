@@ -10,6 +10,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include "eckit/exception/Exceptions.h"
+
 namespace Ingester {
 namespace bufr {
      std::vector<std::string> QueryParser::splitMultiquery(const std::string &query) {
@@ -22,8 +24,9 @@ namespace bufr {
 
         if (working_str.substr(0, 1) == "[") {
             if (working_str.substr(working_str.length() - 1, 1) != "]") {
-                std::cerr << "Query Parser: multi query is lacking closing brackets." << std::endl;
-                exit(1);
+                std::stringstream errMsg;
+                errMsg << "Query Parser: multi query is lacking closing brackets." << std::endl;
+                throw eckit::BadParameter(errMsg.str());
             }
 
             working_str = working_str.substr(1, working_str.length() - 2);
