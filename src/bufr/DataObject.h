@@ -17,14 +17,13 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
+#include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/ResultSet.h"
 
 namespace Ingester
 {
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
-
-    const float MissingValue = 10e10;
 
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
@@ -269,7 +268,7 @@ namespace Ingester
             params.chunk = true;
             params.chunks = chunks;
             params.compressWithGZIP(compressionLevel);
-            params.setFillValue<T>(static_cast<T>(MissingValue));
+            params.setFillValue<T>(static_cast<T>(bufr::MissingValue));
 
             return params;
         }

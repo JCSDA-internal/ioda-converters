@@ -16,10 +16,6 @@
 
 namespace Ingester {
 namespace bufr {
-
-    /// \brief The missing data value for all BUFR data.
-    const double MissingValue = 10e10;
-
     /// \brief Represents a single BUFR data element (a element from one message subset). It
     /// contains both the data value(s) and the associated metadata that is used to construct the
     /// results data.

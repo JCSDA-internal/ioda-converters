@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "QueryParser.h"
+#include "Constants.h"
 
 namespace Ingester {
 namespace bufr {
