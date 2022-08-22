@@ -39,7 +39,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
     {
         std::stringstream pathStream;
         pathStream << query.pathComponents[0];
-        for (auto idx=1; idx <= query.dimIdxs.back(); idx++)
+        for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
         {
             pathStream << "/" << query.pathComponents[idx];
         }
@@ -280,7 +280,14 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    printQueries(inputFile, subset, tablePath);
+    try
+    {
+        printQueries(inputFile, subset, tablePath);
+    }
+    catch (const std::exception &e)
+    {
+        throw e;
+    }
 
     return 0;
 }
