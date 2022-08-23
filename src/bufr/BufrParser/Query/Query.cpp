@@ -258,6 +258,9 @@ namespace bufr {
         std::vector<int> currentPath;
         std::vector<int> currentPathReturns;
 
+        currentPath.reserve(10);
+        currentPathReturns.reserve(10);
+
         auto &dataFrame = resultSet.nextDataFrame();
         int returnNodeIdx = -1;
         int lastNonZeroReturnIdx = -1;
