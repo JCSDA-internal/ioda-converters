@@ -92,7 +92,7 @@ namespace bufr {
     class ResultSet
     {
      public:
-        ResultSet(const std::vector<std::string>& names);
+        explicit ResultSet(const std::vector<std::string>& names);
         ~ResultSet();
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
@@ -103,9 +103,9 @@ namespace bufr {
         /// values are int, uint, int32, uint32, int64, uint64, float, double
         /// \return A Result object containing the data.
         std::shared_ptr<Ingester::DataObjectBase>
-            get(const std::string& fieldName,
-                const std::string& groupByFieldName = "",
-                const std::string& overrideType="") const;
+        get(const std::string& fieldName,
+            const std::string& groupByFieldName = "",
+            const std::string& overrideType = "") const;
 
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
         /// \return A reference to the new DataFrame.
@@ -178,7 +178,6 @@ namespace bufr {
         /// \param overrideType The meta data for the element.
         /// \return A Result DataObject containing the data.
         std::shared_ptr<DataObjectBase> objectByType(const std::string& overrideType) const;
-
     };
 }  // namespace bufr
 }  // namespace Ingester

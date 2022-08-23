@@ -130,13 +130,13 @@ namespace bufr {
 
         // trim the unit string
         auto unitStr = std::string(unitCStr);
-        size_t end = unitStr.find_last_not_of( " \n\r\t\f\v");
+        size_t end = unitStr.find_last_not_of(" \n\r\t\f\v");
         unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);
         info.unit = unitStr;
 
         // trim the unit string
         auto descStr = std::string(descCStr);
-        end = descStr.find_last_not_of( " \n\r\t\f\v");
+        end = descStr.find_last_not_of(" \n\r\t\f\v");
         descStr = (end == std::string::npos) ? "" : descStr.substr(0, end + 1);
         info.description = descStr;
 

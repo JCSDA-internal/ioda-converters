@@ -399,7 +399,7 @@ namespace Ingester
                       double dataMissingValue,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            data_ =std::vector<T>(data.begin(), data.end());
+            data_ = std::vector<T>(data.begin(), data.end());
             std::replace(data_.begin(),
                          data_.end(),
                          static_cast<T>(dataMissingValue),
@@ -410,9 +410,10 @@ namespace Ingester
         /// \param data - double vector of raw data
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
-        void _setData(const std::vector<double>& data,
-                      double dataMissingValue,
-                      typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        void _setData(
+            const std::vector<double>& data,
+            double dataMissingValue,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             data_ = std::vector<std::string>();
             auto charPtr = reinterpret_cast<const char*>(data.data());
@@ -450,8 +451,8 @@ namespace Ingester
         void _multiplyBy(double val,
                          typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            if (typeid(T) == typeid(float) ||
-                typeid(T) == typeid(double) ||
+            if (typeid(T) == typeid(float) ||   // NOLINT
+                typeid(T) == typeid(double) ||  // NOLINT
                 trunc(val) == val)
             {
                 for (size_t i = 0; i < data_.size(); i++)
@@ -474,8 +475,9 @@ namespace Ingester
         /// \brief Multiply the stored values in this data object by a scalar (string version).
         /// \param val Scalar to multiply to the data.
         template<typename U = void>
-        void _multiplyBy(double val,
-                         typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        void _multiplyBy(
+            double val,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             throw std::runtime_error("Trying to multiply a string by a number");
         }
@@ -506,8 +508,9 @@ namespace Ingester
         /// \brief Add a scalar to the stored values in this data object (string version).
         /// \param val Scalar to add to the data.
         template<typename U = void>
-        void _offsetBy(double val,
-                       typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        void _offsetBy(
+            double val,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             throw std::runtime_error("Trying to offset a string by a number");
         }

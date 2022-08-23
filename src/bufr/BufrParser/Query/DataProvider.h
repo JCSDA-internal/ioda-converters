@@ -48,7 +48,7 @@ namespace bufr {
     class DataProvider
     {
      public:
-        DataProvider(int fileUnit) : fileUnit_(fileUnit) {}
+        explicit DataProvider(int fileUnit) : fileUnit_(fileUnit) {}
         ~DataProvider() = default;
 
         /// \brief Read the data from the BUFR interface for the current subset and reset the
