@@ -218,12 +218,12 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 if v in obsspace.variables:
                     _var = obsspace.Variable(v)
                     tmpdata = np.array(_var.read_data())
+                    del _var
                 else:
                     tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(GeoVarTypes[v]),
                                       dtype=GeoVarTypes[v])
                 tmpgeodata.append(tmpdata)
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
-                del _var
                 del obsspace
             tmpgeodata = np.hstack(tmpgeodata)
             tmpgeoidx = np.hstack(tmpgeoidx)
@@ -244,12 +244,12 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 if v in obsspace.variables:
                     _var = obsspace.Variable(v)
                     tmpdata = np.array(_var.read_data())
+                    del _var
                 else:
                     tmpdata = np.full((obsspace.nlocs, nlevs), iconv.get_default_fill_val(GeoVarTypes[v]),
                                       dtype=GeoVarTypes[v])
                 tmpgeodata.append(tmpdata)
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
-                del _var
                 del obsspace
             tmpgeodata = np.vstack(tmpgeodata)
             tmpgeoidx = np.vstack(tmpgeoidx)
@@ -268,12 +268,12 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 if v in obsspace.variables:
                     _var = obsspace.Variable(v)
                     tmpdata = np.array(_var.read_data())
+                    del _var
                 else:
                     tmpdata = np.full((obsspace.nlocs, ninterfaces), iconv.get_default_fill_val(GeoVarTypes[v]),
                                       dtype=GeoVarTypes[v])
                 tmpgeodata.append(tmpdata)
                 tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
-                del _var
                 del obsspace
             tmpgeodata = np.vstack(tmpgeodata)
             tmpgeoidx = np.vstack(tmpgeoidx)
