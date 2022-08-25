@@ -7,6 +7,10 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
+# TODO:
+#      - Add flags
+#      - Unit conversion
+
 import sys
 import argparse
 import netCDF4 as nc
@@ -14,9 +18,11 @@ import numpy as np
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
+
 import xarray as xr
 import dask
 import math
+from numpy import log as ln
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -34,24 +40,31 @@ locationKeyList = [
 ]
 
 obsvars = {
-    'x': 'carbonmonoxideProfile'  # Should I change this to total column instead of mixing ratio?
+    'x': 'carbonmonoxideProfile'  # Total col is not ready, is Profile the right term?
     # units:1
     # standard_name:dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide
     # long_name:carbon_monoxide_vmr
     # comment:Volume mixing ratio (VMR) of Carbon Monoxide relative to dry air
+}
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'nvars': np.int32(len(obsvars))
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'x': ['nlocs','level'] ##not sure about level
+    'x': ['nlocs']
 }
-
+    
+# constants
+avogadro = 6.02214076E23
+scm2sm = 1E4
+vmr2col = 2.12E13  # What is this value for TROPESS?
+hPa2Pa = 1E2
+    
 class tropess(object):
     def __init__(self, filenames):
         self.filenames = filenames
@@ -69,7 +82,7 @@ class tropess(object):
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1' # make sure to update this
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
             self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
@@ -90,18 +103,17 @@ class tropess(object):
             # note that datetime_utc variable in the intput is buggy 
             # and has +10sec offset when compared time_tai93.
             times = ds_cris['time'].dt.strftime("%Y-%m-%dT%H:%M:%SZ").values
-
                 
-            pressure = ds_cris['pressure'] # 14xnloc
+            pressure = ds_cris['pressure'] #hPa
             nlocs = pressure.shape[0]
             nlevs = pressure.shape[1]
             x = ds_cris['x'] # dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide
-    
+
             # open observation_ops group
             ds_cris_observation_ops= xr.open_mfdataset(filename, group='observation_ops', parallel=False)
     
-            # A priori state, as volume mixing ratio (VMR) relative to dry air
-                                                                                                                                          
+            # A priori state, as volume mixing ratio (VMR) relative to dry air, unit = 1
+            xa = ds_cris_observation_ops['xa']                                                                                                                   
     
             # logarithmic_averaging_kernel
             averaging_kernel = ds_cris_observation_ops['averaging_kernel']
@@ -111,47 +123,65 @@ class tropess(object):
             
             # The estimated state for target 0 based on x[0], xa[0], and avg_kernel[0], as volume mixing ratio (VMR) relative to dry air
             test_x = ds_cris_observation_ops['x_test']
-     
-            # sum of rows in ak used for tc calculation
-            ak_tc = np.zeros([nlocs, nlevs])
-            for loc in range(nlocs):
-                ak_loc = ak[loc,:,:]
-                ak_tc[loc,:] = ak_loc.sum(axis=0)
+    
+            # Calculate apriori term
+            user_levels = [1,5] ## read this from YAML?
+            lev=0
+            ap = np.zeros((nlocs,len(user_levels)))
+            for user_level in user_levels:
+                ap [:,lev] = 0
+                for j in range(nlevs):
+                    ap[:,lev] = ln(xa)[:,user_level] - averaging_kernel[:,user_level,j]*ln(xa)[:,j] + ap[:,lev]
+                lev=lev+1
+    
+            ## TOTAL COLUMN CALC:
     
             # H(xt) = ln(xa) + A (ln(xt) - ln(xa))
-    
-            # convert VMR to total column (ct) following MOPPIT Version 4 Produc User's Guide
+            # convert VMR to total column (ct) following MOPPIT Version 4 Product User's Guide
             # C = K x sum(delP x VMR); 
             # where K = 2.2 x 10^13 (mol/cm2)/(hPa ppb)
             # for tropess need to remove ppb => K = 2.2 x 10^(13+9) = 2.2 x 10^22 (mol/cm2)/(hPa)
-            vmr2col = 2.2 x 10^22
-    
-            ap_tc = np.zeros(nlocs)
-            for j in range(nlevs):
-                for i in range(nlevs-1):
-                delP = pressure[:,i] - pressure[:,i+1]
-                sumterm = delP*xa[:,i]*averaging_kernel[:,i,j] + sumterm
-        
-            ap_tc[:,j] = (vmr2col/math.log10(math.e)) * sumterm
-    
-            #for lev in range(nlevs-1):
-            #    print("lev = "+str(lev))
-            #    delP = pressure[:,lev] - pressure[:,lev+1]
-            #    ap_tc (mol/m2) = ap_tc + averaging_kernel[:,0, lev] * delP * ln(xa[:,lev])* more constants to convert (mol/m2)
+            #vmr2col = 2.2 x 10^22    
+            #ap_tc = np.zeros(nlocs)
+            #for j in range(nlevs):
+            #    for i in range(nlevs-1):
+            #        delP = pressure[:,i] - pressure[:,i+1]
+            #        sumterm = delP*x[:,i]*averaging_kernel[:,i,j] + sumterm
+            #ap_tc[:,j] = (vmr2col/math.log10(math.e)) * sumterm
 
-            #print("****ap_tc***")
-            #print(ap_tc)
+            # if first: # add this later
+    
+            # add metadata variables
+            self.outdata[('datetime', 'MetaData')] = times
+            self.outdata[('latitude', 'MetaData')] = lats
+            self.outdata[('longitude', 'MetaData')] = lons
+            #self.outdata[('apriori_term', 'RtrvlAncData')] = ap
+    
+            counter = 0
+
+            for k in user_levels: ## over user_levels or retrieval levels
+                varname_ak = ('averaging_kernel_level_'+str(k), 'RtrvlAncData')
+                self.outdata[varname_ak] = averaging_kernel.sum(axis=1) # 2D or 1 D? Sum over rows? 
+                
+                varname_pr = ('pressure_level_'+str(k), 'RtrvlAncData')
+                self.outdata[varname_pr] = hPa2Pa * pressure[:, k]
             
-
-            if first:
-                # add metadata vari  ables
-                self.outdata[('datetime', 'MetaData')] = times
-                self.outdata[('latitude', 'MetaData')] = lats
-                self.outdata[('longitude', 'MetaData')] = lons
+                varname_ap = ('apriori_term_'+str(k), 'RtrvlAncData')
+                self.outdata[varname_ap] = ap[:,counter]
+                counter = counter + 1
+               
+            varname_xa_ln = ('apriori_state_ln', 'RtrvlAncData')
+            self.outdata[varname_xa_ln] = ln(xa)    
+    
 
         DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-
+        
+        for k in user_levels:
+            varname = 'averaging_kernel_level_'+str(k)
+            vkey = (varname, 'RtrvlAncData')
+            self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+            self.varAttrs[vkey]['units'] = ''
 
 def main():
 
@@ -175,7 +205,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Read in the NO2 data
+    # Read in the CO2 data
     co = tropess(args.input)
 
     # setup the IODA writer
