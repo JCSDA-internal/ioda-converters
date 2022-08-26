@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
-#include "ioda/Engines/Factory.h"
+#include "ioda/Engines/EngineUtils.h"
 #include "ioda/Group.h"
 
 namespace Ingester
