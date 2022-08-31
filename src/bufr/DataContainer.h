@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "Eigen/Dense"
 
 #include "DataObject.h"
 #include "IngesterTypes.h"
