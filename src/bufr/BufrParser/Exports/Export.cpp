@@ -16,6 +16,7 @@
 #include "Splits/CategorySplit.h"
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
+#include "Variables/AircraftAltitudeVariable.h"
 #include "Variables/Transforms/Transform.h"
 #include "Variables/Transforms/TransformBuilder.h"
 
@@ -34,6 +35,7 @@ namespace
             const char* Datetime = "datetime";
             const char* Query = "query";
             const char* GroupByField = "group_by";  // Deprecated
+            const char* AircraftAltitude = "aircraftAltitude";
             const char* Type = "type";
         }  // namespace Variable
 
@@ -124,6 +126,11 @@ namespace Ingester
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
                 variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
+            }
+            else if (subConf.has(ConfKeys::Variable::AircraftAltitude))
+            {
+                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::AircraftAltitude);
+                variable = std::make_shared<AircraftAltitudeVariable>(key, groupByField, dtconf);
             }
             else if (subConf.has(ConfKeys::Variable::Query))
             {
