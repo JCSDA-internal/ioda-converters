@@ -217,7 +217,7 @@ def main():
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-q', '--qa_value',
-        help="qa value used to preflag data the goes into file before QC"
+        help="qa value used to preflag data that goes into file before QC"
         "default at 0.75 as suggested in documentation. See:"
         "https://sentinel.esa.int/documents/247904/2474726/"
         "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6",
