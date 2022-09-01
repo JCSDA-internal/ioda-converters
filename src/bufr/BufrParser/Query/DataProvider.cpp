@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 
 #include "eckit/exception/Exceptions.h"
 
@@ -56,18 +57,20 @@ namespace bufr {
             typ_.resize(size);
             for (int wordIdx = 0; wordIdx < size; wordIdx++)
             {
-                auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
+                static const std::unordered_map<std::string, Typ> TypMap =
+                    {{Subset,            Typ::Subset},
+                     {DelayedRep,        Typ::DelayedRep},
+                     {FixedRep,          Typ::FixedRep},
+                     {DelayedRepStacked, Typ::DelayedRepStacked},
+                     {DelayedBinary,     Typ::DelayedBinary},
+                     {Sequence,          Typ::Sequence},
+                     {Repeat,            Typ::Repeat},
+                     {StackedRepeat,     Typ::StackedRepeat},
+                     {Number,            Typ::Number},
+                     {Character,         Typ::Character}};
 
-                if      (typ == Subset)            typ_[wordIdx] = Typ::Subset;
-                else if (typ == DelayedRep)        typ_[wordIdx] = Typ::DelayedRep;
-                else if (typ == FixedRep)          typ_[wordIdx] = Typ::FixedRep;
-                else if (typ == DelayedRepStacked) typ_[wordIdx] = Typ::DelayedRepStacked;
-                else if (typ == DelayedBinary)     typ_[wordIdx] = Typ::DelayedBinary;
-                else if (typ == Sequence)          typ_[wordIdx] = Typ::Sequence;
-                else if (typ == Repeat)            typ_[wordIdx] = Typ::Repeat;
-                else if (typ == StackedRepeat)     typ_[wordIdx] = Typ::StackedRepeat;
-                else if (typ == Number)            typ_[wordIdx] = Typ::Number;
-                else if (typ == Character)         typ_[wordIdx] = Typ::Character;
+                auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
+                typ_[wordIdx] = TypMap.at(typ);
             }
 
             get_tag_f(&charPtr, &strLen, &size);
@@ -109,15 +112,6 @@ namespace bufr {
 
         int retVal;
         TypeInfo info;
-//        get_tabb_info_f(bufrLoc_,
-//                        getTag(idx).c_str(),
-//                        &info.scale,
-//                        &info.reference,
-//                        &info.bits,
-//                        unitCStr,
-//                        UNIT_STR_LEN,
-//                        descCStr,
-//                        DESC_STR_LEN);
 
         nemdefs_f(fileUnit_,
                   getTag(idx).c_str(),
@@ -127,36 +121,38 @@ namespace bufr {
                    DESC_STR_LEN,
                    &retVal);
 
+        if (retVal == 0)
+        {
+            // trim the unit string
+            auto unitStr = std::string(unitCStr);
+            size_t end = unitStr.find_last_not_of(" \n\r\t\f\v");
+            unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);
+            info.unit = unitStr;
 
-        // trim the unit string
-        auto unitStr = std::string(unitCStr);
-        size_t end = unitStr.find_last_not_of(" \n\r\t\f\v");
-        unitStr = (end == std::string::npos) ? "" : unitStr.substr(0, end + 1);
-        info.unit = unitStr;
+            // trim the unit string
+            auto descStr = std::string(descCStr);
+            end = descStr.find_last_not_of(" \n\r\t\f\v");
+            descStr = (end == std::string::npos) ? "" : descStr.substr(0, end + 1);
+            info.description = descStr;
 
-        // trim the unit string
-        auto descStr = std::string(descCStr);
-        end = descStr.find_last_not_of(" \n\r\t\f\v");
-        descStr = (end == std::string::npos) ? "" : descStr.substr(0, end + 1);
-        info.description = descStr;
+            int descriptor;
+            int table_idx;
+            char table_type;
 
-        int descriptor;
-        int table_idx;
-        char table_type;
+            nemtab_f(bufrLoc_,
+                     getTag(idx).c_str(),
+                     &descriptor,
+                     &table_type,
+                     &table_idx);
 
-        nemtab_f(bufrLoc_,
-                 getTag(idx).c_str(),
-                 &descriptor,
-                 &table_type,
-                 &table_idx);
-
-        nemtbb_f(bufrLoc_,
-                 table_idx,
-                 unitCStr,
-                 UNIT_STR_LEN,
-                 &info.scale,
-                 &info.reference,
-                 &info.bits);
+            nemtbb_f(bufrLoc_,
+                     table_idx,
+                     unitCStr,
+                     UNIT_STR_LEN,
+                     &info.scale,
+                     &info.reference,
+                     &info.bits);
+        }
 
         return info;
     }

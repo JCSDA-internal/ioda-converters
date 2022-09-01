@@ -37,7 +37,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
-  testinput/modis_aod.nc
+  testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
   testinput/afwa_snod_24km.grib
@@ -913,8 +913,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
-                          -i testinput/modis_aod.nc
-                          -t 2016060100
+                          -i testinput/modis_aod.hdf
+                          -t 2021080100
+			  -p Terra
                           -o testrun/modis_aod.nc"
                           modis_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
@@ -1167,18 +1168,11 @@ if(iodaconv_bufr_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa
                     TYPE    SCRIPT
+                    COMMAND bash
                     COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                     ARGS    netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr.yaml"
                     adpupa_prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
-                    DEPENDS bufr2ioda.x )
-
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa_groupby
-                    TYPE    SCRIPT
-                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                    ARGS    netcdf
-                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr_group_by.yaml"
-                    adpupa_prepbufr_group_by.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
@@ -1581,8 +1575,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                  ARGS    netcdf
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/owp_snow_obs.py
                           -i testinput/owp_snow_obs.csv
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc

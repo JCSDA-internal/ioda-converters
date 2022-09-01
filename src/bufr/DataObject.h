@@ -59,7 +59,7 @@ namespace Ingester
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
         /// \brief Print the data object to stdout.
-        virtual void print() const = 0;
+        virtual void print(std::ostream &out) const = 0;
 
         /// \brief Get the data at the location as an integer.
         /// \return Integer data.
@@ -171,16 +171,16 @@ namespace Ingester
         };
 
         /// \brief Print data to stdout for debug purposes.
-        void print() const final
+        void print(std::ostream &out) const final
         {
-            std::cout << "DataObject " << fieldName_ << ":";
-
-            for (auto element : data_)
+            out << "DataObject " << fieldName_ << ":";
+            for (auto val = data_.cbegin(); val != data_.cend(); ++val)
             {
-                std::cout << element << ", ";
+                if (val != data_.cbegin()) out << ", ";
+                out << *val;
             }
 
-            std::cout << std::endl;
+            out << std::endl;
         };
 
         /// \brief Get the raw data.
