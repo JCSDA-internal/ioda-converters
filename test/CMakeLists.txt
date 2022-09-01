@@ -100,7 +100,8 @@ list( APPEND test_output
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/viirs_bias.nc 
-  testoutput/tropomi_no2.nc
+  testoutput/tropomi_no2_total.nc
+  testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
@@ -894,7 +895,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_total
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
@@ -902,8 +903,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
                           -i testinput/tropomi_no2.nc
-                          -o testrun/tropomi_no2.nc"
-                          tropomi_no2.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          -o testrun/tropomi_no2_total.nc
+                          -c total"
+                          tropomi_no2_total.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+                          -i testinput/tropomi_no2.nc
+                          -o testrun/tropomi_no2_tropo.nc
+                          -c tropo"
+                          tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
