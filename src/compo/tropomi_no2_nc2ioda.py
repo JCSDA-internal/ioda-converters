@@ -85,8 +85,10 @@ class tropomi(object):
             qa_value = qa_value.ravel()
 
             # adding ability to pre filter the data using the qa value
-            # documentation recommends using > 0.75
-            flg = (qa_value > self.qa_flg and np.random.uniform(size=len(lons)) > self.thin)
+            # and also perform thinning using random uniform draw
+            qaf = qa_value > self.qa_flg 
+            thi = np.random.uniform(size=len(lons)) > self.thin
+            flg = np.logical_and(qaf, thi)
             qc_flag = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS']\
                 .variables['processing_quality_flags'][:]
             qc_flag = qc_flag.ravel().astype('int32')
@@ -218,7 +220,7 @@ def main():
         help="qa value used to preflag data the goes into file before QC"
         "default at 0.75 as suggested in documentation. See:"
         "https://sentinel.esa.int/documents/247904/2474726/"
-        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6"
+        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6",
         type=float, default=0.75)
     optional.add_argument(
         '-n', '--thin',
