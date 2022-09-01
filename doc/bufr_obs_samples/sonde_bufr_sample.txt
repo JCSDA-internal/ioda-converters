@@ -1,0 +1,238 @@
+Found BUFR message #      1
+  
+        Message length:       38953
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          22
+          Master table:           0
+    Originating center:           7 (= U.S. National Weather Service, National Centres for Environmental Prediction (NCEP))
+ Originating subcenter:           3 (= NCEP Central Operations)
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           2 (= Vertical soundings (other than satellite))
+     Local subcategory:         255
+ Internatl subcategory:           4 (= Upper-level temperature/humidity/wind reports from fixed-land stations (TEMP))
+  Master table version:          25
+   Local table version:           0
+                  Year:        2021
+                 Month:           2
+                   Day:           1
+                  Hour:          11
+                Minute:           7
+                Second:          20
+  
+ Number of data subsets:           1
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:           2
+        1: 301128
+        2: 309052
+
+BUFR message #      1 of type MSTTB001 and date 2021020111 contains      1 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001081  RSERL                   88311468  (20)CCITT IA5                 Radiosonde serial number                        
+001082  RASCN                       64.0  NUMERIC                       Radiosonde ascension number                     
+001083  RRLSE                        1.0  NUMERIC                       Radiosonde release number                       
+001095  OBSVR                        GPM  ( 4)CCITT IA5                 Observer identification                         
+002015  RACP                     MISSING  CODE TABLE                    Radiosonde completeness                         
+002016  RCONF                        4.0  FLAG TABLE(3)                 Radiosonde configuration                        
+                                      3 = Parachute
+002017  CAHM                     MISSING  CODE TABLE                    Correction algorithms for humidity measurements 
+002066  RGRSY                        0.0  CODE TABLE                    Radiosonde ground receiving system              
+                                      0 = InterMet IMS 2000
+002067  RFREQ               1676000000.0  HZ                            Radiosonde operating frequency                  
+002080  BMFGR                        1.0  CODE TABLE                    Balloon manufacturer                            
+                                      1 = Totex
+002081  BTYPE                        0.0  CODE TABLE                    Type of balloon                                 
+                                      0 = GP26
+002082  BWGHT                      0.600  KG                            Weight of balloon                               
+002083  BSHEL                        0.0  CODE TABLE                    Type of balloon shelter                         
+                                      0 = High bay
+002084  BGTYP                        0.0  CODE TABLE                    Type of gas used in balloon                     
+                                      0 = Hydrogen
+002085  BGAMT                      1.100  KG                            Amount of gas used in balloon                   
+002086  BFTLN                       22.9  M                             Balloon flight train length                     
+002095  PSENS                        0.0  CODE TABLE                    Type of pressure sensor                         
+                                      0 = Capacitance aneroid
+002096  TSENS                        1.0  CODE TABLE                    Type of temperature sensor                      
+                                      1 = Bead thermistor
+002097  RHSENS                       4.0  CODE TABLE                    Type of humidity sensor                         
+                                      4 = Capacitance sensor
+002103  RADO                     MISSING  FLAG TABLE                    Radome                                          
+002191  GHTC                     MISSING  CODE TABLE                    Geopotential height calculation                 
+025061  SOFTV                    3.4.0.3  (12)CCITT IA5                 Software identification and version number      
+035035  RTERM                        9.0  CODE TABLE                    Reason for termination                          
+                                      9 = Excessive missing data frames
+001001  WMOB                        72.0  NUMERIC                       WMO block number                                
+001002  WMOS                       265.0  NUMERIC                       WMO station number                              
+001011  SMID                     MISSING  ( 9)CCITT IA5                 Ship or mobile land station identifier          
+002011  RATP                       182.0  CODE TABLE                    Radiosonde type                                 
+                                    182 = Lockheed Martin LMS-6 w/chip thermistor, external boom mounted polymer capacitive relative humidity sensor, capacitive p
+002013  SIRC                         5.0  CODE TABLE                    Solar and infrared radiation correction         
+                                      5 = Solar corrected automatically by radiosonde system
+002014  TTSS                         8.0  CODE TABLE                    Tracking technique/status of system used        
+                                      8 = Automatic satellite navigation
+002003  A4ME                     MISSING  CODE TABLE                    Type of measuring equipment used                
+008021  TSIG                        18.0  CODE TABLE                    Time significance                               
+                                     18 = Radiosonde launch time
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                         7.0  MINUTE                        Minute                                          
+004006  SECO                        20.0  S                             Second                                          
+005001  CLATH                   31.94267  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -102.18986  DEGREE                        Longitude (high accuracy)                       
+007030  HSMSL                    MISSING  M                             Height of station ground above mean sea level   
+007031  HBMSL                      874.0  M                             Height of barometer above mean sea level        
+007007  HEIT                       874.0  M                             Height                                          
+033024  QCEVR                    MISSING  CODE TABLE                    Station elevation quality mark (for mobile stati
+008002  VSSO                     MISSING  CODE TABLE                    Vertical significance (surface observations)    
+020011  CLAM                         0.0  CODE TABLE                    Cloud amount                                    
+                                      0 = 0
+020013  HOCB                      2500.0  M                             Height of base of cloud                         
+020012  CLTP                        30.0  CODE TABLE                    Cloud type                                      
+                                     30 = No CL clouds
+020012  CLTP                        20.0  CODE TABLE                    Cloud type                                      
+                                     20 = No CM clouds
+020012  CLTP                        10.0  CODE TABLE                    Cloud type                                      
+                                     10 = No CH clouds
+008002  VSSO                     MISSING  CODE TABLE                    Vertical significance (surface observations)    
+022043  SST1                     MISSING  K                             Sea/water temperature                           
+           (TDWPRAOB)  1848 REPLICATIONS
+    ++++++  TDWPRAOB  REPLICATION #     1  ++++++
+004086  LTDS                         0.0  S                             Long time period or displacement                
+008042  VSIGX                   131072.0  FLAG TABLE(1)                 Extended vertical sounding significance         
+                                      1 = Surface
+007004  PRLC                     92870.0  PA                            Pressure                                        
+010009  GPH10                      874.0  GPM                           Geopotential height                             
+005015  LATDH                    0.00000  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                    0.00000  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      274.55  K                             Temperature/air temperature                     
+012103  TMDP                      269.49  K                             Dewpoint temperature                            
+011001  WDIR                         0.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         0.0  M S⁻¹                      Wind speed                                      
+    ++++++  TDWPRAOB  REPLICATION #     2  ++++++
+004086  LTDS                         1.0  S                             Long time period or displacement                
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance         
+007004  PRLC                     92810.0  PA                            Pressure                                        
+010009  GPH10                      879.0  GPM                           Geopotential height                             
+005015  LATDH                   -0.00010  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                    0.00003  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      275.86  K                             Temperature/air temperature                     
+012103  TMDP                      269.09  K                             Dewpoint temperature                            
+011001  WDIR                       135.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         0.1  M S⁻¹                      Wind speed                                      
+    ++++++  TDWPRAOB  REPLICATION #     3  ++++++
+004086  LTDS                         2.0  S                             Long time period or displacement                
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance         
+007004  PRLC                     92740.0  PA                            Pressure                                        
+010009  GPH10                      885.0  GPM                           Geopotential height                             
+005015  LATDH                   -0.00015  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                    0.00002  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      276.77  K                             Temperature/air temperature                     
+012103  TMDP                      269.70  K                             Dewpoint temperature                            
+011001  WDIR                       135.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         0.4  M S⁻¹                      Wind speed                                      
+    ++++++  TDWPRAOB  REPLICATION #     4  ++++++
+004086  LTDS                         3.0  S                             Long time period or displacement                
+008042  VSIGX                     8192.0  FLAG TABLE(5)                 Extended vertical sounding significance         
+                                      5 = Significant temperature level
+007004  PRLC                     92680.0  PA                            Pressure                                        
+010009  GPH10                      890.0  GPM                           Geopotential height                             
+005015  LATDH                   -0.00011  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                   -0.00002  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      277.55  K                             Temperature/air temperature                     
+012103  TMDP                      270.27  K                             Dewpoint temperature                            
+011001  WDIR                       135.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         0.6  M S⁻¹                      Wind speed                                      
+    ++++++  TDWPRAOB  REPLICATION #     5  ++++++
+004086  LTDS                         4.0  S                             Long time period or displacement                
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance         
+007004  PRLC                     92610.0  PA                            Pressure                                        
+010009  GPH10                      896.0  GPM                           Geopotential height                             
+005015  LATDH                   -0.00005  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                   -0.00008  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      278.10  K                             Temperature/air temperature                     
+012103  TMDP                      270.56  K                             Dewpoint temperature                            
+011001  WDIR                       135.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         0.8  M S⁻¹                      Wind speed                                      
+    ++++++  TDWPRAOB  REPLICATION #     6  ++++++
+004086  LTDS                         5.0  S                             Long time period or displacement                
+008042  VSIGX                    65536.0  FLAG TABLE(2)                 Extended vertical sounding significance         
+                                      2 = Standard level
+007004  PRLC                     92500.0  PA                            Pressure                                        
+010009  GPH10                      906.0  GPM                           Geopotential height                             
+005015  LATDH                   -0.00002  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                   -0.00014  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      279.06  K                             Temperature/air temperature                     
+012103  TMDP                      270.93  K                             Dewpoint temperature                            
+011001  WDIR                       135.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         1.0  M S⁻¹                      Wind speed                                      
+    ++++++  TDWPRAOB  REPLICATION #     7  ++++++
+004086  LTDS                         6.0  S                             Long time period or displacement                
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance         
+007004  PRLC                     92470.0  PA                            Pressure                                        
+010009  GPH10                      908.0  GPM                           Geopotential height                             
+005015  LATDH                    0.00004  DEGREE                        Latitude displacement (high accuracy)           
+006015  LONDH                   -0.00020  DEGREE                        Longitude displacement (high accuracy)          
+012101  TMDB                      279.24  K                             Temperature/air temperature                     
+012103  TMDP                      271.05  K                             Dewpoint temperature                            
+011001  WDIR                       135.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         1.3  M S⁻¹                      Wind speed
+
+<SNIP>
+
+    ++++++  TDWPRAOB  REPLICATION #  1845  ++++++
+004086  LTDS                      1844.0  S                             Long time period or displacement
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance
+007004  PRLC                     27030.0  PA                            Pressure
+010009  GPH10                    10270.0  GPM                           Geopotential height
+005015  LATDH                   -0.13194  DEGREE                        Latitude displacement (high accuracy)
+006015  LONDH                    0.29067  DEGREE                        Longitude displacement (high accuracy)
+012101  TMDB                      230.16  K                             Temperature/air temperature
+012103  TMDP                      216.39  K                             Dewpoint temperature
+011001  WDIR                     MISSING  DEGREE TRUE                   Wind direction
+011002  WSPD                     MISSING  M S⁻¹                      Wind speed
+    ++++++  TDWPRAOB  REPLICATION #  1846  ++++++
+004086  LTDS                      1845.0  S                             Long time period or displacement
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance
+007004  PRLC                     27010.0  PA                            Pressure
+010009  GPH10                    10275.0  GPM                           Geopotential height
+005015  LATDH                   -0.13211  DEGREE                        Latitude displacement (high accuracy)
+006015  LONDH                    0.29100  DEGREE                        Longitude displacement (high accuracy)
+012101  TMDB                      230.12  K                             Temperature/air temperature
+012103  TMDP                      216.40  K                             Dewpoint temperature
+011001  WDIR                     MISSING  DEGREE TRUE                   Wind direction
+011002  WSPD                     MISSING  M S⁻¹                      Wind speed
+    ++++++  TDWPRAOB  REPLICATION #  1847  ++++++
+004086  LTDS                      1846.0  S                             Long time period or displacement
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance
+007004  PRLC                     26990.0  PA                            Pressure
+010009  GPH10                    10280.0  GPM                           Geopotential height
+005015  LATDH                   -0.13228  DEGREE                        Latitude displacement (high accuracy)
+006015  LONDH                    0.29133  DEGREE                        Longitude displacement (high accuracy)
+012101  TMDB                      230.09  K                             Temperature/air temperature
+012103  TMDP                      216.40  K                             Dewpoint temperature
+011001  WDIR                     MISSING  DEGREE TRUE                   Wind direction
+011002  WSPD                     MISSING  M S⁻¹                      Wind speed
+    ++++++  TDWPRAOB  REPLICATION #  1848  ++++++
+004086  LTDS                      1847.0  S                             Long time period or displacement
+008042  VSIGX                        0.0  FLAG TABLE                    Extended vertical sounding significance
+007004  PRLC                     26970.0  PA                            Pressure
+010009  GPH10                    10285.0  GPM                           Geopotential height
+005015  LATDH                    MISSING  DEGREE                        Latitude displacement (high accuracy)
+006015  LONDH                    MISSING  DEGREE                        Longitude displacement (high accuracy)
+012101  TMDB                      230.05  K                             Temperature/air temperature
+012103  TMDP                      216.40  K                             Dewpoint temperature
+011001  WDIR                     MISSING  DEGREE TRUE                   Wind direction
+011002  WSPD                     MISSING  M S⁻¹                      Wind speed
+           {WSPLRAOB}     0 REPLICATIONS
+
+ >>> END OF SUBSET <<<
+
+
+End of BUFR message #      1

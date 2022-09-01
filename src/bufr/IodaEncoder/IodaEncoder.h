@@ -11,7 +11,7 @@
 
 #include "eckit/config/LocalConfiguration.h"
 #include "ioda/Group.h"
-#include "ioda/Engines/Factory.h"
+#include "ioda/Engines/EngineUtils.h"
 #include "ioda/ObsGroup.h"
 
 #include "DataContainer.h"

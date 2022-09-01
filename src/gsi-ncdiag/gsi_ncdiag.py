@@ -301,6 +301,7 @@ geovals_vars = {
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
     'geopotential_height': 'geopotential_height',
+    'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
@@ -310,6 +311,7 @@ geovals_vars = {
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
     'surface_geopotential_height': 'surface_geopotential_height',
+    'surface_geometric_height': 'surface_geometric_height',
     'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
@@ -863,11 +865,14 @@ class Conv(BaseGSI):
                             tmp[tmp == 10009.] = self.FLOAT_FILL  # for u,v sfc Height values that are 10+9999
                             # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
                             # this is correctly 10m agl though for u,v obs
-                            if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
-                                elev = self.var('Station_Elevation')[idx]
-                                hgt = elev + 2.
-                                hgt[hgt > 9998.] = self.FLOAT_FILL
-                                tmp = hgt
+                            # --- temporarily comment out the following so 2m_t & 2m_q can be properly combined
+                            # --- with surface_pressure ioda obs as single record because 2m_t and 2m_q are used
+                            # --- in UFO surface pressure correction scheme
+                            # if lvar == 'Height' and self.obstype in ['conv_t', 'conv_q']:
+                            #     elev = self.var('Station_Elevation')[idx]
+                            #     hgt = elev + 2.
+                            #     hgt[hgt > 9998.] = self.FLOAT_FILL
+                            #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind':

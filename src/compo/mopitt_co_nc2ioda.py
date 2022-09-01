@@ -158,11 +158,14 @@ class mopitt(object):
                 self.outdata[('datetime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('apriori_term', 'MetaData')] = ap_tc[flg]
+                self.outdata[('apriori_term', 'RtrvlAncData')] = ap_tc[flg]
                 for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
+                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = ak_tc_dimless[:, k][flg]
-                    varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
+                # add top vertice in IODA file, here it is 0hPa but can be different
+                # for other obs stream
+                for k in range(nlevs+1):
+                    varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = hPa2Pa * pr_gd[:, k][flg]
 
                 self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]
@@ -176,13 +179,16 @@ class mopitt(object):
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
-                self.outdata[('apriori_term', 'MetaData')] = np.concatenate((
-                    self.outdata[('apriori_term', 'MetaData')], ap_tc[flg]))
+                self.outdata[('apriori_term', 'RtrvlAncData')] = np.concatenate((
+                    self.outdata[('apriori_term', 'RtrvlAncData')], ap_tc[flg]))
                 for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'MetaData')
+                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = np.concatenate(
                         (self.outdata[varname_ak], ak_tc_dimless[:, k][flg]))
-                    varname_pr = ('pressure_level_'+str(k+1), 'MetaData')
+                # add top vertice in IODA file, here it is 0hPa but can be different
+                # for other obs stream
+                for k in range(nlevs+1):
+                    varname_pr = ('pressure_level_'+str(k), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
                         (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
@@ -199,7 +205,7 @@ class mopitt(object):
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)
-            vkey = (varname, 'MetaData')
+            vkey = (varname, 'RtrvlAncData')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
             self.varAttrs[vkey]['units'] = ''
 
