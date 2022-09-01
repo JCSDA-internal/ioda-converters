@@ -18,7 +18,7 @@ namespace Ingester
     class Transform
     {
      public:
-        ~Transform() = default;
+        virtual ~Transform() = default;
 
         /// \brief Modify data according to the rules of the transform.
         /// \param array Array of data to modify.
