@@ -86,7 +86,7 @@ class tropomi(object):
 
             # adding ability to pre filter the data using the qa value
             # documentation recommends using > 0.75
-            flg = ( qa_value > self.qa_flg and np.random.uniform(size=len(lons)) > self.thin )
+            flg = (qa_value > self.qa_flg and np.random.uniform(size=len(lons)) > self.thin)
             qc_flag = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS']\
                 .variables['processing_quality_flags'][:]
             qc_flag = qc_flag.ravel().astype('int32')
