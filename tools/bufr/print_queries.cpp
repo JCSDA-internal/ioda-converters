@@ -24,7 +24,10 @@ std::set<std::string> getSubsets(int fileUnit)
     char subset[SubsetLen];
     while (ireadmg_f(fileUnit, subset, &iddate, SubsetLen) == 0)
     {
-        subsets.insert(std::string(subset));
+        auto str_subset = std::string(subset);
+        str_subset.erase(
+            remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
+        subsets.insert(str_subset);
     }
 
     return subsets;
