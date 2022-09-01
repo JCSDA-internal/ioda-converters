@@ -84,6 +84,16 @@ conv_bufrtypes = {
 all_LocKeyList = {
     'Station_ID': ('station_id', 'string'),
     'Time': ('datetime', 'string'),
+    'time': ('time', 'string'),
+    'ascending_flag': ('ascending_flag', 'string'),
+    'earth_radius_of_curvature': ('earth_radius_of_curvature', 'string'),
+    'reference_sat_id': ('reference_sat_id', 'string'),
+    'occulting_sat_id': ('occulting_sat_id', 'string'),
+    'record_number': ('record_number', 'string'),
+    'geoid_height_above_reference_ellipsoid': ('geoid_height_above_reference_ellipsoid', 'string'),
+    'gnss_sat_class': ('gnss_sat_class', 'string'),
+    'impact_height': ('impact_height', 'string'),
+    'impact_parameter': ('impact_parameter', 'string'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('station_elevation', 'float'),
@@ -115,6 +125,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
     'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
     'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
+    'Data_Vertical_Velocity': ('data_vertical_velocity', 'float'),
     'LaunchTime': ('LaunchTime', 'float'),
 }
 
@@ -152,6 +163,8 @@ gsi_add_vars_allsky = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Forecast_adjusted': 'GsiHofXBc',
+    'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
     'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
@@ -181,6 +194,8 @@ gsi_add_vars = {
     'Errinv_Final': 'GsiFinalObsError',
     'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
+    'Forecast_adjusted': 'GsiHofXBc',
+    'Forecast_unadjusted': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
@@ -300,6 +315,7 @@ geovals_vars = {
     'specific_humidity': 'specific_humidity',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
+    'geopotential_height_levels': 'geopotential_height_levels',
     'geopotential_height': 'geopotential_height',
     'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
@@ -311,6 +327,7 @@ geovals_vars = {
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
     'surface_geopotential_height': 'surface_geopotential_height',
+    'surface_altitude': 'surface_altitude',
     'surface_geometric_height': 'surface_geometric_height',
     'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
@@ -407,12 +424,18 @@ units_values = {
     'northward_wind': 'm s-1',
     'eastward_wind': 'm s-1',
     'geopotential_height': 'm',
+    'geopotential_height_levels': 'm',
     'height_above_mean_sea_level': 'm',
     'surface_pressure': 'Pa',
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
     'surface_geopotential_height': 'm',
+    'surface_altitude': 'm',
+    'geoid_height_above_reference_ellipsoid': 'Meters',
+    'earth_radius_of_curvature': 'Meters',
+    'impact_height': 'Meters',
+    'impact_parameter': 'Meters',
     'land_area_fraction': '1',
     'air_temperature': 'K',
     'air_pressure': 'Pa',
@@ -490,6 +513,7 @@ units_values = {
     'clw_retrieved_from_background': 'kg/m/m',
     'scat_retrieved_from_observation': '1',
     'LaunchTime': 'hours',
+    'bending_angle': 'radians',
 }
 
 # @TestReference
@@ -677,7 +701,8 @@ class Conv(BaseGSI):
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
-                                if vname == "atmosphere_pressure_coordinate_interface":
+                                if (vname == "atmosphere_pressure_coordinate_interface" \
+                                    or vname == "geopotential_height_levels"):
                                     dims = ("nlocs", "ninterfaces")
                                 else:
                                     dims = ("nlocs", "nlevs")
@@ -843,7 +868,7 @@ class Conv(BaseGSI):
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
-                    elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                    elif lvar == 'Time' or lvar == 'time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -1331,6 +1356,8 @@ class Radiances(BaseGSI):
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
                 elif "Obs_Minus_" in gsivar:
+                    if 'Forecast_adjusted' in self.df.variables:
+                        continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
                 else:
@@ -1356,7 +1383,8 @@ class Radiances(BaseGSI):
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
-        gsiqc[outdata[errname] > 1e8] = 1
+        # keep original QC.
+        gsiqc = np.reshape(self.var('QC_Flag'), (nlocs, nchans))
         gsiqc[np.reshape(self.var('QC_Flag'), (nlocs, nchans)) < 0] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
         varAttrs[gsiqcname]['units'] = 'unitless'
@@ -1394,12 +1422,12 @@ class Radiances(BaseGSI):
         for key, value2 in chan_metadata_dict.items():
             try:
                 if value2 in chan_metadata_int:
-                    outdata[(value2, 'VarMetaData')] = self.var(key).astype(np.int32)
+                    outdata[(value2, 'MetaData')] = self.var(key).astype(np.int32)
                 else:
-                    outdata[(value2, 'VarMetaData')] = self.var(key).astype(np.float32)
-                VarDims[(value2, 'VarMetaData')] = ['nvars']
+                    outdata[(value2, 'MetaData')] = self.var(key).astype(np.float32)
+                VarDims[(value2, 'MetaData')] = ['nchans']
                 if value2 in units_values.keys():
-                    varAttrs[(value2, 'VarMetaData')]['units'] = units_values[value2]
+                    varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
             except IndexError:
                 pass
 
@@ -1411,7 +1439,6 @@ class Radiances(BaseGSI):
         # ExtractObsData
         DimDict['nlocs'] = nlocs
         DimDict['nchans'] = chanlist
-        DimDict['nvars'] = chanlist
 
         writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
         writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
