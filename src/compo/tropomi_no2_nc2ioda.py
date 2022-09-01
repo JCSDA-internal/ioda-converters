@@ -218,7 +218,7 @@ def main():
     optional.add_argument(
         '-q', '--qa_value',
         help="qa value used to preflag data that goes into file before QC"
-        "default at 0.75 as suggested in documentation. See:"
+        "default at 0.75 as suggested in the documentation. See:"
         "https://sentinel.esa.int/documents/247904/2474726/"
         "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6",
         type=float, default=0.75)
