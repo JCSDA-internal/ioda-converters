@@ -24,22 +24,25 @@ std::set<std::string> getSubsets(int fileUnit)
     char subset[SubsetLen];
     while (ireadmg_f(fileUnit, subset, &iddate, SubsetLen) == 0)
     {
-        subsets.insert(std::string(subset));
+        auto str_subset = std::string(subset);
+        str_subset.erase(
+            remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
+        subsets.insert(str_subset);
     }
 
     return subsets;
 }
 
 
-std::vector<std::pair<int, std::string>>
+std::vector<std::pair<int, std::string> >
 getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
 {
-    std::map<std::string, std::pair<int, std::string>> dimPathMap;
+    std::map<std::string, std::pair<int, std::string> > dimPathMap;
     for (auto& query : queryData)
     {
         std::stringstream pathStream;
         pathStream << query.pathComponents[0];
-        for (auto idx=1; idx <= query.dimIdxs.back(); idx++)
+        for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
         {
             pathStream << "/" << query.pathComponents[idx];
         }
@@ -49,7 +52,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
                                pathStream.str());
     }
 
-    std::vector<std::pair<int, std::string>> result;
+    std::vector<std::pair<int, std::string> > result;
     for (auto& dimPath : dimPathMap)
     {
         result.push_back(dimPath.second);
@@ -76,11 +79,15 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
 
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
     {
+        auto msg_subset = std::string(current_subset);
+        msg_subset.erase(
+            remove_if(msg_subset.begin(), msg_subset.end(), isspace), msg_subset.end());
+
         status_f(fileUnit, &bufrLoc, &il, &im);
         dataProvider.updateData(bufrLoc);
 
         msgNum++;
-        if (std::string(current_subset) == subset)
+        if (msg_subset == subset)
         {
             queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
             break;
@@ -113,7 +120,7 @@ std::string dimStyledStr(int dims)
     return ostr.str();
 }
 
-void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
+void printDimPaths(std::vector<std::pair<int, std::string> > dimPaths)
 {
     for (auto& dimPath : dimPaths)
     {
@@ -280,7 +287,14 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    printQueries(inputFile, subset, tablePath);
+    try
+    {
+        printQueries(inputFile, subset, tablePath);
+    }
+    catch (const std::exception &e)
+    {
+        throw e;
+    }
 
     return 0;
 }

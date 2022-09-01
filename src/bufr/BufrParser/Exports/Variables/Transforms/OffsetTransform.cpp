@@ -7,6 +7,7 @@
 
 #include "OffsetTransform.h"
 #include "IngesterTypes.h"
+#include "BufrParser/Query/Constants.h"
 
 
 namespace Ingester
@@ -23,7 +24,7 @@ namespace Ingester
         auto data = object->getRawData();
         for (auto& val : data)
         {
-            if (val != MissingValue) val += offset_;
+            if (val != bufr::MissingValue) val += offset_;
         }
 
         object->setRawData(data);

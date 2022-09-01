@@ -17,14 +17,13 @@
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
+#include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/ResultSet.h"
 
 namespace Ingester
 {
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
-
-    const float MissingValue = 10e10;
 
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
@@ -58,7 +57,7 @@ namespace Ingester
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
         /// \brief Print the data object to stdout.
-        virtual void print() const = 0;
+        virtual void print(std::ostream &out) const = 0;
 
         /// \brief Get the data at the location as an integer.
         /// \return Integer data.
@@ -147,16 +146,16 @@ namespace Ingester
         };
 
         /// \brief Print data to stdout for debug purposes.
-        void print() const final
+        void print(std::ostream &out) const final
         {
-            std::cout << "DataObject " << fieldName_ << ":";
-
-            for (auto element : data_)
+            out << "DataObject " << fieldName_ << ":";
+            for (auto val = data_.cbegin(); val != data_.cend(); ++val)
             {
-                std::cout << element << ", ";
+                if (val != data_.cbegin()) out << ", ";
+                out << *val;
             }
 
-            std::cout << std::endl;
+            out << std::endl;
         };
 
         /// \brief Get the raw data.
@@ -269,7 +268,7 @@ namespace Ingester
             params.chunk = true;
             params.chunks = chunks;
             params.compressWithGZIP(compressionLevel);
-            params.setFillValue<T>(static_cast<T>(MissingValue));
+            params.setFillValue<T>(static_cast<T>(bufr::MissingValue));
 
             return params;
         }
@@ -364,7 +363,6 @@ namespace Ingester
             typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
             throw std::runtime_error("The stored value was is not a number");
-            return 0.0f;
         }
     };
 }  // namespace Ingester

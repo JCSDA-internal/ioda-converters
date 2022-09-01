@@ -13,6 +13,7 @@
 #include <sstream>
 
 #include "eckit/exception/Exceptions.h"
+#include "oops/util/Logger.h"
 
 #include "ioda/Layout.h"
 #include "ioda/Misc/DimensionScales.h"
@@ -118,7 +119,7 @@ namespace Ingester
             {
                 for (auto category : categories)
                 {
-                    std::cout << "  Skipped category " << category << std::endl;
+                    oops::Log::warning() << "  Skipped category " << category << std::endl;
                 }
 
                 continue;

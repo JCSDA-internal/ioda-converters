@@ -20,6 +20,7 @@ namespace Ingester
     {
      public:
         explicit Split(const std::string& name);
+        virtual ~Split() = default;
 
         /// \brief Get set of sub categories this split will create
         /// \param dataMap The data we will split on.
