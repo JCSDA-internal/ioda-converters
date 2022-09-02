@@ -243,7 +243,7 @@ def main():
     optional.add_argument(
         '-r', '--date_range',
         help="extract a date range to fit the data assimilation window"
-        "format -r YYYYMMDDHH YYYMMDDHH",
+        "format -r YYYYMMDDHH YYYYMMDDHH",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('1970010100', '2170010100'))
 
