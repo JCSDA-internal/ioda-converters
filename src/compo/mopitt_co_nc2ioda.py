@@ -242,7 +242,7 @@ def main():
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-r', '--date_range',
-        help="extract a date range to fit the data assimilation windows"
+        help="extract a date range to fit the data assimilation window"
         "format -r YYYYMMDDHH YYYMMDDHH",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('1970010100', '2170010100'))
