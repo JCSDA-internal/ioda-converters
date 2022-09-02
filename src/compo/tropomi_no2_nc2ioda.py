@@ -86,7 +86,7 @@ class tropomi(object):
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
-            qaf = qa_value > self.qa_flg 
+            qaf = qa_value > self.qa_flg
             thi = np.random.uniform(size=len(lons)) > self.thin
             flg = np.logical_and(qaf, thi)
             qc_flag = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS']\
