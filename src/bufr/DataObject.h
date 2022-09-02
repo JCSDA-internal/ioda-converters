@@ -56,7 +56,7 @@ namespace Ingester
         std::string getPath() const { return query_; }
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
-        /// \brief Print the data object to stdout.
+        /// \brief Print the data object to a output stream.
         virtual void print(std::ostream &out) const = 0;
 
         /// \brief Get the data at the location as an integer.
@@ -145,7 +145,7 @@ namespace Ingester
             return var;
         };
 
-        /// \brief Print data to stdout for debug purposes.
+        /// \brief Print the data object to a output stream.
         void print(std::ostream &out) const final
         {
             out << "DataObject " << fieldName_ << ":";
