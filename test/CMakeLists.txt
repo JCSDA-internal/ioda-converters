@@ -985,18 +985,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -o testrun/airnow_2020081306.nc"
                           airnow_2020081306.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_iodaconv_generic_gnssro_bufr
-        TYPE    SCRIPT
-        ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-        COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-        ARGS    netcdf
-        "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py
-                            -d 2020121500
-                            -i testinput/bfrPrf_C2E3.2020.349.21.26.R18_0001.0001_bufr
-                            -o testrun/gnssro_cosmic2_2020121500.nc4"
-        gnssro_cosmic2_2020121500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
-
-
 #==============================================================================
 # Bufr Ingester tests
 #==============================================================================
@@ -1246,7 +1234,19 @@ if(iodaconv_bufr_ENABLED)
 #                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/gnssro_wmoBUFR2ioda.yaml"
 #                    gnssro_2020-306-2358C2E6.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
-#
+
+  ecbuild_add_test( TARGET  test_iodaconv_generic_gnssro_bufr
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/gnssro/gnssro_bufr2ioda.py
+                    -d 2021080212
+                    -i testinput/bfrPrf_C2E6.2021.214.12.00.G16_0001.0001_bufr
+                    -o testrun/gnssro_cosmic2_2021080212.nc4"
+                    gnssro_cosmic2_2021080212.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_buoy_wmo_bufr
 #                    TYPE    SCRIPT
 #                    COMMAND ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
