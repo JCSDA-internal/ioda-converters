@@ -54,8 +54,9 @@ hPa2Pa = 1E2
 
 
 class mopitt(object):
-    def __init__(self, filenames):
+    def __init__(self, filenames, date_range):
         self.filenames = filenames
+        self.date_rage = date_range
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -153,6 +154,8 @@ class mopitt(object):
             # set flag: rule out all anomalous data
             flg = qa == 0
 
+            print(self.date_range)
+
             if first:
                 # add metadata variables
                 self.outdata[('datetime', 'MetaData')] = times[flg]
@@ -230,10 +233,18 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
 
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-r', '--date_range',
+        help="extract a date range to fit the data assimilation windows"
+        "format -r YYYYMMDDHH YYYMMDDHH",
+        type=str, metavar=('begindate', 'enddate'), nargs=2, 
+        default=('1970010100','2170010100'))
+
     args = parser.parse_args()
 
     # Read in the MOPITT CO data
-    co = mopitt(args.input)
+    co = mopitt(args.input,args.date_range)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
