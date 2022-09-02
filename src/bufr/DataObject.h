@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -79,8 +79,8 @@ namespace Ingester
         /// \return Data size.
         virtual size_t size() const = 0;
 
-        /// \brief Makes an ioda::Variable and ads it to the given ioda::ObsGroup
-        /// \param obsGroup Obsgroup were to add the variable
+        /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
+        /// \param obsGroup Obsgroup where to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
         /// \param dimensions List of Variables to use as the dimensions for this new variable
         /// \param chunks List of integers specifying the chunking dimensions
@@ -127,7 +127,7 @@ namespace Ingester
 
         ~DataObject() = default;
 
-        /// \brief Makes an ioda::Variable and ads it to the given ioda::ObsGroup
+        /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
         /// \param dimensions List of Variables to use as the dimensions for this new variable
@@ -191,18 +191,27 @@ namespace Ingester
         size_t size() const { return data_.size(); }
 
         /// \brief Get the data at the location as an integer.
+        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
+        ///            at that coordinate).
         /// \return Integer data.
         int getAsInt(const Location& loc) const final { return _getAsInt(loc); }
 
         /// \brief Get the data at the location as a float.
+        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
+        ///            at that coordinate).
         /// \return Float data.
         float getAsFloat(const Location& loc) const final { return _getAsFloat(loc); }
 
         /// \brief Get the data at the location as a string.
+        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
+        ///            at that coordinate).
         /// \return String data.
         std::string getAsString(const Location& loc) const final { return _getAsString(loc); }
 
-        /// \brief Get the data at the location as a float.
+        /// \brief Get the data at the index into the internal 1d array as a float. This function
+        ///        gives you direct access to the internal data and doesn't account for dimensional
+        ///        information (its up to the user). Note: getAsFloat(const Location&) is safer.
+        /// \param idx The idx into the internal 1d array.
         /// \return Float data.
         float getAsFloat(size_t idx) const final { return _getAsFloat(idx); }
 
