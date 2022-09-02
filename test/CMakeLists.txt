@@ -360,7 +360,7 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
 #        ...
 #        )
-#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
+set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 #===============================================================================
 # Marine converters
@@ -894,6 +894,14 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           -n 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
+                  TYPE    SCRIPT
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  netcdf
+                  "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_biaswriter.py
+                                    -o testrun/viirs_bias.nc"
+                  viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_total
                   TYPE    SCRIPT
@@ -919,6 +927,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
                           -c tropo"
                           tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                  netcdf
+                  "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
+                                    -i testinput/mopitt_co.he5
+                                    -o testrun/mopitt_co.nc"
+                  mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
@@ -1236,6 +1254,15 @@ if(iodaconv_bufr_ENABLED)
 #                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/buoy_wmoBUFR2ioda.yaml"
 #                    buoy_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
+
+#  ecbuild_add_test( TARGET  test_iodaconv_bufr_rass_wmo_bufr
+#                    TYPE    SCRIPT
+#                    COMMAND bash
+#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                    netcdf
+#                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/rass_wmoBUFR2ioda.yaml"
+#                    rass_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
+#                    DEPENDS bufr2ioda.x )
 #
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_ship_wmo_bufr
 #                    TYPE    SCRIPT
@@ -1266,6 +1293,24 @@ if(iodaconv_bufr_ENABLED)
 #                    ARGS    netcdf
 #                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Himawari_wmoBUFR2ioda.yaml"
 #                    satwind_Himawari.nc ${IODA_CONV_COMP_TOL_ZERO}
+#                    DEPENDS bufr2ioda.x )
+#
+#  ecbuild_add_test( TARGET  test_iodaconv_bufr_satwind_Insat_wmo_bufr
+#                    TYPE    SCRIPT
+#                    COMMAND bash
+#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                    netcdf
+#                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/satwind_Insat_wmoBUFR2ioda.yaml"
+#                    satwind_Insat.nc ${IODA_CONV_COMP_TOL_ZERO}
+#                    DEPENDS bufr2ioda.x )
+#
+#  ecbuild_add_test( TARGET  test_iodaconv_bufr_vadwinds_wmo_bufr
+#                    TYPE    SCRIPT
+#                    COMMAND bash
+#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                    netcdf
+#                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/vadwinds_wmoBUFR2ioda.yaml"
+#                    vadwinds_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
 endif()
 
