@@ -1383,8 +1383,7 @@ class Radiances(BaseGSI):
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
-        # keep original QC.
-        gsiqc = np.reshape(self.var('QC_Flag'), (nlocs, nchans))
+        gsiqc[outdata[errname] > 1e8] = 1
         gsiqc[np.reshape(self.var('QC_Flag'), (nlocs, nchans)) < 0] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
         varAttrs[gsiqcname]['units'] = 'unitless'
