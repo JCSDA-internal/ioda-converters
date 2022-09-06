@@ -58,10 +58,10 @@ class Observation(object):
         time = ncd.variables['time_mjd'][:]
         lons = ncd.variables['lon'][:]
         lats = ncd.variables['lat'][:]
-        vals = ncd.variables['adt_xgm2016'][:]
-        val_units = ncd.variables['adt_xgm2016'].units
-        Fill_val = ncd.variables['adt_xgm2016']._FillValue
-        scale_factor = ncd.variables['adt_xgm2016'].scale_factor
+        vals = ncd.variables['adt_egm2008'][:]
+        val_units = ncd.variables['adt_egm2008'].units
+        Fill_val = ncd.variables['adt_egm2008']._FillValue
+        scale_factor = ncd.variables['adt_egm2008'].scale_factor
         units = ncd.variables['time_mjd'].units[-23:-4]
         reftime = dateutil.parser.parse(units)
         ncd.close()

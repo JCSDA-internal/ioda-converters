@@ -7,6 +7,7 @@
 
 #include "ScalingTransform.h"
 #include "IngesterTypes.h"
+#include "BufrParser/Query/Constants.h"
 
 namespace Ingester
 {
@@ -22,7 +23,7 @@ namespace Ingester
         auto data = object->getRawData();
         for (auto& val : data)
         {
-            if (val != MissingValue) val *= scaling_;
+            if (val != bufr::MissingValue) val *= scaling_;
         }
 
         object->setRawData(data);

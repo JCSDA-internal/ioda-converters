@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 
 namespace
 {
@@ -53,18 +54,20 @@ namespace bufr {
             typ_.resize(size);
             for (int wordIdx = 0; wordIdx < size; wordIdx++)
             {
-                auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
+                static const std::unordered_map<std::string, Typ> TypMap =
+                    {{Subset,            Typ::Subset},
+                     {DelayedRep,        Typ::DelayedRep},
+                     {FixedRep,          Typ::FixedRep},
+                     {DelayedRepStacked, Typ::DelayedRepStacked},
+                     {DelayedBinary,     Typ::DelayedBinary},
+                     {Sequence,          Typ::Sequence},
+                     {Repeat,            Typ::Repeat},
+                     {StackedRepeat,     Typ::StackedRepeat},
+                     {Number,            Typ::Number},
+                     {Character,         Typ::Character}};
 
-                if      (typ == Subset)            typ_[wordIdx] = Typ::Subset;
-                else if (typ == DelayedRep)        typ_[wordIdx] = Typ::DelayedRep;
-                else if (typ == FixedRep)          typ_[wordIdx] = Typ::FixedRep;
-                else if (typ == DelayedRepStacked) typ_[wordIdx] = Typ::DelayedRepStacked;
-                else if (typ == DelayedBinary)     typ_[wordIdx] = Typ::DelayedBinary;
-                else if (typ == Sequence)          typ_[wordIdx] = Typ::Sequence;
-                else if (typ == Repeat)            typ_[wordIdx] = Typ::Repeat;
-                else if (typ == StackedRepeat)     typ_[wordIdx] = Typ::StackedRepeat;
-                else if (typ == Number)            typ_[wordIdx] = Typ::Number;
-                else if (typ == Character)         typ_[wordIdx] = Typ::Character;
+                auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
+                typ_[wordIdx] = TypMap.at(typ);
             }
 
             get_tag_f(&charPtr, &strLen, &size);

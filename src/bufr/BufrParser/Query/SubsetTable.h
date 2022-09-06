@@ -29,6 +29,34 @@ namespace bufr {
         bool requiresIdx;
     };
 
+//    struct Node
+//    {
+//        Typ type;
+//        size_t nodeIdx;
+//        std::string mnemonic;
+//    };
+//
+//    struct Sequence : Node
+//    {
+//        std::vector<std::shared_ptr<Node>> children = {};
+//    };
+//
+//    struct FixedRep : Node
+//    {
+//        size_t size;
+//        Sequence sequence;
+//    };
+//
+//    struct DelayedRep : Node
+//    {
+//        Sequence sequence;
+//    };
+//
+//    struct Leaf : Node
+//    {
+//        std::string type;
+//    };
+
     /// \brief Parses the BUFR message subset Meta data tables.
     class SubsetTable
     {
@@ -54,6 +82,8 @@ namespace bufr {
         std::vector<std::string> makePathComponents(std::vector<size_t> seqPath, int nodeIdx);
         std::string mapKey(const std::vector<std::string>& pathComponents, size_t idx = 0) const;
         std::string mapKey(const std::shared_ptr<QueryData> query) const;
+
+//        void parseSequence(std::shared_ptr<Node> parentNode, size_t& nodeIdx, size_t endIdx);
     };
 }  // namespace bufr
 }  // namespace Ingester

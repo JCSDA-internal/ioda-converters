@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <string>
 
+#include "Constants.h"
 #include "VectorMath.h"
 
 
@@ -359,7 +360,7 @@ namespace bufr {
             }
         }
 
-        auto output = std::vector<double>(product(dims), 10.0e10);
+        auto output = std::vector<double>(product(dims), MissingValue);
         for (size_t i = 0; i < idxs.size(); ++i)
         {
             output[idxs[i]] = targetField.data[i];

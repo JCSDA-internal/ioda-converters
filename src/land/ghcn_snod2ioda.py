@@ -102,7 +102,7 @@ class ghcn(object):
         df30 = df30[df30["DATETIME"] == parse(startdate).date()]
         # Read station files
         cols = ["ID", "LATITUDE", "LONGITUDE", "ELEVATION", "STATE", "NAME", "GSN_FLAG", "HCNCRN_FLAG", "WMO_ID"]
-        df10all = pd.read_csv(self.fixfile, header=None, sep='\n')
+        df10all = pd.read_csv(self.fixfile, header=None, sep='\r\n')
         df10all = df10all[0].str.split('\\s+', expand=True)
         df10 = df10all.iloc[:, 0:4]
         sub_cols = {0: "ID", 1: "LATITUDE", 2: "LONGITUDE", 3: "ELEVATION"}

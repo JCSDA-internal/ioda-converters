@@ -55,7 +55,7 @@ namespace Ingester
         /// \brief Name used to export this variable
         std::string exportName_;
 
-        /// \brief The query map for all the queries this vairable needs
+        /// \brief The query map for all the queries this variable needs
         QueryList queryList_;
     };
 }  // namespace Ingester
