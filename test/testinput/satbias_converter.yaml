@@ -202,7 +202,19 @@ output:
   predictors: *default_preds
 - sensor: gmi_gpm
   output file: satbias_gmi_gpm.nc4
-  predictors: *default_preds
+  predictors:
+  - constant
+  - zenith_angle
+  - cosine_of_latitude_times_orbit_node
+  - lapse_rate_order_2
+  - lapse_rate
+  - cloud_liquid_water_order_2
+  - cloud_liquid_water
+  - emissivity
+  - scan_angle_order_4
+  - scan_angle_order_3
+  - scan_angle_order_2
+  - scan_angle
 - sensor: saphir_meghat
   output file: satbias_saphir_meghat.nc4
   predictors: *default_preds
