@@ -701,8 +701,8 @@ class Conv(BaseGSI):
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
-                                if (vname == "atmosphere_pressure_coordinate_interface" ) or (
-                                       vname == "geopotential_height_levels"):
+                                if (vname == "atmosphere_pressure_coordinate_interface") or (
+                                        vname == "geopotential_height_levels"):
                                     dims = ("nlocs", "ninterfaces")
                                 else:
                                     dims = ("nlocs", "nlevs")
