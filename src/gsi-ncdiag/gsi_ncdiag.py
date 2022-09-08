@@ -391,17 +391,20 @@ aod_sensors = [
     'viirs',
 ]
 
-oz_sensors = [
+oz_lay_sensors = [
     'gome',
     'sbuv2',
     'omi',
     'ompsnp',
     'ompstc8',
-    'ompslp',
-    'mls55',
     'ompsnm',
 ]
 
+oz_lev_sensors = [
+    'ompslp',
+    'ompslpnc',
+    'mls55',
+]
 # units
 # 'IODA/UFO_variable_name': 'Unit'
 units_values = {
@@ -1443,6 +1446,7 @@ class Ozone(BaseGSI):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
         i = False
+        oz_sensors = oz_lay_sensors + oz_lev_sensors
         for s in oz_sensors:
             if s in splitfname:
                 i = splitfname.index(s)
@@ -1493,7 +1497,7 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        if (self.sensor not in ["ompslp", "mls55"]):
+        if (self.sensor in oz_lay_sensors):
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1541,14 +1545,19 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
-        if (self.sensor in ["ompslp", "mls55"]):
+        if (self.sensor in oz_lev_sensors):
             vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
         VarDims[vname] = ['nlocs']
-        varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
-        varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
+        if (self.sensor in oz_lev_sensors):
+            varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
+            varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
+        else:
+            varAttrs[varDict[vname]['valKey']]['units'] = 'DU'
+            varAttrs[varDict[vname]['errKey']]['units'] = 'DU'
+
         varAttrs[varDict[vname]['qcKey']]['units'] = 'unitless'
         varAttrs[varDict[vname]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['errKey']]['_FillValue'] = self.FLOAT_FILL
