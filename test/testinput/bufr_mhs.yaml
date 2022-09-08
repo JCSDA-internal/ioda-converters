@@ -54,7 +54,6 @@ observations:
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
-          source: variables/channels
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"

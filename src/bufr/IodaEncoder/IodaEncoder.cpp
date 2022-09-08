@@ -18,8 +18,6 @@
 #include "ioda/Layout.h"
 #include "ioda/Misc/DimensionScales.h"
 
-//#include <boost/algorithm/string.hpp>
-
 
 namespace Ingester
 {
@@ -77,10 +75,10 @@ namespace Ingester
             auto dataObjectGroupBy = dataContainer->getGroupByObject(
                 description_.getVariables()[0].source, categories);
 
-            auto rootDim = std::make_shared<DimensionData<uint32_t>>();
+            auto rootDim = std::make_shared<DimensionData<int>>();
             rootDim->dimScale =
                 ioda::NewDimensionScale<int>(LocationName, dataObjectGroupBy->getDims()[0]);
-            rootDim->data = std::vector<uint32_t>(dataObjectGroupBy->getDims()[0], 0);
+            rootDim->data = std::vector<int>(dataObjectGroupBy->getDims()[0], 0);
             dimMap[LocationName] = rootDim;
 
             auto rootLocation = DimensionDescription();
@@ -100,6 +98,7 @@ namespace Ingester
                         dataObject->getDimPaths().size() - 1);
                 }
             }
+
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
@@ -127,11 +126,11 @@ namespace Ingester
 
                         namedExtraDims[{dimPath}] = dimDesc;
                         autoGenDimNumber++;
+                    }
 
-                        if (dimMap.find(dimName) == dimMap.end())
-                        {
-                            dimMap[dimName] = dataObject->createDimensionData(dimName, dimIdx);
-                        }
+                    if (dimMap.find(dimName) == dimMap.end())
+                    {
+                        dimMap[dimName] = dataObject->createDimensionData(dimName, dimIdx);
                     }
                 }
             }
