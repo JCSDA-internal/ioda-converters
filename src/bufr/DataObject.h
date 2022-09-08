@@ -170,46 +170,11 @@ namespace Ingester
         };
 
         //  FIXME: Update createDimensionData functions after feature/query_cxx_types gets merged.
+        /// \brief Makes an new dimension scale
         std::shared_ptr<DimensionDataBase> createDimensionData(const std::string& name,
                                                                std::size_t dimIdx) const final
         {
             return _createDimensionData(name, dimIdx);
-        }
-
-        /// \brief Makes an new dimension scale
-        template<typename U = void>
-        std::shared_ptr<DimensionDataBase> _createDimensionData(
-            const std::string& name,
-            std::size_t dimIdx,
-            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
-        {
-            auto dimData = std::make_shared<DimensionData<int>>();
-            dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
-            dimData->data.resize(getDims()[dimIdx]);
-
-            for (size_t idx = 0; idx < dimData->data.size(); idx++)
-            {
-                if (data_.size() > idx)
-                {
-                    dimData->data[idx] = static_cast<int> (data_[idx]);
-                }
-                else
-                {
-                    dimData->data[idx] = 0;
-                }
-            }
-
-            return dimData;
-        }
-
-        /// \brief Makes an new dimension scale
-        template<typename U = void>
-        std::shared_ptr<DimensionDataBase> _createDimensionData(
-            const std::string& name,
-            std::size_t dimIdx,
-            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
-        {
-            throw eckit::BadParameter("Can't use string fields for dimensions.");
         }
 
         /// \brief Print the data object to a output stream.
@@ -368,6 +333,41 @@ namespace Ingester
             return params;
         }
 
+        /// \brief Makes an new dimension scale
+        template<typename U = void>
+        std::shared_ptr<DimensionDataBase> _createDimensionData(
+            const std::string& name,
+            std::size_t dimIdx,
+            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            auto dimData = std::make_shared<DimensionData<int>>();
+            dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
+            dimData->data.resize(getDims()[dimIdx]);
+
+            for (size_t idx = 0; idx < dimData->data.size(); idx++)
+            {
+                if (data_.size() > idx)
+                {
+                    dimData->data[idx] = static_cast<int> (data_[idx]);
+                }
+                else
+                {
+                    dimData->data[idx] = 0;
+                }
+            }
+
+            return dimData;
+        }
+
+        /// \brief Makes an new dimension scale
+        template<typename U = void>
+        std::shared_ptr<DimensionDataBase> _createDimensionData(
+            const std::string& name,
+            std::size_t dimIdx,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
+        {
+            throw eckit::BadParameter("Can't use string fields for dimensions.");
+        }
 
         /// \brief Get the data at the location as a float for numeric data.
         /// \return Float data.
