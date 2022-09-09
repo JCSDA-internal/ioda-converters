@@ -158,7 +158,7 @@ class mopitt(object):
             date_start = datetime.strptime(self.date_range[0], "%Y%m%d%H")
             date_end = datetime.strptime(self.date_range[1], "%Y%m%d%H")
             date_list = [datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ") for date in times]
-            tsf = [(date_i > date_start) & (date_i < date_end) for date_i in date_list]
+            tsf = [(date_i >= date_start) & (date_i < date_end) for date_i in date_list]
 
             flg = np.logical_and(qaf, tsf)
 
