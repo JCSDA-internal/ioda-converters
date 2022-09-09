@@ -54,9 +54,9 @@ hPa2Pa = 1E2
 
 
 class mopitt(object):
-    def __init__(self, filenames, date_range):
+    def __init__(self, filenames, time_range):
         self.filenames = filenames
-        self.date_range = date_range
+        self.time_range = time_range
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -155,8 +155,8 @@ class mopitt(object):
             qaf = qa == 0
 
             # date range to fit DA window
-            date_start = datetime.strptime(self.date_range[0], "%Y%m%d%H")
-            date_end = datetime.strptime(self.date_range[1], "%Y%m%d%H")
+            date_start = datetime.strptime(self.time_range[0], "%Y%m%d%H")
+            date_end = datetime.strptime(self.time_range[1], "%Y%m%d%H")
             date_list = [datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ") for date in times]
             tsf = [(date_i >= date_start) & (date_i < date_end) for date_i in date_list]
 
@@ -241,7 +241,7 @@ def main():
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-r', '--date_range',
+        '-r', '--time_range',
         help="extract a date range to fit the data assimilation window"
         "format -r YYYYMMDDHH YYYYMMDDHH",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
@@ -250,7 +250,7 @@ def main():
     args = parser.parse_args()
 
     # Read in the MOPITT CO data
-    co = mopitt(args.input, args.date_range)
+    co = mopitt(args.input, args.time_range)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
