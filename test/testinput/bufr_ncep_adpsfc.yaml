@@ -58,6 +58,7 @@ observations:
           # CEILING (cloud ceiling) not found
           cloudCoverTotal:
             query: "*/TOCC"
+            type: float
             transforms:
               - scale: 0.01
           cloudAmountDescription:

@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <math.h>
 #include <memory>
 #include <gsl/gsl-lite.hpp>
 
@@ -41,7 +42,25 @@ namespace bufr {
         bool isString() const { return unit == "CCITT IA5"; }
         bool isSigned() const  { return reference < 0; }
         bool isInteger() const { return scale <= 0; }
-        bool is64Bit() const { return bits > 32; }
+        bool is64Bit() const
+        {
+            bool is64Bit;
+            if (isInteger() && !isSigned())
+            {
+                is64Bit = (log2((pow(2, bits) - 1) / pow(10, scale) + reference) > 32);
+            }
+            else if (isInteger() && isSigned())
+            {
+                is64Bit = (log2(fmax(-1 * reference,
+                    (pow(2, bits - 1) - 1) / pow(10, scale) + reference) * 2) + 1 > 32);
+            }
+            else
+            {
+                is64Bit = false;
+            }
+
+            return is64Bit;
+        }
     };
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.

@@ -21,11 +21,9 @@ observations:
 
           latitude:
             query: "*/CLAT"
-            type: double
 
           longitude:
             query: "*/CLON"
-            type: uint
 
           satelliteIdentifier:
             query: "*/SAID"
