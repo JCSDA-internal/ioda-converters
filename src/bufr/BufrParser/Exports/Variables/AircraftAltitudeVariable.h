@@ -18,7 +18,7 @@
 
 namespace Ingester
 {
-    /// \brief Exports parsed data as datetimes using speciefied Mnemonics
+    /// \brief Exports parsed data as aircraftAltitudes using specified Mnemonics
     class AircraftAltitudeVariable final : public Variable
     {
      public:
@@ -28,7 +28,7 @@ namespace Ingester
                          const eckit::Configuration& conf);
         ~AircraftAltitudeVariable() final = default;
 
-        /// \brief Get the configured mnemonics and turn them into datetime strings
+        /// \brief Get the configured mnemonics and turn them into AircraftAltitude 
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
 

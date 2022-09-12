@@ -93,39 +93,45 @@ namespace Ingester
     std::shared_ptr<DataObjectBase> AircraftAltitudeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
-        static const float missing = 1.e+11;
+        static const float missing_int = 1.e+11; // determined from print_queries.x
+        static const float missing_float = 3.402823e38; 
+        static const float missing_uint32 = 4294967295;
 
 	std::vector<float> AircraftAltitudeArray;
 	AircraftAltitudeArray.reserve(map.at(getExportKey(ConfKeys::Latitude))->size());
         for (unsigned int idx = 0; idx < map.at(getExportKey(ConfKeys::Latitude))->size(); idx++)
         {
             float latitude = static_cast<int>(map.at(getExportKey(ConfKeys::Latitude))->getAsFloat(idx));
-            float acftalt = missing;            
-            float pressures = missing;
-            float aircraftIndicatedAltitudes = missing;
-            float pressureAltitudeRelativeToMeanSeaLevels = missing;
-            float flightLevels = missing;
-            float heights = missing;
-            float heightOrAltitudes = missing;
-            float flightLevelSTs = missing;
+            float acftalt = missing_float; 
+            float pressures = missing_uint32;
+            float aircraftIndicatedAltitudes = missing_int;
+            float pressureAltitudeRelativeToMeanSeaLevels = missing_float;
+            float flightLevels = missing_float;
+            float heights = missing_int;
+            float heightOrAltitudes = missing_int;
+            float flightLevelSTs = missing_int;
 
-            if (latitude != missing)
+            if (latitude != missing_int)
             {
                 if (!pressureQuery_.empty()) 
                 {
                     pressures = static_cast<float>(map.at(getExportKey(ConfKeys::Pressure))->getAsFloat(idx));
+                    std::cout << pressures << std::endl;
                 }
                 if (!aircraftIndicatedAltitudeQuery_.empty())
                 {
                     aircraftIndicatedAltitudes = static_cast<float>(map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getAsFloat(idx));
+                    std::cout << aircraftIndicatedAltitudes << std::endl;
                 }
                 if (!pressureAltitudeRelativeToMeanSeaLevelQuery_.empty())
                 {
                     pressureAltitudeRelativeToMeanSeaLevels = static_cast<float>(map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->getAsFloat(idx));
+                    std::cout << "a" << pressureAltitudeRelativeToMeanSeaLevels << std::endl;
                 }
                 if (!flightLevelQuery_.empty())
                 {
                     flightLevels = static_cast<float>(map.at(getExportKey(ConfKeys::FlightLevel))->getAsFloat(idx));
+                    std::cout << "b" << flightLevels << std::endl;
                 }
                 if (!heightQuery_.empty())
                 {
@@ -141,9 +147,9 @@ namespace Ingester
                 }
 
 
-                if (pressures != missing)
+                if (pressures != missing_uint32)
                 {
-                    float ht_from_p = missing;
+                    float ht_from_p = missing_uint32;
                     if (pressures < 22630)
                     {
                         ht_from_p = 11000 - (std::log1p(pressures/22630)/0.0001576106);
@@ -152,34 +158,39 @@ namespace Ingester
                     }
                     acftalt = ht_from_p;
                 }
-                else if (aircraftIndicatedAltitudes != missing) 
+                else if (aircraftIndicatedAltitudes != missing_int) 
                 {
                     acftalt = aircraftIndicatedAltitudes;
                 }
                 else
                 {
-                    acftalt = missing;
+                    acftalt = missing_float;
                 }
 
-                if(pressureAltitudeRelativeToMeanSeaLevels != missing)
+                if(pressureAltitudeRelativeToMeanSeaLevels != missing_float)
                 {
                     acftalt = pressureAltitudeRelativeToMeanSeaLevels;
                 }
-                else if (flightLevels != missing)
+                else if (flightLevels != missing_float)
                 {
                     acftalt = flightLevels; 
                 }
-                else if (heights != missing)
+                else if (heights != missing_int)
                 {
                     acftalt = heights;
                 }
-                else if (heightOrAltitudes != missing)
+                else if (heightOrAltitudes != missing_int)
                 {
                     acftalt = heightOrAltitudes;
                 }
-                else if (flightLevelSTs != missing)
+                else if (flightLevelSTs != missing_int)
                 {
                     acftalt = flightLevelSTs;
+                }
+
+                if (acftalt == missing_int || acftalt == missing_float)
+                {
+                    acftalt = missing_float;
                 }
 
 	    AircraftAltitudeArray.push_back(acftalt);
