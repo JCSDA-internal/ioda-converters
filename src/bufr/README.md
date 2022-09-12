@@ -67,6 +67,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               hoursFromUtc: 0  # Optional
           satellite_id:
             query: "*/SAID"
+            type: uint64
           longitude:
             query: "*/CLON"
             transforms:
