@@ -293,7 +293,7 @@ int main(int argc, char** argv)
     }
     catch (const std::exception &e)
     {
-        throw e;
+        throw;
     }
 
     return 0;

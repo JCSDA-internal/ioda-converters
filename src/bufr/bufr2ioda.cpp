@@ -111,18 +111,15 @@ int main(int argc, char **argv)
         }
     }
 
-    Ingester::registerParsers();
-    Ingester::parse(yamlPath, numMsgs);
-
-//    try
-//    {
-//        Ingester::registerParsers();
-//        Ingester::parse(yamlPath, numMsgs);
-//    }
-//    catch (const std::exception &e)
-//    {
-//        throw e;
-//    }
+    try
+    {
+        Ingester::registerParsers();
+        Ingester::parse(yamlPath, numMsgs);
+    }
+    catch (const std::exception &e)
+    {
+        throw;
+    }
 
     return 0;
 }
