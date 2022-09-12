@@ -115,8 +115,6 @@ namespace bufr {
         int bufrLoc_;
         gsl::span<const double> val_;
         gsl::span<const int> inv_;
-
-        bool tableInfoLoaded_ = false;
     };
 }  // namespace bufr
 }  // namespace Ingester

@@ -46,6 +46,7 @@ namespace Ingester
     {
         std::string name;
         virtual void addTo(ioda::Group& group) = 0;
+        virtual ~GlobalDescriptionBase() = default;
     };
 
     template<typename T>
