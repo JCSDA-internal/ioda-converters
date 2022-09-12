@@ -34,10 +34,10 @@ std::set<std::string> getSubsets(int fileUnit)
 }
 
 
-std::vector<std::pair<int, std::string> >
+std::vector<std::pair<int, std::string>>
 getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
 {
-    std::map<std::string, std::pair<int, std::string> > dimPathMap;
+    std::map<std::string, std::pair<int, std::string>> dimPathMap;
     for (auto& query : queryData)
     {
         std::stringstream pathStream;
@@ -52,7 +52,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
                                pathStream.str());
     }
 
-    std::vector<std::pair<int, std::string> > result;
+    std::vector<std::pair<int, std::string>> result;
     for (auto& dimPath : dimPathMap)
     {
         result.push_back(dimPath.second);
@@ -120,7 +120,7 @@ std::string dimStyledStr(int dims)
     return ostr.str();
 }
 
-void printDimPaths(std::vector<std::pair<int, std::string> > dimPaths)
+void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
 {
     for (auto& dimPath : dimPaths)
     {
@@ -293,7 +293,7 @@ int main(int argc, char** argv)
     }
     catch (const std::exception &e)
     {
-        throw e;
+        throw;
     }
 
     return 0;
