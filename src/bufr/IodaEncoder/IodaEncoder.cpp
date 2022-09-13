@@ -39,6 +39,7 @@ namespace Ingester
         NamedPathDims namedLocDims;
         NamedPathDims namedExtraDims;
 
+        // Get a list of all the named dimensions
         {
             std::set<std::string> dimNames;
             std::set<std::string> dimPaths;
@@ -75,17 +76,30 @@ namespace Ingester
             auto dataObjectGroupBy = dataContainer->getGroupByObject(
                 description_.getVariables()[0].source, categories);
 
+            // When we find that the primary index is zero we need to skip this category
+            if (dataObjectGroupBy->getDims()[0] == 0)
+            {
+                for (auto category : categories)
+                {
+                    oops::Log::warning() << "  Skipped category " << category << std::endl;
+                }
+
+                continue;
+            }
+
+            // Create the root Location dimension for this category
             auto rootDim = std::make_shared<DimensionData<int>>(dataObjectGroupBy->getDims()[0]);
             rootDim->dimScale =
                 ioda::NewDimensionScale<int>(LocationName, dataObjectGroupBy->getDims()[0]);
             dimMap[LocationName] = rootDim;
 
+            // Add the root Location dimension as a named dimension
             auto rootLocation = DimensionDescription();
             rootLocation.name = LocationName;
             rootLocation.source = "";
-
             namedLocDims[{dataObjectGroupBy->getDimPaths()[0]}] = rootLocation;
 
+            // Create the dimension data for dimensions which include source data
             for (const auto& dimDesc : description_.getDims())
             {
                 if (!dimDesc.source.empty())
@@ -98,6 +112,8 @@ namespace Ingester
                 }
             }
 
+            // Discover and create the dimension data for dimensions with no source field. If
+            // dim is un-named (not listed) then call it dim_<number>
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
@@ -132,17 +148,6 @@ namespace Ingester
                         dimMap[dimName] = dataObject->createDimensionForData(dimName, dimIdx);
                     }
                 }
-            }
-
-            // When we find that the primary index is zero we need to skip this category
-            if (dataObjectGroupBy->getDims()[0] == 0)
-            {
-                for (auto category : categories)
-                {
-                    oops::Log::warning() << "  Skipped category " << category << std::endl;
-                }
-
-                continue;
             }
 
             // Make the filename string
@@ -187,7 +192,7 @@ namespace Ingester
                 global->addTo(rootGroup);
             }
 
-            // Create Dimension Variables
+            // Write the Dimension Variables
             for (const auto& dimDesc : description_.getDims())
             {
                 if (!dimDesc.source.empty())
@@ -214,7 +219,7 @@ namespace Ingester
                 }
             }
 
-            // Create Variables
+            // Write all the Variables
             for (const auto& varDesc : description_.getVariables())
             {
                 std::vector<ioda::Dimensions_t> chunks;
@@ -342,7 +347,7 @@ namespace Ingester
 
     bool IodaEncoder::existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const
     {
-        for (auto paths : pathMap)
+        for (auto& paths : pathMap)
         {
             if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
             {
