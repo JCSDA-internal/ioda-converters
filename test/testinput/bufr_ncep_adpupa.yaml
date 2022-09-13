@@ -7,31 +7,20 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testinput/gdas.t12z.adpupa_thinned.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t12z.adpupa.tm00.bufr_d"
 
       exports:
+        group_by_variable: pressure
         variables:
-#          timestamp:
-#            datetime:
-#              year: "*/YEAR"
-#              month: "*/MNTH"
-#              day: "*/DAYS"
-#              hour: "*/HOUR"
-#              minute: "*/MINU"
-
-          stationElevationQualityMarker:
-            query: "*/QCEVR"
-
-          degreeOfTurbulence:
-            query: "*/DGOT"
-          presentWeather:
-            query: "*/PRWE"
-          horizontalVisibility:
-            query: "*/HOVI"
-          pressureReducedToMeanSeaLevel:
-            query: "*/PMSL"
-
-          reportIdentifier:
+          # MetaData
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          stationIdentification:
             query: "*/RPID"
           latitude:
             query: "*/CLAT"
@@ -40,214 +29,93 @@ observations:
           stationElevation:
             query: "*/SELV"
 
-          verticalSoundingSignificance:
-            query: "[*/UARLV/VSIG, */VSIG]"
-          pressureQualityMarker:
-            query: "*/UARLV/QMPR"
+          # ObsValue
           pressure:
-            query: "[*/UARLV/PRLC, */PRLC]"
-          geopotentialQualityMarker:
-            query: "*/UARLV/QMGP"
-
-          airTemperatureQualityMarker:
-            query: "[*/UARLV/UATMP/QMAT, */QMAT]"
+            query: "[*/UARLV/PRLC]"
           airTemperature:
-            query: "[*/UARLV/UATMP/TMDB, */TMDB]"
-          moistureQualityMarker:
-            query: "[*/UARLV/UATMP/QMDD, */QMDD]"
+            query: "[*/UARLV/UATMP/TMDB]"
           dewpointTemperature:
-            query: "[*/UARLV/UATMP/TMDP, */TMDP]"
-
-          relativeHumidity:
-            query: "*/REHU"
-
-          windQualityMarker:
-            query: "[*/UARLV/UAWND/QMWN, */QMWN]"
+            query: "[*/UARLV/UATMP/TMDP]"
           windDirection:
-            query: "[*/UARLV/UAWND/WDIR, */WDIR]"
+            query: "[*/UARLV/UAWND/WDIR]"
           windSpeed:
-            query: "[*/UARLV/UAWND/WSPD, */WSPD]"
+            query: "[*/UARLV/UAWND/WSPD]"
 
-          surfaceWindDirection:
-            query: "*/ARSWD/WDIR1"
-          surfaceWindSpeed:
-            query: "*/ARSWD/WSPD1"
-
-          seaSurfaceTemperatureQualityMarker:
-            query: "[*/UASDG/QMST, */QMST]"
-          seaSurfaceTemperature:
-            query: "[*/UASDG/SST1, */SST1]"
-
-          cloudType:
-            query: "[*/UACLD/CLTP, */AFCLD/CLTP]"
-          cloudAmount:
-            query: "[*/UACLD/CLAM, */AFCLD/CLAM]"
-          heightAboveSurfaceOfBaseOfLowestCloud:
-            query: "*/UACLD/HBLCS"
-
-          heightOfBaseOfCloud:
-            query: "*/AFCLD/HOCB"
-          heightOfTopOfCloud:
-            query: "*/AFCLD/HOCT"
-
-          airframeIcing:
-            query: "*/AFICG/AFIC"
-          heightOfBaseOfIcing:
-            query: "*/AFICG/HBOI"
-          heightOfTopOfIcing:
-            query: "*/AFICG/HTOI"
-
-          mandatoryLevelPressure:
-            query: "*/UAADF/XMPRLC"
-          mandatoryLevelGeopotential:
-            query: "*/UAADF/XMGP10"
+          # QualityMarker
+          stationElevationQM:
+            query: "*/QCEVR"
+          pressureQM:
+            query: "*/UARLV/QMPR"
+          airTemperatureQM:
+            query: "[*/UARLV/UATMP/QMAT]"
+          moistureQM:
+            query: "[*/UARLV/UATMP/QMDD]"
+          windQM:
+            query: "[*/UARLV/UAWND/QMWN]"
+          waterTemperatureQM:
+            query: "[*/UASDG/QMST]"
 
 
     ioda:
       backend: netcdf
-      obsdataout: "/scratch1/NCEPDEV/da/Praveen.Kumar/JEDI/IODA_CONVR_ADPUPA_BUFR_2020110112/testoutput/bufr_ncep_adpupa.nc"
+      obsdataout: "./testrun/gdas.t12z.adpupa_bufr.tm00.nc"
 
-#      dimensions:
-#        - name: rcptim_Dim
-#          path: "*/RCPTIM"
-#        - name: bid_Dim
-#          path: "*/BID"
-#        - name: uarid_Dim
-#          path: "*/UARID"
-#        - name: uarlv_Dim
-#          path: "*/UARLV"
-#        - name: uardcs_Dim
-#          path: "*/UARDCS"
-#        - name: rawrpt_Dim
-#          path: "*/RAWRPT"
-#        - name: uacld_Dim
-#          path: "*/UACLD"
-#        - name: afcld_Dim
-#          path: "*/AFCLD"
+      dimensions:
+        - name: RadiosondeReportLevelData
+          path: "*/UARLV"
 
       variables:
-
-#        - name: "MetaData/dateTime"
-#          coordinates: "longitude latitude"
-#          source: variables/timestamp
-#          longName: "Datetime"
-#          units: "seconds since 1970-01-01T00:00:00Z"
-
-        - name: "MetaData/stationElevationQualityMarker"
+        # MetaData
+        - name: "MetaData/dateTime"
           coordinates: "longitude latitude"
-          source: variables/stationElevationQualityMarker
-          longName: "Station Elevation Quality Marker (For Mobil Stations)"
-          units: ""
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "MetaData/degreeOfTurbulence"
+        - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
-          source: variables/degreeOfTurbulence
-          longName: "Degree Of Turbulence"
-          units: ""
-
-        - name: "MetaData/presentWeather"
-          coordinates: "longitude latitude"
-          source: variables/presentWeather
-          longName: "Present weather"
-          units: ""
-
-        - name: "ObsValue/horizontalVisibility"
-          coordinates: "longitude latitude"
-          source: variables/horizontalVisibility
-          longName: "Horizontal Visibility"
-          units: "m"
-
-        - name: "ObsValue/pressureReducedToMeanSeaLevel"
-          coordinates: "longitude latitude"
-          source: variables/pressureReducedToMeanSeaLevel
-          longName: "Mean Sea-Level Pressure"
-          units: "Pa"
-
-        - name: "MetaData/reportIdentifier"
-          coordinates: "longitude latitude"
-          source: variables/reportIdentifier
-          longName: "Report Identifier"
-          units: ""
+          source: variables/stationIdentification
+          longName: "Station Identification"
 
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
           source: variables/latitude
           longName: "Latitude"
-          units: "degrees_north"
+          units: "degree_north"
           range: [-90, 90]
 
         - name: "MetaData/longitude"
           coordinates: "longitude latitude"
           source: variables/longitude
           longName: "Longitude"
-          units: "degrees_east"
-          range: [0, 360]
+          units: "degree_east"
+          range: [-180, 180]
+#         range: [0, 360]
 
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          longName: "Station Elevation"
-          units: "Meter"
+          longName: "Elevation of Observing Location"
+          units: "m"
 
-        - name: "MetaData/verticalSoundingSignificance"
-          coordinates: "longitude latitude"
-          source: variables/verticalSoundingSignificance
-          longName: "Vertical Sounding Significance"
-          units: ""
- 
-        - name: "QualityMarker/pressure"
-          coordinates: "longitude latitude"
-          source: variables/pressureQualityMarker
-          longName: "Sdmedit Quality Mark for Pressure"
-          units: ""
-
+        # ObsValue
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
-          units: "Pascals"
-
-        - name: "QualityMarker/geopotential"
-          coordinates: "longitude latitude"
-          source: variables/geopotentialQualityMarker
-          longName: "Sdmedit Quality Mark for Geopotential"
-          units: ""
-
-        - name: "QualityMarker/airTemperature"
-          coordinates: "longitude latitude"
-          source: variables/airTemperatureQualityMarker
-          longName: "Sdmedit Quality Mark for Temperature"
-          units: ""
+          units: "Pa"
 
         - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperature
           longName: "Air Temperature"
-          units: "Kelvin"
-
-        - name: "QualityMarker/moisture"
-          coordinates: "longitude latitude"
-          source: variables/moistureQualityMarker
-          longName: "Sdmedit Quality Mark for Moisture"
-          units: ""
+          units: "K"
 
         - name: "ObsValue/dewpointTemperature"
           coordinates: "longitude latitude"
           source: variables/dewpointTemperature
-          longName: "Dew Point"
-          units: "Kelvin"
-
-        - name: "ObsValue/relativeHumidity"
-          coordinates: "longitude latitude"
-          source: variables/relativeHumidity
-          longName: "Relative Humidity"
-          units: "Percent"
-
-        - name: "QualityMarker/wind"
-          coordinates: "longitude latitude"
-          source: variables/windQualityMarker
-          longName: "Sdmedit Quality Mark for Wind"
-          units: ""
+          longName: "Dewpoint Temperature"
+          units: "K"
 
         - name: "ObsValue/windDirection"
           coordinates: "longitude latitude"
@@ -261,88 +129,29 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        - name: "ObsValue/surfaceWindDirection"
+        # QualityMarker
+        - name: "QualityMarker/stationElevation"
           coordinates: "longitude latitude"
-          source: variables/surfaceWindDirection
-          longName: "Surface Wind Direction"
-          units: "degree"
+          source: variables/stationElevationQM
+          longName: "Quality Indicator for Station Elevation"
 
-        - name: "ObsValue/surfaceWindSpeed"
+        - name: "QualityMarker/pressure"
           coordinates: "longitude latitude"
-          source: variables/surfaceWindSpeed
-          longName: "Surface Wind Speed"
-          units: "m s-1"
+          source: variables/pressureQM
+          longName: "Quality Indicator for Pressure"
 
-        - name: "QualityMarker/seaSurfaceTemperature"
+        - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude"
-          source: variables/seaSurfaceTemperatureQualityMarker
-          longName: "Sdmedit Quality Mark For Sea Surface Temperature"
-          units: ""
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Temperature"
 
-        - name: "ObsValue/seaSurfaceTemperature"
+        - name: "QualityMarker/moisture"
           coordinates: "longitude latitude"
-          source: variables/seaSurfaceTemperature
-          longName: "Sea/Water Temperature"
-          units: "Kelvin"
+          source: variables/moistureQM
+          longName: "Quality Indicator for Moisture"
 
-        - name: "MetaData/cloudType"
+        - name: "QualityMarker/wind"
           coordinates: "longitude latitude"
-          source: variables/cloudType
-          longName: "Cloud Type"
-          units: ""
-
-        - name: "ObsValue/cloudAmount"
-          coordinates: "longitude latitude"
-          source: variables/cloudAmount
-          longName: "Cloud Amount"
-          units: ""
-
-        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
-          coordinates: "longitude latitude"
-          source: variables/heightAboveSurfaceOfBaseOfLowestCloud
-          longName: "Height Above Surface of Base of Lowest Cloud Seen"
-          units: "m"
-
-        - name: "ObsValue/heightOfBaseOfCloud"
-          coordinates: "longitude latitude"
-          source: variables/heightOfBaseOfCloud
-          longName: "Height of Base of Cloud"
-          units: "m"
-
-        - name: "ObsValue/heightOfTopOfCloud"
-          coordinates: "longitude latitude"
-          source: variables/heightOfTopOfCloud
-          longName: "Height of Top of Cloud"
-          units: "m"
-
-
-        - name: "MetaData/airframeIcing"
-          coordinates: "longitude latitude"
-          source: variables/airframeIcing
-          longName: "Airframe Icing"
-          units: ""
-
-        - name: "ObsValue/heightOfBaseOfIcing"
-          coordinates: "longitude latitude"
-          source: variables/heightOfBaseOfIcing
-          longName: "Height of Base of Icing"
-          units: "m"
-
-        - name: "ObsValue/heightOfTopOfIcing"
-          coordinates: "longitude latitude"
-          source: variables/heightOfTopOfIcing
-          longName: "Height of Top of Icing"
-          units: "m"
-
-        - name: "ObsValue/mandatoryLevelPressure"
-          coordinates: "longitude latitude"
-          source: variables/mandatoryLevelPressure
-          longName: "Mandatory Level Pressure"
-          units: "Pa"
-
-        - name: "ObsValue/mandatoryLevelGeopotential"
-          coordinates: "longitude latitude"
-          source: variables/mandatoryLevelGeopotential
-          longName: "Mandatory Level Geopotential"
-          units: "(m/s)^2"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind"
 
