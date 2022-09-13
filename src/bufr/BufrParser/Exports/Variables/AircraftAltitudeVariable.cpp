@@ -9,7 +9,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>  //
-
+#include <float.h>
 
 #include <ostream>
 #include <time.h>
@@ -93,106 +93,91 @@ namespace Ingester
     std::shared_ptr<DataObjectBase> AircraftAltitudeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
-        static const float missing_int = 1.e+11; // determined from print_queries.x
-        static const float missing_float = 3.402823e38; 
-        static const float missing_uint32 = 4294967295;
+        static const float missing_int = 1.e+11; // types determined from print_queries.x
 
 	std::vector<float> AircraftAltitudeArray;
 	AircraftAltitudeArray.reserve(map.at(getExportKey(ConfKeys::Latitude))->size());
         for (unsigned int idx = 0; idx < map.at(getExportKey(ConfKeys::Latitude))->size(); idx++)
         {
             float latitude = static_cast<int>(map.at(getExportKey(ConfKeys::Latitude))->getAsFloat(idx));
-            float acftalt = missing_float; 
-            float pressures = missing_uint32;
-            float aircraftIndicatedAltitudes = missing_int;
-            float pressureAltitudeRelativeToMeanSeaLevels = missing_float;
-            float flightLevels = missing_float;
-            float heights = missing_int;
-            float heightOrAltitudes = missing_int;
-            float flightLevelSTs = missing_int;
-
+            float acftalt = FLT_MAX; 
             if (latitude != missing_int)
             {
+                float pressures = FLT_MAX;
+                float aircraftIndicatedAltitudes = FLT_MAX;
+                float pressureAltitudeRelativeToMeanSeaLevels = FLT_MAX;
+                float flightLevels = FLT_MAX;
+                float heights = FLT_MAX;
+                float heightOrAltitudes = FLT_MAX;
+                float flightLevelSTs = FLT_MAX;
                 if (!pressureQuery_.empty()) 
                 {
                     pressures = static_cast<float>(map.at(getExportKey(ConfKeys::Pressure))->getAsFloat(idx));
-                    std::cout << pressures << std::endl;
-                }
-                if (!aircraftIndicatedAltitudeQuery_.empty())
-                {
-                    aircraftIndicatedAltitudes = static_cast<float>(map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getAsFloat(idx));
-                    std::cout << aircraftIndicatedAltitudes << std::endl;
+                    if (pressures != UINT_MAX)
+                    {
+                        float ht_from_p = FLT_MAX;
+                        if (pressures < 22630)
+                        {
+                            ht_from_p = 11000 - (std::log1p(pressures/22630)/0.0001576106);
+                        } else {
+                            ht_from_p = (1.0-pow((pressures/101325),(1.0/5.256)))*(288.15/0.0065);
+                        }
+                        acftalt = ht_from_p;
+                    } else if (!aircraftIndicatedAltitudeQuery_.empty())
+                    {
+                        aircraftIndicatedAltitudes = static_cast<float>(map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getAsFloat(idx));
+                        if (aircraftIndicatedAltitudes != UINT_MAX)
+                        {
+                            acftalt = aircraftIndicatedAltitudes;
+                        }
+                    } else {
+                        acftalt = FLT_MAX;
+                    }
                 }
                 if (!pressureAltitudeRelativeToMeanSeaLevelQuery_.empty())
                 {
                     pressureAltitudeRelativeToMeanSeaLevels = static_cast<float>(map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->getAsFloat(idx));
-                    std::cout << "a" << pressureAltitudeRelativeToMeanSeaLevels << std::endl;
+                    if (pressureAltitudeRelativeToMeanSeaLevels != FLT_MAX)
+                    {
+                        acftalt = pressureAltitudeRelativeToMeanSeaLevels;
+                    }
                 }
                 if (!flightLevelQuery_.empty())
                 {
                     flightLevels = static_cast<float>(map.at(getExportKey(ConfKeys::FlightLevel))->getAsFloat(idx));
-                    std::cout << "b" << flightLevels << std::endl;
+                    if (flightLevels != FLT_MAX)
+                    {
+                        acftalt = flightLevels;
+                    }
                 }
+
                 if (!heightQuery_.empty())
                 {
                     heights = static_cast<float>(map.at(getExportKey(ConfKeys::Height))->getAsFloat(idx));
+                    if (heights != static_cast<float>(INT_MAX))
+                    {
+                        acftalt = heights;
+                    }
                 }
+
                 if (!heightOrAltitudeQuery_.empty())
                 {
                     heightOrAltitudes = static_cast<float>(map.at(getExportKey(ConfKeys::HeightOrAltitude))->getAsFloat(idx));
+                    if (heightOrAltitudes != static_cast<float>(INT_MAX))
+                    {
+                        acftalt = heightOrAltitudes;
+                    }
                 }
+
                 if (!flightLevelSTQuery_.empty())
                 {
                     flightLevelSTs = static_cast<float>(map.at(getExportKey(ConfKeys::FlightLevelST))->getAsFloat(idx));
-                }
-
-
-                if (pressures != missing_uint32)
-                {
-                    float ht_from_p = missing_uint32;
-                    if (pressures < 22630)
+                    if (flightLevelSTs != static_cast<float>(INT_MAX))
                     {
-                        ht_from_p = 11000 - (std::log1p(pressures/22630)/0.0001576106);
-                    } else {
-                        ht_from_p = (1.0-pow((pressures/101325),(1.0/5.256)))*(288.15/0.0065);
+                        acftalt = flightLevelSTs;
                     }
-                    acftalt = ht_from_p;
-                }
-                else if (aircraftIndicatedAltitudes != missing_int) 
-                {
-                    acftalt = aircraftIndicatedAltitudes;
-                }
-                else
-                {
-                    acftalt = missing_float;
-                }
 
-                if(pressureAltitudeRelativeToMeanSeaLevels != missing_float)
-                {
-                    acftalt = pressureAltitudeRelativeToMeanSeaLevels;
                 }
-                else if (flightLevels != missing_float)
-                {
-                    acftalt = flightLevels; 
-                }
-                else if (heights != missing_int)
-                {
-                    acftalt = heights;
-                }
-                else if (heightOrAltitudes != missing_int)
-                {
-                    acftalt = heightOrAltitudes;
-                }
-                else if (flightLevelSTs != missing_int)
-                {
-                    acftalt = flightLevelSTs;
-                }
-
-                if (acftalt == missing_int || acftalt == missing_float)
-                {
-                    acftalt = missing_float;
-                }
-
 	    AircraftAltitudeArray.push_back(acftalt);
             }
         } 
