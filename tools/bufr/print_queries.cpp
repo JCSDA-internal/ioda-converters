@@ -68,12 +68,11 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
 {
     static const int SubsetLen = 9;
 
-    size_t msgNum = 0;
-
     int iddate;
     int bufrLoc;
     int il, im; // throw away
     char current_subset[9];
+    bool subsetFound = false;
 
     std::vector<Ingester::bufr::QueryData> queryData;
 
@@ -86,12 +85,18 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
         status_f(fileUnit, &bufrLoc, &il, &im);
         dataProvider.updateData(bufrLoc);
 
-        msgNum++;
         if (msg_subset == subset)
         {
-            queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
-            break;
+            while (ireadsb_f(fileUnit) == 0)
+            {
+                status_f(fileUnit, &bufrLoc, &il, &im);
+                dataProvider.updateData(bufrLoc);
+                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
+                subsetFound = true;
+            }
         }
+
+        if (subsetFound) break;
     }
 
     return queryData;
@@ -120,6 +125,54 @@ std::string dimStyledStr(int dims)
     return ostr.str();
 }
 
+std::string typeStyledStr(const Ingester::bufr::TypeInfo& info)
+{
+    std::string typeStr;
+
+    if (info.isString())
+    {
+        typeStr = "string";
+    }
+    else if (info.isInteger())
+    {
+        if (info.isSigned())
+        {
+            if (info.is64Bit())
+            {
+                typeStr = "int64 ";
+            }
+            else
+            {
+                typeStr = "int   ";
+            }
+        }
+        else
+        {
+            if (info.is64Bit())
+            {
+                typeStr = "uint64";
+            }
+            else
+            {
+                typeStr = "uint  ";
+            }
+        }
+    }
+    else
+    {
+        if (info.is64Bit())
+        {
+            typeStr = "double";
+        }
+        else
+        {
+            typeStr = "float ";
+        }
+    }
+
+    return typeStr;
+}
+
 void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
 {
     for (auto& dimPath : dimPaths)
@@ -133,7 +186,8 @@ void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
     for (auto query : queries)
     {
         std::ostringstream ostr;
-        ostr << dimStyledStr(query.dimIdxs.size()) << " ";
+        ostr << dimStyledStr(query.dimIdxs.size()) << "  ";
+        ostr << typeStyledStr(query.typeInfo) << "  ";
         ostr << query.pathComponents[0];
         for (size_t pathIdx = 1; pathIdx < query.pathComponents.size(); pathIdx++)
         {
@@ -176,7 +230,7 @@ void printQueries(const std::string& filePath,
         mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
     }
 
-    auto dataProvider = Ingester::bufr::DataProvider();
+    auto dataProvider = Ingester::bufr::DataProvider(FileUnit);
     if (!subset.empty())
     {
         auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);

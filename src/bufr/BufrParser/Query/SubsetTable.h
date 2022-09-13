@@ -27,35 +27,8 @@ namespace bufr {
         std::vector<size_t> dimIdxs;
         size_t idx;
         bool requiresIdx;
+        TypeInfo typeInfo;
     };
-
-//    struct Node
-//    {
-//        Typ type;
-//        size_t nodeIdx;
-//        std::string mnemonic;
-//    };
-//
-//    struct Sequence : Node
-//    {
-//        std::vector<std::shared_ptr<Node>> children = {};
-//    };
-//
-//    struct FixedRep : Node
-//    {
-//        size_t size;
-//        Sequence sequence;
-//    };
-//
-//    struct DelayedRep : Node
-//    {
-//        Sequence sequence;
-//    };
-//
-//    struct Leaf : Node
-//    {
-//        std::string type;
-//    };
 
     /// \brief Parses the BUFR message subset Meta data tables.
     class SubsetTable

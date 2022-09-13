@@ -7,8 +7,11 @@
 
 #include "ResultSet.h"
 
+#include "eckit/exception/Exceptions.h"
+
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 #include "Constants.h"
 #include "VectorMath.h"
@@ -26,82 +29,44 @@ namespace bufr {
     {
     }
 
-    std::shared_ptr<ResultBase> ResultSet::get(const std::string& fieldName,
-                                               const std::string& groupByFieldName) const
+    std::shared_ptr<Ingester::DataObjectBase>
+        ResultSet::get(const std::string& fieldName,
+                       const std::string& groupByFieldName,
+                       const std::string& overrideType) const
     {
         std::vector<double> data;
         std::vector<int> dims;
         std::vector<std::string> dimPaths;
+        TypeInfo info;
 
         getRawValues(fieldName,
                      groupByFieldName,
                      data,
                      dims,
-                     dimPaths);
-
-
-        std::shared_ptr<ResultBase> result;
-        if (isString(fieldName))
-        {
-            auto strData = std::vector<std::string>();
-
-            const char* charPtr = reinterpret_cast<char*>(data.data());
-            for (int row_idx = 0; row_idx < dims[0]; row_idx++)
-            {
-                if (data.data()[row_idx] != MissingValue)
-                {
-                    std::string str = std::string(
-                            charPtr + row_idx * sizeof(double), sizeof(double));
-
-                    // trim trailing whitespace from str
-                    str.erase(std::find_if(str.rbegin(), str.rend(),
-                                           [](char c){ return !std::isspace(c); }).base(),
-                              str.end());
-
-                    strData.push_back(str);
-                }
-                else
-                {
-                    strData.push_back("");
-                }
-            }
-
-            auto strResult = std::make_shared<Result<std::string>>();
-            strResult->field_name = fieldName;
-            strResult->group_by_field_name = groupByFieldName;
-            strResult->data = strData;
-            strResult->dims.push_back(dims[0]);
-            result = strResult;
-        }
-        else
-        {
-            // Compute product of dimensions
-            int tot_elements = 1;
-            for (const auto& dim : dims)
-            {
-                tot_elements *= dim;
-            }
-
-            auto floatResult = std::make_shared<Result<float>>();
-            floatResult->field_name = fieldName;
-            floatResult->group_by_field_name = groupByFieldName;
-            floatResult->data = std::vector<float>(data.data(), data.data() + tot_elements);
-            floatResult->dims = dims;
-            result = floatResult;
-        }
+                     dimPaths,
+                     info);
 
         // Add dim path strings
         const char* ws = " \t\n\r\f\v";
+        std::vector<std::string> paths(dims.size());
         for (size_t dimIdx = 0; dimIdx < dims.size(); dimIdx++)
         {
             auto path_str = dimPaths[dimIdx];
 
             // Trim extra chars from the path str
             path_str.erase(path_str.find_last_not_of(ws) + 1);
-            result->dimPaths.push_back(path_str);
+            paths[dimIdx] = path_str;
         }
 
-        return result;
+        std::shared_ptr<Ingester::DataObjectBase> object = makeDataObject(fieldName,
+                                                                          groupByFieldName,
+                                                                          info,
+                                                                          overrideType,
+                                                                          data,
+                                                                          dims,
+                                                                          paths);
+
+        return object;
     }
 
 
@@ -115,7 +80,8 @@ namespace bufr {
                                  const std::string& groupByField,
                                  std::vector<double>& data,
                                  std::vector<int>& dims,
-                                 std::vector<std::string>& dimPaths) const
+                                 std::vector<std::string>& dimPaths,
+                                 TypeInfo& info) const
     {
         // Find the dims based on the largest sequence counts in the fields
 
@@ -137,18 +103,19 @@ namespace bufr {
             }
 
             auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-            dimPaths = targetField.dimPaths;
+            dimPaths = targetField.target->dimPaths;
 
-            exportDims = targetField.exportDims;
+            exportDims = targetField.target->exportDimIdxs;
         }
 
         for (auto& dataFrame : dataFrames_)
         {
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-            if (!targetField.dimPaths.empty() && dimPaths.size() < targetField.dimPaths.size())
+            if (!targetField.target->dimPaths.empty() &&
+                dimPaths.size() < targetField.target->dimPaths.size())
             {
-                dimPaths = targetField.dimPaths;
-                exportDims = targetField.exportDims;
+                dimPaths = targetField.target->dimPaths;
+                exportDims = targetField.target->exportDimIdxs;
             }
 
             size_t dimsLen = targetField.seqCounts.size();
@@ -166,6 +133,16 @@ namespace bufr {
                 }
             }
 
+            info.reference = std::min(info.reference, targetField.target->typeInfo.reference);
+            info.bits = std::max(info.bits, targetField.target->typeInfo.bits);
+
+            if (std::abs(targetField.target->typeInfo.scale) > info.scale)
+            {
+                info.scale = targetField.target->typeInfo.scale;
+            }
+
+            if (info.unit.empty()) info.unit = targetField.target->typeInfo.unit;
+
             if (groupByField != "")
             {
                 auto& groupByField = dataFrame.fieldAtIdx(groupByFieldIdx);
@@ -173,7 +150,7 @@ namespace bufr {
 
                 if (groupbyIdx > static_cast<int>(dimsList.size()))
                 {
-                    dimPaths = {groupByField.dimPaths.back()};
+                    dimPaths = {groupByField.target->dimPaths.back()};
 
                     int groupbyElementsForFrame = 1;
                     for (auto &seqCount : groupByField.seqCounts)
@@ -189,11 +166,11 @@ namespace bufr {
                 else
                 {
                     dimPaths = {};
-                    for (size_t targetIdx = groupByField.exportDims.size() - 1;
-                         targetIdx < targetField.dimPaths.size();
+                    for (size_t targetIdx = groupByField.target->exportDimIdxs.size() - 1;
+                         targetIdx < targetField.target->dimPaths.size();
                          ++targetIdx)
                     {
-                        dimPaths.push_back(targetField.dimPaths[targetIdx]);
+                        dimPaths.push_back(targetField.target->dimPaths[targetIdx]);
                     }
                 }
             }
@@ -277,7 +254,7 @@ namespace bufr {
             std::vector<std::vector<double>> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
-            if (!targetField.missing) {
+            if (!targetField.data.size() == 0) {
                 getRowsForField(targetField,
                                 frameData,
                                 allDims,
@@ -405,10 +382,138 @@ namespace bufr {
         }
     }
 
-    bool ResultSet::isString(const std::string& fieldName) const
+    std::string ResultSet::unit(const std::string& fieldName) const
     {
         auto fieldIdx = dataFrames_.front().fieldIndexForNodeNamed(fieldName);
-        return dataFrames_.front().fieldAtIdx(fieldIdx).isString;
+        return dataFrames_.front().fieldAtIdx(fieldIdx).target->unit;
     }
+
+    std::shared_ptr<DataObjectBase> ResultSet::makeDataObject(
+                                                    const std::string& fieldName,
+                                                    const std::string& groupByFieldName,
+                                                    TypeInfo& info,
+                                                    const std::string& overrideType,
+                                                    const std::vector<double> data,
+                                                    const std::vector<int> dims,
+                                                    const std::vector<std::string> dimPaths) const
+    {
+        std::shared_ptr<DataObjectBase> object;
+        if (overrideType.empty())
+        {
+            object = objectByTypeInfo(info);
+        }
+        else
+        {
+            object = objectByType(overrideType);
+
+            if ((overrideType == "string" && !info.isString()) ||
+                (overrideType != "string" && info.isString()))
+            {
+                std::ostringstream errMsg;
+                errMsg << "Conversions between numbers and strings are not currently supported. ";
+                errMsg << "See the export definition for \"" << fieldName << "\".";
+                throw eckit::BadParameter(errMsg.str());
+            }
+        }
+
+        object->setData(data, 10e10);
+        object->setDims(dims);
+        object->setFieldName(fieldName);
+        object->setGroupByFieldName(groupByFieldName);
+        object->setDimPaths(dimPaths);
+
+        return object;
+    }
+
+    std::shared_ptr<DataObjectBase> ResultSet::objectByTypeInfo(TypeInfo &info) const
+    {
+        std::shared_ptr<DataObjectBase> object;
+
+        if (info.isString())
+        {
+            object = std::make_shared<DataObject<std::string>>();
+        }
+        else if (info.isInteger())
+        {
+            if (info.isSigned())
+            {
+                if (info.is64Bit())
+                {
+                    object = std::make_shared<DataObject<int64_t>>();
+                }
+                else
+                {
+                    object = std::make_shared<DataObject<int32_t>>();
+                }
+            }
+            else
+            {
+                if (info.is64Bit())
+                {
+                    object = std::make_shared<DataObject<uint64_t>>();
+                }
+                else
+                {
+                    object = std::make_shared<DataObject<uint32_t>>();
+                }
+            }
+        }
+        else
+        {
+            if (info.is64Bit())
+            {
+                object = std::make_shared<DataObject<double>>();
+            }
+            else
+            {
+                object = std::make_shared<DataObject<float>>();
+            }
+        }
+
+        return object;
+    }
+
+    std::shared_ptr<DataObjectBase> ResultSet::objectByType(const std::string& overrideType) const
+    {
+        std::shared_ptr<DataObjectBase> object;
+
+        if (overrideType == "uint" || overrideType == "uint32")
+        {
+            object = std::make_shared<DataObject<uint32_t>>();
+        }
+        else if (overrideType == "int" || overrideType == "int32")
+        {
+            object = std::make_shared<DataObject<int32_t>>();
+        }
+        else if (overrideType == "float")
+        {
+            object = std::make_shared<DataObject<float>>();
+        }
+        else if (overrideType == "double")
+        {
+            object = std::make_shared<DataObject<double>>();
+        }
+        else if (overrideType == "string")
+        {
+            object = std::make_shared<DataObject<std::string>>();
+        }
+        else if (overrideType == "uint64")
+        {
+            object = std::make_shared<DataObject<uint64_t>>();
+        }
+        else if (overrideType == "int64")
+        {
+            object = std::make_shared<DataObject<int64_t>>();
+        }
+        else
+        {
+            std::ostringstream errMsg;
+            errMsg << "Unknown type " << overrideType << ".";
+            throw eckit::BadParameter(errMsg.str());
+        }
+
+        return object;
+    }
+
 }  // namespace bufr
 }  // namespace Ingester
