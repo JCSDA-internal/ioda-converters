@@ -23,6 +23,8 @@ observations:
             query: "*/CLON"
           latitude:
             query: "*/CLAT"
+          channel:
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
           radiance:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
 
@@ -35,7 +37,7 @@ observations:
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
-#          source: variables/longitude
+#          source: variables/channel
 
       variables:
         - name: "dateTime@MetaData"

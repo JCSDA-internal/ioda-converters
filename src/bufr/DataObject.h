@@ -37,9 +37,29 @@ namespace Ingester
     {
         std::vector<T> data;
 
+        DimensionData() = delete;
+
+        explicit DimensionData(size_t size) :
+            data(std::vector<T>(size, _default()))
+        {
+        }
+
         void write(ioda::Variable& var)
         {
             var.write(data);
+        }
+
+     private:
+        template<typename U = void>
+        T _default(typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            return static_cast<T>(0);
+        }
+
+        template<typename U = void>
+        T _default(typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            return std::string("");
         }
     };
 
@@ -115,10 +135,15 @@ namespace Ingester
                                       const std::vector<ioda::Dimensions_t>& chunks,
                                       int compressionLevel) const = 0;
 
-        /// \brief Makes an new dimension scale
-        virtual std::shared_ptr<DimensionDataBase> createDimensionData(
+        /// \brief Makes an new dimension scale using this data objet as the source
+        virtual std::shared_ptr<DimensionDataBase> createDimensionFromData(
                                                                     const std::string& name,
                                                                     std::size_t dimIdx) const = 0;
+
+        /// \brief Makes an new dimension blank dimension scale with default type.
+        virtual std::shared_ptr<DimensionDataBase> createDimensionForData(
+                                                                  const std::string& name,
+                                                                  std::size_t dimIdx) const = 0;
 
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
@@ -196,12 +221,31 @@ namespace Ingester
             return var;
         };
 
-        //  FIXME: Update createDimensionData functions after feature/query_cxx_types gets merged.
-        /// \brief Makes an new dimension scale
-        std::shared_ptr<DimensionDataBase> createDimensionData(const std::string& name,
-                                                               std::size_t dimIdx) const final
+        /// \brief Makes an new dimension scale using this data objet as the source
+        std::shared_ptr<DimensionDataBase> createDimensionFromData(const std::string& name,
+                                                                   std::size_t dimIdx) const final
         {
-            return _createDimensionData(name, dimIdx);
+            auto dimData = std::make_shared<DimensionData<T>>(getDims()[dimIdx]);
+            dimData->dimScale = ioda::NewDimensionScale<T>(name, getDims()[dimIdx]);
+
+            for (size_t idx = 0; idx < dimData->data.size(); idx++)
+            {
+                if (data_.size() > idx)
+                {
+                    dimData->data[idx] =  data_[idx];
+                }
+            }
+
+            return dimData;
+        }
+
+        /// \brief Makes an new dimension blank dimension scale with default type.
+        std::shared_ptr<DimensionDataBase> createDimensionForData(const std::string& name,
+                                                                  std::size_t dimIdx) const final
+        {
+            auto dimData = std::make_shared<DimensionData<int>>(getDims()[dimIdx]);
+            dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
+            return dimData;
         }
 
         /// \brief Print the data object to a output stream.
@@ -358,42 +402,6 @@ namespace Ingester
             params.setFillValue<T>(static_cast<T>(std::string("")));
 
             return params;
-        }
-
-        /// \brief Makes an new dimension scale
-        template<typename U = void>
-        std::shared_ptr<DimensionDataBase> _createDimensionData(
-            const std::string& name,
-            std::size_t dimIdx,
-            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
-        {
-            auto dimData = std::make_shared<DimensionData<int>>();
-            dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
-            dimData->data.resize(getDims()[dimIdx]);
-
-            for (size_t idx = 0; idx < dimData->data.size(); idx++)
-            {
-                if (data_.size() > idx)
-                {
-                    dimData->data[idx] = static_cast<int> (data_[idx]);
-                }
-                else
-                {
-                    dimData->data[idx] = 0;
-                }
-            }
-
-            return dimData;
-        }
-
-        /// \brief Makes an new dimension scale
-        template<typename U = void>
-        std::shared_ptr<DimensionDataBase> _createDimensionData(
-            const std::string& name,
-            std::size_t dimIdx,
-            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
-        {
-            throw eckit::BadParameter("Can't use string fields for dimensions.");
         }
 
         /// \brief Get the data at the location as a float for numeric data.

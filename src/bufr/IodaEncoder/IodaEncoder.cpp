@@ -75,10 +75,9 @@ namespace Ingester
             auto dataObjectGroupBy = dataContainer->getGroupByObject(
                 description_.getVariables()[0].source, categories);
 
-            auto rootDim = std::make_shared<DimensionData<int>>();
+            auto rootDim = std::make_shared<DimensionData<int>>(dataObjectGroupBy->getDims()[0]);
             rootDim->dimScale =
                 ioda::NewDimensionScale<int>(LocationName, dataObjectGroupBy->getDims()[0]);
-            rootDim->data = std::vector<int>(dataObjectGroupBy->getDims()[0], 0);
             dimMap[LocationName] = rootDim;
 
             auto rootLocation = DimensionDescription();
@@ -93,7 +92,7 @@ namespace Ingester
                 {
                     auto dataObject = dataContainer->get(dimDesc.source, categories);
 
-                    dimMap[dimDesc.name] = dataObject->createDimensionData(
+                    dimMap[dimDesc.name] = dataObject->createDimensionFromData(
                         dimDesc.name,
                         dataObject->getDimPaths().size() - 1);
                 }
@@ -130,7 +129,7 @@ namespace Ingester
 
                     if (dimMap.find(dimName) == dimMap.end())
                     {
-                        dimMap[dimName] = dataObject->createDimensionData(dimName, dimIdx);
+                        dimMap[dimName] = dataObject->createDimensionForData(dimName, dimIdx);
                     }
                 }
             }
