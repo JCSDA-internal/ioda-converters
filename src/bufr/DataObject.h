@@ -136,11 +136,15 @@ namespace Ingester
                                       int compressionLevel) const = 0;
 
         /// \brief Makes an new dimension scale using this data objet as the source
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
         virtual std::shared_ptr<DimensionDataBase> createDimensionFromData(
                                                                     const std::string& name,
                                                                     std::size_t dimIdx) const = 0;
 
         /// \brief Makes an new dimension blank dimension scale with default type.
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
         virtual std::shared_ptr<DimensionDataBase> createDimensionForData(
                                                                   const std::string& name,
                                                                   std::size_t dimIdx) const = 0;
@@ -222,6 +226,8 @@ namespace Ingester
         };
 
         /// \brief Makes an new dimension scale using this data objet as the source
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
         std::shared_ptr<DimensionDataBase> createDimensionFromData(const std::string& name,
                                                                    std::size_t dimIdx) const final
         {
@@ -240,6 +246,8 @@ namespace Ingester
         }
 
         /// \brief Makes an new dimension blank dimension scale with default type.
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
         std::shared_ptr<DimensionDataBase> createDimensionForData(const std::string& name,
                                                                   std::size_t dimIdx) const final
         {
