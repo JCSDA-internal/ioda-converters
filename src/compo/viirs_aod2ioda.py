@@ -44,7 +44,7 @@ DimDict = {
 }
 
 VarDims = {
-    'aerosol_optical_depth': ['nlocs','nchans'], 
+    'aerosol_optical_depth': ['nlocs', 'nchans'],
 }
 
 
@@ -159,7 +159,7 @@ class AOD(object):
             first = False
 
         DimDict['nlocs'] = len(self.outdata[('latitude', 'MetaData')])
-        DimDict['nchans'] =  np.array([4]) 
+        DimDict['nchans'] = np.array([4])
 
 
 def main():
