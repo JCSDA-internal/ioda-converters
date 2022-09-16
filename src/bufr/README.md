@@ -67,7 +67,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               hoursFromUtc: 0  # Optional
           satellite_id:
             query: "*/SAID"
-            type: uint64
+            type: int64
           longitude:
             query: "*/CLON"
             transforms:
@@ -104,7 +104,7 @@ ioda encoder. It has the following sections:
     * `query` Query string which is used to get the data from the BUFR file. _(optional)_ Can 
       apply a list of `tranforms` to the numeric (not string) data. Possible transforms are 
       `offset` and `scale`. You can also manually override the type by specifying the `type` as 
-      **int**, **uint**, **int64**, **uint64**, **float**, or **double**.
+      **int**, **int64**, **float**, or **double**.
     * `datetime` Associate **key** with data for mnemonics for `year`, `month`, `day`, `hour`,
       `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must be an **integer**).
       Internally, the value stored is number of seconds elapsed since a reference epoch, currently

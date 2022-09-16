@@ -40,7 +40,12 @@ namespace bufr {
         std::string description;
 
         bool isString() const { return unit == "CCITT IA5"; }
-        bool isSigned() const  { return reference < 0; }
+        bool isSigned() const
+        {
+            // To better support Fortran clients for the generated ObsGroups we will assume all
+            // fields are signed. Otherwise this code would be reference < 0.
+            return true;
+        }
         bool isInteger() const { return scale <= 0; }
         bool is64Bit() const
         {
