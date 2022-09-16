@@ -40,9 +40,11 @@ DimDict = {
 
 
 class tropomi(object):
-    def __init__(self, filenames, columnType, obsVar):
+    def __init__(self, filenames, columnType, qa_flg, thin, obsVar):
         self.filenames = filenames
         self.columnType = columnType
+        self.qa_flg = qa_flg
+        self.thin = thin
         self.obsVar = obsVar
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -83,8 +85,10 @@ class tropomi(object):
             qa_value = qa_value.ravel()
 
             # adding ability to pre filter the data using the qa value
-            # documentation recommends using > 0.75
-            flg = qa_value > 0.75
+            # and also perform thinning using random uniform draw
+            qaf = qa_value > self.qa_flg
+            thi = np.random.uniform(size=len(lons)) > self.thin
+            flg = np.logical_and(qaf, thi)
             qc_flag = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS']\
                 .variables['processing_quality_flags'][:]
             qc_flag = qc_flag.ravel().astype('int32')
@@ -149,7 +153,7 @@ class tropomi(object):
                         (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]))
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], ak[k] + bk[k]*ps[...].ravel()[flg]))
+                        (self.outdata[varname_pr], ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]))
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 self.outdata[varname_pr] = np.concatenate(
                     (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
@@ -210,6 +214,19 @@ def main():
         '-c', '--column',
         help="type of column: total or tropo",
         type=str, required=True)
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-q', '--qa_value',
+        help="qa value used to preflag data that goes into file before QC"
+        "default at 0.75 as suggested in the documentation. See:"
+        "https://sentinel.esa.int/documents/247904/2474726/"
+        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6",
+        type=float, default=0.75)
+    optional.add_argument(
+        '-n', '--thin',
+        help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
+        " no thinning is performed. (default: %(default)s)",
+        type=float, default=0.0)
 
     args = parser.parse_args()
 
@@ -234,7 +251,7 @@ def main():
         }
 
     # Read in the NO2 data
-    no2 = tropomi(args.input, args.column, obsVar)
+    no2 = tropomi(args.input, args.column, args.qa_value, args.thin, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
