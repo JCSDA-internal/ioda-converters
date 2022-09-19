@@ -122,12 +122,15 @@ phases:
       - echo $BUILD_STATUS
 
       # run ctest
-      - su - nonroot -c "CC=mpicc CXX=mpicxx FC=mpifort
-        && export PATH=/usr/local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        && export LD_LIBRARY_PATH=/usr/local/lib:/nonroot/home/lib
-        && export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
-        && cd /home/nonroot/iodaconv
+      - su - nonroot -c " cd /home/nonroot/iodaconv
         && ctest -C RelWithDebInfo -D ExperimentalTest"
+
+        #- su - nonroot -c "CC=mpicc CXX=mpicxx FC=mpifort
+        #&& export PATH=/usr/local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        #&& export LD_LIBRARY_PATH=/usr/local/lib:/nonroot/home/lib
+        #&& export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
+        #&& cd /home/nonroot/iodaconv
+        #&& ctest -C RelWithDebInfo -D ExperimentalTest"
 
     finally:
       # upload ctest report to CDASH
