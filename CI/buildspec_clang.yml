@@ -89,9 +89,11 @@ phases:
   build:
     on-failure: CONTINUE
     commands:
-      - mkdir /build_container
       - cd /build_container
       - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle
+      - ls /build_container
+
+      # Build ioda
       - cd /build_container/ioda
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
@@ -99,12 +101,12 @@ phases:
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
+      # Build ioda-converters
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
       - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
       - export BUILD_STATUS="0"
