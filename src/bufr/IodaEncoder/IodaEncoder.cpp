@@ -68,6 +68,7 @@ namespace Ingester
             }
         }
 
+        // Got through each unique category
         for (const auto& categories : dataContainer->allSubCategories())
         {
             // Create the dimensions variables
@@ -231,7 +232,7 @@ namespace Ingester
                 }
             }
 
-            // Write all the Variables
+            // Write all the other Variables
             for (const auto& varDesc : description_.getVariables())
             {
                 std::vector<ioda::Dimensions_t> chunks;
