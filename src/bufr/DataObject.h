@@ -239,7 +239,7 @@ namespace Ingester
                       dimData->data.begin());
 
             // Validate this data object is a valid (has values that repeat for each frame
-            for(size_t idx = 0; idx < data_.size(); idx += dimData->data.size())
+            for (size_t idx = 0; idx < data_.size(); idx += dimData->data.size())
             {
                 if (!std::equal(data_.begin(),
                                 data_.begin() + dimData->data.size(),
