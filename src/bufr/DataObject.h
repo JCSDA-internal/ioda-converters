@@ -234,11 +234,22 @@ namespace Ingester
             auto dimData = std::make_shared<DimensionData<T>>(getDims()[dimIdx]);
             dimData->dimScale = ioda::NewDimensionScale<T>(name, getDims()[dimIdx]);
 
-            for (size_t idx = 0; idx < dimData->data.size(); idx++)
+            std::copy(data_.begin(),
+                      data_.begin() + dimData->data.size(),
+                      dimData->data.begin());
+
+            // Validate this data object is a valid (has values that repeat for each frame
+            for(size_t idx = 0; idx < data_.size(); idx += dimData->data.size())
             {
-                if (data_.size() > idx)
+                if (!std::equal(data_.begin(),
+                                data_.begin() + dimData->data.size(),
+                                data_.begin() + idx,
+                                data_.begin() + idx + dimData->data.size()))
                 {
-                    dimData->data[idx] =  data_[idx];
+                    std::stringstream errStr;
+                    errStr << "Dimension " << name << " has an invalid source field. ";
+                    errStr << "The values don't repeat in each sequence.";
+                    throw eckit::BadParameter(errStr.str());
                 }
             }
 

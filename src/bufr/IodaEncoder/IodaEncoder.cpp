@@ -106,6 +106,18 @@ namespace Ingester
                 {
                     auto dataObject = dataContainer->get(dimDesc.source, categories);
 
+                    // Validate the path for the source field makes sense for the dimension
+                    if (std::find(dimDesc.paths.begin(),
+                                  dimDesc.paths.end(),
+                                  dataObject->getDimPaths().back()) == dimDesc.paths.end())
+                    {
+                        std::stringstream errStr;
+                        errStr << "ioda::dimensions: Source field " << dimDesc.source << " in ";
+                        errStr << dimDesc.name << " is not in the correct path.";
+                        throw eckit::BadParameter(errStr.str());
+                    }
+
+                    // Create the dimension data
                     dimMap[dimDesc.name] = dataObject->createDimensionFromData(
                         dimDesc.name,
                         dataObject->getDimPaths().size() - 1);
