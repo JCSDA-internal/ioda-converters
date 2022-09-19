@@ -74,6 +74,8 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               - offset: -180
           latitude:
             query: "*/CLAT"
+          channels:
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
           radiance:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
 
@@ -147,6 +149,7 @@ ioda encoder. It has the following sections:
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
+          source: variables/channels
 
       variables:
         - name: "MetaData/dateTime"
@@ -184,8 +187,13 @@ The `ioda` section defines the ObsGroup objects that will be created.
   replaced with the relevant split category ID for that file to form a unique name for every file.
 * `dimensions` used to define dimension information in variables
     * `name` arbitrary name for the dimension
-    * `paths` - list of subqueries for that dimension (different paths for different BUFR subsets 
-                only) **or** `path` Single subquery for that dimension ex: **\*/BRITCSTC**
+    * `paths` list of subqueries for that dimension (different paths for different BUFR subsets 
+              only) **or** `path` Single subquery for that dimension ex: **\*/BRITCSTC**
+    * `source` (optional) The exported data that acts as the source field for this dimension. 
+               The data dimension values (labels) will reflect this field. The source is validated
+               to make sure it makes sense for the dimension and that it is made up of repeated
+               values for each occurrence of the sequence. The source field must be inside the
+               dimension and be 1:1 with it.
 * `variables` List of output variable objects to create.
   * `name` standardized pathname **group**/**var_name**. 
     * **var_name** name for the variable
