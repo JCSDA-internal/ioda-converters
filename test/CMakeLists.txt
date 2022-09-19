@@ -893,7 +893,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
                           -i testinput/mopitt_co.he5
-                          -o testrun/mopitt_co.nc"
+                          -o testrun/mopitt_co.nc
+                          -r 2021092903 2021092921"
                           mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
