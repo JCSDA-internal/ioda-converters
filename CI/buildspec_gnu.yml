@@ -88,29 +88,29 @@ phases:
 
   build:
     commands:
-      - su - jedi -c "cd /home/jedi
+      - su - nonroot -c "cd /home/nonroot
         && echo $CC
         && echo $CXX
         && echo $FC
         && CC=mpicc CXX=mpicxx FC=mpifort ecbuild -Wno-dev -DCDASH_OVERRIDE_SITE=CodeBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DUSE_ECCODES=ON /jcsda/ioda-bundle/"
 
-      - su - jedi -c "cd /home/jedi/ioda
+      - su - nonroot -c "cd /home/nonroot/ioda
         && echo $CC
         && echo $CXX
         && echo $FC
         && cp ../DartConfiguration.tcl .
         && sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
-        && sed -i 's/jedi/jedi\/ioda/' DartConfiguration.tcl
+        && sed -i 's/nonroot/nonroot\/ioda/' DartConfiguration.tcl
         && cat DartConfiguration.tcl
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
 
-      - su - jedi -c "cd /home/jedi/iodaconv
+      - su - nonroot -c "cd /home/nonroot/iodaconv
         && echo $CC
         && echo $CXX
         && echo $FC
         && cp ../DartConfiguration.tcl .
         && sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
-        && sed -i 's/jedi/jedi\/iodaconv/' DartConfiguration.tcl
+        && sed -i 's/nonroot/nonroot\/iodaconv/' DartConfiguration.tcl
         && cat DartConfiguration.tcl
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
 
@@ -122,17 +122,17 @@ phases:
       - echo $BUILD_STATUS
 
       # run ctest
-      - su - jedi -c "CC=mpicc CXX=mpicxx FC=mpifort
+      - su - nonroot -c "CC=mpicc CXX=mpicxx FC=mpifort
         && export PATH=/usr/local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        && export LD_LIBRARY_PATH=/usr/local/lib:/jedi/home/lib
+        && export LD_LIBRARY_PATH=/usr/local/lib:/nonroot/home/lib
         && export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
-        && cd /home/jedi/iodaconv
+        && cd /home/nonroot/iodaconv
         && ctest -C RelWithDebInfo -D ExperimentalTest"
 
     finally:
       # upload ctest report to CDASH
-      - su - jedi -c "CC=mpicc CXX=mpicxx FC=mpifort
-        && cd /home/jedi/iodaconv
+      - su - nonroot -c "CC=mpicc CXX=mpicxx FC=mpifort
+        && cd /home/nonroot/iodaconv
         && ctest -C RelWithDebInfo -D ExperimentalSubmit -M Continuous -- --track Continuous --group Continuous"
 
   post_build:
@@ -144,7 +144,7 @@ phases:
       # upload find cdash url and upload it as CodeBuild artifact to S3
       - if [ "$BUILD_STATUS" = "1" ];
         then echo "Build & tests passed, find cdash url";
-        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing $CDASH_URL);
+        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/nonroot/iodaconv/Testing $CDASH_URL);
         echo $url;
         echo ${url} > /jcsda/artifacts/cdash-url.txt;
         cat /jcsda/artifacts/cdash-url.txt;

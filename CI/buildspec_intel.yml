@@ -96,22 +96,22 @@ phases:
   build:
     on-failure: CONTINUE
     commands:
-      - cd /home/jedi
+      - cd /home/nonroot
       - echo $PYTHONPATH
       - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
       - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle/
 
-      - cd /home/jedi/ioda
+      - cd /home/nonroot/ioda
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
-      - sed -i 's/jedi/jedi\/ioda/' DartConfiguration.tcl
+      - sed -i 's/nonroot/nonroot\/ioda/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
-      - cd /home/jedi/iodaconv
+      - cd /home/nonroot/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
-      - sed -i 's/jedi/jedi\/iodaconv/' DartConfiguration.tcl
+      - sed -i 's/nonroot/nonroot\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
@@ -138,7 +138,7 @@ phases:
 
       - if [ "$BUILD_STATUS" = "1" ];
         then echo "Build & tests passed, find cdash url";
-        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing $CDASH_URL);
+        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/nonroot/iodaconv/Testing $CDASH_URL);
         echo $url;
         echo ${url} > /jcsda/artifacts/cdash-url.txt;
         cat /jcsda/artifacts/cdash-url.txt;
