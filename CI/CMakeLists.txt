@@ -19,8 +19,9 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 
 ecbuild_bundle_initialize()
 
-ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
-include( jedicmake/cmake/Functions/git_functions.cmake )
+#ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
+#include( jedicmake/cmake/Functions/git_functions.cmake )
+include( /opt/view/share/jedicmake/Functions/git_functions.cmake )
 
 # Core JEDI repositories
 ecbuild_bundle( PROJECT oops GIT "https://github.com/JCSDA-internal/oops.git" )
