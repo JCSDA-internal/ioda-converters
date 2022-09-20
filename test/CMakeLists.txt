@@ -227,6 +227,7 @@ if (iodaconv_satbias_ENABLED )
   list( APPEND test_input
     testinput/satbias_converter_amsua.yaml
     testinput/satbias_converter_cris.yaml
+    testinput/satbias_converter_gmi_gpm.yaml
     testinput/satbias_converter_ssmis.yaml
     testinput/satbias_crtm_in
     testinput/satbias_crtm_pc
@@ -235,6 +236,7 @@ if (iodaconv_satbias_ENABLED )
   list( APPEND test_output
     testoutput/satbias_amsua_n18.nc4
     testoutput/satbias_cris_npp.nc4
+    testoutput/satbias_gmi_gpm.nc4
     testoutput/satbias_ssmis_f16.nc4
     testoutput/viirs_bias.nc 
   )
@@ -891,7 +893,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
                           -i testinput/mopitt_co.he5
-                          -o testrun/mopitt_co.nc"
+                          -o testrun/mopitt_co.nc
+                          -r 2021092903 2021092921"
                           mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
@@ -1321,6 +1324,15 @@ if( iodaconv_satbias_ENABLED )
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_cris.yaml"
                             satbias_cris_npp.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS satbias2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_satbias_gmi
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_gmi_gpm.yaml"
+                            satbias_gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_ssmis
