@@ -51,14 +51,14 @@ namespace bufr {
     }  // namespace __details
 
     /// \brief Manages the execution of queries against on a BUFR file.
-    class Query
+    class QueryRunner
     {
      public:
         /// \brief Constructor.
         /// \param[in] querySet The set of queries to execute against the BUFR file.
         /// \param[in, out] resultSet The object used to store the accumulated collected data.
         /// \param[in] dataProvider The BUFR data provider to use.
-        Query(const QuerySet& querySet, ResultSet& resultSet, const DataProvider& dataProvider);
+        QueryRunner(const QuerySet& querySet, ResultSet& resultSet, const DataProvider& dataProvider);
         void query();
 
         Targets getTargets()
@@ -96,8 +96,8 @@ namespace bufr {
         /// \brief Find the target associated with a specific user provided query string.
         /// \param[in] targetName The name specified for the target.
         /// \param[in] query The query string to use.
-        std::shared_ptr<Target> findTarget(const std::string& targetName,
-                                           const std::string& query) const;
+        std::shared_ptr<Target> findTarget(const std::string &targetName,
+                                           const Query& query) const;
 
 
         /// \brief Does the node idx correspond to an element you'd find in a query string (repeat

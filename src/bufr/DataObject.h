@@ -492,7 +492,7 @@ namespace Ingester
         int _getAsInt(size_t idx,
             typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
-            throw std::runtime_error("The stored value was is not a number");
+            throw std::runtime_error("The stored value is not a number");
         }
 
         /// \brief Set the data associated with this data object (numeric DataObject).

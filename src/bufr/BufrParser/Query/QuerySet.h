@@ -7,8 +7,12 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <vector>
+#include <set>
 #include <string>
+
+#include "QueryParser.h"
 
 namespace Ingester {
 namespace bufr
@@ -23,30 +27,25 @@ namespace bufr
         /// \brief Add a new query to the collection.
         /// \param[in] name The name of the query.
         /// \param[in] query The query string.
-        void add(const std::string& name, const std::string& query)
-        {
-            queryList_.push_back({name, query});
-        }
+        void add(const std::string& name, const std::string& query);
 
         /// \brief Returns the size of the collection.
-        size_t size() const { return queryList_.size(); }
-
-        /// \brief Returns the name of the query at the specified index.
-        /// \param[in] idx The index of the query..
-        /// \return The name of the query.
-        std::string nameAt(size_t idx) const { return queryList_.at(idx).first; }
-
-        /// \brief Returns the query string at the specified index.
-        /// \param[in] idx The index of the query.
-        /// \return The query string.
-        std::string queryAt(size_t idx) const { return queryList_.at(idx).second; }
+        size_t size() const { return queryMap_.size(); }
 
         /// \brief Returns the names of all the queries.
         /// \return A vector of the names of all the queries.
         std::vector<std::string> names() const;
 
+        /// \brief Returns a list of subsets.
+        /// \return A vector of the names of all the queries.
+        bool includesSubset(const std::string& subset) const;
+
+        std::vector<Query> queriesFor(const std::string& name) const { return queryMap_.at(name); }
+
      private:
-        std::vector<std::pair<std::string, std::string>> queryList_;
+        std::unordered_map<std::string, std::vector<Query>> queryMap_;
+        bool includesAllSubsets_;
+        std::set<std::string> includedSubsets_;
     };
 }  // namespace bufr
 }  // namespace Ingester
