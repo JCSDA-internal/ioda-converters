@@ -15,17 +15,9 @@ phases:
       - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
-      #- pip install xarray
-      #- pip install pyhdf
-      #- echo $PATH
-      #- echo $LD_LIBRARY_PATH
-      #- echo $LIBRARY_PATH
-      #- echo $PYTHONPATH
-
       # Codebuild only runs on PUSH events if HEAD_REF
       # is refs/heads/develop (merge to develop). In this
       # case CODEBUILD_GIT_BRANCH="develop"
-
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PUSH" ];
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";

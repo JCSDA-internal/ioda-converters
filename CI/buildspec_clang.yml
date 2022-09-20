@@ -16,13 +16,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
-      #- pip install xarray
-      #- pip install pyhdf
-      #- echo $PATH
-      #- echo $LD_LIBRARY_PATH
-      #- echo $PYTHONPATH
-      #- export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages
-
       # read cdash url from s3
       - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
       - CDASH_URL=$(cat cdash_url.txt)
@@ -30,7 +23,6 @@ phases:
       # Codebuild only runs on PUSH events if HEAD_REF
       # is refs/heads/develop (merge to develop). In this
       # case CODEBUILD_GIT_BRANCH="develop"
-
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PUSH" ];
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";

@@ -104,9 +104,6 @@ phases:
       #- which mpiicc || true
       #- export | grep CC
 
-      #- cd /home/nonroot
-      #- echo $PYTHONPATH
-      #- export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
       - cd /build_container
       - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle/
 
