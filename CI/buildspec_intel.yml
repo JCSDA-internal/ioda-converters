@@ -115,16 +115,16 @@ phases:
       - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
       - sed -i 's/nonroot/nonroot\/ioda/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-      - make -j2
-      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j2
+      #- make -j2
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
       - sed -i 's/nonroot/nonroot\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-      - make -j2
-      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j2
+      #- make -j2
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
       - echo $BUILD_STATUS
       - echo $CODEBUILD_BUILD_SUCCEEDING
