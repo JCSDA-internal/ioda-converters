@@ -13,17 +13,50 @@
 namespace Ingester {
 namespace bufr {
 
+    QuerySet::QuerySet(const std::vector<std::string>& subsets) :
+        includesAllSubsets_(false),
+        limitSubsets_(std::set<std::string>(subsets.begin(),
+                                            subsets.end())),
+        presentSubsets_({})
+    {
+    }
+
     void QuerySet::add(const std::string& name, const std::string& queryStr)
     {
         std::vector<Query> queries;
-        for (const auto& query : QueryParser::parse(queryStr))
+        for (const auto &query: QueryParser::parse(queryStr))
         {
-            if (query.subset == "*")
+            if (limitSubsets_.empty())
             {
-                includesAllSubsets_ = true;
+                if (query.subset == "*")
+                {
+                    includesAllSubsets_ = true;
+                }
+
+                presentSubsets_.insert(query.subset);
+            }
+            else
+            {
+                if (query.subset == "*")
+                {
+                    presentSubsets_ = limitSubsets_;
+                }
+                else
+                {
+                    presentSubsets_.insert(query.subset);
+
+                    std::vector<std::string> newSubsets;
+                    std::set_intersection(limitSubsets_.begin(),
+                                          limitSubsets_.end(),
+                                          presentSubsets_.begin(),
+                                          presentSubsets_.end(),
+                                          std::back_inserter(newSubsets));
+
+                    presentSubsets_ = std::set<std::string>(newSubsets.begin(),
+                                                            newSubsets.end());
+                }
             }
 
-            includedSubsets_.emplace(query.subset);
             queries.emplace_back(query);
         }
 
@@ -35,40 +68,10 @@ namespace bufr {
         bool includesSubset = true;
         if (!includesAllSubsets_)
         {
-            includesSubset = (includedSubsets_.find(subset) != includedSubsets_.end());
+            includesSubset = (presentSubsets_.find(subset) != presentSubsets_.end());
         }
 
         return includesSubset;
-    }
-
-    void QuerySet::limitSubsets(std::vector<std::string> subsets)
-    {
-        auto subsetsSet = std::set<std::string>(subsets.begin(), subsets.end());
-        if (includesAllSubsets_)
-        {
-            includedSubsets_ = subsetsSet;
-
-        }
-        else
-        {
-            for(auto& s : includedSubsets_) std::cout << s << " ";
-            std::cout << std::endl;
-
-            std::vector<std::string> newSubsets;
-            std::set_intersection(subsetsSet.begin(),
-                                  subsetsSet.end(),
-                                  includedSubsets_.begin(),
-                                  includedSubsets_.end(),
-                                  std::back_inserter(newSubsets));
-
-            includedSubsets_ = std::set<std::string>(newSubsets.begin(),
-                                                     newSubsets.end());
-
-            for(auto& s : includedSubsets_) std::cout << s << " ";
-            std::cout << std::endl;
-        }
-
-        includesAllSubsets_ = false;
     }
 
     std::vector<std::string> QuerySet::names() const
@@ -81,6 +84,5 @@ namespace bufr {
 
         return names;
     }
-
 }  // namespace bufr
 }  // namespace Ingester
