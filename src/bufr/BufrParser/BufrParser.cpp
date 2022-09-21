@@ -49,12 +49,19 @@ namespace Ingester {
         auto startTime = std::chrono::steady_clock::now();
 
         auto querySet = bufr::QuerySet();
+
         for (const auto &var : description_.getExport().getVariables())
         {
             for (const auto &queryPair : var->getQueryList())
             {
                 querySet.add(queryPair.name, queryPair.query);
             }
+        }
+
+        auto subsets =  description_.getExport().getSubsets();
+        if (!subsets.empty())
+        {
+            querySet.limitSubsets(subsets);
         }
 
         oops::Log::info() << "Executing Queries" << std::endl;

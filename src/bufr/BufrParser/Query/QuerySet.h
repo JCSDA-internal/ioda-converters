@@ -40,6 +40,10 @@ namespace bufr
         /// \return A vector of the names of all the queries.
         bool includesSubset(const std::string& subset) const;
 
+        /// \brief Limit the subsets to the ones presented.
+        /// \param[in] subsets A vector of subsets.
+        void limitSubsets(std::vector<std::string> subsets);
+
         std::vector<Query> queriesFor(const std::string& name) const { return queryMap_.at(name); }
 
      private:

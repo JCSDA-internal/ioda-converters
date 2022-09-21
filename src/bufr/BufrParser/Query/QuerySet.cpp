@@ -7,6 +7,8 @@
 
 #include "QuerySet.h"
 
+#include <algorithm>
+#include <iostream>
 
 namespace Ingester {
 namespace bufr {
@@ -37,6 +39,36 @@ namespace bufr {
         }
 
         return includesSubset;
+    }
+
+    void QuerySet::limitSubsets(std::vector<std::string> subsets)
+    {
+        auto subsetsSet = std::set<std::string>(subsets.begin(), subsets.end());
+        if (includesAllSubsets_)
+        {
+            includedSubsets_ = subsetsSet;
+
+        }
+        else
+        {
+            for(auto& s : includedSubsets_) std::cout << s << " ";
+            std::cout << std::endl;
+
+            std::vector<std::string> newSubsets;
+            std::set_intersection(subsetsSet.begin(),
+                                  subsetsSet.end(),
+                                  includedSubsets_.begin(),
+                                  includedSubsets_.end(),
+                                  std::back_inserter(newSubsets));
+
+            includedSubsets_ = std::set<std::string>(newSubsets.begin(),
+                                                     newSubsets.end());
+
+            for(auto& s : includedSubsets_) std::cout << s << " ";
+            std::cout << std::endl;
+        }
+
+        includesAllSubsets_ = false;
     }
 
     std::vector<std::string> QuerySet::names() const
