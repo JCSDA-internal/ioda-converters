@@ -15,12 +15,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID
       - echo $CODEBUILD_WEBHOOK_EVENT
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
-      - pip install xarray
-      - pip install pyhdf
-      - echo $PATH
-      - echo $LD_LIBRARY_PATH
-      - echo $PYTHONPATH
-      - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages
 
       # read cdash url from s3
       - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
@@ -29,7 +23,6 @@ phases:
       # Codebuild only runs on PUSH events if HEAD_REF
       # is refs/heads/develop (merge to develop). In this
       # case CODEBUILD_GIT_BRANCH="develop"
-
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PUSH" ];
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";
@@ -47,16 +40,11 @@ phases:
   pre_build:
     commands:
       - echo Executing pre_build phase
-      - git lfs install
-      - mkdir /build_container
       - mkdir -p /jcsda/ioda-bundle
+      - mkdir /build_container
 
+      - git lfs install
       - cd CI
-
-      # Upload branch name and commit sha as CodeBuild artifact to S3
-      - mkdir -p /jcsda/artifacts
-      - echo ${CODEBUILD_GIT_BRANCH} > /jcsda/artifacts/branch_name.txt
-      - echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} > /jcsda/artifacts/commit_sha.tx
 
       #  Setting git credentials
       - sed -i '/ssh/d' ~/.gitconfig
@@ -66,31 +54,44 @@ phases:
       - chmod 0700 ~/.git-credentials
       - echo "https://${GIT_USER}:${GIT_PASS}@github.com" >~/.git-credentials
 
+
+      # Upload branch name and commit sha as CodeBuild artifact to S3
+      - mkdir -p /jcsda/artifacts
+      - echo ${CODEBUILD_GIT_BRANCH} > /jcsda/artifacts/branch_name.txt
+      - echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} > /jcsda/artifacts/commit_sha.txt
+
       # ioda-converters (testing repo)
       - ./clone.sh jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH  /jcsda/ioda-bundle iodaconv ${GIT_BASE_BRANCH} develop
 
-      # jedi-cmake
-      - ./clone.sh jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle jedicmake ${GIT_BASE_BRANCH} develop
-
-     # oops
+      # oops
       - ./clone.sh jcsda-internal/oops $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle oops ${GIT_BASE_BRANCH} develop
 
-     # ioda
+      # ioda
       - ./clone.sh jcsda-internal/ioda $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda ${GIT_BASE_BRANCH} develop
 
       # ioda-data
       - ./clone.sh jcsda-internal/ioda-data $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda-data ${GIT_BASE_BRANCH} develop
 
+      # move CMakeLists.txt from ioda-converters/CI to bundle directory
       - cp CMakeLists.txt /jcsda/ioda-bundle
       - cp -r cmake /jcsda/ioda-bundle/
       - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
       - sed -i "s@CDASH_URL@$CDASH_URL@g" /jcsda/ioda-bundle/CTestConfig.cmake
       - ls /jcsda/ioda-bundle/
+
   build:
     on-failure: CONTINUE
     commands:
+      - echo Executing build phase
+      - export BUILD_STATUS="0"
+      - echo $BUILD_STATUS
+      - echo $CODEBUILD_BUILD_SUCCEEDING
+
       - cd /build_container
-      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle
+      - source /etc/profile.d/z10_spack_environment.sh
+      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=ClangContainer -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle
+
+      # Build ioda
       - cd /build_container/ioda
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
@@ -98,17 +99,13 @@ phases:
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
+      # Build ioda-converters
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
       - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
-
-      - export BUILD_STATUS="0"
-      - echo $BUILD_STATUS
-      - echo $CODEBUILD_BUILD_SUCCEEDING
 
       - if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ];
         then export BUILD_STATUS="1";

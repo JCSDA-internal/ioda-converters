@@ -11,3 +11,4 @@ set_targets_deps( "${programs}"
 
 add_subdirectory( fortran )
 add_subdirectory( run_satwnds )
+add_subdirectory( bufr )

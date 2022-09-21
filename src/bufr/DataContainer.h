@@ -7,14 +7,12 @@
 
 #pragma once
 
-
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
-#include "Eigen/Dense"
 
-#include "DataObject/DataObject.h"
+#include "DataObject.h"
 #include "IngesterTypes.h"
 
 
@@ -27,7 +25,7 @@ namespace Ingester
     typedef std::map<std::string, SubCategory> CategoryMap;
 
     /// Map string paths (ex: variable/radiance) to DataObject
-    typedef std::map<std::string, std::shared_ptr<DataObject>> DataSetMap;
+    typedef std::map<std::string, std::shared_ptr<DataObjectBase>> DataSetMap;
 
     /// Map category combo (ex: SatId/sat_1, GeoBox/lat_25_30__lon_23_26) to the relevant DataSetMap
     typedef std::map<std::vector<std::string>, DataSetMap> DataSets;
@@ -53,14 +51,20 @@ namespace Ingester
         /// \param data The DataObject to store
         /// \param categoryId The vector<string> for the subcategory
         void add(const std::string& fieldName,
-                 std::shared_ptr<DataObject> data,
+                 std::shared_ptr<DataObjectBase> data,
                  const SubCategory& categoryId = {});
 
         /// \brief Get a DataObject from the collection
         /// \param fieldName The name of the data object ot get
         /// \param categoryId The vector<string> for the subcategory
-        std::shared_ptr<DataObject> get(const std::string& fieldName,
-                                        const SubCategory& categoryId = {}) const;
+        std::shared_ptr<DataObjectBase> get(const std::string& fieldName,
+                                            const SubCategory& categoryId = {}) const;
+
+        /// \brief Get a DataObject for the group by field
+        /// \param fieldName The name of the data object ot get
+        /// \param categoryId The vector<string> for the subcategory
+        std::shared_ptr<DataObjectBase> getGroupByObject(const std::string& fieldName,
+                                                         const SubCategory& categoryId = {}) const;
 
         /// \brief Check if DataObject with name is available
         /// \param fieldName The name of the object
