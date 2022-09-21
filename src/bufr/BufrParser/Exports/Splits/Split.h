@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -20,6 +20,7 @@ namespace Ingester
     {
      public:
         explicit Split(const std::string& name);
+        virtual ~Split() = default;
 
         /// \brief Get set of sub categories this split will create
         /// \param dataMap The data we will split on.

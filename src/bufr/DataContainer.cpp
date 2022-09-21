@@ -9,7 +9,6 @@
 #include <string>
 #include <ostream>
 
-#include "Eigen/Dense"
 #include "eckit/exception/Exceptions.h"
 
 #include "DataContainer.h"

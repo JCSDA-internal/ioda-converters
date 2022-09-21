@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 
+#include "Constants.h"
 #include "VectorMath.h"
 
 
@@ -308,8 +309,8 @@ namespace bufr {
              repIdx < std::min(dims.size(), targetField.seqCounts.size());
              ++repIdx)
         {
-            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) - \
-                              targetField.seqCounts[repIdx] * \
+            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
+                              targetField.seqCounts[repIdx] *
                               product<int>(dims.begin() + repIdx + 1, dims.end());
         }
 
@@ -336,7 +337,7 @@ namespace bufr {
             }
         }
 
-        auto output = std::vector<double>(product(dims), 10.0e10);
+        auto output = std::vector<double>(product(dims), MissingValue);
         for (size_t i = 0; i < idxs.size(); ++i)
         {
             output[idxs[i]] = targetField.data[i];
@@ -476,11 +477,7 @@ namespace bufr {
     {
         std::shared_ptr<DataObjectBase> object;
 
-        if (overrideType == "uint" || overrideType == "uint32")
-        {
-            object = std::make_shared<DataObject<uint32_t>>();
-        }
-        else if (overrideType == "int" || overrideType == "int32")
+        if (overrideType == "int" || overrideType == "int32")
         {
             object = std::make_shared<DataObject<int32_t>>();
         }
@@ -496,10 +493,6 @@ namespace bufr {
         {
             object = std::make_shared<DataObject<std::string>>();
         }
-        else if (overrideType == "uint64")
-        {
-            object = std::make_shared<DataObject<uint64_t>>();
-        }
         else if (overrideType == "int64")
         {
             object = std::make_shared<DataObject<int64_t>>();
@@ -507,7 +500,7 @@ namespace bufr {
         else
         {
             std::ostringstream errMsg;
-            errMsg << "Unknown type " << overrideType << ".";
+            errMsg << "Unknown or unsupported type " << overrideType << ".";
             throw eckit::BadParameter(errMsg.str());
         }
 

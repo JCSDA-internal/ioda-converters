@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "QueryParser.h"
+#include "Constants.h"
 
 namespace Ingester {
 namespace bufr {
@@ -143,12 +144,37 @@ namespace bufr {
 
                 // Step back up the tree (unfortunately this is finicky)
                 if (seqPath.size() > 1) {
+                    // Skip pure sequences not inside any kind of repeated sequence
+                    auto jumpBackNode = dataProvider_.getInode();
+                    if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+                    {
+                        jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
+                        if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
+                        while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
+                        {
+                            auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
+                            if (newJumpBackNode != jumpBackNode)
+                            {
+                                jumpBackNode = newJumpBackNode;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+
                     // Peak ahead to see if the next node is inside one of the containing sequences
                     // then go back up the approptiate number of sequences. You may have to exit
                     // several sequences in a row if the current sequence is the last element in the
                     // containing sequence.
                     for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--) {
-                        if (seqPath[pathIdx] == dataProvider_.getJmpb(nodeIdx + 1)) {
+                        if (seqPath[pathIdx] == jumpBackNode) {
                             for (int rewindIdx = seqPath.size() - 1;
                                  rewindIdx > pathIdx;
                                  rewindIdx--) {
@@ -169,7 +195,7 @@ namespace bufr {
                 }
             }
 
-            if (index > 0 && index <= static_cast<int>(targetNodes.size())) {
+            if (index > 0 && index <= gsl::narrow<int>(targetNodes.size())) {
                 targetNodes = {targetNodes[index - 1]};
             }
 
@@ -253,6 +279,9 @@ namespace bufr {
                             ResultSet &resultSet) const {
         std::vector<int> currentPath;
         std::vector<int> currentPathReturns;
+
+        currentPath.reserve(10);
+        currentPathReturns.reserve(10);
 
         auto &dataFrame = resultSet.nextDataFrame();
         int returnNodeIdx = -1;

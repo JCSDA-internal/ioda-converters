@@ -119,13 +119,38 @@ namespace bufr {
 
             if (seqPath.size() > 1)
             {
+                auto jumpBackNode = dataProvider_.getInode();
+                if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+                {
+                    // Skip pure sequences not inside any kind of repeated sequence
+                    jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
+                    if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
+
+                    while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
+                    {
+                        auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
+                        if (newJumpBackNode != jumpBackNode)
+                        {
+                            jumpBackNode = newJumpBackNode;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
                 // Peak ahead to see if the next node is inside one of the containing sequences.
                 for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--)
                 {
                     // Check if the node idx is the next node for the current path
                     // or if the parent node of the next node is the previous path index
 
-                    if (seqPath[pathIdx] == dataProvider_.getJmpb(nodeIdx + 1))
+                    if (seqPath[pathIdx] == jumpBackNode)
                     {
                         auto numToRewind = seqPath.size() - pathIdx - 1;
                         for (size_t rewindIdx = 0; rewindIdx < numToRewind; rewindIdx++)

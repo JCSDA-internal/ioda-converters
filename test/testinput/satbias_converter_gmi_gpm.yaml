@@ -1,0 +1,18 @@
+input coeff file: testinput/satbias_crtm_in
+input err file: testinput/satbias_crtm_pc
+output:
+- sensor: gmi_gpm
+  predictors:
+  - constant
+  - zenith_angle
+  - cosine_of_latitude_times_orbit_node
+  - lapse_rate_order_2
+  - lapse_rate
+  - cloud_liquid_water_order_2
+  - cloud_liquid_water
+  - emissivity
+  - scan_angle_order_4
+  - scan_angle_order_3
+  - scan_angle_order_2
+  - scan_angle
+  output file: testrun/satbias_gmi_gpm.nc4

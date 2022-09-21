@@ -28,6 +28,8 @@ namespace Ingester
                        std::shared_ptr<float> lowerBound,
                        std::shared_ptr<float> upperBound);
 
+        virtual ~BoundingFilter() = default;
+
         /// \brief Apply the filter to the dataevant data.
         void apply(BufrDataMap& dataMap) final;
 

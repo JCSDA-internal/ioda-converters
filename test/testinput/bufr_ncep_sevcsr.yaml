@@ -30,6 +30,7 @@ observations:
             query: "*/SAZA"
           cloudAmount:
             query: "*/RPSEQ7/CLDMNT"
+            type: float
             transforms:
               - scale: 0.01
           brightnessTemperature:

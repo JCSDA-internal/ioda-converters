@@ -73,6 +73,7 @@ observations:
 
           fractionOfClearPixelsInFov:
             query: "*/IASIL1CS/FCPH"
+            type: float
             transforms:
                - scale: 0.01
 
