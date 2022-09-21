@@ -31,7 +31,7 @@ namespace bufr {
     {
     }
 
-    void QueryRunner::query()
+    void QueryRunner::accumulate()
     {
         Targets targets;
         std::shared_ptr<__details::ProcessingMasks> masks;

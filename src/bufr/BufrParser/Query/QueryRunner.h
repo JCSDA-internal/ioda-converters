@@ -61,7 +61,7 @@ namespace bufr {
         QueryRunner(const QuerySet& querySet,
                     ResultSet& resultSet,
                     const DataProvider& dataProvider);
-        void query();
+        void accumulate();
 
         Targets getTargets()
         {

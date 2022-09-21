@@ -72,7 +72,7 @@ namespace bufr {
         auto dataProvider = DataProvider(fileUnit_);
 
         auto resultSet = ResultSet(querySet.names());
-        auto query = QueryRunner(querySet, resultSet, dataProvider);
+        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
 
         while (ireadmg_f(fileUnit_, subsetChars, &iddate, SubsetLen) == 0)
         {
@@ -85,14 +85,14 @@ namespace bufr {
                 {
                     status_f(fileUnit_, &bufrLoc, &il, &im);
                     dataProvider.updateData(bufrLoc);
-                    query.query();
+                    queryRunner.accumulate();
                 }
 
                 if (next > 0 && ++messageNum >= next) break;
             }
         }
 
-        resultSet.setTargets(query.getTargets());
+        resultSet.setTargets(queryRunner.getTargets());
 
         dataProvider.deleteData();
 
