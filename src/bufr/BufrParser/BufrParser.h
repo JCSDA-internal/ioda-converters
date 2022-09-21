@@ -16,14 +16,12 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
+#include "Query/File.h"
 #include "Parser.h"
-#include "BufrTypes.h"
 #include "BufrDescription.h"
 
 
-namespace Ingester
-{
-    class BufrMnemonicSet;
+namespace Ingester {
     class DataContainer;
 
     /// \brief Uses a BufrDescription and helper classes to parse the contents of a BUFR file.
@@ -48,14 +46,8 @@ namespace Ingester
         /// \brief The description the defines what to parse from the BUFR file
         BufrDescription description_;
 
-        /// \brief The Fortran file ID to an open BUFR file (0 when no file open)
-        unsigned int fortranFileId_;
-
-        /// \brief The Fortran file ID to an open BUFR file (0 when no file open)
-        unsigned int table1FileId_;
-
-        /// \brief The Fortran file ID to an open BUFR file (0 when no file open)
-        unsigned int table2FileId_;
+        /// \brief The Bufr file object we are working with
+        bufr::File file_;
 
         /// \brief Exports collected data into a DataContainer
         /// \param srcData Data to export
@@ -72,11 +64,6 @@ namespace Ingester
         /// \param filepath Path to bufr file.
         /// \param isWmoFormat _optional_ Bufr file is in the standard format.
         /// \param tablepath _optional_ Path to WMO master tables (needed for standard bufr files).
-        void
-        openBufrFile(const std::string& filepath, bool isWmoFormat, const std::string& tablepath);
-
-        /// \brief Closes the open BUFR file.
-        void closeBufrFile();
 
         /// \brief Convenience method to print the Categorical data map to stdout.
         void printMap(const CatDataMap& map);
