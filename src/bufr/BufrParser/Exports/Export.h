@@ -35,7 +35,7 @@ namespace Ingester
         inline Splits getSplits() const { return splits_; }
         inline Variables getVariables() const { return variables_; }
         inline Filters getFilters() const { return filters_; }
-        inline std::vector<std::string> getSubsets() const { return subsets_; };
+        inline std::vector<std::string> getSubsets() const { return subsets_; }
 
      private:
         Splits splits_;

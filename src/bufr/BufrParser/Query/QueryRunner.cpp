@@ -31,7 +31,8 @@ namespace bufr {
     {
     }
 
-    void QueryRunner::query() {
+    void QueryRunner::query()
+    {
         Targets targets;
         std::shared_ptr<__details::ProcessingMasks> masks;
 
@@ -39,9 +40,12 @@ namespace bufr {
         collectData(targets, masks, resultSet_);
     }
 
-    void QueryRunner::findTargets(Targets &targets, std::shared_ptr<__details::ProcessingMasks> &masks) {
+    void QueryRunner::findTargets(Targets &targets,
+                                  std::shared_ptr<__details::ProcessingMasks> &masks)
+    {
         // Check if the target list for this subset is cached
-        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end()) {
+        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end())
+        {
             targets = targetCache_.at(dataProvider_.getSubset());
             masks = maskCache_.at(dataProvider_.getSubset());
             return;

@@ -24,7 +24,7 @@ namespace bufr {
     void QuerySet::add(const std::string& name, const std::string& queryStr)
     {
         std::vector<Query> queries;
-        for (const auto &query: QueryParser::parse(queryStr))
+        for (const auto &query : QueryParser::parse(queryStr))
         {
             if (limitSubsets_.empty())
             {

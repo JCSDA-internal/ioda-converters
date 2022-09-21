@@ -58,7 +58,9 @@ namespace bufr {
         /// \param[in] querySet The set of queries to execute against the BUFR file.
         /// \param[in, out] resultSet The object used to store the accumulated collected data.
         /// \param[in] dataProvider The BUFR data provider to use.
-        QueryRunner(const QuerySet& querySet, ResultSet& resultSet, const DataProvider& dataProvider);
+        QueryRunner(const QuerySet& querySet,
+                    ResultSet& resultSet,
+                    const DataProvider& dataProvider);
         void query();
 
         Targets getTargets()
