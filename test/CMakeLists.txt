@@ -541,6 +541,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
                           -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
                           ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_swot_l2adt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/swot_l2adt2ioda.py
+                          -i testinput/SWOT_L2_LR_SSH_Basic_001_001_20160901T000000_20160901T005126_DG10_01.nc
+                          -o testrun/SWOT_L2_ADT_001_001_20160901T000000_20160901T005126_DG10_01.nc"
+                          SWOT_L2_ADT_001_001_20160901T000000_20160901T005126_DG10_01.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sst_ostia
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"

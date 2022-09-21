@@ -62,7 +62,6 @@ class swot_l2adt2ioda(object):
         ncd = nc.Dataset(self.filename, 'r')
         self.lons = ncd.variables['longitude'][:].ravel()
         self.lats = ncd.variables['latitude'][:].ravel()
-        self.time = ncd.variables['time'][:].ravel()
         self.geoid = ncd.variables['geoid'][:].ravel()
         self.ssh = ncd.variables['ssh_karin'][:].ravel()
         Fillvalue = ncd.variables['ssh_karin']._FillValue
@@ -73,10 +72,17 @@ class swot_l2adt2ioda(object):
         err_units = ncd.variables['ssh_karin'].units
         err_scale_factor = ncd.variables['ssh_karin'].scale_factor
         self.qcflag = ncd.variables['ssha_karin_qual'][:].ravel()
+        # get the time data, convert to timestamps
+        time_var = ncd.variables['time']
+        num_pixels = ncd.dimensions['num_pixels'].size
+        self.time = nc.num2date(np.repeat(time_var[:],num_pixels), \
+                                time_var.units) #,only_use_cftime_datetimes=False)
+        for t in range(len(self.time)):
+            self.time[t]= self.time[t].strftime("%Y-%m-%dT%H:%M:%SZ")
         ncd.close()
 
         # estimate adt from SSH and Geoid height
-        adt = npwhere(ssh == FillValue,Fillvalue,ssh - geoid)
+        adt = np.where(self.ssh == Fillvalue,Fillvalue,self.ssh - self.geoid)
 
         # set up variable names for IODA
         iodavar = 'absolute_dynamic_topography'
@@ -91,13 +97,14 @@ class swot_l2adt2ioda(object):
         self.var_mdata[iodavar, iconv.OerrName()]['scale_factor'] = err_scale_factor
 
 
-        # map copernicus to ioda data structure
-        self.outdata[('datetime', 'MetaData')] = swh.datetime
+        # map swot adt to ioda data structure
+        self.outdata[('datetime', 'MetaData')] = self.time
         self.outdata[('latitude', 'MetaData')] = self.lats
         self.outdata[('longitude', 'MetaData')] = self.lons
         self.outdata[self.varDict[iodavar]['valKey']] = adt
-        self.outdata[self.varDict[iodavar]['errKey']] = self.err
-        self.outdata[self.varDict[iodavar]['qcKey']] = self.qcflag
+        # The current uncertainity values seem to be wrong so setting error to 1
+        self.outdata[self.varDict[iodavar]['errKey']] = np.ones(np.shape(self.err))
+        self.outdata[self.varDict[iodavar]['qcKey']] = self.qcflag.astype('int32')
 
         DimDict['nlocs'] = len(adt)
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
