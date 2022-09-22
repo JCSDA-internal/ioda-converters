@@ -26,7 +26,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/bufr_specific_subsets_by_query.nc"
+      obsdataout: "./testrun/bufr_specifying_subsets.nc"
 
       #MetaData
       variables:
