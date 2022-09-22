@@ -23,7 +23,7 @@ namespace Ingester
 
         /// \brief Modify data according to the rules of the transform.
         /// \param array Array of data to modify.
-        void apply(IngesterArray& array) override;
+        void apply(std::shared_ptr<DataObjectBase>& dataObject) override;
 
      private:
         const double scaling_;
