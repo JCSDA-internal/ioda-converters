@@ -49,41 +49,49 @@ namespace Ingester
     {
         if (conf.has(ConfKeys::Pressure))
         {
+            std::cout << "PRLC Confkey" << std::endl;
             pressureQuery_ = conf.getString(ConfKeys::Pressure);
         }
 
 	if (conf.has(ConfKeys::AircraftIndicatedAltitude))
-        {
+        {            
+            std::cout << "IALR Confkey" << std::endl;
             aircraftIndicatedAltitudeQuery_ = conf.getString(ConfKeys::AircraftIndicatedAltitude);
         }
 
         if (conf.has(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))
         {
+            std::cout << "PSAL Confkey" << std::endl;
             pressureAltitudeRelativeToMeanSeaLevelQuery_ = conf.getString(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel);
         }
 
         if (conf.has(ConfKeys::FlightLevel))
         {
+            std::cout << "FLVL Confkey" << std::endl;
             flightLevelQuery_ = conf.getString(ConfKeys::FlightLevel);
         }
 
         if (conf.has(ConfKeys::Height))
         {
+            std::cout << "HEIT Confkey" << std::endl;
             heightQuery_ = conf.getString(ConfKeys::Height);
         }
 
         if (conf.has(ConfKeys::HeightOrAltitude))
         {
+            std::cout << "HMSL Confkey" << std::endl;
             heightOrAltitudeQuery_ = conf.getString(ConfKeys::HeightOrAltitude);
         }
 
         if (conf.has(ConfKeys::FlightLevelST))
         {
+            std::cout << "FLVLST Confkey" << std::endl;
             flightLevelSTQuery_ = conf.getString(ConfKeys::FlightLevelST);
         }
 
         if (conf.has(ConfKeys::GroupByField))
         {
+            std::cout << "Groupby Confkey" << std::endl;
             groupByField_ = conf.getString(ConfKeys::GroupByField);
         }
 
@@ -94,14 +102,18 @@ namespace Ingester
     {
         checkKeys(map);
         static const float missing_int = 1.e+11; // types determined from print_queries.x
+        int n = 0;
 
 	std::vector<float> AircraftAltitudeArray;
 	AircraftAltitudeArray.reserve(map.at(getExportKey(ConfKeys::Latitude))->size());
         for (unsigned int idx = 0; idx < map.at(getExportKey(ConfKeys::Latitude))->size(); idx++)
         {
-            float latitude = static_cast<int>(map.at(getExportKey(ConfKeys::Latitude))->getAsFloat(idx));
+            //float latitude = static_cast<int>(map.at(getExportKey(ConfKeys::Latitude))->getAsFloat(idx));
+            float latitude = static_cast<float>(map.at(getExportKey(ConfKeys::Latitude))->getAsFloat(idx));
+            std::cout << "lat: " << latitude << std::endl;
             float acftalt = FLT_MAX; 
             if (latitude != missing_int)
+            //if (latitude != FLT_MAX)
             {
                 float pressures = FLT_MAX;
                 float aircraftIndicatedAltitudes = FLT_MAX;
@@ -178,8 +190,10 @@ namespace Ingester
                     }
 
                 }
+            n = n + 1;
 	    AircraftAltitudeArray.push_back(acftalt);
             }
+        std::cout << "n is" << n << std::endl;
         } 
         Dimensions dims = {static_cast<int>(AircraftAltitudeArray.size())};
         return std::make_shared<DataObject<float>>(
@@ -268,6 +282,7 @@ namespace Ingester
 
         if (!pressureQuery_.empty())  // pressure (mnemonic PRLC)
         {
+            std::cout << "PRLC Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Pressure);
             info.query = pressureQuery_;
@@ -277,6 +292,7 @@ namespace Ingester
 
         if (!aircraftIndicatedAltitudeQuery_.empty())  // aircraftIndicateAltitude (IALT)
         {
+            std::cout << "IALR Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::AircraftIndicatedAltitude);
             info.query = aircraftIndicatedAltitudeQuery_;
@@ -286,6 +302,7 @@ namespace Ingester
 
         if (!pressureAltitudeRelativeToMeanSeaLevelQuery_.empty())  // (mnemonic PSAL)
         {
+            std::cout << "PSAL Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel);
             info.query = pressureAltitudeRelativeToMeanSeaLevelQuery_;
@@ -295,6 +312,7 @@ namespace Ingester
 
         if (!flightLevelQuery_.empty())  // flightLevel (FLVL) 
         {
+            std::cout << "FLVL Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::FlightLevel);
             info.query = flightLevelQuery_;
@@ -304,6 +322,7 @@ namespace Ingester
 
         if (!heightQuery_.empty())  // height (mnemonic HEIT)
         {
+            std::cout << "HEIT Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Height);
             info.query = heightQuery_;
@@ -313,6 +332,7 @@ namespace Ingester
 
         if (!heightOrAltitudeQuery_.empty())  // heightOrAltitude (mnemonic HMSL)
         {
+            std::cout << "HMSL Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::HeightOrAltitude);
             info.query = heightOrAltitudeQuery_;
@@ -322,6 +342,7 @@ namespace Ingester
 
         if (!flightLevelSTQuery_.empty())  // flightLevelST (mnemonic FLVLST)
         {
+            std::cout << "FLVLST Query not empty" << std::endl;
             QueryInfo info;
             info.name = getExportKey(ConfKeys::FlightLevelST);
             info.query = flightLevelSTQuery_;
