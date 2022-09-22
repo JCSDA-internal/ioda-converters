@@ -22,6 +22,7 @@ list(APPEND programs
   godae_bgc_argo2ioda.py
   avhrr_radiance2ioda.py
   pace_oc2ioda.py
+  pace_radiance2ioda.py
   ostia_l4sst2ioda.py
 )
 
