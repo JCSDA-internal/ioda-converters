@@ -55,6 +55,10 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
 ```yaml
       exports:
         group_by_variable: longitude  # Optional
+        subsets:
+          - NC004001
+          - NC004002
+          - NC004003
         variables:
           timestamp:
             datetime:
@@ -99,7 +103,8 @@ ioda encoder. It has the following sections:
 
 * `group_by_variable` _(optional)_ String value that defines the name of the variable to group 
    observations by. If this field is missing then observations will not be grouped.
-
+* `subsets` _(optional)_ List of subsets that you want to process. If the field is not present then
+   all subsets will be processed in accordance with the query definitions.
 * `variables`
   * **keys** are arbitrary strings (anything you want). They can be referenced in the ioda section.
   * **values** (One of these types):
