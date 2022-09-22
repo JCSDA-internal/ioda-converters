@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-#include "BufrParser/BufrTypes.h"
-
 
 namespace Ingester
 {
@@ -23,19 +21,21 @@ namespace Ingester
     {
      public:
         /// \brief Constructor
-        /// \param mnemonic BUFR Mnemonic to filter on
+        /// \param variable Variable to filter
         /// \param lowerBound Lowest allowable value
         /// \param upperBound Highest allowable value
-        BoundingFilter(const std::string& mnemonic,
+        BoundingFilter(const std::string& variable,
                        std::shared_ptr<float> lowerBound,
                        std::shared_ptr<float> upperBound);
 
-        /// \brief Apply the filter to the data
-        /// \param dataMap Map to modify by filtering out relevant data.
+        virtual ~BoundingFilter() = default;
+
+        /// \brief Apply the filter to the dataevant data.
         void apply(BufrDataMap& dataMap) final;
 
+        /// \param dataMap Map to modify by filtering out rel
      private:
-         const std::string mnemonic_;
+         const std::string variable_;
          const std::shared_ptr<float> lowerBound_;
          const std::shared_ptr<float> upperBound_;
     };

@@ -19,23 +19,13 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 
 ecbuild_bundle_initialize()
 
-ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
-include( jedicmake/cmake/Functions/git_functions.cmake )
-
-# ECMWF libs
-# ----------
-option("BUNDLE_SKIP_ECKIT" "Don't build eckit" "ON" ) # Skip eckit build unless user passes -DBUNDLE_SKIP_ECKIT=OFF
-option("BUNDLE_SKIP_FCKIT" "Don't build fckit" "ON") # Build fckit unless user passes -DBUNDLE_SKIP_FCKIT=OFF
-option("BUNDLE_SKIP_ATLAS" "Don't build atlas" "ON") # Build atlas unless user passes -DBUNDLE_SKIP_ATLAS=OFF
-
-ecbuild_bundle( PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0 )
-ecbuild_bundle( PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2 )
-ecbuild_bundle( PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.24.1 )
+#ecbuild_bundle( PROJECT jedicmake GIT "https://github.com/JCSDA-internal/jedi-cmake.git" )
+#include( jedicmake/cmake/Functions/git_functions.cmake )
+include( /opt/view/share/jedicmake/Functions/git_functions.cmake )
 
 # Core JEDI repositories
 ecbuild_bundle( PROJECT oops GIT "https://github.com/JCSDA-internal/oops.git" )
 ecbuild_bundle( PROJECT ioda GIT "https://github.com/JCSDA-internal/ioda.git" )
-
 
 # If IODA branch is being built set GIT_BRANCH_FUNC to IODA's current branch.
 # If a tagged version of IODA is being built set GIT_TAG_FUNC to ioda's current tag. In this case,
@@ -51,7 +41,6 @@ endif()
 # If IODA's current branch is available in ioda-data repo, that branch will be checked out
 branch_checkout (REPO_DIR_NAME ioda-data
                  BRANCH ${GIT_BRANCH_FUNC} )
-
 
 # Build IODA converters
 

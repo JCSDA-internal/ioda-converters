@@ -1,0 +1,161 @@
+#(C) Copyright 2021 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# SAID, CLAT, CLON, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM
+# HAMD, PRLC, WDIR, WSPD
+# GNAP, PCCF
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t18z.satwnd_avhrr.tm00.bufr_d"
+
+      exports:
+        variables:
+          satelliteIdentifier:
+            query: "*/SAID"
+
+          latitude:
+            query: "*/CLAT"
+
+          longitude:
+            query: "*/CLON"
+
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
+
+          windComputationMethod:
+            query: "*/SWCM"
+
+          satelliteZenithAngle:
+            query: "*/SAZA"
+
+          dataProviderOrigin:
+            query: "*/OGCE"
+
+          sensorCentralFrequency:
+            query: "*/SCCF"
+
+          qualityFlags:
+            query: "*/SWQM"
+
+          windHeightAssignMethod:
+            query: "*/HAMD"
+
+          pressure:
+            query: "*/PRLC"
+
+          windDirection:
+            query: "*/WDIR"
+
+          windSpeed:
+            query: "*/WSPD"
+
+          windSpeedGeneratingApplication:
+            query: "*/GQCPRMS/GNAP[1]"
+
+          windDirectionGeneratingApplication:
+            query: "*/GQCPRMS/GNAP[2]"
+
+          windSpeedPercentConfidence:
+            query: "*/GQCPRMS/PCCF[1]"
+
+          windDirectionPercentConfidence:
+            query: "*/GQCPRMS/PCCF[2]"
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t18z.satwnd_avhrr.tm00.nc"
+      dimensions:
+        - name: Confidence
+          paths:
+            - "*/GQCPRMS"
+
+      variables:
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          longName: "Satellite Identifier"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude (Coarse Accuracy)"
+          units: "degree_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude (Coarse Accuracy)"
+          units: "degree_east"
+
+        - name: "MetaData/dateTime"
+          coordinates: "longitude latitude"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/windComputationMethod"
+          source: variables/windComputationMethod
+          longName: "Satellite Derived Wind Computation Method"
+
+        - name: "MetaData/satelliteZenithAngle"
+          source: variables/satelliteZenithAngle
+          longName: "Satellite Zenith Angle"
+          units: "degree"
+
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/dataProviderOrigin
+          longName: "Identification of Originating/Generating Center"
+
+        - name: "MetaData/sensorCentralFrequency"
+          source: variables/sensorCentralFrequency
+          longName: "Satellite Channel Center Frequency"
+          units: "Hz"
+
+        - name: "MetaData/qualityFlags"
+          source: variables/qualityFlags
+          longName: "SDMEDIT Satellite Wind Quality Mark"
+
+        - name: "MetaData/windHeightAssignMethod"
+          source: variables/windHeightAssignMethod
+          longName: "Wind Height Assignment Method"
+
+        - name: "MetaData/pressure"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/windDirection"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "degree"
+
+        - name: "ObsValue/windSpeed"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "m s-1"
+
+        - name: "MetaData/windSpeedGeneratingApplication"
+          source: variables/windSpeedGeneratingApplication
+          longName: "Wind Speed Generating Application"
+
+        - name: "MetaData/windDirectionGeneratingApplication"
+          source: variables/windDirectionGeneratingApplication
+          longName: "Wind Direction Generating Application"
+
+        - name: "MetaData/windSpeedPercentConfidence"
+          source: variables/windSpeedPercentConfidence
+          longName: "Wind Speed Per Cent Confidence"
+          units: "percent"
+
+        - name: "MetaData/windDirectionPercentConfidence"
+          source: variables/windDirectionPercentConfidence
+          longName: "Wind Direction Per Cent Confidence"
+          units: "percent"
+

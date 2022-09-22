@@ -6,6 +6,8 @@
  */
 
 #include "OffsetTransform.h"
+#include "IngesterTypes.h"
+#include "BufrParser/Query/Constants.h"
 
 
 namespace Ingester
@@ -15,9 +17,18 @@ namespace Ingester
     {
     }
 
-    void OffsetTransform::apply(IngesterArray& array)
+    void OffsetTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-        array = array + offset_;
+      if (auto object = std::dynamic_pointer_cast<DataObject<float>>(dataObject))
+      {
+        auto data = object->getRawData();
+        for (auto& val : data)
+        {
+            if (val != bufr::MissingValue) val += offset_;
+        }
+
+        object->setRawData(data);
+      }
     }
 
 }  // namespace Ingester

@@ -1,4 +1,4 @@
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,45 +7,105 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
-      mnemonicSets:
-        - mnemonics: [OGCE, GNAP, PCCF]
-          channels: 1-12
 
       exports:
+
         variables:
-          originating_generating_center:
-            mnemonic: OGCE
-          generating_application:
-            mnemonic: GNAP
-          percent_confidence:
-            mnemonic: PCCF
+
+          latitude:
+            query: "*/CLAT"
+
+          longitude:
+            query: "*/CLON"
+
+          originatingGeneratingCenter:
+            query: "*/OGCE"
+
+          pressure:
+            query: "*/QCPRMS/GNAP[1]"
+
+          windDirection:
+            query: "*/QCPRMS/GNAP[2]"
+
+          windSpeed:
+            query: "*/QCPRMS/GNAP[3]"
+
+          coldClusterTemperature:
+            query: "*/QCPRMS/GNAP[4]"
+
+          percentConfidencePressure:
+            query: "*/QCPRMS/PCCF[1]"
+
+          percentConfidenceWindDirection:
+            query: "*/QCPRMS/PCCF[2]"
+
+          percentConfidenceWindSpeed:
+            query: "*/QCPRMS/PCCF[3]"
+
+          percentConfidenceColdClusterTemperature:
+            query: "*/QCPRMS/PCCF[4]"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_read_2_dim_blocks.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/percent_confidence.nrows
-        - name: "ncols_conf"
-          size: variables/percent_confidence.ncols
+        - name: "Confidence"
+          paths:
+            - "*/QCPRMS"
 
       variables:
-        - name: "originating_generating_center@MetaData"
-          source: variables/originating_generating_center
-          dimensions: [ "nlocs" ]
-          longName: "Originating/Generating Center"
-          units: "id"
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude (Coarse Accuracy)"
+          units: "degree_north"
 
-        - name: "generating_application@MetaData"
-          source: variables/generating_application
-          dimensions: [ "nlocs" , "ncols_conf"]
-          longName: "Generating Application"
-          units: "id"
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude (Coarse Accuracy)"
+          units: "degree_east"
 
-        - name: "percent_confidence@ObsValue"
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/originatingGeneratingCenter
+          longName: "Originating Generating Center"
+
+        - name: "MetaData/pressureGeneratingApplication"
+          source: variables/pressure
+          longName: "Generating Application for Pressure"
+
+        - name: "MetaData/windDirectionGeneratingApplication"
+          source: variables/windDirection
+          longName: "Generating Application for Wind Direction"
+
+        - name: "MetaData/windSpeedGeneratingApplication"
+          source: variables/windSpeed
+          longName: "Generating Application for Wind Speed"
+
+        - name: "MetaData/coldClusterTemperatureGeneratingApplication"
+          source: variables/coldClusterTemperature
+          longName: "Generating Application for Cold Cluster Temperature"
+
+        - name: "MetaData/pressurePercentConfidence"
           coordinates: "longitude latitude"
-          source: variables/percent_confidence
-          dimensions: [ "nlocs", "ncols_conf"]
-          longName: "Percent Confidence"
+          source: variables/percentConfidencePressure
+          longName: "Percent Confidence of Pressure"
           units: "percent"
+
+        - name: "MetaData/windDirectionPercentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidenceWindDirection
+          longName: "Percent Confidence of Wind Direction"
+          units: "percent"
+
+        - name: "MetaData/windSpeedPercentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidenceWindSpeed
+          longName: "Percent Confidence of Wind Speed"
+          units: "percent"
+
+        - name: "MetaData/coldClusterTemperaturePercentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidenceColdClusterTemperature
+          longName: "Percent Confidence of Clod Cluster Temperature"
+          units: "percent"
+
