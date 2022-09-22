@@ -66,8 +66,9 @@ MetaDataKeyList = [
     ("longitude", "float", "degrees_east"),
     ("station_elevation", "float", "m"),
     ("height", "float", "m"),
-    ("pressure", "float", "Pa"),
-    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
+    ("air_pressure", "float", "Pa"),
+    ("launch_time", "string", ""),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
@@ -98,7 +99,7 @@ AttrData = {
     'ioda_version': 2,
     'description': 'Radiosonde observations converted from text (TAC) format',
     'source': 'LDM at NCAR-RAL',
-    'source_files': ''
+    'sourceFiles': ''
 }
 
 DimDict = {
@@ -181,11 +182,13 @@ def getStationInfo(icaoId=None,synopId=None):
     return station
 
 
-def getProfile(filename, synopId):
+def getProfile(filename, synopId, year, month):
     """
     Get a parsed profile for the given station from the given RAOBS file
     :param filename:
     :param synopId:
+    :param year:
+    :param month:
     :return: A parsed sounding dict, or None
     """
     sections = getSections(filename,[synopId])
@@ -194,7 +197,7 @@ def getProfile(filename, synopId):
 
     s = []
     for type in sections[synopId].keys():
-        sc = decode(sections[synopId][type])
+        sc = decode(sections[synopId][type], year, month)
         if sc is not None:
             s.append(sc)
     return mergeSections(s)
@@ -256,7 +259,7 @@ def getSections(filename, stationList=None):
         return None
 
 
-def decode(soundingStr):
+def decode(soundingStr, year, month):
     """
     Decode a sounding string containing TT* or PP* data
     :param soundingStr: The complete sounding string
@@ -279,22 +282,22 @@ def decode(soundingStr):
     stationAlt = STATIONS[id]['elev']
 
     if type == "TTAA":
-        decoded = decodeMandatory(type, tokens, stationAlt, above100=False)
+        decoded = decodeMandatory(type, tokens, stationAlt, year, month, above100=False)
     elif type == "TTBB":
-        decoded = decodeSignificant(type, tokens, above100=False)
+        decoded = decodeSignificant(type, tokens, year, month, above100=False)
     elif type == "PPBB":
         decoded = decodeWinds(type, tokens, stationAlt)
     elif type == "TTCC":
-        decoded = decodeMandatory(type, tokens, stationAlt, above100=True)
+        decoded = decodeMandatory(type, tokens, stationAlt, year, month, above100=True)
     elif type == "TTDD":
-        decoded = decodeSignificant(type, tokens, above100=True)
+        decoded = decodeSignificant(type, tokens, year, month, above100=True)
     elif type == "PPDD":
         decoded = decodeWinds(type, tokens, stationAlt)
 
     return decoded
 
 
-def decodeMandatory(type, tokens, stationAlt, above100=False):
+def decodeMandatory(type, tokens, stationAlt, year, month, above100=False):
     """
     Decode the TTAA or TTBB section of the sounding
     :param tokens: The parsed tokens making up the section
@@ -310,6 +313,8 @@ def decodeMandatory(type, tokens, stationAlt, above100=False):
     mandatory = {
         'type': type,
         'id': tokens[index],
+        'year': year,
+        'month': month,
         'day': day,
         'hour': hour,
         'levels': {}
@@ -396,7 +401,7 @@ def decodeMandatory(type, tokens, stationAlt, above100=False):
     return mandatory
 
 
-def decodeSignificant(type, tokens, above100=False):
+def decodeSignificant(type, tokens, year, month, above100=False):
     """
     Decode the TTBB or TTDD sections of the data
     :param tokens: The parsed tokens making up the section
@@ -411,6 +416,8 @@ def decodeSignificant(type, tokens, above100=False):
     significant = {
         'type': type,
         'id': tokens[index],
+        'year': year,
+        'month': month,
         'day': day,
         'hour': hour,
         'levels': {}
@@ -687,12 +694,12 @@ def getTokens(soundingStr):
     tokens = []
     for t in toks:
         t = t.replace("=","")
-        if len(t) > 3:
+        if len(t) >= 3:
             tokens.append(t)
 
     type = ""
     stationId = ""
-    if len(tokens) > 3:
+    if len(tokens) >= 3:
         if tokens[0] in TYPES:
             type = tokens[0]
             stationId = tokens[2]
@@ -882,8 +889,8 @@ def printProfile(profile, output=sys.stdout):
     """
     # print header
     print()
+    print("%-15s %s" % ("WMO number:", profile['synop']))
     print("%-15s %s" % ("ICAO ID:", profile['id']))
-    print("%-15s %s" % ("SYNOP ID:", profile['synop']))
     print("%-15s %s" % ("Name:", profile['name']))
     print("%-15s %s" % ("Latitude:", profile['lat']))
     print("%-15s %s" % ("Longitude:", profile['lon']))
@@ -920,11 +927,93 @@ def printProfile(profile, output=sys.stdout):
               ("%.1f" % level, temp, dew, wspd, wdir, u, v, height, section), file=output)
 
 
+def change_vars(profile):
+    met_utils = meteo_utils.meteo_utils()
+    new_profile = {}
+    for var_name in meta_keys:
+        new_profile[var_name] = []
+    for var_name in obsvars:
+        new_profile[var_name] = []
+
+    # SPECIAL:  Most soundings launched 50-55 minutes prior to stated synoptic time, so a 12Z
+    # launch is usually initiated close to 11:05Z.
+    this_datetime = datetime(profile['year'], profile['month'], profile['day'], profile['hour'], 0, 0)
+    launch_time = this_datetime - timedelta(seconds=55*60)
+    previous_time = launch_time
+
+    heightKm1 = profile['elev']
+    levels = profile['levels']
+    for pressure in sorted(levels.keys(), reverse=True):
+        pres = pressure*100.0
+        height = float_missing_value
+        temp = float_missing_value
+        dewp = float_missing_value
+        tvirt = float_missing_value
+        spfh = float_missing_value
+        u = float_missing_value
+        v = float_missing_value
+        if 'temp' in levels[pressure] and levels[pressure]['temp'] is not None:
+            temp = levels[pressure]['temp'] + 273.15
+        if 'dew' in levels[pressure] and levels[pressure]['dew'] is not None:
+            dewp = levels[pressure]['dew'] + 273.15
+        if (temp > 75 and temp < 355 and dewp > 50 and dewp < 325 and dewp <= temp*1.05
+                        and pres > 100 and pres < 109900):
+            spfh = met_utils.specific_humidity(dewp, pres)
+            qvapor = max(1.0e-12, spfh/(1.0-spfh))
+            tvirt = temp*(1.0 + 0.61*qvapor)
+        if 'height' in levels[pressure] and levels[pressure]['height'] is not None:
+            height = levels[pressure]['height']
+            dz = height - heightKm1
+            # Typical radiosonde ascent rate is 5 m/s
+            this_datetime = previous_time + timedelta(seconds=dz*0.2)
+            heightKm1 = height
+        else:
+            this_datetime = previous_time
+
+        if 'u' in levels[pressure] and levels[pressure]['u'] is not None:
+            u = levels[pressure]['u']
+        if 'v' in levels[pressure] and levels[pressure]['v'] is not None:
+            v = levels[pressure]['v']
+
+        time_offset = round((this_datetime - epoch).total_seconds())
+        previous_time = this_datetime
+
+        new_profile['station_id'].append(profile['synop'])
+        new_profile['latitude'].append(profile['lat'])
+        new_profile['longitude'].append(profile['lon'])
+        new_profile['station_elevation'].append(profile['elev'])
+        new_profile['launch_time'].append(launch_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        new_profile['dateTime'].append(time_offset)
+        new_profile['air_pressure'].append(pres)
+        new_profile['height'].append(height)
+        new_profile['air_temperature'].append(temp)
+        new_profile['virtual_temperature'].append(tvirt)
+        new_profile['specific_humidity'].append(spfh)
+        new_profile['eastward_wind'].append(u)
+        new_profile['northward_wind'].append(v)
+
+    return new_profile
+
+
+def append_ioda_data(in_profile, obs_data):
+    """
+    Append each profile to the end of obs_data.
+    """
+
+    for var_name in meta_keys:
+        obs_data[var_name].extend(in_profile[var_name])
+    for var_name in obsvars:
+        obs_data[var_name].extend(in_profile[var_name])
+
+    return obs_data
+
+
 if __name__ == "__main__":
 
     import argparse
 
     start_time = time.time()
+    today = datetime.today()
 
     parser = argparse.ArgumentParser(
         description=(
@@ -946,6 +1035,10 @@ if __name__ == "__main__":
     parser.set_defaults(verbose=False)
     parser.set_defaults(netCDF=False)
     optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument('-y', '--year', dest='year',
+                          action='store', default=None, help='year')
+    optional.add_argument('-m', '--month', dest='month',
+                          action='store', default=None, help='month')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
@@ -955,6 +1048,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.year:
+        year = int(args.year)
+    else:
+        year = today.year
+    if args.month:
+        month = int(args.month)
+    else:
+        month = today.month
+
     if args.debug:
         logging.basicConfig(level=logging.INFO)
     elif args.verbose:
@@ -962,20 +1064,26 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
+    #---------------------------------------------------------------------------------------------
     """
     Options captured, now ingest the station list and cycle the stations to get each profile.
     """
+    #---------------------------------------------------------------------------------------------
 
     if not os.path.isfile(args.station_file):
         parser.error('Station table (-t option) file: ', args.station_file, ' does not exist')
 
     loadStations(args.station_file)
 
-    # If using netcdf output option, set up data structures for outputs.
+    # If using netcdf output option, set up data structures (IODA) for outputs.
     if args.netcdf:
         varDict = defaultdict(lambda: DefaultOrderedDict(dict))
         varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         obs_data = {}          # The final outputs.
+        for var_name in meta_keys:
+            obs_data[var_name] = []
+        for var_name in obsvars:
+            obs_data[var_name] = []
 
     # Loop through input files and decode/convert.
     ntotal = 0
@@ -983,30 +1091,58 @@ if __name__ == "__main__":
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
         if args.netcdf:
-            AttrData['source_files'] += ", " + file_name
+            AttrData['sourceFiles'] += ", " + file_name
+        logging.debug(f"Reading input file: {file_name}")
 
         nstations = 0
         for n, station in enumerate(STATIONS.keys()):
-            logging.debug(f"Seeking data from station {station} within {file_name}")
-            profile = getProfile(file_name, station)
+            logging.debug(f"\n seeking data from station {station} within {file_name} for year:{year} and month:{month}")
+            profile = getProfile(file_name, station, year, month)
 
             if profile:
-                ntotal += 1
                 nstations += 1
                 nlevels = len(profile['levels'])
+                ntotal += nlevels
+                logging.debug(f"   found sounding with {nlevels} levels")
                 if args.verbose:
-                    logging.debug(f"  found sounding with {nlevels} levels")
                     printProfile(profile)
                 if args.netcdf:
-                    append_ioda_data(profile)
-
-
+                    new_profile = change_vars(profile)
+                    obs_data = append_ioda_data(new_profile, obs_data)
 
     if args.netcdf:
-        logging.debug("Writing file: " + output_file)
+        ioda_data = {}
+        DimDict = {'nlocs': ntotal}
+        AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
+        # Set coordinates and units of the ObsValues.
+        for n, iodavar in enumerate(obsvars):
+            varDict[iodavar]['valKey'] = iodavar, obsValName
+            varDict[iodavar]['errKey'] = iodavar, obsErrName
+            varDict[iodavar]['qcKey'] = iodavar, qcName
+            varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+            varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+            varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
+            varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
+            varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
+
+        # Set units of the MetaData variables and all _FillValues.
+        for key in meta_keys:
+            dtypestr = MetaDataKeyList[meta_keys.index(key)][1]
+            if MetaDataKeyList[meta_keys.index(key)][2]:
+                varAttrs[(key, metaDataName)]['units'] = MetaDataKeyList[meta_keys.index(key)][2]
+            varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+            ioda_data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
+
+        # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
+        for n, iodavar in enumerate(obsvars):
+            ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
+            ioda_data[(iodavar, obsErrName)] = np.full(ntotal, obserrlist[n], dtype=np.float32)
+            ioda_data[(iodavar, qcName)] = np.full(ntotal, 2, dtype=np.int32)
+
+        logging.debug("Writing output file: " + args.output_file)
         # setup the IODA writer
-        #writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
+        writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
         # write everything out
-        #writer.BuildIoda(obs_data, VarDims, varAttrs, AttrData)
+        writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
 
     logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
