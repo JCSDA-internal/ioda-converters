@@ -33,7 +33,6 @@ locationKeyList = [
     ("datetime", "string")
 ]
 
-#GlobalAttrs = {}
 GlobalAttrs = {
     'odb_version': 1,
 }
@@ -44,7 +43,7 @@ DimDict = {}
 
 VarDims = {}
 
-chan_number = range(1,250) # we havew 120 Blue band 120 Red band and 9 SWRI
+chan_number = range(1, 250)  # we havew 120 Blue band 120 Red band and 9 SWRI
 
 
 def read_input(input_args):
@@ -72,10 +71,10 @@ def read_input(input_args):
     # Determine the lat/lon grid.
     lons = ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
     lats = ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
-    pixels=ncd.groups['geolocation_data'].variables['longitude'][:].shape[1]
+    pixels = ncd.groups['geolocation_data'].variables['longitude'][:].shape[1]
 
     # calculate the time
-    time = np.tile((time_base), ( pixels))
+    time = np.tile((time_base), (pixels))
 
     # load in all the other data
     geo_vars = (
@@ -84,12 +83,12 @@ def read_input(input_args):
         'sensor_azimuth',
         'solar_azimuth')
 
-    band_vars = ( 
+    band_vars = (
         'blue_wavelength',
         'red_wavelength',
         'SWIR_wavelength')
 
-    obs_vars =  (
+    obs_vars = (
         'Lt_blue',
         'Lt_red',
         'Lt_SWIR')
@@ -109,7 +108,7 @@ def read_input(input_args):
             data_in[v] = ncd.groups['observation_data'].variables[v][:]
 
     ncd.close()
-    
+
     # Create a mask for optional random thinning
     mask = np.random.uniform(size=len(lons)) > global_config['thin']
 
@@ -120,31 +119,30 @@ def read_input(input_args):
             mask = np.logical_and(mask, np.logical_not(data_in[v].mask))
 
     time = time[mask]
-    lons = lons[mask]             
+    lons = lons[mask]
     lats = lats[mask]
-    
+
     # create a string version of the date for each observation
     dates = []
     for i in range(len(lons)):
-        obs_date = basetime + \
-            timedelta(seconds=float(time[i])) 
+        obs_date = basetime + timedelta(seconds=float(time[i]))
         dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     # output values
     nchans = len(chan_number)
     obs_dim = (len(lons))
-    val_radiance = np.concatenate((data_in['Lt_blue'],data_in['Lt_red'],data_in['Lt_SWIR']),axis=0)
-    val_radiance = np.reshape(val_radiance,(val_radiance.shape[0],val_radiance.shape[1]*val_radiance.shape[2]))
+    val_radiance = np.concatenate((data_in['Lt_blue'], data_in['Lt_red'], data_in['Lt_SWIR']), axis=0)
+    val_radiance = np.reshape(val_radiance, (val_radiance.shape[0], val_radiance.shape[1]*val_radiance.shape[2]))
     val_radiance = val_radiance.T
 
     # as there is not any obs error in data  we use the same obs error for all chans for now
     err = np.zeros((obs_dim, nchans))+0.5
 
-    # the quality flaq is not developed for this data set yet, we need to change this part when 
+    # the quality flaq is not developed for this data set yet, we need to change this part when
     # they add the qC to the obs data
     qc = np.zeros((obs_dim, nchans))
 
-    wavelength = np.concatenate((data_in['blue_wavelength'],data_in['red_wavelength'],data_in['SWIR_wavelength']),axis=0)
+    wavelength = np.concatenate((data_in['blue_wavelength'], data_in['red_wavelength'], data_in['SWIR_wavelength']), axis=0)
 
     # allocate space for output depending on which variables are to be saved
 
@@ -154,7 +152,7 @@ def read_input(input_args):
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
     obs_data[('time', 'MetaData')] = time.astype('float32')
-    obs_data[('height_above_mean_sea_level', 'MetaData')] =  np.zeros((obs_dim), dtype = np.float32)
+    obs_data[('height_above_mean_sea_level', 'MetaData')] = np.zeros((obs_dim), dtype=np.float32)
     obs_data[('sensor_azimuth_angle', 'MetaData')] = data_in['sensor_azimuth']
     obs_data[('sensor_zenith_angle', 'MetaData')] = data_in['sensor_zenith']
     obs_data[('sensor_view_angle', 'MetaData')] = data_in['sensor_zenith']
@@ -164,8 +162,9 @@ def read_input(input_args):
     obs_data[output_var_names[0], global_config['oval_name']] = val_radiance.astype('float32')
     obs_data[output_var_names[0], global_config['oerr_name']] = err.astype('float32')
     obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
-    
+
     return (obs_data, GlobalAttrs)
+
 
 def main():
 
@@ -217,9 +216,8 @@ def main():
     global_config['oerr_name'] = iconv.OerrName()
     global_config['opqc_name'] = iconv.OqcName()
 
-
     # concatenate the data from the files
-    obs_data = read_input((args.input[0],global_config))[0]
+    obs_data = read_input((args.input[0], global_config))[0]
 
     for i in range(1, len(args.input)):
         for k in obs_data:
@@ -239,18 +237,18 @@ def main():
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
     VarDims = {
-        'radiance'         : ['nlocs', 'nchans'],
-        'sensor_band_central_radiation_wavenumber' : ['nchans']
+        'radiance': ['nlocs', 'nchans'],
+        'sensor_band_central_radiation_wavenumber': ['nchans']
     }
 
     nchans = len(chan_number)
     nlocs = len(obs_data[('longitude', 'MetaData')])
-    ndatetime = np.zeros((20),dtype=np.float32)
+    ndatetime = np.zeros((20), dtype=np.float32)
     DimDict = {
         'nlocs': nlocs,
         'nchans': list(chan_number),
         'nvars': list(chan_number),
-        'ndatetime' : list(ndatetime)
+        'ndatetime': list(ndatetime)
     }
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
