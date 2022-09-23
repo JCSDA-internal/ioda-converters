@@ -64,7 +64,7 @@ list( APPEND test_input
   testinput/avhrr_radiance.nc
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
   testinput/satwinds_ssec2021080103.txt
-  testinput/pace_oc_l2.n
+  testinput/pace_oc_l2.nc
   testinput/pace_radiance_L1B.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
