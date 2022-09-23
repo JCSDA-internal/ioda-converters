@@ -63,10 +63,11 @@ class swot_l2adt2ioda(object):
         self.lons = ncd.variables['longitude'][:].ravel()
         self.lats = ncd.variables['latitude'][:].ravel()
         self.geoid = ncd.variables['geoid'][:].ravel()
-        self.ssh = ncd.variables['ssh_karin'][:].ravel()
-        Fillvalue = ncd.variables['ssh_karin']._FillValue
-        units = ncd.variables['ssh_karin'].units
-        scale_factor = ncd.variables['ssh_karin'].scale_factor
+        self.ssha = ncd.variables['ssha_karin'][:].ravel()
+        Fillvalue = ncd.variables['ssha_karin']._FillValue
+        units = ncd.variables['ssha_karin'].units
+        scale_factor = ncd.variables['ssha_karin'].scale_factor
+        self.mssh = ncd.variables['mean_sea_surface_cnescls'][:].ravel()
         self.err = ncd.variables['ssh_karin_uncert'][:].ravel()
         err_Fillvalue = ncd.variables['ssh_karin']._FillValue
         err_units = ncd.variables['ssh_karin'].units
@@ -82,7 +83,7 @@ class swot_l2adt2ioda(object):
         ncd.close()
 
         # estimate adt from SSH and Geoid height
-        adt = np.where(self.ssh == Fillvalue,Fillvalue,self.ssh - self.geoid)
+        adt = np.where(self.ssha == Fillvalue,Fillvalue,self.ssha + self.mssh - self.geoid)
 
         # set up variable names for IODA
         iodavar = 'absolute_dynamic_topography'

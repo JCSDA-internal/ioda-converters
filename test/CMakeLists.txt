@@ -52,7 +52,7 @@ list( APPEND test_input
   testinput/aeronet_aod.dat
   testinput/dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testinput/global_vavh_l3_rt_s3a_20210930T18.nc
-  testinput/SWOT_L2_LR_SSH_Basic_001_001_20160901T000000_20160901T005126_DG10_01.nc
+  testinput/SWOT_L2_SSHA.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
@@ -118,7 +118,7 @@ list( APPEND test_output
   testoutput/aeronet_aod.nc
   testoutput/ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
-  testoutput/SWOT_L2_ADT_001_001_20160901T000000_20160901T005126_DG10_01.nc
+  testoutput/SWOT_L2_ADT.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
   testoutput/gnssro_cosmic2_2021080212.nc4
@@ -550,9 +550,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_swot_l2adt
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/swot_l2adt2ioda.py
-                          -i testinput/SWOT_L2_LR_SSH_Basic_001_001_20160901T000000_20160901T005126_DG10_01.nc
-                          -o testrun/SWOT_L2_ADT_001_001_20160901T000000_20160901T005126_DG10_01.nc"
-                          SWOT_L2_ADT_001_001_20160901T000000_20160901T005126_DG10_01.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          -i testinput/SWOT_L2_SSHA.nc
+                          -o testrun/SWOT_L2_ADT.nc"
+                          SWOT_L2_ADT.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sst_ostia
                   TYPE    SCRIPT
