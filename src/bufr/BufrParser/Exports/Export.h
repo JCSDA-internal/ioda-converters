@@ -8,7 +8,6 @@
 #pragma once
 
 #include <memory>
-#include <map>
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
@@ -24,8 +23,8 @@ namespace Ingester
     class Export
     {
      public:
-        typedef std::map<std::string, std::shared_ptr<Split>> Splits;
-        typedef std::map<std::string, std::shared_ptr<Variable>> Variables;
+        typedef std::vector<std::shared_ptr<Split>> Splits;
+        typedef std::vector<std::shared_ptr<Variable>> Variables;
         typedef std::vector<std::shared_ptr<Filter>> Filters;
 
         /// \brief Constructor
@@ -43,7 +42,8 @@ namespace Ingester
         Filters filters_;
 
         /// \brief Create Variables exports from config.
-        void addVariables(const eckit::Configuration &conf);
+        void addVariables(const eckit::Configuration &conf,
+                          const std::string& groupByVariable = "");
 
         /// \brief Create Splits exports from config.
         void addSplits(const eckit::Configuration &conf);
