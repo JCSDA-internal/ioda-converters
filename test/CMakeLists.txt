@@ -632,7 +632,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_radiance_L1B
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_oc2ioda.py
                           -i testinput/pace_radiance_L1B.nc
                           -o testrun/pace_radiance_L1B.nc
-                          -d 2019032112
+                          -d 2019032112"
                           pace_radiance_L1B.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
