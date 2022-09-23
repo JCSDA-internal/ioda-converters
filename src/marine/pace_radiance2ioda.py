@@ -111,13 +111,11 @@ def read_input(input_args):
     ncd.close()
     
     # Create a mask for optional random thinning
-    np.random.seed(
-        int((global_config['date']).total_seconds()))
     mask = np.random.uniform(size=len(lons)) > global_config['thin']
 
     # also, sometimes certain input variables have their own mask due to
     # missing values
-    for v in input_vars:
+    for v in geo_vars:
         if np.ma.is_masked(data_in[v]):
             mask = np.logical_and(mask, np.logical_not(data_in[v].mask))
 
