@@ -134,7 +134,7 @@ list( APPEND test_output
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
-  testoutput/2021081612_RAOB_small.nc
+  testoutput/2021081612_sonde_small.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
