@@ -200,7 +200,11 @@ def getProfile(filename, synopId, year, month):
         sc = decode(sections[synopId][type], year, month)
         if sc is not None:
             s.append(sc)
-    return mergeSections(s)
+    fullyMerged = mergeSections(s)
+    if fullyMerged is None:
+        logger.error(f"Can't merge sections - missing mandatory levels! at site: {synopId}")
+
+    return fullyMerged
 
 
 def getSections(filename, stationList=None):
@@ -542,7 +546,6 @@ def mergeSections(sections):
         types.append(s['type'])
 
     if 'TTAA' not in sects:
-        logger.error("Can't merge sections - missing mandatory levels!")
         return None
 
     # merge mandatory levels
@@ -1145,4 +1148,5 @@ if __name__ == "__main__":
         # write everything out
         writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
 
+    print(f" wrote data for {nstations} number of stations")
     logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
