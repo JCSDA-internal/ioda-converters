@@ -34,18 +34,23 @@ observations:
           # ObsValue
           pressure:
             query: "*/PRES"
+            type: float
           pressureReducedToMeanSeaLevel:
             query: "*/PMSL"
-          altimeterSettingQnh:
+            type: float
+          altimeterSetting:
             query: "*/ALSE"
+            type: float
           airTemperature:
             query: "*/TMDB"
           dewpointTemperature:
             query: "*/TMDP"
           windDirection:
             query: "*/WDIR"
+            type: float
           windSpeed:
             query: "*/WSPD"
+            type: float
 
           # ObsValue - ocean
           # DBSS (depth below water surface) not found 
@@ -67,12 +72,15 @@ observations:
             query: "*/HBLCS"
           heightOfBaseOfCloud:
             query: "[*/CLDSQ1/HOCB, */MTRCLD/HOCB, NC000100/HOCB, NC000101/HOCB, NC000102/HOCB]"
+            type: float
           verticalSignificanceSurfaceObservations:
             query: "[*/CLDSQ1/VSSO, */MTRCLD/VSSO, NC000100/VSSO[1], NC000101/VSSO[1], NC000102/VSSO[1]]"
           verticalVisibility:
             query: "[*/RPSEC3/VTVI, */VTVI]"
+            type: float
           horizontalVisibility:
             query: "*/HOVI"
+            type: float
           minimumTemperature:
             query: "[*/TMPSQ3/MITM, */MTTPSQ/MITM, NC000100/BSYEXTM/MITM[1], NC000101/BSYEXTM/MITM[1], NC000102/BSYEXTM/MITM[1]]"
           maximumTemperature:
@@ -89,6 +97,9 @@ observations:
             query: "*/QMDD"
           pressureQM:
             query: "*/QMPR"
+          windQM:
+            query: "*/QMWN"
+
 
     ioda:
       backend: netcdf
@@ -144,10 +155,11 @@ observations:
           longName: "Method of Water Temperature Measurement"
 
         # ObsValue
-        - name: "ObsValue/altimeterSettingQnh"
+        - name: "ObsValue/altimeterSetting"
           coordinates: "longitude latitude"
-          source: variables/altimeterSettingQnh
-          longName: "Altimeter Setting Qnh"
+          source: variables/altimeterSetting
+          longName: "Altimeter Setting"
+          units: "Pa"
 
         - name: "ObsValue/pressure"
           coordinates: "longitude latitude"
@@ -204,6 +216,7 @@ observations:
           source: variables/cloudCoverTotal
           longName: "Total Cloud Coverage"
           units: "1"
+
         - name: "ObsValue/cloudAmountDescription"
           coordinates: "longitude latitude"
           source: variables/cloudAmountDescription
@@ -213,7 +226,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceOfBaseOfLowestCloud
           longName: "Height Above Surface of Base of Lowest Cloud Seen"
-          units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
@@ -276,3 +288,9 @@ observations:
           coordinates: "longitude latitude"
           source: variables/pressureQM
           longName: "Quality Indicator for Pressure"
+
+        - name: "QualityMarker/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind Direction"
+

@@ -61,6 +61,16 @@ namespace Ingester
                               + path);
                     }
 
+                    if (path.substr(0, 1) != "*")
+                    {
+                        std::ostringstream errStr;
+                        errStr << "ioda::dimensions: ";
+                        errStr << "Path " << path << " must start with *. ";
+                        errStr << "Subset specific named dimensions are not supported.";
+
+                        throw eckit::BadParameter(errStr.str());
+                    }
+
                     dimPaths.insert(path);
                 }
 
