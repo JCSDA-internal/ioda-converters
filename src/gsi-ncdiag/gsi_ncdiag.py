@@ -1245,7 +1245,8 @@ class Radiances(BaseGSI):
         try:
             obserr = self.var('Input_Observation_Error')
         except IndexError:
-            obserr = 1./self.var('Inverse_Observation_Error')
+            obserr = 1./self.var('error_variance')
+            obserr = np.repeat(obserr,nlocs,axis=0)
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1546,6 +1547,7 @@ class Ozone(BaseGSI):
         output observations from the specified GSI diag file
         to the JEDI/IODA observation format
         """
+
         # set up a NcWriter class
         outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
