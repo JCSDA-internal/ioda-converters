@@ -325,7 +325,7 @@ endforeach(FILENAME)
 
 # create the share directory and link files to test subdir
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share)
-file( GLOB_RECURSE SHARE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/share/* )
+file( GLOB_RECURSE SHARE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../share/* )
 foreach ( f ${SHARE_FILES} )
     get_filename_component(filename ${f} NAME)
     execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
