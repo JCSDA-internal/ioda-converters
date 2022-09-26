@@ -55,7 +55,7 @@ LEVEL_CODES = {
 }
 
 # List of sounding data sections
-TYPES = ['TTAA', 'TTBB', 'PPBB','TTCC','TTDD','PPDD']
+TYPES = ['TTAA', 'TTBB', 'PPBB', 'TTCC', 'TTDD', 'PPDD']
 
 STATIONS = {}
 
@@ -141,7 +141,7 @@ def loadStations(stationfile, skipIfLoaded=True):
         return True
 
     try:
-        fh = open(stationfile,"r")
+        fh = open(stationfile, "r")
         data = fh.read()
         fh.close()
         STATIONS = json.loads(data)
@@ -151,7 +151,7 @@ def loadStations(stationfile, skipIfLoaded=True):
         return False
 
 
-def getStationInfo(icaoId=None,synopId=None):
+def getStationInfo(icaoId=None, synopId=None):
     """
     Get info for a station given either an icaoId or a synopId
     :param icaoId:
@@ -191,7 +191,7 @@ def getProfile(filename, synopId, year, month):
     :param month:
     :return: A parsed sounding dict, or None
     """
-    sections = getSections(filename,[synopId])
+    sections = getSections(filename, [synopId])
     if not sections:
         return None
 
@@ -225,7 +225,7 @@ def getSections(filename, stationList=None):
             # get rid of non-ASCII characters
             line = ''.join(chr(i) for i in line if i < 128)
 
-            (type,tokens,id) = getTokens(line)
+            (type, tokens, id) = getTokens(line)
             if type == "":
                 continue
             if stationList is not None and id not in stationList:
@@ -243,7 +243,7 @@ def getSections(filename, stationList=None):
                 line = ''.join(chr(i) for i in line if i < 128)
 
                 if line:
-                    line = line.replace(chr(13),"").replace(chr(10)," ")
+                    line = line.replace(chr(13), "").replace(chr(10), " ")
                     if line == "" or line == " ":
                         continue
                     soundingStr += line
@@ -341,7 +341,7 @@ def decodeMandatory(type, tokens, stationAlt, year, month, above100=False):
                 pressure /= 10
             try:
                 height = int(tokens[index][2:5])
-            except:
+            except Exception:
                 index += 3
                 continue
 
@@ -383,9 +383,9 @@ def decodeMandatory(type, tokens, stationAlt, year, month, above100=False):
                 (temp, dew) = (None, None)
             index += 1
             if index < len(tokens):
-                (wspd,wdir,u,v) = getWind(tokens[index])
+                (wspd, wdir, u, v) = getWind(tokens[index])
             else:
-                (wspd,wdir,u,v) = (None,None,None,None)
+                (wspd, wdir, u, v) = (None, None, None, None)
 
             mandatory['levels'][pressure] = {
                 'height': height,
@@ -398,7 +398,7 @@ def decodeMandatory(type, tokens, stationAlt, year, month, above100=False):
                 'section': type
             }
         else:
-            index += 2 # skip this level and the temp and wind fields
+            index += 2  # skip this level and the temp and wind fields
 
         index += 1
 
@@ -430,7 +430,7 @@ def decodeSignificant(type, tokens, year, month, above100=False):
     index += 1
     last_dewdep = None
     while index < len(tokens):
-        if tokens[index] in ["21212", "31313","41414","51515","61616"]:
+        if tokens[index] in ["21212", "31313", "41414", "51515", "61616"]:
             break
         if tokens[index] == "/////":
             index += 2
@@ -438,7 +438,7 @@ def decodeSignificant(type, tokens, year, month, above100=False):
 
         try:
             pl = int(tokens[index][2:5])
-        except:
+        except Exception:
             index += 2
             continue
 
@@ -448,7 +448,7 @@ def decodeSignificant(type, tokens, year, month, above100=False):
             pl += 1000
         index += 1
         if index < len(tokens):
-            (temp,dew) = getTempDew(tokens[index], last_dewdep)
+            (temp, dew) = getTempDew(tokens[index], last_dewdep)
             if temp is not None and dew is not None:
                 last_dewdep = temp - dew
 
@@ -493,8 +493,8 @@ def decodeWinds(type, tokens, stationAlt):
             for h in heighttok[2:5]:
                 if h == "/":
                     continue
-                height = (baseht + int(h)) * 1000 + iadd # in feet
-                height *= 0.3048 # to meters
+                height = (baseht + int(h)) * 1000 + iadd  # in feet
+                height *= 0.3048  # to meters
                 if height == 0:
                     height = stationAlt
                 heights.append(height)
@@ -522,12 +522,12 @@ def decodeWinds(type, tokens, stationAlt):
             while len(nexttoks) < len(heights):
                 heights = heights[:-1]
 
-            for i in range(0,len(heights)):
+            for i in range(0, len(heights)):
                 if heights[i] not in winds['heights']:
-                    (wspd,wdir,u,v) = getWind(nexttoks[i])
+                    (wspd, wdir, u, v) = getWind(nexttoks[i])
                     if heights[i] >= stationAlt:
                         winds['heights'][heights[i]] = {'wspd': wspd, 'wdir': wdir, 'u': u, 'v': v, 'section': type}
-        except:
+        except Exception:
             break
 
     return winds
@@ -551,10 +551,10 @@ def mergeSections(sections):
     # merge mandatory levels
     merged = sects['TTAA']
     if 'TTCC' in sects:
-        merge(merged,sects['TTCC'])
+        merge(merged, sects['TTCC'])
     levels = {}
-    for l in merged['levels']:
-        levels[l] = merged['levels'][l]
+    for lv in merged['levels']:
+        levels[lv] = merged['levels'][lv]
 
     # merge in optional levels, which have either
     # pressure or height data (but not both) so get those too
@@ -578,7 +578,7 @@ def mergeSections(sections):
     synop = merged['id']
     station = STATIONS[synop]
     merged.update(station)
-    merged.pop("type",None)
+    merged.pop("type", None)
     merged['sections'] = types
     merged['synop'] = synop
 
@@ -622,7 +622,7 @@ def interpolateWindAndTemp(levels):
             continue
 
         # whch variable set do we need?
-        missing = ['temp','dew'] if haveWind else ['u','v']
+        missing = ['temp', 'dew'] if haveWind else ['u', 'v']
 
         # find a level above and below that contain the missing data field
         # so we can interpolate
@@ -693,10 +693,10 @@ def getTokens(soundingStr):
     """
     str = soundingStr.replace(chr(13), "").replace(chr(10), " ")
     str = str.strip()
-    toks = re.split("\s+", str)
+    toks = re.split(r"\s+", str)
     tokens = []
     for t in toks:
-        t = t.replace("=","")
+        t = t.replace("=", "")
         if len(t) >= 3:
             tokens.append(t)
 
@@ -725,7 +725,7 @@ def getDayHour(str):
             day += 50
         hour = int(str[2:4])
         return (day, hour)
-    except:
+    except Exception:
         return (None, None)
 
 
@@ -740,7 +740,7 @@ def getWind(str):
     u = None
     v = None
 
-    try: 
+    try:
         wdir = int(str[0:3])
         wspd = int(str[3:5])
         mid = int(str[2])
@@ -748,7 +748,7 @@ def getWind(str):
             wdir -= 1
             wspd += 100
 
-        #wspd *= 0.51444 # convert to m/s
+        # wspd *= 0.51444, convert to m/s
 
         # calculate u and v
         md = 270 - wdir
@@ -757,10 +757,10 @@ def getWind(str):
         theta = md * (math.pi / 180)
         u = wspd * math.cos(theta)
         v = wspd * math.sin(theta)
-    except:
+    except Exception:
         pass
 
-    return (wspd,wdir,u,v)
+    return (wspd, wdir, u, v)
 
 
 def getTempDew(str, last_dewdep):
@@ -780,7 +780,7 @@ def getTempDew(str, last_dewdep):
             temp += 0.1 * dec
             if dec % 2 != 0:
                 temp *= -1
-        except:
+        except Exception:
             pass
 
         try:
@@ -792,12 +792,12 @@ def getTempDew(str, last_dewdep):
 
             # calculate dewpoint from dewpoint depression
             dew = temp - dewdep
-        except:
+        except Exception:
             # dewpoint is missing or unparesable, so calculate it
             if temp and last_dewdep:
                 dew = temp - last_dewdep
 
-    return (temp,dew)
+    return (temp, dew)
 
 
 def getPressureLevels(section, levels):
@@ -835,7 +835,7 @@ def getPressureLevels(section, levels):
             tempup = levels[pressureup]['temp']
             heightlo = levels[pressurelo]['height']
             heightup = levels[pressureup]['height']
-            pressure = meteo_sounding_utils.p_interp(templo,tempup,pressurelo,pressureup,heightlo, heightup, height)
+            pressure = meteo_sounding_utils.p_interp(templo, tempup, pressurelo, pressureup, heightlo, heightup, height)
 
         if pressure is not None:
             level = section['heights'][height]
@@ -860,15 +860,15 @@ def getHeights(section, levels):
 
         if pressure > pressurelo and levels[pressurelo]['height'] is not None \
                 and levels[pressurelo]['temp'] is not None:
-            height = meteo_sounding_utils.zext_down(pressure, pressurelo,levels[pressurelo]['temp'],
-                                           levels[pressurelo]['height'])
+            height = meteo_sounding_utils.zext_down(pressure, pressurelo, levels[pressurelo]['temp'],
+                                                    levels[pressurelo]['height'])
         elif pressure < pressureup and levels[pressureup]['height'] is not None \
                 and levels[pressureup]['temp'] is not None:
-            height = meteo_sounding_utils.zext_up(pressureup, pressure,levels[pressureup]['temp'],
-                                           levels[pressureup]['height'])
+            height = meteo_sounding_utils.zext_up(pressureup, pressure, levels[pressureup]['temp'],
+                                                  levels[pressureup]['height'])
         else:
             p = 0
-            while p < len(pressures) -1 and pressures[p] > pressure:
+            while p < len(pressures) - 1 and pressures[p] > pressure:
                 p += 1
             pressureup = pressures[p]
             pressurelo = pressures[0] if p == 0 else pressures[p - 1]
@@ -877,7 +877,7 @@ def getHeights(section, levels):
             tempup = levels[pressureup]['temp']
             heightlo = levels[pressurelo]['height']
             heightup = levels[pressureup]['height']
-            height = meteo_sounding_utils.z_interp(templo,tempup,pressurelo,pressureup,pressure,heightlo, heightup)
+            height = meteo_sounding_utils.z_interp(templo, tempup, pressurelo, pressureup, pressure, heightlo, heightup)
 
         if height is not None:
             section['levels'][pressure]['height'] = height
@@ -959,8 +959,7 @@ def change_vars(profile):
             temp = levels[pressure]['temp'] + 273.15
         if 'dew' in levels[pressure] and levels[pressure]['dew'] is not None:
             dewp = levels[pressure]['dew'] + 273.15
-        if (temp > 75 and temp < 355 and dewp > 50 and dewp < 325 and dewp <= temp*1.05
-                        and pres > 100 and pres < 109900):
+        if (temp > 75 and temp < 355 and dewp > 50 and dewp < 325 and dewp <= temp*1.05 and pres > 100 and pres < 109900):
             spfh = met_utils.specific_humidity(dewp, pres)
             qvapor = max(1.0e-12, spfh/(1.0-spfh))
             tvirt = temp*(1.0 + 0.61*qvapor)
@@ -1067,11 +1066,11 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
-    #---------------------------------------------------------------------------------------------
     """
+    #---------------------------------------------------------------------------------------------
     Options captured, now ingest the station list and cycle the stations to get each profile.
-    """
     #---------------------------------------------------------------------------------------------
+    """
 
     if not os.path.isfile(args.station_file):
         parser.error('Station table (-t option) file: ', args.station_file, ' does not exist')
