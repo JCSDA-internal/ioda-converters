@@ -968,7 +968,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                           -i testinput/mopitt_co.he5
                           -o testrun/mopitt_co.nc
                           -r 2021092903 2021092921"
-                          mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
+                  mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
@@ -1229,7 +1229,6 @@ if(iodaconv_bufr_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa
                     TYPE    SCRIPT
-                    COMMAND bash
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
