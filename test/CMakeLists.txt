@@ -956,7 +956,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2_tropo.nc
                           -c tropo"
-                          tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
@@ -992,7 +992,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
 		          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/aeronet_aod2ioda.py
                           -i testinput/aeronet_aod.dat
                           -o testrun/aeronet_aod.nc"
-                          aeronet_aod.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          aeronet_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
                   TYPE    SCRIPT
