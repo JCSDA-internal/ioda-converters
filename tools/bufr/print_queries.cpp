@@ -41,7 +41,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
     for (auto& query : queryData)
     {
         std::stringstream pathStream;
-        pathStream << query.pathComponents[0];
+        pathStream << "*";
         for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
         {
             pathStream << "/" << query.pathComponents[idx];
@@ -177,7 +177,7 @@ void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
 {
     for (auto& dimPath : dimPaths)
     {
-        std::cout << "  " << dimPath.first << "d " << dimPath.second << std::endl;
+        std::cout << "  " << dimPath.first << "d  " << dimPath.second << std::endl;
     }
 }
 

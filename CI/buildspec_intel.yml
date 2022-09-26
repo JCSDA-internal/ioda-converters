@@ -110,14 +110,14 @@ phases:
       - cd /build_container/ioda
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
-      - sed -i 's/nonroot/nonroot\/ioda/' DartConfiguration.tcl
+      - sed -i 's/build_container/build_container\/ioda/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j8
 
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
-      - sed -i 's/nonroot/nonroot\/iodaconv/' DartConfiguration.tcl
+      - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j8
 
@@ -145,7 +145,7 @@ phases:
 
       - if [ "$BUILD_STATUS" = "1" ];
         then echo "Build & tests passed, find cdash url";
-        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/nonroot/iodaconv/Testing $CDASH_URL);
+        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /build_container/iodaconv/Testing $CDASH_URL);
         echo $url;
         echo ${url} > /jcsda/artifacts/cdash-url.txt;
         cat /jcsda/artifacts/cdash-url.txt;
