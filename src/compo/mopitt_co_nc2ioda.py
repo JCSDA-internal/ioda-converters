@@ -197,7 +197,7 @@ class mopitt(object):
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
                 for k in range(nlevs+1):
-                    varname_pr = ('pressure_level_'+str(k), 'RtrvlAncData')
+                    varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
                         (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
