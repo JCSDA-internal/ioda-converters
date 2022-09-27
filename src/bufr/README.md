@@ -67,6 +67,7 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               hoursFromUtc: 0  # Optional
           satellite_id:
             query: "*/SAID"
+            type: int64
           longitude:
             query: "*/CLON"
             transforms:
@@ -102,7 +103,8 @@ ioda encoder. It has the following sections:
   * **values** (One of these types):
     * `query` Query string which is used to get the data from the BUFR file. _(optional)_ Can 
       apply a list of `tranforms` to the numeric (not string) data. Possible transforms are 
-      `offset` and `scale`.
+      `offset` and `scale`. You can also manually override the type by specifying the `type` as 
+      **int**, **int64**, **float**, or **double**.
     * `datetime` Associate **key** with data for mnemonics for `year`, `month`, `day`, `hour`,
       `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must be an **integer**).
       Internally, the value stored is number of seconds elapsed since a reference epoch, currently
@@ -182,8 +184,8 @@ The `ioda` section defines the ObsGroup objects that will be created.
   replaced with the relevant split category ID for that file to form a unique name for every file.
 * `dimensions` used to define dimension information in variables
     * `name` arbitrary name for the dimension
-    * `paths` - list of subqueries for that dimension (different paths for different BUFR subsets only) **or** `path` Single subquery for that dimension ex:
-       **\*/BRITCSTC**
+    * `paths` - list of subqueries for that dimension (different paths for different BUFR subsets 
+                only) **or** `path` Single subquery for that dimension ex: **\*/BRITCSTC**
 * `variables` List of output variable objects to create.
   * `name` standardized pathname **group**/**var_name**. 
     * **var_name** name for the variable
