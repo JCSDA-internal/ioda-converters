@@ -10,73 +10,61 @@ observations:
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
-      mnemonicSets:
-        - mnemonics: [CLATH, CLONH]
-        - mnemonics: [TMDB, TMDP, WDIR, WSPD]
-          channels: 1-5880
-
       exports:
         variables:
           latitude:
-            mnemonic: CLATH
+            query: "*/CLATH"
           longitude:
-            mnemonic: CLONH
+            query: "*/CLONH"
           air_temperature:
-            mnemonic: TMDB
+            query: "*/TDWPRAOB/TMDB"
           dewpoint_temperature:
-            mnemonic: TMDP
+            query: "*/TDWPRAOB/TMDP"
           wind_direction:
-            mnemonic: WDIR
+            query: "*/TDWPRAOB/WDIR"
           wind_speed:
-            mnemonic: WSPD
+            query: "*/TDWPRAOB/WSPD"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_read_wmo_radiosonde.nc"
 
       dimensions:
-        - name: "nlocs"
-          size: variables/air_temperature.nrows
-        - name: "temp_ncols"
-          size: variables/air_temperature.ncols
+        - name: Channel
+          path: "*/TDWPRAOB"
+
 
       variables:
         - name: "latitude@MetaData"
           source: variables/latitude
-          dimensions: [ "nlocs" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "longitude@MetaData"
           source: variables/longitude
-          dimensions: [ "nlocs" ]
           longName: "Longitude"
           units: "degrees_east"
 
         - name: "air_temperature@ObsValue"
           coordinates: "longitude latitude"
           source: variables/air_temperature
-          dimensions: [ "nlocs", "temp_ncols"]
           longName: "Air Temperature"
           units: "K"
 
         - name: "dewpoint_temperature@ObsValue"
           coordinates: "longitude latitude"
           source: variables/dewpoint_temperature
-          dimensions: [ "nlocs",  "temp_ncols"]
           longName: "Dewpoint Temperature"
           units: "K"
 
         - name: "wind_direction@ObsValue"
           coordinates: "longitude latitude"
           source: variables/wind_direction
-          dimensions: [ "nlocs",  "temp_ncols"]
           longName: "Wind Direction"
           units: "degrees true"
 
         - name: "wind_speed@ObsValue"
           coordinates: "longitude latitude"
           source: variables/wind_speed
-          dimensions: [ "nlocs",  "temp_ncols"]
           longName: "Wind Speed"
           units: "m/s"

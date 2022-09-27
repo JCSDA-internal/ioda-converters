@@ -9,12 +9,10 @@
 
 #include <string>
 #include <vector>
-
+#include <memory>
 
 #include "eckit/config/LocalConfiguration.h"
 
-#include "BufrParser/BufrTypes.h"
-#include "DataObject/Int64VecDataObject.h"
 #include "Variable.h"
 
 
@@ -24,36 +22,48 @@ namespace Ingester
     class DatetimeVariable final : public Variable
     {
      public:
-        explicit DatetimeVariable(const eckit::Configuration& conf);
+        DatetimeVariable() = delete;
+        DatetimeVariable(const std::string& exportName,
+                         const std::string& groupByField,
+                         const eckit::Configuration& conf);
         ~DatetimeVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
-        std::shared_ptr<DataObject> exportData(const BufrDataMap& map) final;
+        std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
+
+        /// \brief Get a list of queries for this variable
+        QueryList makeQueryList() const final;
 
      private:
-        /// \brief Mnemonic for year
-        const std::string yearKey_;
+        /// \brief Query for year
+        const std::string yearQuery_;
 
-        /// \brief Mnemonic for month
-        const std::string monthKey_;
+        /// \brief Query for month
+        const std::string monthQuery_;
 
-        /// \brief Mnemonic for day
-        const std::string dayKey_;
+        /// \brief Query for day
+        const std::string dayQuery_;
 
-        /// \brief Mnemonic for hour
-        const std::string hourKey_;
+        /// \brief Query for hour
+        const std::string hourQuery_;
 
-        /// \brief Mnemonic for minute
-        const std::string minuteKey_;
+        /// \brief Query for minute
+        const std::string minuteQuery_;
 
-        /// \brief Mnemonic for second (optional)
-        std::string secondKey_;
+        /// \brief Query for second (optional)
+        std::string secondQuery_;
+
+        /// \brief For field (optional)
+        std::string groupByField_;
 
         /// \brief Hours to offset from UTC (optional)
         int hoursFromUtc_;
 
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
+
+        /// \brief get the export key string
+        std::string getExportKey(const char* name) const;
     };
 }  // namespace Ingester

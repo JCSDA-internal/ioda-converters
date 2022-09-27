@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,7 +26,7 @@ namespace Ingester
     struct DimensionDescription
     {
         std::string name;
-        std::string size;
+        std::vector<std::string> paths;
     };
 
     struct VariableDescription
@@ -47,6 +46,7 @@ namespace Ingester
     {
         std::string name;
         virtual void addTo(ioda::Group& group) = 0;
+        virtual ~GlobalDescriptionBase() = default;
     };
 
     template<typename T>
@@ -98,7 +98,7 @@ namespace Ingester
         explicit IodaDescription(const eckit::Configuration& conf);
 
         /// \brief Add Dimension defenition
-        void addDimension(const DimensionDescription& scale);
+        void addDimension(const DimensionDescription& dim);
 
         /// \brief Add Variable defenition
         void addVariable(const VariableDescription& variable);

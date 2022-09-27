@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
+#include <memory>
 
+#include "DataObject.h"
 #include "Eigen/Dense"
 
 namespace Ingester
 {
-    typedef float FloatType;
-    typedef Eigen::Array<FloatType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> IngesterArray;
-    typedef std::map<std::string, IngesterArray> IngesterArrayMap;
-    typedef std::vector<std::string> IngesterStrVector;
+    typedef Eigen::Array<float, Eigen::Dynamic, 1, Eigen::RowMajor> RawData;
+    typedef std::unordered_map<std::string, std::shared_ptr<DataObjectBase> > BufrDataMap;
 }
