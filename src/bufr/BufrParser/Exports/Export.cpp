@@ -29,6 +29,7 @@ namespace
         const char* Splits = "splits";
         const char* Variables = "variables";
         const char* GroupByVariable = "group_by_variable";
+        const char* Subsets = "subsets";
 
         namespace Variable
         {
@@ -75,6 +76,11 @@ namespace Ingester
         if (conf.has(ConfKeys::GroupByVariable))  // Optional
         {
             groupByVariable = conf.getString(ConfKeys::GroupByVariable);
+        }
+
+        if (conf.has(ConfKeys::Subsets))
+        {
+            subsets_ = conf.getStringVector(ConfKeys::Subsets);
         }
 
         if (conf.has(ConfKeys::Variables))

@@ -84,6 +84,16 @@ conv_bufrtypes = {
 all_LocKeyList = {
     'Station_ID': ('station_id', 'string'),
     'Time': ('datetime', 'string'),
+    'time': ('time', 'string'),
+    'ascending_flag': ('ascending_flag', 'string'),
+    'earth_radius_of_curvature': ('earth_radius_of_curvature', 'string'),
+    'reference_sat_id': ('reference_sat_id', 'string'),
+    'occulting_sat_id': ('occulting_sat_id', 'string'),
+    'record_number': ('record_number', 'string'),
+    'geoid_height_above_reference_ellipsoid': ('geoid_height_above_reference_ellipsoid', 'string'),
+    'gnss_sat_class': ('gnss_sat_class', 'string'),
+    'impact_height': ('impact_height', 'string'),
+    'impact_parameter': ('impact_parameter', 'string'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('station_elevation', 'float'),
@@ -115,6 +125,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('channel_wavelength', 'float'),
     'QI_with_FC': ('satwind_quality_ind_with_fc', 'float'),
     'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
+    'Data_Vertical_Velocity': ('data_vertical_velocity', 'float'),
     'LaunchTime': ('LaunchTime', 'float'),
 }
 
@@ -304,7 +315,9 @@ geovals_vars = {
     'specific_humidity': 'specific_humidity',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
+    'geopotential_height_levels': 'geopotential_height_levels',
     'geopotential_height': 'geopotential_height',
+    'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
@@ -314,6 +327,8 @@ geovals_vars = {
     'surface_roughness': 'surface_roughness_length',
     'surface_height': 'surface_geopotential_height',
     'surface_geopotential_height': 'surface_geopotential_height',
+    'surface_altitude': 'surface_altitude',
+    'surface_geometric_height': 'surface_geometric_height',
     'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
@@ -347,7 +362,7 @@ geovals_vars = {
     'Lai': 'leaf_area_index',
     'Soil_Moisture': 'volume_fraction_of_condensed_water_in_soil',
     'Soil_Temperature': 'soil_temperature',
-    'Land_Type_Index': 'land_type_index',
+    'Land_Type_Index': 'land_type_index_NPOESS',
     'Vegetation_Type': 'vegetation_type_index',
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
@@ -389,17 +404,20 @@ aod_sensors = [
     'viirs',
 ]
 
-oz_sensors = [
+oz_lay_sensors = [
     'gome',
     'sbuv2',
     'omi',
     'ompsnp',
     'ompstc8',
-    'ompslp',
-    'mls55',
     'ompsnm',
 ]
 
+oz_lev_sensors = [
+    'ompslp',
+    'ompslpnc',
+    'mls55',
+]
 # units
 # 'IODA/UFO_variable_name': 'Unit'
 units_values = {
@@ -409,12 +427,18 @@ units_values = {
     'northward_wind': 'm s-1',
     'eastward_wind': 'm s-1',
     'geopotential_height': 'm',
+    'geopotential_height_levels': 'm',
     'height_above_mean_sea_level': 'm',
     'surface_pressure': 'Pa',
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
     'surface_geopotential_height': 'm',
+    'surface_altitude': 'm',
+    'geoid_height_above_reference_ellipsoid': 'Meters',
+    'earth_radius_of_curvature': 'Meters',
+    'impact_height': 'Meters',
+    'impact_parameter': 'Meters',
     'land_area_fraction': '1',
     'air_temperature': 'K',
     'air_pressure': 'Pa',
@@ -446,7 +470,7 @@ units_values = {
     'leaf_area_index': '1',
     'volume_fraction_of_condensed_water_in_soil': '1',
     'soil_temperature': 'K',
-    'land_type_index': '1',
+    'land_type_index_NPOESS': '1',
     'vegetation_type_index': '1',
     'soil_type': '1',
     'surface_snow_thickness': 'm',
@@ -492,6 +516,7 @@ units_values = {
     'clw_retrieved_from_background': 'kg/m/m',
     'scat_retrieved_from_observation': '1',
     'LaunchTime': 'hours',
+    'bending_angle': 'radians',
 }
 
 # @TestReference
@@ -679,7 +704,8 @@ class Conv(BaseGSI):
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
-                                if vname == "atmosphere_pressure_coordinate_interface":
+                                if (vname == "atmosphere_pressure_coordinate_interface") or (
+                                        vname == "geopotential_height_levels"):
                                     dims = ("nlocs", "ninterfaces")
                                 else:
                                     dims = ("nlocs", "nlevs")
@@ -845,7 +871,7 @@ class Conv(BaseGSI):
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
-                    elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                    elif lvar == 'Time' or lvar == 'time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -1441,6 +1467,7 @@ class Ozone(BaseGSI):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
         i = False
+        oz_sensors = oz_lay_sensors + oz_lev_sensors
         for s in oz_sensors:
             if s in splitfname:
                 i = splitfname.index(s)
@@ -1491,7 +1518,7 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        if (self.sensor not in ["ompslp", "mls55"]):
+        if (self.sensor in oz_lay_sensors):
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1539,14 +1566,19 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
-        if (self.sensor in ["ompslp", "mls55"]):
+        if (self.sensor in oz_lev_sensors):
             vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
         VarDims[vname] = ['nlocs']
-        varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
-        varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
+        if (self.sensor in oz_lev_sensors):
+            varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
+            varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
+        else:
+            varAttrs[varDict[vname]['valKey']]['units'] = 'DU'
+            varAttrs[varDict[vname]['errKey']]['units'] = 'DU'
+
         varAttrs[varDict[vname]['qcKey']]['units'] = 'unitless'
         varAttrs[varDict[vname]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['errKey']]['_FillValue'] = self.FLOAT_FILL

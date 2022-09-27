@@ -25,7 +25,6 @@ namespace Ingester
     class BufrDescription
     {
      public:
-        BufrDescription() = default;
         explicit BufrDescription(const eckit::Configuration &conf);
 
         /// \brief Add a BufrMnemonicSet to the description.

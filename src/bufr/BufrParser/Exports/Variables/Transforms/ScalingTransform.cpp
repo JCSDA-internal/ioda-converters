@@ -7,6 +7,7 @@
 
 #include "ScalingTransform.h"
 #include "IngesterTypes.h"
+#include "BufrParser/Query/Constants.h"
 
 namespace Ingester
 {

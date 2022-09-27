@@ -48,8 +48,8 @@ namespace Ingester {
     {
         auto startTime = std::chrono::steady_clock::now();
 
-        oops::Log::info() << "Start" << std::endl;
-        auto querySet = bufr::QuerySet();
+        auto querySet = bufr::QuerySet(description_.getExport().getSubsets());
+
         for (const auto &var : description_.getExport().getVariables())
         {
             for (const auto &queryPair : var->getQueryList())

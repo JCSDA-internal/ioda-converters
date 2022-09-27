@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <numeric>
 #include <vector>
 
 namespace Ingester {
@@ -16,15 +17,9 @@ namespace bufr {
     /// \brief Multiply all the values in a vector together.
     /// \return Scalar value.
     template<typename T>
-    T product(std::vector<T> vec)
+    T product(const std::vector<T> &vec)
     {
-        T result = 1;
-        for (auto i : vec)
-        {
-            result *= i;
-        }
-
-        return result;
+        return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<T>());
     }
 
     /// \brief Multiply a range of values in a vector together.

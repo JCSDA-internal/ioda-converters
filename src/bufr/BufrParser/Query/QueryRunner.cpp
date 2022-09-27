@@ -4,7 +4,7 @@
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
-#include "Query.h"
+#include "QueryRunner.h"
 
 #include "eckit/exception/Exceptions.h"
 #include "oops/util/Logger.h"
@@ -12,7 +12,7 @@
 #include <string>
 #include <iostream>
 
-#include "QueryParser.h"
+#include "Constants.h"
 
 namespace Ingester {
 namespace bufr {
@@ -22,7 +22,7 @@ namespace bufr {
         std::vector<int> counts;
     };
 
-    Query::Query(const QuerySet &querySet,
+    QueryRunner::QueryRunner(const QuerySet &querySet,
                  ResultSet &resultSet,
                  const DataProvider &dataProvider) :
         querySet_(querySet),
@@ -31,7 +31,8 @@ namespace bufr {
     {
     }
 
-    void Query::query() {
+    void QueryRunner::accumulate()
+    {
         Targets targets;
         std::shared_ptr<__details::ProcessingMasks> masks;
 
@@ -39,9 +40,12 @@ namespace bufr {
         collectData(targets, masks, resultSet_);
     }
 
-    void Query::findTargets(Targets &targets, std::shared_ptr<__details::ProcessingMasks> &masks) {
+    void QueryRunner::findTargets(Targets &targets,
+                                  std::shared_ptr<__details::ProcessingMasks> &masks)
+    {
         // Check if the target list for this subset is cached
-        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end()) {
+        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end())
+        {
             targets = targetCache_.at(dataProvider_.getSubset());
             masks = maskCache_.at(dataProvider_.getSubset());
             return;
@@ -54,20 +58,21 @@ namespace bufr {
         masks->valueNodeMask.resize(numNodes, false);
         masks->pathNodeMask.resize(numNodes, false);
 
-        for (size_t targetIdx = 0; targetIdx < querySet_.size(); ++targetIdx) {
-            auto queryName = querySet_.nameAt(targetIdx);
-            auto queryStr = querySet_.queryAt(targetIdx);
-
-            auto subQueries = QueryParser::splitMultiquery(queryStr);
+        for (size_t targetIdx = 0; targetIdx < querySet_.size(); ++targetIdx)
+        {
+            auto queryName = querySet_.names()[targetIdx];
+            auto subQueries = querySet_.queriesFor(queryName);
 
             bool foundTarget = false;
             std::shared_ptr<Target> target;
-            for (size_t subQueryIdx = 0; subQueryIdx < subQueries.size(); ++subQueryIdx) {
-                const std::string &subQuery = subQueries[subQueryIdx];
+            for (size_t subQueryIdx = 0; subQueryIdx < subQueries.size(); ++subQueryIdx)
+            {
+                const Query& subQuery = subQueries[subQueryIdx];
 
                 target = findTarget(queryName, subQuery);
 
-                if (target->nodeIds.size() > 0) {
+                if (target->nodeIds.size() > 0)
+                {
                     // Collect mask data
                     masks->valueNodeMask[target->nodeIds[0]] = true;
                     for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx) {
@@ -80,14 +85,34 @@ namespace bufr {
                 }
             }
 
-            if (!foundTarget) {
+            if (!foundTarget)
+            {
                 // Add the last missing target to the list
                 targets.push_back(target);
-                oops::Log::warning() << "Warning: Query String "
-                                     << queryStr
-                                     << " didn't apply to subset "
-                                     << dataProvider_.getSubset()
-                                     << std::endl;
+                oops::Log::warning() << "Warning: Query String ";
+
+                auto queries = querySet_.queriesFor(queryName);
+
+                if (queries.size() == 1)
+                {
+                    oops::Log::warning() << queries[0].queryStr;
+                }
+                else
+                {
+                    oops::Log::warning() << "[";
+                    for (auto subQuery = queries.cbegin();
+                         subQuery < queries.cend();
+                         ++subQuery)
+                    {
+                        if (subQuery != queries.cbegin()) oops::Log::warning() << ", ";
+                        oops::Log::warning() << subQuery->queryStr;
+                    }
+                    oops::Log::warning() << "]";
+                }
+
+                oops::Log::warning() << " didn't apply to subset ";
+                oops::Log::warning() << dataProvider_.getSubset();
+                oops::Log::warning() << std::endl;
             }
         }
 
@@ -95,23 +120,18 @@ namespace bufr {
         maskCache_.insert({dataProvider_.getSubset(), masks});
     }
 
-    std::shared_ptr<Target> Query::findTarget(const std::string &targetName,
-                                              const std::string &query) const {
-        std::string querySubset;
-        std::vector<std::string> mnemonics;
-        int index;
-
-        QueryParser::splitQueryStr(query, querySubset, mnemonics, index);
-
+    std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
+                                                    const Query& query) const
+    {
         std::vector<int> branches;
         std::vector<int> targetNodes;
         std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(querySubset == "*" || querySubset == dataProvider_.getSubset());
+        bool targetMissing = !(query.subset == "*" || query.subset == dataProvider_.getSubset());
         if (!targetMissing) {
-            branches.resize(mnemonics.size() - 1);
+            branches.resize(query.mnemonics.size() - 1);
 
             seqPath.push_back(dataProvider_.getInode());
 
@@ -125,7 +145,7 @@ namespace bufr {
                     dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
                     dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
                     if (isQueryNode(nodeIdx - 1)) {
-                        if (dataProvider_.getTag(nodeIdx) == mnemonics[mnemonicCursor + 1] &&
+                        if (dataProvider_.getTag(nodeIdx) == query.mnemonics[mnemonicCursor + 1] &&
                             tableCursor == mnemonicCursor) {
                             mnemonicCursor++;
                             branches[mnemonicCursor] = nodeIdx - 1;
@@ -133,9 +153,9 @@ namespace bufr {
                         tableCursor++;
                     }
                     seqPath.push_back(nodeIdx);
-                } else if (mnemonicCursor == static_cast<int>(mnemonics.size()) - 2 &&
+                } else if (mnemonicCursor == static_cast<int>(query.mnemonics.size()) - 2 &&
                            tableCursor == mnemonicCursor &&
-                           dataProvider_.getTag(nodeIdx) == mnemonics.back()) {
+                           dataProvider_.getTag(nodeIdx) == query.mnemonics.back()) {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
@@ -143,12 +163,37 @@ namespace bufr {
 
                 // Step back up the tree (unfortunately this is finicky)
                 if (seqPath.size() > 1) {
+                    // Skip pure sequences not inside any kind of repeated sequence
+                    auto jumpBackNode = dataProvider_.getInode();
+                    if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+                    {
+                        jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
+                        if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
+                        while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
+                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
+                        {
+                            auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
+                            if (newJumpBackNode != jumpBackNode)
+                            {
+                                jumpBackNode = newJumpBackNode;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+
                     // Peak ahead to see if the next node is inside one of the containing sequences
                     // then go back up the approptiate number of sequences. You may have to exit
                     // several sequences in a row if the current sequence is the last element in the
                     // containing sequence.
                     for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--) {
-                        if (seqPath[pathIdx] == dataProvider_.getJmpb(nodeIdx + 1)) {
+                        if (seqPath[pathIdx] == jumpBackNode) {
                             for (int rewindIdx = seqPath.size() - 1;
                                  rewindIdx > pathIdx;
                                  rewindIdx--) {
@@ -169,21 +214,21 @@ namespace bufr {
                 }
             }
 
-            if (index > 0 && index <= static_cast<int>(targetNodes.size())) {
-                targetNodes = {targetNodes[index - 1]};
+            if (query.index > 0 && query.index <= gsl::narrow<int>(targetNodes.size())) {
+                targetNodes = {targetNodes[query.index - 1]};
             }
 
             if (targetNodes.size() > 1) {
                 std::ostringstream errMsg;
                 errMsg << "Query string must return 1 target. Are you missing an index? ";
-                errMsg << query << ".";
+                errMsg << query.queryStr << ".";
                 throw eckit::BadParameter(errMsg.str());
             }
         }
 
         auto target = std::make_shared<Target>();
         target->name = targetName;
-        target->queryStr = query;
+        target->queryStr = query.queryStr;
         target->seqPath = branches;
         target->nodeIds = targetNodes;
 
@@ -200,14 +245,14 @@ namespace bufr {
         return target;
     }
 
-    bool Query::isQueryNode(int nodeIdx) const {
+    bool QueryRunner::isQueryNode(int nodeIdx) const {
         return (dataProvider_.getTyp(nodeIdx) == Typ::DelayedRep ||
                 dataProvider_.getTyp(nodeIdx) == Typ::FixedRep ||
                 dataProvider_.getTyp(nodeIdx) == Typ::DelayedRepStacked ||
                 dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary);
     }
 
-    void Query::getDimInfo(const std::vector<int> &branches,
+    void QueryRunner::getDimInfo(const std::vector<int> &branches,
                            int mnemonicCursor,
                            std::vector<std::string> &dimPaths,
                            std::vector<int> &dimIdxs) const {
@@ -248,11 +293,14 @@ namespace bufr {
         }
     }
 
-    void Query::collectData(Targets& targets,
+    void QueryRunner::collectData(Targets& targets,
                             std::shared_ptr<__details::ProcessingMasks> masks,
                             ResultSet &resultSet) const {
         std::vector<int> currentPath;
         std::vector<int> currentPathReturns;
+
+        currentPath.reserve(10);
+        currentPathReturns.reserve(10);
 
         auto &dataFrame = resultSet.nextDataFrame();
         int returnNodeIdx = -1;

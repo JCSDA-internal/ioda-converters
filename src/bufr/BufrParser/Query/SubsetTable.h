@@ -55,6 +55,8 @@ namespace bufr {
         std::vector<std::string> makePathComponents(std::vector<size_t> seqPath, int nodeIdx);
         std::string mapKey(const std::vector<std::string>& pathComponents, size_t idx = 0) const;
         std::string mapKey(const std::shared_ptr<QueryData> query) const;
+
+//        void parseSequence(std::shared_ptr<Node> parentNode, size_t& nodeIdx, size_t endIdx);
     };
 }  // namespace bufr
 }  // namespace Ingester

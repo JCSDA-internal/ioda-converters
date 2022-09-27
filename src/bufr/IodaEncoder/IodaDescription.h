@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
-#include "ioda/Engines/Factory.h"
+#include "ioda/Engines/EngineUtils.h"
 #include "ioda/Group.h"
 
 namespace Ingester
@@ -27,6 +27,7 @@ namespace Ingester
     {
         std::string name;
         std::vector<std::string> paths;
+        std::string source;
     };
 
     struct VariableDescription
@@ -46,6 +47,7 @@ namespace Ingester
     {
         std::string name;
         virtual void addTo(ioda::Group& group) = 0;
+        virtual ~GlobalDescriptionBase() = default;
     };
 
     template<typename T>

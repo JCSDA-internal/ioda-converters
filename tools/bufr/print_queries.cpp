@@ -24,7 +24,10 @@ std::set<std::string> getSubsets(int fileUnit)
     char subset[SubsetLen];
     while (ireadmg_f(fileUnit, subset, &iddate, SubsetLen) == 0)
     {
-        subsets.insert(std::string(subset));
+        auto str_subset = std::string(subset);
+        str_subset.erase(
+            remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
+        subsets.insert(str_subset);
     }
 
     return subsets;
@@ -38,7 +41,7 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
     for (auto& query : queryData)
     {
         std::stringstream pathStream;
-        pathStream << query.pathComponents[0];
+        pathStream << "*";
         for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
         {
             pathStream << "/" << query.pathComponents[idx];
@@ -75,7 +78,14 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
 
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
     {
-        if (std::string(current_subset) == subset)
+        auto msg_subset = std::string(current_subset);
+        msg_subset.erase(
+            remove_if(msg_subset.begin(), msg_subset.end(), isspace), msg_subset.end());
+
+        status_f(fileUnit, &bufrLoc, &il, &im);
+        dataProvider.updateData(bufrLoc);
+
+        if (msg_subset == subset)
         {
             while (ireadsb_f(fileUnit) == 0)
             {
@@ -167,7 +177,7 @@ void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
 {
     for (auto& dimPath : dimPaths)
     {
-        std::cout << "  " << dimPath.first << "d " << dimPath.second << std::endl;
+        std::cout << "  " << dimPath.first << "d  " << dimPath.second << std::endl;
     }
 }
 
@@ -331,7 +341,14 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    printQueries(inputFile, subset, tablePath);
+    try
+    {
+        printQueries(inputFile, subset, tablePath);
+    }
+    catch (const std::exception &e)
+    {
+        throw;
+    }
 
     return 0;
 }

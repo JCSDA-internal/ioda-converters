@@ -10,9 +10,23 @@
 #include <iostream>
 #include <algorithm>
 
+#include "eckit/exception/Exceptions.h"
+
 namespace Ingester {
 namespace bufr {
-     std::vector<std::string> QueryParser::splitMultiquery(const std::string &query) {
+    std::vector<Query> QueryParser::parse(const std::string& queryStr)
+    {
+        std::vector<Query> queries;
+        for (auto& subStr : QueryParser::splitMultiquery(queryStr))
+        {
+            queries.emplace_back(QueryParser::splitQueryStr(subStr));
+        }
+
+        return queries;
+    }
+
+    std::vector<std::string> QueryParser::splitMultiquery(const std::string &query)
+    {
         std::vector<std::string> subqueries;
 
         // Remove whitespace from query and assign to working_str
@@ -22,8 +36,9 @@ namespace bufr {
 
         if (working_str.substr(0, 1) == "[") {
             if (working_str.substr(working_str.length() - 1, 1) != "]") {
-                std::cerr << "Query Parser: multi query is lacking closing brackets." << std::endl;
-                exit(1);
+                std::stringstream errMsg;
+                errMsg << "Query Parser: multi query is lacking closing brackets." << std::endl;
+                throw eckit::BadParameter(errMsg.str());
             }
 
             working_str = working_str.substr(1, working_str.length() - 2);
@@ -63,11 +78,8 @@ namespace bufr {
         return subqueries;
     }
 
-
-    void QueryParser::splitQueryStr(const std::string& query,
-                                    std::string& subset,
-                                    std::vector<std::string>& mnemonics,
-                                    int& index) {
+    Query QueryParser::splitQueryStr(const std::string& query)
+    {
         // Find positions of slashes
         std::vector<size_t> slashPositions;
         size_t slashIdx = 0;
@@ -80,12 +92,13 @@ namespace bufr {
         }
 
         if (slashPositions.size() < 1) {
-            std::cerr << "Query Parser: Not a valid query string." << std::endl;
-            exit(1);
+            std::stringstream errMsg;
+            errMsg << "Query Parser: Not a valid query string." << std::endl;
+            throw eckit::BadParameter(errMsg.str());
         }
 
         // Capture the subset string
-        subset = query.substr(0, slashPositions[0]);
+        auto subset = query.substr(0, slashPositions[0]);
 
         std::vector<std::string> mnemonicStrings(slashPositions.size());
 
@@ -101,7 +114,7 @@ namespace bufr {
         std::string lastElement = query.substr(slashPositions[slashPositions.size() - 1] + 1);
 
         // Parse last element
-        index = -1;
+        int index = -1;
         size_t startSubscript = lastElement.find_first_of("[");
         size_t endSubscript = lastElement.find_first_of("]");
         if (startSubscript != std::string::npos && endSubscript != std::string::npos)
@@ -114,14 +127,21 @@ namespace bufr {
         {
             if (endSubscript != std::string::npos || startSubscript != std::string::npos)
             {
-                std::cerr << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
-                exit(1);
+                std::stringstream errMsg;
+                errMsg << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
+                throw eckit::BadParameter(errMsg.str());
             }
 
             mnemonicStrings.back() = lastElement;
         }
 
-        mnemonics = mnemonicStrings;
+        auto queryObj = Query();
+        queryObj.queryStr = query;
+        queryObj.subset = subset;
+        queryObj.mnemonics = mnemonicStrings;
+        queryObj.index = index;
+
+        return queryObj;
     }
 }  // namespace bufr
 }  // namespace Ingester
