@@ -90,7 +90,12 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'dir': ['direction', float_missing_value]}
 
 
-def main(file_names, output_file, datetimeRef):
+def main(args):
+
+    file_names = args.file_names
+    output_file = args.output_file
+    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
+    datetimeRef = dtg.isoformat() + "Z"
 
     start_time = time.time()
 
@@ -298,8 +303,5 @@ if __name__ == "__main__":
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
-
-    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
-    datetimeRef = dtg.isoformat() + "Z"
 
     main(args.file_names, args.output_file, datetimeRef)
