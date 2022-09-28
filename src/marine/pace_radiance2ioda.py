@@ -179,7 +179,7 @@ def main():
     required.add_argument(
         '-i', '--input',
         help="Path to a  pace L1B observation input file",
-        type=str, nargs='1', required=True)
+        type=str, nargs=1, required=True)
     required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
