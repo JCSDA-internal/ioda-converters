@@ -246,7 +246,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
     testoutput/gdas.t12z.aircar.tm00.nc
     testoutput/gdas.t12z.aircft_AMDAR103.tm00.nc
-    testoutput/gdas.t12z.aircrt_noAMDAR103.tm00.nc
+    testoutput/gdas.t12z.aircft_noAMDAR103.tm00.nc
     testoutput/gdas.t12z.acft_profiles.prepbufr.nc
     testoutput/gdas.t00z.sevcsr.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
