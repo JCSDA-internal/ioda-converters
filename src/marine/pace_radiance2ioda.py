@@ -196,11 +196,6 @@ def main():
         help="percentage of random thinning, from 0.0 to 1.0. Zero indicates"
              " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
-    optional.add_argument(
-        '--threads',
-        help='multiple threads can be used to load input files in parallel.'
-             ' (default: %(default)s)',
-        type=int, default=1)
 
     args = parser.parse_args()
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
