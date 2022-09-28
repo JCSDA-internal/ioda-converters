@@ -178,8 +178,8 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of patmosx avhrr observation input file(s)",
-        type=str, nargs='+', required=True)
+        help="Path to a  pace L1B observation input file",
+        type=str, nargs='1', required=True)
     required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
