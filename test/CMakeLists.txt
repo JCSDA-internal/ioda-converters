@@ -1162,7 +1162,7 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t12z.aircft_noAMDAR103.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_aircft_noamdar2ioda
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_aircft_amdar2ioda
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
