@@ -200,11 +200,20 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        # QualityMarker
-        - name: "QualityMarker/airTemperatureQualityInformation"
+        # QualityIndicator
+        - name: "QualityIndicator/airTemperature"
           source: variables/airTemperatureQualityInformation
           longName: "Air Temperature Quality Information"
 
+        - name: "QualityIndicator/windDirection"
+          source: variables/windDirectionQualityInformation
+          longName: "Wind Direction Quality Information"
+
+        - name: "QualityIndicator/windSpeed"
+          source: variables/windSpeedQualityInformation
+          longName: "Wind Speed Quality Information"
+
+        #QualityMarker
         - name: "QualityMarker/airTemperature"
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Atmospheric Temperature"
@@ -212,14 +221,6 @@ observations:
         - name: "QualityMarker/moisture"
           source: variables/moistureQM
           longName: "Quality Indicator for Moisture"
-
-        - name: "QualityMarker/windDirectionQualityInformation"
-          source: variables/windDirectionQualityInformation
-          longName: "Wind Direction Quality Information"
-
-        - name: "QualityMarker/windSpeedQualityInformation"
-          source: variables/windSpeedQualityInformation
-          longName: "Wind Speed Quality Information"
 
         - name: "QualityMarker/windSpeed"
           source: variables/windQM
