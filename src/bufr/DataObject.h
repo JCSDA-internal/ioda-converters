@@ -110,6 +110,10 @@ namespace Ingester
         /// \return Float data.
         virtual float getAsFloat(const Location& loc) const = 0;
 
+        /// \brief Get the data at the index as an int.
+        /// \return Int data.
+        virtual int getAsInt(size_t idx) const = 0;
+
         /// \brief Get the data at the index as an float.
         /// \return Float data.
         virtual float getAsFloat(size_t idx) const = 0;
@@ -177,7 +181,7 @@ namespace Ingester
     {
      public:
         typedef T value_type;
-        constexpr T missingValue() const { return std::numeric_limits<T>::max(); }
+        static constexpr T missingValue() { return std::numeric_limits<T>::max(); }
 
         /// \brief Constructor.
         /// \param dimensions The dimensions of the data object.
@@ -315,7 +319,7 @@ namespace Ingester
         /// \brief Get the data at the location as an integer.
         /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
         ///            at that coordinate).
-        /// \return Integer data.
+        /// \return Int data.
         int getAsInt(const Location& loc) const final { return _getAsInt(loc); }
 
         /// \brief Get the data at the location as a float.
@@ -330,12 +334,22 @@ namespace Ingester
         /// \return String data.
         std::string getAsString(const Location& loc) const final { return _getAsString(loc); }
 
-        /// \brief Get the data at the index into the internal 1d array as a float. This function
+
+        /// \brief Get the data at the index into the internal 1d array as a int. This function
         ///        gives you direct access to the internal data and doesn't account for dimensional
-        ///        information (its up to the user). Note: getAsFloat(const Location&) is safer.
+        ///        information (its up to the user). Note: getAsInt(const Location&) is safer.
+        /// \param idx The idx into the internal 1d array.
+        /// \return Int data.
+        int getAsInt(size_t idx) const final { return _getAsInt(idx); }
+
+
+        /// \brief idx Get the data at the index into the internal 1d array as a float. This
+        ///            function gives you direct access to the internal data and doesn't account for
+        ///            dimensional information (its up to the user). Note: getAsInt(const Location&)
+        ///            is safer.
         /// \param idx The idx into the internal 1d array.
         /// \return Float data.
-        float getAsFloat(size_t idx) const final { return _getAsFloat(idx); }
+        float getAsFloat(const size_t idx) const final { return _getAsFloat(idx); }
 
         /// \brief Slice the dta object according to a list of indices.
         /// \param rows The indices to slice the data object by.
@@ -475,6 +489,24 @@ namespace Ingester
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
         {
             return get(loc);
+        }
+
+        /// \brief Get the data at the index as a int for numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        int _getAsInt(size_t idx,
+            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            return static_cast<int>(data_[idx]);
+        }
+
+        /// \brief Get the data at the index as a int for non-numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        int _getAsInt(size_t idx,
+            typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            throw std::runtime_error("The stored value is not a number");
         }
 
         /// \brief Get the data at the index as a float for numeric data.
