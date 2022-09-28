@@ -84,17 +84,22 @@ observations:
           windSpeed:
             query: "*/WSPD"
 
-          #QualityMarker
+          #QualityInformation
           airTemperatureQualityInformation:
             query: "*/QMRKH[2]"
-          airTemperatureQM:
-            query: "*/QMAT"
-          moistureQM:
-            query: "[*/QMDD, */AFMST/QMDD, */ACMST2/QMDD]"
           windDirectionQualityInformation:
             query: "*/QMRKH[3]"
           windSpeedQualityInformation:
             query: "*/QMRKH[4]"
+          percentConfidenceRH:
+            query: "*/PCCF"
+            type: int
+
+          #QualityMarker
+          airTemperatureQM:
+            query: "*/QMAT"
+          moistureQM:
+            query: "[*/QMDD, */AFMST/QMDD, */ACMST2/QMDD]"
           windQM:
             query: "*/QMWN"
 
@@ -169,11 +174,6 @@ observations:
           longName: "Aircraft Altitude"
           units: "m"
 
-        - name: "MetaData/percentConfidence"
-          source: variables/percentConfidenceRH
-          longName: "Percent Confidence of Relative Humidity Quality"
-          units: "percent"
-
         # ObsValue
         - name: "ObsValue/airTemperature"
           source: variables/airTemperature
@@ -200,18 +200,23 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
-        # QualityIndicator
-        - name: "QualityIndicator/airTemperature"
+        # QualityInformation
+        - name: "QualityInformation/airTemperature"
           source: variables/airTemperatureQualityInformation
           longName: "Air Temperature Quality Information"
 
-        - name: "QualityIndicator/windDirection"
+        - name: "QualityInformation/windDirection"
           source: variables/windDirectionQualityInformation
           longName: "Wind Direction Quality Information"
 
-        - name: "QualityIndicator/windSpeed"
+        - name: "QualityInformation/windSpeed"
           source: variables/windSpeedQualityInformation
           longName: "Wind Speed Quality Information"
+
+        - name: "QualityInformation/percentConfidence"
+          source: variables/percentConfidenceRH
+          longName: "Percent Confidence of Relative Humidity Quality"
+          units: "percent"
 
         #QualityMarker
         - name: "QualityMarker/airTemperature"
