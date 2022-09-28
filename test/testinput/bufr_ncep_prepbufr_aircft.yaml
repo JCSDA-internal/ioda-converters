@@ -20,9 +20,7 @@ observations:
           aircraftIdentifier:
             query: "*/SID"
           aircraftFlightNumber:
-#            query: "*/ACID"
             query: "[*/ACID, */ACID_SEQ/ACID]"
-#            query: "AIRCFT/ACID_SEQ/ACID"
           prepbufrDataLevelCategory:
             query: "*/PRSLEVLA/CAT"
           prepbufrReportType:
@@ -164,10 +162,10 @@ observations:
           longName: "Time Profile Level"
           units: "Hour"
 
-        - name: "MetaData/aircraftPhase"
+        - name: "MetaData/aircraftFlightPhase"
           coordinates: "longitude latitude"
           source: variables/aircraftPhase
-          longName: "Phase of Aircraft Flight"
+          longName: "Aircraft Flight Phase"
 
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
