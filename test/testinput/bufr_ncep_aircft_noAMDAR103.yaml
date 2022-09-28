@@ -64,7 +64,7 @@ observations:
               heightOrAltitude: "[*/HMSL]"
               pressureAltitudeRelativeToMeanSeaLevel: "[*/PSAL]"
 
-          percentConfidence:
+          percentConfidenceRH:
             query: "*/PCCF"
             type: int
 
@@ -170,8 +170,8 @@ observations:
           units: "m"
 
         - name: "MetaData/percentConfidence"
-          source: variables/percentConfidence
-          longName: "Percent Confidence"
+          source: variables/percentConfidenceRH
+          longName: "Percent Confidence of Relative Humidity Quality"
           units: "percent"
 
         # ObsValue
