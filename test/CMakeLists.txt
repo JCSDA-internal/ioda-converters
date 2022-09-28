@@ -52,6 +52,7 @@ list( APPEND test_input
   testinput/aeronet_aod.dat
   testinput/dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testinput/global_vavh_l3_rt_s3a_20210930T18.nc
+  testinput/SWOT_L2_SSHA.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
   testinput/imsscf_20191215_c48.nc
@@ -69,6 +70,7 @@ list( APPEND test_input
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
+  testinput/2021081612_RAOB_small.txt
 )
 
 list( APPEND test_output
@@ -117,6 +119,7 @@ list( APPEND test_output
   testoutput/aeronet_aod.nc
   testoutput/ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
+  testoutput/SWOT_L2_ADT.nc
   testoutput/aeronet_aaod.nc
   testoutput/imsfv3_scf.nc
   testoutput/gnssro_cosmic2_2021080212.nc4
@@ -133,6 +136,7 @@ list( APPEND test_output
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
+  testoutput/2021081612_sonde_small.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -324,6 +328,16 @@ foreach(FILENAME ${test_input} ${test_output})
            ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
            ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
 endforeach(FILENAME)
+
+# create the share directory and link files to test subdir
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share)
+file( GLOB_RECURSE SHARE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../share/* )
+foreach ( f ${SHARE_FILES} )
+    get_filename_component(filename ${f} NAME)
+    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
+           ${CMAKE_CURRENT_SOURCE_DIR}/../share/${filename}
+           ${CMAKE_CURRENT_BINARY_DIR}/share/${filename} )
+endforeach()
 
 #===============================================================================
 # The following tests use odb compare or nccmp to check the difference between the output
@@ -589,6 +603,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l3swh
                           -o testrun/ioda_global_vavh_l3_rt_s3a_20210930T18.nc"
                           ioda_global_vavh_l3_rt_s3a_20210930T18.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_swot_l2adt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/swot_l2adt2ioda.py
+                          -i testinput/SWOT_L2_SSHA.nc
+                          -o testrun/SWOT_L2_ADT.nc"
+                          SWOT_L2_ADT.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sst_ostia
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -701,6 +726,23 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
                           -o testrun/2020100106_metars_small.nc
                           -d 2020100106"
                           2020100106_metars_small.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
+# Conventional data, radiosonde, text/alpha (legacy) converter
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_tac2ioda.py
+                          -i testinput/2021081612_RAOB_small.txt
+                          -o testrun/2021081612_sonde_small.nc
+                          -t share/raob_stations_small.json
+                          -y 2021 -m 8 --netcdf"
+                          2021081612_sonde_small.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # MISC converters
