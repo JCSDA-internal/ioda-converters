@@ -16,6 +16,7 @@ list(APPEND programs
   rads_adt2ioda.py
   smap_sss2ioda.py
   smos_sss2ioda.py
+  swot_l2adt2ioda.py
   argoClim2ioda.py
   viirs_modis_l2_oc2ioda.py
   viirs_modis_l3_oc2ioda.py
