@@ -18,7 +18,6 @@
 #include "ioda/defs.h"
 
 #include "BufrParser/Query/Constants.h"
-#include "BufrParser/Query/ResultSet.h"
 
 namespace Ingester
 {
@@ -30,10 +29,6 @@ namespace Ingester
     class DataObjectBase
     {
      public:
-        static std::shared_ptr<DataObjectBase>
-            fromResult(const std::shared_ptr<bufr::ResultBase>& resultBase,
-                       const std::string& query);
-
         explicit DataObjectBase(const std::string& fieldName,
                                 const std::string& groupByFieldName,
                                 const Dimensions& dims,
@@ -47,7 +42,16 @@ namespace Ingester
             dimPaths_(dimPaths)
         {};
 
+        DataObjectBase() = default;
         virtual ~DataObjectBase() = default;
+
+        // Setters
+        void setFieldName(const std::string& fieldName) { fieldName_ = fieldName; }
+        void setGroupByFieldName(const std::string& fieldName) { groupByFieldName_ = fieldName; }
+        void setDims(const std::vector<int> dims) { dims_ = dims; }
+        void setQuery(const std::string& query) { query_ = query; }
+        void setDimPaths(const std::vector<std::string>& dimPaths) { dimPaths_ = dimPaths; }
+        virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -98,6 +102,14 @@ namespace Ingester
         virtual std::shared_ptr<DataObjectBase>
             slice(const std::vector<std::size_t>& rows) const = 0;
 
+        /// \brief Multiply the stored values in this data object by a scalar.
+        /// \param val Scalar to multiply to the data..
+        virtual void multiplyBy(double val) = 0;
+
+        /// \brief Add a scalar to the stored values in this data object.
+        /// \param val Scalar to add to the data..
+        virtual void offsetBy(double val) = 0;
+
      protected:
         std::string fieldName_;
         std::string groupByFieldName_;
@@ -112,9 +124,12 @@ namespace Ingester
     {
      public:
         typedef T value_type;
+        constexpr T missingValue() const { return std::numeric_limits<T>::max(); }
 
         /// \brief Constructor.
         /// \param dimensions The dimensions of the data object.
+        DataObject() = default;
+
         DataObject(const std::vector<T>& data,
                    const std::string& field_name,
                    const std::string& group_by_field_name,
@@ -126,6 +141,18 @@ namespace Ingester
         {};
 
         ~DataObject() = default;
+
+        /// \brief Set the data for this object
+        /// \param data The data vector
+        void setData(const std::vector<T>& data) { data_ = data; }
+
+        /// \brief Set the data for this object
+        /// \param data The data vector
+        /// \param dataMissingValue The missing value used in the raw data
+        void setData(const std::vector<double>& data, double dataMissingValue) final
+        {
+            _setData(data, dataMissingValue);
+        }
 
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
@@ -277,7 +304,7 @@ namespace Ingester
             params.chunk = true;
             params.chunks = chunks;
             params.compressWithGZIP(compressionLevel);
-            params.setFillValue<T>(static_cast<T>(bufr::MissingValue));
+            params.setFillValue<T>(static_cast<T>(missingValue()));
 
             return params;
         }
@@ -372,6 +399,131 @@ namespace Ingester
             typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
             throw std::runtime_error("The stored value was is not a number");
+            return 0.0f;
+        }
+
+        /// \brief Set the data associated with this data object (numeric DataObject).
+        /// \param data - double vector of raw data
+        /// \param dataMissingValue - The number that represents missing values within the raw data
+        template<typename U = void>
+        void _setData(const std::vector<double>& data,
+                      double dataMissingValue,
+                      typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            data_ = std::vector<T>(data.begin(), data.end());
+            std::replace(data_.begin(),
+                         data_.end(),
+                         static_cast<T>(dataMissingValue),
+                         missingValue());
+        }
+
+        /// \brief Set the data associated with this data object (string DataObject).
+        /// \param data - double vector of raw data
+        /// \param dataMissingValue - The number that represents missing values within the raw data
+        template<typename U = void>
+        void _setData(
+            const std::vector<double>& data,
+            double dataMissingValue,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            data_ = std::vector<std::string>();
+            auto charPtr = reinterpret_cast<const char*>(data.data());
+            for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
+            {
+                if (data[row_idx] != dataMissingValue)
+                {
+                    std::string str = std::string(
+                        charPtr + row_idx * sizeof(double), sizeof(double));
+
+                    // trim trailing whitespace from str
+                    str.erase(std::find_if(str.rbegin(), str.rend(),
+                                           [](char c){ return !std::isspace(c); }).base(),
+                              str.end());
+
+                    data_.push_back(str);
+                }
+                else
+                {
+                    data_.push_back("");
+                }
+            }
+        }
+
+        /// \brief Multiply the stored values in this data object by a scalar.
+        /// \param val Scalar to multiply to the data..
+        void multiplyBy(double val) final
+        {
+            _multiplyBy(val);
+        }
+
+        /// \brief Multiply the stored values in this data object by a scalar (numeric version).
+        /// \param val Scalar to multiply to the data.
+        template<typename U = void>
+        void _multiplyBy(double val,
+                         typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            if (typeid(T) == typeid(float) ||   // NOLINT
+                typeid(T) == typeid(double) ||  // NOLINT
+                trunc(val) == val)
+            {
+                for (size_t i = 0; i < data_.size(); i++)
+                {
+                    if (data_[i] != missingValue())
+                    {
+                        data_[i] = static_cast<T>(static_cast<double>(data_[i]) * val);
+                    }
+                }
+            }
+            else
+            {
+                std::ostringstream str;
+                str << "Multiplying integer field \"" << fieldName_ << "\" with a non-integer is ";
+                str << "illegal. Please convert it to a float or double.";
+                throw std::runtime_error(str.str());
+            }
+        }
+
+        /// \brief Multiply the stored values in this data object by a scalar (string version).
+        /// \param val Scalar to multiply to the data.
+        template<typename U = void>
+        void _multiplyBy(
+            double val,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            throw std::runtime_error("Trying to multiply a string by a number");
+        }
+
+        /// \brief Add a scalar to the stored values in this data object.
+        /// \param val Scalar to add to the data.
+        void offsetBy(double val) final
+        {
+            _offsetBy(val);
+        }
+
+
+        /// \brief Add a scalar to the stored values in this data object (numeric version).
+        /// \param val Scalar to add to the data.
+        template<typename U = void>
+        void _offsetBy(double val,
+                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            for (size_t i = 0; i < data_.size(); i++)
+            {
+                if (data_[i] != missingValue())
+                {
+                    data_[i] = data_[i] + static_cast<T>(val);
+                }
+            }
+        }
+
+        /// \brief Add a scalar to the stored values in this data object (string version).
+        /// \param val Scalar to add to the data.
+        template<typename U = void>
+        void _offsetBy(
+            double val,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            throw std::runtime_error("Trying to offset a string by a number");
         }
     };
 }  // namespace Ingester

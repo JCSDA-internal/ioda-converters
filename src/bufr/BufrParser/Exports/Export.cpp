@@ -32,9 +32,9 @@ namespace
         namespace Variable
         {
             const char* Datetime = "datetime";
-            const char* Mnemonic = "mnemonic";
             const char* Query = "query";
             const char* GroupByField = "group_by";  // Deprecated
+            const char* Type = "type";
         }  // namespace Variable
 
         namespace Split
@@ -125,13 +125,6 @@ namespace Ingester
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
                 variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
             }
-            else if (subConf.has(ConfKeys::Variable::Mnemonic))
-            {
-                std::ostringstream errMsg;
-                errMsg << "Obsolete format::exports::variable of type " << key << std::endl;
-                errMsg << "Use \"query:\" instead.";
-                throw eckit::BadParameter(errMsg.str());
-            }
             else if (subConf.has(ConfKeys::Variable::Query))
             {
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
@@ -146,9 +139,16 @@ namespace Ingester
                     throw eckit::BadParameter(errMsg.str());
                 }
 
+                std::string type = "";
+                if (subConf.has(ConfKeys::Variable::Type))
+                {
+                    type = subConf.getString(ConfKeys::Variable::Type);
+                }
+
                 variable = std::make_shared<QueryVariable>(key,
                                                            query,
                                                            groupByField,
+                                                           type,
                                                            transforms);
             }
             else

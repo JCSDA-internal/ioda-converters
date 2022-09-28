@@ -67,7 +67,7 @@ namespace bufr {
         int bufrLoc;
         int il, im;  // throw away
 
-        auto dataProvider = DataProvider();
+        auto dataProvider = DataProvider(fileUnit_);
 
         auto resultSet = ResultSet(querySet.names());
         auto query = Query(querySet, resultSet, dataProvider);
@@ -83,6 +83,8 @@ namespace bufr {
 
             if (next > 0 && ++messageNum >= next) break;
         }
+
+        resultSet.setTargets(query.getTargets());
 
         dataProvider.deleteData();
 

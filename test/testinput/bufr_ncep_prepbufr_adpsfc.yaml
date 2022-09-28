@@ -28,12 +28,14 @@ observations:
             query: "*/SID"
           stationElevation:
             query: "*/ELV"
+            type: float
           waterTemperatureMethod:
             query: "*/SST_INFO/MSST"
 
           # ObsValue
           heightOfObservation:
             query: "*/Z___INFO/Z__EVENT/ZOB"
+            type: float
           pressure:
             query: "*/P___INFO/P__EVENT/POB"
             transforms:
@@ -51,6 +53,7 @@ observations:
             transforms:
               - offset: 273.15
           specificHumidity:
+            type: float
             query: "*/Q___INFO/Q__EVENT/QOB"
             transforms:
               - scale: 0.000001
@@ -64,29 +67,35 @@ observations:
             query: "*/SST_INFO/SSTEVENT/SST1"
           heightOfWaves:
             query: "*/WAVE_SEQ/HOWV"
+            type: float
           depthBelowWaterSurface:
             query: "*/SST_INFO/DBSS_SEQ/DBSS"
-
+            type: float
           # ObsValue - cloud, cloud ceiling, visibility, gust wind, min/max temperature, weather  
           # note: cloud ceiling is a derivative of HOCB, the height of cloud base
           cloudCoverTotal:
             query: "*/CLOU2SEQ/TOCC"
+            type: float
             transforms:
               - scale: 0.01
           cloudAmountDescription:
             query: "*/CLOUDSEQ/CLAM"
           cloudCeiling:
             query: "*/CLOU3SEQ/CEILING"
+            type: float
           heightAboveSurfaceOfBaseOfLowestCloud:
             query: "*/CLOU2SEQ/HBLCS"
           heightOfBaseOfCloud:
             query: "*/CLOUDSEQ/HOCB"
+            type: float
           verticalSignificanceSurfaceObservations:
             query: "*/CLOUDSEQ/VSSO"
           verticalVisibility:
             query: "*/VISB1SEQ/VTVI_SEQ/VTVI"
+            type: float
           horizontalVisibility:
             query: "*/VISB1SEQ/HOVI"
+            type: float
           minimumTemperature:
             query: "*/TMXMNSEQ/MITM"
           maximumTemperature:
@@ -298,7 +307,6 @@ observations:
           coordinates: "longitude latitude"
           source: variables/heightAboveSurfaceOfBaseOfLowestCloud
           longName: "Height above Surface of Base of Lowest Cloud Seen"
-          units: "m"
 
         - name: "ObsValue/heightOfBaseOfCloud"
           coordinates: "longitude latitude"
