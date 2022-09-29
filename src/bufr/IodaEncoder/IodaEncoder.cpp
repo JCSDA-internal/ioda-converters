@@ -168,7 +168,7 @@ namespace Ingester
 
                     if (dimMap.find(dimName) == dimMap.end())
                     {
-                        dimMap[dimName] = dataObject->createDimensionForData(dimName, dimIdx);
+                        dimMap[dimName] = dataObject->createEmptyDimension(dimName, dimIdx);
                     }
                 }
             }

@@ -31,7 +31,7 @@ locationKeyList = [
 
 
 obsvars = {
-    'A': "aerosol_optical_depth_4",
+    'A': "aerosol_optical_depth",
 }
 
 AttrData = {
@@ -44,7 +44,7 @@ DimDict = {
 }
 
 VarDims = {
-    'aerosol_optical_depth_4': ['nlocs']
+    'aerosol_optical_depth': ['nlocs', 'nchans'],
 }
 
 
@@ -159,7 +159,7 @@ class AOD(object):
             first = False
 
         DimDict['nlocs'] = len(self.outdata[('latitude', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['nchans'] = np.array([4])
 
 
 def main():

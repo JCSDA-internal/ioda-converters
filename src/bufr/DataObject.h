@@ -139,17 +139,17 @@ namespace Ingester
                                       const std::vector<ioda::Dimensions_t>& chunks,
                                       int compressionLevel) const = 0;
 
-        /// \brief Makes an new dimension scale using this data objet as the source
+        /// \brief Makes a new dimension scale using this data object as the source
         /// \param name The name of the dimension variable.
         /// \param dimIdx The idx of the data dimension to use.
         virtual std::shared_ptr<DimensionDataBase> createDimensionFromData(
                                                                     const std::string& name,
                                                                     std::size_t dimIdx) const = 0;
 
-        /// \brief Makes an new dimension blank dimension scale with default type.
+        /// \brief Makes a new blank dimension scale with default type.
         /// \param name The name of the dimension variable.
         /// \param dimIdx The idx of the data dimension to use.
-        virtual std::shared_ptr<DimensionDataBase> createDimensionForData(
+        virtual std::shared_ptr<DimensionDataBase> createEmptyDimension(
                                                                   const std::string& name,
                                                                   std::size_t dimIdx) const = 0;
 
@@ -229,7 +229,7 @@ namespace Ingester
             return var;
         };
 
-        /// \brief Makes an new dimension scale using this data objet as the source
+        /// \brief Makes a new dimension scale using this data object as the source
         /// \param name The name of the dimension variable.
         /// \param dimIdx The idx of the data dimension to use.
         std::shared_ptr<DimensionDataBase> createDimensionFromData(const std::string& name,
@@ -252,7 +252,7 @@ namespace Ingester
                 {
                     std::stringstream errStr;
                     errStr << "Dimension " << name << " has an invalid source field. ";
-                    errStr << "The values don't repeat in each sequence.";
+                    errStr << "The values dont repeat in each sequence.";
                     throw eckit::BadParameter(errStr.str());
                 }
             }
@@ -260,10 +260,10 @@ namespace Ingester
             return dimData;
         }
 
-        /// \brief Makes an new dimension blank dimension scale with default type.
+        /// \brief Makes a new blank dimension scale with default type.
         /// \param name The name of the dimension variable.
         /// \param dimIdx The idx of the data dimension to use.
-        std::shared_ptr<DimensionDataBase> createDimensionForData(const std::string& name,
+        std::shared_ptr<DimensionDataBase> createEmptyDimension(const std::string& name,
                                                                   std::size_t dimIdx) const final
         {
             auto dimData = std::make_shared<DimensionData<int>>(getDims()[dimIdx]);
