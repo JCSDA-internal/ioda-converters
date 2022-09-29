@@ -36,10 +36,7 @@ namespace
             const char* Datetime = "datetime";
             const char* Query = "query";
             const char* GroupByField = "group_by";  // Deprecated
-<<<<<<< HEAD
             const char* AircraftAltitude = "aircraftAltitude";
-=======
->>>>>>> develop
             const char* Type = "type";
         }  // namespace Variable
 
@@ -136,14 +133,11 @@ namespace Ingester
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
                 variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
             }
-<<<<<<< HEAD
             else if (subConf.has(ConfKeys::Variable::AircraftAltitude))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::AircraftAltitude);
                 variable = std::make_shared<AircraftAltitudeVariable>(key, groupByField, dtconf);
             }
-=======
->>>>>>> develop
             else if (subConf.has(ConfKeys::Variable::Query))
             {
                 Transforms transforms = TransformBuilder::makeTransforms(subConf);
