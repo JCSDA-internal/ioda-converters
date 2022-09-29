@@ -43,8 +43,8 @@ list(APPEND _ingester_srcs
   BufrParser/Query/VectorMath.h
   BufrParser/Query/QuerySet.h
   BufrParser/Query/QuerySet.cpp
-        BufrParser/Query/QueryRunner.h
-        BufrParser/Query/QueryRunner.cpp
+  BufrParser/Query/QueryRunner.h
+  BufrParser/Query/QueryRunner.cpp
   BufrParser/Query/QueryParser.h
   BufrParser/Query/QueryParser.cpp
   BufrParser/Query/ResultSet.h
