@@ -9,6 +9,6 @@
 namespace Ingester {
 namespace bufr {
     /// \brief The missing data value for all BUFR data.
-    const float MissingValue = 10e10;
+    const double MissingValue = 10.0e10;
 }  // Ingester
 }  // bufr

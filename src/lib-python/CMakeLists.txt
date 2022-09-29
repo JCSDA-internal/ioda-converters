@@ -4,6 +4,7 @@ list( APPEND libs
   ioda_conv_engines.py
   collect_sources.py
   meteo_utils.py
+  meteo_sounding_utils.py
   orddicts.py
 )
 

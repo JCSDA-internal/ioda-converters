@@ -9,8 +9,8 @@
 
 #include <string>
 #include <vector>
+#include <math.h>
 #include <memory>
-
 #include <gsl/gsl-lite.hpp>
 
 namespace Ingester{
@@ -31,11 +31,48 @@ namespace bufr {
         Character
     };
 
+    struct TypeInfo
+    {
+        int scale = 0;
+        int reference = 0;
+        int bits = 0;
+        std::string unit;
+        std::string description;
+
+        bool isString() const { return unit == "CCITT IA5"; }
+        bool isSigned() const
+        {
+            // To better support Fortran clients for the generated ObsGroups we will assume all
+            // fields are signed. Otherwise this code would be reference < 0.
+            return true;
+        }
+        bool isInteger() const { return scale <= 0; }
+        bool is64Bit() const
+        {
+            bool is64Bit;
+            if (isInteger() && !isSigned())
+            {
+                is64Bit = (log2((pow(2, bits) - 1) / pow(10, scale) + reference) > 32);
+            }
+            else if (isInteger() && isSigned())
+            {
+                is64Bit = (log2(fmax(-1 * reference,
+                    (pow(2, bits - 1) - 1) / pow(10, scale) + reference) * 2) + 1 > 32);
+            }
+            else
+            {
+                is64Bit = false;
+            }
+
+            return is64Bit;
+        }
+    };
+
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
     class DataProvider
     {
      public:
-        DataProvider() = default;
+        explicit DataProvider(int fileUnit) : fileUnit_(fileUnit) {}
         ~DataProvider() = default;
 
         /// \brief Read the data from the BUFR interface for the current subset and reset the
@@ -63,8 +100,10 @@ namespace bufr {
         inline FortranIdx getNVal() const { return nval_; }
         inline FortranIdx getInv(FortranIdx idx) const { return inv_[idx - 1]; }
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
+        TypeInfo getTypeInfo(FortranIdx idx) const;
 
      private:
+        int fileUnit_;
         std::string subset_;
 
         // Table data;
@@ -78,6 +117,7 @@ namespace bufr {
         // Subset data
         int inode_;
         int nval_;
+        int bufrLoc_;
         gsl::span<const double> val_;
         gsl::span<const int> inv_;
     };

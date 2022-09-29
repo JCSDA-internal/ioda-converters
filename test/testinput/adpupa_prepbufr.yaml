@@ -68,6 +68,7 @@ observations:
 
           specificHumidity:
             query: "*/PRSLEVEL/Q___INFO/Q__EVENT/QOB"
+            type: float
             transforms:
               - scale: 0.000001
           specificHumidityQM:
