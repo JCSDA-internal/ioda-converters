@@ -71,10 +71,15 @@ known_freq = {'IR': 2.99792458E+14/10.7,
               'VIS': 2.99792458E+14/0.65}
 
 known_sat = {'HMWR08': 173,
-             'MET11': 70,
+             'HMWR09': 174,
              'MET8': 55,
+             'MET9': 56,
+             'MET10': 57,
+             'MET11': 70,
              'GOES16': 270,
-             'GOES17': 271}
+             'GOES17': 271,
+             'GOES18': 272,
+             'GOES19': 273}
 
 known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'sat': ['satellite', int_missing_value],
@@ -92,9 +97,9 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
 
 def main(args):
 
-    file_names = args.file_names
-    output_file = args.output_file
-    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
+    file_names = args.input
+    output_file = args.output
+    dtg = datetime.strptime(args.date, '%Y%m%d%H')
     datetimeRef = dtg.isoformat() + "Z"
 
     start_time = time.time()
@@ -272,19 +277,19 @@ if __name__ == "__main__":
     )
 
     required = parser.add_argument_group(title='required arguments')
-    required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
+    required.add_argument('-i', '--input', nargs='+',
                           action='store', default=None, required=True,
                           help='input files')
-    required.add_argument('-o', '--output-file', dest='output_file',
+    required.add_argument('-o', '--output',
                           action='store', default=None, required=True,
                           help='output file')
-    required.add_argument('-d', '--date', dest='datetimeReference',
+    required.add_argument('-d', '--date',
                           action='store',
                           help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
-    parser.set_defaults(datetimeReference=" ")
+    parser.set_defaults(date=" ")
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
@@ -300,8 +305,8 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
-    for file_name in args.file_names:
+    for file_name in args.input:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file, datetimeRef)
+    main(args)

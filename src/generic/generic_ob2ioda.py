@@ -7,18 +7,27 @@ Python code to ingest observational data and try to convert to IODA
 import argparse
 from datetime import datetime, timedelta
 import glob
-from os import getcwd
+import os
 import sys
+
+from gnssro_bufr2ioda import main as main_gnssro
+from tropics_2ioda import main as main_tropics
+from amv_ssec_ascii2ioda import main as main_amv_ssec
 
 def main(args):
 
-    output_filename = args.output
-    dtg = datetime.strptime(args.date, '%Y%m%d%H')
-
-    file_names = args.file_names
-    output_file = args.output_file
+    # output_filename = args.output
+    # dtg = datetime.strptime(args.date, '%Y%m%d%H')
 
     input_files = [(i) for i in args.input]
+    if 'bfrPrf' in input_files[0] and 'bfrPrf' in input_files[-1]:
+        main_gnssro(args)
+    elif 'TROPICS' in input_files[0] and 'TROPICS' in input_files[-1]:
+        main_tropics(args)
+    elif 'AllWindsQIText' in input_files[0] and 'AllWindsQIText' in input_files[-1]:
+        main_amv_ssec(args)
+    else:
+        print(f"sorry Charlie")
 
 
 if __name__ == "__main__":

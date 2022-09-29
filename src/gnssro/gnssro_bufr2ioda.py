@@ -268,8 +268,6 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
 
 
 def quality_control(profile_meta_data, heights, lats, lons):
-    print('Performing QC Checks')
-
     good = (heights > 0.) & (heights < 100000.) & (abs(lats) < 90.) & (abs(lons) < 360.)
 
     # bad radius or
