@@ -23,6 +23,8 @@ observations:
             query: "*/CLON"
           latitude:
             query: "*/CLAT"
+          channel:
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
           radiance:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
 
@@ -31,10 +33,11 @@ observations:
       obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.nc"
 
       dimensions:
-        - name: Channel 
+        - name: Channel
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
+#          source: variables/channel
 
       variables:
         - name: "dateTime@MetaData"

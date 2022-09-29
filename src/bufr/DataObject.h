@@ -14,6 +14,7 @@
 #include <iostream>
 #include <numeric>
 
+#include "eckit/exception/Exceptions.h"
 #include "ioda/ObsGroup.h"
 #include "ioda/defs.h"
 
@@ -23,6 +24,44 @@ namespace Ingester
 {
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
+
+    struct DimensionDataBase
+    {
+        std::shared_ptr<ioda::NewDimensionScale_Base> dimScale;
+
+        virtual void write(ioda::Variable& var) = 0;
+    };
+
+    template<typename T>
+    struct DimensionData : public DimensionDataBase
+    {
+        std::vector<T> data;
+
+        DimensionData() = delete;
+
+        explicit DimensionData(size_t size) :
+            data(std::vector<T>(size, _default()))
+        {
+        }
+
+        void write(ioda::Variable& var)
+        {
+            var.write(data);
+        }
+
+     private:
+        template<typename U = void>
+        T _default(typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            return static_cast<T>(0);
+        }
+
+        template<typename U = void>
+        T _default(typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            return std::string("");
+        }
+    };
 
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
@@ -71,6 +110,10 @@ namespace Ingester
         /// \return Float data.
         virtual float getAsFloat(const Location& loc) const = 0;
 
+        /// \brief Get the data at the index as an int.
+        /// \return Int data.
+        virtual int getAsInt(size_t idx) const = 0;
+
         /// \brief Get the data at the index as an float.
         /// \return Float data.
         virtual float getAsFloat(size_t idx) const = 0;
@@ -95,6 +138,20 @@ namespace Ingester
                                       const std::vector<ioda::Variable>& dimensions,
                                       const std::vector<ioda::Dimensions_t>& chunks,
                                       int compressionLevel) const = 0;
+
+        /// \brief Makes a new dimension scale using this data object as the source
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
+        virtual std::shared_ptr<DimensionDataBase> createDimensionFromData(
+                                                                    const std::string& name,
+                                                                    std::size_t dimIdx) const = 0;
+
+        /// \brief Makes a new blank dimension scale with default type.
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
+        virtual std::shared_ptr<DimensionDataBase> createEmptyDimension(
+                                                                  const std::string& name,
+                                                                  std::size_t dimIdx) const = 0;
 
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
@@ -124,7 +181,7 @@ namespace Ingester
     {
      public:
         typedef T value_type;
-        constexpr T missingValue() const { return std::numeric_limits<T>::max(); }
+        static constexpr T missingValue() { return std::numeric_limits<T>::max(); }
 
         /// \brief Constructor.
         /// \param dimensions The dimensions of the data object.
@@ -171,6 +228,48 @@ namespace Ingester
             var.write(data_);
             return var;
         };
+
+        /// \brief Makes a new dimension scale using this data object as the source
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
+        std::shared_ptr<DimensionDataBase> createDimensionFromData(const std::string& name,
+                                                                   std::size_t dimIdx) const final
+        {
+            auto dimData = std::make_shared<DimensionData<T>>(getDims()[dimIdx]);
+            dimData->dimScale = ioda::NewDimensionScale<T>(name, getDims()[dimIdx]);
+
+            std::copy(data_.begin(),
+                      data_.begin() + dimData->data.size(),
+                      dimData->data.begin());
+
+            // Validate this data object is a valid (has values that repeat for each frame
+            for (size_t idx = 0; idx < data_.size(); idx += dimData->data.size())
+            {
+                if (!std::equal(data_.begin(),
+                                data_.begin() + dimData->data.size(),
+                                data_.begin() + idx,
+                                data_.begin() + idx + dimData->data.size()))
+                {
+                    std::stringstream errStr;
+                    errStr << "Dimension " << name << " has an invalid source field. ";
+                    errStr << "The values dont repeat in each sequence.";
+                    throw eckit::BadParameter(errStr.str());
+                }
+            }
+
+            return dimData;
+        }
+
+        /// \brief Makes a new blank dimension scale with default type.
+        /// \param name The name of the dimension variable.
+        /// \param dimIdx The idx of the data dimension to use.
+        std::shared_ptr<DimensionDataBase> createEmptyDimension(const std::string& name,
+                                                                  std::size_t dimIdx) const final
+        {
+            auto dimData = std::make_shared<DimensionData<int>>(getDims()[dimIdx]);
+            dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
+            return dimData;
+        }
 
         /// \brief Print the data object to a output stream.
         void print(std::ostream &out) const final
@@ -220,7 +319,7 @@ namespace Ingester
         /// \brief Get the data at the location as an integer.
         /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
         ///            at that coordinate).
-        /// \return Integer data.
+        /// \return Int data.
         int getAsInt(const Location& loc) const final { return _getAsInt(loc); }
 
         /// \brief Get the data at the location as a float.
@@ -235,12 +334,22 @@ namespace Ingester
         /// \return String data.
         std::string getAsString(const Location& loc) const final { return _getAsString(loc); }
 
-        /// \brief Get the data at the index into the internal 1d array as a float. This function
+
+        /// \brief Get the data at the index into the internal 1d array as a int. This function
         ///        gives you direct access to the internal data and doesn't account for dimensional
-        ///        information (its up to the user). Note: getAsFloat(const Location&) is safer.
+        ///        information (its up to the user). Note: getAsInt(const Location&) is safer.
+        /// \param idx The idx into the internal 1d array.
+        /// \return Int data.
+        int getAsInt(size_t idx) const final { return _getAsInt(idx); }
+
+
+        /// \brief idx Get the data at the index into the internal 1d array as a float. This
+        ///            function gives you direct access to the internal data and doesn't account for
+        ///            dimensional information (its up to the user). Note: getAsInt(const Location&)
+        ///            is safer.
         /// \param idx The idx into the internal 1d array.
         /// \return Float data.
-        float getAsFloat(size_t idx) const final { return _getAsFloat(idx); }
+        float getAsFloat(const size_t idx) const final { return _getAsFloat(idx); }
 
         /// \brief Slice the dta object according to a list of indices.
         /// \param rows The indices to slice the data object by.
@@ -328,7 +437,6 @@ namespace Ingester
             return params;
         }
 
-
         /// \brief Get the data at the location as a float for numeric data.
         /// \return Float data.
         template<typename U = void>
@@ -381,6 +489,24 @@ namespace Ingester
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
         {
             return get(loc);
+        }
+
+        /// \brief Get the data at the index as a int for numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        int _getAsInt(size_t idx,
+            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            return static_cast<int>(data_[idx]);
+        }
+
+        /// \brief Get the data at the index as a int for non-numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        int _getAsInt(size_t idx,
+            typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            throw std::runtime_error("The stored value is not a number");
         }
 
         /// \brief Get the data at the index as a float for numeric data.
