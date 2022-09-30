@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -116,6 +116,7 @@ namespace Ingester
                     if (pressures != INT_MAX)
                     {
                         float ht_from_p = FLT_MAX;
+//                      If pressure exists, derive height from US standard atmosphere
                         if (pressures < 22630)
                         {
                             ht_from_p = 11000 - (std::log1p(pressures/22630)/0.0001576106);
@@ -127,6 +128,7 @@ namespace Ingester
                     {
                         aircraftIndicatedAltitudes = static_cast<float>(map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getAsFloat(idx));
                         if (aircraftIndicatedAltitudes != UINT_MAX)
+                        // If aircraftIndicatedAltitudes exists, set as the aircraftAltitude
                         {
                             acftalt = aircraftIndicatedAltitudes;
                         }
