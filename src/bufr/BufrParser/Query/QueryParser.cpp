@@ -14,7 +14,19 @@
 
 namespace Ingester {
 namespace bufr {
-     std::vector<std::string> QueryParser::splitMultiquery(const std::string &query) {
+    std::vector<Query> QueryParser::parse(const std::string& queryStr)
+    {
+        std::vector<Query> queries;
+        for (auto& subStr : QueryParser::splitMultiquery(queryStr))
+        {
+            queries.emplace_back(QueryParser::splitQueryStr(subStr));
+        }
+
+        return queries;
+    }
+
+    std::vector<std::string> QueryParser::splitMultiquery(const std::string &query)
+    {
         std::vector<std::string> subqueries;
 
         // Remove whitespace from query and assign to working_str
@@ -66,11 +78,8 @@ namespace bufr {
         return subqueries;
     }
 
-
-    void QueryParser::splitQueryStr(const std::string& query,
-                                    std::string& subset,
-                                    std::vector<std::string>& mnemonics,
-                                    int& index) {
+    Query QueryParser::splitQueryStr(const std::string& query)
+    {
         // Find positions of slashes
         std::vector<size_t> slashPositions;
         size_t slashIdx = 0;
@@ -89,7 +98,7 @@ namespace bufr {
         }
 
         // Capture the subset string
-        subset = query.substr(0, slashPositions[0]);
+        auto subset = query.substr(0, slashPositions[0]);
 
         std::vector<std::string> mnemonicStrings(slashPositions.size());
 
@@ -105,7 +114,7 @@ namespace bufr {
         std::string lastElement = query.substr(slashPositions[slashPositions.size() - 1] + 1);
 
         // Parse last element
-        index = -1;
+        int index = -1;
         size_t startSubscript = lastElement.find_first_of("[");
         size_t endSubscript = lastElement.find_first_of("]");
         if (startSubscript != std::string::npos && endSubscript != std::string::npos)
@@ -126,7 +135,13 @@ namespace bufr {
             mnemonicStrings.back() = lastElement;
         }
 
-        mnemonics = mnemonicStrings;
+        auto queryObj = Query();
+        queryObj.queryStr = query;
+        queryObj.subset = subset;
+        queryObj.mnemonics = mnemonicStrings;
+        queryObj.index = index;
+
+        return queryObj;
     }
 }  // namespace bufr
 }  // namespace Ingester

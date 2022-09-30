@@ -222,6 +222,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/satwind_Insat_wmo.bufr
     testinput/vadwinds_wmoBUFR2ioda.yaml
     testinput/vadwinds_wmo_multi.bufr
+    testinput/gdas.t12z.aircft.tm00.bufr_d
+    testinput/bufr_specific_subsets_by_query.yaml
+    testinput/bufr_specifying_subsets.yaml
   )
 
   list( APPEND test_output
@@ -265,6 +268,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/satwind_Himawari.nc
     testoutput/satwind_Insat.nc
     testoutput/vadwinds_wmo_multi.nc
+    testoutput/bufr_specifying_subsets.nc
   )
 endif()
 
@@ -1270,6 +1274,24 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_sevcsr.yaml"
                     gdas.t00z.sevcsr.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_specific_subsets_by_query
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_specific_subsets_by_query.yaml"
+                    bufr_specifying_subsets.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_specifying_subsets
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_specifying_subsets.yaml"
+                    bufr_specifying_subsets.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson

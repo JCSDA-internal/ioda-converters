@@ -26,6 +26,7 @@ namespace
             const char* Name = "name";
             const char* Path = "path";
             const char* Paths = "paths";
+            const char* Source = "source";
         }  // Dimension
 
         namespace Variable
@@ -107,6 +108,11 @@ namespace Ingester
                 else
                 {
                     throw eckit::BadParameter(R"(ioda::dimensions section must have either "path" or "paths".)");
+                }
+
+                if (dimConf.has(ConfKeys::Dimension::Source))
+                {
+                    dim.source = {dimConf.getString(ConfKeys::Dimension::Source)};
                 }
 
                 addDimension(dim);

@@ -40,6 +40,8 @@ observations:
             query: "*/SAZA"
           vaz:
             query: "*/BEARAZ"
+          channels:
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
           radiance:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
     
@@ -52,6 +54,7 @@ observations:
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
+          source: variables/channels
 
       globals: 
         - name: "sensorCentralFrequency@MetaData"
