@@ -27,7 +27,9 @@ def main(args):
     elif 'AllWindsQIText' in input_files[0] and 'AllWindsQIText' in input_files[-1]:
         main_amv_ssec(args)
     else:
-        print(f"sorry Charlie")
+        print(f"  the argument provided is not a known data type")
+        print(f"  known types are bfrPrf, TROPICS, AllWindsQIText")
+        raise ValueError(f"   ERROR in generic_obs2ioda.py")
 
 
 if __name__ == "__main__":
