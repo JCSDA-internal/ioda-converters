@@ -1,4 +1,4 @@
-# (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
 # #
 # # This software is licensed under the terms of the Apache Licence Version 2.0
 # # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -59,7 +59,7 @@ observations:
           #Quality Marker
           airTemperatureQM:
             query: "*/QMAT"
-          moistureQM:
+          waterVaporMixingRatioQM:
             query: "*/ACMST2/QMDD"
           windQM:
             query: "*/QMWN"
@@ -126,13 +126,14 @@ observations:
           longName: "Wind Speed"
           units: "m s-1"
 
+        #QualityMarker
         - name: "QualityMarker/airTemperature"
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Atmospheric Temperature"
 
-        - name: "QualityMarker/moisture"
-          source: variables/moistureQM
-          longName: "Quality Indicator for Moisture"
+        - name: "QualityMarker/waterVaporMixingRatio"
+          source: variables/waterVaporMixingRatioQM
+          longName: "Quality Indicator for Water Vapor Mixing Ratio"
 
         - name: "QualityMarker/windSpeed"
           source: variables/windQM

@@ -1,7 +1,7 @@
-# (C) Copyright 2022 NOAA/NWS/NCEP/EMC
-#
-# This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# # #
+# # # This software is licensed under the terms of the Apache Licence Version 2.0
+# # # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 # 
 observations:
   - obs space:
@@ -91,15 +91,17 @@ observations:
             query: "*/QMRKH[3]"
           windSpeedQualityInformation:
             query: "*/QMRKH[4]"
-          percentConfidenceRH:
+          relativeHumidityPercentConfidence:
             query: "*/PCCF"
             type: int
 
           #QualityMarker
           airTemperatureQM:
             query: "*/QMAT"
-          moistureQM:
-            query: "[*/QMDD, */AFMST/QMDD, */ACMST2/QMDD]"
+          relativeHumidityQM:
+            query: "[NC004010/QMDD, NC004003/AFMST/QMDD]"
+          waterVaporMixingRatioQM:
+            query: "NC004006/QMDD"
           windQM:
             query: "*/QMWN"
 
@@ -213,7 +215,7 @@ observations:
           source: variables/windSpeedQualityInformation
           longName: "Wind Speed Quality Information"
 
-        - name: "QualityInformation/percentConfidence"
+        - name: "QualityInformation/relativeHumidityPercentConfidence"
           source: variables/percentConfidenceRH
           longName: "Percent Confidence of Relative Humidity Quality"
           units: "percent"
@@ -223,9 +225,13 @@ observations:
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Atmospheric Temperature"
 
-        - name: "QualityMarker/moisture"
-          source: variables/moistureQM
-          longName: "Quality Indicator for Moisture"
+        - name: "QualityMarker/relativeHumidity"
+          source: variables/relativeHumidityQM
+          longName: "Quality Indicator for Relative Humidity"
+
+        - name: "QualityMarker/waterVaporMixingRatio"
+          source: variables/waterVaporMixingRatioQM
+          longName: "Quality Indicator for Water Vapor Mixing Ratio"
 
         - name: "QualityMarker/windSpeed"
           source: variables/windQM
