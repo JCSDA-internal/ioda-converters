@@ -10,6 +10,7 @@ phases:
   install:
     commands:
       - echo Executing install phase
+
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo $CODEBUILD_SOURCE_REPO_URL
       - echo $CODEBUILD_SOURCE_VERSION
@@ -22,19 +23,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - echo $CODEBUILD_WEBHOOK_BASE_REF
 
-
-      - echo $PATH
-      - echo $LD_LIBRARY_PATH
-      - echo $PYTHONPATH
-      - . /etc/profile.d/intel.sh
-
-      # read cdash url from s3
-      - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
-      - CDASH_URL=$(cat cdash_url.txt)
-
-      - pip install xarray
-      - pip install pyhdf
-
   pre_build:
     commands:
       - echo Executing pre_build phase
@@ -43,7 +31,7 @@ phases:
       # Codebuild only runs on PUSH events if HEAD_REF
       # is refs/heads/develop (merge to develop). In this
       # case CODEBUILD_GIT_BRANCH="develop"
-
+      #
       - if [ "$CODEBUILD_WEBHOOK_EVENT" = "PUSH" ];
         then export CODEBUILD_GIT_BRANCH="develop";
         echo "Merging to develop";
@@ -63,6 +51,12 @@ phases:
       - echo ${CODEBUILD_GIT_BRANCH} > /jcsda/artifacts/branch_name.txt
       - echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} > /jcsda/artifacts/commit_sha.txt
 
+      - cd CI
+
+      # read cdash url from s3
+      - wget https://ci-test-cdash-url.s3.amazonaws.com/cdash_url.txt
+      - CDASH_URL=$(cat cdash_url.txt)
+
       #  Setting git credentials
       - sed -i '/ssh/d' ~/.gitconfig
       - sed '/instead/d' ~/.gitconfig
@@ -71,18 +65,13 @@ phases:
       - chmod 0700 ~/.git-credentials
       - echo "https://${GIT_USER}:${GIT_PASS}@github.com" >~/.git-credentials
 
-      - cd CI
-
       # ioda-converters (testing repo)
       - ./clone.sh jcsda-internal/ioda-converters $CODEBUILD_GIT_BRANCH  /jcsda/ioda-bundle iodaconv ${GIT_BASE_BRANCH} develop
 
-      # jedi-cmake
-      - ./clone.sh jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle jedicmake ${GIT_BASE_BRANCH} develop
-
-     # oops
+      # oops
       - ./clone.sh jcsda-internal/oops $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle oops ${GIT_BASE_BRANCH} develop
 
-     # ioda
+      # ioda
       - ./clone.sh jcsda-internal/ioda $CODEBUILD_GIT_BRANCH /jcsda/ioda-bundle ioda ${GIT_BASE_BRANCH} develop
 
       # ioda-data
@@ -96,26 +85,42 @@ phases:
   build:
     on-failure: CONTINUE
     commands:
-      - cd /home/jedi
-      - echo $PYTHONPATH
-      - export PYTHONPATH=/usr/local/lib:/usr/local/lib/python3.8/site-packages:$PYTHONPATH
-      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle/
+      - echo Executing build phase
+      - export BUILD_STATUS="0"
 
-      - cd /home/jedi/ioda
+      - mkdir /build_container
+      - chmod 777 /build_container
+
+      # These are not permitted
+      #- ulimit -S -s unlimited
+      #- ulimit -S -v unlimited
+      - source /etc/profile.d/z10_spack_environment.sh
+      - cat /etc/profile.d/z10_spack_environment.sh
+      - source /opt/intel/oneapi/compiler/latest/env/vars.sh
+      - source /opt/intel/oneapi/mpi/latest/env/vars.sh
+
+      # for debugging
+      #- which icc || true
+      #- which mpiicc || true
+      #- export | grep CC
+
+      - cd /build_container
+      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=IntelContainer -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle/
+
+      - cd /build_container/ioda
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
-      - sed -i 's/jedi/jedi\/ioda/' DartConfiguration.tcl
+      - sed -i 's/build_container/build_container\/ioda/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j8
 
-      - cd /home/jedi/iodaconv
+      - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
-      - sed -i 's/jedi/jedi\/iodaconv/' DartConfiguration.tcl
+      - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
-      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
+      - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j8
 
-      - export BUILD_STATUS="0"
       - echo $BUILD_STATUS
       - echo $CODEBUILD_BUILD_SUCCEEDING
 
@@ -125,10 +130,12 @@ phases:
         fi
       - echo $BUILD_STATUS
 
+      - cd /build_container/iodaconv
       - ctest -C RelWithDebInfo -D ExperimentalTest
 
     finally:
       # upload ctest report to CDASH
+      - cd /build_container/iodaconv
       - ctest -C RelWithDebInfo -D ExperimentalSubmit -M Continuous -- --track Continuous --group Continuous
 
   post_build:
@@ -138,7 +145,7 @@ phases:
 
       - if [ "$BUILD_STATUS" = "1" ];
         then echo "Build & tests passed, find cdash url";
-        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /home/jedi/iodaconv/Testing $CDASH_URL);
+        url=$(bash /jcsda/ioda-bundle/iodaconv/CI/cdash-url.sh /build_container/iodaconv/Testing $CDASH_URL);
         echo $url;
         echo ${url} > /jcsda/artifacts/cdash-url.txt;
         cat /jcsda/artifacts/cdash-url.txt;

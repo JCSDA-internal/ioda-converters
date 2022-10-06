@@ -6,7 +6,8 @@
  */
 
 #include "ScalingTransform.h"
-
+#include "IngesterTypes.h"
+#include "BufrParser/Query/Constants.h"
 
 namespace Ingester
 {
@@ -15,8 +16,8 @@ namespace Ingester
     {
     }
 
-    void ScalingTransform::apply(IngesterArray& array)
+    void ScalingTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-        array = array * scaling_;
+        dataObject->multiplyBy(scaling_);
     }
 }  // namespace Ingester

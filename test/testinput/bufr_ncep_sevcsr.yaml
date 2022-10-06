@@ -1,0 +1,114 @@
+# (C) Copyright 2021-2022 UCAR
+
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t00z.sevcsr.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          latitude:
+            query: "*/CLATH"
+          longitude:
+            query: "*/CLONH"
+          satelliteIdentifier:
+            query: "*/SAID"
+          solarZenithAngle:
+            query: "*/SOZA"
+          sensorZenithAngle:
+            query: "*/SAZA"
+          cloudAmount:
+            query: "*/RPSEQ7/CLDMNT"
+            type: float
+            transforms:
+              - scale: 0.01
+          brightnessTemperature:
+            query: "*/RPSEQ7/TMBRST"
+          brightnessTemperatureStandardDeviation:
+            query: "*/RPSEQ7/SDTB"
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t00z.sevcsr.tm00.nc"
+
+      dimensions:
+        - name: "Channel"
+          paths:
+            - "*/RPSEQ7"
+
+      globals:
+        - name: "platformCommonName"
+          type: string
+          value: "MSG-SEVIRI"
+
+        - name: "platformLongDescription"
+          type: string
+          value: "MTYP 021-043 PROC. MSG SEVIRI CLEAR SKY RADIANCES (CSR)"
+
+      variables:
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          longName: "Satellite identifier"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/solarZenithAngle"
+          source: variables/solarZenithAngle
+          longName: "Solar zenith angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/sensorZenithAngle
+          longName: "Sensor zenith angle"
+          units: "degrees"
+          range: [0, 90]
+
+        - name: "ObsValue/cloudAmount"
+          coordinates: "longitude latitude Channel"
+          source: variables/cloudAmount
+          longName: "Cloud amount in segment"
+          units: "1"
+          range: [0, 1]
+          chunks: [1000, 15]
+
+        - name: "ObsValue/brightnessTemperature"
+          coordinates: "longitude latitude Channel"
+          source: variables/brightnessTemperature
+          longName: "Brightness temperature"
+          units: "K"
+          range: [150, 350]
+          chunks: [1000, 15]
+
+        - name: "ObsValue/brightnessTemperatureStandardDeviation"
+          coordinates: "longitude latitude Channel"
+          source: variables/brightnessTemperatureStandardDeviation
+          longName: "Brightness temperature standard deviation"
+          units: "K"
+          chunks: [1000, 15]

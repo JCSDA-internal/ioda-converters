@@ -9,44 +9,26 @@ list(APPEND _ingester_srcs
   DataContainer.cpp
   Parser.h
   ParserFactory.h
-  DataObject/DataObject.h
-  DataObject/StrVecDataObject.h
-  DataObject/StrVecDataObject.cpp
-  DataObject/ArrayDataObject.h
-  DataObject/ArrayDataObject.cpp
-  DataObject/Int64VecDataObject.h
-  DataObject/Int64VecDataObject.cpp
+  DataObject.h
+  DataObject.cpp
   BufrParser/BufrParser.h
   BufrParser/BufrParser.cpp
   BufrParser/BufrDescription.h
   BufrParser/BufrDescription.cpp
-  BufrParser/BufrMnemonicSet.h
-  BufrParser/BufrMnemonicSet.cpp
-  BufrParser/BufrTypes.h
-  BufrParser/BufrCollectors/BufrAccumulator.cpp
-  BufrParser/BufrCollectors/BufrAccumulator.h
-  BufrParser/BufrCollectors/BufrCollector.cpp
-  BufrParser/BufrCollectors/BufrCollector.h
-  BufrParser/BufrCollectors/BufrIntCollector.cpp
-  BufrParser/BufrCollectors/BufrIntCollector.h
-  BufrParser/BufrCollectors/BufrRepCollector.cpp
-  BufrParser/BufrCollectors/BufrRepCollector.h
-  BufrParser/BufrCollectors/BufrCollectors.cpp
-  BufrParser/BufrCollectors/BufrCollectors.h
   BufrParser/Exports/Export.h
   BufrParser/Exports/Export.cpp
-  BufrParser/Exports/RowSlice.h
   BufrParser/Exports/Filters/Filter.h
   BufrParser/Exports/Filters/BoundingFilter.h
   BufrParser/Exports/Filters/BoundingFilter.cpp
   BufrParser/Exports/Splits/Split.h
+  BufrParser/Exports/Splits/Split.cpp
   BufrParser/Exports/Splits/CategorySplit.h
   BufrParser/Exports/Splits/CategorySplit.cpp
   BufrParser/Exports/Variables/Variable.h
   BufrParser/Exports/Variables/DatetimeVariable.h
   BufrParser/Exports/Variables/DatetimeVariable.cpp
-  BufrParser/Exports/Variables/MnemonicVariable.h
-  BufrParser/Exports/Variables/MnemonicVariable.cpp
+  BufrParser/Exports/Variables/QueryVariable.h
+  BufrParser/Exports/Variables/QueryVariable.cpp
   BufrParser/Exports/Variables/Transforms/Transform.h
   BufrParser/Exports/Variables/Transforms/OffsetTransform.h
   BufrParser/Exports/Variables/Transforms/OffsetTransform.cpp
@@ -54,6 +36,20 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
   BufrParser/Exports/Variables/Transforms/TransformBuilder.h
   BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
+  BufrParser/Query/DataProvider.h
+  BufrParser/Query/DataProvider.cpp
+  BufrParser/Query/File.h
+  BufrParser/Query/File.cpp
+  BufrParser/Query/VectorMath.h
+  BufrParser/Query/QuerySet.h
+  BufrParser/Query/QuerySet.cpp
+  BufrParser/Query/QueryRunner.h
+  BufrParser/Query/QueryRunner.cpp
+  BufrParser/Query/QueryParser.h
+  BufrParser/Query/QueryParser.cpp
+  BufrParser/Query/ResultSet.h
+  BufrParser/Query/ResultSet.cpp
+  BufrParser/Query/Target.h
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp
@@ -65,7 +61,7 @@ list(APPEND _ingester_deps
   eckit
   ${oops_LIBRARIES}
   ioda_engines
-  bufr::bufr_4
+  bufr::bufr_d
 )
 
 ecbuild_add_library( TARGET   ingester
@@ -82,7 +78,7 @@ target_include_directories(ingester PUBLIC
   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
 )
 
-add_library( ${PROJECT_NAME}::ingester ALIAS ingester )
+add_library( ${PROJECT_NAME}::ingester ALIAS ingester)
 
 ecbuild_add_executable( TARGET  bufr2ioda.x
                         SOURCES bufr2ioda.cpp
