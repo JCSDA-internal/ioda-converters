@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
+# (C) Copyright 2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
-
-# TODO:
-#      - Add flags
-#      - Unit conversion
-#      - add obsvar, obserr, etc.
-#      - a better way to add metadata
 
 import sys
 import argparse
@@ -22,7 +16,6 @@ import os
 from pathlib import Path
 
 import xarray as xr
-import dask
 import math
 from numpy import log as ln
 
@@ -35,213 +28,312 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
-locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("datetime", "string"),
-]
-
-obsvars = {
-    'x_l_1': 'carbon_monoxide_in_l_1',
-    'x_l_5': 'carbon_monoxide_in_l_5'
-
-}
-
-AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars))
-}
-
-DimDict = {
-}
-
-VarDims = {
-    'x': ['nlocs']
-}
-    
 # constants
-vmr2mol_m2 = 3.405 # 1/(MWAir * grav)[(mole.s2)/(kg.m)]
-hPa2Pa = 1E2
-    
+HPA2PA = 1E2
+
 class tropess(object):
-    def __init__(self, filenames):
+
+    def __init__(self, filenames, userLevels):
+
         self.filenames = filenames
-        self.varDict = defaultdict(lambda: defaultdict(dict))
-        self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self._read()
+        self.userLevels = userLevels
+        self.make_dictionaries()      # Set up variable names for IODA
+        self.DimDict = {}
+        self.read()    # Read data from file
 
-    def _read(self):
-        # set up variable names for IODA
-        for key, item in obsvars.items():
-            self.varDict[item]['valKey'] = item, iconv.OvalName()
-            self.varDict[item]['errKey'] = item, iconv.OerrName()
-            self.varDict[item]['qcKey'] = item, iconv.OqcName()
-            self.varAttrs[item, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[item, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[item, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[item, iconv.OvalName()]['units'] = 'mol m-2'
-            self.varAttrs[item, iconv.OerrName()]['units'] = 'mol m-2'
-            self.varAttrs[item, iconv.OqcName()]['units'] = 'unitless'
+    def read(self):
 
-        # loop through input filenames
+        # Loop through input filenames
         first = True
         for filename in self.filenames:
 
-            ds_cris = xr.open_mfdataset(filename, parallel=False)
+            try:
+                dsCris = xr.open_dataset(filename)
+            except IOError:
+                raise IOError('%s file not found!' % self.filename)
+            except Exception:
+                raise Exception('Unknown error opening %s' % self.filename)
 
             # Read global attributes
-            AttrData['sensor'] = ds_cris.attrs['Instrument']
-            AttrData['platform'] = ds_cris.attrs['Platform']
+            self.AttrData['sensor'] = dsCris.attrs['Instrument']
+            self.AttrData['platform'] = dsCris.attrs['Platform']
 
             # Read lat lon
-            lats = ds_cris['latitude']
-            lons = ds_cris['longitude']
+            lats = dsCris['latitude']
+            lons = dsCris['longitude']
 
             # Read time and convert to ioda time format
             # note that datetime_utc variable in the intput is buggy 
             # and has +10sec offset when compared time_tai93.
-            times = ds_cris['time'].dt.strftime("%Y-%m-%dT%H:%M:%SZ").values
-            
+            times = dsCris['time'].dt.strftime("%Y-%m-%dT%H:%M:%SZ").values
+
             # Read pressure
-            pressure = ds_cris['pressure'] # hPa (nlocsxnlevs)
+            pressure = dsCris['pressure'] # hPa (nlocsxnlevs)
             nlocs = pressure.shape[0]
             nlevs = pressure.shape[1]
+
             # add p=0 to the top of the atmopshere
-            top_pressure = np.zeros((nlocs,1))
-            full_pressure = np.concatenate((pressure, top_pressure), axis=1)
-            
+            topPressure = np.zeros((nlocs,1))
+            fullPressure = np.concatenate((pressure, topPressure), axis=1)
+
             # Read other variables
-            x = ds_cris['x'] # dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide (nlocsxnlevs)
+            x = dsCris['x'] # dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide (nlocsxnlevs)
 
             # open observation_ops group
-            ds_cris_observation_ops= xr.open_mfdataset(filename, group='observation_ops', parallel=False)
-    
+            dsCris_observation_ops= xr.open_dataset(filename, group='observation_ops')
+
             # A priori state, as volume mixing ratio (VMR) relative to dry air , unit = 1
-            xa = ds_cris_observation_ops['xa'] # (nlocsxnlevs)
-            
+            xa = dsCris_observation_ops['xa'].values # (nlocsxnlevs)
 
             # logarithmic_averaging_kernel
-            averaging_kernel = ds_cris_observation_ops['averaging_kernel'] # (nlocsxnlevsxnlevs)
-     
+            averaging_kernel = dsCris_observation_ops['averaging_kernel'].values # (nlocsxnlevsxnlevs)
+
             # logarithmic_observation_error
-            log_obs_error = ds_cris_observation_ops['observation_error']  # (nlocsxnlevsxnlevs)
-            
+            log_obs_error = dsCris_observation_ops['observation_error'].values  # (nlocsxnlevsxnlevs)
+
             # The estimated state for target 0 based on x[0], xa[0], 
             # and avg_kernel[0], as volume mixing ratio (VMR) relative to dry air
-            test_x = ds_cris_observation_ops['x_test']
+            x_test = dsCris_observation_ops['x_test'].values
 
-            # --- Unit conversion from VMR to mole/m2
-            x_mole_m2 = np.zeros((nlocs,nlevs))
-            xa_mole_m2 = np.zeros((nlocs,nlevs))
-            obs_error_mole_m2 = np.zeros((nlocs,nlevs,nlevs))
+            # Empty array for QA flags
             qa = np.zeros((nlocs,nlevs))
-            ap_mole_m2 = np.zeros((nlocs,nlevs))
-            
 
-            
-            # --- Calculations
-            # Calculate apriori term
-            user_levels = [1,5]
-            lev=0
-            ap = np.zeros((nlocs,len(user_levels)))
-            for user_level in user_levels:
-                ap [:,lev] = 0
-                for j in range(nlevs):                    
-                    ap[:,lev] = np.exp(ln(xa[:,lev]) - averaging_kernel[:,user_level,j]*ln(xa[:,j])) + ap[:,lev]
-                lev=lev+1
+            # Create a list of integers from a list of strings.
+            userLevels = [ int(x) for x in self.userLevels]
 
-            for i in range(nlevs):
-                delP_pa = hPa2Pa*(full_pressure[:,i] - full_pressure[:,i+1])
-                x_mole_m2[:,i] = x[:,i]*delP_pa*vmr2mol_m2
-                xa_mole_m2[:,i] = xa[:,i]*delP_pa*vmr2mol_m2
-                obs_error_mole_m2[:,i,i] = np.exp(log_obs_error[:,i,i])*delP_pa*vmr2mol_m2 ##?? this is 3D
-                
-            lev=0
-            for user_level in user_levels:
-                delP_pa = hPa2Pa*(full_pressure[:,user_level] - full_pressure[:,user_level+1])
-                print("delP is = ")
-                print(delP_pa)
-                print(ap[:,lev])
-                ap_mole_m2[:,lev] = ap[:,lev]*delP_pa*vmr2mol_m2
-                lev=lev+1
+            # Calculate apriori term (ap) for each userLevel 
+            ap = np.zeros((nlocs,len(userLevels)))
+            for lev, userLevel in enumerate(userLevels):
+                ak = averaging_kernel[:,int(userLevel),:]
+                this_term = ak*ln(xa)
+                ap[:,lev] = np.exp(ln(xa[:,lev])+ np.sum(this_term,axis=1))
 
-                
             # ---- Write Metadata and data 
-            
-            #if first:
-            # add metadata variables
-            self.outdata[('datetime', 'MetaData')] = times
-            self.outdata[('latitude', 'MetaData')] = lats
-            self.outdata[('longitude', 'MetaData')] = lons
+            if first:
 
-            lev=0
-            for user_level in user_levels: ## over user_levels or retrieval levels
+                # add metadata variables
+                self.outData[('datetime', 'MetaData')] = times
+                self.outData[('latitude', 'MetaData')] = lats
+                self.outData[('longitude', 'MetaData')] = lons
+
+
+                for lev, userLevel in enumerate(userLevels):
+
+                    # Write ak level by level for each user level
+                    for j in range(nlevs):
+                        varname_ak = ('averaging_kernel_l_'+str(userLevel)+'_level_'+str(j), 'RtrvlAncData')
+                        self.outData[varname_ak] = averaging_kernel[:,userLevel,j]
+                        self.varAttrs[varname_ak]['coordinates'] = 'longitude latitude'
+                        self.varAttrs[varname_ak]['units'] = ''
+
+                    # Write ap and xa for each user level
+                    varname_ap = ('apriori_term_l_'+str(userLevel), 'RtrvlAncData')
+                    self.outData[varname_ap] = ap[:,lev]
+                    self.varAttrs[varname_ap]['coordinates'] = 'longitude latitude'
+                    self.varAttrs[varname_ap]['units'] = '1'
+
+                    varname_xa = ('xa_l_'+str(userLevel), 'RtrvlAncData')
+                    self.outData[varname_xa] = xa[:,lev]
+                    self.varAttrs[varname_xa]['coordinates'] = 'longitude latitude'
+                    self.varAttrs[varname_xa]['units'] = '1'
+
+                # Write pressure level by level
                 for j in range(nlevs):
-                    varname_ak = ('averaging_kernel_l'+str(user_level)+'_level_'+str(i), 'RtrvlAncData')
-                    self.outdata[varname_ak] = averaging_kernel[:,user_level,j]
-                    self.varAttrs[varname_ak]['coordinates'] = 'longitude latitude'
-                    self.varAttrs[varname_ak]['units'] = ''
-                
-                    varname_pr = ('pressure_l'+str(user_level)+'level_'+str(i), 'RtrvlAncData')
-                    self.outdata[varname_pr] = hPa2Pa * pressure[:, j]
+                    varname_pr = ('pressure_level_'+str(j), 'RtrvlAncData')
+                    self.outData[varname_pr] = HPA2PA * pressure[:, j]
                     self.varAttrs[varname_ak]['coordinates'] = 'longitude latitude'
                     self.varAttrs[varname_ak]['units'] = 'Pa'
-              
-                varname_ap = ('apriori_term_'+str(user_level), 'RtrvlAncData')
-                self.outdata[varname_ap] = ap_mole_m2[:,lev]
-                self.varAttrs[varname_ap]['coordinates'] = 'longitude latitude'
-                self.varAttrs[varname_ap]['units'] = 'mol m-2'
-                
-                varname_xa = ('xa_l_'+str(user_level), 'RtrvlAncData')
-                self.outdata[varname_xa] = xa_mole_m2[:,lev]
-                self.varAttrs[varname_xa]['coordinates'] = 'longitude latitude'
-                self.varAttrs[varname_xa]['units'] = 'mol m-2'
 
-                lev = lev + 1
-                          
-            counter = 0
+                counter = 0
+                for i in self.obsvars.keys():
+                    self.outData[self.varDict[self.obsvars[i]]['valKey']] = \
+                        x[:,userLevels[counter]]
+                    self.outData[self.varDict[self.obsvars[i]]['errKey']] = \
+                        log_obs_error[:,userLevels[counter],userLevels[counter]]
+                    self.outData[self.varDict[self.obsvars[i]]['qcKey']] = \
+                        qa[:,userLevels[counter]]
+                    counter = counter+1
 
-            for i in obsvars.keys():                
-                self.outdata[self.varDict[obsvars[i]]['valKey']] = x_mole_m2[:,user_levels[counter]]
-                self.outdata[self.varDict[obsvars[i]]['errKey']] = obs_error_mole_m2[:,user_levels[counter],user_levels[counter]]
-                self.outdata[self.varDict[obsvars[i]]['qcKey']] = qa[:,user_levels[counter]]
-                counter = counter+1                                
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+            # If not the first file concatenate
+            else:
+                self.outData[('datetime', 'MetaData')] = np.concatenate(
+                    (self.outData[('datetime', 'MetaData')], times))
+                self.outData[('latitude', 'MetaData')] = np.concatenate(
+                    (self.outData[('latitude', 'MetaData')], lats))
+                self.outData[('longitude', 'MetaData')] = np.concatenate(
+                    (self.outData[('longitude', 'MetaData')], lons))
 
-def main():
+                for lev, userLevel in enumerate(userLevels):
+                    for j in range(nlevs):
+                        varname_ak = ('averaging_kernel_l_'+str(userLevel)+'_level_'+str(i), 'RtrvlAncData')
+                        self.outData[varname_ak] = np.concatenate(
+                            (self.outData[varname_ak], averaging_kernel[:,userLevel,j]))
+
+                        varname_pr = ('pressure_l_'+str(userLevel)+'level_'+str(i), 'RtrvlAncData')
+                        self.outData[varname_pr] = np.concatenate(
+                            (self.outData[varname_pr], HPA2PA * pressure[:, j]))
+
+                    varname_ap = ('apriori_term_'+str(userLevel), 'RtrvlAncData')
+                    self.outData[varname_ap] = np.concatenate(
+                        (self.outData[varname_ap], ap[:,lev]))
+
+                    varname_xa = ('xa_l_'+str(userLevel), 'RtrvlAncData')
+                    self.outData[varname_xa] = np.concatenate(
+                        (self.outData[varname_xa], xa[:,lev]))
+
+                counter = 0
+                for i in self.obsvars.keys():
+                    self.outData[self.varDict[self.obsvars[i]]['valKey']] = np.concatenate(
+                        (self.outData[self.varDict[self.obsvars[i]]['valKey']],
+                         x[:,userLevels[counter]]))
+
+                    self.outData[self.varDict[self.obsvars[i]]['errKey']] = np.concatenate(
+                        (self.outData[self.varDict[self.obsvars[i]]['errKey']],
+                        log_obs_error[:,userLevels[counter],userLevels[counter]]))
+
+                    self.outData[self.varDict[self.obsvars[i]]['qcKey']] = np.concatenate(
+                        (self.outData[self.varDict[self.obsvars[i]]['qcKey']],
+                         qa[:,userLevels[counter]]))
+                    counter = counter+1
+                first = False
+
+            self.DimDict['nlocs'] = len(self.outData[('datetime', 'MetaData')])
+            self.AttrData['nlocs'] = np.int32(self.DimDict['nlocs'])
+
+    def make_dictionaries (self):
+        """
+        Make all the necessary dictionaries for this class object.
+        """
+
+        self.outData = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
+
+        self.make_obsVars()
+        self.make_AttrData()
+        self.make_varDict()
+        self.make_varAttrs()
+
+    def make_obsVars(self):
+        """
+        Make a dictionary of obsvars based on the levels specified by the user (command line args).
+        """
+        obsvars = {}
+
+        for userLevel in self.userLevels:
+            obsvars[userLevel] = "carbon_monoxide_in_l_"+str(userLevel)
+
+        self.obsvars= obsvars
+
+    def make_AttrData(self):
+        """
+        Make a dictionary of AttrData based on obsvars that is created using
+        the levels specified by the user (command line args).
+        """
+        AttrData= {
+            'converter': os.path.basename(__file__),
+            'nvars': np.int32(len(self.obsvars))
+        }
+        self.AttrData = AttrData
+
+    def make_varDict (self):
+        """
+        """
+        self.varDict = defaultdict(lambda: defaultdict(dict))
+        for key, item in self.obsvars.items():
+            self.varDict[item]['valKey'] = item, iconv.OvalName()
+            self.varDict[item]['errKey'] = item, iconv.OerrName()
+            self.varDict[item]['qcKey'] = item, iconv.OqcName()
+
+    def make_varAttrs (self):
+        """
+        """
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        for key, item in self.obsvars.items():
+            self.varAttrs[item, iconv.OvalName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[item, iconv.OerrName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[item, iconv.OqcName()]['coordinates'] = 'longitude latitude'
+            self.varAttrs[item, iconv.OvalName()]['units'] = '1'
+            self.varAttrs[item, iconv.OerrName()]['units'] = '1'
+            self.varAttrs[item, iconv.OqcName()]['units'] = 'unitless'
+
+    def __str__(self):
+        """
+        Converts ingredients of the BaseCase to string for printing.
+        """
+        return "{}\n{}".format(
+            str(self.__class__),
+            "\n".join(
+                (
+                    "{} = {}".format(str(key), str(self.__dict__[key]))
+                    for key in sorted(self.__dict__)
+                )
+            ),
+        )
+
+def get_parser():
+    """
+    Get the parser object for this script.
+    Returns:
+        parser (ArgumentParser): ArgumentParser which includes all the parser information.
+    """
 
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
             'Reads TROPESS CO netCDF files provided by NASA ??'
             'and converts into IODA formatted output files. Multiple'
-            'files are able to be concatenated.')
+            'files are able to be concatenated.'),
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.print_usage = parser.print_help
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
         help="path of TROPESS L2 CO observation netCDF input file(s)",
-        type=str, nargs='+', required=True)
+        type=str,
+        nargs='+',
+        required=True)
     required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
-        type=str, required=True)
+        type=str,
+        required=True)
 
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        "--levs",'--levels',
+        help="User levels. [default: %(default)s] ",
+        dest="userLevels",
+        required=False,
+        nargs='+',
+        default = [0,4],
+        )
+    return parser
+
+def main():
+    locationKeyList = [
+        ("latitude", "float"),
+        ("longitude", "float"),
+        ("datetime", "string")
+    ]
+
+    VarDims = {
+        'x': ['nlocs']
+    }
+    # -- read command line arguments
+    parser = get_parser()
     args = parser.parse_args()
 
     # Read in the CO data
-    co = tropess(args.input)
+    co = tropess(args.input, args.userLevels)
 
-    # setup the IODA writer
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    ## setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, co.DimDict)
 
-    # write everything out
-    writer.BuildIoda(co.outdata, VarDims, co.varAttrs, AttrData)
-
+    ## write everything out
+    writer.BuildIoda(co.outData, VarDims, co.varAttrs, co.AttrData)
 
 if __name__ == '__main__':
     main()
+
