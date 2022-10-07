@@ -127,6 +127,14 @@ all_LocKeyList = {
     'QI_without_FC': ('satwind_quality_ind_no_fc', 'float'),
     'Data_Vertical_Velocity': ('data_vertical_velocity', 'float'),
     'LaunchTime': ('LaunchTime', 'float'),
+    # below are for Brett Hoover's AMV QC testing
+    'wind_computation_method': ('windComputationMethod', 'integer'),
+    'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
+    'satellite_identifier': ('satelliteIdentifier', 'integer'),
+    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
+    'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
+    'expected_error': ('expectedError', 'float'),
+    # end AMV QC
 }
 
 checkuv = {
