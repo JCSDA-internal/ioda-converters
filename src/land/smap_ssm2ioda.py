@@ -25,6 +25,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
+    ("depthBelowSoilSurface", "float"),
     ("datetime", "string")
 ]
 
@@ -85,6 +86,9 @@ class smap(object):
         lons = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['longitude'][:].ravel()
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
+
+        deps = 0.0*vals
+        deps[:] = 0.025
         times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":
@@ -93,6 +97,7 @@ class smap(object):
             vals = vals[mask]
             lats = lats[mask]
             lons = lons[mask]
+            deps = deps[mask]
             errs = errs[mask]
             qflg = qflg[mask]
             times = times[mask]
@@ -105,6 +110,7 @@ class smap(object):
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
+        deps = deps.astype('float32')
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         AttrData['date_time_string'] = base_datetime
@@ -127,6 +133,8 @@ class smap(object):
         self.outdata[('datetime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
+        self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
+        self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals

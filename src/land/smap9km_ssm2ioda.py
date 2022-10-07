@@ -25,6 +25,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
+    ("depthBelowSoilSurface", "float"),
     ("datetime", "string")
 ]
 
@@ -92,6 +93,8 @@ class smap(object):
         ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
+        deps = 0.0*vals
+        deps[:] = 0.025
         times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":
@@ -100,6 +103,7 @@ class smap(object):
             vals = vals[mask]
             lats = lats[mask]
             lons = lons[mask]
+            deps = deps[mask]
             errs = errs[mask]
             qflg = qflg[mask]
             sflg = sflg[mask]
@@ -114,6 +118,7 @@ class smap(object):
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
+        deps = deps.astype('float32')
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         sflg = sflg.astype('int32')
@@ -131,6 +136,8 @@ class smap(object):
         self.outdata[('longitude', 'MetaData')] = lons
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
+        self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
+        self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
         self.outdata[('surfaceFlag', 'MetaData')] = sflg
         self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
