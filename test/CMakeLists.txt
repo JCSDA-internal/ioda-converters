@@ -225,6 +225,10 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.aircft.tm00.bufr_d
     testinput/bufr_specific_subsets_by_query.yaml
     testinput/bufr_specifying_subsets.yaml
+    testinput/rap.t06z.lgycld.tm00.bufr_d
+    testinput/rap.t06z.adpsfc.prepbufr.tm00
+    testinput/bufr_ncep_lgycld_rrfs.yaml
+    testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml
   )
 
   list( APPEND test_output
@@ -269,6 +273,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/satwind_Insat.nc
     testoutput/vadwinds_wmo_multi.nc
     testoutput/bufr_specifying_subsets.nc
+    testoutput/rrfs.t06z.lgycld.bufr.nc
+    testoutput/rrfs.t06z.adpsfc.prepbufr.nc
   )
 endif()
 
@@ -1292,6 +1298,24 @@ if(iodaconv_bufr_ENABLED)
                     netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_specifying_subsets.yaml"
                     bufr_specifying_subsets.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_lgycld
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_lgycld_rrfs.yaml"
+                    rrfs.t06z.lgycld.bufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpsfc_cloud
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml"
+                    rrfs.t06z.adpsfc.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
