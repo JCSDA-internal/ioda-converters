@@ -36,9 +36,6 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        /// \brief Query for latitude (required)
-        const std::string latitudeQuery_;
-
         /// \brief Query for pressure (PRLC) (optional)
         std::string pressureQuery_;
 
