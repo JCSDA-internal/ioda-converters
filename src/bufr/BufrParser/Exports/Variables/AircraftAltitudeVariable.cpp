@@ -50,96 +50,140 @@ namespace Ingester
         if (conf.has(ConfKeys::Pressure))
         {
             pressureQuery_ = conf.getString(ConfKeys::Pressure);
+//            unsigned int datalength = getExportKey(ConfKeys::Pressure).size();
         }
 
         if (conf.has(ConfKeys::AircraftIndicatedAltitude))
         {            
             aircraftIndicatedAltitudeQuery_ = conf.getString(ConfKeys::AircraftIndicatedAltitude);
+//            unsigned int datalength = map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->size();
         }
 
         if (conf.has(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))
         {
             pressureAltitudeRelativeToMeanSeaLevelQuery_ = conf.getString(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel);
+//            unsigned int datalength = map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->size();
         }
 
         if (conf.has(ConfKeys::FlightLevel))
         {
             flightLevelQuery_ = conf.getString(ConfKeys::FlightLevel);
+//            unsigned int datalength = map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->size();
         }
 
         if (conf.has(ConfKeys::Height))
         {
             heightQuery_ = conf.getString(ConfKeys::Height);
+//            unsigned int datalength = map.at(getExportKey(ConfKeys::Height))->size();
         }
 
         if (conf.has(ConfKeys::HeightOrAltitude))
         {
             heightOrAltitudeQuery_ = conf.getString(ConfKeys::HeightOrAltitude);
+//            unsigned int datalength = map.at(getExportKey(ConfKeys::HeightOrAltitude))->size();
         }
 
         if (conf.has(ConfKeys::FlightLevelST))
         {
             flightLevelSTQuery_ = conf.getString(ConfKeys::FlightLevelST);
+//            unsigned int datalength = map.at(getExportKey(ConfKeys::FlightLevelST))->size();
         }
 
         if (conf.has(ConfKeys::GroupByField))
         {
             groupByField_ = conf.getString(ConfKeys::GroupByField);
         }
+//        unsigned int datalength = map.at(initQueryMap().front())->size();
 
         initQueryMap();
-    }
+//        unsigned int datalength = map.at(initQueryMap().front())->size();
 
+    }
+//    unsigned int datalength = map.at(initQueryMap().front())->size();
     std::shared_ptr<DataObjectBase> AircraftAltitudeVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
 //        static const float missing_int = 1.e+11;
 //        static const float missing_int = DataObject<int>::missingValue();
-
+//        unsigned int datalength = map.at(checkKeys(map).front())->size();
         std::vector<float> aircraftaltitudearray;
-        aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::Latitude))->size());
-        unsigned int datalength = map.at(getExportKey(ConfKeys::Latitude))->size();
+        unsigned int datalength = 0;
+//        aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::Latitude))->size());
+//        unsigned int datalength = map.at(requiredKeys(map).front())->size();
+//        unsigned int datalength = map.at(getExportKey(ConfKeys::Latitude))->size();
 //        auto prestype =  map.at(getExportKey(ConfKeys::Latitude))->typeInfo();
 //        auto prestype =  map.at(getExportKey(ConfKeys::Latitude))->typeInfo;
 //        std::cout << "prestype is " << prestype << std::endl;
+        if (!pressureQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::Pressure))->size());
+            datalength = map.at(getExportKey(ConfKeys::Pressure))->size();
+        } else if (!aircraftIndicatedAltitudeQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->size());
+            datalength = map.at(getExportKey(ConfKeys::Pressure))->size();
+        } else if (!pressureAltitudeRelativeToMeanSeaLevelQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->size());
+            datalength = map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->size();
+        } else if (!flightLevelQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::FlightLevel))->size());
+            datalength = map.at(getExportKey(ConfKeys::FlightLevel))->size();
+        } else if (!heightQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::Height))->size());
+            datalength = map.at(getExportKey(ConfKeys::Height))->size();
+        } else if (!heightOrAltitudeQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::HeightOrAltitude))->size());
+            datalength = map.at(getExportKey(ConfKeys::HeightOrAltitude))->size();
+        } else if (!flightLevelSTQuery_.empty())
+        { 
+            aircraftaltitudearray.reserve(map.at(getExportKey(ConfKeys::FlightLevelST))->size());
+            datalength = map.at(getExportKey(ConfKeys::FlightLevelST))->size();
+        }
+
         for (unsigned int idx = 0; idx < datalength; idx++)
         {
 //            float latitude = map.at(getExportKey(ConfKeys::Latitude))->getAsFloat(idx);
-            float acftalt = FLT_MAX; 
+            float acftalt = DataObject<float>::missingValue();
 //            if(latitude != DataObject<float>::missingValue())
 //            {
-/*                float pressures = FLT_MAX;
-                float aircraftIndicatedAltitudes = FLT_MAX;
-                float pressureAltitudeRelativeToMeanSeaLevels = FLT_MAX;
-                float flightLevels = FLT_MAX;
-                float heights = FLT_MAX;
-                float heightOrAltitudes = FLT_MAX;
-                float flightLevelSTs = FLT_MAX; */
+/*                float PRLCdata = FLT_MAX;
+                float IALTdata = FLT_MAX;
+                float PSALdata = FLT_MAX;
+                float FLVLdata = FLT_MAX;
+                float HEITdata = FLT_MAX;
+                float HMSLdata = FLT_MAX;
+                float FLVLSTdata = FLT_MAX; */
                 if (!pressureQuery_.empty()) 
                 {
-                      auto prestype = std::shared_pt<map.at(getExportKey(ConfKeys::Pressure))> objectByTypeInfo(TypeInfo& info) const;
 //                    auto prestype = map.at(getExportKey(ConfKeys::Pressure)).target->typeInfo;
 //                    auto prestype = map.at(getExportKey(ConfKeys::Pressure)).target->typeInfo;
-                    float pressures = map.at(getExportKey(ConfKeys::Pressure))->getAsFloat(idx);
-                     
-                    if (pressures != INT_MAX) 
-//                    if (pressures != ResultSet<pressureQuery_.typeInfo>::missingValue())
-//                    if (pressures != ResultSet<pressureQuery_.typeInfo>::missingValue())
+                    //float PRLCdata = map.at(getExportKey(ConfKeys::Pressure))->getAsFloat(idx);
+                    float PRLCdata = map.at(getExportKey(ConfKeys::Pressure))->getAsFloat(idx);
+                    bool PRLCdataMissing = map.at(getExportKey(ConfKeys::Pressure))->isMissing(idx); 
+                    
+                    if (PRLCdataMissing == false) 
+
+                    //if (pressureQuery_.isMissing(idx)) 
                     {
 //                      If pressure exists, derive height from US standard atmosphere
-                        if (pressures < 22630)
+                        if (PRLCdata < 22630)
                         {
-                            acftalt = 11000 - (std::log1p(pressures/22630)/0.0001576106);
+                            acftalt = 11000 - (std::log1p(PRLCdata/22630)/0.0001576106);
                         } else {
-                            acftalt = (1.0-pow((pressures/101325),(1.0/5.256)))*(288.15/0.0065);
+                            acftalt = (1.0-pow((PRLCdata/101325),(1.0/5.256)))*(288.15/0.0065);
                         }
                     } else if (!aircraftIndicatedAltitudeQuery_.empty())
                     {
-                        float aircraftIndicatedAltitudes = map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getAsFloat(idx);
-                        if (aircraftIndicatedAltitudes != DataObject<unsigned int>::missingValue())
-                        // If aircraftIndicatedAltitudes exists (it should if PRLC doesn't), set as the aircraftAltitude
+                        float IALTdata = map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getAsFloat(idx);
+                        bool IALTdataMissing = map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->isMissing(idx);
+                        if (IALTdataMissing == false)
+                        // If IALTdata exists (it should if PRLC doesn't), set as the aircraftAltitude
                         {
-                            acftalt = aircraftIndicatedAltitudes;
+                            acftalt = IALTdata;
                         }
                     } //else {
                     //    acftalt = FLT_MAX;
@@ -147,40 +191,48 @@ namespace Ingester
                 }
                 if (!pressureAltitudeRelativeToMeanSeaLevelQuery_.empty())
                 {
-                    float pressureAltitudeRelativeToMeanSeaLevels = map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->getAsFloat(idx);
-                    if (pressureAltitudeRelativeToMeanSeaLevels != DataObject<float>::missingValue())
+                    float PSALdata = map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->getAsFloat(idx);
+                    bool PSALdataMissing = map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->isMissing(idx);
+                    if (PSALdataMissing == false)
                     {
-                        acftalt = pressureAltitudeRelativeToMeanSeaLevels;
+                        acftalt = PSALdata;
                     }
-                } else if (!flightLevelQuery_.empty())
+                } 
+                if (!flightLevelQuery_.empty())
                 {
-                    float flightLevels = map.at(getExportKey(ConfKeys::FlightLevel))->getAsFloat(idx);
-                    if (flightLevels != DataObject<float>::missingValue())
+                    float FLVLdata = map.at(getExportKey(ConfKeys::FlightLevel))->getAsFloat(idx);
+                    bool FLVLdataMissing = map.at(getExportKey(ConfKeys::FlightLevel))->isMissing(idx);
+                    if (FLVLdataMissing == false) 
                     {
-                        acftalt = flightLevels;
+                        acftalt = FLVLdata;
                     }
-                } else if (!heightQuery_.empty())
+                } 
+                if (!heightQuery_.empty())
                 {
-                    float heights = map.at(getExportKey(ConfKeys::Height))->getAsFloat(idx);
-                    if (heights != DataObject<float>::missingValue())
+                    float HEITdata = map.at(getExportKey(ConfKeys::Height))->getAsFloat(idx);
+                    bool HEITdataMissing = map.at(getExportKey(ConfKeys::Height))->isMissing(idx);
+                    if (HEITdataMissing == false)
                     {
-                        acftalt = heights;
+                        acftalt = HEITdata;
                     }
-                } else if (!heightOrAltitudeQuery_.empty())
+                } 
+                if (!heightOrAltitudeQuery_.empty())
                 {
-                    float heightOrAltitudes = map.at(getExportKey(ConfKeys::HeightOrAltitude))->getAsFloat(idx);
-                    if (heightOrAltitudes != DataObject<float>::missingValue())
+                    float HMSLdata = map.at(getExportKey(ConfKeys::HeightOrAltitude))->getAsFloat(idx);
+                    bool HMSLdataMissing = map.at(getExportKey(ConfKeys::HeightOrAltitude))->isMissing(idx);
+                    if (HMSLdataMissing == false) 
                     {
-                        acftalt = heightOrAltitudes;
+                        acftalt = HMSLdata;
                     }
-                } else if (!flightLevelSTQuery_.empty())
+                } 
+                if (!flightLevelSTQuery_.empty())
                 {
-                    float flightLevelSTs = map.at(getExportKey(ConfKeys::FlightLevelST))->getAsFloat(idx);
-                    if (flightLevelSTs != DataObject<float>::missingValue())
+                    float FLVLSTdata = map.at(getExportKey(ConfKeys::FlightLevelST))->getAsFloat(idx);
+                    bool FLVLSTdataMissing = map.at(getExportKey(ConfKeys::FlightLevelST))->isMissing(idx);
+                    if (FLVLSTdataMissing == false)
                     {
-                        acftalt = flightLevelSTs;
+                        acftalt = FLVLSTdata;
                     }
-
                 }
             aircraftaltitudearray.push_back(acftalt);
 //            }
@@ -198,7 +250,8 @@ namespace Ingester
     void AircraftAltitudeVariable::checkKeys(const BufrDataMap& map)
     {
 
-        std::vector<std::string> requiredKeys  = {getExportKey(ConfKeys::Latitude)};
+//        std::vector<std::string> requiredKeys  = {getExportKey(ConfKeys::Latitude)};
+        std::vector<std::string> requiredKeys  = {};
 
         if (!pressureQuery_.empty())
         {
@@ -249,6 +302,7 @@ namespace Ingester
                 break;
             }
         }
+//        unsigned int datalength = map.at(requiredKeys.front())->size();
 
         errStr << " could not be found during export of AircraftAltitude object.";
 
@@ -267,9 +321,8 @@ namespace Ingester
             info.name = getExportKey(ConfKeys::Latitude);
             info.query = latitudeQuery_;
             info.groupByField = groupByField_;
-//            info.type = getExportKey(ConfKeys::Latitude).typeInfo; 
             queries.push_back(info);
-        }
+        } 
 
         if (!pressureQuery_.empty())  // pressure (mnemonic PRLC)
         {
@@ -277,7 +330,6 @@ namespace Ingester
             info.name = getExportKey(ConfKeys::Pressure);
             info.query = pressureQuery_;
             info.groupByField = groupByField_;
-//            info.type = getExportKey(ConfKeys::Pressure).typeInfo;
             queries.push_back(info);
         }
 
