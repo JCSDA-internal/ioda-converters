@@ -77,10 +77,10 @@ class iceconc(object):
                 date2 = datetime.strptime(dateend, "%Y-%m-%dT%H:%M:%S.%fZ")
                 avg = date1 + (date2 - date1)*0.5
                 locKey = lat[i], lon[i], avg.strftime("%Y-%m-%dT%H:%M:%SZ")
-                self.data[locKey][valKey] = icec[i]*1e-02
+                self.data[locKey][valKey] = icec[i]*0.01 #1e-02
                 self.data[locKey][errKey] = 0.1
                 self.data[locKey][qcKey] = icec_qc[i]
-                ncd.close()
+            ncd.close()
 
 
 def main():
