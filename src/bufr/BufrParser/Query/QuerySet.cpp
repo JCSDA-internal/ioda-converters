@@ -68,7 +68,14 @@ namespace bufr {
         bool includesSubset = true;
         if (!includesAllSubsets_)
         {
-            includesSubset = (presentSubsets_.find(subset) != presentSubsets_.end());
+            if (queryMap_.empty())
+            {
+                includesSubset = (limitSubsets_.find(subset) != limitSubsets_.end());
+            }
+            else
+            {
+                includesSubset = (presentSubsets_.find(subset) != presentSubsets_.end());
+            }
         }
 
         return includesSubset;

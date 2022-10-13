@@ -14,25 +14,10 @@
 
 #include "eckit/exception/Exceptions.h"
 
-namespace
-{
-    const char* Subset = "SUB";
-    const char* DelayedRep = "DRP";
-    const char* FixedRep = "REP";
-    const char* DelayedRepStacked = "DRS";
-    const char* DelayedBinary = "DRB";
-    const char* Sequence = "SEQ";
-    const char* Repeat = "RPC";
-    const char* StackedRepeat = "RPS";
-    const char* Number = "NUM";
-    const char* Character = "CHR";
-}  // namespace
-
 
 namespace Ingester {
 namespace bufr {
-
-    void DataProvider::updateData(int bufrLoc)
+    void DataProvider::updateData(const std::string& subset, int bufrLoc)
     {
         bufrLoc_ = bufrLoc;
         int size = 0;
@@ -42,48 +27,7 @@ namespace bufr {
         int strLen = 0;
         char *charPtr = nullptr;
 
-        if (isc_.empty())
-        {
-            get_isc_f(&intPtr, &size);
-            isc_ = gsl::span<const int>(intPtr, size);
-
-            get_link_f(&intPtr, &size);
-            link_ = gsl::span<const int>(intPtr, size);
-
-            get_itp_f(&intPtr, &size);
-            itp_ = gsl::span<const int>(intPtr, size);
-
-            get_typ_f(&charPtr, &strLen, &size);
-            typ_.resize(size);
-            for (int wordIdx = 0; wordIdx < size; wordIdx++)
-            {
-                static const std::unordered_map<std::string, Typ> TypMap =
-                    {{Subset,            Typ::Subset},
-                     {DelayedRep,        Typ::DelayedRep},
-                     {FixedRep,          Typ::FixedRep},
-                     {DelayedRepStacked, Typ::DelayedRepStacked},
-                     {DelayedBinary,     Typ::DelayedBinary},
-                     {Sequence,          Typ::Sequence},
-                     {Repeat,            Typ::Repeat},
-                     {StackedRepeat,     Typ::StackedRepeat},
-                     {Number,            Typ::Number},
-                     {Character,         Typ::Character}};
-
-                auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
-                typ_[wordIdx] = TypMap.at(typ);
-            }
-
-            get_tag_f(&charPtr, &strLen, &size);
-            tag_.resize(size);
-            for (int wordIdx = 0; wordIdx < size; wordIdx++)
-            {
-                auto tag = std::string(&charPtr[wordIdx * strLen], strLen);
-                tag_[wordIdx] = tag.substr(0, tag.find_first_of(' '));
-            }
-
-            get_jmpb_f(&intPtr, &size);
-            jmpb_ = gsl::span<const int>(intPtr, size);
-        }
+        updateTableData(subset);
 
         get_inode_f(bufrLoc, &inode_);
         get_nval_f(bufrLoc, &nval_);
@@ -94,7 +38,7 @@ namespace bufr {
         get_inv_f(bufrLoc, &intPtr, &size);
         inv_ = gsl::span<const int>(intPtr, size);
 
-        subset_ = getTag(getInode());
+        subset_ = subset;
     }
 
     void DataProvider::deleteData()
@@ -113,7 +57,7 @@ namespace bufr {
         int retVal;
         TypeInfo info;
 
-        nemdefs_f(fileUnit_,
+        nemdefs_f(FileUnit,
                   getTag(idx).c_str(),
                    unitCStr,
                    UNIT_STR_LEN,
@@ -155,6 +99,25 @@ namespace bufr {
         }
 
         return info;
+    }
+
+    std::set<std::string> DataProvider::getSubsets()
+    {
+        static const int SubsetLen = 9;
+        int iddate;
+
+        std::set<std::string> subsets;
+
+        char subset[SubsetLen];
+        while (ireadmg_f(FileUnit, subset, &iddate, SubsetLen) == 0)
+        {
+            auto str_subset = std::string(subset);
+            str_subset.erase(
+                remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
+            subsets.insert(str_subset);
+        }
+
+        return subsets;
     }
 }  // namespace bufr
 }  // namespace Ingester

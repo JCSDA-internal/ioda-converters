@@ -16,7 +16,7 @@
 namespace Ingester {
 namespace bufr {
 
-    SubsetTable::SubsetTable(const DataProvider& dataProvider) :
+    SubsetTable::SubsetTable(const DataProviderType& dataProvider) :
       dataProvider_(dataProvider)
     {
         initialize();
@@ -66,27 +66,27 @@ namespace bufr {
         std::vector<std::shared_ptr<QueryData>> allQueries;
         std::unordered_map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
 
-        seqPath.push_back(dataProvider_.getInode());
-        for (auto nodeIdx = dataProvider_.getInode();
-             nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
+        seqPath.push_back(dataProvider_->getInode());
+        for (auto nodeIdx = dataProvider_->getInode();
+             nodeIdx <= dataProvider_->getIsc(dataProvider_->getInode());
              nodeIdx++)
         {
-            if (dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
-                dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat)
+            if (dataProvider_->getTyp(nodeIdx) == Typ::Repeat ||
+                dataProvider_->getTyp(nodeIdx) == Typ::StackedRepeat)
             {
                 seqPath.push_back(nodeIdx);
                 currentPathElements.push_back({});
             }
-            else if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary ||
-                     dataProvider_.getTyp(nodeIdx) == Typ::FixedRep)
+            else if (dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary ||
+                     dataProvider_->getTyp(nodeIdx) == Typ::FixedRep)
             {
                 seqPath.push_back(nodeIdx + 1);  // push the node idx for the embedded sequence
                 currentPathElements.push_back({});
             }
-            else if (dataProvider_.getTyp(nodeIdx) == Typ::Number ||
-                     dataProvider_.getTyp(nodeIdx) == Typ::Character)
+            else if (dataProvider_->getTyp(nodeIdx) == Typ::Number ||
+                     dataProvider_->getTyp(nodeIdx) == Typ::Character)
             {
-                auto elementTag = dataProvider_.getTag(nodeIdx);
+                auto elementTag = dataProvider_->getTag(nodeIdx);
                 currentPathElements.back().push_back(elementTag);
 
                 auto numElements = std::count(currentPathElements.back().begin(),
@@ -107,11 +107,11 @@ namespace bufr {
                 query->isMissing = false;
                 query->seqPath = seqPath;
                 query->pathComponents = pathComponents;
-                query->isString = (dataProvider_.getItp(nodeIdx) == 3);
+                query->isString = (dataProvider_->getItp(nodeIdx) == 3);
                 query->dimIdxs = dimPathIdxs(seqPath);
                 query->idx = numElements;
                 query->requiresIdx = (numElements > 1);
-                query->typeInfo = dataProvider_.getTypeInfo(nodeIdx);
+                query->typeInfo = dataProvider_->getTypeInfo(nodeIdx);
 
                 allQueries.push_back(query);
                 foundQueryMap[mapKey(query->pathComponents, numElements)] = allQueries.back();
@@ -119,20 +119,20 @@ namespace bufr {
 
             if (seqPath.size() > 1)
             {
-                auto jumpBackNode = dataProvider_.getInode();
-                if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+                auto jumpBackNode = dataProvider_->getInode();
+                if (nodeIdx < dataProvider_->getIsc(dataProvider_->getInode()))
                 {
                     // Skip pure sequences not inside any kind of repeated sequence
-                    jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
-                    if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
+                    jumpBackNode = dataProvider_->getJmpb(nodeIdx + 1);
+                    if (jumpBackNode == 0) jumpBackNode = dataProvider_->getInode();
 
-                    while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
-                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
-                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
-                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
-                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
+                    while (dataProvider_->getTyp(jumpBackNode) == Typ::Sequence &&
+                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
+                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::FixedRep &&
+                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
+                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
                     {
-                        auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
+                        auto newJumpBackNode = dataProvider_->getJmpb(jumpBackNode);
                         if (newJumpBackNode != jumpBackNode)
                         {
                             jumpBackNode = newJumpBackNode;
@@ -178,9 +178,9 @@ namespace bufr {
         dimPathIdxs.push_back(0);
         for (size_t idx = 1; idx < seqPath.size(); idx++)
         {
-            if (dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
-                dataProvider_.getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
-                dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedRepStacked)
+            if (dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
+                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
+                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRepStacked)
             {
                 dimPathIdxs.push_back(idx);
             }
@@ -195,19 +195,19 @@ namespace bufr {
     {
         std::vector<std::string> pathComps;
 
-        pathComps.push_back(dataProvider_.getTag(seqPath[0]));
+        pathComps.push_back(dataProvider_->getTag(seqPath[0]));
         for (size_t idx = 1; idx < seqPath.size(); idx++)
         {
-            if (dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
-                dataProvider_.getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
-                dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedRepStacked ||
-                dataProvider_.getTyp(seqPath[idx] - 1) == Typ::DelayedBinary)
+            if (dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
+                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
+                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRepStacked ||
+                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedBinary)
             {
-                pathComps.push_back(dataProvider_.getTag(seqPath[idx]));
+                pathComps.push_back(dataProvider_->getTag(seqPath[idx]));
             }
         }
 
-        pathComps.push_back(dataProvider_.getTag(nodeIdx));
+        pathComps.push_back(dataProvider_->getTag(nodeIdx));
         return pathComps;
     }
 

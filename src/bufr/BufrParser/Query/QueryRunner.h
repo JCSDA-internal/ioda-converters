@@ -14,7 +14,7 @@
 
 #include "QuerySet.h"
 #include "ResultSet.h"
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
 #include "Target.h"
 
 namespace Ingester {

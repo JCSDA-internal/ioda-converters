@@ -8,7 +8,9 @@
 #include <vector>
 
 
-#include "../../src/bufr/BufrParser/Query/DataProvider.h"
+#include "../../src/bufr/BufrParser/Query/DataProvider/DataProvider.h"
+#include "../../src/bufr/BufrParser/Query/DataProvider/NcepDataProvider.h"
+#include "../../src/bufr/BufrParser/Query/DataProvider/WmoDataProvider.h"
 #include "../../src/bufr/BufrParser/Query/SubsetTable.h"
 
 #include "bufr_interface.h"
@@ -64,40 +66,73 @@ getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
 
 std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
                                                   const std::string& subset,
-                                                  Ingester::bufr::DataProvider& dataProvider)
+                                                  Ingester::bufr::DataProviderType& dataProvider)
 {
-    static const int SubsetLen = 9;
 
-    int iddate;
-    int bufrLoc;
-    int il, im; // throw away
-    char current_subset[9];
-    bool subsetFound = false;
+    bool finished = false;
 
     std::vector<Ingester::bufr::QueryData> queryData;
-
-    while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
-    {
-        auto msg_subset = std::string(current_subset);
-        msg_subset.erase(
-            remove_if(msg_subset.begin(), msg_subset.end(), isspace), msg_subset.end());
-
-        status_f(fileUnit, &bufrLoc, &il, &im);
-        dataProvider.updateData(bufrLoc);
-
-        if (msg_subset == subset)
+    auto processMsg =
+        [] (const Ingester::bufr::DataProviderType& provider)
         {
-            while (ireadsb_f(fileUnit) == 0)
-            {
-                status_f(fileUnit, &bufrLoc, &il, &im);
-                dataProvider.updateData(bufrLoc);
-                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
-                subsetFound = true;
-            }
-        }
+        };
 
-        if (subsetFound) break;
-    }
+    auto processSubset =
+        [&queryData, &finished](const Ingester::bufr::DataProviderType& provider) mutable
+        {
+            queryData = Ingester::bufr::SubsetTable(provider).allQueryData();
+            finished = true;
+        };
+
+    auto processFinish =
+        [](const Ingester::bufr::DataProviderType& provider)
+        {
+        };
+
+    auto continueProcessing =
+        [&finished](const Ingester::bufr::DataProviderType& provider) -> bool
+        {
+            return !finished;
+        };
+
+    dataProvider->run(Ingester::bufr::QuerySet({subset}),
+                       processMsg,
+                       processSubset,
+                       processFinish,
+                       continueProcessing);
+
+//    static const int SubsetLen = 9;
+//
+//    int iddate;
+//    int bufrLoc;
+//    int il, im; // throw away
+//    char current_subset[9];
+//    bool subsetFound = false;
+//
+//    std::vector<Ingester::bufr::QueryData> queryData;
+//
+//    while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
+//    {
+//        auto msg_subset = std::string(current_subset);
+//        msg_subset.erase(
+//            remove_if(msg_subset.begin(), msg_subset.end(), isspace), msg_subset.end());
+//
+//        status_f(fileUnit, &bufrLoc, &il, &im);
+//        dataProvider.updateData(bufrLoc);
+//
+//        if (msg_subset == subset)
+//        {
+//            while (ireadsb_f(fileUnit) == 0)
+//            {
+//                status_f(fileUnit, &bufrLoc, &il, &im);
+//                dataProvider.updateData(bufrLoc);
+//                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
+//                subsetFound = true;
+//            }
+//        }
+//
+//        if (subsetFound) break;
+//    }
 
     return queryData;
 }
@@ -218,19 +253,21 @@ void printQueries(const std::string& filePath,
     const static int FileUnitTable1 = 13;
     const static int FileUnitTable2 = 14;
 
-    open_f(FileUnit, filePath.c_str());
+    Ingester::bufr::DataProviderType dataProvider;
 
+    open_f(FileUnit, filePath.c_str());
     if (tablePath.empty())
     {
         openbf_f(FileUnit, "IN", FileUnit);
+        dataProvider = std::make_shared<Ingester::bufr::NcepDataProvider>(filePath);
     }
     else
     {
         openbf_f(FileUnit, "SEC3", FileUnit);
         mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
+        dataProvider = std::make_shared<Ingester::bufr::WmoDataProvider>(filePath, tablePath);
     }
 
-    auto dataProvider = Ingester::bufr::DataProvider(FileUnit);
     if (!subset.empty())
     {
         auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);

@@ -7,11 +7,19 @@
 
 #pragma once
 
+#include <functional>
+#include <set>
 #include <string>
 #include <vector>
 #include <math.h>
 #include <memory>
 #include <gsl/gsl-lite.hpp>
+#include <unordered_map>
+
+#include "bufr_interface.h"
+#include "../QuerySet.h"
+
+
 
 namespace Ingester{
 namespace bufr {
@@ -30,6 +38,20 @@ namespace bufr {
         Number,
         Character
     };
+
+    const std::unordered_map<std::string, Typ> TypMap =
+        {{"SUB",            Typ::Subset},
+         {"DRP",        Typ::DelayedRep},
+         {"REP",          Typ::FixedRep},
+         {"DRS", Typ::DelayedRepStacked},
+         {"DRB",     Typ::DelayedBinary},
+         {"SEQ",          Typ::Sequence},
+         {"RPC",            Typ::Repeat},
+         {"RPS",     Typ::StackedRepeat},
+         {"NUM",            Typ::Number},
+         {"CHR",         Typ::Character}};
+
+
 
     struct TypeInfo
     {
@@ -68,17 +90,42 @@ namespace bufr {
         }
     };
 
+    class DataProvider;
+    typedef std::shared_ptr<DataProvider> DataProviderType;
+
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
-    class DataProvider
+class DataProvider : public std::enable_shared_from_this<DataProvider>
     {
      public:
-        explicit DataProvider(int fileUnit) : fileUnit_(fileUnit) {}
+        DataProvider() = delete;
+
+        explicit DataProvider(const std::string filePath) :
+            filePath_(filePath)
+        {
+        }
+
         ~DataProvider() = default;
 
-        /// \brief Read the data from the BUFR interface for the current subset and reset the
-        /// internal data structures.
-        ////// \param bufrLoc The Fortran idx for the subset we need to read.
-        void updateData(int bufrLoc);
+        virtual void run(const QuerySet& querySet,
+                         const std::function<void(const DataProviderType&)> processMsg,
+                         const std::function<void(const DataProviderType&)> processSubset,
+                         const std::function<void(const DataProviderType&)> processFinish,
+                         const std::function<bool(const DataProviderType&)> continueProcessing =
+                             [](const DataProviderType&){return true;}) = 0;
+
+        virtual void open() = 0;
+
+        void close()
+        {
+            closbf_f(FileUnit);
+            close_f(FileUnit);
+        }
+
+        void rewind()
+        {
+            close();
+            open();
+        }
 
         /// \brief Tells the Fortran BUFR interface to delete its temporary data structures that are
         /// are needed to support this class instanc.
@@ -87,14 +134,9 @@ namespace bufr {
         /// \brief Get the subset string for the currently active message subset.
         std::string getSubset() const { return subset_; }
 
-        // Getters to get the raw data by idx. Since fortran indices are 1-based,
-        // we need to subtract 1 to get the correct c style index.
-        inline FortranIdx getIsc(FortranIdx idx) const { return isc_[idx - 1]; }
-        inline FortranIdx getLink(FortranIdx idx) const { return link_[idx - 1]; }
-        inline FortranIdx getItp(FortranIdx idx) const { return itp_[idx - 1]; }
-        inline FortranIdx getJmpb(FortranIdx idx) const { return jmpb_[idx - 1]; }
-        inline Typ getTyp(FortranIdx idx) const { return typ_[idx - 1]; }
-        inline std::string getTag(FortranIdx idx) const { return tag_[idx - 1]; }
+        /// \brief Get a complete set of subsets in the data file. WARNING: using this will be slow
+        ///        and reset the file pointer.
+        std::set<std::string> getSubsets();
 
         inline FortranIdx getInode() const { return inode_; }
         inline FortranIdx getNVal() const { return nval_; }
@@ -102,17 +144,18 @@ namespace bufr {
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
         TypeInfo getTypeInfo(FortranIdx idx) const;
 
-     private:
-        int fileUnit_;
-        std::string subset_;
+        virtual inline FortranIdx getIsc(FortranIdx idx) const = 0;
+        virtual inline FortranIdx getLink(FortranIdx idx) const = 0;
+        virtual inline FortranIdx getItp(FortranIdx idx) const = 0;
+        virtual inline FortranIdx getJmpb(FortranIdx idx) const = 0;
+        virtual inline Typ getTyp(FortranIdx idx) const = 0;
+        virtual inline std::string getTag(FortranIdx idx) const = 0;
 
-        // Table data;
-        gsl::span<const int> isc_;
-        gsl::span<const int> link_;
-        gsl::span<const int> itp_;
-        gsl::span<const int> jmpb_;
-        std::vector<Typ> typ_;
-        std::vector<std::string> tag_;
+     protected:
+        const static int FileUnit = 12;
+
+        const std::string filePath_;
+        std::string subset_;
 
         // Subset data
         int inode_;
@@ -120,6 +163,13 @@ namespace bufr {
         int bufrLoc_;
         gsl::span<const double> val_;
         gsl::span<const int> inv_;
+
+        virtual void updateTableData(const std::string& subset) = 0;
+
+        /// \brief Read the data from the BUFR interface for the current subset and reset the
+        /// internal data structures.
+        ////// \param bufrLoc The Fortran idx for the subset we need to read.
+        void updateData(const std::string& subset, int bufrLoc);
     };
 }  // namespace bufr
 }  // namespace Ingester

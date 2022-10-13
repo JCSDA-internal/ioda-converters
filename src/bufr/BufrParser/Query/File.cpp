@@ -13,7 +13,7 @@
 
 #include "QueryRunner.h"
 #include "QuerySet.h"
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
 
 
 namespace Ingester {
@@ -61,40 +61,40 @@ namespace bufr {
 
     ResultSet File::execute(const QuerySet &querySet, size_t next)
     {
-        static int SubsetLen = 9;
-        unsigned int messageNum = 0;
-        char subsetChars[SubsetLen];
-        int iddate;
-
-        int bufrLoc;
-        int il, im;  // throw away
-
-        auto dataProvider = DataProvider(fileUnit_);
+//        static int SubsetLen = 9;
+//        unsigned int messageNum = 0;
+//        char subsetChars[SubsetLen];
+//        int iddate;
+//
+//        int bufrLoc;
+//        int il, im;  // throw away
+//
+//        auto dataProvider = DataProvider(fileUnit_);
 
         auto resultSet = ResultSet(querySet.names());
-        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
-
-        while (ireadmg_f(fileUnit_, subsetChars, &iddate, SubsetLen) == 0)
-        {
-            auto subset = std::string(subsetChars);
-            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
-
-            if (querySet.includesSubset(subset))
-            {
-                while (ireadsb_f(fileUnit_) == 0)
-                {
-                    status_f(fileUnit_, &bufrLoc, &il, &im);
-                    dataProvider.updateData(bufrLoc);
-                    queryRunner.accumulate();
-                }
-
-                if (next > 0 && ++messageNum >= next) break;
-            }
-        }
-
-        resultSet.setTargets(queryRunner.getTargets());
-
-        dataProvider.deleteData();
+//        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
+//
+//        while (ireadmg_f(fileUnit_, subsetChars, &iddate, SubsetLen) == 0)
+//        {
+//            auto subset = std::string(subsetChars);
+//            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
+//
+//            if (querySet.includesSubset(subset))
+//            {
+//                while (ireadsb_f(fileUnit_) == 0)
+//                {
+//                    status_f(fileUnit_, &bufrLoc, &il, &im);
+//                    dataProvider.updateData(bufrLoc);
+//                    queryRunner.accumulate();
+//                }
+//
+//                if (next > 0 && ++messageNum >= next) break;
+//            }
+//        }
+//
+//        resultSet.setTargets(queryRunner.getTargets());
+//
+//        dataProvider.deleteData();
 
         return resultSet;
     }
