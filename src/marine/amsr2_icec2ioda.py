@@ -75,7 +75,7 @@ class iceconc(object):
                 dateend = ncd.getncattr('time_coverage_end')
                 date1 = datetime.strptime(datestart, "%Y-%m-%dT%H:%M:%S.%fZ")
                 date2 = datetime.strptime(dateend, "%Y-%m-%dT%H:%M:%S.%fZ")
-                avg = date1 + (date2 - date1)*0.5                
+                avg = date1 + (date2 - date1)*0.5 
                 locKey = lat[i], lon[i], avg.strftime("%Y-%m-%dT%H:%M:%SZ")
                 self.data[locKey][valKey] = icec[i]*1e-02
                 self.data[locKey][errKey] = 0.1
@@ -110,7 +110,7 @@ def main():
         'sea_ice_area_fraction': ['nlocs'],
     }
 
-    # Read in the Ice concentration 
+    # Read in the Ice concentration
     icec = iceconc(args.input, fdate)
 
     # write them out
