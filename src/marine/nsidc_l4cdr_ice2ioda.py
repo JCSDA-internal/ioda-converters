@@ -49,10 +49,7 @@ class Observation(object):
             'longitude',
             'latitude')
 
-        # get the QC flags, and calculate a mask from the non-missing values
-        # (since L3 files are mostly empty, fields need a mask applied immediately
-        # to avoid using way too much memory)
-
+        # apply mask to constrain the ice concentration to within 1.0 (100% coverage)
         data_in['cdr_seaice_conc'] = ncd.variables['cdr_seaice_conc'][:].ravel()
         mask = data_in['cdr_seaice_conc'] <= 1.0
         for v in input_vars:
