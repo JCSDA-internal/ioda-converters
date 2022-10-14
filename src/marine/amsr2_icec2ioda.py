@@ -39,6 +39,7 @@ class iceconc(object):
         self.filenames = filenames
         self.date = date
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self._read()
 
     # Open obs file and read/load relevant info
@@ -60,9 +61,13 @@ class iceconc(object):
             lon = ncd.variables['Longitude'][:]
             lat = ncd.variables['Latitude'][:]
             icec = ncd.variables['NASA_Team_2_Ice_Concentration'][:]
+            icec_FillValue = ncd.variables['NASA_Team_2_Ice_Concentration']._FillValue
+            icec_units = ncd.variables['NASA_Team_2_Ice_Concentration'].units
             icec_qc = ncd.variables['Flags'][:]
+            qc_FillValue = ncd.variables['Flags']._FillValue
+            qc_units = ncd.variables['Flags'].units
             icec_qc = icec_qc.astype(int)
-
+            
             mask = np.logical_not(icec.mask)
             lon = lon[mask]
             lat = lat[mask]
@@ -75,11 +80,17 @@ class iceconc(object):
                 dateend = ncd.getncattr('time_coverage_end')
                 date1 = datetime.strptime(datestart, "%Y-%m-%dT%H:%M:%S.%fZ")
                 date2 = datetime.strptime(dateend, "%Y-%m-%dT%H:%M:%S.%fZ")
-                avg = date1 + (date2 - date1)*0.5
+                avg = date1 + (date2 - date1) * 0.5
                 locKey = lat[i], lon[i], avg.strftime("%Y-%m-%dT%H:%M:%SZ")
-                self.data[locKey][valKey] = icec[i]*0.01 #1e-02
+                self.data[locKey][valKey] = icec[i] * 0.01
+                self.VarAttrs[locKey][valKey]['_FillValue'] = icec_FillValue
+                self.VarAttrs[locKey][valKey]['units'] = icec_units
                 self.data[locKey][errKey] = 0.1
+                self.VarAttrs[locKey][errKey]['_FillValue'] = icec_FillValue
+                self.VarAttrs[locKey][errKey]['units'] = icec_units
                 self.data[locKey][qcKey] = icec_qc[i]
+                self.VarAttrs[locKey][qcKey]['_FillValue'] = qc_FillValue
+                self.VarAttrs[locKey][qcKey]['units'] = qc_units
             ncd.close()
 
 
@@ -119,14 +130,7 @@ def main():
     DimDict = {'nlocs': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_area_fraction', 'ObsValue')]['units'] = '1'
-    VarAttrs[('sea_area_fraction', 'ObsError')]['units'] = '1'
-    VarAttrs[('sea_area_fraction', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_area_fraction', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_area_fraction', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_area_fraction', 'PreQC')]['_FillValue'] = 999
-    writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
+    writer.BuildIoda(ObsVars, VarDims, icec.VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
