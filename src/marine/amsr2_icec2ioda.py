@@ -67,7 +67,6 @@ class iceconc(object):
             qc_FillValue = ncd.variables['Flags']._FillValue
             qc_units = ncd.variables['Flags'].units
             icec_qc = icec_qc.astype(int)
-            
             mask = np.logical_not(icec.mask)
             lon = lon[mask]
             lat = lat[mask]
