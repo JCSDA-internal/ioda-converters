@@ -99,11 +99,12 @@ class Observation(object):
             self.VarAttrs[locKey][valKey]['units'] = vals_units
             self.data[locKey][errKey] = errs[i]
             if errs[i] == 0:
-               self.data[locKey][errKey] = 0.0001
+                self.data[locKey][errKey] = 0.0001
             self.VarAttrs[locKey][errKey]['_FillValue'] = errs_FillValue
             self.VarAttrs[locKey][errKey]['units'] = errs_units
             self.data[locKey][qcKey] = 1
             self.VarAttrs[locKey][qcKey]['units'] = 'unitless'
+
 
 vName = "sea_ice_area_fraction"
 
@@ -129,15 +130,15 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="EMC ice fraction obs input file(s)", 
-        type=str,required=True)
+        help="EMC ice fraction obs input file(s)",
+        type=str, required=True)
     required.add_argument(
         '-o', '--output',
-        help="name of ioda output file", 
+        help="name of ioda output file",
         type=str, required=True)
     required.add_argument(
         '-d', '--date',
-        help="base date for the center of the window", 
+        help="base date for the center of the window",
         metavar="YYYYMMDDHH", type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
