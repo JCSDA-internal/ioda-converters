@@ -8,6 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
+  testinput/nsidc_l4_icec.nc
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
@@ -75,6 +76,7 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
+  testoutput/nsidc_l4_icec.nc
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -387,6 +389,18 @@ set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 #===============================================================================
 # Marine converters
 #===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/nsidc_l4cdr_ice2ioda.py
+                          -i testinput/nsidc_l4_icec.nc
+                          -o testrun/nsidc_l4_icec.nc
+                          -d 2019010112"
+                          nsidc_l4_icec.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l2p
                   TYPE    SCRIPT
