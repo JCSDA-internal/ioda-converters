@@ -8,6 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
+  testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
@@ -75,6 +76,7 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
+  testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -388,6 +390,18 @@ set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 # Marine converters
 #===============================================================================
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsr2_l2icec
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/amsr2_icec2ioda.py
+                          -i testinput/amsr2_icec_l2p.nc
+                          -o testrun/amsr2_icec_l2p.nc
+                          -d 2021080112"
+                          amsr2_icec_l2p.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l2p
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -582,6 +596,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_sss
                           -o testrun/smos_sss_l2.nc
                           -d 2010060100"
                           smos_sss_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4icethk
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/copernicus_l4icethk2ioda.py
+                          -i testinput/coperl4_icethk.nc
+                          -o testrun/coperl4_icethk.nc -d 2019010115"
+                          coperl4_icethk.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4adt
                   TYPE    SCRIPT
