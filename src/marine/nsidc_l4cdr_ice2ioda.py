@@ -62,7 +62,6 @@ class Observation(object):
         vals_units = ncd.variables['cdr_seaice_conc'].units
         errs_FillValue = ncd.variables['cdr_seaice_conc']._FillValue
         errs_units = ncd.variables['cdr_seaice_conc'].units
-        
         # also, sometimes certain input variables have their own mask due to
         # missing values
         for v in input_vars:
@@ -94,19 +93,20 @@ class Observation(object):
             qc = qc[mask_thin]
 
         for i in range(len(lons)):
-              locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-              self.data[locKey][valKey] = vals[i]
-              self.VarAttrs[locKey][valKey]['_FillValue'] = vals_FillValue
-              self.VarAttrs[locKey][valKey]['units'] = vals_units
-              self.data[locKey][errKey] = errs[i]
-              if errs[i] == 0:
-                 self.data[locKey][errKey] = 0.0001
-              self.VarAttrs[locKey][errKey]['_FillValue'] = errs_FillValue
-              self.VarAttrs[locKey][errKey]['units'] = errs_units
-              self.data[locKey][qcKey] = 1
-              self.VarAttrs[locKey][qcKey]['units'] = 'unitless'
+            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.data[locKey][valKey] = vals[i]
+            self.VarAttrs[locKey][valKey]['_FillValue'] = vals_FillValue
+            self.VarAttrs[locKey][valKey]['units'] = vals_units
+            self.data[locKey][errKey] = errs[i]
+            if errs[i] == 0:
+               self.data[locKey][errKey] = 0.0001
+            self.VarAttrs[locKey][errKey]['_FillValue'] = errs_FillValue
+            self.VarAttrs[locKey][errKey]['units'] = errs_units
+            self.data[locKey][qcKey] = 1
+            self.VarAttrs[locKey][qcKey]['units'] = 'unitless'
 
 vName = "sea_ice_area_fraction"
+
 
 locationKeyList = [
     ("latitude", "float"),
@@ -129,15 +129,15 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="EMC ice fraction obs input file(s)",
+        help="EMC ice fraction obs input file(s)", 
         type=str,required=True)
     required.add_argument(
         '-o', '--output',
-        help="name of ioda output file",
+        help="name of ioda output file", 
         type=str, required=True)
     required.add_argument(
         '-d', '--date',
-        help="base date for the center of the window",
+        help="base date for the center of the window", 
         metavar="YYYYMMDDHH", type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
@@ -153,7 +153,6 @@ def main():
         vName: ['nlocs'],
     }
     # Read in
-    #print('args.input =', args.input)
     ice = Observation(args.input, args.thin, fdate)
 
     # write them out
