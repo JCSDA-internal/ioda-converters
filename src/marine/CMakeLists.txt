@@ -1,5 +1,6 @@
 list(APPEND programs
   copernicus_l4adt2ioda.py
+  copernicus_l4icethk2ioda.py
   copernicus_l3swh2ioda.py
   cryosat_ice2ioda.py
   emc_ice2ioda.py
