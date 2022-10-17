@@ -87,8 +87,7 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
-        deps = 0.0*vals
-        deps[:] = 0.025
+        deps = np.full_like(vals, 0.025)
         times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":

@@ -93,8 +93,7 @@ class smap(object):
         ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
-        deps = 0.0*vals
-        deps[:] = 0.025
+        deps = np.full_like(vals, 0.025)
         times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":
