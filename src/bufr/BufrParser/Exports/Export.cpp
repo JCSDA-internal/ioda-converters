@@ -136,7 +136,7 @@ namespace Ingester
             else if (subConf.has(ConfKeys::Variable::Timeoffset))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Timeoffset);
-                variable = std::make_shared<TimeoffsetVariable>(key, dtconf);
+                variable = std::make_shared<TimeoffsetVariable>(key, groupByField, dtconf);
             }
             else if (subConf.has(ConfKeys::Variable::Query))
             {

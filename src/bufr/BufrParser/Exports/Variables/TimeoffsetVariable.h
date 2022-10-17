@@ -24,6 +24,7 @@ namespace Ingester
      public:
         TimeoffsetVariable() = delete;
         TimeoffsetVariable(const std::string& exportName,
+                         const std::string& groupByField,
                          const eckit::Configuration& conf);
         ~TimeoffsetVariable() final = default;
 
@@ -39,7 +40,10 @@ namespace Ingester
         const std::string referenceTime_;
 
         /// \brief Query for offset from reference time
-        const std::string offsetQuery_;
+        const std::string timeOffsetQuery_;
+
+        /// \brief For field (optional)
+        std::string groupByField_;
 
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);

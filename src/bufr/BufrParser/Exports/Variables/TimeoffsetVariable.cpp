@@ -29,6 +29,7 @@ namespace
     {
         const char* Timeoffset = "time_offset";
         const char* Referencetime = "reference_time";
+        const char* GroupByField = "group_by";
     }  // namespace ConfKeys
 }  // namespace
 
@@ -36,11 +37,19 @@ namespace
 namespace Ingester
 {
     TimeoffsetVariable::TimeoffsetVariable(const std::string& exportName,
+                                       const std::string& groupByField,
                                        const eckit::Configuration &conf) :
       Variable(exportName),
       timeOffsetQuery_(conf.getString(ConfKeys::Timeoffset)),
-      referenceTime_(conf.getString(ConfKeys::Referencetime))
+      referenceTime_(conf.getString(ConfKeys::Referencetime)),
+      groupByField_(groupByField)
     {
+
+        if (conf.has(ConfKeys::GroupByField))
+        {
+            groupByField_ = conf.getString(ConfKeys::GroupByField);
+        }
+
         initQueryMap();
     }
 
@@ -92,8 +101,7 @@ namespace Ingester
             {
                 ref_time.tm_sec += offset;
                 auto thisTime = std::mktime(&ref_time);
-                diff_time = static_cast<int64_t>(difftime(thisTime, epochDt)
-                                                 + hoursFromUtc_ * 3600);
+                diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
             }
 
             timeOffsets.push_back(diff_time);
@@ -104,6 +112,7 @@ namespace Ingester
         return std::make_shared<DataObject<int64_t>>(
                 timeOffsets,
                 getExportName(),
+                groupByField_,
                 dims,
                 map.at(getExportKey(ConfKeys::Timeoffset))->getPath(),
                 map.at(getExportKey(ConfKeys::Timeoffset))->getDimPaths());
@@ -144,6 +153,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Timeoffset);
             info.query = timeOffsetQuery_;
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
