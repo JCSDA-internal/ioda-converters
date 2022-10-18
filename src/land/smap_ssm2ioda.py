@@ -46,9 +46,10 @@ VarDims = {
 
 
 class smap(object):
-    def __init__(self, filename, mask):
+    def __init__(self, filename, mask, assumedSoilDepth):
         self.filename = filename
         self.mask = mask
+        self.assumedSoilDepth = assumedSoilDepth
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -87,7 +88,7 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
-        deps = np.full_like(vals, 0.025)
+        deps = np.full_like(vals, self.assumedSoilDepth)
         times = np.empty_like(vals, dtype=object)
 
         if self.mask == "maskout":
@@ -162,11 +163,15 @@ def main():
         '-m', '--mask',
         help="maskout missing values: maskout/default, default=none",
         type=str, required=True)
+    optional.add_argument(
+        '-d', '--assumedSoilDepth',
+        help="default assumed depth of soil moisture in meters",
+        type=float, default=0.025, required=True)
 
     args = parser.parse_args()
 
     # Read in the SMAP volumetric soil moisture data
-    ssm = smap(args.input, args.mask)
+    ssm = smap(args.input, args.mask, args.assumedSoilDepth)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

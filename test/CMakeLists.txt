@@ -1698,7 +1698,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
                             -o testrun/smap_ssm.nc
-                            -m maskout"
+                            -m maskout
+                            -d 0.025"
                             smap_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
@@ -1745,7 +1746,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap9km_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
                             -o testrun/smap9km_ssm.nc
-                            -m maskout"
+                            -m maskout
+                            -d 0.025"
                             smap9km_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
