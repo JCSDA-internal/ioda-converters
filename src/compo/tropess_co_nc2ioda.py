@@ -33,10 +33,11 @@ HPA2PA = 1E2
 
 class tropess(object):
 
-    def __init__(self, filenames, userLevels):
+    def __init__(self, filenames, userLevels, thin):
 
         self.filenames = filenames
         self.userLevels = userLevels
+        self.thin = thin
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
         self.read()    # Read data from file
@@ -95,26 +96,35 @@ class tropess(object):
             # and avg_kernel[0], as volume mixing ratio (VMR) relative to dry air
             x_test = dsCris_observation_ops['x_test'].values
 
-            # Empty array for QA flags
-            qa = np.zeros((nlocs,nlevs))
+            # Empty array for QA and missing flags
+            qa = np.zeros((nlocs,nlevs), dtype=np.float32)
+            nan_flag = np.full((nlocs),True)
 
             # Create a list of integers from a list of strings.
-            userLevels = [ int(x) for x in self.userLevels]
+            userLevels = [ int(lev) for lev in self.userLevels]
 
             # Calculate apriori term (ap) for each userLevel 
-            ap = np.zeros((nlocs,len(userLevels)))
+            ap = np.zeros((nlocs,len(userLevels)), dtype=np.float32)
+
             for lev, userLevel in enumerate(userLevels):
                 ak = averaging_kernel[:,int(userLevel),:]
                 this_term = ak*ln(xa)
+
                 ap[:,lev] = np.exp(ln(xa[:,lev])+ np.sum(this_term,axis=1))
+                if(np.isnan(ap[:,lev]).any()):
+                    nan_flag[np.argwhere(np.isnan(ap[:,lev]))] = False
+
+            # Thin using random uniform draw
+            thin = np.random.uniform(size=nlocs) > self.thin
+            flag = np.logical_and(nan_flag, thin)
 
             # ---- Write Metadata and data 
             if first:
 
                 # add metadata variables
-                self.outData[('datetime', 'MetaData')] = times
-                self.outData[('latitude', 'MetaData')] = lats
-                self.outData[('longitude', 'MetaData')] = lons
+                self.outData[('datetime', 'MetaData')] = times[flag]
+                self.outData[('latitude', 'MetaData')] = lats[flag]
+                self.outData[('longitude', 'MetaData')] = lons[flag]
 
 
                 for lev, userLevel in enumerate(userLevels):
@@ -122,79 +132,79 @@ class tropess(object):
                     # Write ak level by level for each user level
                     for j in range(nlevs):
                         varname_ak = ('averaging_kernel_l_'+str(userLevel)+'_level_'+str(j), 'RtrvlAncData')
-                        self.outData[varname_ak] = averaging_kernel[:,userLevel,j]
+                        self.outData[varname_ak] = averaging_kernel[:,userLevel,j][flag]
                         self.varAttrs[varname_ak]['coordinates'] = 'longitude latitude'
-                        self.varAttrs[varname_ak]['units'] = ''
+                        self.varAttrs[varname_ak]['units'] = '1'
 
                     # Write ap and xa for each user level
                     varname_ap = ('apriori_term_l_'+str(userLevel), 'RtrvlAncData')
-                    self.outData[varname_ap] = ap[:,lev]
+                    self.outData[varname_ap] = ap[:,lev][flag]
                     self.varAttrs[varname_ap]['coordinates'] = 'longitude latitude'
                     self.varAttrs[varname_ap]['units'] = '1'
 
                     varname_xa = ('xa_l_'+str(userLevel), 'RtrvlAncData')
-                    self.outData[varname_xa] = xa[:,lev]
+                    self.outData[varname_xa] = xa[:,lev][flag]
                     self.varAttrs[varname_xa]['coordinates'] = 'longitude latitude'
                     self.varAttrs[varname_xa]['units'] = '1'
 
                 # Write pressure level by level
                 for j in range(nlevs):
                     varname_pr = ('pressure_level_'+str(j), 'RtrvlAncData')
-                    self.outData[varname_pr] = HPA2PA * pressure[:, j]
+                    self.outData[varname_pr] = HPA2PA * pressure[:, j][flag]
                     self.varAttrs[varname_ak]['coordinates'] = 'longitude latitude'
                     self.varAttrs[varname_ak]['units'] = 'Pa'
 
                 counter = 0
                 for i in self.obsvars.keys():
                     self.outData[self.varDict[self.obsvars[i]]['valKey']] = \
-                        x[:,userLevels[counter]]
+                        x[:,userLevels[counter]][flag]
                     self.outData[self.varDict[self.obsvars[i]]['errKey']] = \
-                        log_obs_error[:,userLevels[counter],userLevels[counter]]
+                        log_obs_error[:,userLevels[counter],userLevels[counter]][flag]
                     self.outData[self.varDict[self.obsvars[i]]['qcKey']] = \
-                        qa[:,userLevels[counter]]
+                        qa[:,userLevels[counter]][flag]
                     counter = counter+1
 
 
             # If not the first file concatenate
             else:
                 self.outData[('datetime', 'MetaData')] = np.concatenate(
-                    (self.outData[('datetime', 'MetaData')], times))
+                    (self.outData[('datetime', 'MetaData')], times[flag]))
                 self.outData[('latitude', 'MetaData')] = np.concatenate(
-                    (self.outData[('latitude', 'MetaData')], lats))
+                    (self.outData[('latitude', 'MetaData')], lats[flag]))
                 self.outData[('longitude', 'MetaData')] = np.concatenate(
-                    (self.outData[('longitude', 'MetaData')], lons))
+                    (self.outData[('longitude', 'MetaData')], lons[flag]))
 
                 for lev, userLevel in enumerate(userLevels):
                     for j in range(nlevs):
                         varname_ak = ('averaging_kernel_l_'+str(userLevel)+'_level_'+str(i), 'RtrvlAncData')
                         self.outData[varname_ak] = np.concatenate(
-                            (self.outData[varname_ak], averaging_kernel[:,userLevel,j]))
+                            (self.outData[varname_ak], averaging_kernel[:,userLevel,j][flag]))
 
                         varname_pr = ('pressure_l_'+str(userLevel)+'level_'+str(i), 'RtrvlAncData')
                         self.outData[varname_pr] = np.concatenate(
-                            (self.outData[varname_pr], HPA2PA * pressure[:, j]))
+                            (self.outData[varname_pr], HPA2PA * pressure[:, j][flag]))
 
                     varname_ap = ('apriori_term_'+str(userLevel), 'RtrvlAncData')
                     self.outData[varname_ap] = np.concatenate(
-                        (self.outData[varname_ap], ap[:,lev]))
+                        (self.outData[varname_ap], ap[:,lev][flag]))
 
                     varname_xa = ('xa_l_'+str(userLevel), 'RtrvlAncData')
                     self.outData[varname_xa] = np.concatenate(
-                        (self.outData[varname_xa], xa[:,lev]))
+                        (self.outData[varname_xa], xa[:,lev][flag]))
 
                 counter = 0
                 for i in self.obsvars.keys():
                     self.outData[self.varDict[self.obsvars[i]]['valKey']] = np.concatenate(
                         (self.outData[self.varDict[self.obsvars[i]]['valKey']],
-                         x[:,userLevels[counter]]))
+                         x[:,userLevels[counter]][flag]))
 
                     self.outData[self.varDict[self.obsvars[i]]['errKey']] = np.concatenate(
                         (self.outData[self.varDict[self.obsvars[i]]['errKey']],
-                        log_obs_error[:,userLevels[counter],userLevels[counter]]))
+                        log_obs_error[:,userLevels[counter],userLevels[counter]][flag]))
 
                     self.outData[self.varDict[self.obsvars[i]]['qcKey']] = np.concatenate(
                         (self.outData[self.varDict[self.obsvars[i]]['qcKey']],
-                         qa[:,userLevels[counter]]))
+                         qa[:,userLevels[counter]][flag]))
                     counter = counter+1
                 first = False
 
@@ -309,6 +319,13 @@ def get_parser():
         nargs='+',
         default = [0,4],
         )
+
+    optional.add_argument(
+        '-n', '--thin',
+        help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
+        " no thinning is performed. (default: %(default)s)",
+        type=float, default=0.0)
+
     return parser
 
 def main():
@@ -326,7 +343,7 @@ def main():
     args = parser.parse_args()
 
     # Read in the CO data
-    co = tropess(args.input, args.userLevels)
+    co = tropess(args.input, args.userLevels, args.thin)
 
     ## setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, co.DimDict)
