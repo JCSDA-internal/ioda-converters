@@ -46,10 +46,10 @@ VarDims = {
 
 
 class smap(object):
-    def __init__(self, filename, mask):
-        self.filename = filename
-        self.mask = mask
-        self.assumedSoilDepth = assumedSoilDepth
+    def __init__(self, args):
+        self.filename = args.input
+        self.mask = args.mask
+        self.assumedSoilDepth = args.assumedSoilDepth
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -171,7 +171,7 @@ def main():
     args = parser.parse_args()
 
     # Read in the SMAP volumetric soil moisture data
-    ssm = smap(args.input, args.mask, args.assumedSoilDepth)
+    ssm = smap(args)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
