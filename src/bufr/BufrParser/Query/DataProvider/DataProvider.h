@@ -94,7 +94,7 @@ namespace bufr {
     typedef std::shared_ptr<DataProvider> DataProviderType;
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
-class DataProvider : public std::enable_shared_from_this<DataProvider>
+class DataProvider
     {
      public:
         DataProvider() = delete;
@@ -107,11 +107,11 @@ class DataProvider : public std::enable_shared_from_this<DataProvider>
         ~DataProvider() = default;
 
         virtual void run(const QuerySet& querySet,
-                         const std::function<void(const DataProviderType&)> processMsg,
-                         const std::function<void(const DataProviderType&)> processSubset,
-                         const std::function<void(const DataProviderType&)> processFinish,
-                         const std::function<bool(const DataProviderType&)> continueProcessing =
-                             [](const DataProviderType&){return true;}) = 0;
+                         const std::function<void()> processMsg,
+                         const std::function<void()> processSubset,
+                         const std::function<void()> processFinish,
+                         const std::function<bool()> continueProcessing =
+                             [](){return true;}) = 0;
 
         virtual void open() = 0;
 

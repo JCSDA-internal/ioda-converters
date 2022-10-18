@@ -60,7 +60,7 @@ namespace bufr {
         /// \param[in] dataProvider The BUFR data provider to use.
         QueryRunner(const QuerySet& querySet,
                     ResultSet& resultSet,
-                    const DataProvider& dataProvider);
+                    const DataProviderType& dataProvider);
         void accumulate();
 
         Targets getTargets()
@@ -79,7 +79,7 @@ namespace bufr {
      private:
         const QuerySet querySet_;
         ResultSet& resultSet_;
-        const DataProvider& dataProvider_;
+        const DataProviderType& dataProvider_;
 
         std::unordered_map<std::string, Targets> targetCache_;
         std::unordered_map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;

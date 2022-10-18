@@ -24,7 +24,7 @@ namespace bufr {
 
     QueryRunner::QueryRunner(const QuerySet &querySet,
                  ResultSet &resultSet,
-                 const DataProvider &dataProvider) :
+                 const DataProviderType &dataProvider) :
         querySet_(querySet),
         resultSet_(resultSet),
         dataProvider_(dataProvider)
@@ -44,16 +44,16 @@ namespace bufr {
                                   std::shared_ptr<__details::ProcessingMasks> &masks)
     {
         // Check if the target list for this subset is cached
-        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end())
+        if (targetCache_.find(dataProvider_->getSubset()) != targetCache_.end())
         {
-            targets = targetCache_.at(dataProvider_.getSubset());
-            masks = maskCache_.at(dataProvider_.getSubset());
+            targets = targetCache_.at(dataProvider_->getSubset());
+            masks = maskCache_.at(dataProvider_->getSubset());
             return;
         }
 
         masks = std::make_shared<__details::ProcessingMasks>();
 
-        size_t numNodes = dataProvider_.getIsc(dataProvider_.getInode());
+        size_t numNodes = dataProvider_->getIsc(dataProvider_->getInode());
 
         masks->valueNodeMask.resize(numNodes, false);
         masks->pathNodeMask.resize(numNodes, false);
@@ -111,13 +111,13 @@ namespace bufr {
                 }
 
                 oops::Log::warning() << " didn't apply to subset ";
-                oops::Log::warning() << dataProvider_.getSubset();
+                oops::Log::warning() << dataProvider_->getSubset();
                 oops::Log::warning() << std::endl;
             }
         }
 
-        targetCache_.insert({dataProvider_.getSubset(), targets});
-        maskCache_.insert({dataProvider_.getSubset(), masks});
+        targetCache_.insert({dataProvider_->getSubset(), targets});
+        maskCache_.insert({dataProvider_->getSubset(), masks});
     }
 
     std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
@@ -129,23 +129,23 @@ namespace bufr {
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(query.subset == "*" || query.subset == dataProvider_.getSubset());
+        bool targetMissing = !(query.subset == "*" || query.subset == dataProvider_->getSubset());
         if (!targetMissing) {
             branches.resize(query.mnemonics.size() - 1);
 
-            seqPath.push_back(dataProvider_.getInode());
+            seqPath.push_back(dataProvider_->getInode());
 
             int tableCursor = -1;
             int mnemonicCursor = -1;
 
-            for (auto nodeIdx = dataProvider_.getInode();
-                 nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
+            for (auto nodeIdx = dataProvider_->getInode();
+                 nodeIdx <= dataProvider_->getIsc(dataProvider_->getInode());
                  nodeIdx++) {
-                if (dataProvider_.getTyp(nodeIdx) == Typ::Sequence ||
-                    dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
-                    dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
+                if (dataProvider_->getTyp(nodeIdx) == Typ::Sequence ||
+                    dataProvider_->getTyp(nodeIdx) == Typ::Repeat ||
+                    dataProvider_->getTyp(nodeIdx) == Typ::StackedRepeat) {
                     if (isQueryNode(nodeIdx - 1)) {
-                        if (dataProvider_.getTag(nodeIdx) == query.mnemonics[mnemonicCursor + 1] &&
+                        if (dataProvider_->getTag(nodeIdx) == query.mnemonics[mnemonicCursor + 1] &&
                             tableCursor == mnemonicCursor) {
                             mnemonicCursor++;
                             branches[mnemonicCursor] = nodeIdx - 1;
@@ -155,7 +155,7 @@ namespace bufr {
                     seqPath.push_back(nodeIdx);
                 } else if (mnemonicCursor == static_cast<int>(query.mnemonics.size()) - 2 &&
                            tableCursor == mnemonicCursor &&
-                           dataProvider_.getTag(nodeIdx) == query.mnemonics.back()) {
+                           dataProvider_->getTag(nodeIdx) == query.mnemonics.back()) {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
@@ -164,18 +164,18 @@ namespace bufr {
                 // Step back up the tree (unfortunately this is finicky)
                 if (seqPath.size() > 1) {
                     // Skip pure sequences not inside any kind of repeated sequence
-                    auto jumpBackNode = dataProvider_.getInode();
-                    if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+                    auto jumpBackNode = dataProvider_->getInode();
+                    if (nodeIdx < dataProvider_->getIsc(dataProvider_->getInode()))
                     {
-                        jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
-                        if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
-                        while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
+                        jumpBackNode = dataProvider_->getJmpb(nodeIdx + 1);
+                        if (jumpBackNode == 0) jumpBackNode = dataProvider_->getInode();
+                        while (dataProvider_->getTyp(jumpBackNode) == Typ::Sequence &&
+                               dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
+                               dataProvider_->getTyp(jumpBackNode - 1) != Typ::FixedRep &&
+                               dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
+                               dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
                         {
-                            auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
+                            auto newJumpBackNode = dataProvider_->getJmpb(jumpBackNode);
                             if (newJumpBackNode != jumpBackNode)
                             {
                                 jumpBackNode = newJumpBackNode;
@@ -235,7 +235,7 @@ namespace bufr {
         if (targetNodes.size() > 0) {
             target->dimPaths = dimPaths;
             target->exportDimIdxs = dimIdxs;
-            target->typeInfo = dataProvider_.getTypeInfo(targetNodes[0]);
+            target->typeInfo = dataProvider_->getTypeInfo(targetNodes[0]);
         } else {
             target->dimPaths = {"*"};
             target->exportDimIdxs = {0};
@@ -246,10 +246,10 @@ namespace bufr {
     }
 
     bool QueryRunner::isQueryNode(int nodeIdx) const {
-        return (dataProvider_.getTyp(nodeIdx) == Typ::DelayedRep ||
-                dataProvider_.getTyp(nodeIdx) == Typ::FixedRep ||
-                dataProvider_.getTyp(nodeIdx) == Typ::DelayedRepStacked ||
-                dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary);
+        return (dataProvider_->getTyp(nodeIdx) == Typ::DelayedRep ||
+                dataProvider_->getTyp(nodeIdx) == Typ::FixedRep ||
+                dataProvider_->getTyp(nodeIdx) == Typ::DelayedRepStacked ||
+                dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary);
     }
 
     void QueryRunner::getDimInfo(const std::vector<int> &branches,
@@ -276,15 +276,15 @@ namespace bufr {
             int dimIdx = 1;
             for (int branchIdx = 0; branchIdx <= mnemonicCursor; branchIdx++) {
                 int nodeIdx = branches[branchIdx];
-                mnemonicStr = dataProvider_.getTag(nodeIdx);
+                mnemonicStr = dataProvider_->getTag(nodeIdx);
 
                 std::ostringstream path;
                 path << currentDimPath << "/" << mnemonicStr.substr(1, mnemonicStr.size() - 2);
                 currentDimPath = path.str();
 
-                if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedRep ||
-                    dataProvider_.getTyp(nodeIdx) == Typ::FixedRep ||
-                    dataProvider_.getTyp(nodeIdx) == Typ::DelayedRepStacked) {
+                if (dataProvider_->getTyp(nodeIdx) == Typ::DelayedRep ||
+                    dataProvider_->getTyp(nodeIdx) == Typ::FixedRep ||
+                    dataProvider_->getTyp(nodeIdx) == Typ::DelayedRepStacked) {
                     dimIdx = dimIdx + 1;
                     dimIdxs.push_back(branchIdx + 1);  // +1 to account for the root dimension
                     dimPaths.push_back(currentDimPath);
@@ -309,25 +309,24 @@ namespace bufr {
         // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all
         // the data a bunch of times)
         auto dataTable = __details::OffsetArray<NodeData>(
-                dataProvider_.getInode(),
-                dataProvider_.getIsc(dataProvider_.getInode()));
+                dataProvider_->getInode(),
+                dataProvider_->getIsc(dataProvider_->getInode()));
 
-        for (size_t dataCursor = 1; dataCursor <= dataProvider_.getNVal(); ++dataCursor) {
-            int nodeIdx = dataProvider_.getInv(dataCursor);
+        for (size_t dataCursor = 1; dataCursor <= dataProvider_->getNVal(); ++dataCursor) {
+            int nodeIdx = dataProvider_->getInv(dataCursor);
 
             if (masks->valueNodeMask[nodeIdx]) {
-                auto &values = dataTable[nodeIdx].values;
-                values.push_back(dataProvider_.getVal(dataCursor));
+                dataTable[nodeIdx].values.push_back(dataProvider_->getVal(dataCursor));
             }
 
             // Unfortuantely the fixed replicated sequences do not store their counts as values for
             // the Fixed Replication nodes. It's therefore necessary to discover this information by
             // manually tracing the nested sequences and counting everything manually. Since we have
             // to do it for fixed reps anyways, its easier just to do it for all the squences.
-            if (dataProvider_.getJmpb(nodeIdx) > 0 &&
-                masks->pathNodeMask[dataProvider_.getJmpb(nodeIdx)]) {
-                const auto typ = dataProvider_.getTyp(nodeIdx);
-                const auto jmpbTyp = dataProvider_.getTyp(dataProvider_.getJmpb(nodeIdx));
+            if (dataProvider_->getJmpb(nodeIdx) > 0 &&
+                masks->pathNodeMask[dataProvider_->getJmpb(nodeIdx)]) {
+                const auto typ = dataProvider_->getTyp(nodeIdx);
+                const auto jmpbTyp = dataProvider_->getTyp(dataProvider_->getJmpb(nodeIdx));
                 if ((typ == Typ::Sequence && (jmpbTyp == Typ::Sequence ||
                                               jmpbTyp == Typ::DelayedBinary ||
                                               jmpbTyp == Typ::FixedRep)) ||
@@ -339,7 +338,7 @@ namespace bufr {
 
             if (currentPath.size() >= 1) {
                 if (nodeIdx == returnNodeIdx ||
-                    dataCursor == dataProvider_.getNVal() ||
+                    dataCursor == dataProvider_->getNVal() ||
                     (currentPath.size() > 1 && nodeIdx == *(currentPath.end() - 1) + 1)) {
                     // Look for the first path return idx that is not 0 and check if its this node
                     // idx. Exit the sequence if its appropriate. A return idx of 0 indicates a
@@ -351,7 +350,7 @@ namespace bufr {
                         auto seqNodeIdx = currentPath.back();
                         currentPath.pop_back();
 
-                        const auto typSeqNode = dataProvider_.getTyp(seqNodeIdx);
+                        const auto typSeqNode = dataProvider_->getTyp(seqNodeIdx);
                         if (typSeqNode == Typ::DelayedRep || typSeqNode == Typ::DelayedRepStacked) {
                             dataTable[seqNodeIdx + 1].counts.back()--;
                         }
@@ -363,12 +362,12 @@ namespace bufr {
             }
 
             if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx)) {
-                if (dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary &&
-                    dataProvider_.getVal(dataCursor) == 0) {
+                if (dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary &&
+                    dataProvider_->getVal(dataCursor) == 0) {
                     // Ignore the node if it is a delayed binary and the value is 0
                 } else {
                     currentPath.push_back(nodeIdx);
-                    const auto tmpReturnNodeIdx = dataProvider_.getLink(nodeIdx);
+                    const auto tmpReturnNodeIdx = dataProvider_->getLink(nodeIdx);
                     currentPathReturns.push_back(tmpReturnNodeIdx);
 
                     if (tmpReturnNodeIdx != 0) {
@@ -378,10 +377,10 @@ namespace bufr {
                         lastNonZeroReturnIdx = 0;
                         returnNodeIdx = 0;
 
-                        if (dataCursor != dataProvider_.getNVal()) {
+                        if (dataCursor != dataProvider_->getNVal()) {
                             for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx) {
-                                returnNodeIdx = dataProvider_.getLink(
-                                        dataProvider_.getJmpb(currentPath[pathIdx]));
+                                returnNodeIdx = dataProvider_->getLink(
+                                        dataProvider_->getJmpb(currentPath[pathIdx]));
                                 lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx;
 
                                 if (returnNodeIdx != 0) break;

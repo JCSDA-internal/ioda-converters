@@ -72,25 +72,21 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
     bool finished = false;
 
     std::vector<Ingester::bufr::QueryData> queryData;
-    auto processMsg =
-        [] (const Ingester::bufr::DataProviderType& provider)
+    auto processMsg = [] ()
         {
         };
 
-    auto processSubset =
-        [&queryData, &finished](const Ingester::bufr::DataProviderType& provider) mutable
+    auto processSubset = [&queryData, &finished, &dataProvider]() mutable
         {
-            queryData = Ingester::bufr::SubsetTable(provider).allQueryData();
+            queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
             finished = true;
         };
 
-    auto processFinish =
-        [](const Ingester::bufr::DataProviderType& provider)
+    auto processFinish = []()
         {
         };
 
-    auto continueProcessing =
-        [&finished](const Ingester::bufr::DataProviderType& provider) -> bool
+    auto continueProcessing = [&finished]() -> bool
         {
             return !finished;
         };

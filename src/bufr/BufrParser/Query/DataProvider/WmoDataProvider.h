@@ -36,10 +36,10 @@ namespace bufr {
                         const std::string& tableFilePath_);
 
         void run(const QuerySet& querySet,
-                 const std::function<void(const DataProviderType&)> processMsg,
-                 const std::function<void(const DataProviderType&)> processSubset,
-                 const std::function<void(const DataProviderType&)> processFinish,
-                 const std::function<bool(const DataProviderType&)> continueProcessing) final;
+                 const std::function<void()> processMsg,
+                 const std::function<void()> processSubset,
+                 const std::function<void()> processFinish,
+                 const std::function<bool()> continueProcessing) final;
 
         void open() final;
 

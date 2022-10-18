@@ -7,6 +7,7 @@
 #include "bufr_interface.h"
 
 #include <gsl/gsl-lite.hpp>
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 #include <iostream>
@@ -21,12 +22,42 @@ namespace bufr {
     {
     }
 
-    void WmoDataProvider::run(const QuerySet&,
-                              const std::function<void(const DataProviderType&)> processMsg,
-                              const std::function<void(const DataProviderType&)> processSubset,
-                              const std::function<void(const DataProviderType&)> processFinish,
-                              const std::function<bool(const DataProviderType&)> continueProcessing)
+    void WmoDataProvider::run(const QuerySet& querySet,
+                              const std::function<void()> processMsg,
+                              const std::function<void()> processSubset,
+                              const std::function<void()> processFinish,
+                              const std::function<bool()> continueProcessing)
     {
+        static int SubsetLen = 9;
+        unsigned int messageNum = 0;
+        char subsetChars[SubsetLen];
+        int iddate;
+
+        int bufrLoc;
+        int il, im;  // throw away
+
+        while (ireadmg_f(FileUnit, subsetChars, &iddate, SubsetLen) == 0)
+        {
+            auto subset = std::string(subsetChars);
+            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
+
+            if (querySet.includesSubset(subset))
+            {
+                while (ireadsb_f(FileUnit) == 0)
+                {
+                    status_f(FileUnit, &bufrLoc, &il, &im);
+                    updateData(subset, bufrLoc);
+
+                    processSubset();
+                }
+
+                processMsg();
+                if (!continueProcessing()) break;
+            }
+        }
+
+        processFinish();
+        deleteData();
     }
 
     void WmoDataProvider::open()
@@ -46,9 +77,11 @@ namespace bufr {
 
     std::shared_ptr<TableData> WmoDataProvider::getTableData(const std::string& subset)
     {
+        deleteData();
+
         auto tableData = std::make_shared<TableData>();
-        if (tableCache_.find(subset) == tableCache_.end())
-        {
+//        if (tableCache_.find(subset) == tableCache_.end())
+//        {
             int size = 0;
             int *intPtr = nullptr;
             double *dataPtr = nullptr;
@@ -82,11 +115,12 @@ namespace bufr {
 
             get_jmpb_f(&intPtr, &size);
             tableData->jmpb = std::vector<int>(intPtr, intPtr + size);
+//            tableCache_[subset] = tableData;
+//        }
 
-            tableCache_[subset] = tableData;
-        }
 
-        return tableCache_[subset];
+
+        return tableData;
     }
 }  // namespace bufr
 }  // namespace Ingester

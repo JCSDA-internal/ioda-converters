@@ -14,6 +14,8 @@
 #include "QueryRunner.h"
 #include "QuerySet.h"
 #include "DataProvider/DataProvider.h"
+#include "DataProvider/NcepDataProvider.h"
+#include "DataProvider/WmoDataProvider.h"
 
 
 namespace Ingester {
@@ -61,18 +63,53 @@ namespace bufr {
 
     ResultSet File::execute(const QuerySet &querySet, size_t next)
     {
-//        static int SubsetLen = 9;
-//        unsigned int messageNum = 0;
-//        char subsetChars[SubsetLen];
-//        int iddate;
-//
-//        int bufrLoc;
-//        int il, im;  // throw away
-//
-//        auto dataProvider = DataProvider(fileUnit_);
+        DataProviderType dataProvider;
 
+        if (!isWmoFormat_)
+        {
+            dataProvider = std::make_shared<Ingester::bufr::NcepDataProvider>(filename_);
+        }
+        else
+        {
+            dataProvider = std::make_shared<Ingester::bufr::WmoDataProvider>(filename_,
+                                                                             wmoTablePath_);
+        }
+
+        size_t msgCnt = 0;
         auto resultSet = ResultSet(querySet.names());
-//        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
+        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
+
+
+        auto processMsg = [&msgCnt] () mutable
+        {
+            msgCnt++;
+        };
+
+        auto processSubset = [&queryRunner]() mutable
+        {
+            queryRunner.accumulate();
+        };
+
+        auto processFinish = [&msgCnt]() mutable
+        {
+            msgCnt = 0;
+        };
+
+        auto continueProcessing = [next, &msgCnt]() -> bool
+        {
+            if (next > 0)
+            {
+               return  msgCnt < next;
+            }
+
+            return true;
+        };
+
+        dataProvider->run(querySet,
+                          processMsg,
+                          processSubset,
+                          processFinish,
+                          continueProcessing);
 //
 //        while (ireadmg_f(fileUnit_, subsetChars, &iddate, SubsetLen) == 0)
 //        {

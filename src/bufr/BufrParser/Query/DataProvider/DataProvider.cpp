@@ -27,10 +27,10 @@ namespace bufr {
         int strLen = 0;
         char *charPtr = nullptr;
 
-        updateTableData(subset);
-
         get_inode_f(bufrLoc, &inode_);
         get_nval_f(bufrLoc, &nval_);
+
+        updateTableData(subset);
 
         get_val_f(bufrLoc, &dataPtr, &size);
         val_ = gsl::span<const double>(dataPtr, size);

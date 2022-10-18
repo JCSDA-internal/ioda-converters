@@ -22,10 +22,10 @@ namespace bufr {
     }
 
     void NcepDataProvider::run(const QuerySet& querySet,
-                               const std::function<void(const DataProviderType&)> processMsg,
-                               const std::function<void(const DataProviderType&)> processSubset,
-                               const std::function<void(const DataProviderType&)> processFinish,
-                               const std::function<bool(const DataProviderType&)> continueProcessing)
+                               const std::function<void()> processMsg,
+                               const std::function<void()> processSubset,
+                               const std::function<void()> processFinish,
+                               const std::function<bool()> continueProcessing)
     {
         static int SubsetLen = 9;
         unsigned int messageNum = 0;
@@ -47,15 +47,15 @@ namespace bufr {
                     status_f(FileUnit, &bufrLoc, &il, &im);
                     updateData(subset, bufrLoc);
 
-                    processSubset(shared_from_this());
+                    processSubset();
                 }
 
-                processMsg(shared_from_this());
-                if (!continueProcessing(shared_from_this())) break;
+                processMsg();
+                if (!continueProcessing()) break;
             }
         }
 
-        processFinish(shared_from_this());
+        processFinish();
         deleteData();
     }
 
