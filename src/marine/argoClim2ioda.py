@@ -17,13 +17,8 @@ import numpy as np
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 
 class argoClim(object):

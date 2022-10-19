@@ -8,13 +8,13 @@
 
 import os
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 import numpy as np
 import datetime as dt
 import netCDF4 as nc
 
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 
 __ALL__ = ['conv_platforms']
 

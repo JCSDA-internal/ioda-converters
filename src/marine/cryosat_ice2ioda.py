@@ -18,13 +18,8 @@ import subprocess
 import os
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
 
 
 class Observation(object):

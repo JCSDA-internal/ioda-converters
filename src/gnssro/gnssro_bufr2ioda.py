@@ -20,7 +20,7 @@ from pathlib import Path
 from itertools import repeat
 
 import lib_python.ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 from eccodes import *
 

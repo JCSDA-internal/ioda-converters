@@ -12,14 +12,9 @@ from datetime import datetime
 import yaml
 import sys
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import meteo_utils
-import ioda_conv_ncio as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.meteo_utils
+import lib_python.ioda_conv_ncio as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 
 class singleob(object):

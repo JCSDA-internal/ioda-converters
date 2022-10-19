@@ -7,10 +7,10 @@
 from collections import defaultdict, OrderedDict
 import datetime as dt
 import errno
-import ioda_conv_ncio as iconv
+import lib_python.ioda_conv_ncio as iconv
 import netCDF4 as nc
 import numpy as np
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 import os
 import sys
 

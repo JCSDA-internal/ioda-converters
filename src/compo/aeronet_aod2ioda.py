@@ -18,10 +18,10 @@ from builtins import str
 from numpy import NaN
 from pathlib import Path
 
-import meteo_utils
+import lib_python.meteo_utils
 import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 
 def dateparse(x):

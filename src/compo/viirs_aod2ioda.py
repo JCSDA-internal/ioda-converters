@@ -17,7 +17,7 @@ from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
