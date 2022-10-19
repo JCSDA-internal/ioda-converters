@@ -178,7 +178,7 @@ def main():
     optional.add_argument(
         '-d', '--assumedSoilDepth',
         help="default assumed depth of soil moisture in meters",
-        type=float, default=0.025, required=True)
+        type=float, default=0.025, required=False)
 
     args = parser.parse_args()
 
