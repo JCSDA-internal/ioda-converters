@@ -6,6 +6,7 @@ import os, argparse
 import pandas as pd
 
 import lib_python.ioda_conv_engines as iconv
+import lib_python.ioda_conv_ncio as iconio
 from collections import defaultdict, OrderedDict
 from lib_python.orddicts import DefaultOrderedDict
 
@@ -113,7 +114,7 @@ if __name__ == '__main__':
                        ("station_elevation", "float"), ("height", "float"), ("station_id", "string"),
                        ("datetime", "string")]
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    writer = iconio.NcWriter(args.output, locationKeyList)
 
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))

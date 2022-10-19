@@ -4,13 +4,11 @@
 # one output file with matching corresponding locations
 # and missing data where applicable
 
-import sys
 import netCDF4 as nc
 import numpy as np
 import argparse
 from collections import defaultdict, OrderedDict
 import datetime as dt
-from pathlib import Path
 
 import lib_python.ioda_conv_ncio as iconv
 from lib_python.orddicts import DefaultOrderedDict
