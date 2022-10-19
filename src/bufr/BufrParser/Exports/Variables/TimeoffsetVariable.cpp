@@ -69,7 +69,6 @@ namespace Ingester
         std::time_t epochDt = std::mktime(&tm);
 
         // Convert the reference time (ISO8601 string) to time struct
-
         std::tm ref_time = {};
         std::istringstream ss(referenceTime_);
         ss.imbue(std::locale("en_US.utf-8"));
@@ -81,32 +80,44 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-        std::vector<int64_t> timeOffsets;
-        timeOffsets.reserve(map.at(getExportKey(ConfKeys::Timeoffset))->size());
-
         // Validation
-        if (map.at(getExportKey(ConfKeys::Timeoffset))->getDims().size() != 1)
+        size_t ndims = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().size();
+        if (ndims > 2)
         {
             std::ostringstream errStr;
-            errStr << "Timeoffset variables must be 1 dimensional.";
+            errStr << "Timeoffset variable cannot be more than 2 dimensions.";
             throw eckit::BadParameter(errStr.str());
         }
 
-        for (unsigned int idx = 0; idx < map.at(getExportKey(ConfKeys::Timeoffset))->size(); idx++)
+        // Falsify a 2D variable with second dimension size=1 if Timeoffset is 1D
+        size_t nlocs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(0);
+        size_t nlevs = 1;
+        if (ndims == 2)
         {
-            float offset = map.at(getExportKey(ConfKeys::Timeoffset))->getAsFloat(idx);
-
-            auto diff_time = DataObject<int64_t>::missingValue();
-            if (offset != missingVal)
-            {
-                ref_time.tm_sec += offset;
-                auto thisTime = std::mktime(&ref_time);
-                diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
-            }
-
-            timeOffsets.push_back(diff_time);
+            nlevs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(1);
         }
 
+        std::vector<std::vector<int64_t> timeOffsets(nlocs, std::vector<float> (nlevs));
+
+        for (size_t nlev = 0; nlev < nlevs; nlev++)
+        {
+            for (size_t nloc = 0; nloc < nlocs; nloc++)
+            {
+                // This next line will fail since variable (BUFR mnemonic) is 2D, not 1D
+                float offset = map.at(getExportKey(ConfKeys::Timeoffset))->getAsFloat(idx);
+
+                auto diff_time = DataObject<int64_t>::missingValue();
+                if (offset != missingVal)
+                {
+                    ref_time.tm_sec += offset;
+                    auto thisTime = std::mktime(&ref_time);
+                    diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
+                }
+                timeOffsets[nloc][nlev] = diff_time;
+            }
+        }
+
+        // If timeOffsets is 2D, will the next two lines fail?
         Dimensions dims = {static_cast<int>(timeOffsets.size())};
 
         return std::make_shared<DataObject<int64_t>>(
@@ -120,8 +131,7 @@ namespace Ingester
 
     void TimeoffsetVariable::checkKeys(const BufrDataMap& map)
     {
-        std::vector<std::string> requiredKeys = {getExportKey(ConfKeys::Timeoffset),
-                                                 getExportKey(ConfKeys::Referencetime)};
+        std::vector<std::string> requiredKeys = {getExportKey(ConfKeys::Timeoffset)};
 
         std::stringstream errStr;
         errStr << "Query ";
@@ -164,6 +174,7 @@ namespace Ingester
 
     std::string TimeoffsetVariable::getExportKey(const char* name) const
     {
-        return getExportName() + "_" + name;
+        // return getExportName() + "_" + name;
+        return name;
     }
 }  // namespace Ingester
