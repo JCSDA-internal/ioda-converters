@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # script to run to test if the GSI ncdiag converters are still working
-import sys
 import argparse
-from pathlib import Path
 
 import gsi_ncdiag.gsi_ncdiag as gsid
 

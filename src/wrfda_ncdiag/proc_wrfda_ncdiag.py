@@ -4,7 +4,6 @@ import os
 import sys
 from multiprocessing import Pool
 import glob
-from pathlib import Path
 
 import wrfda_ncdiag as wrfdad
 

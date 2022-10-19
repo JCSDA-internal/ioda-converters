@@ -8,13 +8,11 @@
 #
 
 from __future__ import print_function
-import sys
 import argparse
 import netCDF4 as nc
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import numpy as np
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict

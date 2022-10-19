@@ -5,10 +5,7 @@ Python code to ingest observational data and try to convert to IODA
 """
 
 import argparse
-from datetime import datetime, timedelta
-import glob
 import os
-import sys
 
 from gnssro.gnssro_bufr2ioda import main as main_gnssro
 from hdf5.tropics_2ioda import main as main_tropics

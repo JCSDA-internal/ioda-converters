@@ -5,12 +5,10 @@ Python code to ingest netCDF4 or HDF5 ATMS data
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 import glob
-# from concurrent.futures import ProcessPoolExecutor
-from pathlib import Path
+from fileinput import filename
 import os.path
-from os import getcwd
 import sys
 
 import h5py

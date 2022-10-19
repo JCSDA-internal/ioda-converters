@@ -6,7 +6,6 @@ import sys
 import os
 import argparse
 from netCDF4 import Dataset
-from pathlib import Path
 
 import bufr2ncCommon as cm
 import bufr2ncObsTypes as ot

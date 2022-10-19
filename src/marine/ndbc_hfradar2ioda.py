@@ -6,15 +6,12 @@
 from __future__ import print_function
 import numpy as np
 import numpy.matlib
-import sys
 import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
-from collections import defaultdict, OrderedDict
 from lib_python.orddicts import DefaultOrderedDict
 
 vName = ["sea_water_meridional_current",

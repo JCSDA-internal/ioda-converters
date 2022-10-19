@@ -5,14 +5,12 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 #
 
-import time, os, sys
+import os
 import argparse
-import netCDF4 as nc
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.parser import parse
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict

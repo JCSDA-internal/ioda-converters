@@ -8,12 +8,9 @@
 # Author:
 # 2020-11-17, 2021-10-18, 2022-01-09: James McCreight
 
-from datetime import datetime
 import numpy as np
 import os
 import pandas as pd
-import pathlib
-from pathlib import Path
 import sys
 import warnings
 

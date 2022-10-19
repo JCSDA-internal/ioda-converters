@@ -8,12 +8,10 @@
 #
 
 from __future__ import print_function
-import sys
 import numpy as np
 from datetime import datetime
 from scipy.io import FortranFile
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict

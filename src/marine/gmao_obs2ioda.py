@@ -10,12 +10,10 @@ Convert GMAO ocean data to IODA netCDF4 format
 """
 
 from __future__ import print_function
-import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import netCDF4 as nc4
 import numpy as np
 from datetime import datetime
-from pathlib import Path
 
 import lib_python.ioda_conv_ncio as iconv
 from lib_python.orddicts import DefaultOrderedDict

@@ -10,12 +10,8 @@
 import argparse
 import collections
 from datetime import datetime, timedelta
-import itertools
-import math
 from pathlib import Path
-import sys
 
-import dateutil.parser
 import numpy as np
 import netCDF4 as nc
 

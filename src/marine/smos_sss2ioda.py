@@ -7,12 +7,10 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-import sys
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict

@@ -7,14 +7,12 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 from __future__ import print_function
-import sys
 import argparse
 import yaml
 import netCDF4 as nc
 from datetime import datetime, timedelta
 import numpy as np
 import numpy.matlib
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict

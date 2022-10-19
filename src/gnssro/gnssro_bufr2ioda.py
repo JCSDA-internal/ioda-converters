@@ -10,13 +10,10 @@
 from __future__ import print_function
 import sys
 import argparse
-import netCDF4 as nc
-from datetime import datetime, timedelta
-import dateutil.parser
+from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import os
-from pathlib import Path
 from itertools import repeat
 
 import lib_python.ioda_conv_engines as iconv

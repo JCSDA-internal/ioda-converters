@@ -11,13 +11,10 @@
 #   data-access.ucar.edu:/glade/campaign/ral/aap/gthompsn/METARs/2019/20191231/2019123118_metars.csv.gz
 #
 
-import sys
 import os
-import math
 import numpy as np
 from datetime import datetime
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from pathlib import Path
 import csv
 import netCDF4
 

@@ -7,13 +7,10 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-import sys
 import argparse
-import netCDF4 as nc
 import numpy as np
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import os
-from pathlib import Path
 from pyhdf.SD import SD, SDC
 
 import lib_python.ioda_conv_engines as iconv

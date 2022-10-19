@@ -6,13 +6,8 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import numpy as np
-from pathlib import Path
-from datetime import datetime
 import yaml
-import sys
 
-import lib_python.meteo_utils
 import lib_python.ioda_conv_ncio as iconv
 from lib_python.orddicts import DefaultOrderedDict
 

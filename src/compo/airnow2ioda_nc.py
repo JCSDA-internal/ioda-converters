@@ -2,12 +2,9 @@
 # read airnow data and convert to netcdf
 import netCDF4 as nc
 import numpy as np
-import inspect, os, sys, argparse
+import os, argparse
 import pandas as pd
-from datetime import datetime
-from pathlib import Path
 
-import lib_python.meteo_utils
 import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from lib_python.orddicts import DefaultOrderedDict

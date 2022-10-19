@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 # combine IODA ObsSpaces together into one ObsSpace to write to a file
 
-import sys
-import netCDF4 as nc
 import numpy as np
 import argparse
 import ioda_obs_space as ios
 from collections import defaultdict, OrderedDict
-import datetime as dt
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict

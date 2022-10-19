@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 import netCDF4 as nc
 import re
 import dateutil.parser
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict

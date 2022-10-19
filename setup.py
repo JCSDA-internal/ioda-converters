@@ -22,8 +22,15 @@ setuptools.setup(
         'Operating System :: OS Independent'],
     python_requires='>=3.6',
     install_requires=[
-        'ruamel.yaml',
-        'PyYAML',
-        'jinja2'
+        'pygrib',
+        'netCDF4',
+        'eccodes',
+        'h5py',
+        'pyyaml',
+        'pandas',
+        'pyhdf',
+        'path',
+        'mccabe',
+        'scipy',
     ],
 )

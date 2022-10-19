@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-import dateutil.parser
 import os
-from pathlib import Path
 import sys
 import time
 import logging
 
-from itertools import compress
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
 
 # These modules need the path to lib-python modules
 import lib_python.ioda_conv_engines as iconv
-import lib_python.meteo_utils
+import lib_python.meteo_utils as meteo_utils
 from lib_python.orddicts import DefaultOrderedDict
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 os.environ["TZ"] = "UTC"
 

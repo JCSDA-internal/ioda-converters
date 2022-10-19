@@ -13,7 +13,6 @@ import glob
 import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
-from pathlib import Path
 from collections import defaultdict, OrderedDict
 
 from lib_python.orddicts import DefaultOrderedDict

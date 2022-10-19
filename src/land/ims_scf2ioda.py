@@ -6,12 +6,9 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 import pygrib
-import time, os, sys
+import os
 import argparse
-import netCDF4 as nc
 import numpy as np
-from datetime import datetime, timedelta
-from pathlib import Path
 
 import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict

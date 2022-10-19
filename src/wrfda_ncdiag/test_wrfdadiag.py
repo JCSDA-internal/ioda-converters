@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # script to run to test if the WRFDA ncdiag converters are still working
-import sys
 import argparse
-from pathlib import Path
 
 import wrfda_ncdiag.wrfda_ncdiag as wrfdad
 
