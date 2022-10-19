@@ -21,4 +21,9 @@ setuptools.setup(
         'Natural Language :: English',
         'Operating System :: OS Independent'],
     python_requires='>=3.6',
+    install_requires=[
+        'ruamel.yaml',
+        'PyYAML',
+        'jinja2'
+    ],
 )
