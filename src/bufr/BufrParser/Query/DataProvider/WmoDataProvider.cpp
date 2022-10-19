@@ -79,9 +79,22 @@ namespace bufr {
     {
         deleteData();
 
+        struct TagData
+        {
+            char* ptr;
+            int strLen;
+            int size;
+            std::string tagStr;
+        };
+
+        TagData tagData;
+
+        get_tag_f(&tagData.ptr, &tagData.strLen, &tagData.size);
+        tagData.tagStr = std::string(&tagData.ptr[0], tagData.size * tagData.strLen);
+
         auto tableData = std::make_shared<TableData>();
-//        if (tableCache_.find(subset) == tableCache_.end())
-//        {
+        if (tableCache_.find(tagData.tagStr) == tableCache_.end())
+        {
             int size = 0;
             int *intPtr = nullptr;
             double *dataPtr = nullptr;
@@ -105,20 +118,19 @@ namespace bufr {
                 tableData->typ[wordIdx] = TypMap.at(typ);
             }
 
-            get_tag_f(&charPtr, &strLen, &size);
-            tableData->tag.resize(size);
-            for (int wordIdx = 0; wordIdx < size; wordIdx++)
+            tableData->tag.resize(tagData.size);
+            for (int wordIdx = 0; wordIdx < tagData.size; wordIdx++)
             {
-                auto tag = std::string(&charPtr[wordIdx * strLen], strLen);
+                auto tag = std::string(&tagData.ptr[wordIdx * tagData.strLen], tagData.strLen);
                 tableData->tag[wordIdx] = tag.substr(0, tag.find_first_of(' '));
             }
 
             get_jmpb_f(&intPtr, &size);
             tableData->jmpb = std::vector<int>(intPtr, intPtr + size);
-//            tableCache_[subset] = tableData;
-//        }
+            tableCache_[tagData.tagStr] = tableData;
+        }
 
-
+        tableData = tableCache_[tagData.tagStr];
 
         return tableData;
     }

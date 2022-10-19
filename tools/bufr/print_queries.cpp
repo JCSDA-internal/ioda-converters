@@ -97,39 +97,6 @@ std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
                        processFinish,
                        continueProcessing);
 
-//    static const int SubsetLen = 9;
-//
-//    int iddate;
-//    int bufrLoc;
-//    int il, im; // throw away
-//    char current_subset[9];
-//    bool subsetFound = false;
-//
-//    std::vector<Ingester::bufr::QueryData> queryData;
-//
-//    while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
-//    {
-//        auto msg_subset = std::string(current_subset);
-//        msg_subset.erase(
-//            remove_if(msg_subset.begin(), msg_subset.end(), isspace), msg_subset.end());
-//
-//        status_f(fileUnit, &bufrLoc, &il, &im);
-//        dataProvider.updateData(bufrLoc);
-//
-//        if (msg_subset == subset)
-//        {
-//            while (ireadsb_f(fileUnit) == 0)
-//            {
-//                status_f(fileUnit, &bufrLoc, &il, &im);
-//                dataProvider.updateData(bufrLoc);
-//                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
-//                subsetFound = true;
-//            }
-//        }
-//
-//        if (subsetFound) break;
-//    }
-
     return queryData;
 }
 
