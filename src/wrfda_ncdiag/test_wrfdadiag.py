@@ -4,7 +4,7 @@ import sys
 import argparse
 from pathlib import Path
 
-import wrfda_ncdiag as wrfdad
+import wrfda_ncdiag.wrfda_ncdiag as wrfdad
 
 parser = argparse.ArgumentParser(
     description=('Test for WRFDA netCDF diag file to IODA Obs files converters'))

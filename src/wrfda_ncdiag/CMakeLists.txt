@@ -30,7 +30,7 @@ install( PROGRAMS ${install_bin_wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_I
 
 install( FILES ${wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-ecbuild_add_test( TARGET  ${PROJECT_NAME}_wrfda-ncdiag_coding_norms
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_wrfda_ncdiag_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
                   ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )

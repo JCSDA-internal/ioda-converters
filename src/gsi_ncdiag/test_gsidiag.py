@@ -4,7 +4,7 @@ import sys
 import argparse
 from pathlib import Path
 
-import gsi_ncdiag as gsid
+import gsi_ncdiag.gsi_ncdiag as gsid
 
 parser = argparse.ArgumentParser(
     description=('Test for GSI netCDF diag file to IODA Obs/GeoVaLs files converters'))
