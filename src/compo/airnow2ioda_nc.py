@@ -113,7 +113,7 @@ if __name__ == '__main__':
                        ("station_elevation", "float"), ("height", "float"), ("station_id", "string"),
                        ("datetime", "string")]
 
-    writer = iconv.IodaWriter(args.output, locationKeyList)
+    writer = iconv.NcWriter(args.output, locationKeyList)
 
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
