@@ -182,7 +182,6 @@ gsi_add_vars_allsky = {
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
-    'standard_deviation_clear_bt': 'ClearSkyStdDev',
 }
 
 gsi_add_qcvars_allsky = {
@@ -210,6 +209,7 @@ gsi_add_vars = {
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
+    'standard_deviation_clear_bt': 'ClearSkyStdDev',
 }
 
 gsi_add_qcvars = {
