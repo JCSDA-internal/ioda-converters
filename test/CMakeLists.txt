@@ -8,7 +8,6 @@
 ################################################################################
 
 list( APPEND test_input
-  testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
@@ -72,11 +71,11 @@ list( APPEND test_input
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
+  testinput/icethk_coperl4.nc
   testinput/2021081612_RAOB_small.txt
 )
 
 list( APPEND test_output
-  testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -140,6 +139,7 @@ list( APPEND test_output
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
+  testinput/icethk_coperl4.nc
   testoutput/2021081612_sonde_small.nc
 )
 
