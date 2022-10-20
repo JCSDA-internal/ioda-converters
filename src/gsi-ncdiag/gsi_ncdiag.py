@@ -75,7 +75,7 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 42, 43, 745, 825],
+    "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -161,6 +161,7 @@ gsi_add_vars_allsky = {
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
+    'Errinv_Input': 'GsiInputObsError',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
     'Forecast_adjusted': 'GsiHofXBc',
@@ -190,6 +191,7 @@ gsi_add_vars = {
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
+    'Errinv_Input': 'GsiInputObsError',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
     'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
