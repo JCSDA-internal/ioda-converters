@@ -141,6 +141,27 @@ namespace Ingester
             theDimpath = map.at(getExportKey(ConfKeys::FlightLevelST))->getDimPaths();
         }
 
+        // Validation
+        if ((!pressureQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::Pressure))->getDims().size() != 1) ||
+            (!aircraftIndicatedAltitudeQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::AircraftIndicatedAltitude))->getDims().size() != 1) ||
+            (!pressureAltitudeRelativeToMeanSeaLevelQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::PressureAltitudeRelativeToMeanSeaLevel))->getDims().size() != 1) ||
+            (!flightLevelQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::FlightLevel))->getDims().size() != 1) ||
+            (!heightQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::Height))->getDims().size() != 1) ||
+            (!heightOrAltitudeQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::HeightOrAltitude))->getDims().size() != 1) ||
+            (!flightLevelSTQuery_.empty() &&
+                map.at(getExportKey(ConfKeys::FlightLevelST))->getDims().size() != 1))
+        {
+            std::ostringstream errStr;
+            errStr << "Aircraft Altitude variables must be 1 dimensional.";
+            throw eckit::BadParameter(errStr.str());
+        }
+
         for (unsigned int idx = 0; idx < datalength; idx++)
         {
             float acftalt = DataObject<float>::missingValue();
