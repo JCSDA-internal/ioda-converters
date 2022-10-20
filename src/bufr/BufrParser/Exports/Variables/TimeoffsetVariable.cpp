@@ -40,8 +40,8 @@ namespace Ingester
                                        const std::string& groupByField,
                                        const eckit::Configuration &conf) :
       Variable(exportName),
-      timeOffsetQuery_(conf.getString(ConfKeys::Timeoffset)),
       referenceTime_(conf.getString(ConfKeys::Referencetime)),
+      timeOffsetQuery_(conf.getString(ConfKeys::Timeoffset)),
       groupByField_(groupByField)
     {
 
@@ -56,10 +56,9 @@ namespace Ingester
     std::shared_ptr<DataObjectBase> TimeoffsetVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
-        static const float missingVal = DataObject<float>::missingValue();
 
         std::tm tm{};                // zero initialise
-        tm.tm_year = 1970-1900;      // 1970
+        tm.tm_year = 1970 - 1900;      // 1970
         tm.tm_mon = 0;               // Jan=0, Feb=1, ...
         tm.tm_mday = 1;              // 1st
         tm.tm_hour = 0;              // midnight
@@ -80,53 +79,64 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-        // Validation
-        size_t ndims = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().size();
-        if (ndims > 2)
-        {
-            std::ostringstream errStr;
-            errStr << "Timeoffset variable cannot be more than 2 dimensions.";
-            throw eckit::BadParameter(errStr.str());
-        }
+//        // Validation
+//        size_t ndims = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().size();
+//        if (ndims > 2)
+//        {
+//            std::ostringstream errStr;
+//            errStr << "Timeoffset variable cannot be more than 2 dimensions.";
+//            throw eckit::BadParameter(errStr.str());
+//        }
+//
+//        // Falsify a 2D variable with second dimension size=1 if Timeoffset is 1D
+//        size_t nlocs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(0);
+//        size_t nlevs = 1;
+//        if (ndims == 2)
+//        {
+//            nlevs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(1);
+//        }
+//
+//        std::vector<std::vector<int64_t>> timeOffsets(nlocs, std::vector<float> (nlevs));
+//
+//        for (size_t nlev = 0; nlev < nlevs; nlev++)
+//        {
+//            for (size_t nloc = 0; nloc < nlocs; nloc++)
+//            {
+//                // This next line will fail since variable (BUFR mnemonic) is 2D, not 1D
+//                float offset = map.at(getExportKey(ConfKeys::Timeoffset))->getAsFloat(idx);
+//
+//                auto diff_time = DataObject<int64_t>::missingValue();
+//                if (offset != missingVal)
+//                {
+//                    ref_time.tm_sec += offset;
+//                    auto thisTime = std::mktime(&ref_time);
+//                    diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
+//                }
+//                timeOffsets[nloc][nlev] = diff_time;
+//            }
+//        }
 
-        // Falsify a 2D variable with second dimension size=1 if Timeoffset is 1D
-        size_t nlocs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(0);
-        size_t nlevs = 1;
-        if (ndims == 2)
+        auto timeOffsets = map.at(getExportKey(ConfKeys::Timeoffset));
+        auto timeDiffs = std::vector<int64_t> (timeOffsets->size());
+        for (size_t idx = 0; idx < timeOffsets->size(); ++idx)
         {
-            nlevs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(1);
-        }
-
-        std::vector<std::vector<int64_t> timeOffsets(nlocs, std::vector<float> (nlevs));
-
-        for (size_t nlev = 0; nlev < nlevs; nlev++)
-        {
-            for (size_t nloc = 0; nloc < nlocs; nloc++)
+            auto diff_time = DataObject<int64_t>::missingValue();
+            if (!timeOffsets->isMissing(idx))
             {
-                // This next line will fail since variable (BUFR mnemonic) is 2D, not 1D
-                float offset = map.at(getExportKey(ConfKeys::Timeoffset))->getAsFloat(idx);
-
-                auto diff_time = DataObject<int64_t>::missingValue();
-                if (offset != missingVal)
-                {
-                    ref_time.tm_sec += offset;
-                    auto thisTime = std::mktime(&ref_time);
-                    diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
-                }
-                timeOffsets[nloc][nlev] = diff_time;
+                ref_time.tm_sec += timeOffsets->getAsInt(idx);
+                auto thisTime = std::mktime(&ref_time);
+                diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
             }
+
+            timeDiffs[idx] = diff_time;
         }
 
-        // If timeOffsets is 2D, will the next two lines fail?
-        Dimensions dims = {static_cast<int>(timeOffsets.size())};
-
-        return std::make_shared<DataObject<int64_t>>(
-                timeOffsets,
-                getExportName(),
-                groupByField_,
-                dims,
-                map.at(getExportKey(ConfKeys::Timeoffset))->getPath(),
-                map.at(getExportKey(ConfKeys::Timeoffset))->getDimPaths());
+        return std::make_shared<DataObject<int64_t>>(timeDiffs,
+                                                     getExportName(),
+                                                     groupByField_,
+                                                     timeOffsets->getDims(),
+                                                     timeOffsets->getPath(),
+                                                     timeOffsets->getDimPaths());
     }
 
     void TimeoffsetVariable::checkKeys(const BufrDataMap& map)
