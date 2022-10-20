@@ -174,7 +174,7 @@ def main():
     optional.add_argument(
         '-m', '--maskMissing',
         help="switch to mask missing values: default=False",
-        type=bool, default=False, action='store_true', required=False)
+        default=False, action='store_true', required=False)
     optional.add_argument(
         '-d', '--assumedSoilDepth',
         help="default assumed depth of soil moisture in meters",
