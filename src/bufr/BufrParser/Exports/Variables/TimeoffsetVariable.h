@@ -25,7 +25,7 @@ namespace Ingester
         TimeoffsetVariable() = delete;
         TimeoffsetVariable(const std::string& exportName,
                          const std::string& groupByField,
-                         const eckit::Configuration& conf);
+                         const eckit::LocalConfiguration& conf);
         ~TimeoffsetVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
@@ -36,14 +36,8 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        /// \brief YAML reference time string
-        const std::string referenceTime_;
-
-        /// \brief Query for offset from reference time
-        const std::string timeOffsetQuery_;
-
-        /// \brief For field (optional)
-        std::string groupByField_;
+        /// \brief Configuration for this variable
+        const eckit::LocalConfiguration conf_;
 
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);

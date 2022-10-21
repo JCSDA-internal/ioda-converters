@@ -5,22 +5,20 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include <climits>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <locale>
-#include <unordered_map>
-
 #include <ostream>
-#include <sstream>
-#include <time.h>
+#include <ctime>
 #include <vector>
+#include <unordered_map>
 
 #include "eckit/exception/Exceptions.h"
 #include "oops/util/Logger.h"
 
 #include "DataObject.h"
 #include "TimeoffsetVariable.h"
+#include "Transforms/TransformBuilder.h"
 
 
 namespace
@@ -30,6 +28,7 @@ namespace
         const char* Timeoffset = "time_offset";
         const char* Referencetime = "reference_time";
         const char* GroupByField = "group_by";
+        const char* Transforms = "transforms";
     }  // namespace ConfKeys
 }  // namespace
 
@@ -37,19 +36,11 @@ namespace
 namespace Ingester
 {
     TimeoffsetVariable::TimeoffsetVariable(const std::string& exportName,
-                                       const std::string& groupByField,
-                                       const eckit::Configuration &conf) :
+                                           const std::string& groupByField,
+                                           const eckit::LocalConfiguration &conf) :
       Variable(exportName),
-      referenceTime_(conf.getString(ConfKeys::Referencetime)),
-      timeOffsetQuery_(conf.getString(ConfKeys::Timeoffset)),
-      groupByField_(groupByField)
+      conf_(conf)
     {
-
-        if (conf.has(ConfKeys::GroupByField))
-        {
-            groupByField_ = conf.getString(ConfKeys::GroupByField);
-        }
-
         initQueryMap();
     }
 
@@ -69,8 +60,12 @@ namespace Ingester
 
         // Convert the reference time (ISO8601 string) to time struct
         std::tm ref_time = {};
-        std::istringstream ss(referenceTime_);
+        std::istringstream ss(conf_.getString(ConfKeys::Referencetime));
+
+#ifndef __APPLE__
         ss.imbue(std::locale("en_US.utf-8"));
+#endif
+
         ss >> std::get_time(&ref_time, "%Y-%m-%dT%H:%M:%S");
         if (ss.fail())
         {
@@ -79,44 +74,16 @@ namespace Ingester
             throw eckit::BadParameter(errStr.str());
         }
 
-//        // Validation
-//        size_t ndims = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().size();
-//        if (ndims > 2)
-//        {
-//            std::ostringstream errStr;
-//            errStr << "Timeoffset variable cannot be more than 2 dimensions.";
-//            throw eckit::BadParameter(errStr.str());
-//        }
-//
-//        // Falsify a 2D variable with second dimension size=1 if Timeoffset is 1D
-//        size_t nlocs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(0);
-//        size_t nlevs = 1;
-//        if (ndims == 2)
-//        {
-//            nlevs = map.at(getExportKey(ConfKeys::Timeoffset))->getDims().at(1);
-//        }
-//
-//        std::vector<std::vector<int64_t>> timeOffsets(nlocs, std::vector<float> (nlevs));
-//
-//        for (size_t nlev = 0; nlev < nlevs; nlev++)
-//        {
-//            for (size_t nloc = 0; nloc < nlocs; nloc++)
-//            {
-//                // This next line will fail since variable (BUFR mnemonic) is 2D, not 1D
-//                float offset = map.at(getExportKey(ConfKeys::Timeoffset))->getAsFloat(idx);
-//
-//                auto diff_time = DataObject<int64_t>::missingValue();
-//                if (offset != missingVal)
-//                {
-//                    ref_time.tm_sec += offset;
-//                    auto thisTime = std::mktime(&ref_time);
-//                    diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
-//                }
-//                timeOffsets[nloc][nlev] = diff_time;
-//            }
-//        }
-
         auto timeOffsets = map.at(getExportKey(ConfKeys::Timeoffset));
+        if (conf_.has(ConfKeys::Transforms))
+        {
+            auto transforms = TransformBuilder::makeTransforms(conf_);
+            for (const auto &transform: transforms)
+            {
+                transform->apply(timeOffsets);
+            }
+        }
+
         auto timeDiffs = std::vector<int64_t> (timeOffsets->size());
         for (size_t idx = 0; idx < timeOffsets->size(); ++idx)
         {
@@ -131,9 +98,15 @@ namespace Ingester
             timeDiffs[idx] = diff_time;
         }
 
+        std::string groupByField;
+        if (conf_.has(ConfKeys::GroupByField))
+        {
+            groupByField = conf_.getString(ConfKeys::GroupByField);
+        }
+
         return std::make_shared<DataObject<int64_t>>(timeDiffs,
                                                      getExportName(),
-                                                     groupByField_,
+                                                     groupByField,
                                                      timeOffsets->getDims(),
                                                      timeOffsets->getPath(),
                                                      timeOffsets->getDimPaths());
@@ -172,8 +145,13 @@ namespace Ingester
         {  // Timeoffset
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Timeoffset);
-            info.query = timeOffsetQuery_;
-            info.groupByField = groupByField_;
+            info.query = conf_.getString(ConfKeys::Timeoffset);
+
+            if (conf_.has(ConfKeys::GroupByField))
+            {
+                info.groupByField = conf_.getString(ConfKeys::GroupByField);
+            }
+
             queries.push_back(info);
         }
 
@@ -184,7 +162,6 @@ namespace Ingester
 
     std::string TimeoffsetVariable::getExportKey(const char* name) const
     {
-        // return getExportName() + "_" + name;
-        return name;
+        return getExportName() + "_" + name;
     }
 }  // namespace Ingester
