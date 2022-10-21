@@ -78,7 +78,7 @@ namespace Ingester
         if (conf_.has(ConfKeys::Transforms))
         {
             auto transforms = TransformBuilder::makeTransforms(conf_);
-            for (const auto &transform: transforms)
+            for (const auto &transform : transforms)
             {
                 transform->apply(timeOffsets);
             }
