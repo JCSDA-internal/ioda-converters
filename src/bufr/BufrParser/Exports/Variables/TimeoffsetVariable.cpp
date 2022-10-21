@@ -49,7 +49,7 @@ namespace Ingester
         checkKeys(map);
 
         std::tm tm{};                // zero initialise
-        tm.tm_year = 1970 - 1900;      // 1970
+        tm.tm_year = 1970 - 1900;    // 1970
         tm.tm_mon = 0;               // Jan=0, Feb=1, ...
         tm.tm_mday = 1;              // 1st
         tm.tm_hour = 0;              // midnight
@@ -90,8 +90,9 @@ namespace Ingester
             auto diff_time = DataObject<int64_t>::missingValue();
             if (!timeOffsets->isMissing(idx))
             {
-                ref_time.tm_sec += timeOffsets->getAsInt(idx);
-                auto thisTime = std::mktime(&ref_time);
+                auto obs_tm = ref_time;
+                obs_tm.tm_sec = ref_time.tm_sec + timeOffsets->getAsInt(idx);
+                auto thisTime = std::mktime(&obs_tm);
                 diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
             }
 
