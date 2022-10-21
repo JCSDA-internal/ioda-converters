@@ -63,7 +63,7 @@ namespace Ingester
         std::istringstream ss(conf_.getString(ConfKeys::Referencetime));
 
 #ifndef __APPLE__
-        ss.imbue(std::locale("en_US.utf-8"));
+        // ss.imbue(std::locale("en_US.utf-8"));
 #endif
 
         ss >> std::get_time(&ref_time, "%Y-%m-%dT%H:%M:%S");
