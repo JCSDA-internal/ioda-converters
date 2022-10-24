@@ -341,7 +341,7 @@ namespace Ingester
 
         /// \brief Get the data at the index into the internal 1d array as a int. This function
         ///        gives you direct access to the internal data and doesn't account for dimensional
-        ///        information (its up to the user). Note: getAsInt(const Location&) is safer.
+        ///        information (its up to the user).
         /// \param idx The idx into the internal 1d array.
         /// \return Int data.
         int getAsInt(size_t idx) const final { return _getAsInt(idx); }
@@ -349,8 +349,7 @@ namespace Ingester
 
         /// \brief idx Get the data at the index into the internal 1d array as a float. This
         ///            function gives you direct access to the internal data and doesn't account for
-        ///            dimensional information (its up to the user). Note: getAsInt(const Location&)
-        ///            is safer.
+        ///            dimensional information (its up to the user).
         /// \param idx The idx into the internal 1d array.
         /// \return Float data.
         float getAsFloat(const size_t idx) const final { return _getAsFloat(idx); }

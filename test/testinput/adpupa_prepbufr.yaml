@@ -12,10 +12,10 @@ observations:
         variables:
           timestamp:
             timeoffset:
-              time_offset: "*/PRSLEVEL/DRFTINFO/HRDR"
+              timeOffset: "*/PRSLEVEL/DRFTINFO/HRDR"
               transforms:
                 - scale: 3600
-              reference_time: "2020-11-01T12:00:00Z"
+              referenceTime: "2020-11-01T12:00:00Z"
           longitude:
             query: "*/PRSLEVEL/DRFTINFO/XDR"
           latitude:

@@ -25,9 +25,8 @@ namespace
 {
     namespace ConfKeys
     {
-        const char* Timeoffset = "time_offset";
-        const char* Referencetime = "reference_time";
-        const char* GroupByField = "group_by";
+        const char* Timeoffset = "timeOffset";
+        const char* Referencetime = "referenceTime";
         const char* Transforms = "transforms";
     }  // namespace ConfKeys
 }  // namespace
@@ -36,7 +35,7 @@ namespace
 namespace Ingester
 {
     TimeoffsetVariable::TimeoffsetVariable(const std::string& exportName,
-                                           const std::string& groupByField,
+                                           const std::string& groupByField_,
                                            const eckit::LocalConfiguration &conf) :
       Variable(exportName),
       conf_(conf)
@@ -61,10 +60,6 @@ namespace Ingester
         // Convert the reference time (ISO8601 string) to time struct
         std::tm ref_time = {};
         std::istringstream ss(conf_.getString(ConfKeys::Referencetime));
-
-#ifndef __APPLE__
-        // ss.imbue(std::locale("en_US.utf-8"));
-#endif
 
         ss >> std::get_time(&ref_time, "%Y-%m-%dT%H:%M:%S");
         if (ss.fail())
@@ -99,15 +94,9 @@ namespace Ingester
             timeDiffs[idx] = diff_time;
         }
 
-        std::string groupByField;
-        if (conf_.has(ConfKeys::GroupByField))
-        {
-            groupByField = conf_.getString(ConfKeys::GroupByField);
-        }
-
         return std::make_shared<DataObject<int64_t>>(timeDiffs,
                                                      getExportName(),
-                                                     groupByField,
+                                                     groupByField_,
                                                      timeOffsets->getDims(),
                                                      timeOffsets->getPath(),
                                                      timeOffsets->getDimPaths());
@@ -147,12 +136,6 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Timeoffset);
             info.query = conf_.getString(ConfKeys::Timeoffset);
-
-            if (conf_.has(ConfKeys::GroupByField))
-            {
-                info.groupByField = conf_.getString(ConfKeys::GroupByField);
-            }
-
             queries.push_back(info);
         }
 

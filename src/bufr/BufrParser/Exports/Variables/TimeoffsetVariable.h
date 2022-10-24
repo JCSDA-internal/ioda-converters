@@ -44,5 +44,8 @@ namespace Ingester
 
         /// \brief get the export key string
         std::string getExportKey(const char* name) const;
+
+        // \\brief This is just a placeholder, will be removed later.
+        std::string groupByField_;
     };
 }  // namespace Ingester
