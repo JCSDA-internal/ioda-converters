@@ -102,6 +102,10 @@ phases:
         && cat DartConfiguration.tcl
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
 
+      # Install python-based ioda-converters
+      - cd /jcsda/ioda-bundle/iodaconv
+      - python3 -m pip install -e .
+
       - su - nonroot -c "cd /home/nonroot/iodaconv
         && export FC=mpifort
         && export CC=mpicc
@@ -111,10 +115,6 @@ phases:
         && sed -i 's/nonroot/nonroot\/iodaconv/' DartConfiguration.tcl
         && cat DartConfiguration.tcl
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
-
-      # Install python-based ioda-converters
-      - cd /jcsda/ioda-bundle/iodaconv
-      - python3 -m pip install -e .
 
       - if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ];
         then export BUILD_STATUS="1";

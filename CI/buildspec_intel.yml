@@ -114,16 +114,16 @@ phases:
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j8
 
+      # Install python-based ioda-converters
+      - cd /jcsda/ioda-bundle/iodaconv
+      - python3 -m pip install -e .
+
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
       - sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
       - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j8
-
-      # Install python-based ioda-converters
-      - cd /jcsda/ioda-bundle/iodaconv
-      - python3 -m pip install -e .
 
       - echo $BUILD_STATUS
       - echo $CODEBUILD_BUILD_SUCCEEDING

@@ -99,6 +99,10 @@ phases:
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
+      # Install python-based ioda-converters
+      - cd /jcsda/ioda-bundle/iodaconv
+      - python3 -m pip install -e .
+
       # Build ioda-converters
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
@@ -106,10 +110,6 @@ phases:
       - sed -i 's/build_container/build_container\/iodaconv/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
-
-      # Install python-based ioda-converters
-      - cd /jcsda/ioda-bundle/iodaconv
-      - python3 -m pip install -e .
 
       - if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ];
         then export BUILD_STATUS="1";
