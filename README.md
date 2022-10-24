@@ -131,9 +131,15 @@ In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file
 
 For surface volumetric soil moisture (ssm), SMAP NRT h5 files are supported with `smap_ssm2ioda.py`.
 ```
-Usage: smap_ssm2ioda.py -i input_smap_file.h5 -o output_ioda_file.nc -m maskout
+Usage: smap_ssm2ioda.py -i input_smap_file.h5 -o output_ioda_file.nc --maskMissing
 ```
-For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values. It should be noted that SMAP NRT h5 filename contains date and time which has been transferred to the datetime in smap_ssm2ioda.py because the data in the file does not have date and time variables. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
+For -i you can specify an input file and the converter will write it to one output file. --maskMissing means to not write out missing values. It should be noted that SMAP NRT h5 filename contains date and time which has been transferred to the datetime in smap_ssm2ioda.py because the data in the file does not have date and time variables. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
+
+For surface volumetric soil moisture (ssm), SMAP 9km h5 files are supported with `smap9km_ssm2ioda.py`.
+```
+Usage: smap9km_ssm2ioda.py -i input_smap9km_file.h5 -o output_ioda_file.nc --maskMissing
+```
+For -i you can specify an input file and the converter will write it to one output file. --maskMissin means to not write out missing values. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
 
 For surface volumetric soil moisture (ssm), SMOS L2 NRT Netcdf files are supported with `smos_ssm2ioda.py`.
 ```

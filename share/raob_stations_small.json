@@ -1,0 +1,8 @@
+{
+"72469": {"id": "KDNR", "name": "DENVER/STAPLETON", "state": "CO", "lat": 39.75, "lon": -104.87, "elev": 1608},
+"72403": {"id": "KIAD", "name": "WASH DC/DULLES", "state": "VA", "lat": 38.93, "lon": -77.45, "elev": 93},
+"17064": {"id": "", "name": "ISTANBUL/KARTAL", "state": "TU", "lat": 40.90, "lon": 29.15, "elev": 18},
+"83840": {"id": "SBCT", "name": "CURITIBA/AFONSO PEN", "state": "BZ", "lat": -25.52, "lon": -49.17, "elev": 908},
+"68263": {"id": "FAIR", "name": "PRETORIA/IRENE", "state": "ZA", "lat": -25.92, "lon": 28.22, "elev": 1500},
+"27713": {"id": "UUDD", "name": "MOSCOW POLGOPRUDNYJ", "state": "RS", "lat": 55.40, "lon": 37.90, "elev": 179}
+}

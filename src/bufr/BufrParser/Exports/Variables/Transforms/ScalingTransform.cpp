@@ -18,15 +18,6 @@ namespace Ingester
 
     void ScalingTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-      if (auto object = std::dynamic_pointer_cast<DataObject<float>>(dataObject))
-      {
-        auto data = object->getRawData();
-        for (auto& val : data)
-        {
-            if (val != bufr::MissingValue) val *= scaling_;
-        }
-
-        object->setRawData(data);
-      }
+        dataObject->multiplyBy(scaling_);
     }
 }  // namespace Ingester

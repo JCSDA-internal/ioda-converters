@@ -1,4 +1,6 @@
 list(APPEND programs
+  nsidc_l4cdr_ice2ioda.py
+  amsr2_icec2ioda.py
   copernicus_l4adt2ioda.py
   copernicus_l3swh2ioda.py
   cryosat_ice2ioda.py
@@ -23,6 +25,7 @@ list(APPEND programs
   godae_bgc_argo2ioda.py
   avhrr_radiance2ioda.py
   pace_oc2ioda.py
+  pace_radiance2ioda.py
   ostia_l4sst2ioda.py
 )
 

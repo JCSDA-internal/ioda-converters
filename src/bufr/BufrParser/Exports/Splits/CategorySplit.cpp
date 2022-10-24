@@ -83,11 +83,10 @@ namespace Ingester
                 auto location = Location(dataObject->getDims().size(), 0);
                 location[0] = rowIdx;
 
-                auto itemVal =  dataObject->getAsFloat(location);
-                if (trunc(itemVal) == itemVal)
+                if (auto dat = std::dynamic_pointer_cast<DataObject<int>> (dataObject))
                 {
-                    nameMap_.insert({static_cast<int> (itemVal),
-                                     std::to_string(static_cast<int> (itemVal))});
+                    auto itemVal = dat->get(location);
+                    nameMap_.insert({itemVal, std::to_string(itemVal)});
                 }
                 else
                 {

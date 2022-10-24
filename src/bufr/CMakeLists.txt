@@ -43,12 +43,13 @@ list(APPEND _ingester_srcs
   BufrParser/Query/VectorMath.h
   BufrParser/Query/QuerySet.h
   BufrParser/Query/QuerySet.cpp
-  BufrParser/Query/Query.h
-  BufrParser/Query/Query.cpp
+  BufrParser/Query/QueryRunner.h
+  BufrParser/Query/QueryRunner.cpp
   BufrParser/Query/QueryParser.h
   BufrParser/Query/QueryParser.cpp
   BufrParser/Query/ResultSet.h
   BufrParser/Query/ResultSet.cpp
+  BufrParser/Query/Target.h
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp

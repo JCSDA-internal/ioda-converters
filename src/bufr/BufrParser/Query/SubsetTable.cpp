@@ -111,6 +111,7 @@ namespace bufr {
                 query->dimIdxs = dimPathIdxs(seqPath);
                 query->idx = numElements;
                 query->requiresIdx = (numElements > 1);
+                query->typeInfo = dataProvider_.getTypeInfo(nodeIdx);
 
                 allQueries.push_back(query);
                 foundQueryMap[mapKey(query->pathComponents, numElements)] = allQueries.back();
