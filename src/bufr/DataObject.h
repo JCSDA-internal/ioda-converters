@@ -358,10 +358,8 @@ namespace Ingester
 
         /// \brief idx See if the data at the index into the internal 1d array is missing. This
         ///            function gives you direct access to the internal data and doesn't account for
-        ///            dimensional information (its up to the user). Note: getAsInt(const Location&)
-        ///            is safer.
-        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
-        ///            at that coordinate).
+        ///            dimensional information (its up to the user).
+        /// \param idx The idx into the internal 1d array.
         /// \return bool data.
         bool isMissing(const size_t idx) const final
         {
