@@ -112,6 +112,10 @@ phases:
         && cat DartConfiguration.tcl
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
 
+      # Install python-based ioda-converters
+      - cd /jcsda/ioda-bundle/iodaconv
+      - python3 -m pip install -e .
+
       - if [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ];
         then export BUILD_STATUS="1";
         echo "Build passed";
