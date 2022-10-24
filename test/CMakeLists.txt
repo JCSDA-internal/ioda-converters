@@ -393,6 +393,11 @@ set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 #===============================================================================
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/nsidc_l4cdr_ice2ioda.py
                           -i testinput/nsidc_l4_icec.nc
                           -o testrun/nsidc_l4_icec.nc
