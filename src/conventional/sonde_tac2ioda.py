@@ -19,6 +19,8 @@ from pathlib import Path
 
 import numpy as np
 import netCDF4 as nc
+from cartopy import geodesic
+from copy import deepcopy as dcop
 
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -124,6 +126,8 @@ dtypes = {'string': object,
           'long': np.int64,
           'float': np.float32,
           'double': np.float64}
+
+geod = geodesic.Geodesic()  # generate ellipsoid, defaults to Earth WGS84 parameters
 
 
 def loadStations(stationfile, skipIfLoaded=True):
@@ -993,6 +997,28 @@ def change_vars(profile):
         new_profile['specific_humidity'].append(spfh)
         new_profile['eastward_wind'].append(u)
         new_profile['northward_wind'].append(v)
+
+    """
+    Based on height and time and the wind componenents, predict the lat, lon positions
+    as the balloon ascends.  Generally the balloon ascends at 5 m/s, which was already
+    assumed in the creation of each timestamp.
+    """
+
+    previous_loc = [new_profile['longitude'][0], new_profile['latitude'][0], None]
+    delta_t = np.diff(new_profile['dateTime'])
+
+    for idx in range(1, len(delta_t)):
+        # move north-south
+        location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north[idx])[0]
+        # move east-west
+        location = geod.direct(points=location[:2], azimuths=90., distances=d_east[idx])[0]
+
+        # changes in latitude and longitude in this timestep
+        new_profile['latitude'][idx] = location[1] - previous_loc[1]
+        new_profile['longitude'][idx] = location[0] - previous_loc[0]
+
+        # store location for next step calculations
+        previous_loc = dcop(location)
 
     return new_profile
 
