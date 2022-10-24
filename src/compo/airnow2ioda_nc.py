@@ -5,7 +5,6 @@ import numpy as np
 import os, argparse
 import pandas as pd
 
-import lib_python.ioda_conv_engines as iconv
 import lib_python.ioda_conv_ncio as iconio
 from collections import defaultdict, OrderedDict
 from lib_python.orddicts import DefaultOrderedDict
