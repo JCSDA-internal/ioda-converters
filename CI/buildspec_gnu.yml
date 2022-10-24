@@ -103,8 +103,8 @@ phases:
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
 
       # Install python-based ioda-converters
-      - cd /jcsda/ioda-bundle/iodaconv
-      - python3 -m pip install -e .
+      - su - nonroot -c "cd /jcsda/ioda-bundle/iodaconv
+        && python3 -m pip install -e ."
 
       - su - nonroot -c "cd /home/nonroot/iodaconv
         && export FC=mpifort
