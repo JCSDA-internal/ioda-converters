@@ -118,8 +118,8 @@ ioda encoder. It has the following sections:
       set to 1970-01-01T00:00:00Z.
     * `timeoffset` Associate **key** with data for mnemonic for `timeOffset`, that should be in
       seconds, relative to an ISO-8601 string of date and time (e.g., `2020-11-01T11:42:56Z`).
-      Internally, the value stored is number of seconds elapsed since a reference epoch, currently
-      set to 1970-01-01T00:00:00Z.
+      This section and `datetime` are **mutually exclusive**.  Internally, the value stored is
+      number of seconds elapsed since a reference epoch, currently set to 1970-01-01T00:00:00Z.
       
 
 * _(optional)_ `splits` List of key value pair (splits) that define how to split the data into 
