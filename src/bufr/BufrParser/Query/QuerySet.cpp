@@ -19,6 +19,10 @@ namespace bufr {
                                             subsets.end())),
         presentSubsets_({})
     {
+        if (limitSubsets_.empty())
+        {
+            includesAllSubsets_ = true;
+        }
     }
 
     void QuerySet::add(const std::string& name, const std::string& queryStr)

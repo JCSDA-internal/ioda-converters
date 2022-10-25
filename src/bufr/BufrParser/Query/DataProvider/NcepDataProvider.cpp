@@ -6,6 +6,7 @@
 #include "bufr_interface.h"
 
 #include <algorithm>
+#include <iostream>
 
 
 namespace Ingester {
@@ -19,44 +20,6 @@ namespace bufr {
     {
         open_f(FileUnit, filePath_.c_str());
         openbf_f(FileUnit, "IN", FileUnit);
-    }
-
-    void NcepDataProvider::run(const QuerySet& querySet,
-                               const std::function<void()> processMsg,
-                               const std::function<void()> processSubset,
-                               const std::function<void()> processFinish,
-                               const std::function<bool()> continueProcessing)
-    {
-        static int SubsetLen = 9;
-        unsigned int messageNum = 0;
-        char subsetChars[SubsetLen];
-        int iddate;
-
-        int bufrLoc;
-        int il, im;  // throw away
-
-        while (ireadmg_f(FileUnit, subsetChars, &iddate, SubsetLen) == 0)
-        {
-            auto subset = std::string(subsetChars);
-            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
-
-            if (querySet.includesSubset(subset))
-            {
-                while (ireadsb_f(FileUnit) == 0)
-                {
-                    status_f(FileUnit, &bufrLoc, &il, &im);
-                    updateData(subset, bufrLoc);
-
-                    processSubset();
-                }
-
-                processMsg();
-                if (!continueProcessing()) break;
-            }
-        }
-
-        processFinish();
-        deleteData();
     }
 
     void NcepDataProvider::updateTableData(const std::string& subset)
@@ -97,6 +60,24 @@ namespace bufr {
             get_jmpb_f(&intPtr, &size);
             jmpb_ = gsl::span<const int>(intPtr, size);
         }
+    }
+
+    size_t NcepDataProvider::variantId() const
+    {
+        return 0;
+    }
+
+    bool NcepDataProvider::hasVariants() const
+    {
+        return false;
+    }
+
+    void NcepDataProvider::_deleteData()
+    {
+        isc_ = gsl::span<const int>(nullptr, 0);
+        link_ = gsl::span<const int>(nullptr, 0);
+        itp_ = gsl::span<const int>(nullptr, 0);
+        jmpb_ = gsl::span<const int>(nullptr, 0);
     }
 }  // namespoce bufr
 }  // namespace Ingester

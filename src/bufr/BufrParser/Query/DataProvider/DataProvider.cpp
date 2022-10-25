@@ -17,33 +17,68 @@
 
 namespace Ingester {
 namespace bufr {
-    void DataProvider::updateData(const std::string& subset, int bufrLoc)
+    void DataProvider::run(const QuerySet& querySet,
+                           const std::function<void()> processMsg,
+                           const std::function<void()> processSubset,
+                           const std::function<void()> processFinish,
+                           const std::function<bool()> continueProcessing)
+    {
+        static int SubsetLen = 9;
+        char subsetChars[SubsetLen];
+        int iddate;
+
+        int bufrLoc;
+        int il, im;  // throw away
+
+        while (ireadmg_f(FileUnit, subsetChars, &iddate, SubsetLen) == 0)
+        {
+            subset_ = std::string(subsetChars);
+            subset_.erase(std::remove_if(subset_.begin(), subset_.end(), isspace), subset_.end());
+
+            if (querySet.includesSubset(subset_))
+            {
+                while (ireadsb_f(FileUnit) == 0)
+                {
+                    status_f(FileUnit, &bufrLoc, &il, &im);
+                    updateData(bufrLoc);
+
+                    processSubset();
+
+                    if (!continueProcessing()) break;
+                }
+
+                processMsg();
+                if (!continueProcessing()) break;
+            }
+        }
+
+        processFinish();
+        deleteData();
+    }
+
+    void DataProvider::updateData(int bufrLoc)
     {
         bufrLoc_ = bufrLoc;
         int size = 0;
         int *intPtr = nullptr;
         double *dataPtr = nullptr;
 
-        int strLen = 0;
-        char *charPtr = nullptr;
-
         get_inode_f(bufrLoc, &inode_);
         get_nval_f(bufrLoc, &nval_);
 
-        updateTableData(subset);
+        updateTableData(subset_);
 
         get_val_f(bufrLoc, &dataPtr, &size);
         val_ = gsl::span<const double>(dataPtr, size);
 
         get_inv_f(bufrLoc, &intPtr, &size);
         inv_ = gsl::span<const int>(intPtr, size);
-
-        subset_ = subset;
     }
 
     void DataProvider::deleteData()
     {
         delete_table_data_f();
+        _deleteData();
     }
 
     TypeInfo DataProvider::getTypeInfo(FortranIdx idx) const
@@ -99,25 +134,6 @@ namespace bufr {
         }
 
         return info;
-    }
-
-    std::set<std::string> DataProvider::getSubsets()
-    {
-        static const int SubsetLen = 9;
-        int iddate;
-
-        std::set<std::string> subsets;
-
-        char subset[SubsetLen];
-        while (ireadmg_f(FileUnit, subset, &iddate, SubsetLen) == 0)
-        {
-            auto str_subset = std::string(subset);
-            str_subset.erase(
-                remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
-            subsets.insert(str_subset);
-        }
-
-        return subsets;
     }
 }  // namespace bufr
 }  // namespace Ingester

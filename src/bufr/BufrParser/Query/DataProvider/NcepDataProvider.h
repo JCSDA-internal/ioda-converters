@@ -18,12 +18,6 @@ namespace bufr {
     public:
         NcepDataProvider(const std::string& filePath_);
 
-        void run(const QuerySet& querySet,
-                 const std::function<void()> processMsg,
-                 const std::function<void()> processSubset,
-                 const std::function<void()> processFinish,
-                 const std::function<bool()> continueProcessing) final;
-
         void open() final;
 
         // Getters to get the raw data by idx. Since fortran indices are 1-based,
@@ -34,6 +28,9 @@ namespace bufr {
         inline FortranIdx getJmpb(FortranIdx idx) const { return jmpb_[idx - 1]; }
         inline Typ getTyp(FortranIdx idx) const { return typ_[idx - 1]; }
         inline std::string getTag(FortranIdx idx) const { return tag_[idx - 1]; }
+
+        size_t variantId() const final;
+        bool hasVariants() const final;
 
      private:
 
@@ -46,7 +43,7 @@ namespace bufr {
         std::vector<std::string> tag_;
 
         void updateTableData(const std::string& subset) final;
-
+        void _deleteData() final;
     };
 }  // namespace bufr
 }  // namespace Ingester

@@ -13,27 +13,10 @@
 #include "../../src/bufr/BufrParser/Query/DataProvider/WmoDataProvider.h"
 #include "../../src/bufr/BufrParser/Query/SubsetTable.h"
 
+#include "QueryPrinter/NcepQueryPrinter.h"
+#include "QueryPrinter/WmoQueryPrinter.h"
+
 #include "bufr_interface.h"
-
-
-std::set<std::string> getSubsets(int fileUnit)
-{
-    static const int SubsetLen = 9;
-    int iddate;
-
-    std::set<std::string> subsets;
-
-    char subset[SubsetLen];
-    while (ireadmg_f(fileUnit, subset, &iddate, SubsetLen) == 0)
-    {
-        auto str_subset = std::string(subset);
-        str_subset.erase(
-            remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
-        subsets.insert(str_subset);
-    }
-
-    return subsets;
-}
 
 
 std::vector<std::pair<int, std::string>>
@@ -244,7 +227,7 @@ void printQueries(const std::string& filePath,
     }
     else
     {
-        auto subsets = getSubsets(FileUnit);
+        std::vector<std::string> subsets = {""};
 
         if (subsets.empty())
         {
@@ -341,9 +324,31 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    std::shared_ptr<Ingester::bufr::QueryPrinter> printer;
+    if (tablePath.empty())
+    {
+        printer = std::make_shared<Ingester::bufr::NcepQueryPrinter> (inputFile);
+    }
+    else
+    {
+        printer = std::make_shared<Ingester::bufr::WmoQueryPrinter> (inputFile, tablePath);
+    }
+
+    printer->printQueries(subset);
+
     try
     {
-        printQueries(inputFile, subset, tablePath);
+        std::shared_ptr<Ingester::bufr::QueryPrinter> printer;
+        if (tablePath.empty())
+        {
+            printer = std::make_shared<Ingester::bufr::NcepQueryPrinter> (inputFile);
+        }
+        else
+        {
+            printer = std::make_shared<Ingester::bufr::WmoQueryPrinter> (inputFile, tablePath);
+        }
+
+        printer->printQueries(subset);
     }
     catch (const std::exception &e)
     {

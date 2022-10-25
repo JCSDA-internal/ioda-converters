@@ -22,60 +22,19 @@ namespace bufr {
     {
     }
 
-    void WmoDataProvider::run(const QuerySet& querySet,
-                              const std::function<void()> processMsg,
-                              const std::function<void()> processSubset,
-                              const std::function<void()> processFinish,
-                              const std::function<bool()> continueProcessing)
-    {
-        static int SubsetLen = 9;
-        unsigned int messageNum = 0;
-        char subsetChars[SubsetLen];
-        int iddate;
-
-        int bufrLoc;
-        int il, im;  // throw away
-
-        while (ireadmg_f(FileUnit, subsetChars, &iddate, SubsetLen) == 0)
-        {
-            auto subset = std::string(subsetChars);
-            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
-
-            if (querySet.includesSubset(subset))
-            {
-                while (ireadsb_f(FileUnit) == 0)
-                {
-                    status_f(FileUnit, &bufrLoc, &il, &im);
-                    updateData(subset, bufrLoc);
-
-                    processSubset();
-                }
-
-                processMsg();
-                if (!continueProcessing()) break;
-            }
-        }
-
-        processFinish();
-        deleteData();
-    }
-
     void WmoDataProvider::open()
     {
         open_f(FileUnit, filePath_.c_str());
         openbf_f(FileUnit, "SEC3", FileUnit);
         mtinfo_f(tableFilePath_.c_str(), FileUnitTable1, FileUnitTable2);
-    }
 
-    void WmoDataProvider::updateTableData(const std::string& subset)
-    {
-        if (currentTableData_ == nullptr || subset != currentTableData_->subset)
+        if (tableCache_.empty())
         {
-            currentTableData_ = getTableData(subset);
+            initialize();
         }
     }
 
-    std::shared_ptr<TableData> WmoDataProvider::getTableData(const std::string& subset)
+    void WmoDataProvider::updateTableData(const std::string& subset)
     {
         deleteData();
 
@@ -92,7 +51,7 @@ namespace bufr {
         get_tag_f(&tagData.ptr, &tagData.strLen, &tagData.size);
         tagData.tagStr = std::string(&tagData.ptr[0], tagData.size * tagData.strLen);
 
-        auto tableData = std::make_shared<TableData>();
+        std::shared_ptr<TableData> tableData;
         if (tableCache_.find(tagData.tagStr) == tableCache_.end())
         {
             int size = 0;
@@ -100,6 +59,8 @@ namespace bufr {
             double *dataPtr = nullptr;
             int strLen = 0;
             char *charPtr = nullptr;
+
+            tableData = std::make_shared<TableData>();
 
             get_isc_f(&intPtr, &size);
             tableData->isc = std::vector<int>(intPtr, intPtr + size);
@@ -127,12 +88,72 @@ namespace bufr {
 
             get_jmpb_f(&intPtr, &size);
             tableData->jmpb = std::vector<int>(intPtr, intPtr + size);
+
+            // Figure out the variant ID.
+            int variantNum = 1;
+            for (const auto& cacheEntry : tableCache_)
+            {
+                if (cacheEntry.second->subset == subset) ++variantNum;
+            }
+            tableData->varientNumber = variantNum;
+
             tableCache_[tagData.tagStr] = tableData;
+
+            if (variantCount_.find(subset) == variantCount_.end())
+            {
+                variantCount_.insert({subset, 0});
+            }
+            variantCount_.at(subset) += 1;
         }
 
-        tableData = tableCache_[tagData.tagStr];
+        currentTableData_ = tableCache_[tagData.tagStr];
+    }
 
-        return tableData;
+    size_t WmoDataProvider::variantId() const
+    {
+        return currentTableData_->varientNumber;
+    }
+
+    bool  WmoDataProvider::hasVariants() const
+    {
+        return variantCount_.at(getSubset()) > 1;
+    }
+
+    void WmoDataProvider::initialize()
+    {
+        // Run the entire file in order to initialize the cache
+        auto processMsg = []() mutable
+        {
+        };
+
+        auto processSubset = [this]()
+        {
+//            auto variant = std::make_pair(getSubset(), variantId());
+//
+//            if (existingVariants.find(variant) == existingVariants.end())
+//            {
+//                existingVariants.insert(variant);
+//                variantCount_.at(getSubset()) = 0;
+//            }
+//
+//            variantCount_.at(getSubset()) += 1;
+//            variants_.push_back(variant);
+        };
+
+        auto processFinish = [this]()
+        {
+        };
+
+        run(QuerySet({}),
+                       processMsg,
+                       processSubset,
+                       processFinish);
+
+        rewind();
+    }
+
+    void WmoDataProvider::_deleteData()
+    {
     }
 }  // namespace bufr
 }  // namespace Ingester

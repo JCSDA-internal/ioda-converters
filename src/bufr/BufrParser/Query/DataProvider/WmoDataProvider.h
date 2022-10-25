@@ -27,6 +27,7 @@ namespace bufr {
         std::vector<int> jmpb;
         std::vector<Typ> typ;
         std::vector<std::string> tag;
+        int varientNumber;
     };
 
     class WmoDataProvider : public DataProvider
@@ -34,12 +35,6 @@ namespace bufr {
      public:
         WmoDataProvider(const std::string& filePath_,
                         const std::string& tableFilePath_);
-
-        void run(const QuerySet& querySet,
-                 const std::function<void()> processMsg,
-                 const std::function<void()> processSubset,
-                 const std::function<void()> processFinish,
-                 const std::function<bool()> continueProcessing) final;
 
         void open() final;
 
@@ -52,7 +47,12 @@ namespace bufr {
         inline Typ getTyp(FortranIdx idx) const { return currentTableData_->typ[idx - 1]; }
         inline std::string getTag(FortranIdx idx) const { return currentTableData_->tag[idx - 1]; }
 
+        size_t variantId() const final;
+        bool hasVariants() const final;
+
     private:
+        typedef std::pair<std::string, size_t> Variant;
+
         const static int FileUnitTable1 = 13;
         const static int FileUnitTable2 = 14;
 
@@ -60,8 +60,14 @@ namespace bufr {
         std::unordered_map<std::string, std::shared_ptr<TableData>> tableCache_;
         std::shared_ptr<TableData> currentTableData_ = nullptr;
 
+        std::vector<Variant> variants_;
+        std::set<Variant> existingVariants;
+        std::unordered_map<std::string, size_t> variantCount_;
+
         void updateTableData(const std::string& subset) final;
-        std::shared_ptr<TableData> getTableData(const std::string& subset);
+
+        void initialize();
+        void _deleteData() final;
     };
 
 }  // namespace bufr

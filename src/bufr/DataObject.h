@@ -99,6 +99,8 @@ namespace Ingester
         std::string getPath() const { return query_; }
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
+        bool hasSamePath(const std::shared_ptr<DataObjectBase>& dataObject);
+
         /// \brief Print the data object to a output stream.
         virtual void print(std::ostream &out) const = 0;
 
@@ -117,6 +119,10 @@ namespace Ingester
         /// \brief Get the data at the index as an float.
         /// \return Float data.
         virtual float getAsFloat(size_t idx) const = 0;
+
+        /// \brief Is the element at the index the missing value.
+        /// \return bool data.
+        virtual bool isMissing(size_t idx) const = 0;
 
         /// \brief Get the data at the Location as an string.
         /// \return String data.
@@ -350,6 +356,20 @@ namespace Ingester
         /// \param idx The idx into the internal 1d array.
         /// \return Float data.
         float getAsFloat(const size_t idx) const final { return _getAsFloat(idx); }
+
+
+        /// \brief idx See if the data at the index into the internal 1d array is missing. This
+        ///            function gives you direct access to the internal data and doesn't account for
+        ///            dimensional information (its up to the user). Note: getAsInt(const Location&)
+        ///            is safer.
+        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
+        ///            at that coordinate).
+        /// \return bool data.
+        bool isMissing(const size_t idx) const final
+        {
+            return data_[idx] == missingValue();
+        }
+
 
         /// \brief Slice the dta object according to a list of indices.
         /// \param rows The indices to slice the data object by.

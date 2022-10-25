@@ -106,12 +106,11 @@ class DataProvider
 
         ~DataProvider() = default;
 
-        virtual void run(const QuerySet& querySet,
-                         const std::function<void()> processMsg,
-                         const std::function<void()> processSubset,
-                         const std::function<void()> processFinish,
-                         const std::function<bool()> continueProcessing =
-                             [](){return true;}) = 0;
+        void run(const QuerySet& querySet,
+                 const std::function<void()> processMsg,
+                 const std::function<void()> processSubset,
+                 const std::function<void()> processFinish,
+                 const std::function<bool()> continueProcessing = [](){return true;});
 
         virtual void open() = 0;
 
@@ -132,12 +131,8 @@ class DataProvider
         void deleteData();
 
         /// \brief Get the subset string for the currently active message subset.
-        std::string getSubset() const { return subset_; }
-
-        /// \brief Get a complete set of subsets in the data file. WARNING: using this will be slow
-        ///        and reset the file pointer.
-        std::set<std::string> getSubsets();
-
+        Variant getSubsetVariant() const { return subset_; }
+        std::string getFilepath() const { return filePath_; }
         inline FortranIdx getInode() const { return inode_; }
         inline FortranIdx getNVal() const { return nval_; }
         inline FortranIdx getInv(FortranIdx idx) const { return inv_[idx - 1]; }
@@ -150,6 +145,9 @@ class DataProvider
         virtual inline FortranIdx getJmpb(FortranIdx idx) const = 0;
         virtual inline Typ getTyp(FortranIdx idx) const = 0;
         virtual inline std::string getTag(FortranIdx idx) const = 0;
+
+        virtual size_t variantId() const = 0;
+        virtual bool hasVariants() const = 0;
 
      protected:
         const static int FileUnit = 12;
@@ -169,7 +167,10 @@ class DataProvider
         /// \brief Read the data from the BUFR interface for the current subset and reset the
         /// internal data structures.
         ////// \param bufrLoc The Fortran idx for the subset we need to read.
-        void updateData(const std::string& subset, int bufrLoc);
+        void updateData(int bufrLoc);
+
+     private:
+        virtual void _deleteData() = 0;
     };
 }  // namespace bufr
 }  // namespace Ingester
