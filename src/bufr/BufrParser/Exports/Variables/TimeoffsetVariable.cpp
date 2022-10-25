@@ -35,9 +35,10 @@ namespace
 namespace Ingester
 {
     TimeoffsetVariable::TimeoffsetVariable(const std::string& exportName,
-                                           const std::string& groupByField_,
+                                           const std::string& groupByField,
                                            const eckit::LocalConfiguration &conf) :
       Variable(exportName),
+      groupByField_(groupByField),
       conf_(conf)
     {
         initQueryMap();
