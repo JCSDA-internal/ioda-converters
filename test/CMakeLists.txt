@@ -8,6 +8,8 @@
 ################################################################################
 
 list( APPEND test_input
+  testinput/nsidc_l4_icec.nc
+  testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
@@ -76,6 +78,8 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
+  testoutput/nsidc_l4_icec.nc
+  testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -389,6 +393,7 @@ set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 #===============================================================================
 # Marine converters
 #===============================================================================
+
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsr2_l2icec
                   TYPE    SCRIPT
@@ -1723,7 +1728,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
                             -o testrun/smap_ssm.nc
-                            -m maskout"
+                            --maskMissing"
                             smap_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
@@ -1770,7 +1775,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap9km_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
                             -o testrun/smap9km_ssm.nc
-                            -m maskout"
+                            --maskMissing"
                             smap9km_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
