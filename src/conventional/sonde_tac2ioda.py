@@ -1004,18 +1004,30 @@ def change_vars(profile):
     assumed in the creation of each timestamp.
     """
 
+    previous_idx = 0
+    location = [new_profile['longitude'][0], new_profile['latitude'][0], None]
     previous_loc = [new_profile['longitude'][0], new_profile['latitude'][0], None]
     delta_t = np.diff(new_profile['dateTime'])
 
     for idx in range(1, len(delta_t)):
-        # move north-south
-        location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north[idx])[0]
-        # move east-west
-        location = geod.direct(points=location[:2], azimuths=90., distances=d_east[idx])[0]
 
-        # changes in latitude and longitude in this timestep
-        new_profile['latitude'][idx] = location[1] - previous_loc[1]
-        new_profile['longitude'][idx] = location[0] - previous_loc[0]
+        print(f"iteration: {idx} with delta_t: {delta_t[idx-1]}")
+        print(f" prev lat, lon: {new_profile['latitude'][idx-1]}, {new_profile['longitude'][idx-1]}")
+        if (new_profile['eastward_wind'][idx-1] != float_missing_value and new_profile['northward_wind'][idx-1] != float_missing_value):
+            previous_idx = idx
+            # move north-south
+            d_north = new_profile['northward_wind'][idx-1] * delta_t[idx-1]
+            location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north)[0]
+            new_profile['latitude'][idx] = location[1]
+            # move east-west
+            d_east = new_profile['eastward_wind'][idx-1] * delta_t[idx-1]
+            location = geod.direct(points=location[:2], azimuths=90., distances=d_east)[0]
+            new_profile['longitude'][idx] = location[0]
+            print(f" using wind comps: {new_profile['eastward_wind'][idx-1]}, {new_profile['northward_wind'][idx-1]} the new lat, lon is: {new_profile['latitude'][idx]}, {new_profile['longitude'][idx]}")
+        else:
+            print("  no wind components for new location")
+            new_profile['latitude'][idx] = new_profile['latitude'][idx-1]
+            new_profile['longitude'][idx] = new_profile['longitude'][idx-1]
 
         # store location for next step calculations
         previous_loc = dcop(location)
