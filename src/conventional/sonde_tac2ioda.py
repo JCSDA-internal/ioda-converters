@@ -970,8 +970,12 @@ def change_vars(profile):
         if 'height' in levels[pressure] and levels[pressure]['height'] is not None:
             height = levels[pressure]['height']
             dz = height - heightKm1
-            # Typical radiosonde ascent rate is 5 m/s
-            this_datetime = previous_time + timedelta(seconds=dz*0.2)
+            # Legacy soundings produce null values at mandatory level below ground.
+            if (dz < 1.0):
+                this_datetime = previous_time
+            else:
+                # Typical radiosonde ascent rate is 5 m/s
+                this_datetime = previous_time + timedelta(seconds=dz*0.2)
             heightKm1 = height
         else:
             this_datetime = previous_time
@@ -1011,8 +1015,6 @@ def change_vars(profile):
 
     for idx in range(1, len(delta_t)):
 
-        print(f"iteration: {idx} with delta_t: {delta_t[idx-1]}")
-        print(f" prev lat, lon: {new_profile['latitude'][idx-1]}, {new_profile['longitude'][idx-1]}")
         if (new_profile['eastward_wind'][idx-1] != float_missing_value and new_profile['northward_wind'][idx-1] != float_missing_value):
             previous_idx = idx
             # move north-south
@@ -1023,9 +1025,7 @@ def change_vars(profile):
             d_east = new_profile['eastward_wind'][idx-1] * delta_t[idx-1]
             location = geod.direct(points=location[:2], azimuths=90., distances=d_east)[0]
             new_profile['longitude'][idx] = location[0]
-            print(f" using wind comps: {new_profile['eastward_wind'][idx-1]}, {new_profile['northward_wind'][idx-1]} the new lat, lon is: {new_profile['latitude'][idx]}, {new_profile['longitude'][idx]}")
         else:
-            print("  no wind components for new location")
             new_profile['latitude'][idx] = new_profile['latitude'][idx-1]
             new_profile['longitude'][idx] = new_profile['longitude'][idx-1]
 
