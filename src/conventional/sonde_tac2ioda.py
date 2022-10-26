@@ -1009,8 +1009,8 @@ def change_vars(profile):
     """
 
     previous_idx = 0
-    location = [new_profile['longitude'][0], new_profile['latitude'][0], None]
-    previous_loc = [new_profile['longitude'][0], new_profile['latitude'][0], None]
+    location = [profile['lon'], profile['lat'], None]
+    previous_loc = [profile['lon'], profile['lat'], None]
     delta_t = np.diff(new_profile['dateTime'])
 
     for idx in range(1, len(delta_t)):
@@ -1142,13 +1142,16 @@ if __name__ == "__main__":
             if profile:
                 nstations += 1
                 nlevels = len(profile['levels'])
-                ntotal += nlevels
-                logging.debug(f"   found sounding with {nlevels} levels")
-                if args.verbose:
-                    printProfile(profile)
-                if args.netcdf:
-                    new_profile = change_vars(profile)
-                    obs_data = append_ioda_data(new_profile, obs_data)
+                if nlevels > 1:
+                    ntotal += nlevels
+                    logging.debug(f"   found sounding with {nlevels} levels")
+                    if args.verbose:
+                        printProfile(profile)
+                    if args.netcdf:
+                        new_profile = change_vars(profile)
+                        obs_data = append_ioda_data(new_profile, obs_data)
+                else:
+                    logging.debug(f"  skipping sounding {station} with 1 or fewer ({nlevels}) levels")
 
     if args.netcdf:
         ioda_data = {}
