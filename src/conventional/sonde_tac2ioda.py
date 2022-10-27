@@ -1016,7 +1016,6 @@ def change_vars(profile):
     for idx in range(1, len(delta_t)):
 
         if (new_profile['eastward_wind'][idx-1] != float_missing_value and new_profile['northward_wind'][idx-1] != float_missing_value):
-            previous_idx = idx
             # move north-south
             d_north = new_profile['northward_wind'][idx-1] * delta_t[idx-1]
             location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north)[0]
@@ -1029,8 +1028,15 @@ def change_vars(profile):
             new_profile['latitude'][idx] = new_profile['latitude'][idx-1]
             new_profile['longitude'][idx] = new_profile['longitude'][idx-1]
 
+        if flag:
+            print(f"  new lat, lon at Denver: {new_profile['latitude'][idx]}, {new_profile['longitude'][idx]}")
+
         # store location for next step calculations
         previous_loc = dcop(location)
+
+    # Be sure to delete the prior location info before exiting
+    del location
+    del previous_loc
 
     return new_profile
 
