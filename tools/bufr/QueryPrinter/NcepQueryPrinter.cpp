@@ -19,7 +19,7 @@ namespace bufr {
     {
     }
 
-    std::vector<QueryData> NcepQueryPrinter::getQueries(const std::string& subset)
+    std::vector<QueryData> NcepQueryPrinter::getQueries(const SubsetVariant& variant)
     {
         bool finished = false;
 
@@ -44,7 +44,7 @@ namespace bufr {
             return !finished;
         };
 
-        dataProvider_->run(QuerySet({subset}),
+        dataProvider_->run(QuerySet({variant.subset}),
                           processMsg,
                           processSubset,
                           processFinish,
@@ -72,14 +72,14 @@ namespace bufr {
 //        return subsets;
 //    }
 
-    std::set<std::string> NcepQueryPrinter::getSubsets() const
+    std::set<SubsetVariant> NcepQueryPrinter::getSubsetVariants() const
     {
-        std::set<std::string> subsets;
+        std::set<SubsetVariant> subsets;
 
         auto& dataProvider = dataProvider_;
         auto processMsg = [&subsets, &dataProvider] () mutable
         {
-            subsets.insert(dataProvider->getSubset());
+            subsets.insert(dataProvider->getSubsetVariant());
         };
 
         auto processSubset = []()

@@ -44,10 +44,10 @@ namespace bufr {
                                   std::shared_ptr<__details::ProcessingMasks> &masks)
     {
         // Check if the target list for this subset is cached
-        if (targetCache_.find(dataProvider_->getSubset()) != targetCache_.end())
+        if (targetCache_.find(dataProvider_->getSubsetVariant().subset) != targetCache_.end())
         {
-            targets = targetCache_.at(dataProvider_->getSubset());
-            masks = maskCache_.at(dataProvider_->getSubset());
+            targets = targetCache_.at(dataProvider_->getSubsetVariant().subset);
+            masks = maskCache_.at(dataProvider_->getSubsetVariant().subset);
             return;
         }
 
@@ -111,13 +111,13 @@ namespace bufr {
                 }
 
                 oops::Log::warning() << " didn't apply to subset ";
-                oops::Log::warning() << dataProvider_->getSubset();
+                oops::Log::warning() << dataProvider_->getSubsetVariant().subset;
                 oops::Log::warning() << std::endl;
             }
         }
 
-        targetCache_.insert({dataProvider_->getSubset(), targets});
-        maskCache_.insert({dataProvider_->getSubset(), masks});
+        targetCache_.insert({dataProvider_->getSubsetVariant().subset, targets});
+        maskCache_.insert({dataProvider_->getSubsetVariant().subset, masks});
     }
 
     std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
@@ -129,7 +129,8 @@ namespace bufr {
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(query.subset == "*" || query.subset == dataProvider_->getSubset());
+        bool targetMissing = !(query.subset == "*" ||
+                               query.subset == dataProvider_->getSubsetVariant().subset);
         if (!targetMissing) {
             branches.resize(query.mnemonics.size() - 1);
 

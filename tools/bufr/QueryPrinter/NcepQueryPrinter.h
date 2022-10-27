@@ -20,8 +20,8 @@ namespace bufr {
      public:
         explicit NcepQueryPrinter(const std::string& filepath);
 
-        std::vector<QueryData> getQueries(const std::string& subset) final;
-        std::set<std::string> getSubsets() const final;
+        std::vector<QueryData> getQueries(const SubsetVariant& variant) final;
+        std::set<SubsetVariant> getSubsetVariants() const final;
     };
 }  // namespace bufr
 }  // namespace Ingester

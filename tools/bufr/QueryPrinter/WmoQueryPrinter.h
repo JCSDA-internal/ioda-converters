@@ -18,8 +18,8 @@ namespace bufr {
        WmoQueryPrinter(const std::string& filepath, const std::string& tablepath);
        ~WmoQueryPrinter() = default;
 
-        std::vector<QueryData> getQueries(const std::string& subset) final;
-        std::set<std::string> getSubsets() const final;
+        std::vector<QueryData> getQueries(const SubsetVariant& variant) final;
+        std::set<SubsetVariant> getSubsetVariants() const final;
 
      private:
         const int FileUnitTable1 = 13;

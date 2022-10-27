@@ -66,6 +66,12 @@ namespace bufr {
         std::vector<std::shared_ptr<QueryData>> allQueries;
         std::unordered_map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
 
+        auto isDigit = [](const std::string& str) -> bool
+        {
+            return !str.empty() && std::find_if(str.begin(),
+                str.end(), [](unsigned char c) { return !std::isdigit(c); }) == str.end();
+        };
+
         seqPath.push_back(dataProvider_->getInode());
         for (auto nodeIdx = dataProvider_->getInode();
              nodeIdx <= dataProvider_->getIsc(dataProvider_->getInode());
@@ -83,8 +89,9 @@ namespace bufr {
                 seqPath.push_back(nodeIdx + 1);  // push the node idx for the embedded sequence
                 currentPathElements.push_back({});
             }
-            else if (dataProvider_->getTyp(nodeIdx) == Typ::Number ||
-                     dataProvider_->getTyp(nodeIdx) == Typ::Character)
+            else if ((dataProvider_->getTyp(nodeIdx) == Typ::Number ||
+                     dataProvider_->getTyp(nodeIdx) == Typ::Character) &&
+                     !isDigit(dataProvider_->getTag(nodeIdx)))
             {
                 auto elementTag = dataProvider_->getTag(nodeIdx);
                 currentPathElements.back().push_back(elementTag);

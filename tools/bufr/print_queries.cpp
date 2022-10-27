@@ -324,18 +324,6 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    std::shared_ptr<Ingester::bufr::QueryPrinter> printer;
-    if (tablePath.empty())
-    {
-        printer = std::make_shared<Ingester::bufr::NcepQueryPrinter> (inputFile);
-    }
-    else
-    {
-        printer = std::make_shared<Ingester::bufr::WmoQueryPrinter> (inputFile, tablePath);
-    }
-
-    printer->printQueries(subset);
-
     try
     {
         std::shared_ptr<Ingester::bufr::QueryPrinter> printer;

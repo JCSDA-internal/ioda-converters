@@ -23,11 +23,11 @@ namespace bufr {
 
         void printQueries(const std::string& subset);
 
-        virtual std::vector<QueryData> getQueries(const std::string& subset) = 0;
+        virtual std::vector<QueryData> getQueries(const SubsetVariant& variant) = 0;
 
         /// \brief Get a complete set of subsets in the data file. WARNING: using this will be slow
         ///        and reset the file pointer.
-        virtual std::set<std::string> getSubsets() const = 0;
+        virtual std::set<SubsetVariant> getSubsetVariants() const = 0;
 
      protected:
         const int FileUnit = 12;

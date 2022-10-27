@@ -17,7 +17,7 @@ namespace bufr {
     {
         if (!subset.empty())
         {
-            auto queries = getQueries(subset);
+            auto queries = getQueries({subset, 0});
             std::cout << subset << std::endl;
             std::cout << " Dimensioning Sub-paths: " << std::endl;
             printDimPaths(getDimPaths(queries));
@@ -29,33 +29,31 @@ namespace bufr {
         else
         {
             dataProvider_->open();
-            auto subsets = getSubsets();
+            auto variants = getSubsetVariants();
             dataProvider_->rewind();
 
-            if (subsets.empty())
+            if (variants.empty())
             {
-                std::cerr << "No BUFR subsets found in "
+                std::cerr << "No BUFR variants found in "
                           << dataProvider_->getFilepath() << std::endl;
                 exit(1);
             }
 
-            std::cout << "Available subsets: " << std::endl;
-            for (auto s : subsets)
+            std::cout << "Available subset variants: " << std::endl;
+            for (auto v : variants)
             {
-                std::cout << s << std::endl;
+                std::cout << v.str() << std::endl;
             }
 
-            std::cout << "Total number of subsets found: "
-                      << subsets.size()
+            std::cout << "Total number of subset variants found: "
+                      << variants.size()
                       << std::endl << std::endl;
 
-            for (const auto& s : subsets)
+            for (const auto& v : variants)
             {
-                auto queries = getQueries(s);
+                auto queries = getQueries(v);
 
-                std::cout << queries.size() << std::endl;
-
-                std::cout << s << std::endl;
+                std::cout << v.str() << std::endl;
                 std::cout << " Dimensioning Sub-paths: " << std::endl;
                 printDimPaths(getDimPaths(queries));
                 std::cout << std::endl;

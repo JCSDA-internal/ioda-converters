@@ -21,37 +21,29 @@ namespace bufr {
     {
     }
 
-    std::vector<QueryData> WmoQueryPrinter::getQueries(const std::string& subset)
+    std::vector<QueryData> WmoQueryPrinter::getQueries(const SubsetVariant& variant)
     {
-        bool finished = false;
-
-        std::cout << "!! "  << subset << std::endl;
-
-        std::unordered_map<std::string, std::vector<QueryData>> dataMap;
+        std::unordered_map<SubsetVariant, std::vector<QueryData>> dataMap;
 
         auto processMsg = []()
         {
         };
 
         auto& dataProvider = dataProvider_;
-        auto processSubset = [&dataMap, &dataProvider]() mutable
+        auto processSubset = [&variant, &dataMap, &dataProvider]() mutable
         {
-            std::string variant = dataProvider->getSubset();
-            if (dataProvider->hasVariants())
+            auto subsetVariant = dataProvider->getSubsetVariant();
+            if (subsetVariant == variant)
             {
-                variant = variant + "[" + std::to_string(dataProvider->variantId()) + "]";
+                dataMap.insert({variant,SubsetTable(dataProvider).allQueryData()});
             }
-
-            std::cout << dataProvider->getSubset() <<" ## " << variant << std::endl;
-
-            dataMap.insert({variant, SubsetTable(dataProvider).allQueryData()});
         };
 
         auto processFinish = []()
         {
         };
 
-        dataProvider_->run(Ingester::bufr::QuerySet({subset}),
+        dataProvider_->run(QuerySet({variant.subset}),
                            processMsg,
                            processSubset,
                            processFinish);
@@ -65,26 +57,18 @@ namespace bufr {
         return queryData;
     }
 
-    std::set<std::string> WmoQueryPrinter::getSubsets() const
+    std::set<SubsetVariant> WmoQueryPrinter::getSubsetVariants() const
     {
-        std::set<std::string> subsets;
+        std::set<SubsetVariant> variants;
 
         auto& dataProvider = dataProvider_;
         auto processMsg = [] () mutable
         {
         };
 
-        auto processSubset = [&subsets, &dataProvider]()
+        auto processSubset = [&variants, &dataProvider]()
         {
-            if (dataProvider->hasVariants())
-            {
-                subsets.insert(dataProvider->getSubset() +
-                               "[" + std::to_string(dataProvider->variantId()) + "]");
-            }
-            else
-            {
-                subsets.insert(dataProvider->getSubset());
-            }
+            variants.insert(dataProvider->getSubsetVariant());
         };
 
         auto processFinish = []()
@@ -96,7 +80,7 @@ namespace bufr {
                            processSubset,
                            processFinish);
 
-        return subsets;
+        return variants;
     }
 
 }  // namespace bufr

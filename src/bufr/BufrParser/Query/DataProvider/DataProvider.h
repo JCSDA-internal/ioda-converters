@@ -18,6 +18,7 @@
 
 #include "bufr_interface.h"
 #include "../QuerySet.h"
+#include "SubsetVariant.h"
 
 
 
@@ -50,7 +51,6 @@ namespace bufr {
          {"RPS",     Typ::StackedRepeat},
          {"NUM",            Typ::Number},
          {"CHR",         Typ::Character}};
-
 
 
     struct TypeInfo
@@ -131,7 +131,7 @@ class DataProvider
         void deleteData();
 
         /// \brief Get the subset string for the currently active message subset.
-        Variant getSubsetVariant() const { return subset_; }
+        SubsetVariant getSubsetVariant() const { return {subset_, variantId(), hasVariants()}; }
         std::string getFilepath() const { return filePath_; }
         inline FortranIdx getInode() const { return inode_; }
         inline FortranIdx getNVal() const { return nval_; }

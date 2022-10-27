@@ -66,7 +66,7 @@ namespace bufr {
 
         void updateTableData(const std::string& subset) final;
 
-        void initialize();
+        void initCache();
         void _deleteData() final;
     };
 

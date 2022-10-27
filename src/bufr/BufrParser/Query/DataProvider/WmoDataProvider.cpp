@@ -30,7 +30,7 @@ namespace bufr {
 
         if (tableCache_.empty())
         {
-            initialize();
+            initCache();
         }
     }
 
@@ -89,21 +89,14 @@ namespace bufr {
             get_jmpb_f(&intPtr, &size);
             tableData->jmpb = std::vector<int>(intPtr, intPtr + size);
 
-            // Figure out the variant ID.
-            int variantNum = 1;
-            for (const auto& cacheEntry : tableCache_)
-            {
-                if (cacheEntry.second->subset == subset) ++variantNum;
-            }
-            tableData->varientNumber = variantNum;
-
-            tableCache_[tagData.tagStr] = tableData;
-
             if (variantCount_.find(subset) == variantCount_.end())
             {
                 variantCount_.insert({subset, 0});
             }
             variantCount_.at(subset) += 1;
+            tableData->varientNumber = variantCount_.at(subset);
+
+            tableCache_[tagData.tagStr] = tableData;
         }
 
         currentTableData_ = tableCache_[tagData.tagStr];
@@ -116,39 +109,12 @@ namespace bufr {
 
     bool  WmoDataProvider::hasVariants() const
     {
-        return variantCount_.at(getSubset()) > 1;
+        return variantCount_.at(subset_) > 1;
     }
 
-    void WmoDataProvider::initialize()
+    void WmoDataProvider::initCache()
     {
-        // Run the entire file in order to initialize the cache
-        auto processMsg = []() mutable
-        {
-        };
-
-        auto processSubset = [this]()
-        {
-//            auto variant = std::make_pair(getSubset(), variantId());
-//
-//            if (existingVariants.find(variant) == existingVariants.end())
-//            {
-//                existingVariants.insert(variant);
-//                variantCount_.at(getSubset()) = 0;
-//            }
-//
-//            variantCount_.at(getSubset()) += 1;
-//            variants_.push_back(variant);
-        };
-
-        auto processFinish = [this]()
-        {
-        };
-
-        run(QuerySet({}),
-                       processMsg,
-                       processSubset,
-                       processFinish);
-
+        run(QuerySet({}), [](){}, [](){}, [](){});
         rewind();
     }
 
