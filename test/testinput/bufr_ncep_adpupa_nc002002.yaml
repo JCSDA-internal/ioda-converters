@@ -1,0 +1,155 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# 
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+#     obsdatain: "./testinput/gdas.t12z.adpupa_thinned.tm00.bufr_d"
+      obsdatain: "NC002002"
+
+      exports:
+        group_by_variable: pressure
+        variables:
+          # MetaData
+          timestamp:
+            datetime:
+              year: "NC002002/YEAR"
+              month: "NC002002/MNTH"
+              day: "NC002002/DAYS"
+              hour: "NC002002/HOUR"
+              minute: "*/MINU"
+          stationIdentification:
+            query: "NC002002/RPID"
+          latitude:
+            query: "NC002002/CLAT"
+          longitude:
+            query: "NC002002/CLON"
+          stationElevation:
+            query: "NC002002/SELV"
+
+          # ObsValue
+          pressure:
+            query: "NC002002/UARLV/PRLC"
+          airTemperature:
+            query: "NC002002/UARLV/UATMP/TMDB"
+          dewpointTemperature:
+            query: "NC002002/UARLV/UATMP/TMDP"
+          windDirection:
+            query: "NC002002/UARLV/UAWND/WDIR"
+          windSpeed:
+            query: "NC002002/UARLV/UAWND/WSPD"
+
+          # QualityMarker
+          stationElevationQM:
+            query: "NC002002/QCEVR"
+          pressureQM:
+            query: "NC002002/UARLV/QMPR"
+          airTemperatureQM:
+            query: "NC002002/UARLV/UATMP/QMAT"
+          moistureQM:
+            query: "NC002002/UARLV/UATMP/QMDD"
+          windQM:
+            query: "NC002002/UARLV/UAWND/QMWN"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "../testoutput/gdas.t12z.adpupa_bufr_nc002002.tm00.nc"
+
+      dimensions:
+        - name: RadiosondeReportLevelData
+          path: "*/UARLV"
+
+      variables:
+        # MetaData
+        - name: "MetaData/dateTime"
+          coordinates: "longitude latitude"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station Identification"
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degree_east"
+          range: [0, 360]
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Elevation of Observing Location"
+          units: "m"
+
+        # ObsValue
+        - name: "ObsValue/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dewpoint Temperature"
+          units: "K"
+
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "degree"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "m s-1"
+
+        # QualityMarker
+        - name: "QualityMarker/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevationQM
+          longName: "Quality Indicator for Station Elevation"
+
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQM
+          longName: "Quality Indicator for Pressure"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Temperature"
+
+        - name: "QualityMarker/moisture"
+          coordinates: "longitude latitude"
+          source: variables/moistureQM
+          longName: "Quality Indicator for Moisture"
+
+        - name: "QualityMarker/wind"
+          coordinates: "longitude latitude"
+          source: variables/windQM
+          longName: "Quality Indicator for Wind"
+
