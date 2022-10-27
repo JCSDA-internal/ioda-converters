@@ -1028,9 +1028,6 @@ def change_vars(profile):
             new_profile['latitude'][idx] = new_profile['latitude'][idx-1]
             new_profile['longitude'][idx] = new_profile['longitude'][idx-1]
 
-        if flag:
-            print(f"  new lat, lon at Denver: {new_profile['latitude'][idx]}, {new_profile['longitude'][idx]}")
-
         # store location for next step calculations
         previous_loc = dcop(location)
 
