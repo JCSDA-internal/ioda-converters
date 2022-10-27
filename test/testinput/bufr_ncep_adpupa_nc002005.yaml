@@ -7,8 +7,8 @@ observations:
   - obs space:
       name: bufr
 
-#     obsdatain: "./testinput/gdas.t12z.adpupa_thinned.tm00.bufr_d"
-      obsdatain: "NC002005"
+#     obsdatain: "./gdas.t12z.adpupa.tm00.bufr_d"
+      obsdatain: "./gdas.t12z.adpupa_nc002005.tm00.bufr_d"
 
       exports:
         group_by_variable: pressure
@@ -49,9 +49,9 @@ observations:
             query: "NC002005/UARLV/QMPR"
           airTemperatureQM:
             query: "NC002005/UARLV/UATMP/QMAT"
-          moistureQM:
+          dewpointTemperatureQM:
             query: "NC002005/UARLV/UATMP/QMDD"
-          windQM:
+          windSpeedQM:
             query: "NC002005/UARLV/UAWND/QMWN"
 
 
@@ -143,13 +143,13 @@ observations:
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Temperature"
 
-        - name: "QualityMarker/moisture"
+        - name: "QualityMarker/dewpointTemperature"
           coordinates: "longitude latitude"
-          source: variables/moistureQM
+          source: variables/dewpointTemperatureQM
           longName: "Quality Indicator for Moisture"
 
-        - name: "QualityMarker/wind"
+        - name: "QualityMarker/windSpeed"
           coordinates: "longitude latitude"
-          source: variables/windQM
+          source: variables/windSpeedQM
           longName: "Quality Indicator for Wind"
 

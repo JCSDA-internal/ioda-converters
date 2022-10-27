@@ -31,15 +31,15 @@ observations:
 
           # ObsValue
           pressure:
-            query: "[*/UARLV/PRLC]"
+            query: "*/UARLV/PRLC"
           airTemperature:
-            query: "[*/UARLV/UATMP/TMDB]"
+            query: "*/UARLV/UATMP/TMDB"
           dewpointTemperature:
-            query: "[*/UARLV/UATMP/TMDP]"
+            query: "*/UARLV/UATMP/TMDP"
           windDirection:
-            query: "[*/UARLV/UAWND/WDIR]"
+            query: "*/UARLV/UAWND/WDIR"
           windSpeed:
-            query: "[*/UARLV/UAWND/WSPD]"
+            query: "*/UARLV/UAWND/WSPD"
 
           # QualityMarker
           stationElevationQM:
@@ -47,13 +47,13 @@ observations:
           pressureQM:
             query: "*/UARLV/QMPR"
           airTemperatureQM:
-            query: "[*/UARLV/UATMP/QMAT]"
-          moistureQM:
-            query: "[*/UARLV/UATMP/QMDD]"
-          windQM:
-            query: "[*/UARLV/UAWND/QMWN]"
+            query: "*/UARLV/UATMP/QMAT"
+          dewpointTemperatureQM:
+            query: "*/UARLV/UATMP/QMDD"
+          windSpeedQM:
+            query: "*/UARLV/UAWND/QMWN"
           waterTemperatureQM:
-            query: "[*/UASDG/QMST]"
+            query: "*/UASDG/QMST"
 
 
     ioda:
@@ -144,13 +144,13 @@ observations:
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Temperature"
 
-        - name: "QualityMarker/moisture"
+        - name: "QualityMarker/dewpointTemperature"
           coordinates: "longitude latitude"
-          source: variables/moistureQM
+          source: variables/dewpointTemperatureQM
           longName: "Quality Indicator for Moisture"
 
-        - name: "QualityMarker/wind"
+        - name: "QualityMarker/windSpeed"
           coordinates: "longitude latitude"
-          source: variables/windQM
+          source: variables/windSpeedQM
           longName: "Quality Indicator for Wind"
 
