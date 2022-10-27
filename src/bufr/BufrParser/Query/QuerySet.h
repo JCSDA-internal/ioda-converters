@@ -47,6 +47,7 @@ namespace bufr
      private:
         std::unordered_map<std::string, std::vector<Query>> queryMap_;
         bool includesAllSubsets_;
+        bool addHasBeenCalled_;
         const Subsets limitSubsets_;
         Subsets presentSubsets_;
     };
