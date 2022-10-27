@@ -90,7 +90,6 @@ observations:
           longName: "Longitude"
           units: "degree_east"
           range: [-180, 180]
-#         range: [0, 360]
 
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
