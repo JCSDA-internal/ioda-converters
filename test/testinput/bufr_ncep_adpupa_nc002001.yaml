@@ -12,45 +12,47 @@ observations:
 
       exports:
         group_by_variable: pressure
+        subsets:
+          - NC002001
         variables:
           # MetaData
           timestamp:
             datetime:
-              year: "NC002001/YEAR"
-              month: "NC002001/MNTH"
-              day: "NC002001/DAYS"
-              hour: "NC002001/HOUR"
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
               minute: "*/MINU"
           stationIdentification:
-            query: "NC002001/RPID"
+            query: "*/RPID"
           latitude:
-            query: "NC002001/CLAT"
+            query: "*/CLAT"
           longitude:
-            query: "NC002001/CLON"
+            query: "*/CLON"
           stationElevation:
-            query: "NC002001/SELV"
+            query: "*/SELV"
 
           # ObsValue
           pressure:
-            query: "NC002001/UARLV/PRLC"
+            query: "*/UARLV/PRLC"
           airTemperature:
-            query: "NC002001/UARLV/UATMP/TMDB"
+            query: "*/UARLV/UATMP/TMDB"
           dewpointTemperature:
-            query: "NC002001/UARLV/UATMP/TMDP"
+            query: "*/UARLV/UATMP/TMDP"
           windDirection:
-            query: "NC002001/UARLV/UAWND/WDIR"
+            query: "*/UARLV/UAWND/WDIR"
           windSpeed:
-            query: "NC002001/UARLV/UAWND/WSPD"
+            query: "*/UARLV/UAWND/WSPD"
 
           # QualityMarker
           pressureQM:
-            query: "NC002001/UARLV/QMPR"
+            query: "*/UARLV/QMPR"
           airTemperatureQM:
-            query: "NC002001/UARLV/UATMP/QMAT"
+            query: "*/UARLV/UATMP/QMAT"
           dewpointTemperatureQM:
-            query: "NC002001/UARLV/UATMP/QMDD"
+            query: "*/UARLV/UATMP/QMDD"
           windSpeedQM:
-            query: "NC002001/UARLV/UAWND/QMWN"
+            query: "*/UARLV/UAWND/QMWN"
 
 
     ioda:
