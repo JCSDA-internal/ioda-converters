@@ -20,7 +20,6 @@ varid_name = 'obserror_correlations'
 !> get command line arguments
 do ii = 1, iargc()
   call getarg(ii,arg)
-  print*, trim(arg)
   if (ii == 1) filename_in = arg
   if (ii == 2) filename_out = arg
   if (ii == 3) varid_name = arg
