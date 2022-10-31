@@ -24,9 +24,6 @@ namespace bufr {
         bool finished = false;
 
         std::vector<QueryData> queryData;
-        auto processMsg = [] ()
-        {
-        };
 
         auto& dataProvider = dataProvider_;
         auto processSubset = [&queryData, &finished, &dataProvider]() mutable
@@ -35,9 +32,6 @@ namespace bufr {
             finished = true;
         };
 
-        auto processFinish = []()
-        {
-        };
 
         auto continueProcessing = [&finished]() -> bool
         {
@@ -45,10 +39,9 @@ namespace bufr {
         };
 
         dataProvider_->run(QuerySet({variant.subset}),
-                          processMsg,
-                          processSubset,
-                          processFinish,
-                          continueProcessing);
+                           processSubset,
+                          [](){},
+                           continueProcessing);
 
         return queryData;
     }
@@ -82,18 +75,9 @@ namespace bufr {
             subsets.insert(dataProvider->getSubsetVariant());
         };
 
-        auto processSubset = []()
-        {
-        };
-
-        auto processFinish = []()
-        {
-        };
-
         dataProvider_->run(QuerySet({}),
-                           processMsg,
-                           processSubset,
-                           processFinish);
+                           [](){},
+                           processMsg);
 
         return subsets;
     }

@@ -107,10 +107,9 @@ namespace bufr {
         ~DataProvider() = default;
 
         void run(const QuerySet& querySet,
-                 const std::function<void()> processMsg,
                  const std::function<void()> processSubset,
-                 const std::function<void()> processFinish,
-                 const std::function<bool()> continueProcessing = [](){return true;});
+                 const std::function<void()> processMsg = [](){},
+                 const std::function<bool()> continueProcessing = [](){ return true; });
 
         virtual void open() = 0;
 

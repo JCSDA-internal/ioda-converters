@@ -25,10 +25,6 @@ namespace bufr {
     {
         std::unordered_map<SubsetVariant, std::vector<QueryData>> dataMap;
 
-        auto processMsg = []()
-        {
-        };
-
         auto& dataProvider = dataProvider_;
         auto processSubset = [&variant, &dataMap, &dataProvider]() mutable
         {
@@ -39,14 +35,7 @@ namespace bufr {
             }
         };
 
-        auto processFinish = []()
-        {
-        };
-
-        dataProvider_->run(QuerySet({variant.subset}),
-                           processMsg,
-                           processSubset,
-                           processFinish);
+        dataProvider_->run(QuerySet({variant.subset}), processSubset);
 
         std::vector<QueryData> queryData;
         for (const auto& queryObjs : dataMap)
@@ -62,23 +51,12 @@ namespace bufr {
         std::set<SubsetVariant> variants;
 
         auto& dataProvider = dataProvider_;
-        auto processMsg = [] () mutable
-        {
-        };
-
         auto processSubset = [&variants, &dataProvider]()
         {
             variants.insert(dataProvider->getSubsetVariant());
         };
 
-        auto processFinish = []()
-        {
-        };
-
-        dataProvider_->run(QuerySet({}),
-                           processMsg,
-                           processSubset,
-                           processFinish);
+        dataProvider_->run(QuerySet({}), processSubset);
 
         return variants;
     }

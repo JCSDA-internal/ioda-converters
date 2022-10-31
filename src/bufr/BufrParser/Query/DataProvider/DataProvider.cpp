@@ -18,9 +18,8 @@
 namespace Ingester {
 namespace bufr {
     void DataProvider::run(const QuerySet& querySet,
-                           const std::function<void()> processMsg,
                            const std::function<void()> processSubset,
-                           const std::function<void()> processFinish,
+                           const std::function<void()> processMsg,
                            const std::function<bool()> continueProcessing)
     {
         static int SubsetLen = 9;
@@ -43,7 +42,6 @@ namespace bufr {
                     updateData(bufrLoc);
 
                     processSubset();
-
                     if (!continueProcessing()) break;
                 }
 
@@ -52,7 +50,6 @@ namespace bufr {
             }
         }
 
-        processFinish();
         deleteData();
     }
 

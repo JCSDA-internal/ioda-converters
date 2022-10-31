@@ -79,7 +79,6 @@ namespace bufr {
         auto resultSet = ResultSet(querySet.names());
         auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
 
-
         auto processMsg = [&msgCnt] () mutable
         {
             msgCnt++;
@@ -88,11 +87,6 @@ namespace bufr {
         auto processSubset = [&queryRunner]() mutable
         {
             queryRunner.accumulate();
-        };
-
-        auto processFinish = [&msgCnt]() mutable
-        {
-            msgCnt = 0;
         };
 
         auto continueProcessing = [next, &msgCnt]() -> bool
@@ -106,32 +100,9 @@ namespace bufr {
         };
 
         dataProvider->run(querySet,
-                          processMsg,
                           processSubset,
-                          processFinish,
+                          processMsg,
                           continueProcessing);
-//
-//        while (ireadmg_f(fileUnit_, subsetChars, &iddate, SubsetLen) == 0)
-//        {
-//            auto subset = std::string(subsetChars);
-//            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
-//
-//            if (querySet.includesSubset(subset))
-//            {
-//                while (ireadsb_f(fileUnit_) == 0)
-//                {
-//                    status_f(fileUnit_, &bufrLoc, &il, &im);
-//                    dataProvider.updateData(bufrLoc);
-//                    queryRunner.accumulate();
-//                }
-//
-//                if (next > 0 && ++messageNum >= next) break;
-//            }
-//        }
-//
-//        resultSet.setTargets(queryRunner.getTargets());
-//
-//        dataProvider.deleteData();
 
         return resultSet;
     }

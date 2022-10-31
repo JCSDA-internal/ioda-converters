@@ -117,7 +117,7 @@ namespace bufr {
 
     void WmoDataProvider::initCache()
     {
-        run(QuerySet({}), [](){}, [](){}, [](){});
+        run(QuerySet({}), [](){});
         rewind();
     }
 
