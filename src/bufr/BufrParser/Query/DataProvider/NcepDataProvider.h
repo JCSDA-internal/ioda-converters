@@ -1,6 +1,9 @@
-//
-// Created by Ronald McLaren on 10/5/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
@@ -15,8 +18,8 @@ namespace bufr {
 
     class NcepDataProvider : public DataProvider
     {
-    public:
-        NcepDataProvider(const std::string& filePath_);
+     public:
+        explicit NcepDataProvider(const std::string& filePath_);
 
         void open() final;
 
@@ -33,7 +36,6 @@ namespace bufr {
         bool hasVariants() const final;
 
      private:
-
         // Table data;
         gsl::span<const int> isc_;
         gsl::span<const int> link_;

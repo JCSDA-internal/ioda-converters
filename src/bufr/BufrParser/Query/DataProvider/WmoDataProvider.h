@@ -1,6 +1,9 @@
-//
-// Created by Ronald McLaren on 10/5/22.
-//
+/*
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
 
 #pragma once
 
@@ -50,11 +53,11 @@ namespace bufr {
         size_t variantId() const final;
         bool hasVariants() const final;
 
-    private:
+     private:
         typedef std::pair<std::string, size_t> Variant;
 
-        const static int FileUnitTable1 = 13;
-        const static int FileUnitTable2 = 14;
+        static const int FileUnitTable1 = 13;
+        static const int FileUnitTable2 = 14;
 
         const std::string tableFilePath_;
         std::unordered_map<std::string, std::shared_ptr<TableData>> tableCache_;

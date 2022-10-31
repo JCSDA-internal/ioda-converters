@@ -94,7 +94,7 @@ namespace bufr {
     typedef std::shared_ptr<DataProvider> DataProviderType;
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
-class DataProvider
+    class DataProvider
     {
      public:
         DataProvider() = delete;
@@ -150,7 +150,7 @@ class DataProvider
         virtual bool hasVariants() const = 0;
 
      protected:
-        const static int FileUnit = 12;
+        static const int FileUnit = 12;
 
         const std::string filePath_;
         std::string subset_;
