@@ -44,10 +44,10 @@ namespace bufr {
                                   std::shared_ptr<__details::ProcessingMasks> &masks)
     {
         // Check if the target list for this subset is cached
-        if (targetCache_.find(dataProvider_->getSubsetVariant().subset) != targetCache_.end())
+        if (targetCache_.find(dataProvider_->getSubsetVariant()) != targetCache_.end())
         {
-            targets = targetCache_.at(dataProvider_->getSubsetVariant().subset);
-            masks = maskCache_.at(dataProvider_->getSubsetVariant().subset);
+            targets = targetCache_.at(dataProvider_->getSubsetVariant());
+            masks = maskCache_.at(dataProvider_->getSubsetVariant());
             return;
         }
 
@@ -111,13 +111,13 @@ namespace bufr {
                 }
 
                 oops::Log::warning() << " didn't apply to subset ";
-                oops::Log::warning() << dataProvider_->getSubsetVariant().subset;
+                oops::Log::warning() << dataProvider_->getSubsetVariant().str();
                 oops::Log::warning() << std::endl;
             }
         }
 
-        targetCache_.insert({dataProvider_->getSubsetVariant().subset, targets});
-        maskCache_.insert({dataProvider_->getSubsetVariant().subset, masks});
+        targetCache_.insert({dataProvider_->getSubsetVariant(), targets});
+        maskCache_.insert({dataProvider_->getSubsetVariant(), masks});
     }
 
     std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
