@@ -115,6 +115,11 @@ namespace Ingester
                         }
                     }
                 }
+                else if (field.first == ConfKeys::AircraftIndicatedAltitude)
+                {
+                    // This variable is only used in conjunction with pressure.
+                    continue;
+                }
                 else if (!field.second->isMissing(idx))
                 {
                      aircraftAlts[idx] = field.second->getAsFloat(idx);
