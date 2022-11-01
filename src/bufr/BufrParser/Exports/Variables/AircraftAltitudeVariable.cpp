@@ -5,11 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include <climits>
-#include <iostream>
-#include <iomanip>
-#include <string> 
-#include <float.h>
+#include <string>
 
 #include <ostream>
 #include <time.h>
@@ -26,8 +22,9 @@ namespace
     namespace ConfKeys
     {
         const char* Pressure = "pressure";
-        const char* AircraftIndicatedAltitude = "aircraftIndicatedAltitude"; 
-        const char* PressureAltitudeRelativeToMeanSeaLevel = "pressureAltitudeRelativeToMeanSeaLevel";
+        const char* AircraftIndicatedAltitude = "aircraftIndicatedAltitude";
+        const char* PressureAltitudeRelativeToMeanSeaLevel =
+            "pressureAltitudeRelativeToMeanSeaLevel";
         const char* FlightLevel = "flightLevel";
         const char* Height = "height";
         const char* HeightOrAltitude = "heightOrAltitude";
@@ -91,7 +88,7 @@ namespace Ingester
 
         for (size_t idx = 0; idx < referenceObj->size(); idx++)
         {
-            for (const auto &field: includedFields)
+            for (const auto &field : includedFields)
             {
                 if (field.first == ConfKeys::Pressure)
                 {
@@ -100,18 +97,23 @@ namespace Ingester
                         auto value = field.second->getAsFloat(idx);
                         if (value < 22630)
                         {
-                            aircraftAlts[idx]  = 11000 - (std::log1p(value/22630)/0.0001576106);
+                            aircraftAlts[idx]  =
+                                11000.0f - (std::log1p(value / 22630.0) / 0.0001576106f);
                         }
                         else
                         {
-                            aircraftAlts[idx]  = (1.0-pow((value/101325),(1.0/5.256)))*(288.15/0.0065);
+                            aircraftAlts[idx]  =
+                                (1.0f - powf((value / 101325.0f),
+                                             (1.0 / 5.256))) * (288.15f / 0.0065f);
                         }
                     }
-                    else if (includedFields.find(ConfKeys::AircraftIndicatedAltitude) != includedFields.end())
+                    else if (includedFields.find(ConfKeys::AircraftIndicatedAltitude)
+                             != includedFields.end())
                     {
                         if (!includedFields[ConfKeys::AircraftIndicatedAltitude]->isMissing(idx))
                         {
-                            aircraftAlts[idx] = includedFields[ConfKeys::AircraftIndicatedAltitude]->getAsFloat(idx);
+                            aircraftAlts[idx] =
+                              includedFields[ConfKeys::AircraftIndicatedAltitude]->getAsFloat(idx);
                         }
                     }
                 }
