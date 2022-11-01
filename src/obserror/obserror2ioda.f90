@@ -28,7 +28,7 @@ enddo
 !> sanity check for options
 if (trim(varid_name) /= 'obserror_correlations' .and. trim(varid_name) /= 'obserror_covariances') then
   print *, 'Unknown option ', trim(varid_name)
-  stop "Stopped"
+  call abort()
 end if
 
 !> read GSI obs error covariances
@@ -56,7 +56,7 @@ contains
     integer, intent ( in) :: status
     if(status /= nf90_noerr) then
       print *, trim(nf90_strerror(status))
-      stop "Stopped"
+      call abort()
     end if
   end subroutine check
 
