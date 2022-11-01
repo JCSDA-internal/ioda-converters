@@ -95,7 +95,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.acft_profiles.prepbufr_newAA.nc"
+      obsdataout: "testrun/gdas.t12z.acft_profiles.prepbufr.nc"
 
       dimensions:
         - name: PressureEvent
