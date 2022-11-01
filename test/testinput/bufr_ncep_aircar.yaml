@@ -35,7 +35,6 @@ observations:
 
           aircraftAltitude:
             aircraftAltitude:
-              latitude: "*/CLAT"
               pressure: "*/PRLC"
               aircraftIndicatedAltitude: "*/IALT"
 
