@@ -24,8 +24,9 @@ namespace Ingester
      public:
         AircraftAltitudeVariable() = delete;
         AircraftAltitudeVariable(const std::string& exportName,
-                         const std::string& groupByField,
-                         const eckit::Configuration& conf);
+                                 const std::string& groupByField,
+                                 const eckit::LocalConfiguration& conf);
+
         ~AircraftAltitudeVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into AircraftAltitude 
@@ -36,34 +37,16 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        /// \brief Query for pressure (PRLC) (optional)
-        std::string pressureQuery_;
-
-        /// \brief Query for indicated Aircraft Altitude (IALR) (optional)
-        std::string aircraftIndicatedAltitudeQuery_;
-
-        /// \brief Query for Pressure Altitude Relative to MSL (PSAL) (optional)
-        std::string pressureAltitudeRelativeToMeanSeaLevelQuery_;
-
-        /// \brief Query for Flight Level (FLVL) (optional)
-        std::string flightLevelQuery_;
-
-        /// \brief Query for height (HEIT) (optional)
-        std::string heightQuery_;
-
-        /// \brief Query for heightOrAltitude (HMSL) (optional)
-        std::string heightOrAltitudeQuery_;
-
-        /// \brief Query for Flight Level ST (FLVLST) (optional)
-        std::string flightLevelSTQuery_;
-
         /// \brief For field
         std::string groupByField_;
+
+        /// \brief The configuration
+        const eckit::LocalConfiguration conf_;
 
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
 
         /// \brief get the export key string
-        std::string getExportKey(const char* name) const;
+        std::string getExportKey(const std::string& name) const;
     };
 }  // namespace Ingester
