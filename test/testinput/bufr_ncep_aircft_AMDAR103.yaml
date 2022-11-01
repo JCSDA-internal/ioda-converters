@@ -64,7 +64,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.aircft_AMDAR103.tm00.nc"
+      obsdataout: "testrun/gdas.t12z.aircft_AMDAR103_newAA.tm00.nc"
 
       variables:
         # MetaData
