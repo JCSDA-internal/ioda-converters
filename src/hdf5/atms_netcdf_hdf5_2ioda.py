@@ -40,9 +40,11 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
 ]
 
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 def main(args):
 
@@ -255,6 +257,20 @@ def get_WMO_satellite_ID(filename):
         sys.exit()
 
     return WMO_sat_ID
+
+
+def get_epoch_time(obs_time_utc):
+
+    year = obs_time_utc[:, :, 0].flatten()
+    month = obs_time_utc[:, :, 1].flatten()
+    day = obs_time_utc[:, :, 2].flatten()
+    hour = obs_time_utc[:, :, 3].flatten()
+    minute = obs_time_utc[:, :, 4].flatten()
+    # this_datetime = [i for i in year
+    this_datetime = datetime(year, month, day, hour, minute, second)
+    time_offset = round((this_datetime - epoch).total_seconds())
+
+    return time_offset
 
 
 def get_string_dtg(obs_time_utc):
