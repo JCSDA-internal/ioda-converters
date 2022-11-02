@@ -22,7 +22,6 @@ namespace bufr {
                            const std::function<void()> processMsg,
                            const std::function<bool()> continueProcessing)
     {
-
         if (!isOpen_)
         {
             std::ostringstream errStr;
