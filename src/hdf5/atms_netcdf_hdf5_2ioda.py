@@ -12,6 +12,7 @@ from pathlib import Path
 import os.path
 from os import getcwd
 import sys
+import pdb
 
 import h5py
 import numpy as np
@@ -42,6 +43,7 @@ locationKeyList = [
     ("longitude", "float"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
 ]
+meta_keys = [m_item[0] for m_item in locationKeyList]
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -212,7 +214,7 @@ def get_data(f, g, obs_data):
         obs_data[('sensor_view_angle', 'MetaData')] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
         nlocs = len(obs_data[('latitude', 'MetaData')])
         obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-        obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
+        obs_data[('datetime', 'MetaData')] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
 
     # BaseException is a catch-all mechamism
     except BaseException:
@@ -261,14 +263,22 @@ def get_WMO_satellite_ID(filename):
 
 def get_epoch_time(obs_time_utc):
 
+    # ugh this does not seem generic
     year = obs_time_utc[:, :, 0].flatten()
     month = obs_time_utc[:, :, 1].flatten()
     day = obs_time_utc[:, :, 2].flatten()
     hour = obs_time_utc[:, :, 3].flatten()
     minute = obs_time_utc[:, :, 4].flatten()
-    # this_datetime = [i for i in year
-    this_datetime = datetime(year, month, day, hour, minute, second)
-    time_offset = round((this_datetime - epoch).total_seconds())
+    second = obs_time_utc[:, :, 5].flatten()
+
+    # following examples here could be written better potentially
+    iterables = [year, month, day, hour, minute, second]
+    # ensure the year is plausible (65535 appears in some data) if not set to 01Jan1900 (revisit)
+    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5]) \
+        if adate[0] < 2200 else datetime(1900,1,1,0,0,0) \
+        for adate in zip(*iterables)]
+
+    time_offset = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
 
     return time_offset
 
