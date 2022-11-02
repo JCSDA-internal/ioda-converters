@@ -128,6 +128,7 @@ namespace bufr {
         {
             closbf_f(FileUnit);
             close_f(FileUnit);
+            isOpen_ = false;
         }
 
         /// \brief Rewind the current BUFR file (start over from the beginning).
@@ -136,6 +137,9 @@ namespace bufr {
             close();
             open();
         }
+
+        /// \brief Is the BUFR file open
+        bool isFileOpen() { return isOpen_; }
 
         /// \brief Tells the Fortran BUFR interface to delete its temporary data structures that are
         /// are needed to support this class instanc.
@@ -203,11 +207,15 @@ namespace bufr {
         ///        loaded subset.
         virtual bool hasVariants() const = 0;
 
+        /// \brief Initialize the table cache in order to capture all the subset information.
+        virtual void initAllTableData() {}
+
      protected:
         static const int FileUnit = 12;
 
         const std::string filePath_;
         std::string subset_;
+        bool isOpen_ = false;
 
         // BUFR table meta data elements
         int inode_;

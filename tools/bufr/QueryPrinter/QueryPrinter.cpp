@@ -16,6 +16,11 @@
 namespace Ingester {
 namespace bufr {
 
+    QueryPrinter::QueryPrinter(std::shared_ptr<DataProvider> dataProvider) :
+        dataProvider_(dataProvider)
+    {
+    }
+
     void QueryPrinter::printQueries(const std::string &subset)
     {
         if (!subset.empty())
@@ -31,9 +36,8 @@ namespace bufr {
         }
         else
         {
-            dataProvider_->open();
+            dataProvider_->initAllTableData();
             auto variants = getSubsetVariants();
-            dataProvider_->rewind();
 
             if (variants.empty())
             {
@@ -63,12 +67,8 @@ namespace bufr {
                 std::cout << " Queries: " << std::endl;
                 printQueryList(queries);
                 std::cout << std::endl;
-
-                dataProvider_->rewind();
             }
         }
-
-        dataProvider_->close();
     }
 
 

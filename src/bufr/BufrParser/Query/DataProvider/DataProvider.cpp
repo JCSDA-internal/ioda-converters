@@ -22,6 +22,14 @@ namespace bufr {
                            const std::function<void()> processMsg,
                            const std::function<bool()> continueProcessing)
     {
+
+        if (!isOpen_)
+        {
+            std::ostringstream errStr;
+            errStr << "Tried to call DataProvider::run, but the file is not open!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
         static int SubsetLen = 9;
         char subsetChars[SubsetLen];
         int iddate;

@@ -7,13 +7,15 @@
 
 #include "WmoDataProvider.h"
 
-#include "bufr_interface.h"
-
 #include <gsl/gsl-lite.hpp>
 #include <algorithm>
 #include <unordered_map>
 #include <vector>
 #include <iostream>
+#include <sstream>
+
+#include "eckit/exception/Exceptions.h"
+#include "bufr_interface.h"
 
 namespace Ingester {
 namespace bufr {
@@ -31,10 +33,7 @@ namespace bufr {
         openbf_f(FileUnit, "SEC3", FileUnit);
         mtinfo_f(tableFilePath_.c_str(), FileUnitTable1, FileUnitTable2);
 
-        if (tableCache_.empty())
-        {
-            initCache();
-        }
+        isOpen_ = true;
     }
 
     void WmoDataProvider::updateTableData(const std::string& subset)
@@ -59,7 +58,6 @@ namespace bufr {
         {
             int size = 0;
             int *intPtr = nullptr;
-            double *dataPtr = nullptr;
             int strLen = 0;
             char *charPtr = nullptr;
 
@@ -115,10 +113,22 @@ namespace bufr {
         return variantCount_.at(subset_) > 1;
     }
 
-    void WmoDataProvider::initCache()
+    void WmoDataProvider::initAllTableData()
     {
-        run(QuerySet({}), [](){});
-        rewind();
+        if (isOpen_)
+        {
+            std::ostringstream errStr;
+            errStr << "Tried to call DataProvider::initAllTableData, but the file is already open!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        // Run through each message subset in order to cache the table information.
+        if (tableCache_.empty())
+        {
+            open();
+            run(QuerySet({}), []() {});
+            close();
+        }
     }
 
     void WmoDataProvider::_deleteData()

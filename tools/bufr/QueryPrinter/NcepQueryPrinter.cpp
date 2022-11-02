@@ -9,6 +9,9 @@
 
 #include <memory>
 #include <iostream>
+#include <sstream>
+
+#include "eckit/exception/Exceptions.h"
 
 #include "QueryPrinter.h"
 #include "../../../src/bufr/BufrParser/Query/DataProvider/NcepDataProvider.h"
@@ -24,9 +27,18 @@ namespace bufr {
 
     std::vector<QueryData> NcepQueryPrinter::getQueries(const SubsetVariant& variant)
     {
+        if (dataProvider_->isFileOpen())
+        {
+            std::ostringstream errStr;
+            errStr << "Tried to call QueryPrinter::getQueries, but the file is already open!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
         bool finished = false;
 
         std::vector<QueryData> queryData;
+
+        dataProvider_->open();
 
         auto& dataProvider = dataProvider_;
         auto processSubset = [&queryData, &finished, &dataProvider]() mutable
@@ -46,30 +58,22 @@ namespace bufr {
                           [](){},
                            continueProcessing);
 
+        dataProvider_->close();
+
         return queryData;
     }
 
-//    std::set<std::string> DataProvider::getSubsets()
-//    {
-//        static const int SubsetLen = 9;
-//        int iddate;
-//
-//        std::set<std::string> subsets;
-//
-//        char subset[SubsetLen];
-//        while (ireadmg_f(FileUnit, subset, &iddate, SubsetLen) == 0)
-//        {
-//            auto str_subset = std::string(subset);
-//            str_subset.erase(
-//                remove_if(str_subset.begin(), str_subset.end(), isspace), str_subset.end());
-//            subsets.insert(str_subset);
-//        }
-//
-//        return subsets;
-//    }
-
     std::set<SubsetVariant> NcepQueryPrinter::getSubsetVariants() const
     {
+        if (dataProvider_->isFileOpen())
+        {
+            std::ostringstream errStr;
+            errStr << "Tried to call QueryPrinter::getSubsetVariants but the file is already open!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        dataProvider_->open();
+
         std::set<SubsetVariant> subsets;
 
         auto& dataProvider = dataProvider_;
@@ -81,6 +85,8 @@ namespace bufr {
         dataProvider_->run(QuerySet({}),
                            [](){},
                            processMsg);
+
+        dataProvider_->close();
 
         return subsets;
     }

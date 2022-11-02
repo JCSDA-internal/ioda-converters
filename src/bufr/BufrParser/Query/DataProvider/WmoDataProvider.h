@@ -77,6 +77,9 @@ namespace bufr {
         ///        loaded subset.
         bool hasVariants() const final;
 
+        /// \brief Initialize the table cache in order to capture all the subset information.
+        void initAllTableData() final;
+
      private:
         typedef std::pair<std::string, size_t> Variant;
 
@@ -94,9 +97,6 @@ namespace bufr {
         /// \brief Update the table data for the currently loaded subset.
         /// \param subset The subset string.
         void updateTableData(const std::string& subset) final;
-
-        /// \param Initialize the table cache in order to capture all the subset information.
-        void initCache();
 
         /// \brief Deletes the currently loaded data that is stored in the NCEPbufr-lib library.
         void _deleteData() final;

@@ -23,13 +23,14 @@ namespace bufr {
     {
         open_f(FileUnit, filePath_.c_str());
         openbf_f(FileUnit, "IN", FileUnit);
+
+        isOpen_ = true;
     }
 
     void NcepDataProvider::updateTableData(const std::string& subset)
     {
         int size = 0;
         int *intPtr = nullptr;
-        double *dataPtr = nullptr;
         int strLen = 0;
         char *charPtr = nullptr;
 

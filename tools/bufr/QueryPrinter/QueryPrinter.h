@@ -22,8 +22,7 @@ namespace bufr {
      public:
         QueryPrinter() = delete;
 
-        explicit QueryPrinter(std::shared_ptr<DataProvider> dataProvider)
-          : dataProvider_(dataProvider) {};
+        explicit QueryPrinter(std::shared_ptr<DataProvider> dataProvider);
 
         /// \brief Print queries associated with the given subset to stdio.
         /// \param subset The subset
@@ -34,8 +33,7 @@ namespace bufr {
         /// \returns Vector of SubsetTable QueryData objects
         virtual std::vector<QueryData> getQueries(const SubsetVariant& variant) = 0;
 
-        /// \brief Get a complete set of subsets in the data file. WARNING: using this will be slow
-        ///        and reset the file pointer.
+        /// \brief Get a complete set of subsets in the data file.
         /// \returns Vector of subset variants
         virtual std::set<SubsetVariant> getSubsetVariants() const = 0;
 

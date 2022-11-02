@@ -11,7 +11,9 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <sstream>
 
+#include "eckit/exception/Exceptions.h"
 #include "bufr_interface.h"
 
 #include "../../../src/bufr/BufrParser/Query/DataProvider/WmoDataProvider.h"
@@ -26,6 +28,15 @@ namespace bufr {
 
     std::vector<QueryData> WmoQueryPrinter::getQueries(const SubsetVariant& variant)
     {
+        if (dataProvider_->isFileOpen())
+        {
+            std::ostringstream errStr;
+            errStr << "Tried to call QueryPrinter::getQueries, but the file is already open!";
+            throw eckit::BadParameter(errStr.str());
+        }
+
+        dataProvider_->open();
+
         std::unordered_map<SubsetVariant, std::vector<QueryData>> dataMap;
 
         auto& dataProvider = dataProvider_;
@@ -46,20 +57,33 @@ namespace bufr {
             queryData.insert(queryData.end(), queryObjs.second.begin(), queryObjs.second.end());
         }
 
+        dataProvider_->close();
+
         return queryData;
     }
 
     std::set<SubsetVariant> WmoQueryPrinter::getSubsetVariants() const
     {
-        std::set<SubsetVariant> variants;
+        if (dataProvider_->isFileOpen())
+        {
+            std::ostringstream errStr;
+            errStr << "Tried to call QueryPrinter::getSubsetVariants but the file is already open!";
+            throw eckit::BadParameter(errStr.str());
+        }
 
+        dataProvider_->open();
+
+        std::set<SubsetVariant> variants;
         auto& dataProvider = dataProvider_;
+
         auto processSubset = [&variants, &dataProvider]()
         {
             variants.insert(dataProvider->getSubsetVariant());
         };
 
         dataProvider_->run(QuerySet({}), processSubset);
+
+        dataProvider_->close();
 
         return variants;
     }
