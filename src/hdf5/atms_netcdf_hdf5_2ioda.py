@@ -12,7 +12,6 @@ from pathlib import Path
 import os.path
 from os import getcwd
 import sys
-import pdb
 
 import h5py
 import numpy as np
