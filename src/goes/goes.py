@@ -25,11 +25,10 @@ class Goes:
     def __init__(self, input_file_path, goes_util: GoesUtil):
         """
         Constructor
-        input_file_path - a GOES-16 or GOES-17 raw data file for a single ABI channel
+        input_file_path - a GOES-R raw data file for a single ABI channel
         """
         self._input_file_path = input_file_path
         self._goes_util = goes_util
-        self._get_metadata_from_input_file_path()
         self._rad_data_array = None
         self._dqf_data_array = None
         self._lat_fill_value_index_array = None
@@ -38,33 +37,83 @@ class Goes:
         self._obserror_rf_data_array = None
         self._obserror_bt_data_array = None
 
-    def _get_metadata_from_input_file_path(self):
+    def _get_metadata_from_input_file(self):
         """
         Creates a dictionary of file metadata from input_file_path
         """
-        self._metadata_dict = {'instrument': 'ABI',
-                               'processing_level': 'L1b',
-                               'product_acronym': 'Rad'}
-        metadata_array = os.path.splitext(os.path.basename(self._input_file_path))[0].split('_')
-        self._metadata_dict['system_environment'] = metadata_array[0]
-        self._metadata_dict['abi_sector_type'] = Goes._string_to_abisectortype(metadata_array[1])
-        self._metadata_dict['abi_mode'] = Goes._string_to_abimode(metadata_array[1])
-        self._metadata_dict['abi_channel'] = int(metadata_array[1][-2:])
-        self._metadata_dict['platform_identifier'] = metadata_array[2]
-        year = int(metadata_array[3][1:-1][0:4])
-        day_of_year = int(metadata_array[3][1:-1][4:7])
-        hour = int(metadata_array[3][1:-1][7:9])
-        minute = int(metadata_array[3][1:-1][9:11])
-        second = int(metadata_array[3][1:-1][11:13])
-        scan_start_datetime = datetime.datetime(year, 1, 1, hour, minute, second) + datetime.timedelta(day_of_year - 1)
-        self._metadata_dict['day_of_year'] = day_of_year
-        self._metadata_dict['start_date'] = scan_start_datetime
+        self._metadata_dict['platform_identifier'] = self._load_metadata_platform()
+        self._metadata_dict['instrument_identifier'] = self._load_metadata_instrument()
+        self._title = self._load_metadata_title()
+        metadata_elements = self._title.split(' ')
+        self._metadata_dict['instrument'] = metadata_elements[0]
+        self._metadata_dict['processing_level'] = metadata_elements[1]
+        self._metadata_dict['product_acronym'] = metadata_elements[2]
+        self._metadata_dict['abi_sector_type'] = self._load_metadata_sceneID()
+        time_coverage_start = self._load_metadata_timestamp()
+        self._metadata_dict['start_date'] = datetime.datetime.fromisoformat(time_coverage_start[:-3])
+
+        # Only the channel should change per file, nothing else, so we could do steps above only once.
+        self._metadata_dict['abi_channel'] = self._load_band_variable()
 
     def _open(self):
         """
         Opens a netCDF4 dataset using input_file_path.
         """
         self._input_dataset = Dataset(self._input_file_path, 'r')
+
+    def _load_metadata_platform(self):
+        """
+        Creates a local platform variable
+        """
+        self._platformID = self._input_dataset.getncattr('platform_ID')
+        return self._platformID
+
+    def _load_metadata_instrument(self):
+        """
+        Creates a local instrument variable
+        """
+        self._instrumentID = self._input_dataset.getncattr('instrument_ID')
+        return self._instrumentID
+
+    def _load_metadata_sceneID(self):
+        """
+        Creates a local scene ID variable (Full Disk, CONUS, Mesoscale)
+        """
+        self._sceneID = self._input_dataset.getncattr('scene_id')
+        return self._sceneID
+
+    def _load_metadata_title(self):
+        """
+        Creates a local title variable (ABI L1b Radiances)
+        """
+        self._title = self._input_dataset.getncattr('title')
+        return self._title
+
+    def _load_metadata_timestamp(self):
+        """
+        Creates a local timestamp (ISO-8601) variable
+        """
+        self._timestamp = self._input_dataset.getncattr('time_coverage_start')
+        return self._timestamp
+
+    def _load_band_variable(self):
+        """
+        Creates a local band (channel number) variable (convert byte to int).
+        """
+        self._band = int(ma.getdata(self._input_dataset.variables['band'][0]))
+        return self._band
+
+    def get_abi_channel(self):
+        """
+        Returns the ABI channel.
+        """
+        return self._metadata_dict['abi_channel']
+
+    def get_start_date(self):
+        """
+        Returns the scan's start date as a datetime object
+        """
+        return self._metadata_dict['start_date']
 
     def _load_kappa0_variable(self):
         """
@@ -106,32 +155,6 @@ class Goes:
         """
         self._rad_data_array = ma.getdata(self._input_dataset.variables['Rad'][:].real)
 
-    @staticmethod
-    def _string_to_abimode(string):
-        """
-        Selects the ABI Mode Enum constant from string.
-        string - the string used for the match
-        """
-        if 'M4' in string:
-            return ABIMode.ABI_SCAN_MODE_4
-        if 'M6' in string:
-            return ABIMode.ABI_SCAN_MODE_6
-
-    @staticmethod
-    def _string_to_abisectortype(string):
-        """
-        Selects the ABI Sector Type constant from string.
-        string - the string used for the match
-        """
-        if 'F' in string:
-            return ABISectorType.FULL_DISK
-        if 'C' in string:
-            return ABISectorType.CONUS
-        if 'M1' in string:
-            return ABISectorType.MESOSCALE_REGION_1
-        if 'M2' in string:
-            return ABISectorType.MESOSCALE_REGION_2
-
     def _create_obsvalue_rf_data_array(self):
         """
         Creates a local data array variable containing the calculated obsvalue reflectance factor data
@@ -166,30 +189,6 @@ class Goes:
         sqrt_comp_2 = 1 / (self._planck_fk1 + self._rad_data_array) - 1 / self._rad_data_array
         sqrt_comp = np.power(sqrt_comp_1 * sqrt_comp_2, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
         self._obserror_bt_data_array = np.sqrt(sqrt_comp) / np.sqrt(self._valid_pixel_count)
-
-    def get_abi_channel(self):
-        """
-        Returns the ABI channel.
-        """
-        return self._metadata_dict['abi_channel']
-
-    def get_platform_identifier(self):
-        """
-        Returns the platform identifier.
-        """
-        return self._metadata_dict['platform_identifier']
-
-    def get_start_date(self):
-        """
-        Returns the scan's start date as a datetime object
-        """
-        return self._metadata_dict['start_date']
-
-    def get_day_of_year(self):
-        """
-        Returns the scan's day of year.
-        """
-        return self._metadata_dict['day_of_year']
 
     def get_input_file_path(self):
         """
@@ -246,6 +245,7 @@ class Goes:
         """
         self._open()
         self._input_dataset.set_auto_scale(True)
+        self._get_metadata_from_input_file()
         self._load_kappa0_variable()
         self._load_planck_variables()
         self._load_std_dev_radiance_value_of_valid_pixels_variable()
@@ -286,21 +286,3 @@ class Goes:
             self._create_obserror_bt_data_array()
 
         self.close()
-
-
-#
-# This enumeration is for the ABI Mode.
-#
-class ABIMode(Enum):
-    ABI_SCAN_MODE_4 = 1
-    ABI_SCAN_MODE_6 = 2
-
-
-#
-# This enumeration is for the ABI Sector Type
-#
-class ABISectorType(Enum):
-    FULL_DISK = 1
-    CONUS = 2
-    MESOSCALE_REGION_1 = 3
-    MESOSCALE_REGION_2 = 4
