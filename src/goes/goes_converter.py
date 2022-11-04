@@ -107,6 +107,7 @@ class GoesConverter:
                 self._goes_dict_rf[abi_channel] = goes
             else:
                 self._goes_dict_bt[abi_channel] = goes
+        self._platform_id = goes.get_platform_id()
         self._start_date = goes.get_start_date()
         self._input_file_path_template = self._goes_dict_bt[7].get_input_file_path()
         self._goes_util.set_yaw_flip_flag(goes.get_yaw_flip_flag())
@@ -349,7 +350,7 @@ class GoesConverter:
         output_dataset['/MetaData/sensor_channel'][:] = output_dataset['nchans'][:]
 
     @staticmethod
-    def _create_root_group_attributes(output_dataset, resolution):
+    def _create_root_group_attributes(output_dataset, resolution, platform_id):
         """
         Creates several root group attributes in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
@@ -357,6 +358,7 @@ class GoesConverter:
         output_dataset.setncattr('_ioda_layout', 'ObsGroup')
         output_dataset.setncattr('_ioda_layout_version', '0')
         output_dataset.setncattr('subsampled_resolution (km)', resolution)
+        output_dataset.setncattr('platform_identifier', platform_id)
 
     @staticmethod
     def _get_nlocs(dataset):
@@ -535,7 +537,7 @@ class GoesConverter:
         """
         dataset = Dataset(self._output_file_path_bt, 'w')
         GoesConverter._create_groups(dataset)
-        GoesConverter._create_root_group_attributes(dataset, self._resolution)
+        GoesConverter._create_root_group_attributes(dataset, self._resolution, self._platform_id)
         GoesConverter._create_nchans_dimension(dataset, 10)
         self._create_nlocs_dimension(dataset)
         GoesConverter._create_metadata_sensor_channel_variable(dataset)
@@ -561,7 +563,7 @@ class GoesConverter:
         """
         dataset = Dataset(self._output_file_path_rf, 'w')
         GoesConverter._create_groups(dataset)
-        GoesConverter._create_root_group_attributes(dataset, self._resolution)
+        GoesConverter._create_root_group_attributes(dataset, self._resolution, self._platform_id)
         GoesConverter._create_nchans_dimension(dataset, 6)
         self._create_nlocs_dimension(dataset)
         GoesConverter._create_metadata_sensor_channel_variable(dataset)

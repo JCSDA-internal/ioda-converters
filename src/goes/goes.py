@@ -136,6 +136,12 @@ class Goes:
         """
         return self._metadata_dict['yaw_flip_flag']
 
+    def get_platform_id(self):
+        """
+        Returns the platform_id information
+        """
+        return self._metadata_dict['platform_identifier']
+
     def _load_kappa0_variable(self):
         """
         Creates a local kappa0 variable.
