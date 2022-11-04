@@ -36,6 +36,8 @@ class Goes:
         self._obsvalue_bt_data_array = None
         self._obserror_rf_data_array = None
         self._obserror_bt_data_array = None
+        self._input_dataset = None
+        self._metadata_dict = {}
 
     def _get_metadata_from_input_file(self):
         """
