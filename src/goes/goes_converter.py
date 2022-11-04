@@ -102,34 +102,15 @@ class GoesConverter:
         self._goes_dict_bt = {}
         for input_file_path in self._input_file_paths:
             goes = Goes(input_file_path, self._goes_util)
-            goes._get_metadata_from_input_file()
-            abi_channel = goes._metadata_dict['abi_channel']
+            abi_channel = goes.get_abi_channel()
             if abi_channel < 7:
                 self._goes_dict_rf[abi_channel] = goes
             else:
                 self._goes_dict_bt[abi_channel] = goes
-        self._start_date = goes._metadata_dict['start_date']
+        self._start_date = goes.get_start_date()
         self._input_file_path_template = self._goes_dict_bt[7].get_input_file_path()
-        self._goes_util.set_yaw_flip_flag(self._get_yaw_flip_flag())
+        self._goes_util.set_yaw_flip_flag(goes.get_yaw_flip_flag())
         self._goes_util.set_resolution(self._resolution)
-
-    def _get_yaw_flip_flag(self):
-        """
-        Returns the yaw_flip_flag from channel 1
-        """
-        dataset = Dataset(self._input_file_paths[0], 'r')
-        yaw_flip_flag = dataset.variables['yaw_flip_flag'][0]
-        dataset.close()
-        return yaw_flip_flag
-
-    def _get_timestamp(self):
-        """
-        Returns the time_coverage_start from channel 1
-        """
-        dataset = Dataset(self._input_file_paths[0], 'r')
-        time_coverage_start = dataset.time_coverage_start('time_coverage_start')
-        dataset.close()
-        return time_coverage_start
 
     def _check_nadir(self):
         """

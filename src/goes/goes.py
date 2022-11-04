@@ -38,6 +38,10 @@ class Goes:
         self._obserror_bt_data_array = None
         self._input_dataset = None
         self._metadata_dict = {}
+        self._open()
+
+        # Pre-load some important MetaData into the dictionary
+        self._get_metadata_from_input_file()
 
     def _get_metadata_from_input_file(self):
         """
@@ -50,7 +54,8 @@ class Goes:
         self._metadata_dict['instrument'] = metadata_elements[0]
         self._metadata_dict['processing_level'] = metadata_elements[1]
         self._metadata_dict['product_acronym'] = metadata_elements[2]
-        self._metadata_dict['abi_sector_type'] = self._load_metadata_sceneID()
+        self._metadata_dict['abi_sector_type'] = self._load_metadata_scene_id()
+        self._metadata_dict['yaw_flip_flag'] = self._load_yaw_flip_flag()
         time_coverage_start = self._load_metadata_timestamp()
         self._metadata_dict['start_date'] = datetime.datetime.fromisoformat(time_coverage_start[:-3])
 
@@ -62,27 +67,28 @@ class Goes:
         Opens a netCDF4 dataset using input_file_path.
         """
         self._input_dataset = Dataset(self._input_file_path, 'r')
+        self._input_dataset.set_auto_scale(True)
 
     def _load_metadata_platform(self):
         """
         Creates a local platform variable
         """
-        self._platformID = self._input_dataset.getncattr('platform_ID')
-        return self._platformID
+        self._platform_id = self._input_dataset.getncattr('platform_ID')
+        return self._platform_id
 
     def _load_metadata_instrument(self):
         """
         Creates a local instrument variable
         """
-        self._instrumentID = self._input_dataset.getncattr('instrument_ID')
-        return self._instrumentID
+        self._instrument_id = self._input_dataset.getncattr('instrument_ID')
+        return self._instrument_id
 
-    def _load_metadata_sceneID(self):
+    def _load_metadata_scene_id(self):
         """
         Creates a local scene ID variable (Full Disk, CONUS, Mesoscale)
         """
-        self._sceneID = self._input_dataset.getncattr('scene_id')
-        return self._sceneID
+        self._scene_id = self._input_dataset.getncattr('scene_id')
+        return self._scene_id
 
     def _load_metadata_title(self):
         """
@@ -102,8 +108,15 @@ class Goes:
         """
         Creates a local band (channel number) variable (convert byte to int).
         """
-        self._band = int(ma.getdata(self._input_dataset.variables['band'][0]))
+        self._band = int(self._input_dataset.variables['band_id'][0])
         return self._band
+
+    def _load_yaw_flip_flag(self):
+        """
+        Creates a local yaw_flip_flag variable
+        """
+        self._yaw_flip_flag = self._input_dataset.variables['yaw_flip_flag'][0]
+        return self._yaw_flip_flag
 
     def get_abi_channel(self):
         """
@@ -116,6 +129,12 @@ class Goes:
         Returns the scan's start date as a datetime object
         """
         return self._metadata_dict['start_date']
+
+    def get_yaw_flip_flag(self):
+        """
+        Returns the yaw_flip_flag
+        """
+        return self._metadata_dict['yaw_flip_flag']
 
     def _load_kappa0_variable(self):
         """
@@ -245,9 +264,6 @@ class Goes:
         """
         Loads, calculates, sub-samples, reshapes, and filters all data arrays required by the GoesConverter class.
         """
-        self._open()
-        self._input_dataset.set_auto_scale(True)
-        self._get_metadata_from_input_file()
         self._load_kappa0_variable()
         self._load_planck_variables()
         self._load_std_dev_radiance_value_of_valid_pixels_variable()
