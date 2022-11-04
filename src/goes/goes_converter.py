@@ -127,7 +127,7 @@ class GoesConverter:
         Returns the time_coverage_start from channel 1
         """
         dataset = Dataset(self._input_file_paths[0], 'r')
-        yaw_flip_flag = dataset.variables['time_coverage_start'][0]
+        time_coverage_start = dataset.time_coverage_start('time_coverage_start')
         dataset.close()
         return time_coverage_start
 
