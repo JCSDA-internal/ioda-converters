@@ -41,15 +41,11 @@ namespace
         namespace Split
         {
             const char* Category = "category";
-            const char* Variable = "variable";
         }  // namespace Split
 
         namespace Filter
         {
-            const char* Variable = "variable";
             const char* Bounding = "bounding";
-            const char* UpperBound = "upperBound";
-            const char* LowerBound = "lowerBound";
         }
     }  // namespace ConfKeys
 }  // namespace
@@ -113,9 +109,9 @@ namespace Ingester
     void Export::addVariables(const eckit::Configuration &conf, const std::string& groupByField)
     {
         typedef ObjectFactory<Variable,
-                              const std::string&,
-                              const std::string&,
-                              const eckit::LocalConfiguration&> VariableFactory;
+                              const std::string& /*exportName*/,
+                              const std::string& /*groupByField*/,
+                              const eckit::LocalConfiguration& /*configuration*/> VariableFactory;
 
         VariableFactory variableFactory;
         variableFactory.registerObject<QueryVariable>(ConfKeys::Variable::Query);
@@ -131,7 +127,6 @@ namespace Ingester
         for (const auto& key : conf.keys())
         {
             auto subConf = conf.getSubConfiguration(key);
-
 
             std::shared_ptr<Variable> variable;
             if (subConf.has(ConfKeys::Variable::Query))
@@ -155,8 +150,8 @@ namespace Ingester
     void Export::addSplits(const eckit::Configuration &conf)
     {
         typedef ObjectFactory<Split,
-                              const std::string&,
-                              const eckit::LocalConfiguration&> SplitFactory;
+                              const std::string& /*name*/,
+                              const eckit::LocalConfiguration& /*configuration*/> SplitFactory;
 
         SplitFactory splitFactory;
         splitFactory.registerObject<CategorySplit>(ConfKeys::Split::Category);
@@ -171,10 +166,9 @@ namespace Ingester
         for (const auto& key : conf.keys())
         {
             auto subConf = conf.getSubConfiguration(key);
-            auto split = splitFactory.create(
-                                        subConf.keys()[0],
-                                        key,
-                                        subConf.getSubConfiguration(ConfKeys::Split::Category));
+            auto split = splitFactory.create(subConf.keys()[0],
+                                             key,
+                                             subConf.getSubConfiguration(subConf.keys()[0]));
 
             splits_.push_back(split);
         }
@@ -182,6 +176,12 @@ namespace Ingester
 
     void Export::addFilters(const eckit::Configuration &conf)
     {
+        typedef ObjectFactory<Filter,
+                              const eckit::LocalConfiguration& /*configuration*/> FilterFactory;
+
+        FilterFactory filterFactory;
+        filterFactory.registerObject<BoundingFilter>(ConfKeys::Filter::Bounding);
+
         auto subConfs = conf.getSubConfigurations();
         if (subConfs.size() == 0)
         {
@@ -192,41 +192,10 @@ namespace Ingester
 
         for (const auto& subConf : subConfs)
         {
-            std::shared_ptr<Filter> filter;
-
-            if (subConf.has(ConfKeys::Filter::Bounding))
-            {
-                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Bounding);
-
-                std::shared_ptr<float> lowerBound = nullptr;
-                if (filterConf.has(ConfKeys::Filter::LowerBound))
-                {
-                    lowerBound = std::make_shared<float>(
-                        filterConf.getFloat(ConfKeys::Filter::LowerBound));
-                }
-
-                std::shared_ptr<float> upperBound = nullptr;
-                if (filterConf.has(ConfKeys::Filter::UpperBound))
-                {
-                    upperBound = std::make_shared<float>(
-                        filterConf.getFloat(ConfKeys::Filter::UpperBound));
-                }
-
-                filter = std::make_shared<BoundingFilter>(
-                    filterConf.getString(ConfKeys::Filter::Variable),
-                    lowerBound,
-                    upperBound);
-            }
-            else
-            {
-                std::ostringstream errMsg;
-                errMsg << "bufr::exports::filters Unknown filter of type ";
-                errMsg << subConf.keys()[0] << ".";
-                throw eckit::BadParameter(errMsg.str());
-            }
-
+            std::cout << subConf.keys()[0] << std::endl;
+            auto filter = filterFactory.create(subConf.keys()[0],
+                                               subConf.getSubConfiguration(subConf.keys()[0]));
             filters_.push_back(filter);
         }
     }
-
 }  // namespace Ingester
