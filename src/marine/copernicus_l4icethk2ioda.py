@@ -84,9 +84,6 @@ class copernicus_l4icethk2ioda(object):
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
         self.var_mdata[iodavar, iconv.OvalName()]['units'] = 'm'
         self.var_mdata[iodavar, iconv.OerrName()]['units'] = 'm'
-        #self.var_mdata[iodavar, iconv.OvalName()]['_FillValue'] = -999.9
-        #self.var_mdata[iodavar, iconv.OerrName()]['_FillValue'] = -999.9
-        #self.var_mdata[iodavar, iconv.OqcName()]['_FillValue'] = -999.9
         # read input filename
         sith = copernicus(self.filename)
         # put the time at 00 between start and end coverage time
