@@ -25,7 +25,7 @@ namespace Ingester
         DatetimeVariable() = delete;
         DatetimeVariable(const std::string& exportName,
                          const std::string& groupByField,
-                         const eckit::Configuration& conf);
+                         const eckit::LocalConfiguration& conf);
         ~DatetimeVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
@@ -53,9 +53,6 @@ namespace Ingester
 
         /// \brief Query for second (optional)
         std::string secondQuery_;
-
-        /// \brief For field (optional)
-        std::string groupByField_;
 
         /// \brief Hours to offset from UTC (optional)
         int hoursFromUtc_;
