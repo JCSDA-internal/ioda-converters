@@ -32,7 +32,6 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* GroupByField = "group_by";
     }  // namespace ConfKeys
 }  // namespace
 
