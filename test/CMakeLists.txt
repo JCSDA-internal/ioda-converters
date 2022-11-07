@@ -8,7 +8,6 @@
 ################################################################################
 
 list( APPEND test_input
-  testinput/nsidc_l4_icec.nc
   testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
@@ -78,7 +77,6 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
-  testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
