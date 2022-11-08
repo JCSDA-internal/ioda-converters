@@ -16,6 +16,7 @@
 #include "Splits/CategorySplit.h"
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
+#include "Variables/SpectralRadianceVariable.h"
 #include "Variables/Transforms/Transform.h"
 #include "Variables/Transforms/TransformBuilder.h"
 
@@ -33,6 +34,7 @@ namespace
         namespace Variable
         {
             const char* Datetime = "datetime";
+            const char* SpectralRadiance = "spectralRadiance";
             const char* Query = "query";
             const char* GroupByField = "group_by";  // Deprecated
             const char* Type = "type";
@@ -130,6 +132,11 @@ namespace Ingester
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
                 variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
+            }
+           else if (subConf.has(ConfKeys::Variable::SpectralRadiance))
+            {
+                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::SpectralRadiance);
+                variable = std::make_shared<SpectralRadianceVariable>(key, groupByField, dtconf);
             }
             else if (subConf.has(ConfKeys::Variable::Query))
             {
