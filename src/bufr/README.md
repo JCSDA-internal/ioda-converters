@@ -69,6 +69,15 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               minute: "*/MINU"
               second: "*/SECO"  # default assumed zero if skipped or found as missing
               hoursFromUtc: 0  # Optional
+
+          # Or, sometimes BUFR data use an offset time related to model analysis/cycle.
+          timestamp:
+            timeoffset:
+              timeOffset: "*/PRSLEVEL/DRFTINFO/HRDR"
+              transforms:
+                - scale: 3600
+              referenceTime: "2020-11-01T12:00:00Z"
+
           satellite_id:
             query: "*/SAID"
             type: int64
@@ -118,7 +127,7 @@ ioda encoder. It has the following sections:
       set to 1970-01-01T00:00:00Z.
     * `timeoffset` Associate **key** with data for mnemonic for `timeOffset`, that should result
       in seconds relative to an ISO-8601 string of date and time (e.g., `2020-11-01T11:42:56Z`).
-      If the timeOffset mnemonic is a floating-point value in hours, then simply use **transform**
+      If the timeOffset mnemonic is a floating-point value in hours, then simply use **transforms**
       and scale by 3600 seconds.  Internally, the value stored is number of seconds elapsed since
       a reference epoch, currently set to 1970-01-01T00:00:00Z.
       

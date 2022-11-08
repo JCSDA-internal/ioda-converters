@@ -36,7 +36,7 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        // \\brief This is something that will be removed later.
+        // \\brief The field to group by.
         std::string groupByField_;
 
         /// \brief Configuration for this variable
