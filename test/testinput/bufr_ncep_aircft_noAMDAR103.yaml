@@ -90,9 +90,6 @@ observations:
             query: "*/QMRKH[3]"
           windSpeedQualityInformation:
             query: "*/QMRKH[4]"
-          relativeHumidityPercentConfidence:
-            query: "*/PCCF"
-            type: int
 
           #QualityMarker
           airTemperatureQM:
@@ -106,7 +103,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t12z.aircft_noAMDAR103.tm00.nc"
+      obsdataout: "testrun/gdas.t12z.aircft_noAMDAR103_newAA.tm00.nc"
 
       #MetaData
       variables:
@@ -174,6 +171,11 @@ observations:
           source: variables/aircraftAltitude
           longName: "Aircraft Altitude"
           units: "m"
+
+        - name: "MetaData/relativeHumidityPercentConfidence"
+          source: variables/percentConfidenceRH
+          longName: "Percent Confidence of Relative Humidity Quality"
+          units: "percent"
 
         # ObsValue
         - name: "ObsValue/airTemperature"
