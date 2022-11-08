@@ -216,11 +216,6 @@ observations:
           source: variables/windSpeedQualityInformation
           longName: "Wind Speed Quality Information"
 
-        - name: "QualityInformation/relativeHumidityPercentConfidence"
-          source: variables/percentConfidenceRH
-          longName: "Percent Confidence of Relative Humidity Quality"
-          units: "percent"
-
         #QualityMarker
         - name: "QualityMarker/airTemperature"
           source: variables/airTemperatureQM
