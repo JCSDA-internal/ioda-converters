@@ -90,8 +90,7 @@ namespace Ingester
         auto yearVar = map.at(getExportKey(ConfKeys::Year));
 
         // Validation
-        if (!yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Year))) ||
-            !yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Month))) ||
+        if (!yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Month))) ||
             !yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Day))) ||
             (!minuteQuery_.empty() &&
                 !yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Minute)))) ||
