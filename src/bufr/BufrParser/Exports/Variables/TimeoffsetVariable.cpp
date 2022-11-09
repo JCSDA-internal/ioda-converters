@@ -48,6 +48,7 @@ namespace Ingester
     {
         checkKeys(map);
 
+        setenv("TZ", "UTC", 1);      // Force UTC time zone
         std::tm tm{};                // zero initialise
         tm.tm_year = 1970 - 1900;    // 1970
         tm.tm_mon = 0;               // Jan=0, Feb=1, ...
