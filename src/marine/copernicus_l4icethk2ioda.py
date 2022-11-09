@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Before using copernicus L4 sea ice thickness data, it is important to replace # NaNf using nco tools, such as 
+# ncdump in.nc | sed -e 's/NaNf/-1.0e+10f/g'| ncgen -o out.nc
 
 #
 # (C) Copyright 2021 UCAR
