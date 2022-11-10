@@ -48,7 +48,6 @@ namespace Ingester
     {
         checkKeys(map);
 
-        setenv("TZ", "UTC", 1);      // Force UTC time zone
         std::tm tm{};                // zero initialise
         tm.tm_year = 1970 - 1900;    // 1970
         tm.tm_mon = 0;               // Jan=0, Feb=1, ...
@@ -57,7 +56,7 @@ namespace Ingester
         tm.tm_min = 0;
         tm.tm_sec = 0;
         tm.tm_isdst = 0;             // Not daylight saving
-        std::time_t epochDt = std::mktime(&tm);
+        std::time_t epochDt = timegm(&tm);
 
         // Convert the reference time (ISO8601 string) to time struct
         std::tm ref_time = {};
@@ -89,7 +88,7 @@ namespace Ingester
             {
                 auto obs_tm = ref_time;
                 obs_tm.tm_sec = ref_time.tm_sec + timeOffsets->getAsInt(idx);
-                auto thisTime = std::mktime(&obs_tm);
+                auto thisTime = timegm(&obs_tm);
                 diff_time = static_cast<int64_t>(difftime(thisTime, epochDt));
             }
 
