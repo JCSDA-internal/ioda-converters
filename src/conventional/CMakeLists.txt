@@ -1,7 +1,3 @@
-list( APPEND libs
-  def_jedi_utils.py
-)
-
 list(APPEND programs
   amv_ssec_ascii2ioda.py
   amdar_bufr2ioda.py
