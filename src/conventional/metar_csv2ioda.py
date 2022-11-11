@@ -30,6 +30,7 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 import meteo_utils
+from def_jedi_utils import concat_obs_dict
 
 os.environ["TZ"] = "UTC"
 
@@ -137,7 +138,8 @@ class reformatMetar(object):
             # pass the file object to reader() to get the reader object
             csv_dict_reader = csv.DictReader(fh)
             column_names = csv_dict_reader.fieldnames
-            print(column_names)
+            # make this debug verbose print
+            # print(column_names)
             # Iterate over each row in the csv using reader object
             for row in csv_dict_reader:
                 # row variable is a list that represents a row in csv
@@ -256,7 +258,7 @@ def main():
         description=desc,
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '-i', '--input', help='name of the input METARs CSV-formatted file',
+        '-i', '--input', nargs='+', help='name of the input METARs CSV-formatted file',
         type=str, required=True, default=None)
     parser.add_argument(
         '-o', '--output', help='name of the output netCDF IODA-ready file',
@@ -269,13 +271,21 @@ def main():
 
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    obs = reformatMetar(args.input, fdate)
+    obs_data = {}
+    for afile in args.input:
+        metar = None
+        metar = reformatMetar(afile, fdate)
+        file_obs_data = metar.outdata
+        if obs_data:
+            concat_obs_dict(obs_data, file_obs_data)
+        else:
+            obs_data = file_obs_data
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildIoda(obs.outdata, VarDims, obs.varAttrs, AttrData)
+    writer.BuildIoda(obs_data, VarDims, metar.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
