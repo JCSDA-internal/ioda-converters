@@ -138,8 +138,6 @@ class reformatMetar(object):
             # pass the file object to reader() to get the reader object
             csv_dict_reader = csv.DictReader(fh)
             column_names = csv_dict_reader.fieldnames
-            # make this debug verbose print
-            # print(column_names)
             # Iterate over each row in the csv using reader object
             for row in csv_dict_reader:
                 # row variable is a list that represents a row in csv
