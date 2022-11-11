@@ -54,7 +54,7 @@ def main(args):
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc)):
             if not file_obs_data:
-                print("INFO: non-nominal file skipping")
+                print(f"INFO: non-nominal file skipping")
                 continue
             if obs_data:
                 concat_obs_dict(obs_data, file_obs_data)
@@ -264,8 +264,8 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     if add_qc:
         good = quality_control(profile_meta_data, height, lats, lons)
         if len(lats[good]) == 0:
-            return{}
             # exit if entire profile is missing
+            return{}
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
@@ -274,7 +274,12 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
 
 def quality_control(profile_meta_data, heights, lats, lons):
 
-    good = (heights > 0.) & (heights < 100000.) & (abs(lats) < 90.) & (abs(lons) < 360.)
+    try:
+        good = (heights > 0.) & (heights < 100000.) & (abs(lats) < 90.) & (abs(lons) < 360.)
+    except:
+        print(f" quality control on impact_height and lat/lon did not pass")
+        print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
+        return []
 
     # bad radius or
     # large geoid undulation
