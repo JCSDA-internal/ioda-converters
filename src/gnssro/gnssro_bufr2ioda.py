@@ -171,16 +171,22 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     # array([247, 247, 200])
 
     drepfac = codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
-    # len(drepfac) Out[13]: 247   # ALL values all 3
-    # sequence is 3 *(freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
-    #  note the label bendingAngle is used for both the value and its error !!!
+    # L1, L2, combined -- only care about combined
+    if drepfac[0] == 1:
+        offset = 0
+    elif drepfac[0] == 3:
+        offset = 2
+    else:
+       raise NotImplementedError(f"expect repeat factor to be either 3 (L1, L2, and combined) or 1 (combined): {drepfac[0]}")
 
+    # sequence is either 1 or 3 *(freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
+    #  note the label bendingAngle is used for both the value and its error !!!
     # get the bending angle
     lats = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons = codes_get_array(bufr, 'longitude')[1:]
-    bang = codes_get_array(bufr, 'bendingAngle')[4::drepfac[0]*2]    # L1, L2, combined -- only care about combined
-    bang_err = codes_get_array(bufr, 'bendingAngle')[5::drepfac[0]*2]
-    impact = codes_get_array(bufr, 'impactParameter')[2::drepfac[0]]
+    impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
+    bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
+    bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
