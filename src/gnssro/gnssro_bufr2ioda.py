@@ -177,7 +177,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     elif drepfac[0] == 3:
         offset = 2
     else:
-       raise NotImplementedError(f"expect repeat factor to be either 3 (L1, L2, and combined) or 1 (combined): {drepfac[0]}")
+        raise NotImplementedError(f"expect repeat factor to be either 3 (L1, L2, and combined) or 1 (combined): {drepfac[0]}")
 
     # sequence is either 1 or 3 *(freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
     #  note the label bendingAngle is used for both the value and its error !!!
