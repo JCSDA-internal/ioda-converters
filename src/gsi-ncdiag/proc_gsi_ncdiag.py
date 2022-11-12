@@ -142,7 +142,8 @@ if MyArgs.obs_dir:
     # ozone
     for radfile in radfiles:
         process = False
-        for p in gsid.oz_sensors:
+        oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors
+        for p in oz_sensors:
             if p in radfile:
                 process = True
         if process:
@@ -172,7 +173,8 @@ if MyArgs.geovals_dir:
     # ozone
     for radfile in radfiles:
         process = False
-        for p in gsid.oz_sensors:
+        oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors
+        for p in oz_sensors:
             if p in radfile:
                 process = True
         if process:

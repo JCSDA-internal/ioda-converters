@@ -24,14 +24,15 @@ namespace
         namespace Dimension
         {
             const char* Name = "name";
-            const char* Size = "size";
+            const char* Path = "path";
+            const char* Paths = "paths";
+            const char* Source = "source";
         }  // Dimension
 
         namespace Variable
         {
             const char* Name = "name";
             const char* Source = "source";
-            const char* Dimensions = "dimensions";
             const char* LongName = "longName";
             const char* Units = "units";
             const char* Range = "range";
@@ -83,21 +84,39 @@ namespace Ingester
             }
         }
 
-        auto dimConfs = conf.getSubConfigurations(ConfKeys::Dimensions);
-        if (dimConfs.size() == 0)
+        if (conf.has(ConfKeys::Dimensions))
         {
-            std::stringstream errStr;
-            errStr << "ioda::dimensions must contain a list of dimensions!";
-            throw eckit::BadParameter(errStr.str());
-        }
+            auto dimConfs = conf.getSubConfigurations(ConfKeys::Dimensions);
+            if (dimConfs.size() == 0) {
+                std::stringstream errStr;
+                errStr << "ioda::dimensions must contain a list of dimensions!";
+                throw eckit::BadParameter(errStr.str());
+            }
 
-        for (const auto& dimConf : dimConfs)
-        {
-            DimensionDescription scale;
-            scale.name = dimConf.getString(ConfKeys::Dimension::Name);
-            scale.size = dimConf.getString(ConfKeys::Dimension::Size);
+            for (const auto &dimConf : dimConfs) {
+                DimensionDescription dim;
+                dim.name = dimConf.getString(ConfKeys::Dimension::Name);
 
-            addDimension(scale);
+                if (dimConf.has(ConfKeys::Dimension::Paths))
+                {
+                    dim.paths = dimConf.getStringVector(ConfKeys::Dimension::Paths);
+                }
+                else if (dimConf.has(ConfKeys::Dimension::Path))
+                {
+                    dim.paths = {dimConf.getString(ConfKeys::Dimension::Path)};
+                }
+                else
+                {
+                    throw eckit::BadParameter(R"(ioda::dimensions section must have either "path" or "paths".)");
+                }
+
+                if (dimConf.has(ConfKeys::Dimension::Source))
+                {
+                    dim.source = {dimConf.getString(ConfKeys::Dimension::Source)};
+                }
+
+                addDimension(dim);
+            }
         }
 
         auto varConfs = conf.getSubConfigurations(ConfKeys::Variables);
@@ -113,9 +132,13 @@ namespace Ingester
             VariableDescription variable;
             variable.name = varConf.getString(ConfKeys::Variable::Name);
             variable.source = varConf.getString(ConfKeys::Variable::Source);
-            variable.dimensions = varConf.getStringVector(ConfKeys::Variable::Dimensions);
             variable.longName = varConf.getString(ConfKeys::Variable::LongName);
-            variable.units = varConf.getString(ConfKeys::Variable::Units);
+
+            variable.units = "";
+            if (varConf.has(ConfKeys::Variable::Units))
+            {
+                    variable.units = varConf.getString(ConfKeys::Variable::Units);
+            }
 
             if (varConf.has(ConfKeys::Variable::Coords))
             {
@@ -165,61 +188,61 @@ namespace Ingester
         }
 
         if (conf.has(ConfKeys::Globals))
-           {
-           auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
-           for (const auto& globalConf : globalConfs)
-           {
-              if (globalConf.getString(ConfKeys::Global::Type) == \
-                  ConfKeys::Global::StringType)
-              {
-                  auto global = std::make_shared<GlobalDescription<std::string>>();
-                  global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->value = globalConf.getString(ConfKeys::Global::Value);
-                  addGlobal(global);
-              }
-              else if (globalConf.getString(ConfKeys::Global::Type) == \
-                       ConfKeys::Global::FloatType)
-              {
-                  auto global = std::make_shared<GlobalDescription<float>>();
-                  global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->name = globalConf.getFloat(ConfKeys::Global::Name);
-                  addGlobal(global);
-              }
-              else if (globalConf.getString(ConfKeys::Global::Type) == \
-                       ConfKeys::Global::FloatVectorType)
-              {
-                  auto global = std::make_shared<GlobalDescription<std::vector<float>>>();
-                  global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->value = globalConf.getFloatVector(ConfKeys::Global::Value);
-                  addGlobal(global);
-              }
-              else if (globalConf.getString(ConfKeys::Global::Type) == \
-                       ConfKeys::Global::IntType)
-              {
-                  auto global = std::make_shared<GlobalDescription<int>>();
-                  global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->value = globalConf.getInt(ConfKeys::Global::Value);
-                  addGlobal(global);
-              }
-              else if (globalConf.getString(ConfKeys::Global::Type) == \
-                       ConfKeys::Global::IntVectorType)
-              {
-                  auto global = std::make_shared<GlobalDescription<std::vector<int>>>();
-                  global->name = globalConf.getString(ConfKeys::Global::Name);
-                  global->value = globalConf.getIntVector(ConfKeys::Global::Value);
-                  addGlobal(global);
-              }
-              else
-              {
-                 throw eckit::BadParameter("Unsupported global attribute type");
-              }
-            }
-       }
+        {
+            auto globalConfs = conf.getSubConfigurations(ConfKeys::Globals);
+            for (const auto& globalConf : globalConfs)
+            {
+                if (globalConf.getString(ConfKeys::Global::Type) == \
+                    ConfKeys::Global::StringType)
+                {
+                    auto global = std::make_shared<GlobalDescription<std::string>>();
+                    global->name = globalConf.getString(ConfKeys::Global::Name);
+                    global->value = globalConf.getString(ConfKeys::Global::Value);
+                    addGlobal(global);
+                }
+                else if (globalConf.getString(ConfKeys::Global::Type) == \
+                         ConfKeys::Global::FloatType)
+                {
+                    auto global = std::make_shared<GlobalDescription<float>>();
+                    global->name = globalConf.getString(ConfKeys::Global::Name);
+                    global->name = globalConf.getFloat(ConfKeys::Global::Name);
+                    addGlobal(global);
+                }
+                else if (globalConf.getString(ConfKeys::Global::Type) == \
+                         ConfKeys::Global::FloatVectorType)
+                {
+                    auto global = std::make_shared<GlobalDescription<std::vector<float>>>();
+                    global->name = globalConf.getString(ConfKeys::Global::Name);
+                    global->value = globalConf.getFloatVector(ConfKeys::Global::Value);
+                    addGlobal(global);
+                }
+                else if (globalConf.getString(ConfKeys::Global::Type) == \
+                         ConfKeys::Global::IntType)
+                {
+                    auto global = std::make_shared<GlobalDescription<int>>();
+                    global->name = globalConf.getString(ConfKeys::Global::Name);
+                    global->value = globalConf.getInt(ConfKeys::Global::Value);
+                    addGlobal(global);
+                }
+                else if (globalConf.getString(ConfKeys::Global::Type) == \
+                         ConfKeys::Global::IntVectorType)
+                {
+                    auto global = std::make_shared<GlobalDescription<std::vector<int>>>();
+                    global->name = globalConf.getString(ConfKeys::Global::Name);
+                    global->value = globalConf.getIntVector(ConfKeys::Global::Value);
+                    addGlobal(global);
+                }
+                else
+                {
+                    throw eckit::BadParameter("Unsupported global attribute type");
+                }
+               }
+        }
     }
 
-    void IodaDescription::addDimension(const DimensionDescription& scale)
+    void IodaDescription::addDimension(const DimensionDescription& dim)
     {
-        dimensions_.push_back(scale);
+        dimensions_.push_back(dim);
     }
 
     void IodaDescription::addVariable(const VariableDescription& variable)

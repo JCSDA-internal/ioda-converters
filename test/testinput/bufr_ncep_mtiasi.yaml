@@ -1,0 +1,206 @@
+# (C) Copyright 2021 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t12z.mtiasi.tm00.bufr_d" 
+
+      exports:
+        variables:
+          # MetaData
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+
+          latitude:
+            query: "*/CLATH"
+
+          longitude:
+            query: "*/CLONH"
+
+          satelliteId:
+            query: "*/SAID"
+
+          sensorId:
+            query: "*/SIID[1]"
+
+          scanLineNumber:
+            query: "*/SLNM"
+
+          gqisFlagQual:
+            query: "*/QGFQ"
+
+          fieldOfViewNumber:
+            query: "*/FOVN"
+
+          solarZenithAngle:
+            query: "*/SOZA"
+
+          solarAzimuthAngle:
+            query: "*/SOLAZI"
+
+          sensorZenithAngle:
+            query: "*/SAZA"
+
+          sensorAzimuthAngle:
+            query: "*/BEARAZ"
+
+          heightOfStation:
+            query: "*/SELV"
+
+          startChannel:
+            query: "*/IASIL1CB/STCH"
+
+          endChannel:
+            query: "*/IASIL1CB/ENCH"
+
+          channelScaleFactor:
+            query: "*/IASIL1CB/CHSF"
+
+          sensorChannelNumber:
+            query: "*/IASICHN/CHNM"
+
+          # ObsValue
+          scaledSpectralRadiance:
+            query: "*/IASICHN/SCRA"
+
+          fractionOfClearPixelsInFov:
+            query: "*/IASIL1CS/FCPH"
+            type: float
+            transforms:
+               - scale: 0.01
+
+        splits:
+          satId:
+            category:
+              variable: satelliteId
+              map:
+                _3: metop-b
+                _4: metop-a
+                _5: metop-c
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t12z.mtiasi.{splits/satId}.tm00.nc"
+
+      dimensions:
+        - name: Channel
+          path: "*/IASICHN"
+        - name: Cluster 
+          path: "*/IASIL1CS"
+        - name: Band 
+          path: "*/IASIL1CB"
+
+      globals:
+        - name: "platformCommonName"
+          type: string
+          value: "IASI"
+
+        - name: "platformLongDescription"
+          type: string
+          value: "MTYP 021-027 PROCESSED MHS Tb"
+
+      variables:
+
+        # MetaData 
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [ -90, 90 ]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude"
+          type: float 
+          units: "degree_east"
+          range: [ -180, 180 ]
+
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteId
+          longName: "Satellite Identifier"
+
+        - name: "MetaData/instrumentIdentifier"
+          source: variables/sensorId
+          longName: "Satellite Instrument Identifier"
+
+        - name: "MetaData/scanLineNumber"
+          source: variables/scanLineNumber
+          longName: "Scan Line Number"
+
+        - name: "MetaData/qualityFlags"
+          source: variables/gqisFlagQual
+          longName: "Individual IASI-System Quality Flag"
+
+        - name: "MetaData/fieldOfViewNumber"
+          source: variables/fieldOfViewNumber
+          longName: "Field of View Number"
+
+        - name: "MetaData/solarZenithAngle"
+          source: variables/solarZenithAngle
+          longName: "Solar Zenith Angle"
+          units: "degree"
+          range: [ 0, 180 ]
+
+        - name: "MetaData/solarAzimuthAngle"
+          source: variables/solarAzimuthAngle
+          longName: "Solar Azimuth Angle"
+          units: "degree"
+          range: [ 0, 360 ]
+
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/sensorZenithAngle
+          longName: "Sensor Zenith Angle"
+          units: "degree"
+          range: [ 0, 90 ]
+
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/sensorAzimuthAngle
+          longName: "Sensor Azimuth Angle"
+          units: "degree"
+          range: [ 0, 360 ]
+
+        - name: "MetaData/heightOfStation"
+          source: variables/heightOfStation
+          longName: "Altitude of Satellite"
+          units: "m"
+
+        - name: "MetaData/startChannel"
+          source: variables/startChannel
+          longName: "Start Channel"
+
+        - name: "MetaData/endChannel"
+          source: variables/endChannel
+          longName: "End Channel"
+
+        - name: "MetaData/channelScaleFactor"
+          source: variables/channelScaleFactor
+          longName: "Channel Scale Factor"
+
+        - name: "MetaData/sensorChannelNumber"
+          source: variables/sensorChannelNumber
+          longName: "Sensor Channel Number"
+
+        # ObsValue
+        - name: "ObsValue/scaledSpectralRadiance"
+          source: variables/scaledSpectralRadiance
+          longName: "Scaled IASI Spectral Radiance"
+          units: "W m-2 sr-1 m"
+
+        - name: "MetaData/fractionOfClearPixelsInFov"
+          source: variables/fractionOfClearPixelsInFov
+          longName: "Fraction of Clear Pixels in a Field of View"
+          units: "1"
+          range: [0, 1]

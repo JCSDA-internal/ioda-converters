@@ -438,7 +438,7 @@ units_values = {
     'height_above_mean_sea_level': 'm',
     'heightOfSurface': 'm',
     'surface_pressure': 'Pa',
-    'station{ressure': 'Pa',
+    'station{ressure': 'Pa',    # Is this for real, curly-brace??? or a typo that should be "p"?
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',

@@ -6,6 +6,8 @@
  */
 
 #include "OffsetTransform.h"
+#include "IngesterTypes.h"
+#include "BufrParser/Query/Constants.h"
 
 
 namespace Ingester
@@ -15,9 +17,9 @@ namespace Ingester
     {
     }
 
-    void OffsetTransform::apply(IngesterArray& array)
+    void OffsetTransform::apply(std::shared_ptr<DataObjectBase>& dataObject)
     {
-        array = array + offset_;
+        dataObject->offsetBy(offset_);
     }
 
 }  // namespace Ingester

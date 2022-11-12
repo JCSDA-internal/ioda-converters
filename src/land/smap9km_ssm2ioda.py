@@ -25,7 +25,8 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string")
+    ("depthBelowSoilSurface", "float"),
+    ("datetime", "string")
 ]
 
 obsvars = {
@@ -44,9 +45,10 @@ VarDims = {
 
 
 class smap(object):
-    def __init__(self, filename, mask):
-        self.filename = filename
-        self.mask = mask
+    def __init__(self, args):
+        self.filename = args.input
+        self.mask = args.maskMissing
+        self.assumedSoilDepth = args.assumedSoilDepth
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -89,14 +91,16 @@ class smap(object):
         ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
+        deps = np.full_like(vals, self.assumedSoilDepth)
         times = np.empty_like(vals, dtype=object)
 
-        if self.mask == "maskout":
+        if self.mask:
             with np.errstate(invalid='ignore'):
                 mask = (vals > valid_min) & (vals < valid_max)
             vals = vals[mask]
             lats = lats[mask]
             lons = lons[mask]
+            deps = deps[mask]
             errs = errs[mask]
             qflg = qflg[mask]
             sflg = sflg[mask]
@@ -111,6 +115,7 @@ class smap(object):
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
+        deps = deps.astype('float32')
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         sflg = sflg.astype('int32')
@@ -126,9 +131,12 @@ class smap(object):
         self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.varAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
-        self.varAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
-        self.outdata[('earthSurfaceType', 'MetaData')] = sflg
+        self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
+        self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
+        self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
+        self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
+        self.outdata[('surfaceFlag', 'MetaData')] = sflg
+        self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
         self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
@@ -158,14 +166,18 @@ def main():
                         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-m', '--mask',
-        help="maskout missing values: maskout/default, default=none",
-        type=str, required=True)
+        '-m', '--maskMissing',
+        help="switch to mask missing values: default=False",
+        default=False, action='store_true', required=False)
+    optional.add_argument(
+        '-d', '--assumedSoilDepth',
+        help="default assumed depth of soil moisture in meters",
+        type=float, default=0.025, required=False)
 
     args = parser.parse_args()
 
     # Read in the SMAP volumetric soil moisture data
-    ssm = smap(args.input, args.mask)
+    ssm = smap(args)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

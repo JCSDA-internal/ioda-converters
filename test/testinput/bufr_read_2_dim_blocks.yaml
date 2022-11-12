@@ -1,4 +1,4 @@
-# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,77 +7,105 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/bufr_read_2_dim_blocks.bufr"
-      mnemonicSets:
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLAT, CLON]
-        - mnemonics: [OGCE, GNAP, PCCF]
-          channels: 1-12
 
       exports:
+
         variables:
-          timestamp:
-            datetime:
-              year: YEAR
-              month: MNTH
-              day: DAYS
-              hour: HOUR
-              minute: MINU
-          longitude:
-            mnemonic: CLON
+
           latitude:
-            mnemonic: CLAT
-          dataProviderOrigin:
-            mnemonic: OGCE
-          generatingApplication:
-            mnemonic: GNAP
-          windPercentConfidence:
-            mnemonic: PCCF
+            query: "*/CLAT"
+
+          longitude:
+            query: "*/CLON"
+
+          originatingGeneratingCenter:
+            query: "*/OGCE"
+
+          pressure:
+            query: "*/QCPRMS/GNAP[1]"
+
+          windDirection:
+            query: "*/QCPRMS/GNAP[2]"
+
+          windSpeed:
+            query: "*/QCPRMS/GNAP[3]"
+
+          coldClusterTemperature:
+            query: "*/QCPRMS/GNAP[4]"
+
+          percentConfidencePressure:
+            query: "*/QCPRMS/PCCF[1]"
+
+          percentConfidenceWindDirection:
+            query: "*/QCPRMS/PCCF[2]"
+
+          percentConfidenceWindSpeed:
+            query: "*/QCPRMS/PCCF[3]"
+
+          percentConfidenceColdClusterTemperature:
+            query: "*/QCPRMS/PCCF[4]"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_read_2_dim_blocks.nc"
 
       dimensions:
-        - name: "Location"
-          size: variables/windPercentConfidence.nrows
         - name: "Confidence"
-          size: variables/windPercentConfidence.ncols
+          paths:
+            - "*/QCPRMS"
 
       variables:
-        - name: "MetaData/dateTime"
-          source: variables/timestamp
-          dimensions: [ "Location" ]
-          longName: "dateTime"
-          units: "seconds since 1970-01-01T00:00:00Z"
-
         - name: "MetaData/latitude"
           source: variables/latitude
-          dimensions: ["Location"]
-          longName: "Latitude"
-          units: "degrees_north"
-          range: [-90, 90]
+          longName: "Latitude (Coarse Accuracy)"
+          units: "degree_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
-          dimensions: ["Location"]
-          longName: "Longitude"
-          units: "degrees_east"
-          range: [-180, 180]
+          longName: "Longitude (Coarse Accuracy)"
+          units: "degree_east"
 
         - name: "MetaData/dataProviderOrigin"
-          source: variables/dataProviderOrigin
-          dimensions: [ "Location" ]
-          longName: "Originating/Generating Center"
-          units: ""
+          source: variables/originatingGeneratingCenter
+          longName: "Originating Generating Center"
 
-        - name: "MetaData/generatingApplication"
-          source: variables/generatingApplication
-          dimensions: [ "Location" ]
-          longName: "Generating Application"
-          units: ""
+        - name: "MetaData/pressureGeneratingApplication"
+          source: variables/pressure
+          longName: "Generating Application for Pressure"
 
-        - name: "ObsValue/windPercentConfidence"
-          source: variables/windPercentConfidence
+        - name: "MetaData/windDirectionGeneratingApplication"
+          source: variables/windDirection
+          longName: "Generating Application for Wind Direction"
+
+        - name: "MetaData/windSpeedGeneratingApplication"
+          source: variables/windSpeed
+          longName: "Generating Application for Wind Speed"
+
+        - name: "MetaData/coldClusterTemperatureGeneratingApplication"
+          source: variables/coldClusterTemperature
+          longName: "Generating Application for Cold Cluster Temperature"
+
+        - name: "MetaData/pressurePercentConfidence"
           coordinates: "longitude latitude"
-          dimensions: [ "Location", "Confidence"]
-          longName: "Percent Confidence"
+          source: variables/percentConfidencePressure
+          longName: "Percent Confidence of Pressure"
           units: "percent"
+
+        - name: "MetaData/windDirectionPercentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidenceWindDirection
+          longName: "Percent Confidence of Wind Direction"
+          units: "percent"
+
+        - name: "MetaData/windSpeedPercentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidenceWindSpeed
+          longName: "Percent Confidence of Wind Speed"
+          units: "percent"
+
+        - name: "MetaData/coldClusterTemperaturePercentConfidence"
+          coordinates: "longitude latitude"
+          source: variables/percentConfidenceColdClusterTemperature
+          longName: "Percent Confidence of Clod Cluster Temperature"
+          units: "percent"
+
