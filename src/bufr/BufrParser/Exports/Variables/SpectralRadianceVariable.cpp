@@ -59,11 +59,14 @@ namespace Ingester
 
         checkKeys(map);
 
+        static const float missingFloat = DataObject<float>::missingValue();
+        static const int missingInt = DataObject<int>::missingValue();
+
         // Get scaled spectral radiance from BufrDataMap
         auto& refObj = map.at(getExportKey(ConfKeys::ScaledSpectralRadiance));
 
         // Declare unscale spectral radiance data array from scaled spectral radiance: nlocs * nchns
-        std::vector<float> outData(refObj->size()); 
+        std::vector<float> outData((refObj->size()), missingFloat); 
 
         // Get dimensions
         size_t nlocs = (refObj->getDims())[0];
@@ -107,8 +110,8 @@ namespace Ingester
                idx2 = iloc * nbands + ibnd;  
                if (Channel[idx] >= begChannel[idx2] && Channel[idx] <= endChannel[idx2]) break;  
             } 
-            outData[idx] = refObj->getAsFloat(idx); 
-            outData[idx] = outData[idx]*scaleFactor[idx2]; 
+            if (refObj->getAsFloat(idx) != missingFloat && scaleFactor[idx2] !=missingInt)
+                outData[idx] = refObj->getAsFloat(idx) * scaleFactor[idx2]; 
         } 
 
         return std::make_shared<DataObject<float>>(outData,
