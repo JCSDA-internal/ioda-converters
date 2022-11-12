@@ -4,7 +4,7 @@
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
-#include "Query.h"
+#include "QueryRunner.h"
 
 #include "eckit/exception/Exceptions.h"
 #include "oops/util/Logger.h"
@@ -12,7 +12,6 @@
 #include <string>
 #include <iostream>
 
-#include "QueryParser.h"
 #include "Constants.h"
 
 namespace Ingester {
@@ -23,73 +22,97 @@ namespace bufr {
         std::vector<int> counts;
     };
 
-    Query::Query(const QuerySet &querySet,
+    QueryRunner::QueryRunner(const QuerySet &querySet,
                  ResultSet &resultSet,
                  const DataProvider &dataProvider) :
-            querySet_(querySet),
-            resultSet_(resultSet),
-            dataProvider_(dataProvider) {
+        querySet_(querySet),
+        resultSet_(resultSet),
+        dataProvider_(dataProvider)
+    {
     }
 
-    void Query::query() {
-        std::shared_ptr<std::vector<__details::Target>> targets;
+    void QueryRunner::accumulate()
+    {
+        Targets targets;
         std::shared_ptr<__details::ProcessingMasks> masks;
 
         findTargets(targets, masks);
-        return collectData(targets, masks, resultSet_);
+        collectData(targets, masks, resultSet_);
     }
 
-    void Query::findTargets(std::shared_ptr<std::vector<__details::Target>> &targets,
-                            std::shared_ptr<__details::ProcessingMasks> &masks) {
-        // Check if the target list for this subset is cached in the targetMap_
-        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end()) {
+    void QueryRunner::findTargets(Targets &targets,
+                                  std::shared_ptr<__details::ProcessingMasks> &masks)
+    {
+        // Check if the target list for this subset is cached
+        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end())
+        {
             targets = targetCache_.at(dataProvider_.getSubset());
             masks = maskCache_.at(dataProvider_.getSubset());
             return;
         }
 
         masks = std::make_shared<__details::ProcessingMasks>();
-        targets = std::make_shared<std::vector<__details::Target>>();
 
         size_t numNodes = dataProvider_.getIsc(dataProvider_.getInode());
 
         masks->valueNodeMask.resize(numNodes, false);
         masks->pathNodeMask.resize(numNodes, false);
 
-        for (size_t targetIdx = 0; targetIdx < querySet_.size(); ++targetIdx) {
-            auto queryName = querySet_.nameAt(targetIdx);
-            auto queryStr = querySet_.queryAt(targetIdx);
-
-            auto subQueries = QueryParser::splitMultiquery(queryStr);
+        for (size_t targetIdx = 0; targetIdx < querySet_.size(); ++targetIdx)
+        {
+            auto queryName = querySet_.names()[targetIdx];
+            auto subQueries = querySet_.queriesFor(queryName);
 
             bool foundTarget = false;
-            __details::Target target;
-            for (size_t subQueryIdx = 0; subQueryIdx < subQueries.size(); ++subQueryIdx) {
-                const std::string &subQuery = subQueries[subQueryIdx];
+            std::shared_ptr<Target> target;
+            for (size_t subQueryIdx = 0; subQueryIdx < subQueries.size(); ++subQueryIdx)
+            {
+                const Query& subQuery = subQueries[subQueryIdx];
 
                 target = findTarget(queryName, subQuery);
 
-                if (target.nodeIds.size() > 0) {
+                if (target->nodeIds.size() > 0)
+                {
                     // Collect mask data
-                    masks->valueNodeMask[target.nodeIds[0]] = true;
-                    for (size_t pathIdx = 0; pathIdx < target.seqPath.size(); ++pathIdx) {
-                        masks->pathNodeMask[target.seqPath[pathIdx]] = true;
+                    masks->valueNodeMask[target->nodeIds[0]] = true;
+                    for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx) {
+                        masks->pathNodeMask[target->seqPath[pathIdx]] = true;
                     }
 
-                    targets->push_back(target);
+                    targets.push_back(target);
                     foundTarget = true;
                     break;
                 }
             }
 
-            if (!foundTarget) {
+            if (!foundTarget)
+            {
                 // Add the last missing target to the list
-                targets->push_back(target);
-                oops::Log::warning() << "Warning: Query String "
-                                     << queryStr
-                                     << " didn't apply to subset "
-                                     << dataProvider_.getSubset()
-                                     << std::endl;
+                targets.push_back(target);
+                oops::Log::warning() << "Warning: Query String ";
+
+                auto queries = querySet_.queriesFor(queryName);
+
+                if (queries.size() == 1)
+                {
+                    oops::Log::warning() << queries[0].queryStr;
+                }
+                else
+                {
+                    oops::Log::warning() << "[";
+                    for (auto subQuery = queries.cbegin();
+                         subQuery < queries.cend();
+                         ++subQuery)
+                    {
+                        if (subQuery != queries.cbegin()) oops::Log::warning() << ", ";
+                        oops::Log::warning() << subQuery->queryStr;
+                    }
+                    oops::Log::warning() << "]";
+                }
+
+                oops::Log::warning() << " didn't apply to subset ";
+                oops::Log::warning() << dataProvider_.getSubset();
+                oops::Log::warning() << std::endl;
             }
         }
 
@@ -97,24 +120,18 @@ namespace bufr {
         maskCache_.insert({dataProvider_.getSubset(), masks});
     }
 
-    __details::Target Query::findTarget(const std::string &targetName,
-                                        const std::string &query) const {
-        std::string querySubset;
-        std::vector<std::string> mnemonics;
-        int index;
-
-        QueryParser::splitQueryStr(query, querySubset, mnemonics, index);
-
+    std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
+                                                    const Query& query) const
+    {
         std::vector<int> branches;
-        bool isString = false;
         std::vector<int> targetNodes;
         std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(querySubset == "*" || querySubset == dataProvider_.getSubset());
+        bool targetMissing = !(query.subset == "*" || query.subset == dataProvider_.getSubset());
         if (!targetMissing) {
-            branches.resize(mnemonics.size() - 1);
+            branches.resize(query.mnemonics.size() - 1);
 
             seqPath.push_back(dataProvider_.getInode());
 
@@ -128,7 +145,7 @@ namespace bufr {
                     dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
                     dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
                     if (isQueryNode(nodeIdx - 1)) {
-                        if (dataProvider_.getTag(nodeIdx) == mnemonics[mnemonicCursor + 1] &&
+                        if (dataProvider_.getTag(nodeIdx) == query.mnemonics[mnemonicCursor + 1] &&
                             tableCursor == mnemonicCursor) {
                             mnemonicCursor++;
                             branches[mnemonicCursor] = nodeIdx - 1;
@@ -136,13 +153,11 @@ namespace bufr {
                         tableCursor++;
                     }
                     seqPath.push_back(nodeIdx);
-                } else if (mnemonicCursor == static_cast<int>(mnemonics.size()) - 2 &&
+                } else if (mnemonicCursor == static_cast<int>(query.mnemonics.size()) - 2 &&
                            tableCursor == mnemonicCursor &&
-                           dataProvider_.getTag(nodeIdx) == mnemonics.back()) {
+                           dataProvider_.getTag(nodeIdx) == query.mnemonics.back()) {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
-                    isString = (dataProvider_.getItp(nodeIdx) == 3);
-
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
                 }
 
@@ -199,44 +214,45 @@ namespace bufr {
                 }
             }
 
-            if (index > 0 && index <= gsl::narrow<int>(targetNodes.size())) {
-                targetNodes = {targetNodes[index - 1]};
+            if (query.index > 0 && query.index <= gsl::narrow<int>(targetNodes.size())) {
+                targetNodes = {targetNodes[query.index - 1]};
             }
 
             if (targetNodes.size() > 1) {
                 std::ostringstream errMsg;
                 errMsg << "Query string must return 1 target. Are you missing an index? ";
-                errMsg << query << ".";
+                errMsg << query.queryStr << ".";
                 throw eckit::BadParameter(errMsg.str());
             }
         }
 
-        auto target = __details::Target();
-        target.name = targetName;
-        target.queryStr = query;
-        target.isString = isString;
-        target.seqPath = branches;
-        target.nodeIds = targetNodes;
+        auto target = std::make_shared<Target>();
+        target->name = targetName;
+        target->queryStr = query.queryStr;
+        target->seqPath = branches;
+        target->nodeIds = targetNodes;
 
         if (targetNodes.size() > 0) {
-            target.dimPaths = dimPaths;
-            target.exportDimIdxs = dimIdxs;
+            target->dimPaths = dimPaths;
+            target->exportDimIdxs = dimIdxs;
+            target->typeInfo = dataProvider_.getTypeInfo(targetNodes[0]);
         } else {
-            target.dimPaths = {"*"};
-            target.exportDimIdxs = {0};
+            target->dimPaths = {"*"};
+            target->exportDimIdxs = {0};
+            target->typeInfo = TypeInfo();
         }
 
         return target;
     }
 
-    bool Query::isQueryNode(int nodeIdx) const {
+    bool QueryRunner::isQueryNode(int nodeIdx) const {
         return (dataProvider_.getTyp(nodeIdx) == Typ::DelayedRep ||
                 dataProvider_.getTyp(nodeIdx) == Typ::FixedRep ||
                 dataProvider_.getTyp(nodeIdx) == Typ::DelayedRepStacked ||
                 dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary);
     }
 
-    void Query::getDimInfo(const std::vector<int> &branches,
+    void QueryRunner::getDimInfo(const std::vector<int> &branches,
                            int mnemonicCursor,
                            std::vector<std::string> &dimPaths,
                            std::vector<int> &dimIdxs) const {
@@ -277,7 +293,7 @@ namespace bufr {
         }
     }
 
-    void Query::collectData(std::shared_ptr<std::vector<__details::Target>> targets,
+    void QueryRunner::collectData(Targets& targets,
                             std::shared_ptr<__details::ProcessingMasks> masks,
                             ResultSet &resultSet) const {
         std::vector<int> currentPath;
@@ -378,42 +394,22 @@ namespace bufr {
             }
         }
 
-        for (size_t targetIdx = 0; targetIdx < targets->size(); targetIdx++) {
-            const auto &targ = targets->at(targetIdx);
+        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++) {
+            const auto &targ = targets.at(targetIdx);
             auto &dataField = dataFrame.fieldAtIdx(targetIdx);
-            dataField.name = targ.name;
-            dataField.queryStr = targ.queryStr;
-            dataField.isString = targ.isString;
-            if (targ.isString)
-                resultSet.indicateFieldIsString(targetIdx);  // Whole column is string.
-            dataField.dimPaths = targ.dimPaths;
-            dataField.seqPath.resize(targ.seqPath.size() + 1);
-            dataField.seqPath[0] = 1;
-            std::copy(targ.seqPath.begin(),
-                      targ.seqPath.end(),
-                      std::back_inserter(dataField.seqPath));
-            dataField.exportDims = targ.exportDimIdxs;
+            dataField.target = targ;
 
-            if (targ.nodeIds.size() == 0) {
+            if (targ->nodeIds.size() == 0) {
                 dataField.data = {MissingValue};
-                dataField.missing = true;
                 dataField.seqCounts = {{1}};
             } else {
-                dataField.seqCounts.resize(targ.seqPath.size() + 1);
+                dataField.seqCounts.resize(targ->seqPath.size() + 1);
                 dataField.seqCounts[0] = {1};
-                for (size_t pathIdx = 0; pathIdx < targ.seqPath.size(); pathIdx++) {
-                    dataField.seqCounts[pathIdx + 1] = dataTable[targ.seqPath[pathIdx] + 1].counts;
+                for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++) {
+                    dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
                 }
 
-                if (resultSet.isFieldStr(targetIdx) != targ.isString) {
-                    std::ostringstream errMsg;
-                    errMsg << "Different subsets don't agree whether " << dataField.name
-                           << "is a string or not (there is a type mismatch).";
-                    throw eckit::BadParameter(errMsg.str());
-                }
-
-                dataField.data = dataTable[targ.nodeIds[0]].values;
-                if (dataField.data.size() == 0) dataField.missing = true;
+                dataField.data = dataTable[targ->nodeIds[0]].values;
             }
         }
     }

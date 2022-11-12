@@ -55,6 +55,10 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
 ```yaml
       exports:
         group_by_variable: longitude  # Optional
+        subsets:
+          - NC004001
+          - NC004002
+          - NC004003
         variables:
           timestamp:
             datetime:
@@ -65,14 +69,26 @@ Defines how to read data from the input BUFR file. Its sections are as follows:
               minute: "*/MINU"
               second: "*/SECO"  # default assumed zero if skipped or found as missing
               hoursFromUtc: 0  # Optional
+
+          # Or, sometimes BUFR data use an offset time related to model analysis/cycle.
+          timestamp:
+            timeoffset:
+              timeOffset: "*/PRSLEVEL/DRFTINFO/HRDR"
+              transforms:
+                - scale: 3600
+              referenceTime: "2020-11-01T12:00:00Z"
+
           satellite_id:
             query: "*/SAID"
+            type: int64
           longitude:
             query: "*/CLON"
             transforms:
               - offset: -180
           latitude:
             query: "*/CLAT"
+          channels:
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
           radiance:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
 
@@ -96,17 +112,24 @@ ioda encoder. It has the following sections:
 
 * `group_by_variable` _(optional)_ String value that defines the name of the variable to group 
    observations by. If this field is missing then observations will not be grouped.
-
+* `subsets` _(optional)_ List of subsets that you want to process. If the field is not present then
+   all subsets will be processed in accordance with the query definitions.
 * `variables`
   * **keys** are arbitrary strings (anything you want). They can be referenced in the ioda section.
   * **values** (One of these types):
     * `query` Query string which is used to get the data from the BUFR file. _(optional)_ Can 
       apply a list of `tranforms` to the numeric (not string) data. Possible transforms are 
-      `offset` and `scale`.
+      `offset` and `scale`. You can also manually override the type by specifying the `type` as 
+      **int**, **int64**, **float**, or **double**.
     * `datetime` Associate **key** with data for mnemonics for `year`, `month`, `day`, `hour`,
       `minute`, _(optional)_ `second`, and _(optional)_ `hoursFromUtc` (must be an **integer**).
       Internally, the value stored is number of seconds elapsed since a reference epoch, currently
       set to 1970-01-01T00:00:00Z.
+    * `timeoffset` Associate **key** with data for mnemonic for `timeOffset`, that should result
+      in seconds relative to an ISO-8601 string of date and time (e.g., `2020-11-01T11:42:56Z`).
+      If the timeOffset mnemonic is a floating-point value in hours, then simply use **transforms**
+      and scale by 3600 seconds.  Internally, the value stored is number of seconds elapsed since
+      a reference epoch, currently set to 1970-01-01T00:00:00Z.
       
 
 * _(optional)_ `splits` List of key value pair (splits) that define how to split the data into 
@@ -145,6 +168,7 @@ ioda encoder. It has the following sections:
           paths:
             - "*/BRIT"
             - "*/BRITCSTC"
+          source: variables/channels
 
       variables:
         - name: "MetaData/dateTime"
@@ -182,8 +206,13 @@ The `ioda` section defines the ObsGroup objects that will be created.
   replaced with the relevant split category ID for that file to form a unique name for every file.
 * `dimensions` used to define dimension information in variables
     * `name` arbitrary name for the dimension
-    * `paths` - list of subqueries for that dimension (different paths for different BUFR subsets only) **or** `path` Single subquery for that dimension ex:
-       **\*/BRITCSTC**
+    * `paths` list of subqueries for that dimension (different paths for different BUFR subsets 
+              only) **or** `path` Single subquery for that dimension ex: **\*/BRITCSTC**
+    * `source` (optional) The exported data that acts as the source field for this dimension. 
+               The data dimension values (labels) will reflect this field. The source is validated
+               to make sure it makes sense for the dimension and that it is made up of repeated
+               values for each occurrence of the sequence. The source field must be inside the
+               dimension and be 1:1 with it.
 * `variables` List of output variable objects to create.
   * `name` standardized pathname **group**/**var_name**. 
     * **var_name** name for the variable

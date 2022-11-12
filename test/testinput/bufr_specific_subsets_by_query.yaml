@@ -1,0 +1,48 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# # #
+# # # This software is licensed under the terms of the Apache Licence Version 2.0
+# # # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/gdas.t12z.aircft.tm00.bufr_d"
+
+      exports:
+        #MetaData
+        variables:
+          timestamp:
+            datetime:
+              year: "[NC004001/YEAR, NC004002/YEAR, NC004003/YEAR, NC004006/YEAR, NC004009/YEAR, NC004010/YEAR, NC004011/YEAR]"
+              month: "[NC004001/MNTH, NC004002/MNTH, NC004003/MNTH, NC004006/MNTH, NC004009/MNTH, NC004010/MNTH, NC004011/MNTH]"
+              day: "[NC004001/DAYS, NC004002/DAYS, NC004003/DAYS, NC004006/DAYS, NC004009/DAYS, NC004010/DAYS, NC004011/DAYS]"
+              hour: "[NC004001/HOUR, NC004002/HOUR, NC004003/HOUR, NC004006/HOUR, NC004009/HOUR, NC004010/HOUR, NC004011/HOUR]"
+              minute: "[NC004001/MINU, NC004002/MINU, NC004003/MINU, NC004006/MINU, NC004009/MINU, NC004010/MINU, NC004011/MINU]"
+          latitude:
+            query: "[NC004001/CLAT, NC004002/CLAT, NC004003/CLAT, NC004006/CLATH, NC004009/CLATH, NC004010/CLATH, NC004011/CLATH]"
+          longitude:
+            query: "[NC004001/CLON, NC004002/CLON, NC004003/CLON, NC004006/CLONH, NC004009/CLONH, NC004010/CLONH, NC004011/CLONH]"
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/bufr_specifying_subsets.nc"
+
+      #MetaData
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degree_east"
+          range: [-180, 180]

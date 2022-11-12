@@ -48,7 +48,8 @@ namespace Ingester {
     {
         auto startTime = std::chrono::steady_clock::now();
 
-        auto querySet = bufr::QuerySet();
+        auto querySet = bufr::QuerySet(description_.getExport().getSubsets());
+
         for (const auto &var : description_.getExport().getVariables())
         {
             for (const auto &queryPair : var->getQueryList())
@@ -66,9 +67,8 @@ namespace Ingester {
         {
             for (const auto& queryInfo : var->getQueryList())
             {
-                auto resultBase = resultSet.get(
-                        queryInfo.name, queryInfo.groupByField);
-                srcData[queryInfo.name] = DataObjectBase::fromResult(resultBase, queryInfo.query);
+                srcData[queryInfo.name] = resultSet.get(
+                    queryInfo.name, queryInfo.groupByField, queryInfo.type);
             }
         }
 

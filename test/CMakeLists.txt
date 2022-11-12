@@ -8,6 +8,8 @@
 ################################################################################
 
 list( APPEND test_input
+  testinput/nsidc_l4_icec.nc
+  testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
@@ -66,6 +68,7 @@ list( APPEND test_input
   testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
+  testinput/pace_radiance_L1B.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
@@ -74,6 +77,8 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
+  testoutput/nsidc_l4_icec.nc
+  testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -132,6 +137,7 @@ list( APPEND test_output
   testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
+  testoutput/pace_radiance_L1B.nc
   testoutput/mls_o3_l2.nc
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
@@ -220,6 +226,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/satwind_Insat_wmo.bufr
     testinput/vadwinds_wmoBUFR2ioda.yaml
     testinput/vadwinds_wmo_multi.bufr
+    testinput/gdas.t12z.aircft.tm00.bufr_d
+    testinput/bufr_specific_subsets_by_query.yaml
+    testinput/bufr_specifying_subsets.yaml
   )
 
   list( APPEND test_output
@@ -263,6 +272,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/satwind_Himawari.nc
     testoutput/satwind_Insat.nc
     testoutput/vadwinds_wmo_multi.nc
+    testoutput/bufr_specifying_subsets.nc
   )
 endif()
 
@@ -381,6 +391,30 @@ set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 #===============================================================================
 # Marine converters
 #===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/nsidc_l4cdr_ice2ioda.py
+                          -i testinput/nsidc_l4_icec.nc
+                          -o testrun/nsidc_l4_icec.nc
+                          -d 2019010112"
+                          nsidc_l4_icec.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsr2_l2icec
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/amsr2_icec2ioda.py
+                          -i testinput/amsr2_icec_l2p.nc
+                          -o testrun/amsr2_icec_l2p.nc
+                          -d 2021080112"
+                          amsr2_icec_l2p.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gds2_sst_l2p
                   TYPE    SCRIPT
@@ -645,6 +679,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_oc_l2
                           -d 2019032112                                                                                                               
                           -t 0.5"
                           pace_oc_l2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_radiance_L1B
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_radiance2ioda.py
+                          -i testinput/pace_radiance_L1B.nc
+                          -o testrun/pace_radiance_L1B.nc
+                          -d 2019032112"
+                          pace_radiance_L1B.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
                   TYPE    SCRIPT
@@ -1258,6 +1304,24 @@ if(iodaconv_bufr_ENABLED)
                     gdas.t00z.sevcsr.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_specific_subsets_by_query
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_specific_subsets_by_query.yaml"
+                    bufr_specifying_subsets.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_specifying_subsets
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_specifying_subsets.yaml"
+                    bufr_specifying_subsets.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
 #  FIXME: Greg Thompson
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
@@ -1662,7 +1726,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
                             -o testrun/smap_ssm.nc
-                            -m maskout"
+                            --maskMissing"
                             smap_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
@@ -1709,7 +1773,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap9km_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
                             -o testrun/smap9km_ssm.nc
-                            -m maskout"
+                            --maskMissing"
                             smap9km_ssm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin

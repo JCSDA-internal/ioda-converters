@@ -18,8 +18,6 @@
 #include "ioda/Layout.h"
 #include "ioda/Misc/DimensionScales.h"
 
-#include <boost/algorithm/string.hpp>
-
 
 namespace Ingester
 {
@@ -41,6 +39,7 @@ namespace Ingester
         NamedPathDims namedLocDims;
         NamedPathDims namedExtraDims;
 
+        // Get a list of all the named dimensions
         {
             std::set<std::string> dimNames;
             std::set<std::string> dimPaths;
@@ -75,23 +74,69 @@ namespace Ingester
                     dimPaths.insert(path);
                 }
 
-                namedExtraDims.insert({dim.paths, dim.name});
+                namedExtraDims.insert({dim.paths, dim});
             }
         }
 
+        // Got through each unique category
         for (const auto& categories : dataContainer->allSubCategories())
         {
             // Create the dimensions variables
-            std::map<std::string, std::shared_ptr<ioda::NewDimensionScale_Base>> dimMap;
+            std::map<std::string, std::shared_ptr<DimensionDataBase>> dimMap;
 
             auto dataObjectGroupBy = dataContainer->getGroupByObject(
                 description_.getVariables()[0].source, categories);
 
-            dimMap[LocationName] = ioda::NewDimensionScale<int>(
-                LocationName, dataObjectGroupBy->getDims()[0]);
+            // When we find that the primary index is zero we need to skip this category
+            if (dataObjectGroupBy->getDims()[0] == 0)
+            {
+                for (auto category : categories)
+                {
+                    oops::Log::warning() << "  Skipped category " << category << std::endl;
+                }
 
-            namedLocDims[{dataObjectGroupBy->getDimPaths()[0]}] = LocationName;
+                continue;
+            }
 
+            // Create the root Location dimension for this category
+            auto rootDim = std::make_shared<DimensionData<int>>(dataObjectGroupBy->getDims()[0]);
+            rootDim->dimScale =
+                ioda::NewDimensionScale<int>(LocationName, dataObjectGroupBy->getDims()[0]);
+            dimMap[LocationName] = rootDim;
+
+            // Add the root Location dimension as a named dimension
+            auto rootLocation = DimensionDescription();
+            rootLocation.name = LocationName;
+            rootLocation.source = "";
+            namedLocDims[{dataObjectGroupBy->getDimPaths()[0]}] = rootLocation;
+
+            // Create the dimension data for dimensions which include source data
+            for (const auto& dimDesc : description_.getDims())
+            {
+                if (!dimDesc.source.empty())
+                {
+                    auto dataObject = dataContainer->get(dimDesc.source, categories);
+
+                    // Validate the path for the source field makes sense for the dimension
+                    if (std::find(dimDesc.paths.begin(),
+                                  dimDesc.paths.end(),
+                                  dataObject->getDimPaths().back()) == dimDesc.paths.end())
+                    {
+                        std::stringstream errStr;
+                        errStr << "ioda::dimensions: Source field " << dimDesc.source << " in ";
+                        errStr << dimDesc.name << " is not in the correct path.";
+                        throw eckit::BadParameter(errStr.str());
+                    }
+
+                    // Create the dimension data
+                    dimMap[dimDesc.name] = dataObject->createDimensionFromData(
+                        dimDesc.name,
+                        dataObject->getDimPaths().size() - 1);
+                }
+            }
+
+            // Discover and create the dimension data for dimensions with no source field. If
+            // dim is un-named (not listed) then call it dim_<number>
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
@@ -104,7 +149,7 @@ namespace Ingester
 
                     if (existsInNamedPath(dimPath, namedExtraDims))
                     {
-                        dimName = nameForDimPath(dimPath, namedExtraDims);
+                        dimName = dimForDimPath(dimPath, namedExtraDims).name;
                     }
                     else
                     {
@@ -112,27 +157,20 @@ namespace Ingester
                         newDimStr << DefualtDimName << "_" << autoGenDimNumber;
 
                         dimName = newDimStr.str();
-                        namedExtraDims[{dimPath}] = dimName;
+
+                        auto dimDesc = DimensionDescription();
+                        dimDesc.name = dimName;
+                        dimDesc.source = "";
+
+                        namedExtraDims[{dimPath}] = dimDesc;
                         autoGenDimNumber++;
                     }
 
                     if (dimMap.find(dimName) == dimMap.end())
                     {
-                        dimMap[dimName] = ioda::NewDimensionScale<int>(dimName,
-                                          dataObject->getDims()[dimIdx]);
+                        dimMap[dimName] = dataObject->createEmptyDimension(dimName, dimIdx);
                     }
                 }
-            }
-
-            // When we find that the primary index is zero we need to skip this category
-            if (dataObjectGroupBy->getDims()[0] == 0)
-            {
-                for (auto category : categories)
-                {
-                    oops::Log::warning() << "  Skipped category " << category << std::endl;
-                }
-
-                continue;
             }
 
             // Make the filename string
@@ -164,7 +202,7 @@ namespace Ingester
             ioda::NewDimensionScales_t allDims;
             for (auto dimPair : dimMap)
             {
-                allDims.push_back(dimPair.second);
+                allDims.push_back(dimPair.second->dimScale);
             }
 
             auto policy = ioda::detail::DataLayoutPolicy::Policies::ObsGroup;
@@ -177,15 +215,42 @@ namespace Ingester
                 global->addTo(rootGroup);
             }
 
-            // Create Variables
+            // Write the Dimension Variables
+            for (const auto& dimDesc : description_.getDims())
+            {
+                if (!dimDesc.source.empty())
+                {
+                    auto dataObject = dataContainer->get(dimDesc.source, categories);
+                    for (size_t dimIdx = 0; dimIdx < dataObject->getDims().size(); dimIdx++)
+                    {
+                        auto dimPath = dataObject->getDimPaths()[dimIdx];
+
+                        NamedPathDims namedPathDims;
+                        if (dimIdx == 0)
+                        {
+                            namedPathDims = namedLocDims;
+                        }
+                        else
+                        {
+                            namedPathDims = namedExtraDims;
+                        }
+
+                        auto dimName = dimForDimPath(dimPath, namedPathDims).name;
+                        auto dimVar = obsGroup.vars[dimName];
+                        dimMap[dimName]->write(dimVar);
+                    }
+                }
+            }
+
+            // Write all the other Variables
             for (const auto& varDesc : description_.getVariables())
             {
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
-                auto data = dataContainer->get(varDesc.source, categories);
-                for (size_t dimIdx = 0; dimIdx < data->getDims().size(); dimIdx++)
+                auto dataObject = dataContainer->get(varDesc.source, categories);
+                for (size_t dimIdx = 0; dimIdx < dataObject->getDims().size(); dimIdx++)
                 {
-                    auto dimPath = data->getDimPaths()[dimIdx];
+                    auto dimPath = dataObject->getDimPaths()[dimIdx];
 
                     NamedPathDims namedPathDims;
                     if (dimIdx == 0)
@@ -197,7 +262,7 @@ namespace Ingester
                         namedPathDims = namedExtraDims;
                     }
 
-                    auto dimVar = obsGroup.vars[nameForDimPath(dimPath, namedPathDims)];
+                    auto dimVar = obsGroup.vars[dimForDimPath(dimPath, namedPathDims).name];
                     dimensions.push_back(dimVar);
 
                     if (dimIdx < varDesc.chunks.size())
@@ -211,11 +276,11 @@ namespace Ingester
                     }
                 }
 
-                auto var = data->createVariable(obsGroup,
-                                                varDesc.name,
-                                                dimensions,
-                                                chunks,
-                                                varDesc.compressionLevel);
+                auto var = dataObject->createVariable(obsGroup,
+                                                      varDesc.name,
+                                                      dimensions,
+                                                      chunks,
+                                                      varDesc.compressionLevel);
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
 
@@ -305,7 +370,7 @@ namespace Ingester
 
     bool IodaEncoder::existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const
     {
-        for (auto paths : pathMap)
+        for (auto& paths : pathMap)
         {
             if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
             {
@@ -316,20 +381,20 @@ namespace Ingester
         return false;
     }
 
-    std::string IodaEncoder::nameForDimPath(const std::string& path,
-                const NamedPathDims& pathMap) const
+    DimensionDescription IodaEncoder::dimForDimPath(const std::string& path,
+                                                    const NamedPathDims& pathMap) const
     {
-        std::string name;
+        DimensionDescription dimDesc;
 
         for (auto paths : pathMap)
         {
             if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
             {
-                name = paths.second;
+                dimDesc = paths.second;
                 break;
             }
         }
 
-        return name;
+        return dimDesc;
     }
 }  // namespace Ingester

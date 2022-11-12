@@ -27,6 +27,7 @@ namespace Ingester
     {
         std::string name;
         std::vector<std::string> paths;
+        std::string source;
     };
 
     struct VariableDescription
