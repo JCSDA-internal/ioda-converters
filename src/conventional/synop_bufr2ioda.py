@@ -28,13 +28,13 @@ import meteo_utils
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
-    ("station_id", "string", "", "keep"),
+    ("stationIdentification", "string", "", "keep"),
     # ("station_name", "string", "", "keep"),
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
     ("latitude", "float", "degrees_north", "keep"),
     ("longitude", "float", "degrees_east", "keep"),
-    ("station_elevation", "float", "m", "keep"),
+    ("stationElevation", "float", "m", "keep"),
     ("height", "float", "m", "keep"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
     ("year", "integer", "", "toss"),
@@ -52,11 +52,11 @@ metaDataKeyList = {
     # 'station_name': ['stationOrSiteName'],   This fails due to unicode characters
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'station_elevation': ['heightOfStationGroundAboveMeanSeaLevel'],
+    'stationElevation': ['heightOfStationGroundAboveMeanSeaLevel'],
     'height': ['Constructed',
                'heightOfBarometerAboveMeanSeaLevel',
                'heightOfStationGroundAboveMeanSeaLevel'],
-    'station_id': ['Constructed'],
+    'stationIdentification': ['Constructed'],
     'dateTime': ['Constructed'],
     'year': ['year'],
     'month': ['month'],
@@ -76,22 +76,22 @@ raw_obsvars = ['airTemperature',
                'nonCoordinatePressure']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature',
-           'specific_humidity',
-           'virtual_temperature',
-           'eastward_wind',
-           'northward_wind',
-           'surface_pressure']
+obsvars = ['airTemperature',
+           'specificHumidity',
+           'virtualTemperature',
+           'windEastward',
+           'windNorthward',
+           'surfacePressure']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
 obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7, 120.0]
 
 VarDims = {
-    'air_temperature': ['nlocs'],
-    'specific_humidity': ['nlocs'],
-    'virtual_temperature': ['nlocs'],
-    'eastward_wind': ['nlocs'],
-    'northward_wind': ['nlocs'],
-    'surface_pressure': ['nlocs']
+    'airTemperature': ['Location'],
+    'specificHumidity': ['Location'],
+    'virtualTemperature': ['Location'],
+    'windEastward': ['Location'],
+    'windNorthward': ['Location'],
+    'surfacePressure': ['Location']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -164,8 +164,8 @@ def main(file_names, output_file):
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = len(data['dateTime'])
-    DimDict = {'nlocs': nlocs}
-    AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict = {'Location': nlocs}
+    AttrData['Location'] = np.int32(DimDict['Location'])
 
     # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):
@@ -499,7 +499,7 @@ def read_bufr_message(f, count, start_pos, data):
     meta_data['height'][mask_height] = float_missing_value
 
     # If the height of the observation (sensor) is missing, try to fill it with station_elevation.
-    for n, elev in enumerate(meta_data['station_elevation']):
+    for n, elev in enumerate(meta_data['stationElevation']):
         if (elev > -425 and elev < 8500):
             meta_data['height'][n] = elev + 2
 
@@ -579,12 +579,12 @@ def read_bufr_message(f, count, start_pos, data):
                     tvirt[n] = airt[n]*(1.0 + 0.61*qvapor)
 
     # Finally fill up the output data dictionary with observed variables.
-    data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-    data['northward_wind'] = np.append(data['northward_wind'], vwnd)
-    data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
-    data['air_temperature'] = np.append(data['air_temperature'], airt)
-    data['virtual_temperature'] = np.append(data['virtual_temperature'], tvirt)
-    data['surface_pressure'] = np.append(data['surface_pressure'], psfc)
+    data['windEastward'] = np.append(data['windEastward'], uwnd)
+    data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+    data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+    data['airTemperature'] = np.append(data['airTemperature'], airt)
+    data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
+    data['surfacePressure'] = np.append(data['surfacePressure'], psfc)
 
     logging.info(f"number of observations so far: {count[1]} from {count[0]} BUFR msgs.")
     logging.info(f"number of invalid or useless observations: {count[2]}")
