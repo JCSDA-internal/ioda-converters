@@ -85,7 +85,7 @@ class tropomi(object):
             lats = ncd.groups['PRODUCT'].variables['latitude'][:].ravel()
             lons = ncd.groups['PRODUCT'].variables['longitude'][:].ravel()
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
-            times = np.empty_like(qa_value, dtype=object)
+            time_offsets = np.empty_like(qa_value, dtype=np.int64)
             qa_value = qa_value.ravel()
 
             # adding ability to pre filter the data using the qa value
@@ -98,8 +98,10 @@ class tropomi(object):
             qc_flag = qc_flag.ravel().astype('int32')
             time1 = ncd.groups['PRODUCT'].variables['time_utc'][:]
             for t in range(len(time1[0])):
-                times[0, t, :] = time1[0, t][0:19]+'Z'
-            times = times.ravel()
+                this_datetime = datetime.fromisoformat(time1[0, t][0:19])
+                time_offset = round((this_datetime - epoch).total_seconds())
+                time_offsets[0, t, :] = time_offset
+            time_offsets = time_offsets.ravel()
             trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
             total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
             trop_airmass = ncd.groups['PRODUCT'].\
@@ -126,11 +128,9 @@ class tropomi(object):
                     scaleAK[..., k][np.full((nlocf), k, dtype=int) > trop_layer[flg]] = 0
                     scaleAK[..., k] *= total_airmass[flg] / trop_airmass[flg]
 
-            this_datetime = datetime.fromisoformat(times[flg][14:-1])
-            time_offset = round((this_datetime - epoch).total_seconds())
             if first:
                 # add metadata variables
-                self.outdata[('dateTime', 'MetaData')] = np.int64(time_offset)
+                self.outdata[('dateTime', 'MetaData')] = time_offsets[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
@@ -146,7 +146,7 @@ class tropomi(object):
 
             else:
                 self.outdata[('dateTime', 'MetaData')] = np.concatenate((
-                    self.outdata[('dateTime', 'MetaData')], np.int64(time_offset)))
+                    self.outdata[('dateTime', 'MetaData')], time_offsets[flg]))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
