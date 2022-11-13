@@ -71,10 +71,10 @@ obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 1.7, 1.7]
 
 VarDims = {
-    'airTemperature': ['nlocs'],
-    'specificHumidity': ['nlocs'],
-    'windEastward': ['nlocs'],
-    'windNorthward': ['nlocs'],
+    'airTemperature': ['Location'],
+    'specificHumidity': ['Location'],
+    'windEastward': ['Location'],
+    'windNorthward': ['Location'],
 }
 
 metaDataName = iconv.MetaDataName()
@@ -147,8 +147,8 @@ def main(file_names, output_file):
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = len(data['dateTime'])
-    DimDict = {'nlocs': nlocs}
-    AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict = {'Location': nlocs}
+    AttrData['Location'] = np.int32(DimDict['Location'])
 
     # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):
