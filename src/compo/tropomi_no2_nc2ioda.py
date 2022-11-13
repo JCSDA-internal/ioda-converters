@@ -25,10 +25,11 @@ from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
 locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("dateTime", "long"),
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
 ]
+meta_keys = [m_item[0] for m_item in locationKeyList]
 
 AttrData = {
     'converter': os.path.basename(__file__),
@@ -37,6 +38,9 @@ AttrData = {
 
 DimDict = {
 }
+
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class tropomi(object):
@@ -122,9 +126,11 @@ class tropomi(object):
                     scaleAK[..., k][np.full((nlocf), k, dtype=int) > trop_layer[flg]] = 0
                     scaleAK[..., k] *= total_airmass[flg] / trop_airmass[flg]
 
+            this_datetime = datetime.fromisoformat(times[flg][14:-1])
+            time_offset = round((this_datetime - epoch).total_seconds())
             if first:
                 # add metadata variables
-                self.outdata[('dateTime', 'MetaData')] = np.int64(times[flg])
+                self.outdata[('dateTime', 'MetaData')] = np.int64(time_offset)
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
@@ -140,7 +146,7 @@ class tropomi(object):
 
             else:
                 self.outdata[('dateTime', 'MetaData')] = np.concatenate((
-                    self.outdata[('dateTime', 'MetaData')], np.int64(times[flg])))
+                    self.outdata[('dateTime', 'MetaData')], np.int64(time_offset)))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
