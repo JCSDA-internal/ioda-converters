@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
 
 AttrData = {
@@ -124,7 +124,7 @@ class tropomi(object):
 
             if first:
                 # add metadata variables
-                self.outdata[('datetime', 'MetaData')] = times[flg]
+                self.outdata[('dateTime', 'MetaData')] = np.int64(times[flg])
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
@@ -139,8 +139,8 @@ class tropomi(object):
                 self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
 
             else:
-                self.outdata[('datetime', 'MetaData')] = np.concatenate((
-                    self.outdata[('datetime', 'MetaData')], times[flg]))
+                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                    self.outdata[('dateTime', 'MetaData')], np.int64(times[flg])))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
@@ -181,14 +181,13 @@ class tropomi(object):
 
             first = False
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+        AttrData['Location'] = np.int32(DimDict['Location'])
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)
             vkey = (varname, 'RtrvlAncData')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
-            self.varAttrs[vkey]['units'] = ''
 
 
 def main():
@@ -237,7 +236,7 @@ def main():
         }
 
         varDims = {
-            'nitrogen_dioxide_in_tropospheric_column': ['nlocs']
+            'nitrogen_dioxide_in_tropospheric_column': ['Location']
         }
 
     elif args.column == "total":
@@ -247,7 +246,7 @@ def main():
         }
 
         varDims = {
-            'nitrogen_dioxide_in_total_column': ['nlocs']
+            'nitrogen_dioxide_in_total_column': ['Location']
         }
 
     # Read in the NO2 data
