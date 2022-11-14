@@ -23,7 +23,7 @@
 # /MetaData/latitude -> lat_nadir
 # /MetaData/longitude
 # /MetaData/longitude -> lon_nadir
-# /nlocs
+# /Location
 #
 from netCDF4 import Dataset
 from numpy import ma
@@ -192,23 +192,23 @@ class GoesLatLon:
         sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
             self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
-        nlocs = len(latitude)
-        latlon_dataset.createDimension('nlocs', nlocs)
-        latlon_dataset.createVariable('nlocs', 'i4', ('nlocs',))
-        latlon_dataset.variables['nlocs'][:] = np.arange(1, nlocs + 1, 1, dtype='int32')
+        Location = len(latitude)
+        latlon_dataset.createDimension('Location', Location)
+        latlon_dataset.createVariable('Location', 'i4', ('Location',))
+        latlon_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
         nonexistent_indices = len(self._lat_fill_value_index_array[0])
         latlon_dataset.createDimension('nonexistent_indices', nonexistent_indices)
         latlon_dataset.createVariable('nonexistent_indices', 'i4', ('nonexistent_indices',))
         latlon_dataset.variables['nonexistent_indices'][:] = np.array(self._lat_fill_value_index_array[0])
         latlon_dataset.createGroup('MetaData')
-        latlon_dataset.createVariable('/MetaData/latitude', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/scan_position', 'i4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'nlocs', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/latitude', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/longitude', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/scan_angle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/scan_position', 'i4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'Location', fill_value=-999)
         latlon_dataset['/MetaData/latitude'][:] = latitude
         latlon_dataset['/MetaData/longitude'][:] = longitude
         latlon_dataset['/MetaData/scan_angle'][:] = scan_angle

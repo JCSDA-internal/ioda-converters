@@ -26,15 +26,15 @@
 # /MetaData/solar_azimuth_angle -> units
 # /MetaData/solar_zenith_angle -> units
 # /MetaData/sensor_channel
-# /ObsError/reflectance_factor or /ObsError/brightness_temperature
-# /ObsValue/reflectance_factor or /ObsValue/brightness_temperature
-# /ObsError/brightness_temperature -> units
-# /ObsValue/brightness_temperature -> units
-# /PreQC/reflectance_factor or /PreQC/brightness_temperature
-# /PreQC/reflectance_factor -> flag_values or /PreQC/brightness_temperature -> flag_values
-# /PreQC/reflectance_factor -> flag_meanings or /PreQC/brightness_temperature -> flag_meanings
-# /nchans
-# /nlocs
+# /ObsError/albedo or /ObsError/brightnessTemperature
+# /ObsValue/albedo or /ObsValue/brightnessTemperature
+# /ObsError/brightnessTemperature -> units
+# /ObsValue/brightnessTemperature -> units
+# /PreQC/albedo or /PreQC/brightnessTemperature
+# /PreQC/albedo -> flag_values or /PreQC/brightnessTemperature -> flag_values
+# /PreQC/albedo -> flag_meanings or /PreQC/brightnessTemperature -> flag_meanings
+# /Channel
+# /Location
 #
 
 import os
@@ -161,7 +161,7 @@ class GoesConverter:
         output_dataset - A netCDF Dataset object
         """
         latitude_data_array = self._latlon_dataset['MetaData'].variables['latitude'][:].real
-        output_dataset.createVariable('/MetaData/latitude', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/latitude', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/latitude'][:] = latitude_data_array
         output_dataset['/MetaData/latitude'].setncattr('units', 'degrees_north')
 
@@ -171,7 +171,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         longitude_data_array = self._latlon_dataset['MetaData'].variables['longitude'][:].real
-        output_dataset.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/longitude', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/longitude'][:] = longitude_data_array
         output_dataset['/MetaData/longitude'].setncattr('units', 'degrees_east')
 
@@ -181,7 +181,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         scan_angle_data_array = self._latlon_dataset['MetaData'].variables['scan_angle'][:].real
-        output_dataset.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/scan_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/scan_angle'][:] = scan_angle_data_array
         output_dataset['/MetaData/scan_angle'].setncattr('units', 'degrees')
 
@@ -191,7 +191,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['elevation_angle'][:].real
-        output_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/elevation_angle'][:] = elevation_angle_data_array
         output_dataset['/MetaData/elevation_angle'].setncattr('units', 'degrees')
 
@@ -201,7 +201,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         scan_position_data_array = self._latlon_dataset['MetaData'].variables['scan_position'][:].real
-        output_dataset.createVariable('/MetaData/scan_position', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/scan_position', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/scan_position'][:] = scan_position_data_array
 
     def _create_metadata_sensor_zenith_angle_variable(self, output_dataset):
@@ -210,7 +210,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         sensor_zenith_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_zenith_angle'][:].real
-        output_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle_data_array
         output_dataset['/MetaData/sensor_zenith_angle'].setncattr('units', 'degrees')
 
@@ -220,7 +220,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         sensor_azimuth_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_azimuth_angle'][:].real
-        output_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle_data_array
         output_dataset['/MetaData/sensor_azimuth_angle'].setncattr('units', 'degrees')
 
@@ -230,7 +230,7 @@ class GoesConverter:
         output_dataset - A netCDF4 Dataset object
         """
         sensor_view_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_view_angle'][:].real
-        output_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/sensor_view_angle'][:] = sensor_view_angle_data_array
         output_dataset['/MetaData/sensor_view_angle'].setncattr('units', 'degrees')
 
@@ -269,7 +269,7 @@ class GoesConverter:
         dataset.close()
         dataset_latlon.close()
         solar_zenith_angle_data_array = np.nan_to_num(solar_zenith_angle_data_array, nan=-999)
-        output_dataset.createVariable('/MetaData/solar_zenith_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/solar_zenith_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/solar_zenith_angle'][:] = solar_zenith_angle_data_array
         output_dataset['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
 
@@ -299,20 +299,20 @@ class GoesConverter:
         dataset.close()
         dataset_latlon.close()
         solar_azimuth_angle_data_array = np.nan_to_num(solar_azimuth_angle_data_array, nan=-999)
-        output_dataset.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'nlocs', fill_value=-999)
+        output_dataset.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/solar_azimuth_angle'][:] = solar_azimuth_angle_data_array
         output_dataset['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
 
-    def _create_nlocs_dimension(self, output_dataset):
+    def _create_location_dimension(self, output_dataset):
         """
-        Creates the nlocs dimension in an output netCDF4 dataset.
+        Creates the Location dimension in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        nlocs = self._latlon_dataset.dimensions['nlocs'].size
-        output_dataset.createDimension('nlocs', nlocs)
-        output_dataset.createVariable('nlocs', 'i4', 'nlocs')
-        output_dataset.variables['nlocs'].setncattr('suggested_chunk_dim', nlocs)
-        output_dataset.variables['nlocs'][:] = np.arange(1, nlocs + 1, 1, dtype='int32')
+        Location = self._latlon_dataset.dimensions['Location'].size
+        output_dataset.createDimension('Location', Location)
+        output_dataset.createVariable('Location', 'i4', 'Location')
+        output_dataset.variables['Location'].setncattr('suggested_chunk_dim', Location)
+        output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
 
     @staticmethod
     def _create_groups(output_dataset):
@@ -326,19 +326,19 @@ class GoesConverter:
         output_dataset.createGroup('PreQC')
 
     @staticmethod
-    def _create_nchans_dimension(output_dataset, nchans):
+    def _create_channel_dimension(output_dataset, Channel):
         """
-        Creates the nchans dimension in an output netCDF4 dataset.
+        Creates the Channel dimension in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
-        nchans - An integer indicating the number of nchans: 6 (for reflectance factor)
+        Channel - An integer indicating the number of Channel: 6 (for reflectance factor)
                                                           or 10 (for brightness temperature)
         """
-        output_dataset.createDimension('nchans', nchans)
-        output_dataset.createVariable('nchans', 'i4', 'nchans')
-        if nchans == 6:
-            output_dataset.variables['nchans'][:] = [1, 2, 3, 4, 5, 6]
-        elif nchans == 10:
-            output_dataset.variables['nchans'][:] = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        output_dataset.createDimension('Channel', Channel)
+        output_dataset.createVariable('Channel', 'i4', 'Channel')
+        if Channel == 6:
+            output_dataset.variables['Channel'][:] = [1, 2, 3, 4, 5, 6]
+        elif Channel == 10:
+            output_dataset.variables['Channel'][:] = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
     @staticmethod
     def _create_metadata_sensor_channel_variable(output_dataset):
@@ -346,8 +346,8 @@ class GoesConverter:
         Creates the /MetaData/sensor_channel variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        output_dataset.createVariable('/MetaData/sensor_channel', 'i4', 'nchans')
-        output_dataset['/MetaData/sensor_channel'][:] = output_dataset['nchans'][:]
+        output_dataset.createVariable('/MetaData/sensor_channel', 'i4', 'Channel')
+        output_dataset['/MetaData/sensor_channel'][:] = output_dataset['Channel'][:]
 
     @staticmethod
     def _create_root_group_attributes(output_dataset, resolution, platform_id):
@@ -361,16 +361,16 @@ class GoesConverter:
         output_dataset.setncattr('platform_identifier', platform_id)
 
     @staticmethod
-    def _get_nlocs(dataset):
+    def _get_Location(dataset):
         """
-        Returns the nlocs dimension size for the provided netCDF4 Dataset.
-        dataset - the dataset to extract the nlocs size
+        Returns the Location dimension size for the provided netCDF4 Dataset.
+        dataset - the dataset to extract the Location size
         """
-        return dataset.dimensions['nlocs'].size
+        return dataset.dimensions['Location'].size
 
     def _create_preqc_reflectance_factor_variable(self, output_dataset):
         """
-        Creates the /PreQC/reflectance_factor variable variable and associated attributes in an output netCDF4 dataset.
+        Creates the /PreQC/albedo variable variable and associated attributes in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -382,16 +382,16 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/PreQC/reflectance_factor', 'f4', ('nlocs', 'nchans'), fill_value=-999)
-        output_dataset['/PreQC/reflectance_factor'][:] = data_array
-        output_dataset['/PreQC/reflectance_factor'].setncattr('flag_values', '0,1,2,3')
-        output_dataset['/PreQC/reflectance_factor'].setncattr('flag_meanings',
+        output_dataset.createVariable('/PreQC/albedo', 'f4', ('Location', 'Channel'), fill_value=-999)
+        output_dataset['/PreQC/albedo'][:] = data_array
+        output_dataset['/PreQC/albedo'].setncattr('flag_values', '0,1,2,3')
+        output_dataset['/PreQC/albedo'].setncattr('flag_meanings',
                                                               'good_pixel_qf,conditionally_usable_pixel_qf,'
                                                               'out_of_range_pixel_qf,no_value_pixel_qf')
 
     def _create_preqc_brightness_temperature_variable(self, output_dataset):
         """
-        Creates the /PreQC/brightness_temperature variable and associated attributes in an output netCDF4 dataset.
+        Creates the /PreQC/brightnessTemperature variable and associated attributes in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -403,17 +403,17 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/PreQC/brightness_temperature', 'f4', ('nlocs', 'nchans'),
+        output_dataset.createVariable('/PreQC/brightnessTemperature', 'f4', ('Location', 'Channel'),
                                       fill_value=-999)
-        output_dataset['/PreQC/brightness_temperature'][:] = data_array
-        output_dataset['/PreQC/brightness_temperature'].setncattr('flag_values', '0,1,2,3')
-        output_dataset['/PreQC/brightness_temperature'].setncattr('flag_meanings',
+        output_dataset['/PreQC/brightnessTemperature'][:] = data_array
+        output_dataset['/PreQC/brightnessTemperature'].setncattr('flag_values', '0,1,2,3')
+        output_dataset['/PreQC/brightnessTemperature'].setncattr('flag_meanings',
                                                                   'good_pixel_qf,conditionally_usable_pixel_qf,'
                                                                   'out_of_range_pixel_qf,no_value_pixel_qf')
 
     def _create_obsvalue_reflectance_factor_variable(self, output_dataset):
         """
-        Creates the /ObsValue/reflectance_factor variable in an output netCDF4 dataset.
+        Creates the /ObsValue/albedo variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -425,13 +425,13 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/ObsValue/reflectance_factor', 'f4', ('nlocs', 'nchans'),
+        output_dataset.createVariable('/ObsValue/albedo', 'f4', ('Location', 'Channel'),
                                       fill_value=-999)
-        output_dataset['/ObsValue/reflectance_factor'][:] = data_array
+        output_dataset['/ObsValue/albedo'][:] = data_array
 
     def _create_obsvalue_brightness_temperature_variable(self, output_dataset):
         """
-        Creates the /ObsValue/brightness_temperature variable in an output netCDF4 dataset.
+        Creates the /ObsValue/brightnessTemperature variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -443,14 +443,14 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/ObsValue/brightness_temperature', 'f4', ('nlocs', 'nchans'),
+        output_dataset.createVariable('/ObsValue/brightnessTemperature', 'f4', ('Location', 'Channel'),
                                       fill_value=-999)
-        output_dataset['/ObsValue/brightness_temperature'][:] = data_array
-        output_dataset['/ObsValue/brightness_temperature'].setncattr('units', 'K')
+        output_dataset['/ObsValue/brightnessTemperature'][:] = data_array
+        output_dataset['/ObsValue/brightnessTemperature'].setncattr('units', 'K')
 
     def _create_obserror_reflectance_factor_variable(self, output_dataset):
         """
-        Creates the /ObsError/reflectance_factor variable in an output netCDF4 dataset.
+        Creates the /ObsError/albedo variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -462,13 +462,13 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/ObsError/reflectance_factor', 'f4', ('nlocs', 'nchans'),
+        output_dataset.createVariable('/ObsError/albedo', 'f4', ('Location', 'Channel'),
                                       fill_value=-999)
-        output_dataset['/ObsError/reflectance_factor'][:] = data_array
+        output_dataset['/ObsError/albedo'][:] = data_array
 
     def _create_obserror_brightness_temperature_variable(self, output_dataset):
         """
-        Creates the /ObsError/brightness_temperature variable in an output netCDF4 dataset.
+        Creates the /ObsError/brightnessTemperature variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -480,10 +480,10 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/ObsError/brightness_temperature', 'f4', ('nlocs', 'nchans'),
+        output_dataset.createVariable('/ObsError/brightnessTemperature', 'f4', ('Location', 'Channel'),
                                       fill_value=-999)
-        output_dataset['/ObsError/brightness_temperature'][:] = data_array
-        output_dataset['/ObsError/brightness_temperature'].setncattr('units', 'K')
+        output_dataset['/ObsError/brightnessTemperature'][:] = data_array
+        output_dataset['/ObsError/brightnessTemperature'].setncattr('units', 'K')
 
     def _create_metadata_time_variable(self, output_dataset):
         """
@@ -495,9 +495,9 @@ class GoesConverter:
         time_offset = round((self._start_date - epoch).total_seconds())   # seconds since epoch.
         start_date = self._start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
         output_dataset.setncattr("date_time", start_date)
-        datetime_array = np.full(self._get_nlocs(output_dataset), np.int64(time_offset))
+        datetime_array = np.full(self._get_Location(output_dataset), np.int64(time_offset))
 
-        output_dataset.createVariable('/MetaData/dateTime', 'i8', 'nlocs')
+        output_dataset.createVariable('/MetaData/dateTime', 'i8', 'Location')
         output_dataset['/MetaData/dateTime'][:] = datetime_array
         output_dataset['/MetaData/dateTime'].setncattr('units', iso8601_string)
 
@@ -538,8 +538,8 @@ class GoesConverter:
         dataset = Dataset(self._output_file_path_bt, 'w')
         GoesConverter._create_groups(dataset)
         GoesConverter._create_root_group_attributes(dataset, self._resolution, self._platform_id)
-        GoesConverter._create_nchans_dimension(dataset, 10)
-        self._create_nlocs_dimension(dataset)
+        GoesConverter._create_channel_dimension(dataset, 10)
+        self._create_location_dimension(dataset)
         GoesConverter._create_metadata_sensor_channel_variable(dataset)
         self._create_metadata_latitude_variable(dataset)
         self._create_metadata_longitude_variable(dataset)
@@ -564,8 +564,8 @@ class GoesConverter:
         dataset = Dataset(self._output_file_path_rf, 'w')
         GoesConverter._create_groups(dataset)
         GoesConverter._create_root_group_attributes(dataset, self._resolution, self._platform_id)
-        GoesConverter._create_nchans_dimension(dataset, 6)
-        self._create_nlocs_dimension(dataset)
+        GoesConverter._create_channel_dimension(dataset, 6)
+        self._create_location_dimension(dataset)
         GoesConverter._create_metadata_sensor_channel_variable(dataset)
         self._create_metadata_latitude_variable(dataset)
         self._create_metadata_longitude_variable(dataset)
