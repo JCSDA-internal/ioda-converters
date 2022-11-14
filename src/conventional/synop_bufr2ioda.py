@@ -81,7 +81,7 @@ obsvars = ['airTemperature',
            'virtualTemperature',
            'windEastward',
            'windNorthward',
-           'surfacePressure']
+           'stationPressure']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
 obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7, 120.0]
 
@@ -91,7 +91,7 @@ VarDims = {
     'virtualTemperature': ['Location'],
     'windEastward': ['Location'],
     'windNorthward': ['Location'],
-    'surfacePressure': ['Location']
+    'stationPressure': ['Location']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -177,7 +177,6 @@ def main(file_names, output_file):
         varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
         varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
-        varAttrs[iodavar, qcName]['units'] = 'unitless'
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
@@ -584,7 +583,7 @@ def read_bufr_message(f, count, start_pos, data):
     data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
     data['airTemperature'] = np.append(data['airTemperature'], airt)
     data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
-    data['surfacePressure'] = np.append(data['surfacePressure'], psfc)
+    data['stationPressure'] = np.append(data['stationPressure'], psfc)
 
     logging.info(f"number of observations so far: {count[1]} from {count[0]} BUFR msgs.")
     logging.info(f"number of invalid or useless observations: {count[2]}")
