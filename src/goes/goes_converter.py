@@ -14,18 +14,18 @@
 # / -> date_time
 # / -> _ioda_layout
 # / -> _ioda_layout_version
-# /MetaData/datetime
-# /MetaData/elevation_angle
-# /MetaData/latitude
-# /MetaData/longitude
-# /MetaData/scan_angle
+# /MetaData/dateTime
+# /MetaData/latitude -> units
+# /MetaData/longitude -> units
+# /MetaData/elevation_angle -> units
+# /MetaData/scan_angle -> units
 # /MetaData/scan_position
 # /MetaData/sensor_azimuth_angle -> units
 # /MetaData/sensor_view_angle -> units
 # /MetaData/sensor_zenith_angle -> units
 # /MetaData/solar_azimuth_angle -> units
 # /MetaData/solar_zenith_angle -> units
-# /MetaData/time
+# /MetaData/sensor_channel
 # /ObsError/reflectance_factor or /ObsError/brightness_temperature
 # /ObsValue/reflectance_factor or /ObsValue/brightness_temperature
 # /ObsError/brightness_temperature -> units
@@ -33,13 +33,8 @@
 # /PreQC/reflectance_factor or /PreQC/brightness_temperature
 # /PreQC/reflectance_factor -> flag_values or /PreQC/brightness_temperature -> flag_values
 # /PreQC/reflectance_factor -> flag_meanings or /PreQC/brightness_temperature -> flag_meanings
-# /VarMetaData/sensor_channel
-# /VarMetaData/variable_names
 # /nchans
-# /ndatetime
 # /nlocs
-# /nstring
-# /nvars
 #
 
 import os
@@ -47,6 +42,7 @@ import sys
 import numpy as np
 from netCDF4 import Dataset
 from numpy import ma
+import datetime
 from goes import Goes
 from goes_latlon import GoesLatLon
 from goes_util import GoesUtil
@@ -74,6 +70,11 @@ class GoesConverter:
         self._latlon_dataset = None
         self._check_arguments()
 
+        # TODO: make use of default fill values from NetCDF
+        # self._float_missing_value = nc.default_fillvals['f4']
+        # self._int_missing_value = nc.default_fillvals['i4']
+        # self._long_missing_value = nc.default_fillvals['i8']
+
     def _check_arguments(self):
         """
         Checks the input arguments.
@@ -83,8 +84,8 @@ class GoesConverter:
             print("ERROR: input_file_paths must contain 16 GOES-16 or GOES-17 data files. One for each ABI channel.")
             good_args = False
         good_resolutions = [2, 4, 8, 16, 32, 64]
-        if self._resolution not in good_resolutions:
-            print("ERROR: resolution (in km) must be one of the following values: 2 (default), 4, 8, 16, 32, 64.")
+        if int(self._resolution) not in good_resolutions:
+            print("ERROR: resolution (in km) must be one of the following values: 2, 4, 8 (default), 16, 32, 64.")
             good_args = False
         if not good_args:
             sys.exit(2)
@@ -101,25 +102,16 @@ class GoesConverter:
         self._goes_dict_bt = {}
         for input_file_path in self._input_file_paths:
             goes = Goes(input_file_path, self._goes_util)
-            abi_channel = int(goes.get_abi_channel())
+            abi_channel = goes.get_abi_channel()
             if abi_channel < 7:
                 self._goes_dict_rf[abi_channel] = goes
             else:
                 self._goes_dict_bt[abi_channel] = goes
-        self._day_of_year = self._goes_dict_bt[7].get_day_of_year()
-        self._start_date = self._goes_dict_bt[7].get_start_date()
+        self._platform_id = goes.get_platform_id()
+        self._start_date = goes.get_start_date()
         self._input_file_path_template = self._goes_dict_bt[7].get_input_file_path()
-        self._goes_util.set_yaw_flip_flag(self._get_yaw_flip_flag())
+        self._goes_util.set_yaw_flip_flag(goes.get_yaw_flip_flag())
         self._goes_util.set_resolution(self._resolution)
-
-    def _get_yaw_flip_flag(self):
-        """
-        Returns the yaw_flip_flag from channel 1
-        """
-        dataset = Dataset(self._input_file_paths[0], 'r')
-        yaw_flip_flag = dataset.variables['yaw_flip_flag'][0]
-        dataset.close()
-        return yaw_flip_flag
 
     def _check_nadir(self):
         """
@@ -171,6 +163,7 @@ class GoesConverter:
         latitude_data_array = self._latlon_dataset['MetaData'].variables['latitude'][:].real
         output_dataset.createVariable('/MetaData/latitude', 'f4', 'nlocs', fill_value=-999)
         output_dataset['/MetaData/latitude'][:] = latitude_data_array
+        output_dataset['/MetaData/latitude'].setncattr('units', 'degrees_north')
 
     def _create_metadata_longitude_variable(self, output_dataset):
         """
@@ -180,6 +173,7 @@ class GoesConverter:
         longitude_data_array = self._latlon_dataset['MetaData'].variables['longitude'][:].real
         output_dataset.createVariable('/MetaData/longitude', 'f4', 'nlocs', fill_value=-999)
         output_dataset['/MetaData/longitude'][:] = longitude_data_array
+        output_dataset['/MetaData/longitude'].setncattr('units', 'degrees_east')
 
     def _create_metadata_scan_angle_variable(self, output_dataset):
         """
@@ -189,6 +183,7 @@ class GoesConverter:
         scan_angle_data_array = self._latlon_dataset['MetaData'].variables['scan_angle'][:].real
         output_dataset.createVariable('/MetaData/scan_angle', 'f4', 'nlocs', fill_value=-999)
         output_dataset['/MetaData/scan_angle'][:] = scan_angle_data_array
+        output_dataset['/MetaData/scan_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_elevation_angle_variable(self, output_dataset):
         """
@@ -198,6 +193,7 @@ class GoesConverter:
         elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['elevation_angle'][:].real
         output_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'nlocs', fill_value=-999)
         output_dataset['/MetaData/elevation_angle'][:] = elevation_angle_data_array
+        output_dataset['/MetaData/elevation_angle'].setncattr('units', 'degrees')
 
     def _create_metadata_scan_position_variable(self, output_dataset):
         """
@@ -328,7 +324,6 @@ class GoesConverter:
         output_dataset.createGroup('ObsError')
         output_dataset.createGroup('ObsValue')
         output_dataset.createGroup('PreQC')
-        output_dataset.createGroup('VarMetaData')
 
     @staticmethod
     def _create_nchans_dimension(output_dataset, nchans):
@@ -346,80 +341,24 @@ class GoesConverter:
             output_dataset.variables['nchans'][:] = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
     @staticmethod
-    def _create_nvars_dimension(output_dataset, nvars):
+    def _create_metadata_sensor_channel_variable(output_dataset):
         """
-        Creates the nvars dimension in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        nvars - An integer indicating the number of nvars: 6 (for reflectance factor)
-                                                        or 10 (for brightness temperature)
-        """
-        output_dataset.createDimension('nvars', nvars)
-        output_dataset.createVariable('nvars', 'i4', 'nvars')
-        output_dataset.variables['nvars'][:] = np.arange(1, nvars + 1, 1, dtype='int32')
-
-    @staticmethod
-    def _create_ndatetime_dimension(output_dataset):
-        """
-        Creates the ndatetime dimension in an output netCDF4 dataset.
+        Creates the /MetaData/sensor_channel variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        ndatetime = 20
-        output_dataset.createDimension('ndatetime', ndatetime)
-        output_dataset.createVariable('ndatetime', 'i4', 'ndatetime')
-        output_dataset.variables['ndatetime'][:] = np.arange(1, ndatetime + 1, 1, dtype='int32')
+        output_dataset.createVariable('/MetaData/sensor_channel', 'i4', 'nchans')
+        output_dataset['/MetaData/sensor_channel'][:] = output_dataset['nchans'][:]
 
     @staticmethod
-    def _create_nstring_dimension(output_dataset):
-        """
-        Creates the nstring dimension in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        nstring = 50
-        output_dataset.createDimension('nstring', nstring)
-        output_dataset.createVariable('nstring', 'i4', 'nstring')
-        output_dataset.variables['nstring'][:] = np.arange(1, nstring + 1, 1, dtype='int32')
-
-    @staticmethod
-    def _create_varmetadata_sensor_channel_variable(output_dataset):
-        """
-        Creates the /VarMetaData/sensor_channel variable in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        output_dataset.createVariable('/VarMetaData/sensor_channel', 'i4', 'nchans')
-        output_dataset['/VarMetaData/sensor_channel'][:] = output_dataset['nchans'][:]
-
-    @staticmethod
-    def _create_varmetadata_variable_names_reflectance_factor_variable(output_dataset):
-        """
-        Creates the /VarMetaData/variable_names variable for reflectance factor in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        output_dataset.createVariable('/VarMetaData/variable_names', 'str', 'nchans')
-        temp_data_array = ['reflectance_factor_1', 'reflectance_factor_2', 'reflectance_factor_3',
-                           'reflectance_factor_4', 'reflectance_factor_5', 'reflectance_factor_6']
-        output_dataset['/VarMetaData/variable_names'][:] = np.array(temp_data_array)
-
-    @staticmethod
-    def _create_varmetadata_variable_names_brightness_temperature_variable(output_dataset):
-        """
-        Creates the /VarMetaData/variable_names variable for brightness temperature in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        output_dataset.createVariable('/VarMetaData/variable_names', 'str', 'nchans')
-        temp_data_array = ['brightness_temperature_7', 'brightness_temperature_8', 'brightness_temperature_9',
-                           'brightness_temperature_10', 'brightness_temperature_11', 'brightness_temperature_12',
-                           'brightness_temperature_13', 'brightness_temperature_14', 'brightness_temperature_15',
-                           'brightness_temperature_16']
-        output_dataset['/VarMetaData/variable_names'][:] = np.array(temp_data_array)
-
-    @staticmethod
-    def _create_root_group_attributes(output_dataset):
+    def _create_root_group_attributes(output_dataset, resolution, platform_id):
         """
         Creates several root group attributes in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         output_dataset.setncattr('_ioda_layout', 'ObsGroup')
         output_dataset.setncattr('_ioda_layout_version', '0')
+        output_dataset.setncattr('subsampled_resolution (km)', resolution)
+        output_dataset.setncattr('platform_identifier', platform_id)
 
     @staticmethod
     def _get_nlocs(dataset):
@@ -548,18 +487,19 @@ class GoesConverter:
 
     def _create_metadata_time_variable(self, output_dataset):
         """
-        Creates the /MetaData/datetime and MetaData/time variables and /date_time attribute in an output netCDF4
-        dataset.
+        Creates the /MetaData/dateTime variable and /date_time attribute in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
+        iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+        epoch = datetime.datetime.fromisoformat(iso8601_string[14:-1])
+        time_offset = round((self._start_date - epoch).total_seconds())   # seconds since epoch.
         start_date = self._start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-        datetime_array = np.full(self._get_nlocs(output_dataset), start_date)
-        time_array = np.full(self._get_nlocs(output_dataset), 0.0)
-        output_dataset.createVariable('/MetaData/datetime', 'str', 'nlocs')
-        output_dataset['/MetaData/datetime'][:] = datetime_array
-        output_dataset.createVariable('/MetaData/time', 'f4', 'nlocs')
-        output_dataset['/MetaData/time'][:] = time_array
         output_dataset.setncattr("date_time", start_date)
+        datetime_array = np.full(self._get_nlocs(output_dataset), np.int64(time_offset))
+
+        output_dataset.createVariable('/MetaData/dateTime', 'i8', 'nlocs')
+        output_dataset['/MetaData/dateTime'][:] = datetime_array
+        output_dataset['/MetaData/dateTime'].setncattr('units', iso8601_string)
 
     def _load_all_goes(self):
         """
@@ -597,14 +537,10 @@ class GoesConverter:
         """
         dataset = Dataset(self._output_file_path_bt, 'w')
         GoesConverter._create_groups(dataset)
-        GoesConverter._create_root_group_attributes(dataset)
+        GoesConverter._create_root_group_attributes(dataset, self._resolution, self._platform_id)
         GoesConverter._create_nchans_dimension(dataset, 10)
-        GoesConverter._create_nvars_dimension(dataset, 10)
-        GoesConverter._create_ndatetime_dimension(dataset)
-        GoesConverter._create_nstring_dimension(dataset)
         self._create_nlocs_dimension(dataset)
-        GoesConverter._create_varmetadata_sensor_channel_variable(dataset)
-        GoesConverter._create_varmetadata_variable_names_brightness_temperature_variable(dataset)
+        GoesConverter._create_metadata_sensor_channel_variable(dataset)
         self._create_metadata_latitude_variable(dataset)
         self._create_metadata_longitude_variable(dataset)
         self._create_metadata_elevation_angle_variable(dataset)
@@ -627,14 +563,10 @@ class GoesConverter:
         """
         dataset = Dataset(self._output_file_path_rf, 'w')
         GoesConverter._create_groups(dataset)
-        GoesConverter._create_root_group_attributes(dataset)
+        GoesConverter._create_root_group_attributes(dataset, self._resolution, self._platform_id)
         GoesConverter._create_nchans_dimension(dataset, 6)
-        GoesConverter._create_nvars_dimension(dataset, 6)
-        GoesConverter._create_ndatetime_dimension(dataset)
-        GoesConverter._create_nstring_dimension(dataset)
         self._create_nlocs_dimension(dataset)
-        GoesConverter._create_varmetadata_sensor_channel_variable(dataset)
-        GoesConverter._create_varmetadata_variable_names_reflectance_factor_variable(dataset)
+        GoesConverter._create_metadata_sensor_channel_variable(dataset)
         self._create_metadata_latitude_variable(dataset)
         self._create_metadata_longitude_variable(dataset)
         self._create_metadata_elevation_angle_variable(dataset)
