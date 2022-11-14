@@ -58,59 +58,41 @@ namespace Ingester
     {
         checkKeys(map);
 
-        static const float missingFloat = DataObject<float>::missingValue();
-        static const int missingInt = DataObject<int>::missingValue();
-
-        // Get scaled spectral radiance from BufrDataMap
+        // Read the variables from the map
         auto& radObj = map.at(getExportKey(ConfKeys::ScaledSpectralRadiance));
+        auto& sensorChanObj = map.at(getExportKey(ConfKeys::SensorChannelNumber));
+        auto& startChanObj = map.at(getExportKey(ConfKeys::StartChannel));
+        auto& endChanObj = map.at(getExportKey(ConfKeys::EndChannel));
+        auto& scaleFactorObj = map.at(getExportKey(ConfKeys::ScaleFactor));
 
         // Declare unscale spectral radiance data array from scaled spectral radiance
-        std::vector<float> outData((radObj->size()), missingFloat);
+        std::vector<float> outData((radObj->size()), DataObject<float>::missingValue());
 
         // Get dimensions
         size_t nchns = (radObj->getDims())[1];
-
-        // Get start channels from BufrDataMap
-        auto& startChanObj = map.at(getExportKey(ConfKeys::StartChannel));
-        std::vector<float> begChannel(startChanObj->size());
         size_t nbands = (startChanObj->getDims())[1];
-
-        // Get end channels from BufrDataMap
-        auto& endChanObj = map.at(getExportKey(ConfKeys::EndChannel));
-        std::vector<float> endChannel(endChanObj->size());
-
-        // Get scale factors from BufrDataMap
-        auto& scaleFactorObj = map.at(getExportKey(ConfKeys::ScaleFactor));
-        std::vector<float> scaleFactor(scaleFactorObj->size());
-
-        // Get sensor channel number from BufrDataMap
-        auto& sensorChanObj = map.at(getExportKey(ConfKeys::SensorChannelNumber));
-        std::vector<int> Channel(sensorChanObj->size());
-
-        // Get scale factor
-        for (size_t idx = 0; idx < startChanObj->size(); idx++)
-        {
-            begChannel[idx] = startChanObj-> getAsInt(idx);
-            endChannel[idx] = endChanObj-> getAsInt(idx);
-            scaleFactor[idx] = scaleFactorObj-> getAsInt(idx);
-            // convert W/m2 to mW/m2
-            scaleFactor[idx] = -(scaleFactor[idx] - 5.0);
-            scaleFactor[idx] = pow(10.0, scaleFactor[idx]);
-        }
 
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
-            Channel[idx] = sensorChanObj->getAsInt(idx);
-            size_t iloc = static_cast<int>(idx / nchns);
-            size_t idx2;
+            auto channel = sensorChanObj->getAsInt(idx);
+            size_t iloc = static_cast<size_t>(floor(idx / nchns));
+            size_t bandOffset;
 
             for (size_t ibnd = 0; ibnd < nbands; ibnd++)
             {
-               idx2 = iloc * nbands + ibnd;
-               if (Channel[idx] >= begChannel[idx2] && Channel[idx] <= endChannel[idx2]) break;
+                bandOffset = iloc * nbands + ibnd;
+               if (channel >= startChanObj->getAsInt(bandOffset) &&
+                   channel <= endChanObj->getAsInt(bandOffset))
+               {
+                   break;
+               }
             }
-            if (radObj->getAsFloat(idx) != missingFloat && scaleFactor[idx2] !=missingInt)
-                outData[idx] = radObj->getAsFloat(idx) * scaleFactor[idx2];
+
+            if (!radObj->isMissing(idx) && !scaleFactorObj->isMissing(bandOffset))
+            {
+                auto scaleFactor = powf(10.0f, -(scaleFactorObj->getAsFloat(bandOffset) - 5.0f));
+                outData[idx] = radObj->getAsFloat(idx) * scaleFactor;
+            }
         }
 
         return std::make_shared<DataObject<float>>(outData,
