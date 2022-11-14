@@ -126,7 +126,7 @@ namespace Ingester {
 
                 std::string ovar;
                 ovar = var->getExportName();
-                oops::Log::info() << "Exporting variable = " << ovar << std::endl;
+                oops::Log::debug() << "Exporting variable = " << ovar << std::endl;
 
                 exportData->add(pathStr.str(),
                                 var->exportData(dataPair.second),

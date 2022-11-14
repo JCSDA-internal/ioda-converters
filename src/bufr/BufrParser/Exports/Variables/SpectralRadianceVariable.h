@@ -29,7 +29,7 @@ namespace Ingester
 
         ~SpectralRadianceVariable() final = default;
 
-        /// \brief Get the configured mnemonics and turn them into SpectralRadiance 
+        /// \brief Get the configured mnemonics and turn them into SpectralRadiance
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
 
@@ -40,7 +40,7 @@ namespace Ingester
         /// \brief For field (optional)
         std::string groupByField_;
 
-        /// \brief The configuration 
+        /// \brief The configuration
         const eckit::LocalConfiguration conf_;
 
         /// \brief makes sure the bufr data map has all the required keys.

@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+ * (C) Copyright 2022 NOAA/NWS/NCEP/EMC
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -35,7 +35,7 @@ namespace
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::SensorChannelNumber,
-					   	 ConfKeys::StartChannel,
+                                                 ConfKeys::StartChannel,
                                                  ConfKeys::EndChannel,
                                                  ConfKeys::ScaleFactor,
                                                  ConfKeys::ScaledSpectralRadiance};
@@ -56,70 +56,69 @@ namespace Ingester
 
     std::shared_ptr<DataObjectBase> SpectralRadianceVariable::exportData(const BufrDataMap& map)
     {
-
         checkKeys(map);
 
         static const float missingFloat = DataObject<float>::missingValue();
         static const int missingInt = DataObject<int>::missingValue();
 
         // Get scaled spectral radiance from BufrDataMap
-        auto& refObj = map.at(getExportKey(ConfKeys::ScaledSpectralRadiance));
+        auto& radObj = map.at(getExportKey(ConfKeys::ScaledSpectralRadiance));
 
-        // Declare unscale spectral radiance data array from scaled spectral radiance: nlocs * nchns
-        std::vector<float> outData((refObj->size()), missingFloat); 
+        // Declare unscale spectral radiance data array from scaled spectral radiance
+        std::vector<float> outData((radObj->size()), missingFloat);
 
         // Get dimensions
-        size_t nlocs = (refObj->getDims())[0];
-        size_t nchns = (refObj->getDims())[1];
+        size_t nchns = (radObj->getDims())[1];
 
-        // Get start channels from BufrDataMap: nlocs * nbands 
-        auto& refObj1 = map.at(getExportKey(ConfKeys::StartChannel));
-        std::vector<float> begChannel(refObj1->size()); 
-        size_t nbands = (refObj1->getDims())[1];
+        // Get start channels from BufrDataMap
+        auto& startChanObj = map.at(getExportKey(ConfKeys::StartChannel));
+        std::vector<float> begChannel(startChanObj->size());
+        size_t nbands = (startChanObj->getDims())[1];
 
-        // Get end channels from BufrDataMap: nlocs * nbands
-        auto& refObj2 = map.at(getExportKey(ConfKeys::EndChannel));
-        std::vector<float> endChannel(refObj2->size()); 
+        // Get end channels from BufrDataMap
+        auto& endChanObj = map.at(getExportKey(ConfKeys::EndChannel));
+        std::vector<float> endChannel(endChanObj->size());
 
-        // Get scale factors from BufrDataMap: nlocs * bands
-        auto& refObj3 = map.at(getExportKey(ConfKeys::ScaleFactor));
-        std::vector<float> scaleFactor(refObj3->size()); 
+        // Get scale factors from BufrDataMap
+        auto& scaleFactorObj = map.at(getExportKey(ConfKeys::ScaleFactor));
+        std::vector<float> scaleFactor(scaleFactorObj->size());
 
-        // Get sensor channel number from BufrDataMap: nlocs * nbands
-        auto& refObj4 = map.at(getExportKey(ConfKeys::SensorChannelNumber));
-        std::vector<int> Channel(refObj4->size()); 
+        // Get sensor channel number from BufrDataMap
+        auto& sensorChanObj = map.at(getExportKey(ConfKeys::SensorChannelNumber));
+        std::vector<int> Channel(sensorChanObj->size());
 
-        // Get scale factor: nlocs * nbands  
-        for (size_t idx = 0; idx < refObj1->size(); idx++) 
+        // Get scale factor
+        for (size_t idx = 0; idx < startChanObj->size(); idx++)
         {
-            begChannel[idx] = refObj1-> getAsInt(idx);
-            endChannel[idx] = refObj2-> getAsInt(idx);
-            scaleFactor[idx] = refObj3-> getAsInt(idx);
-            scaleFactor[idx] = -(scaleFactor[idx] - 5); 
-            scaleFactor[idx] = pow(10.0, scaleFactor[idx]); 
-        } 
+            begChannel[idx] = startChanObj-> getAsInt(idx);
+            endChannel[idx] = endChanObj-> getAsInt(idx);
+            scaleFactor[idx] = scaleFactorObj-> getAsInt(idx);
+            // convert W/m2 to mW/m2
+            scaleFactor[idx] = -(scaleFactor[idx] - 5.0);
+            scaleFactor[idx] = pow(10.0, scaleFactor[idx]);
+        }
 
-        for (size_t idx = 0; idx < refObj->size(); idx++) 
+        for (size_t idx = 0; idx < radObj->size(); idx++)
         {
-            Channel[idx] = refObj4->getAsInt(idx);
-            size_t iloc = int(idx / nchns);
+            Channel[idx] = sensorChanObj->getAsInt(idx);
+            size_t iloc = static_cast<int>(idx / nchns);
             size_t idx2;
 
-            for (size_t ibnd = 0; ibnd < nbands; ibnd++) 
+            for (size_t ibnd = 0; ibnd < nbands; ibnd++)
             {
-               idx2 = iloc * nbands + ibnd;  
-               if (Channel[idx] >= begChannel[idx2] && Channel[idx] <= endChannel[idx2]) break;  
-            } 
-            if (refObj->getAsFloat(idx) != missingFloat && scaleFactor[idx2] !=missingInt)
-                outData[idx] = refObj->getAsFloat(idx) * scaleFactor[idx2]; 
-        } 
+               idx2 = iloc * nbands + ibnd;
+               if (Channel[idx] >= begChannel[idx2] && Channel[idx] <= endChannel[idx2]) break;
+            }
+            if (radObj->getAsFloat(idx) != missingFloat && scaleFactor[idx2] !=missingInt)
+                outData[idx] = radObj->getAsFloat(idx) * scaleFactor[idx2];
+        }
 
         return std::make_shared<DataObject<float>>(outData,
                                                    getExportName(),
                                                    groupByField_,
-                                                   refObj->getDims(),
-                                                   refObj->getPath(),
-                                                   refObj->getDimPaths());
+                                                   radObj->getDims(),
+                                                   radObj->getPath(),
+                                                   radObj->getDimPaths());
     }
 
     void SpectralRadianceVariable::checkKeys(const BufrDataMap& map)
