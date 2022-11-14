@@ -71,10 +71,10 @@ obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 1.7, 1.7]
 
 VarDims = {
-    'airTemperature': ['nlocs'],
-    'specificHumidity': ['nlocs'],
-    'windEastward': ['nlocs'],
-    'windNorthward': ['nlocs'],
+    'airTemperature': ['Location'],
+    'specificHumidity': ['Location'],
+    'windEastward': ['Location'],
+    'windNorthward': ['Location'],
 }
 
 metaDataName = iconv.MetaDataName()
@@ -87,7 +87,7 @@ AttrData = {
     'ioda_version': 2,
     'description': 'Aircraft observations converted from BUFR',
     'source': 'LDM at NCAR-RAL',
-    'source_files': ''
+    'sourceFiles': ''
 }
 
 DimDict = {
@@ -134,12 +134,12 @@ def main(file_names, output_file):
 
     for fname in file_names:
         logging.debug("Reading file: " + fname)
-        AttrData['source_files'] += ", " + fname
+        AttrData['sourceFiles'] += ", " + fname
 
         data, count, start_pos = read_file(fname, count, start_pos, data)
 
-    AttrData['source_files'] = AttrData['source_files'][2:]
-    logging.debug("All source files: " + AttrData['source_files'])
+    AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
+    logging.debug("All source files: " + AttrData['sourceFiles'])
 
     if not data:
         logging.critical("ABORT: no message data was captured, stopping execution.")
@@ -147,8 +147,7 @@ def main(file_names, output_file):
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = len(data['dateTime'])
-    DimDict = {'nlocs': nlocs}
-    AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict = {'Location': nlocs}
 
     # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):

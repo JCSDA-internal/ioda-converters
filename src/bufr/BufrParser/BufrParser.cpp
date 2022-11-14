@@ -7,121 +7,125 @@
 
 #include "BufrParser.h"
 
-#include <map>
 #include <ostream>
 #include <iostream>
+#include <chrono>  // NOLINT
 
 #include "eckit/exception/Exceptions.h"
+#include "oops/util/Logger.h"
 
-#if __has_include("bufr_interface.h")  // TODO(rmclaren): Remove this in future
-    #include "bufr_interface.h"
-#else
-    #include "bufr.interface.h"
-#endif
-
-#include "BufrParser/BufrCollectors/BufrCollectors.h"
-#include "BufrMnemonicSet.h"
 #include "DataContainer.h"
+#include "DataObject.h"
 #include "Exports/Export.h"
 #include "Exports/Splits/Split.h"
 
+#include "Query/QuerySet.h"
 
-namespace Ingester
-{
+
+namespace Ingester {
     BufrParser::BufrParser(const BufrDescription &description) :
-        description_(description),
-        fortranFileId_(0),
-        table1FileId_(0),
-        table2FileId_(0)
+            description_(description),
+            file_(bufr::File(description_.filepath(),
+                             description_.isWmoFormat(),
+                             description_.tablepath()))
     {
-        reset();
     }
 
-    BufrParser::BufrParser(const eckit::Configuration& conf) :
-        description_(BufrDescription(conf)),
-        fortranFileId_(0),
-        table1FileId_(0),
-        table2FileId_(0)
+    BufrParser::BufrParser(const eckit::Configuration &conf) :
+            description_(BufrDescription(conf)),
+            file_(bufr::File(description_.filepath(),
+                             description_.isWmoFormat(),
+                             description_.tablepath()))
     {
-        reset();
     }
 
     BufrParser::~BufrParser()
     {
-        closeBufrFile();
+        file_.close();
     }
 
-    std::shared_ptr <DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
+    std::shared_ptr<DataContainer> BufrParser::parse(const size_t maxMsgsToParse)
     {
-        const unsigned int SubsetStringLength = 25;
+        auto startTime = std::chrono::steady_clock::now();
 
-        if (fortranFileId_ <= 10)
+        auto querySet = bufr::QuerySet(description_.getExport().getSubsets());
+
+        for (const auto &var : description_.getExport().getVariables())
         {
-            throw eckit::BadValue("Fortran File ID is an invalid number (must be > 10).");
-        }
-
-        auto collectors = BufrCollectors(fortranFileId_);
-        collectors.addMnemonicSets(description_.getMnemonicSets());
-
-        char subset[SubsetStringLength];
-        int iddate;
-
-        unsigned int messageNum = 0;
-        while (ireadmg_f(fortranFileId_, subset, &iddate, SubsetStringLength) == 0)
-        {
-            while (ireadsb_f(fortranFileId_) == 0)
+            for (const auto &queryPair : var->getQueryList())
             {
-                collectors.collect();
+                querySet.add(queryPair.name, queryPair.query);
             }
-
-            if (maxMsgsToParse > 0 && ++messageNum >= maxMsgsToParse) break;
         }
 
-        return exportData(collectors.finalize());
+        oops::Log::info() << "Executing Queries" << std::endl;
+        const auto resultSet = file_.execute(querySet, maxMsgsToParse);
+
+        oops::Log::info() << "Building Bufr Data" << std::endl;
+        auto srcData = BufrDataMap();
+        for (const auto& var : description_.getExport().getVariables())
+        {
+            for (const auto& queryInfo : var->getQueryList())
+            {
+                srcData[queryInfo.name] = resultSet.get(
+                    queryInfo.name, queryInfo.groupByField, queryInfo.type);
+            }
+        }
+
+        oops::Log::info()  << "Exporting Data" << std::endl;
+        auto exportedData = exportData(srcData);
+
+        auto timeElapsed = std::chrono::steady_clock::now() - startTime;
+        auto timeElapsedDuration = std::chrono::duration_cast<std::chrono::milliseconds>
+                (timeElapsed);
+        oops::Log::info()  << "Finished "
+                           << "[" << timeElapsedDuration.count() / 1000.0 << "s]"
+                           << std::endl;
+
+        return exportedData;
     }
 
-    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap& srcData)
-    {
+    std::shared_ptr<DataContainer> BufrParser::exportData(const BufrDataMap &srcData) {
         auto exportDescription = description_.getExport();
 
         auto filters = exportDescription.getFilters();
-        auto splitMap = exportDescription.getSplits();
-        auto varMap = exportDescription.getVariables();
+        auto splits = exportDescription.getSplits();
+        auto vars = exportDescription.getVariables();
 
         // Filter
         BufrDataMap dataCopy = srcData;  // make mutable copy
-        for (const auto& filter : filters)
+        for (const auto &filter : filters)
         {
             filter->apply(dataCopy);
         }
 
         // Split
         CategoryMap catMap;
-        for (const auto& splitPair : splitMap)
+        for (const auto &split : splits)
         {
             std::ostringstream catName;
-            catName << "splits/" << splitPair.first;
-            catMap.insert({catName.str(), splitPair.second->subCategories(dataCopy)});
+            catName << "splits/" << split->getName();
+            catMap.insert({catName.str(), split->subCategories(dataCopy)});
         }
 
         BufrParser::CatDataMap splitDataMaps;
         splitDataMaps.insert({std::vector<std::string>(), dataCopy});
-        for (const auto& splitPair : splitMap)
+        for (const auto &split : splits)
         {
-            splitDataMaps = splitData(splitDataMaps, *splitPair.second);
+            splitDataMaps = splitData(splitDataMaps, *split);
         }
 
         // Export
-        auto exportData = std::make_shared<DataContainer>(catMap);
-        for (const auto& dataPair : splitDataMaps)
+        auto exportData = std::make_shared<Ingester::DataContainer>(catMap);
+        for (const auto &dataPair : splitDataMaps)
         {
-            for (const auto& varPair : varMap)
+            for (const auto &var : vars)
             {
                 std::ostringstream pathStr;
-                pathStr << "variables/" << varPair.first;
+                pathStr << "variables/" << var->getExportName();
 
                 exportData->add(pathStr.str(),
-                                varPair.second->exportData(dataPair.second),
+                                var->exportData(dataPair.second),
                                 dataPair.first);
             }
         }
@@ -129,15 +133,15 @@ namespace Ingester
         return exportData;
     }
 
-    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap& splitMaps, Split& split)
+    BufrParser::CatDataMap BufrParser::splitData(BufrParser::CatDataMap &splitMaps, Split &split)
     {
         CatDataMap splitDataMap;
 
-        for (const auto& splitMapPair : splitMaps)
+        for (const auto &splitMapPair : splitMaps)
         {
             auto newData = split.split(splitMapPair.second);
 
-            for (const auto& newDataPair : newData)
+            for (const auto &newDataPair : newData)
             {
                 auto catVect = splitMapPair.first;
                 catVect.push_back(newDataPair.first);
@@ -148,52 +152,12 @@ namespace Ingester
         return splitDataMap;
     }
 
-    void BufrParser::openBufrFile(const std::string& filepath,
-                                  bool isWmoFormat,
-                                  const std::string& tablepath)
-    {
-        fortranFileId_ = 11;  // Fortran file id must be a integer > 10
-        open_f(fortranFileId_, filepath.c_str());
-
-        if (!isWmoFormat)
-        {
-            openbf_f(fortranFileId_, "IN", fortranFileId_);
-        }
-        else
-        {
-            openbf_f(fortranFileId_, "SEC3", fortranFileId_);
-
-            if (!tablepath.empty())  // else use the default tables
-            {
-                table1FileId_ = fortranFileId_ + 1;
-                table2FileId_ = fortranFileId_ + 2;
-                mtinfo_f(tablepath.c_str(), table1FileId_, table2FileId_);
-            }
-        }
-    }
-
-    void BufrParser::closeBufrFile()
-    {
-        exitbufr_f();
-
-        fortranFileId_ = 0;
-        table1FileId_ = 0;
-        table2FileId_ = 0;
-    }
-
     void BufrParser::reset()
     {
-        if (fortranFileId_ != 0)
-        {
-            closeBufrFile();
-        }
-
-        openBufrFile(description_.filepath(),
-                     description_.isWmoFormat(),
-                     description_.tablepath());
+        file_.rewind();
     }
 
-    void BufrParser::printMap(const BufrParser::CatDataMap& map)
+    void BufrParser::printMap(const BufrParser::CatDataMap &map)
     {
         for (const auto &mp : map)
         {
@@ -206,7 +170,7 @@ namespace Ingester
             std::cout << " subkeys: ";
             for (const auto &m2p : mp.second)
             {
-                std::cout << m2p.first << " " << m2p.second.rows() << " ";
+                std::cout << m2p.first << " " << m2p.second->getDims()[0] << " ";
             }
 
             std::cout << std::endl;

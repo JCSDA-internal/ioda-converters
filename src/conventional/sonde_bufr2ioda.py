@@ -32,7 +32,7 @@ locationKeyList = [
     ("longitude", "float", "degrees_east", "keep"),
     ("stationElevation", "float", "m", "keep"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-    ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
+    ("launchTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
     ("pressure", "float", "Pa", "keep"),
     ("geopotentialHeight", "float", "m", "keep"),
     ("vertSignificance", "integer", "", "toss"),
@@ -41,7 +41,12 @@ locationKeyList = [
     ("timeDisplacement", "float", "s", "toss"),
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
-    ("stationWMO", "string", "", "keep"),
+    ("stationIdentification", "string", "", "keep"),
+    ("instrumentType", "integer", "", "keep"),
+    ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
+    ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
+    ("temperatureSensorType", "integer", "", "keep"),
+    ("humiditySensorType", "integer", "", "keep"),
     ("year", "integer", "", "toss"),
     ("month", "integer", "", "toss"),
     ("day", "integer", "", "toss"),
@@ -57,7 +62,7 @@ metaDataKeyList = {
     'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
                          'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
-    'releaseTime': ['Constructed'],
+    'launchTime': ['Constructed'],
     'pressure': ['pressure', 'nonCoordinatePressure'],
     'geopotentialHeight': ['nonCoordinateGeopotentialHeight', 'geopotentialHeight'],
     'vertSignificance': ['extendedVerticalSoundingSignificance', 'verticalSoundingSignificance'],
@@ -66,13 +71,15 @@ metaDataKeyList = {
     'timeDisplacement': ['timePeriod'],
     'wmoBlockNumber': ['blockNumber'],
     'wmoStationNumber': ['stationNumber'],
-    'stationWMO': ['Constructed'],
+    'stationIdentification': ['Constructed'],
     # "stationLongName": 'shipOrMobileLandStationIdentifier',
-    # "instrumentType": 'radiosondeType',
+    "instrumentType": ['radiosondeType'],
+    "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
+    "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
+    "temperatureSensorType": ['temperatureSensorType'],
+    "humiditySensorType": ['humiditySensorType'],
     # "instrumentSerialNum": 'radiosondeSerialNumber',
     # "instrumentSoftwareVersion": 'softwareVersionNumber',
-    # "instrumentHumidityCorrectionInfo": 'correctionAlgorithmsForHumidityMeasurements',
-    # "instrumentRadiationCorrectionInfo": 'solarAndInfraredRadiationCorrection',
     'year': ['year'],
     'month': ['month'],
     'day': ['day'],
@@ -85,12 +92,13 @@ metaDataKeyList = {
 raw_obsvars = ['airTemperature', 'dewpointTemperature', 'windDirection', 'windSpeed']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['airTemperature', 'specificHumidity', 'windEastward', 'windNorthward']
-obsvars_units = ['K', 'kg kg-1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 0.75E-3, 1.7, 1.7]
+obsvars = ['airTemperature', 'virtualTemperature', 'specificHumidity', 'windEastward', 'windNorthward']
+obsvars_units = ['K', 'K', 'kg kg-1', 'm s-1', 'm s-1']
+obserrlist = [1.2, 1.2, 0.75E-3, 1.7, 1.7]
 
 VarDims = {
     'airTemperature': ['Location'],
+    'virtualTemperature': ['Location'],
     'specificHumidity': ['Location'],
     'windEastward': ['Location'],
     'windNorthward': ['Location']
@@ -436,6 +444,11 @@ def read_bufr_message(f, count, start_pos, data):
     # have to do things differently.
     compressed = ecc.codes_get(bufr, 'compressedData')
 
+    # Unfortunately, there is absolutely no way to handle compressed data with number of subsets>1
+    if compressed and nsubsets > 1:
+        logging.warning(f"CANNOT handle compressed data, skipping ({msg_size} bytes)")
+        return data, count, start_pos
+
     '''
         This will print absolutely every BUFR key in the message.
             print(" ")
@@ -577,7 +590,7 @@ def read_bufr_message(f, count, start_pos, data):
             elif temp_data['latDisplacement'] is not None:
                 target_number = len(temp_data['latDisplacement'])
             elif temp_data['pressure'] is not None:
-                target_number = len(temp_data['pressure'])
+                target_number = len(temp_data['air_pressure'])
             elif temp_data['airTemperature'] is not None:
                 target_number = len(temp_data['airTemperature'])
             elif temp_data['windSpeed'] is not None:
@@ -613,13 +626,13 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
-            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['launchTime'] = np.full(target_number, meta_data['dateTime'][0])
         else:
             meta_data['dateTime'][0] = specialty_time([0],
                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
-            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['launchTime'] = np.full(target_number, meta_data['dateTime'][0])
 
         # Sondes also have lat/lon displacement from launch/release location.
         if temp_data['latDisplacement'] is not None and temp_data['lonDisplacement'] is not None:
@@ -650,15 +663,15 @@ def read_bufr_message(f, count, start_pos, data):
             if (lat < -90 or lat > 90):
                 meta_data['latitude'][n] = meta_data['latitude'][n-1]
 
-        # Forcably create station_id 5-char string from WMO block+station number.
-        meta_data['stationWMO'] = np.full(target_number, string_missing_value, dtype='<S5')
+        # Forcably create stationIdentification 5-char string from WMO block+station number.
+        meta_data['stationIdentification'] = np.full(target_number, string_missing_value, dtype='<S5')
         for n, block in enumerate(meta_data['wmoBlockNumber']):
             number = meta_data['wmoStationNumber'][n]
             if (block > 0 and block < 100 and number > 0 and number < 1000):
-                meta_data['stationWMO'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+                meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
             if n == 0:
                 count[3] += 1
-                logging.info(f"Processing sonde for station: {meta_data['stationWMO'][n]}")
+                logging.info(f"Processing sonde for station: {meta_data['stationIdentification'][n]}")
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
         if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
@@ -721,11 +734,19 @@ def read_bufr_message(f, count, start_pos, data):
                 if (temp > 50 and temp < 345):
                     airt[n] = temp
 
+        tvirt = np.full(target_number, float_missing_value)
+        for n, temp in enumerate(airt):
+            pres = meta_data['pressure'][n]
+            if (temp != float_missing_value and spfh[n] and pres < 108000 and pres > 10000):
+                qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
+                tvirt[n] = temp*(1.0 + 0.61*qvapor)
+
         # Finally fill up the output data dictionary with observed variables.
         data['windEastward'] = np.append(data['windEastward'], uwnd)
         data['windNorthward'] = np.append(data['windNorthward'], vwnd)
         data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
         data['airTemperature'] = np.append(data['airTemperature'], airt)
+        data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
 
         obnum += 1
 

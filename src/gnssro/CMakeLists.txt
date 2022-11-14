@@ -5,7 +5,7 @@
          
 ecbuild_add_executable( TARGET  gnssro_bufr2ioda
                         SOURCES gnssro_bufr2ioda.f90
-                        LIBS    bufr::bufr_4
+                        LIBS    bufr::bufr_d
                                 NetCDF::NetCDF_Fortran)
 
 ecbuild_add_executable( TARGET  gnssro_gsidiag2ioda
