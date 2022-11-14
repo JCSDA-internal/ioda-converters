@@ -148,7 +148,6 @@ def main(file_names, output_file):
 
     nlocs = len(data['dateTime'])
     DimDict = {'Location': nlocs}
-    AttrData['Location'] = np.int32(DimDict['Location'])
 
     # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):
