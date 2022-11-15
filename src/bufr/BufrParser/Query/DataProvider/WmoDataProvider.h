@@ -51,35 +51,34 @@ namespace bufr {
         void open() final;
 
         /// \brief Given the initial BUFR table node idx (see getInode), this function returns
-        ///        the node idx for the last BUFR table element for the subset. Valid after
-        ///        updateTableData is called for a new subset message.
+        ///        the node idx for the last BUFR table element for the subset. Valid while
+        ///        executing "run".
         /// \param idx BUFR table node index
         inline FortranIdx getIsc(FortranIdx idx) const { return currentTableData_->isc[idx - 1]; }
 
         /// \brief Given a BUFR table node index, this function returns the next logical node in the
-        ///        tree... Valid after updateTableData is called for a new subset message.
+        ///        tree... Valid while executing "run".
         /// \param idx BUFR table node index
         inline FortranIdx getLink(FortranIdx idx) const { return currentTableData_->link[idx - 1]; }
 
         /// \brief Given a BUFR table node index, this function can give you some type information
-        ///        for example a value of 3 is used for strings. Valid after updateTableData is
-        ///        called for a new subset message.
+        ///        for example a value of 3 is used for strings. Valid while executing "run".
         /// \param idx BUFR table node index
         inline FortranIdx getItp(FortranIdx idx) const { return currentTableData_->itp[idx - 1]; }
 
         /// \brief Given a BUFR table node index, gives you the node idx for the node that is the
         ///        the next one up in the hierarchy. WARNING: will return 0 for any node at the end
-        ///        of any sequence. Valid after updateTableData is called for a new subset message.
+        ///        of any sequence. Valid while executing "run".
         /// \param idx BUFR table node index
         inline FortranIdx getJmpb(FortranIdx idx) const { return currentTableData_->jmpb[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the type (see the Typ enum and maps above)
-        ///        Valid after updateTableData is called for a new subset message.
+        ///        Valid while executing "run".
         /// \param idx BUFR table node index
         inline Typ getTyp(FortranIdx idx) const { return currentTableData_->typ[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the tag (name as a human readable string)
-        ///        Valid after updateTableData is called for a new subset message.
+        ///        Valid while executing "run".
         /// \param idx BUFR table node index
         inline std::string getTag(FortranIdx idx) const { return currentTableData_->tag[idx - 1]; }
 
