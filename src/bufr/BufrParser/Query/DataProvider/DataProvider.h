@@ -96,7 +96,7 @@ namespace bufr {
     class DataProvider;
     typedef std::shared_ptr<DataProvider> DataProviderType;
 
-    /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.
+    /// \brief Responsible for exposing the data found in a BUFR file.
     class DataProvider
     {
      public:

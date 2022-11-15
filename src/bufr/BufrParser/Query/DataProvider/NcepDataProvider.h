@@ -19,37 +19,44 @@ namespace bufr {
     class NcepDataProvider : public DataProvider
     {
      public:
+        /// \brief This data provider is used to read standard NCEP files. The complete listing
+        ///        of subset table data can be found in the first message of the file, so we only
+        ///        need to store this data one time.
         explicit NcepDataProvider(const std::string& filePath_);
 
         /// \brief Open the BUFR file with NCEPLIB-bufr
         void open() final;
 
         /// \brief Given the initial BUFR table node idx (see getInode), this function returns
-        ///        the node idx for the last BUFR table element for the subset.
+        ///        the node idx for the last BUFR table element for the subset. Valid after the
+        ///        first call to updateTableData.
         /// \param idx BUFR table node index
         inline FortranIdx getIsc(FortranIdx idx) const { return isc_[idx - 1]; }
 
         /// \brief Given a BUFR table node index, this function returns the next logical node in the
-        ///        tree...
+        ///        tree... Valid after the first call to updateTableData.
         /// \param idx BUFR table node index
         inline FortranIdx getLink(FortranIdx idx) const { return link_[idx - 1]; }
 
         /// \brief Given a BUFR table node index, this function can give you some type information
-        ///        for example a value of 3 is used for strings.
+        ///        for example a value of 3 is used for strings. Valid after the first call to
+        ///        updateTableData.
         /// \param idx BUFR table node index
         inline FortranIdx getItp(FortranIdx idx) const { return itp_[idx - 1]; }
 
         /// \brief Given a BUFR table node index, gives you the node idx for the node that is the
         ///        the next one up in the hierarchy. WARNING: will return 0 for any node at the end
-        ///        of any sequence.
+        ///        of any sequence. Valid after the first call to updateTableData.
         /// \param idx BUFR table node index
         inline FortranIdx getJmpb(FortranIdx idx) const { return jmpb_[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the type (see the Typ enum and maps above)
+        ///        Valid after the first call to updateTableData.
         /// \param idx BUFR table node index
         inline Typ getTyp(FortranIdx idx) const { return typ_[idx - 1]; }
 
-        /// \breif Given a BUFR table node index, returns the tag (name as a human readable string)
+        /// \breif Given a BUFR table node index, returns the tag (name as a human readable string).
+        ///        Valid after the first call to updateTableData.
         /// \param idx BUFR table node index
         inline std::string getTag(FortranIdx idx) const { return tag_[idx - 1]; }
 

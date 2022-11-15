@@ -36,37 +36,50 @@ namespace bufr {
     class WmoDataProvider : public DataProvider
     {
      public:
+        /// \brief This data provider is used to read standard WMO BUFR files. These BUFR files
+        ///        work a bit different from NCEP BUFR files in that there is no master table for
+        ///        all the subset tables. Each subset message has a separate copy of its table.
+        ///        Whats worse is that the subset identifiers indicated in the message do not
+        ///        uniquely identify the data structure of the subsets data. So message subsets
+        ///        with the same subset string can have different data structures associated with
+        ///        them (they can have different variants). To accommodate this in a way that
+        ///        maximizes performance means we need to implement a more elaborate caching scheme
+        ///        to store the subset table data.
         WmoDataProvider(const std::string& filePath_,
                         const std::string& tableFilePath_);
 
         void open() final;
 
         /// \brief Given the initial BUFR table node idx (see getInode), this function returns
-        ///        the node idx for the last BUFR table element for the subset.
+        ///        the node idx for the last BUFR table element for the subset. Valid after
+        ///        updateTableData is called for a new subset message.
         /// \param idx BUFR table node index
         inline FortranIdx getIsc(FortranIdx idx) const { return currentTableData_->isc[idx - 1]; }
 
         /// \brief Given a BUFR table node index, this function returns the next logical node in the
-        ///        tree...
+        ///        tree... Valid after updateTableData is called for a new subset message.
         /// \param idx BUFR table node index
         inline FortranIdx getLink(FortranIdx idx) const { return currentTableData_->link[idx - 1]; }
 
         /// \brief Given a BUFR table node index, this function can give you some type information
-        ///        for example a value of 3 is used for strings.
+        ///        for example a value of 3 is used for strings. Valid after updateTableData is
+        ///        called for a new subset message.
         /// \param idx BUFR table node index
         inline FortranIdx getItp(FortranIdx idx) const { return currentTableData_->itp[idx - 1]; }
 
         /// \brief Given a BUFR table node index, gives you the node idx for the node that is the
         ///        the next one up in the hierarchy. WARNING: will return 0 for any node at the end
-        ///        of any sequence.
+        ///        of any sequence. Valid after updateTableData is called for a new subset message.
         /// \param idx BUFR table node index
         inline FortranIdx getJmpb(FortranIdx idx) const { return currentTableData_->jmpb[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the type (see the Typ enum and maps above)
+        ///        Valid after updateTableData is called for a new subset message.
         /// \param idx BUFR table node index
         inline Typ getTyp(FortranIdx idx) const { return currentTableData_->typ[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the tag (name as a human readable string)
+        ///        Valid after updateTableData is called for a new subset message.
         /// \param idx BUFR table node index
         inline std::string getTag(FortranIdx idx) const { return currentTableData_->tag[idx - 1]; }
 
