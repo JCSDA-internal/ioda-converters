@@ -16,12 +16,13 @@ namespace Ingester {
 namespace bufr {
     class QuerySet;
 
+    /// \brief This data provider is used to read standard NCEP files. The complete listing
+    ///        of subset table data can be found in the first message of the file, so we only
+    ///        need to store this data one time.
     class NcepDataProvider : public DataProvider
     {
      public:
-        /// \brief This data provider is used to read standard NCEP files. The complete listing
-        ///        of subset table data can be found in the first message of the file, so we only
-        ///        need to store this data one time.
+
         explicit NcepDataProvider(const std::string& filePath_);
 
         /// \brief Open the BUFR file with NCEPLIB-bufr
