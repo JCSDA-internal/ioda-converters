@@ -39,7 +39,7 @@ VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string"),
+    ("dateTime", "long"),
 ]
 
 
@@ -92,6 +92,7 @@ def read_input(input_args):
     time = (np.repeat(sla.variables['msec'][:].ravel(),
             pixels_per_line).ravel() - sla.variables['msec'][0])/1000.0
     data_in['time'] = time[mask]
+    time_units = basetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # load in all the other data and apply the missing value mask
     input_vars = ('poc', 'chlor_a')
@@ -116,8 +117,7 @@ def read_input(input_args):
     # create a string version of the date for each observation
     dates = []
     for i in range(len(lons)):
-        obs_date = basetime + timedelta(seconds=float(data_in['time'][i]))
-        dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        dates.append(np.int64(data_in['time'][i]))
 
     # allocate space for output depending on which variables are to be saved
     obs_dim = (len(lons))
@@ -138,7 +138,7 @@ def read_input(input_args):
             np.zeros(obs_dim)
 
     # Add the metadata
-    obs_data[('dateTime', 'MetaData')] = np.empty(len(dates), dtype=object)
+    obs_data[('dateTime', 'MetaData')] = np.empty(len(dates), dtype=np.int64)
     obs_data[('dateTime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
@@ -158,7 +158,7 @@ def read_input(input_args):
         obs_data[output_var_names[1], global_config['opqc_name']] = \
             data_in['l2_flags']
 
-    return (obs_data, GlobalAttrs)
+    return (obs_data, GlobalAttrs, time_units)
 
 
 def main():
@@ -236,7 +236,7 @@ def main():
     obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, GlobalAttrs = obs[0]
+    obs_data, GlobalAttrs, time_units = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
     # Get the Location
@@ -248,6 +248,10 @@ def main():
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
     DimDict['Location'] = Location
+
+    VarAttrs[('dateTime', 'MetaData')]['units'] = time_units
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
 
     # determine which variables we are going to output
     if args.poc:
