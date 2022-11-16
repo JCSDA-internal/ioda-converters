@@ -20,19 +20,6 @@
 namespace Ingester {
 namespace bufr {
 
-    struct TableData
-    {
-        // Table data;
-        std::string subset;
-        std::vector<int> isc;
-        std::vector<int> link;
-        std::vector<int> itp;
-        std::vector<int> jmpb;
-        std::vector<Typ> typ;
-        std::vector<std::string> tag;
-        int varientNumber;
-    };
-
     /// \brief This data provider is used to read standard WMO BUFR files. These BUFR files
     ///        work a bit different from NCEP BUFR files in that there is no master table for
     ///        all the subset tables. Each subset message has a separate copy of its table.
@@ -49,38 +36,6 @@ namespace bufr {
                         const std::string& tableFilePath_);
 
         void open() final;
-
-        /// \brief Given the initial BUFR table node idx (see getInode), this function returns
-        ///        the node idx for the last BUFR table element for the subset. Valid while
-        ///        executing "run".
-        /// \param idx BUFR table node index
-        inline FortranIdx getIsc(FortranIdx idx) const { return currentTableData_->isc[idx - 1]; }
-
-        /// \brief Given a BUFR table node index, this function returns the next logical node in the
-        ///        tree... Valid while executing "run".
-        /// \param idx BUFR table node index
-        inline FortranIdx getLink(FortranIdx idx) const { return currentTableData_->link[idx - 1]; }
-
-        /// \brief Given a BUFR table node index, this function can give you some type information
-        ///        for example a value of 3 is used for strings. Valid while executing "run".
-        /// \param idx BUFR table node index
-        inline FortranIdx getItp(FortranIdx idx) const { return currentTableData_->itp[idx - 1]; }
-
-        /// \brief Given a BUFR table node index, gives you the node idx for the node that is the
-        ///        the next one up in the hierarchy. WARNING: will return 0 for any node at the end
-        ///        of any sequence. Valid while executing "run".
-        /// \param idx BUFR table node index
-        inline FortranIdx getJmpb(FortranIdx idx) const { return currentTableData_->jmpb[idx - 1]; }
-
-        /// \breif Given a BUFR table node index, returns the type (see the Typ enum and maps above)
-        ///        Valid while executing "run".
-        /// \param idx BUFR table node index
-        inline Typ getTyp(FortranIdx idx) const { return currentTableData_->typ[idx - 1]; }
-
-        /// \breif Given a BUFR table node index, returns the tag (name as a human readable string)
-        ///        Valid while executing "run".
-        /// \param idx BUFR table node index
-        inline std::string getTag(FortranIdx idx) const { return currentTableData_->tag[idx - 1]; }
 
         /// \brief Gets the variant number for the currently loaded subset.
         size_t variantId() const final;
@@ -112,6 +67,9 @@ namespace bufr {
 
         /// \brief Deletes the currently loaded data that is stored in the NCEPbufr-lib library.
         void _deleteData() final;
+
+        /// \brief Get the currently valid subset table data
+        inline std::shared_ptr<TableData> getTableData() const final { return currentTableData_; };
     };
 
 }  // namespace bufr

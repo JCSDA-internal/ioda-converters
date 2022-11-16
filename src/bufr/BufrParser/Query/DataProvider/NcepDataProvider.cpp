@@ -34,35 +34,37 @@ namespace bufr {
         int strLen = 0;
         char *charPtr = nullptr;
 
-        if (isc_.empty())
+        if (currentTableData_ == nullptr)
         {
+            currentTableData_ = std::make_shared<TableData>();
+
             get_isc_f(&intPtr, &size);
-            isc_ = gsl::span<const int>(intPtr, size);
+            currentTableData_->isc = std::vector<int>(intPtr, intPtr + size);
 
             get_link_f(&intPtr, &size);
-            link_ = gsl::span<const int>(intPtr, size);
+            currentTableData_->link = std::vector<int>(intPtr, intPtr + size);
 
             get_itp_f(&intPtr, &size);
-            itp_ = gsl::span<const int>(intPtr, size);
+            currentTableData_->itp = std::vector<int>(intPtr, intPtr + size);
 
             get_typ_f(&charPtr, &strLen, &size);
-            typ_.resize(size);
+            currentTableData_->typ.resize(size);
             for (int wordIdx = 0; wordIdx < size; wordIdx++)
             {
                 auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
-                typ_[wordIdx] = TypMap.at(typ);
+                currentTableData_->typ[wordIdx] = TypMap.at(typ);
             }
 
             get_tag_f(&charPtr, &strLen, &size);
-            tag_.resize(size);
+            currentTableData_->tag.resize(size);
             for (int wordIdx = 0; wordIdx < size; wordIdx++)
             {
                 auto tag = std::string(&charPtr[wordIdx * strLen], strLen);
-                tag_[wordIdx] = tag.substr(0, tag.find_first_of(' '));
+                currentTableData_->tag[wordIdx] = tag.substr(0, tag.find_first_of(' '));
             }
 
             get_jmpb_f(&intPtr, &size);
-            jmpb_ = gsl::span<const int>(intPtr, size);
+            currentTableData_->jmpb = std::vector<int>(intPtr, intPtr + size);
         }
     }
 
@@ -78,10 +80,7 @@ namespace bufr {
 
     void NcepDataProvider::_deleteData()
     {
-        isc_ = gsl::span<const int>(nullptr, 0);
-        link_ = gsl::span<const int>(nullptr, 0);
-        itp_ = gsl::span<const int>(nullptr, 0);
-        jmpb_ = gsl::span<const int>(nullptr, 0);
+        currentTableData_ = nullptr;
     }
 }  // namespace bufr
 }  // namespace Ingester
