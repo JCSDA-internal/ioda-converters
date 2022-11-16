@@ -35,6 +35,7 @@ namespace bufr {
         WmoDataProvider(const std::string& filePath_,
                         const std::string& tableFilePath_);
 
+        /// \brief Open the BUFR file with NCEPLIB-bufr
         void open() final;
 
         /// \brief Gets the variant number for the currently loaded subset.
@@ -48,17 +49,12 @@ namespace bufr {
         void initAllTableData() final;
 
      private:
-        typedef std::pair<std::string, size_t> Variant;
-
         static const int FileUnitTable1 = 13;
         static const int FileUnitTable2 = 14;
 
         const std::string tableFilePath_;
         std::unordered_map<std::string, std::shared_ptr<TableData>> tableCache_;
         std::shared_ptr<TableData> currentTableData_ = nullptr;
-
-        std::vector<Variant> variants_;
-        std::set<Variant> existingVariants;
         std::unordered_map<std::string, size_t> variantCount_;
 
         /// \brief Update the table data for the currently loaded subset.
@@ -71,6 +67,5 @@ namespace bufr {
         /// \brief Get the currently valid subset table data
         inline std::shared_ptr<TableData> getTableData() const final { return currentTableData_; };
     };
-
 }  // namespace bufr
 }  // namespace Ingester
