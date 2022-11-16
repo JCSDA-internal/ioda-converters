@@ -130,10 +130,5 @@ namespace bufr {
             close();
         }
     }
-
-    void WmoDataProvider::_deleteData()
-    {
-        currentTableData_ = nullptr;
-    }
 }  // namespace bufr
 }  // namespace Ingester

@@ -157,7 +157,7 @@ namespace bufr {
 
         /// \brief Tells the Fortran BUFR interface to delete its temporary data structures that are
         /// are needed to support this class instanc.
-        void deleteData();
+        inline void deleteData() { delete_table_data_f(); }
 
         /// \brief Get the current active suibset variant.
         SubsetVariant getSubsetVariant() const { return {subset_, variantId(), hasVariants()}; }
@@ -253,9 +253,6 @@ namespace bufr {
         void updateData(int bufrLoc);
 
      private:
-        /// \brief Deletes the currently loaded data that is stored in the NCEPbufr-lib library.
-        virtual void _deleteData() = 0;
-
         /// \brief Get the currently valid subset table data
         virtual std::shared_ptr<TableData> getTableData() const = 0;
     };

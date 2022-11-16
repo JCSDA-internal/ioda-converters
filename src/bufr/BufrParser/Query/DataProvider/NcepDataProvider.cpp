@@ -77,10 +77,5 @@ namespace bufr {
     {
         return false;
     }
-
-    void NcepDataProvider::_deleteData()
-    {
-        currentTableData_ = nullptr;
-    }
 }  // namespace bufr
 }  // namespace Ingester

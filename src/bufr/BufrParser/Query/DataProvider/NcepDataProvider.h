@@ -42,9 +42,6 @@ namespace bufr {
         /// \param subset The subset string.
         void updateTableData(const std::string& subset) final;
 
-        /// \brief Deletes the currently loaded data that is stored in the NCEPbufr-lib library.
-        void _deleteData() final;
-
         /// \brief Get the currently valid subset table data
         inline std::shared_ptr<TableData> getTableData() const final { return currentTableData_; }
     };

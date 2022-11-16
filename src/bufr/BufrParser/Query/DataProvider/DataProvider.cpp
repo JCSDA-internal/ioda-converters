@@ -79,12 +79,6 @@ namespace bufr {
         inv_ = gsl::span<const int>(intPtr, size);
     }
 
-    void DataProvider::deleteData()
-    {
-        delete_table_data_f();
-        _deleteData();
-    }
-
     TypeInfo DataProvider::getTypeInfo(FortranIdx idx) const
     {
         static const unsigned int UNIT_STR_LEN = 24;
