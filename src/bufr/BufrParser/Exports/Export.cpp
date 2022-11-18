@@ -16,10 +16,8 @@
 #include "Splits/CategorySplit.h"
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
-#include "Variables/Transforms/TransformBuilder.h"
+#include "Variables/TimeoffsetVariable.h"
 #include "ObjectFactory.h"
-
-#include "debug.h"
 
 
 namespace
@@ -35,6 +33,7 @@ namespace
         namespace Variable
         {
             const char* Datetime = "datetime";
+            const char* Timeoffset = "timeoffset";
             const char* Query = "query";
         }  // namespace Variable
 
@@ -116,6 +115,7 @@ namespace Ingester
         VariableFactory variableFactory;
         variableFactory.registerObject<QueryVariable>(ConfKeys::Variable::Query);
         variableFactory.registerObject<DatetimeVariable>(ConfKeys::Variable::Datetime);
+        variableFactory.registerObject<TimeoffsetVariable>(ConfKeys::Variable::Timeoffset);
 
         if (conf.keys().size() == 0)
         {
