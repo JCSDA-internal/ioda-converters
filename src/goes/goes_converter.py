@@ -17,15 +17,15 @@
 # /MetaData/dateTime
 # /MetaData/latitude -> units
 # /MetaData/longitude -> units
-# /MetaData/elevation_angle -> units
-# /MetaData/scan_angle -> units
-# /MetaData/scan_position
-# /MetaData/sensor_azimuth_angle -> units
-# /MetaData/sensor_view_angle -> units
-# /MetaData/sensor_zenith_angle -> units
-# /MetaData/solar_azimuth_angle -> units
-# /MetaData/solar_zenith_angle -> units
-# /MetaData/sensor_channel
+# /MetaData/sensorElevationAngle -> units
+# /MetaData/sensorScanAngle -> units
+# /MetaData/sensorScanPosition
+# /MetaData/sensorAzimuthAngle -> units
+# /MetaData/sensorViewAngle -> units
+# /MetaData/sensorZenithAngle -> units
+# /MetaData/solarAzimuthAngle -> units
+# /MetaData/solarZenithAngle -> units
+# /MetaData/sensorChannelNumber
 # /ObsError/albedo or /ObsError/brightnessTemperature
 # /ObsValue/albedo or /ObsValue/brightnessTemperature
 # /ObsError/brightnessTemperature -> units
@@ -177,66 +177,66 @@ class GoesConverter:
 
     def _create_metadata_scan_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/scan_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorScanAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        scan_angle_data_array = self._latlon_dataset['MetaData'].variables['scan_angle'][:].real
-        output_dataset.createVariable('/MetaData/scan_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/scan_angle'][:] = scan_angle_data_array
-        output_dataset['/MetaData/scan_angle'].setncattr('units', 'degrees')
+        scan_angle_data_array = self._latlon_dataset['MetaData'].variables['sensorScanAngle'][:].real
+        output_dataset.createVariable('/MetaData/sensorScanAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/sensorScanAngle'][:] = scan_angle_data_array
+        output_dataset['/MetaData/sensorScanAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_elevation_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/elevation_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorElevationAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['elevation_angle'][:].real
-        output_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/elevation_angle'][:] = elevation_angle_data_array
-        output_dataset['/MetaData/elevation_angle'].setncattr('units', 'degrees')
+        elevation_angle_data_array = self._latlon_dataset['MetaData'].variables['sensorElevationAngle'][:].real
+        output_dataset.createVariable('/MetaData/sensorElevationAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/sensorElevationAngle'][:] = elevation_angle_data_array
+        output_dataset['/MetaData/sensorElevationAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_scan_position_variable(self, output_dataset):
         """
-        Creates the /MetaData/scan_position variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorScanPosition variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        scan_position_data_array = self._latlon_dataset['MetaData'].variables['scan_position'][:].real
-        output_dataset.createVariable('/MetaData/scan_position', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/scan_position'][:] = scan_position_data_array
+        scan_position_data_array = self._latlon_dataset['MetaData'].variables['sensorScanPosition'][:].real
+        output_dataset.createVariable('/MetaData/sensorScanPosition', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/sensorScanPosition'][:] = scan_position_data_array
 
     def _create_metadata_sensor_zenith_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/sensor_zenith_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorZenithAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        sensor_zenith_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_zenith_angle'][:].real
-        output_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle_data_array
-        output_dataset['/MetaData/sensor_zenith_angle'].setncattr('units', 'degrees')
+        sensor_zenith_angle_data_array = self._latlon_dataset['MetaData'].variables['sensorZenithAngle'][:].real
+        output_dataset.createVariable('/MetaData/sensorZenithAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/sensorZenithAngle'][:] = sensor_zenith_angle_data_array
+        output_dataset['/MetaData/sensorZenithAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_sensor_azimuth_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/sensor_azimuth_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorAzimuthAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        sensor_azimuth_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_azimuth_angle'][:].real
-        output_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle_data_array
-        output_dataset['/MetaData/sensor_azimuth_angle'].setncattr('units', 'degrees')
+        sensor_azimuth_angle_data_array = self._latlon_dataset['MetaData'].variables['sensorAzimuthAngle'][:].real
+        output_dataset.createVariable('/MetaData/sensorAzimuthAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/sensorAzimuthAngle'][:] = sensor_azimuth_angle_data_array
+        output_dataset['/MetaData/sensorAzimuthAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_sensor_view_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/sensor_view_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorViewAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        sensor_view_angle_data_array = self._latlon_dataset['MetaData'].variables['sensor_view_angle'][:].real
-        output_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/sensor_view_angle'][:] = sensor_view_angle_data_array
-        output_dataset['/MetaData/sensor_view_angle'].setncattr('units', 'degrees')
+        sensor_view_angle_data_array = self._latlon_dataset['MetaData'].variables['sensorViewAngle'][:].real
+        output_dataset.createVariable('/MetaData/sensorViewAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/sensorViewAngle'][:] = sensor_view_angle_data_array
+        output_dataset['/MetaData/sensorViewAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_zenith_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/solar_zenith_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/solarZenithAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         dataset = Dataset(self._input_file_path_template, 'r')
@@ -269,13 +269,13 @@ class GoesConverter:
         dataset.close()
         dataset_latlon.close()
         solar_zenith_angle_data_array = np.nan_to_num(solar_zenith_angle_data_array, nan=-999)
-        output_dataset.createVariable('/MetaData/solar_zenith_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/solar_zenith_angle'][:] = solar_zenith_angle_data_array
-        output_dataset['/MetaData/solar_zenith_angle'].setncattr('units', 'degrees')
+        output_dataset.createVariable('/MetaData/solarZenithAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/solarZenithAngle'][:] = solar_zenith_angle_data_array
+        output_dataset['/MetaData/solarZenithAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_azimuth_angle_variable(self, output_dataset):
         """
-        Creates the /MetaData/solar_azimuth_angle variable in an output netCDF4 dataset.
+        Creates the /MetaData/solarAzimuthAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         dataset = Dataset(self._input_file_path_template, 'r')
@@ -299,9 +299,9 @@ class GoesConverter:
         dataset.close()
         dataset_latlon.close()
         solar_azimuth_angle_data_array = np.nan_to_num(solar_azimuth_angle_data_array, nan=-999)
-        output_dataset.createVariable('/MetaData/solar_azimuth_angle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/solar_azimuth_angle'][:] = solar_azimuth_angle_data_array
-        output_dataset['/MetaData/solar_azimuth_angle'].setncattr('units', 'degrees')
+        output_dataset.createVariable('/MetaData/solarAzimuthAngle', 'f4', 'Location', fill_value=-999)
+        output_dataset['/MetaData/solarAzimuthAngle'][:] = solar_azimuth_angle_data_array
+        output_dataset['/MetaData/solarAzimuthAngle'].setncattr('units', 'degrees')
 
     def _create_location_dimension(self, output_dataset):
         """
@@ -310,9 +310,9 @@ class GoesConverter:
         """
         Location = self._latlon_dataset.dimensions['Location'].size
         output_dataset.createDimension('Location', Location)
-        output_dataset.createVariable('Location', 'i4', 'Location')
-        output_dataset.variables['Location'].setncattr('suggested_chunk_dim', Location)
-        output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
+        output_dataset.createVariable('Location', 'i8', 'Location')
+        output_dataset.variables['Location'].setncattr('suggested_chunk_dim', round(Location*0.1))
+        output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int64')
 
     @staticmethod
     def _create_groups(output_dataset):
@@ -343,11 +343,11 @@ class GoesConverter:
     @staticmethod
     def _create_metadata_sensor_channel_variable(output_dataset):
         """
-        Creates the /MetaData/sensor_channel variable in an output netCDF4 dataset.
+        Creates the /MetaData/sensorChannelNumber variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        output_dataset.createVariable('/MetaData/sensor_channel', 'i4', 'Channel')
-        output_dataset['/MetaData/sensor_channel'][:] = output_dataset['Channel'][:]
+        output_dataset.createVariable('/MetaData/sensorChannelNumber', 'i4', 'Channel')
+        output_dataset['/MetaData/sensorChannelNumber'][:] = output_dataset['Channel'][:]
 
     @staticmethod
     def _create_root_group_attributes(output_dataset, resolution, platform_id):

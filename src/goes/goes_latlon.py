@@ -13,12 +13,12 @@
 #
 # /GROUP/VARIABLE -> ATTRIBUTE
 #
-# /MetaData/elevation_angle
-# /MetaData/scan_angle
-# /MetaData/scan_position
-# /MetaData/sensor_azimuth_angle -> units
-# /MetaData/sensor_view_angle -> units
-# /MetaData/sensor_zenith_angle -> units
+# /MetaData/sensorElevationAngle
+# /MetaData/sensorScanAngle
+# /MetaData/sensorScanPosition
+# /MetaData/sensorAzimuthAngle
+# /MetaData/sensorViewAngle
+# /MetaData/sensorZenithAngle
 # /MetaData/latitude
 # /MetaData/latitude -> lat_nadir
 # /MetaData/longitude
@@ -194,8 +194,8 @@ class GoesLatLon:
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
         Location = len(latitude)
         latlon_dataset.createDimension('Location', Location)
-        latlon_dataset.createVariable('Location', 'i4', ('Location',))
-        latlon_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
+        latlon_dataset.createVariable('Location', 'i8', ('Location',))
+        latlon_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int64')
         nonexistent_indices = len(self._lat_fill_value_index_array[0])
         latlon_dataset.createDimension('nonexistent_indices', nonexistent_indices)
         latlon_dataset.createVariable('nonexistent_indices', 'i4', ('nonexistent_indices',))
@@ -203,20 +203,20 @@ class GoesLatLon:
         latlon_dataset.createGroup('MetaData')
         latlon_dataset.createVariable('/MetaData/latitude', 'f4', 'Location', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/longitude', 'f4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/scan_angle', 'f4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/scan_position', 'i4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/elevation_angle', 'f4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensor_zenith_angle', 'f4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensor_azimuth_angle', 'f4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensor_view_angle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensorScanAngle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensorScanPosition', 'i4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensorElevationAngle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensorZenithAngle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensorAzimuthAngle', 'f4', 'Location', fill_value=-999)
+        latlon_dataset.createVariable('/MetaData/sensorViewAngle', 'f4', 'Location', fill_value=-999)
         latlon_dataset['/MetaData/latitude'][:] = latitude
         latlon_dataset['/MetaData/longitude'][:] = longitude
-        latlon_dataset['/MetaData/scan_angle'][:] = scan_angle
-        latlon_dataset['/MetaData/scan_position'][:] = scan_position
-        latlon_dataset['/MetaData/elevation_angle'][:] = elevation_angle
-        latlon_dataset['/MetaData/sensor_zenith_angle'][:] = sensor_zenith_angle
-        latlon_dataset['/MetaData/sensor_azimuth_angle'][:] = sensor_azimuth_angle
-        latlon_dataset['/MetaData/sensor_view_angle'][:] = sensor_view_angle
+        latlon_dataset['/MetaData/sensorScanAngle'][:] = scan_angle
+        latlon_dataset['/MetaData/sensorScanPosition'][:] = scan_position
+        latlon_dataset['/MetaData/sensorElevationAngle'][:] = elevation_angle
+        latlon_dataset['/MetaData/sensorZenithAngle'][:] = sensor_zenith_angle
+        latlon_dataset['/MetaData/sensorAzimuthAngle'][:] = sensor_azimuth_angle
+        latlon_dataset['/MetaData/sensorViewAngle'][:] = sensor_view_angle
         lat_nadir, lon_nadir = self._get_nadir_attributes()
         latlon_dataset['/MetaData/latitude'].setncattr('lat_nadir', lat_nadir)
         latlon_dataset['/MetaData/longitude'].setncattr('lon_nadir', lon_nadir)
