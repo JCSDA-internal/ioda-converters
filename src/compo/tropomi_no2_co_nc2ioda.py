@@ -149,7 +149,8 @@ class tropomi(object):
                     if self.varname == 'no2':
                        self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
                     elif self.varname == 'co':
-                       self.outdata[varname_pr] = preslv[..., k].ravel()[flg]
+                       rev_k=nlevs-k-1
+                       self.outdata[varname_pr] = preslv[..., rev_k].ravel()[flg]
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
