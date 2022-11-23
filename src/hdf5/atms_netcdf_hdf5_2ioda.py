@@ -40,12 +40,13 @@ GlobalAttrs = {
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
+    ("datetime", "string"),
+#   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
 ]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
-iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
+# iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+# epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 def main(args):
 
@@ -213,7 +214,8 @@ def get_data(f, g, obs_data):
         obs_data[('sensor_view_angle', 'MetaData')] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
         nlocs = len(obs_data[('latitude', 'MetaData')])
         obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-        obs_data[('datetime', 'MetaData')] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+        # obs_data[('dateTime', 'MetaData')] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+        obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
 
     # BaseException is a catch-all mechamism
     except BaseException:
