@@ -12,6 +12,7 @@ from pathlib import Path
 import os.path
 from os import getcwd
 import sys
+import pdb
 
 import h5py
 import numpy as np
@@ -160,7 +161,7 @@ def get_data_from_files(zfiles):
     return obs_data
 
 
-def get_data_nasa_disc(f, g, obs_data):
+def get_data_nasa_disc(f, g, obs_data, add_qc=True):
 
     # NASA GES DISC keys
     # 'antenna', 'antenna_len', 'antenna_temp', 'antenna_temp_qc', 'asc_flag', 'asc_node_local_solar_time',
@@ -203,6 +204,9 @@ def get_data_nasa_disc(f, g, obs_data):
     obs_data[('brightness_temperature', "ObsValue")] = np.array(np.vstack(g['antenna_temp']), dtype='float32')
     obs_data[('brightness_temperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[('brightness_temperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    if add_qc:
+        obs_data = atms_gross_quality_control(obs_data)
 
     return obs_data
 
@@ -255,9 +259,27 @@ def get_data_noaa_class(f, g, obs_data):
     scaled_data = np.vstack(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])
     scale_fac = f['All_Data']['ATMS-SDR_All']['BrightnessTemperatureFactors'][:].flatten()
 
-    obs_data[('brightnessTemperature', "ObsValue")] = np.array((scaled_data * scale_fac[0]) + scale_fac[1], dtype='float32')
-    obs_data[('brightnessTemperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
-    obs_data[('brightnessTemperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+    obs_data[('brightness_temperature', "ObsValue")] = np.array((scaled_data * scale_fac[0]) + scale_fac[1], dtype='float32')
+    obs_data[('brightness_temperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
+    obs_data[('brightness_temperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    return obs_data
+
+
+def atms_gross_quality_control(obs_data):
+
+    tb_key = 'brightness_temperature'
+    good = ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,1] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,2] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,15] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,16] > 10 )
+
+    for k in obs_data:
+        if "MetaData" in k[1] and 'channelNumber' not in k[0]:
+            obs_data[k] = obs_data[k][good]
+        elif tb_key in k[0]:
+            obs_data[k] = obs_data[k][good,:]
 
     return obs_data
 
