@@ -130,7 +130,7 @@ def main():
 
     # replace NaNf by a numerical value
 
-    command='ncdump '+args.input+' | sed -e '+'s/NaNf/-1.0e+10f/g'+' | ncgen -o '+args.input
+    command = 'ncdump '+args.input+' | sed -e '+'s/NaNf/-1.0e+10f/g'+' | ncgen -o '+args.input
     call(command, shell=True)
     # Read in the sea-ice thickness data
     sith = copernicus_l4icethk2ioda(args.input, datetime=args.date)
