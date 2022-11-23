@@ -14,6 +14,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
+from subprocess import call
+
 IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -107,13 +109,13 @@ def main():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads L4 ADT provided by COPERNICUS'
+            'Reads L4 sea-ice thickness provided by COPERNICUS'
             'and converts into IODA formatted output files.')
     )
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of L4 ADT observation netCDF input file",
+        help="path of L4 sea-ice thickness observation netCDF input file",
         type=str, required=True)
     required.add_argument(
         '-o', '--output',
@@ -125,7 +127,12 @@ def main():
         type=str, required=False)
 
     args = parser.parse_args()
-    # Read in the ADT data
+
+    # replace NaNf by a numerical value
+
+    command='ncdump '+args.input+' | sed -e '+'s/NaNf/-1.0e+10f/g'+' | ncgen -o '+args.input
+    call(command, shell=True)
+    # Read in the sea-ice thickness data
     sith = copernicus_l4icethk2ioda(args.input, datetime=args.date)
 
     # setup the IODA writer
