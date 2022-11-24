@@ -226,7 +226,7 @@ def main():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads TROPOMI NO2 netCDF files: official Copernicus product'
+            'Reads TROPOMI NO2/CO netCDF files: official Copernicus product'
             'and converts into IODA formatted output files. Multiple'
             'files are able to be concatenated.')
     )
@@ -234,7 +234,7 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of TROPOMI L2 NO2 observation netCDF input file(s)",
+        help="path of TROPOMI L2 NO2/CO observation netCDF input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -252,9 +252,12 @@ def main():
     optional.add_argument(
         '-q', '--qa_value',
         help="qa value used to preflag data that goes into file before QC"
-        "default at 0.75 as suggested in the documentation. See:"
+        "default at 0.75 (no2) as suggested in the documentation. See:"
         "https://sentinel.esa.int/documents/247904/2474726/"
-        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6",
+        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6"
+        "0.5 is suggested for co. See:"
+        "https://sentinel.esa.int/documents/247904/2474726/"
+        "Sentinel-5P-Level-2-Product-User-Manual-Carbon-Monoxide.pdf section 8.3"
         type=float, default=0.75)
     optional.add_argument(
         '-n', '--thin',
