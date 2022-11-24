@@ -257,7 +257,7 @@ def main():
         "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6"
         "0.5 is suggested for co. See:"
         "https://sentinel.esa.int/documents/247904/2474726/"
-        "Sentinel-5P-Level-2-Product-User-Manual-Carbon-Monoxide.pdf section 8.3"
+        "Sentinel-5P-Level-2-Product-User-Manual-Carbon-Monoxide.pdf section 8.3",
         type=float, default=0.75)
     optional.add_argument(
         '-n', '--thin',
