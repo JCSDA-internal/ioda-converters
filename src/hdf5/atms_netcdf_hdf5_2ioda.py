@@ -353,6 +353,8 @@ def get_string_dtg(obs_time_utc):
     dtg = []
     for i, yyyy in enumerate(year):
         cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
+        if "655" in cdtg:
+            cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (2200, 1, 1, 0, 0))
         dtg.append(cdtg)
 
     return dtg
