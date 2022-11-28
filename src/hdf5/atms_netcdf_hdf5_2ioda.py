@@ -136,23 +136,11 @@ def get_data_from_files(zfiles):
     if True:
         f = h5py.File(afile, 'r')
 
-        path, file = os.path.split(afile)
         if afile[-3:] == 'nc4':
             g = h5py.File(afile, 'r')
             obs_data = get_data_nasa_disc(f, g, obs_data)
         else:
-            geo_file = file.replace('SATMS', 'GATMO')
-            ftype, sat, date, time, end_time, orbit, _, _, _ = file.split('_')
-            geo_search = '_'.join(['GATMO', sat, date, time, end_time, orbit, '*.h5'])
-            geo_search = os.path.join(path, geo_search)
-
-            gfile = glob.glob(geo_search)
-            if (len(gfile) > 0):
-                g = h5py.File(gfile[0], 'r')
-            else:
-                print("could not find geofile matching: %s" % filename)
-                print("tried searching geofile: %s" % geo_search)
-                sys.exit()
+            g = get_geo_noaa_class(afile)
             obs_data = get_data_noaa_class(f, g, obs_data)
 
         f.close()
@@ -211,6 +199,26 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     return obs_data
 
 
+def get_geo_noaa_class(afile):
+    path, filename = os.path.split(afile)
+    if 'GATMO' in filename:
+        g = h5py.File(afile, 'r')
+    else:
+        geo_file = filename.replace('SATMS', 'GATMO')
+        ftype, sat, date, time, end_time, orbit, _, _, _ = filename.split('_')
+        geo_search = '_'.join(['GATMO', sat, date, time, end_time, orbit, '*.h5'])
+        geo_search = os.path.join(path, geo_search)
+
+        gfile = glob.glob(geo_search)
+        if (len(gfile) > 0):
+            g = h5py.File(gfile[0], 'r')
+        else:
+            print("could not find geofile matching: %s" % filename)
+            print("tried searching geofile: %s" % geo_search)
+            sys.exit()
+    return g
+
+
 def get_data_noaa_class(f, g, obs_data):
 
     # NOAA CLASS h5 SDR-GEO keys
@@ -232,28 +240,30 @@ def get_data_noaa_class(f, g, obs_data):
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
 
     # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
-    # this section is for the NOAA CLASS files and need to be tested
     obs_data[('latitude', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'][:, :].flatten(), dtype='float32')
     obs_data[('longitude', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['Longitude'][:, :].flatten(), dtype='float32')
 
-    nscans = np.shape(g['lat'])[0]
-    nbeam_pos = np.shape(g['lat'])[1]
-    obs_data[('channelNumber', 'MetaData')] = np.array(g['channel'][:], dtype='int32')
+    nscans = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[0]
+    nbeam_pos = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[1]
+    obs_data[('channelNumber', 'MetaData')] = np.array(np.arange(np.shape(g['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
     obs_data[('scan_position', 'MetaData')] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
-    obs_data[('solar_zenith_angle', 'MetaData')] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
-    obs_data[('solar_azimuth_angle', 'MetaData')] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
-    obs_data[('sensor_zenith_angle', 'MetaData')] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
-    obs_data[('sensor_azimuth_angle', 'MetaData')] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
-    obs_data[('sensor_view_angle', 'MetaData')] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
+    obs_data[('solar_zenith_angle', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarZenithAngle'][:, :].flatten(), dtype='float32')
+    obs_data[('solar_azimuth_angle', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarAzimuthAngle'][:, :].flatten(), dtype='float32')
+    obs_data[('sensor_zenith_angle', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteZenithAngle'][:, :].flatten(), dtype='float32')
+    obs_data[('sensor_azimuth_angle', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteAzimuthAngle'][:, :].flatten(), dtype='float32')
+    # put in proxy
+    # obs_data[('sensor_view_angle', 'MetaData')] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteZenithAngle'][:, :].flatten(), dtype='float32')
+    # put in approximate
+    # scanang = (real(ibeam) - 1.0) * 1.11 -  52.726
+    obs_data[('sensor_view_angle', 'MetaData')] = (obs_data[('scan_position', 'MetaData')] - 1.0) * 1.11 - 52.726
+
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     # obs_data[('dateTime', 'MetaData')] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
-    obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
-
+    obs_data[('datetime', 'MetaData')] = np.array(create_string_dtg(g['All_Data']['ATMS-SDR_All']['BeamTime'][:,:].flatten()), dtype=object)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('channelNumber', 'MetaData')])
-    nlocs = len(obs_data[('latitude', 'MetaData')])
 
     # this section is for the NOAA CLASS files and need to be tested
     scaled_data = np.vstack(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])
@@ -321,6 +331,16 @@ def get_epoch_time(obs_time_utc):
     time_offset = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
 
     return time_offset
+
+
+def create_string_dtg(obs_datetime, offset=datetime(1982, 1, 1, 0, 0).timestamp()):
+
+    dtg = []
+    for adatetime in obs_datetime:
+        cdtg = datetime.fromtimestamp(adatetime/1.e6-offset).strftime("%4i-%.2i-%.2iT%.2i:%.2i:00Z")
+        dtg.append(cdtg)
+
+    return dtg
 
 
 def get_string_dtg(obs_time_utc):
