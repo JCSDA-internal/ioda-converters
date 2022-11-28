@@ -27,6 +27,8 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Variable.h
   BufrParser/Exports/Variables/DatetimeVariable.h
   BufrParser/Exports/Variables/DatetimeVariable.cpp
+  BufrParser/Exports/Variables/TimeoffsetVariable.h
+  BufrParser/Exports/Variables/TimeoffsetVariable.cpp
   BufrParser/Exports/Variables/QueryVariable.h
   BufrParser/Exports/Variables/QueryVariable.cpp
   BufrParser/Exports/Variables/Transforms/Transform.h
