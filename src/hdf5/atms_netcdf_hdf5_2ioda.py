@@ -337,7 +337,7 @@ def create_string_dtg(obs_datetime, offset=datetime(1982, 1, 1, 0, 0).timestamp(
 
     dtg = []
     for adatetime in obs_datetime:
-        cdtg = datetime.fromtimestamp(adatetime/1.e6-offset).strftime("%4i-%.2i-%.2iT%.2i:%.2i:00Z")
+        cdtg = datetime.fromtimestamp(adatetime/1.e6-offset).strftime("%Y-%m-%dT%H:%M:%SZ")
         dtg.append(cdtg)
 
     return dtg
