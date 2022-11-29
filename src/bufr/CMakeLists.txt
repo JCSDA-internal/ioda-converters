@@ -8,7 +8,7 @@ list(APPEND _ingester_srcs
   DataContainer.h
   DataContainer.cpp
   Parser.h
-  ParserFactory.h
+  ObjectFactory.h
   DataObject.h
   DataObject.cpp
   BufrParser/BufrParser.h
@@ -21,7 +21,6 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Filters/BoundingFilter.h
   BufrParser/Exports/Filters/BoundingFilter.cpp
   BufrParser/Exports/Splits/Split.h
-  BufrParser/Exports/Splits/Split.cpp
   BufrParser/Exports/Splits/CategorySplit.h
   BufrParser/Exports/Splits/CategorySplit.cpp
   BufrParser/Exports/Variables/Variable.h

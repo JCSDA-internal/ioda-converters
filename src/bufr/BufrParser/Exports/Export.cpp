@@ -17,8 +17,7 @@
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
 #include "Variables/TimeoffsetVariable.h"
-#include "Variables/Transforms/Transform.h"
-#include "Variables/Transforms/TransformBuilder.h"
+#include "ObjectFactory.h"
 
 
 namespace
@@ -36,25 +35,17 @@ namespace
             const char* Datetime = "datetime";
             const char* Timeoffset = "timeoffset";
             const char* Query = "query";
-            const char* GroupByField = "group_by";  // Deprecated
-            const char* Type = "type";
         }  // namespace Variable
 
         namespace Split
         {
             const char* Category = "category";
-            const char* Variable = "variable";
-            const char* NameMap = "map";
         }  // namespace Split
 
         namespace Filter
         {
-            const char* Variable = "variable";
             const char* Bounding = "bounding";
-            const char* UpperBound = "upperBound";
-            const char* LowerBound = "lowerBound";
         }
-
     }  // namespace ConfKeys
 }  // namespace
 
@@ -116,6 +107,16 @@ namespace Ingester
 
     void Export::addVariables(const eckit::Configuration &conf, const std::string& groupByField)
     {
+        typedef ObjectFactory<Variable,
+                              const std::string& /*exportName*/,
+                              const std::string& /*groupByField*/,
+                              const eckit::LocalConfiguration& /*configuration*/> VariableFactory;
+
+        VariableFactory variableFactory;
+        variableFactory.registerObject<QueryVariable>(ConfKeys::Variable::Query);
+        variableFactory.registerObject<DatetimeVariable>(ConfKeys::Variable::Datetime);
+        variableFactory.registerObject<TimeoffsetVariable>(ConfKeys::Variable::Timeoffset);
+
         if (conf.keys().size() == 0)
         {
             std::stringstream errStr;
@@ -125,50 +126,21 @@ namespace Ingester
 
         for (const auto& key : conf.keys())
         {
-            std::shared_ptr<Variable> variable;
-
             auto subConf = conf.getSubConfiguration(key);
-            if (subConf.has(ConfKeys::Variable::Datetime))
-            {
-                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
-                variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
-            }
-            else if (subConf.has(ConfKeys::Variable::Timeoffset))
-            {
-                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Timeoffset);
-                variable = std::make_shared<TimeoffsetVariable>(key, groupByField, dtconf);
-            }
-            else if (subConf.has(ConfKeys::Variable::Query))
-            {
-                Transforms transforms = TransformBuilder::makeTransforms(subConf);
-                const auto& query = subConf.getString(ConfKeys::Variable::Query);
 
-                if (subConf.has(ConfKeys::Variable::GroupByField))
-                {
-                    std::ostringstream errMsg;
-                    errMsg << "Obsolete format::exports::variable of group_by field for key";
-                    errMsg << key << std::endl;
-                    errMsg << "Use \"query:\" instead.";
-                    throw eckit::BadParameter(errMsg.str());
-                }
-
-                std::string type = "";
-                if (subConf.has(ConfKeys::Variable::Type))
-                {
-                    type = subConf.getString(ConfKeys::Variable::Type);
-                }
-
-                variable = std::make_shared<QueryVariable>(key,
-                                                           query,
-                                                           groupByField,
-                                                           type,
-                                                           transforms);
+            std::shared_ptr<Variable> variable;
+            if (subConf.has(ConfKeys::Variable::Query))
+            {
+                variable =
+                    variableFactory.create(ConfKeys::Variable::Query, key, groupByField, subConf);
             }
             else
             {
-                std::ostringstream errMsg;
-                errMsg << "Unknown bufr::exports::variable of type " << key;
-                throw eckit::BadParameter(errMsg.str());
+                variable =
+                    variableFactory.create(subConf.keys()[0],
+                                            key,
+                                            groupByField,
+                                            subConf.getSubConfiguration(subConf.keys()[0]));
             }
 
             variables_.push_back(variable);
@@ -177,6 +149,13 @@ namespace Ingester
 
     void Export::addSplits(const eckit::Configuration &conf)
     {
+        typedef ObjectFactory<Split,
+                              const std::string& /*name*/,
+                              const eckit::LocalConfiguration& /*configuration*/> SplitFactory;
+
+        SplitFactory splitFactory;
+        splitFactory.registerObject<CategorySplit>(ConfKeys::Split::Category);
+
         if (conf.keys().size() == 0)
         {
             std::stringstream errStr;
@@ -186,35 +165,10 @@ namespace Ingester
 
         for (const auto& key : conf.keys())
         {
-            std::shared_ptr<Split> split;
-
             auto subConf = conf.getSubConfiguration(key);
-
-            if (subConf.has(ConfKeys::Split::Category))
-            {
-                auto catConf = subConf.getSubConfiguration(ConfKeys::Split::Category);
-
-                auto nameMap = CategorySplit::NameMap();
-                if (catConf.has(ConfKeys::Split::NameMap))
-                {
-                    const auto& mapConf = catConf.getSubConfiguration(ConfKeys::Split::NameMap);
-                    for (const std::string& mapKey : mapConf.keys())
-                    {
-                        auto intKey = mapKey.substr(1, mapKey.size());
-                        nameMap.insert({std::stoi(intKey), mapConf.getString(mapKey)});
-                    }
-                }
-
-                split = std::make_shared<CategorySplit>(key,
-                                                catConf.getString(ConfKeys::Split::Variable),
-                                                        nameMap);
-            }
-            else
-            {
-                std::ostringstream errMsg;
-                errMsg << "Unknown bufr::exports::splits of type " << key;
-                throw eckit::BadParameter(errMsg.str());
-            }
+            auto split = splitFactory.create(subConf.keys()[0],
+                                             key,
+                                             subConf.getSubConfiguration(subConf.keys()[0]));
 
             splits_.push_back(split);
         }
@@ -222,6 +176,12 @@ namespace Ingester
 
     void Export::addFilters(const eckit::Configuration &conf)
     {
+        typedef ObjectFactory<Filter,
+                              const eckit::LocalConfiguration& /*configuration*/> FilterFactory;
+
+        FilterFactory filterFactory;
+        filterFactory.registerObject<BoundingFilter>(ConfKeys::Filter::Bounding);
+
         auto subConfs = conf.getSubConfigurations();
         if (subConfs.size() == 0)
         {
@@ -232,41 +192,10 @@ namespace Ingester
 
         for (const auto& subConf : subConfs)
         {
-            std::shared_ptr<Filter> filter;
-
-            if (subConf.has(ConfKeys::Filter::Bounding))
-            {
-                auto filterConf = subConf.getSubConfiguration(ConfKeys::Filter::Bounding);
-
-                std::shared_ptr<float> lowerBound = nullptr;
-                if (filterConf.has(ConfKeys::Filter::LowerBound))
-                {
-                    lowerBound = std::make_shared<float>(
-                        filterConf.getFloat(ConfKeys::Filter::LowerBound));
-                }
-
-                std::shared_ptr<float> upperBound = nullptr;
-                if (filterConf.has(ConfKeys::Filter::UpperBound))
-                {
-                    upperBound = std::make_shared<float>(
-                        filterConf.getFloat(ConfKeys::Filter::UpperBound));
-                }
-
-                filter = std::make_shared<BoundingFilter>(
-                    filterConf.getString(ConfKeys::Filter::Variable),
-                    lowerBound,
-                    upperBound);
-            }
-            else
-            {
-                std::ostringstream errMsg;
-                errMsg << "bufr::exports::filters Unknown filter of type ";
-                errMsg << subConf.keys()[0] << ".";
-                throw eckit::BadParameter(errMsg.str());
-            }
-
+            std::cout << subConf.keys()[0] << std::endl;
+            auto filter = filterFactory.create(subConf.keys()[0],
+                                               subConf.getSubConfiguration(subConf.keys()[0]));
             filters_.push_back(filter);
         }
     }
-
 }  // namespace Ingester
