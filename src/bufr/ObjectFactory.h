@@ -30,6 +30,8 @@ namespace Ingester
          public:
             /// \brief Instantiate a object instance
             /// \param args List of arguments required to construct the object
+            /// \returns shared_ptr<U> (base class) for the the constructed object defined for this
+            ///          ObjectFactory.
             virtual std::shared_ptr<U> make(Args... args) = 0;
         };
 
@@ -39,6 +41,10 @@ namespace Ingester
         class ObjectMaker : public ObjectMakerBase
         {
          public:
+            /// \brief Instantiate a object instance
+            /// \param args List of arguments required to construct the object
+            /// \returns shared_ptr<U> (base class) for the the constructed object defined for this
+            ///          ObjectFactory.
             std::shared_ptr<U> make(Args... args) override
             {
                 return std::make_shared<T>(args...);
@@ -52,7 +58,8 @@ namespace Ingester
         /// \param objectName The name associated with the object we want to make
         /// \param args The arguments required by the objects constructor
         /// \returns shared_ptr<U> (base class) for the the constructed object defined for this
-        ///          ObjectFactory.
+        ///          ObjectFactory. NOTE: If possible design your objects with generic interfaces
+        ///          that are accessible through the base class to avoid using dynamic_pointer_cast.
         std::shared_ptr<U> create(const std::string& objectName, Args... args)
         {
             if (makers_.find(objectName) == makers_.end())
