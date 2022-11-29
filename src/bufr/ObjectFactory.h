@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <string>
 #include <ostream>
@@ -17,23 +17,23 @@
 
 namespace Ingester
 {
-    /// \brief Factory that is used to create Parsers
+    /// \brief Factory that is used to create objects
     /// \tparam U The type of class to make (base class)
     /// \tparam Args Parameters used in object constructor.
     template<class U, typename... Args>
     class ObjectFactory
     {
-        /// \brief Base class for all ParserMakers. Makes it possible to store all types of parsers
+        /// \brief Base class for all ObjectMakers. Makes it possible to store all types of objects
         /// inside a std data structure like a map.
         class ObjectMakerBase
         {
          public:
-            /// \brief Instantiate a Parser instance
-            /// \param conf Configuration to base the Parser on (obs space)
+            /// \brief Instantiate a object instance
+            /// \param args List of arguments required to construct the object
             virtual std::shared_ptr<U> make(Args... args) = 0;
         };
 
-        /// \brief ParserMaker class template definition
+        /// \brief ObjectMaker class template definition
         /// \tparam T The concrete type of class this Maker will make
         template <class T>
         class ObjectMaker : public ObjectMakerBase
@@ -48,8 +48,11 @@ namespace Ingester
      public:
         virtual ~ObjectFactory() = default;
 
-        /// \brief Create a Parser
-        /// \param conf Provides the name of the parser we want to create
+        /// \brief Create an object
+        /// \param objectName The name associated with the object we want to make
+        /// \param args The arguments required by the objects constructor
+        /// \returns shared_ptr<U> (base class) for the the constructed object defined for this
+        ///          ObjectFactory.
         std::shared_ptr<U> create(const std::string& objectName, Args... args)
         {
             if (makers_.find(objectName) == makers_.end())
@@ -62,9 +65,9 @@ namespace Ingester
             return makers_[objectName]->make(args...);
         }
 
-        /// \brief Register a new Parser type we want to be able to create
-        /// \param name The name to associate with the parser class.
-        /// \tparam T The concrete object type to make.
+        /// \brief Register a new object type we want to be able to create
+        /// \param objectName The name to associate with the new object type.
+        /// \tparam T The concrete object type to register.
         template<class T>
         void registerObject(const std::string& objectName)
         {
@@ -82,12 +85,6 @@ namespace Ingester
         }
 
      private:
-        std::map<std::string, std::shared_ptr<ObjectMakerBase>> makers_;
+        std::unordered_map<std::string, std::shared_ptr<ObjectMakerBase>> makers_;
     };
 }  // namespace Ingester
-
-
-// auto factory = ObjectFactory<Parser>();
-// factory.register<BufrParser>("bufr");
-
-
