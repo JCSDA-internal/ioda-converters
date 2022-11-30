@@ -58,13 +58,11 @@ class copernicus(object):
         self.sith = np.squeeze(ncd.variables['sea_ice_thickness'][:]).ravel()
         self.err = np.squeeze(ncd.variables['uncertainty'][:]).ravel()
         self.date = ncd.getncattr('time_coverage_start')
-        self.nlocs = len(self.sith)
         ncd.close()
-
+        self.nlocs = len(self.sith)
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.sith, dtype=object)
         self.datetime[:] = self.date
-
 
 class copernicus_l4icethk2ioda(object):
 
@@ -95,8 +93,8 @@ class copernicus_l4icethk2ioda(object):
             sith.datetime[:] = ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = sith.datetime
-        self.outdata[('latitude', 'MetaData')] = sith.lats
-        self.outdata[('longitude', 'MetaData')] = sith.lons
+        self.outdata[('latitude', 'MetaData')] = sith.lats.astype('float32')
+        self.outdata[('longitude', 'MetaData')] = sith.lons.astype('float32')
         self.outdata[self.varDict[iodavar]['valKey']] = sith.sith
         self.outdata[self.varDict[iodavar]['errKey']] = sith.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(sith.nlocs, dtype=np.int32)

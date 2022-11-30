@@ -414,7 +414,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4icethk
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/copernicus_l4icethk2ioda.py
                           -i testinput/icethk_coperl4.nc
-                          -o testrun/icethk_coperl4.nc -d 2019010115"
+                          -o testrun/icethk_coperl4.nc -d 2019011500"
                           icethk_coperl4.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsr2_l2icec
