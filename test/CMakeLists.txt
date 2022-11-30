@@ -1805,7 +1805,10 @@ foreach ( f ${TESTOUTPUT_IODA_FILES} )
 		COMMAND ioda-validate.x
 		LABELS ${PROJECT_NAME}_validate
 		ENVIRONMENT "ECKIT_COLOUR_OUTPUT=1"
-		ARGS "${IODA_YAML_ROOT}/validation/ObsSpace.yaml" "${f}"
+		ARGS "--ignore-warn"
+                     "--ignore-error"
+                     "${IODA_YAML_ROOT}/validation/ObsSpace.yaml"
+                     "${f}"
 		)
 endforeach()
 
