@@ -59,6 +59,13 @@ class copernicus(object):
         self.err = np.squeeze(ncd.variables['uncertainty'][:]).ravel()
         self.date = ncd.getncattr('time_coverage_start')
         ncd.close()
+        # masked out the Nan values
+
+        ma = np.ma.where(self.sith != -1e+10)
+        self.lons = self.lons[ma]
+        self.lats = self.lats[ma]
+        self.sith = self.sith[ma]
+        self.err = self.err[ma]
         self.nlocs = len(self.sith)
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.sith, dtype=object)
@@ -101,7 +108,6 @@ class copernicus_l4icethk2ioda(object):
 
         DimDict['nlocs'] = sith.nlocs
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-
 
 def main():
     # get command line arguments
