@@ -100,8 +100,8 @@ class copernicus_l4icethk2ioda(object):
             sith.datetime[:] = ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = sith.datetime
-        self.outdata[('latitude', 'MetaData')] = sith.lats.astype('float32')
-        self.outdata[('longitude', 'MetaData')] = sith.lons.astype('float32')
+        self.outdata[('latitude', 'MetaData')] = sith.lats #.astype('float32')
+        self.outdata[('longitude', 'MetaData')] = sith.lons #.astype('float32')
         self.outdata[self.varDict[iodavar]['valKey']] = sith.sith
         self.outdata[self.varDict[iodavar]['errKey']] = sith.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(sith.nlocs, dtype=np.int32)
