@@ -219,7 +219,7 @@ def get_geo_noaa_class(afile):
     return g
 
 
-def get_data_noaa_class(f, g, obs_data):
+def get_data_noaa_class(f, g, obs_data, add_qc=True):
 
     # NOAA CLASS h5 SDR-GEO keys
     # 'BeamLatitude', 'BeamLongitude', 'Height', 'Latitude', 'Longitude', 'MidTime', 'PadByte1',
@@ -273,6 +273,9 @@ def get_data_noaa_class(f, g, obs_data):
     obs_data[('brightness_temperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[('brightness_temperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
+    if add_qc:
+        obs_data = atms_gross_quality_control(obs_data)
+
     return obs_data
 
 
@@ -280,10 +283,13 @@ def atms_gross_quality_control(obs_data):
 
     tb_key = 'brightness_temperature'
     good = ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,1] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,2] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,15] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,16] > 10 )
+        ( obs_data[(tb_key, "ObsValue")][:,0] < 400 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,16] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,16] < 400 ) & \
+        ( obs_data[('latitude', 'MetaData')] >= -90 ) & \
+        ( obs_data[('latitude', 'MetaData')] <= 90 ) & \
+        ( obs_data[('sensor_zenith_angle', 'MetaData')] > 0 ) & \
+        ( obs_data[('sensor_zenith_angle', 'MetaData')] < 80 )
 
     for k in obs_data:
         if "MetaData" in k[1] and 'channelNumber' not in k[0]:
