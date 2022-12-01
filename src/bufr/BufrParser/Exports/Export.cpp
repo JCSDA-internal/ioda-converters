@@ -139,6 +139,7 @@ namespace Ingester
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::AircraftAltitude);
                 variable = std::make_shared<AircraftAltitudeVariable>(key, groupByField, dtconf);
+            }
             else if (subConf.has(ConfKeys::Variable::Timeoffset))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Timeoffset);
