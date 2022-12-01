@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 from subprocess import call
+import pandas as pd
 
 IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
 if not IODA_CONV_PATH.is_dir():
@@ -53,19 +54,20 @@ class copernicus(object):
         # Create a simple data structure for Copernicus L4 sith product obtained from
         # https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-sea-level-global?tab=form
         ncd = nc.Dataset(filename, 'r')
-        self.lons = ncd.variables['lon'][:].ravel()
-        self.lats = ncd.variables['lat'][:].ravel()
-        self.sith = np.squeeze(ncd.variables['sea_ice_thickness'][:]).ravel()
-        self.err = np.squeeze(ncd.variables['uncertainty'][:]).ravel()
+        lons = ncd.variables['lon'][:].ravel()
+        lats = ncd.variables['lat'][:].ravel()
+        sith = np.squeeze(ncd.variables['sea_ice_thickness'][:]).ravel()
+        err = np.squeeze(ncd.variables['uncertainty'][:]).ravel()
         self.date = ncd.getncattr('time_coverage_start')
         ncd.close()
         # masked out the Nan values
-
-        ma = np.ma.where(self.sith != -1e+10)
-        self.lons = self.lons[ma]
-        self.lats = self.lats[ma]
-        self.sith = self.sith[ma]
-        self.err = self.err[ma]
+        sithdata={'lon':lons, 'lat':lats, 'sith':sith, 'err':err}
+        df = pd.DataFrame(sithdata)
+        df2=df.dropna().reset_index(drop=True)
+        self.lons = df2['lon'] 
+        self.lats = df2['lat'] 
+        self.sith = df2['sith'] 
+        self.err = df2['err'] 
         self.nlocs = len(self.sith)
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.sith, dtype=object)
@@ -101,15 +103,14 @@ class copernicus_l4icethk2ioda(object):
             sith.datetime[:] = ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = sith.datetime
-        self.outdata[('latitude', 'MetaData')] = sith.lats
-        self.outdata[('longitude', 'MetaData')] = sith.lons
+        self.outdata[('latitude', 'MetaData')] = sith.lats #.astype('float32')
+        self.outdata[('longitude', 'MetaData')] = sith.lons #.astype('float32')
         self.outdata[self.varDict[iodavar]['valKey']] = sith.sith
         self.outdata[self.varDict[iodavar]['errKey']] = sith.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(sith.nlocs, dtype=np.int32)
 
         DimDict['nlocs'] = sith.nlocs
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-
 
 def main():
     # get command line arguments
@@ -133,14 +134,8 @@ def main():
         type=str, required=False)
 
     args = parser.parse_args()
-
-    # replace NaNf by a numerical value
-
-    command = 'ncdump '+args.input+' | sed -e '+'s/NaNf/-1.0e+10f/g'+' | ncgen -o '+args.input
-    call(command, shell=True)
     # Read in the sea-ice thickness data
     sith = copernicus_l4icethk2ioda(args.input, datetime=args.date)
-
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     # write everything out
