@@ -282,8 +282,13 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
 def atms_gross_quality_control(obs_data):
 
     tb_key = 'brightness_temperature'
+    # anomalous temperatures pre-Beta data
+    # 20221125T12Z_PT6H and 20221127T06_PT6H
+    # quality top values for ch15 330K arises from this
     good = ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
         ( obs_data[(tb_key, "ObsValue")][:,0] < 400 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,14] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,14] < 330 ) & \
         ( obs_data[(tb_key, "ObsValue")][:,16] > 10 ) & \
         ( obs_data[(tb_key, "ObsValue")][:,16] < 400 ) & \
         ( obs_data[('latitude', 'MetaData')] >= -90 ) & \
