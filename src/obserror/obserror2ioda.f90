@@ -6,7 +6,7 @@ program obserror2ioda
 use netcdf
 implicit none
 
-character(len=256) :: filename_in, filename_out
+character(len=256) :: arg, filename_in, filename_out, varid_name
 integer :: lu, ioflag
 integer :: nch_active, nctot, iprec
 integer :: ii
@@ -14,9 +14,22 @@ integer :: ncid_out, nch_dimid, varid_nch, varid_corr
 integer, allocatable, dimension(:)   :: indxR  !< (nch_active)
 real(4), allocatable, dimension(:,:) :: readR4 !< (nch_active, nch_active)
 
-!> get filenames from command line arguments
-call getarg(1,filename_in)
-call getarg(2,filename_out)
+!> set defaults
+varid_name = 'obserror_correlations'
+
+!> get command line arguments
+do ii = 1, iargc()
+  call getarg(ii,arg)
+  if (ii == 1) filename_in = arg
+  if (ii == 2) filename_out = arg
+  if (ii == 3) varid_name = arg
+enddo
+
+!> sanity check for options
+if (trim(varid_name) /= 'obserror_correlations' .and. trim(varid_name) /= 'obserror_covariances') then
+  print *, 'Unknown option ', trim(varid_name)
+  call abort()
+end if
 
 !> read GSI obs error covariances
 open(lu,file=trim(filename_in),convert='little_endian',form='unformatted')
@@ -33,17 +46,17 @@ close(lu)
 call check( nf90_create(trim(filename_out), NF90_CLOBBER + NF90_NETCDF4,ncid_out))
 call check( nf90_def_dim(ncid_out, 'channels', nch_active,  nch_dimid) )
 call check( nf90_def_var(ncid_out, 'channels', NF90_INT, nch_dimid, varid_nch) )
-call check( nf90_def_var(ncid_out, "obserror_correlations", NF90_FLOAT, (/nch_dimid, nch_dimid/), varid_corr) )
+call check( nf90_def_var(ncid_out, trim(varid_name), NF90_FLOAT, (/nch_dimid, nch_dimid/), varid_corr) )
 call check( nf90_put_var(ncid_out, varid_nch, indxR) )
 call check( nf90_put_var(ncid_out, varid_corr, readR4) )
 call check( nf90_close(ncid_out) )
 
 contains
- subroutine check(status)
+  subroutine check(status)
     integer, intent ( in) :: status
     if(status /= nf90_noerr) then
-     print *, trim(nf90_strerror(status))
-     stop "Stopped"
+      print *, trim(nf90_strerror(status))
+      call abort()
     end if
   end subroutine check
 
