@@ -5,19 +5,16 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include <cmath>
 #include <bits/stdc++.h>
-#include <climits>
-#include <iostream>
+#include <cmath>
 #include <iomanip>
-#include <unordered_map>
-
+#include <memory>
 #include <ostream>
 #include <time.h>
+#include <unordered_map>
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
-#include "oops/util/Logger.h"
 
 #include "DataObject.h"
 #include "SpectralRadianceVariable.h"
