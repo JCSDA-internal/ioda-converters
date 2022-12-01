@@ -61,13 +61,13 @@ class copernicus(object):
         self.date = ncd.getncattr('time_coverage_start')
         ncd.close()
         # masked out the Nan values
-        sithdata={'lon':lons, 'lat':lats, 'sith':sith, 'err':err}
+        sithdata = {'lon': lons, 'lat': lats, 'sith': sith, 'err': err}
         df = pd.DataFrame(sithdata)
-        df2=df.dropna().reset_index(drop=True)
-        self.lons = df2['lon'] 
-        self.lats = df2['lat'] 
-        self.sith = df2['sith'] 
-        self.err = df2['err'] 
+        df2 = df.dropna().reset_index(drop=True)
+        self.lons = df2['lon']
+        self.lats = df2['lat']
+        self.sith = df2['sith']
+        self.err = df2['err']
         self.nlocs = len(self.sith)
         # Same time stamp for all obs within 1 file
         self.datetime = np.empty_like(self.sith, dtype=object)
@@ -103,14 +103,15 @@ class copernicus_l4icethk2ioda(object):
             sith.datetime[:] = ymdhm
         # map copernicus to ioda data structure
         self.outdata[('datetime', 'MetaData')] = sith.datetime
-        self.outdata[('latitude', 'MetaData')] = sith.lats #.astype('float32')
-        self.outdata[('longitude', 'MetaData')] = sith.lons #.astype('float32')
+        self.outdata[('latitude', 'MetaData')] = sith.lats
+        self.outdata[('longitude', 'MetaData')] = sith.lons
         self.outdata[self.varDict[iodavar]['valKey']] = sith.sith
         self.outdata[self.varDict[iodavar]['errKey']] = sith.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(sith.nlocs, dtype=np.int32)
 
         DimDict['nlocs'] = sith.nlocs
         AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+
 
 def main():
     # get command line arguments
