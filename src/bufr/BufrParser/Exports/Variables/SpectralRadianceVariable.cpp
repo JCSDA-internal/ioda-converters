@@ -72,6 +72,7 @@ namespace Ingester
         size_t nchns = (radObj->getDims())[1];
         size_t nbands = (startChanObj->getDims())[1];
 
+        // Convert the scaled radiance to unscaled radiance 
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
             auto channel = sensorChanObj->getAsInt(idx);
@@ -82,10 +83,7 @@ namespace Ingester
             {
                 bandOffset = iloc * nbands + ibnd;
                if (channel >= startChanObj->getAsInt(bandOffset) &&
-                   channel <= endChanObj->getAsInt(bandOffset))
-               {
-                   break;
-               }
+                   channel <= endChanObj->getAsInt(bandOffset)) break;
             }
 
             if (!radObj->isMissing(idx) && !scaleFactorObj->isMissing(bandOffset))
