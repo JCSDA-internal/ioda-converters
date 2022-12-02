@@ -56,12 +56,12 @@ class tropomi(object):
     def _read(self):
         # set up variable names for IODA
         varname_str = list(self.obsVar.keys())[0]
-        print('Processing variable: %s' %(varname_str), flush=1)
+        print('Processing variable: %s' % (varname_str), flush=1)
         iodavar = self.obsVar[varname_str]
-        #if self.columnType == 'total':
-        #    iodavar = self.obsVar['nitrogendioxide_total_column']
-        #elif self.columnType == 'tropo':
-        #    iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
+        # if self.columnType == 'total':
+        #     iodavar = self.obsVar['nitrogendioxide_total_column']
+        # elif self.columnType == 'tropo':
+        #     iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -101,34 +101,34 @@ class tropomi(object):
                 times[0, t, :] = time1[0, t][0:19]+'Z'
             times = times.ravel()
             if self.varname == 'no2':
-               trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
-               total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
-               trop_airmass = ncd.groups['PRODUCT'].\
-                   variables['air_mass_factor_troposphere'][:].ravel()
-               # get info to construct the pressure level array
-               ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
-                        variables['surface_pressure'][:]
-               # bottom of layer is vertice 0, very top layer is TOA (0hPa)
-               ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
-               bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
-               # grab the averaging kernel
-               avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
+                trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
+                total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
+                trop_airmass = ncd.groups['PRODUCT'].\
+                    variables['air_mass_factor_troposphere'][:].ravel()
+                # get info to construct the pressure level array
+                ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
+                    variables['surface_pressure'][:]
+                # bottom of layer is vertice 0, very top layer is TOA (0hPa)
+                ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
+                bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
+                # grab the averaging kernel
+                avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             elif self.varname == 'co':
-               preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
-                            groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
-               # grab the averaging kernel
-               avg_kernel = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
-                            groups['DETAILED_RESULTS'].variables['column_averaging_kernel'][:]
+                preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
+                # grab the averaging kernel
+                avg_kernel = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['column_averaging_kernel'][:]
 
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
 
             # scale the avk using AMF ratio and tropopause level for tropo column
             if self.varname == 'no2':
-               nlocf = len(trop_layer[flg])
+                nlocf = len(trop_layer[flg])
             elif self.varname == 'co':
-               nlocf = len(lats[flg])
-               
+                nlocf = len(lats[flg])
+
             scaleAK = np.ones((nlocf, nlevs), dtype=np.float32)
             if self.varname == 'no2' and self.columnType == 'tropo':
                 # do not loop over nlocs here this makes the execution very slow
@@ -147,17 +147,17 @@ class tropomi(object):
                     self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     if self.varname == 'no2':
-                       self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
+                        self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
                     elif self.varname == 'co':
-                       rev_k=nlevs-k-1
-                       self.outdata[varname_pr] = preslv[..., rev_k].ravel()[flg]
+                        rev_k = nlevs-k-1
+                        self.outdata[varname_pr] = preslv[..., rev_k].ravel()[flg]
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 if self.varname == 'no2':
-                   self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
+                    self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
                 elif self.varname == 'co':
-                   self.outdata[varname_pr] = np.zeros((nlocf, nlevs), dtype=np.float32)
+                    self.outdata[varname_pr] = np.zeros((nlocf, nlevs), dtype=np.float32)
 
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
@@ -174,18 +174,17 @@ class tropomi(object):
                         (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]))
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     if varname == 'no2':
-                       pr_data = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
+                        pr_data = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
                     elif varname == 'co':
-                       pr_data = preslv[..., k].ravel()[flg]
+                        pr_data = preslv[..., k].ravel()[flg]
                     self.outdata[varname_pr] = np.concatenate((self.outdata[varname_pr], pr_data))
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 if self.varname == 'no2':
-                   self.outdata[varname_pr] = np.concatenate(
-                      (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
+                    self.outdata[varname_pr] = np.concatenate(
+                        (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
                 elif self.varname == 'co':
-                   self.outdata[varname_pr] = np.concatenate(
-                    (self.outdata[varname_pr], np.zeros((nlocf, nlevs), dtype=np.float32)))
-
+                    self.outdata[varname_pr] = np.concatenate(
+                        (self.outdata[varname_pr], np.zeros((nlocf, nlevs), dtype=np.float32)))
 
             for ncvar, iodavar in self.obsVar.items():
 
@@ -264,18 +263,18 @@ def main():
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
-        
+
     args = parser.parse_args()
 
     if args.variable == "co":
-       var_in_name='carbonmonoxide'
-       var_out_name='carbon_monoxide'
-       if args.column == "tropo":
-          print('CO is only available for total column, reset column to total',flush=1)
-          args.column = 'total'
+        var_in_name = 'carbonmonoxide'
+        var_out_name = 'carbon_monoxide'
+        if args.column == "tropo":
+            print('CO is only available for total column, reset column to total', flush=1)
+            args.column = 'total'
     elif args.variable == "no2":
-       var_in_name='nitrogendioxide'
-       var_out_name='nitrogen_dioxide'
+        var_in_name = 'nitrogendioxide'
+        var_out_name = 'nitrogen_dioxide'
 
     if args.column == "tropo":
 
