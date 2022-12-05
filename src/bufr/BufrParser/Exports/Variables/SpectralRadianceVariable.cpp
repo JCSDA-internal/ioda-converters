@@ -69,7 +69,7 @@ namespace Ingester
         size_t nchns = (radObj->getDims())[1];
         size_t nbands = (startChanObj->getDims())[1];
 
-        // Convert the scaled radiance to unscaled radiance 
+        // Convert the scaled radiance to unscaled radiance
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
             auto channel = sensorChanObj->getAsInt(idx);
