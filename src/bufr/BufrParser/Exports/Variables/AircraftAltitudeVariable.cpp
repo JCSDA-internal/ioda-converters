@@ -95,16 +95,16 @@ namespace Ingester
                     if (!field.second->isMissing(idx))
                     {
                         auto value = field.second->getAsFloat(idx);
-                        if (value < 22630)
+                        if (value < 22630.0f)
                         {
                             aircraftAlts[idx]  =
-                                11000.0f - (std::log1p(value / 22630.0) / 0.0001576106f);
+                                11000.0f - (std::log1p(value / 22630.0f) / 0.0001576106f);
                         }
                         else
                         {
                             aircraftAlts[idx]  =
                                 (1.0f - powf((value / 101325.0f),
-                                             (1.0 / 5.256))) * (288.15f / 0.0065f);
+                                             (1.0f / 5.256f))) * (288.15f / 0.0065f);
                         }
                     }
                     else if (includedFields.find(ConfKeys::AircraftIndicatedAltitude)
