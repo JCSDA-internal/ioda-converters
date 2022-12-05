@@ -906,7 +906,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv_uv
                           -o testrun/
                           -t conv
                           -p satwind"
-                          satwind_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+                          satwind_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv
                   TYPE    SCRIPT
@@ -919,7 +919,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_conv
                           -o testrun/
                           -t conv
                           -p sfc"
-                          sfc_tv_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+                          sfc_tv_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_rad
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -931,7 +931,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_rad
                           -i testinput/gsidiag_amsua_aqua_radiance_test.nc
                           -o testrun/
                           -t rad"
-                          amsua_aqua_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+                          amsua_aqua_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL})
 
 #===============================================================================
 # WRFDA ncdiag converter
@@ -1805,7 +1805,10 @@ foreach ( f ${TESTOUTPUT_IODA_FILES} )
 		COMMAND ioda-validate.x
 		LABELS ${PROJECT_NAME}_validate
 		ENVIRONMENT "ECKIT_COLOUR_OUTPUT=1"
-		ARGS "${IODA_YAML_ROOT}/validation/ObsSpace.yaml" "${f}"
+		ARGS "--ignore-warn"
+                     "--ignore-error"
+                     "${IODA_YAML_ROOT}/validation/ObsSpace.yaml"
+                     "${f}"
 		)
 endforeach()
 
