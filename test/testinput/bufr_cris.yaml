@@ -6,16 +6,17 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t00z.airsev.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.crisf4.tm00.bufr_d"
       mnemonicSets:
-        - mnemonics: [SAID, SLNM, SOZA, SOLAZI]
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
-        - mnemonics: [CLATH, CLONH, SAZA, BEARAZ, FOVN]
-        - mnemonics: [ALBD]
-          channels: 1-4
-        - mnemonics: [CHNM, TMBR]
-          channels: 1-15
-        - mnemonics: [TOCC]
+        - mnemonics: [SAID, YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLATH, CLONH]
+        - mnemonics: [SAZA, BEARAZ, SOZA, SOLAZI, STKO]
+        - mnemonics: [SLNM, FOVN, HOLS]
+        - mnemonics: [TOCC, HOCT, NSQF]
+        - mnemonics: [STCH, ENCH, CHSF]
+        - mnemonics: [CHNM, SRAD]
+          channels : 1-430
+#       - mnemonics: [CHNM, SCHRAD]      # VIIRS radiance
+#         channels : 1-16
 
       exports:
         variables:
@@ -33,8 +34,10 @@ observations:
             mnemonic: CLONH
           satelliteIdentifier:
             mnemonic: SAID
-          sensorChannelNumber:
-            mnemonic: CHNM
+          scanLineNumber:
+            mnemonic: SLNM
+          satelliteAscendingFlag:
+            mnemonic: STKO
           fieldOfViewNumber:
             mnemonic: FOVN
           solarZenithAngle:
@@ -49,31 +52,39 @@ observations:
             mnemonic: TOCC
             transforms:
               - scale: 0.01
-#         albedo:
-#           mnemonic: ALBD
-#           transforms:
-#             - scale: 0.01
-          brightnessTemperature:
-            mnemonic: TMBR
+          heightOfTopOfCloud:
+            mnemonic: HOCT
+          qualityFlags:
+            mnemonic: NSQF
+          sensorChannelStart:
+            mnemonic: STCH
+          sensorChannelEnd:
+            mnemonic: ENCH
+          channelScaleFactor:
+            mnemonic: CHSF
+          sensorChannelNumber:
+            mnemonic: CHNM
+          radiance:          # This is actually a scaled radiance, needs a fix
+            mnemonic: SRAD
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.airsev.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.crisf4.tm00.nc"
 
       dimensions:
         - name: "Location"
           size: variables/latitude.nrows
         - name: "Channel"
-          size: variables/brightnessTemperature.ncols
+          size: variables/radiance.ncols
 
-      globals:
+      globals: 
         - name: "platformCommonName"
           type: string
-          value: "AIRS"
+          value: "SNPP"
 
         - name: "platformLongDescription"
           type: string
-          value: "MTYP 021-249 EVERY FOV AIRS/AMSU-A/HSB 1B BTEMPS(AQUA)"
+          value: "MTYP 021-206 CrIS FULL SPCTRL RADIANCE (431 CHN SUBSET)"
 
       variables:
         - name: "MetaData/satelliteIdentifier"
@@ -136,6 +147,18 @@ observations:
           units: "degrees"
           range: [0, 360]
 
+        - name: "MetaData/scanLineNumber"
+          source: variables/scanLineNumber
+          dimensions: ["Location"]
+          longName: "Sensor scan line number"
+          units: ""
+
+        - name: "MetaData/qualityFlags"
+          source: variables/qualityFlags
+          dimensions: ["Location"]
+          longName: "Scan level quality flags"
+          units: ""
+
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
           dimensions: ["Channel"]
@@ -143,29 +166,24 @@ observations:
           units: ""
 
         - name: "ObsValue/cloudAmount"
-          coordinates: "longitude latitude"
           source: variables/cloudAmount
+          coordinates: "longitude latitude"
           dimensions: ["Location"]
           longName: "Cloud fraction"
           units: "1"
-          range: [0, 1]
 
-#       - name: "ObsValue/albedo"
-#         coordinates: "longitude latitude Channel"
-#         source: variables/albedo
-#         dimensions: ["Location", "Channel"]
-#         longName: "albedo"
-#         units: "1"
-#         range: [0, 1]
-#         chunks: [1000, 15]
-#         compressionLevel: 4
+        - name: "ObsValue/heightOfTopOfCloud"
+          source: variables/heightOfTopOfCloud
+          coordinates: "longitude latitude"
+          dimensions: ["Location"]
+          longName: "Cloud top height"
+          units: "m"
 
-        - name: "ObsValue/brightnessTemperature"
+        - name: "ObsValue/radiance"
+          source: variables/radiance
           coordinates: "longitude latitude Channel"
-          source: variables/brightnessTemperature
           dimensions: ["Location", "Channel"]
-          longName: "Brightness temperature"
-          units: "K"
-          range: [120, 500]
-          chunks: [1000, 15]
+          longName: "radiance"
+          units: "W m-2 sr-1"
+          chunks: [1000, 430]
           compressionLevel: 4

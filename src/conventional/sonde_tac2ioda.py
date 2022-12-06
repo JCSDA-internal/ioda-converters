@@ -63,32 +63,32 @@ STATIONS = {}
 
 # The outgoing IODA MetaData variables, their data type, and units.
 MetaDataKeyList = [
-    ("stationIdentification", "string", ""),
+    ("station_id", "string", ""),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
-    ("stationElevation", "float", "m"),
+    ("station_elevation", "float", "m"),
     ("height", "float", "m"),
-    ("pressure", "float", "Pa"),
-    ("launchTime", "string", ""),
+    ("air_pressure", "float", "Pa"),
+    ("launch_time", "string", ""),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['airTemperature',
-           'specificHumidity',
-           'virtualTemperature',
-           'windEastward',
-           'windNorthward']
+obsvars = ['air_temperature',
+           'specific_humidity',
+           'virtual_temperature',
+           'eastward_wind',
+           'northward_wind']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7]
 
 VarDims = {
-    'airTemperature': ['Location'],
-    'specificHumidity': ['Location'],
-    'virtualTemperature': ['Location'],
-    'windEastward': ['Location'],
-    'windNorthward': ['Location']
+    'air_temperature': ['nlocs'],
+    'specific_humidity': ['nlocs'],
+    'virtual_temperature': ['nlocs'],
+    'eastward_wind': ['nlocs'],
+    'northward_wind': ['nlocs']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -815,9 +815,6 @@ def getPressureLevels(section, levels):
     section['levels'] = {}
     pressures = sorted(levels.keys(), reverse=True)
 
-    if len(pressures) < 1:
-        return
-
     # loop through each height and try to find surrounding heights with defined
     # levels to interpolate or extrapolate pressure level from
 
@@ -859,9 +856,6 @@ def getHeights(section, levels):
     :return:
     """
     pressures = sorted(levels.keys(), reverse=True)
-
-    if len(pressures) < 1:
-        return
 
     for pressure in sorted(section['levels'].keys(), reverse=True):
         pressurelo = pressures[0]
@@ -994,19 +988,19 @@ def change_vars(profile):
         time_offset = round((this_datetime - epoch).total_seconds())
         previous_time = this_datetime
 
-        new_profile['stationIdentification'].append(profile['synop'])
+        new_profile['station_id'].append(profile['synop'])
         new_profile['latitude'].append(profile['lat'])
         new_profile['longitude'].append(profile['lon'])
-        new_profile['stationElevation'].append(profile['elev'])
-        new_profile['launchTime'].append(launch_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        new_profile['station_elevation'].append(profile['elev'])
+        new_profile['launch_time'].append(launch_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
         new_profile['dateTime'].append(time_offset)
-        new_profile['pressure'].append(pres)
+        new_profile['air_pressure'].append(pres)
         new_profile['height'].append(height)
-        new_profile['airTemperature'].append(temp)
-        new_profile['virtualTemperature'].append(tvirt)
-        new_profile['specificHumidity'].append(spfh)
-        new_profile['windEastward'].append(u)
-        new_profile['windNorthward'].append(v)
+        new_profile['air_temperature'].append(temp)
+        new_profile['virtual_temperature'].append(tvirt)
+        new_profile['specific_humidity'].append(spfh)
+        new_profile['eastward_wind'].append(u)
+        new_profile['northward_wind'].append(v)
 
     """
     Based on height and time and the wind componenents, predict the lat, lon positions
@@ -1021,13 +1015,13 @@ def change_vars(profile):
 
     for idx in range(1, len(delta_t)):
 
-        if (new_profile['windEastward'][idx-1] != float_missing_value and new_profile['windNorthward'][idx-1] != float_missing_value):
+        if (new_profile['eastward_wind'][idx-1] != float_missing_value and new_profile['northward_wind'][idx-1] != float_missing_value):
             # move north-south
-            d_north = new_profile['windNorthward'][idx-1] * delta_t[idx-1]
+            d_north = new_profile['northward_wind'][idx-1] * delta_t[idx-1]
             location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north)[0]
             new_profile['latitude'][idx] = location[1]
             # move east-west
-            d_east = new_profile['windEastward'][idx-1] * delta_t[idx-1]
+            d_east = new_profile['eastward_wind'][idx-1] * delta_t[idx-1]
             location = geod.direct(points=location[:2], azimuths=90., distances=d_east)[0]
             new_profile['longitude'][idx] = location[0]
         else:
@@ -1164,7 +1158,7 @@ if __name__ == "__main__":
 
     if args.netcdf:
         ioda_data = {}
-        DimDict = {'Location': ntotal}
+        DimDict = {'nlocs': ntotal}
         AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
         # Set coordinates and units of the ObsValues.
         for n, iodavar in enumerate(obsvars):

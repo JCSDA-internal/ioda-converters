@@ -1,4 +1,4 @@
-# (C) Copyright 2021 UCAR
+# (C) Copyright 2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,16 +6,14 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t00z.airsev.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.mtiasi.tm00.bufr_d"
       mnemonicSets:
-        - mnemonics: [SAID, SLNM, SOZA, SOLAZI]
-        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
-        - mnemonics: [CLATH, CLONH, SAZA, BEARAZ, FOVN]
-        - mnemonics: [ALBD]
-          channels: 1-4
-        - mnemonics: [CHNM, TMBR]
-          channels: 1-15
-        - mnemonics: [TOCC]
+        - mnemonics: [SAID, YEAR, MNTH, DAYS, HOUR, MINU, SECO]
+        - mnemonics: [CLATH, CLONH, SAZA, BEARAZ, SOZA, SOLAZI, FOVN, SLNM]
+        - mnemonics: [STCH, ENCH, CHSF]
+          channels: 1-10
+        - mnemonics: [CHNM, SCRA]
+          channels: 1-616
 
       exports:
         variables:
@@ -33,8 +31,8 @@ observations:
             mnemonic: CLONH
           satelliteIdentifier:
             mnemonic: SAID
-          sensorChannelNumber:
-            mnemonic: CHNM
+          scanLineNumber:
+            mnemonic: SLNM
           fieldOfViewNumber:
             mnemonic: FOVN
           solarZenithAngle:
@@ -45,35 +43,37 @@ observations:
             mnemonic: SAZA
           sensorAzimuthAngle:
             mnemonic: BEARAZ
-          cloudAmount:
-            mnemonic: TOCC
-            transforms:
-              - scale: 0.01
-#         albedo:
-#           mnemonic: ALBD
-#           transforms:
-#             - scale: 0.01
-          brightnessTemperature:
-            mnemonic: TMBR
+          sensorChannelStart:
+            mnemonic: STCH
+          sensorChannelEnd:
+            mnemonic: ENCH
+          channelScaleFactor:
+            mnemonic: CHSF
+          sensorChannelNumber:
+            mnemonic: CHNM
+          radiance:          # This is actually a scaled radiance, needs a fix
+            mnemonic: SCRA
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.airsev.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.mtiasi.tm00.nc"
 
       dimensions:
         - name: "Location"
           size: variables/latitude.nrows
         - name: "Channel"
-          size: variables/brightnessTemperature.ncols
+          size: variables/radiance.ncols
+  #     - name: "ChannelBlock"
+  #       size: variables/sensorChannelStart.ncols
 
       globals:
         - name: "platformCommonName"
           type: string
-          value: "AIRS"
+          value: "IASI"
 
         - name: "platformLongDescription"
           type: string
-          value: "MTYP 021-249 EVERY FOV AIRS/AMSU-A/HSB 1B BTEMPS(AQUA)"
+          value: "MTYP 021-241 IASI 1C RADIANCES (VARIABLE CHNS) (METOP)"
 
       variables:
         - name: "MetaData/satelliteIdentifier"
@@ -108,6 +108,12 @@ observations:
           longName: "Field of view number"
           units: ""
 
+        - name: "MetaData/scanLineNumber"
+          source: variables/scanLineNumber
+          dimensions: ["Location"]
+          longName: "Scan line number"
+          units: ""
+
         - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
           dimensions: ["Location"]
@@ -136,36 +142,35 @@ observations:
           units: "degrees"
           range: [0, 360]
 
+#       - name: "MetaData/sensorChannelStart"
+#         source: variables/sensorChannelStart
+#         dimensions: ["ChannelBlock"]
+#         longName: "Starting channel number"
+#         units: ""
+
+#       - name: "MetaData/sensorChannelEnd"
+#         source: variables/sensorChannelEnd
+#         dimensions: ["ChannelBlock"]
+#         longName: "Ending channel number"
+#         units: ""
+
+#       - name: "MetaData/channelScaleFactor"
+#         source: variables/channelScaleFactor
+#         dimensions: ["ChannelBlock"]
+#         longName: "Channel scale factor"
+#         units: ""
+
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
           dimensions: ["Channel"]
           longName: "Channel number"
           units: ""
 
-        - name: "ObsValue/cloudAmount"
-          coordinates: "longitude latitude"
-          source: variables/cloudAmount
-          dimensions: ["Location"]
-          longName: "Cloud fraction"
-          units: "1"
-          range: [0, 1]
-
-#       - name: "ObsValue/albedo"
-#         coordinates: "longitude latitude Channel"
-#         source: variables/albedo
-#         dimensions: ["Location", "Channel"]
-#         longName: "albedo"
-#         units: "1"
-#         range: [0, 1]
-#         chunks: [1000, 15]
-#         compressionLevel: 4
-
-        - name: "ObsValue/brightnessTemperature"
+        - name: "ObsValue/radiance"
+          source: variables/radiance
           coordinates: "longitude latitude Channel"
-          source: variables/brightnessTemperature
           dimensions: ["Location", "Channel"]
-          longName: "Brightness temperature"
-          units: "K"
-          range: [120, 500]
-          chunks: [1000, 15]
+          longName: "Scaled radiance"
+          units: "W m-2 sr-1"
+          chunks: [1000, 616]
           compressionLevel: 4

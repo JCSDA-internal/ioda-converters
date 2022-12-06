@@ -66,11 +66,6 @@ def zext_up(pres_lower, pres_upper, temperature, hght_lower):
     :param hght_lower: Height of lower layer (m)
     :return: Extrapolated height (m)
     """
-    if pres_upper is None or pres_lower is None:
-        return None
-    if pres_upper <= 0 or pres_lower <=0 or temperature is None or hght_lower is None:
-        return None
-
     return hght_lower + (Rd * (temperature + CTOK) / G) * math.log(pres_lower / pres_upper)
 
 # --+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -86,11 +81,6 @@ def zext_down(pres_lower, pres_upper, temperature, hght_upper):
     :param hght_upper: Height of upper layer (m)
     :return: Extrapolated height (m)
     """
-    if pres_upper is None or pres_lower is None:
-        return None
-    if pres_upper <= 0 or pres_lower <=0 or temperature is None or hght_upper is None:
-        return None
-
     return hght_upper - (Rd * (temperature + CTOK) / G) * math.log(pres_lower / pres_upper)
 
 # --+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
