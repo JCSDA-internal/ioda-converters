@@ -57,25 +57,27 @@ namespace Ingester
     {
         checkKeys(map);
 
-        std::unordered_map<std::string, std::shared_ptr<DataObjectBase>> includedFields;
+        std::unordered_map<std::string, std::shared_ptr<DataObjectBase>> includedFieldMap;
+	std::vector<std::string> includedFields;
 
         std::shared_ptr<DataObjectBase> referenceObj = nullptr;
         for (const auto& fieldName : FieldNames)
         {
             if (conf_.has(fieldName))
             {
-                includedFields.insert({fieldName, map.at(getExportKey(fieldName))});
+                includedFieldMap.insert({fieldName, map.at(getExportKey(fieldName))});
+		includedFields.push_back(fieldName);
             }
         }
 
-        referenceObj = (*includedFields.begin()).second;
+        referenceObj = (*includedFieldMap.begin()).second;
 
         // Validation: make sure the dimensions are consistent
         auto path = referenceObj->getPath();
         for (const auto& fieldName : FieldNames)
         {
-            if (includedFields.find(fieldName) != includedFields.end() &&
-                includedFields[fieldName]->getPath() != path)
+            if (includedFieldMap.find(fieldName) != includedFieldMap.end() &&
+                includedFieldMap[fieldName]->getPath() != path)
             {
                 std::ostringstream errStr;
                 errStr << "Inconsistent dimensions found in source data.";
@@ -88,45 +90,55 @@ namespace Ingester
 
         for (size_t idx = 0; idx < referenceObj->size(); idx++)
         {
-            for (const auto &field : includedFields)
+            std::cout << "idx = " << idx << std::endl;
+            for (auto nameIt = includedFields.rbegin(); nameIt != includedFields.rend(); ++nameIt)
             {
-                if (field.first == ConfKeys::Pressure)
+		const auto& fieldName = *nameIt;
+		const auto& fieldValues = includedFieldMap.at(fieldName); 
+                if (fieldName == ConfKeys::Pressure)
                 {
-                    if (!field.second->isMissing(idx))
+                    if (!fieldValues->isMissing(idx))
                     {
-                        auto value = field.second->getAsFloat(idx);
+                        auto value = fieldValues->getAsFloat(idx);
                         if (value < 22630.0f)
                         {
                             aircraftAlts[idx]  =
                                 11000.0f - (std::log1p(value / 22630.0f) / 0.0001576106f);
+                            std::cout << "section 1" << std::endl;
                         }
                         else
                         {
                             aircraftAlts[idx]  =
                                 (1.0f - powf((value / 101325.0f),
                                              (1.0f / 5.256f))) * (288.15f / 0.0065f);
+                            std::cout << "section 2" << std::endl;
                         }
                     }
-                    else if (includedFields.find(ConfKeys::AircraftIndicatedAltitude)
-                             != includedFields.end())
+                    else if (includedFieldMap.find(ConfKeys::AircraftIndicatedAltitude)
+                             != includedFieldMap.end())
                     {
-                        if (!includedFields[ConfKeys::AircraftIndicatedAltitude]->isMissing(idx))
+                        if (!includedFieldMap[ConfKeys::AircraftIndicatedAltitude]->isMissing(idx))
                         {
                             aircraftAlts[idx] =
-                              includedFields[ConfKeys::AircraftIndicatedAltitude]->getAsFloat(idx);
+                              includedFieldMap[ConfKeys::AircraftIndicatedAltitude]->getAsFloat(idx);
+                            std::cout << "section 3" << std::endl;
                         }
                     }
                 }
-                else if (field.first == ConfKeys::AircraftIndicatedAltitude)
+                else if (fieldName == ConfKeys::AircraftIndicatedAltitude)
                 {
                     // This variable is only used in conjunction with pressure.
                     continue;
+                    std::cout << "section 4" << std::endl;
                 }
-                else if (!field.second->isMissing(idx))
+                else if (!fieldValues->isMissing(idx))
                 {
-                     aircraftAlts[idx] = field.second->getAsFloat(idx);
+                    std::cout << " fieldValues = " << fieldValues << std::endl;
+                    aircraftAlts[idx] = fieldValues->getAsFloat(idx);
+                    std::cout << "section 5" << std::endl;
                 }
             }
+        std::cout << "AA = " << aircraftAlts[idx] << std::endl;    
         }
 
         return std::make_shared<DataObject<float>>(aircraftAlts,
