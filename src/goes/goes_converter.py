@@ -312,7 +312,7 @@ class GoesConverter:
         output_dataset.createDimension('Location', Location)
         output_dataset.createVariable('Location', 'i8', 'Location')
         output_dataset.variables['Location'].setncattr('suggested_chunk_dim', round(Location*0.1))
-        output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int64')
+        output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
 
     @staticmethod
     def _create_groups(output_dataset):
@@ -382,7 +382,7 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/PreQC/albedo', 'f4', ('Location', 'Channel'), fill_value=-999)
+        output_dataset.createVariable('/PreQC/albedo', 'i4', ('Location', 'Channel'), fill_value=-999)
         output_dataset['/PreQC/albedo'][:] = data_array
         output_dataset['/PreQC/albedo'].setncattr('flag_values', '0,1,2,3')
         output_dataset['/PreQC/albedo'].setncattr('flag_meanings',
@@ -403,7 +403,7 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/PreQC/brightnessTemperature', 'f4', ('Location', 'Channel'),
+        output_dataset.createVariable('/PreQC/brightnessTemperature', 'i4', ('Location', 'Channel'),
                                       fill_value=-999)
         output_dataset['/PreQC/brightnessTemperature'][:] = data_array
         output_dataset['/PreQC/brightnessTemperature'].setncattr('flag_values', '0,1,2,3')
