@@ -310,7 +310,7 @@ class GoesConverter:
         """
         Location = self._latlon_dataset.dimensions['Location'].size
         output_dataset.createDimension('Location', Location)
-        output_dataset.createVariable('Location', 'i8', 'Location')
+        output_dataset.createVariable('Location', 'i4', 'Location')
         output_dataset.variables['Location'].setncattr('suggested_chunk_dim', round(Location*0.1))
         output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
 
@@ -330,7 +330,7 @@ class GoesConverter:
         """
         Creates the Channel dimension in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
-        Channel - An integer indicating the number of Channel: 6 (for reflectance factor)
+        Channel - An integer indicating the number of Channel: 6 (for albedo)
                                                           or 10 (for brightness temperature)
         """
         output_dataset.createDimension('Channel', Channel)
