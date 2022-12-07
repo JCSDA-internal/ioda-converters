@@ -13,164 +13,168 @@
 #include <regex>
 #include <typeinfo>
 #include <cstddef>
+#include <iostream>
+#include <sstream>
 
 #include "ObjectFactory.h"
 
 
 namespace Ingester {
 namespace bufr {
+    // tokenizer to tokenize a query string in the format */ABCD/EFG/XYZ[1]
+    // into a vector of tokens
+    // each token is a mnemonic, seperator, index or filter
+    // the tokenizer is a recursive descent parser
+    // the grammar is as follows
+    //
+    // subset = "*" | [A-Z_]+
+    // index = "[" [0-9]+ "]"
+    // sequence = "/" [A-Z_]+
+    // target element = "/" [A-Z_]+ index? filter?
+    // index = "[" [0-9]+ "]"
+    // filter = "{" [A-Z_] (,[A-Z_]+ ")?}"
 
-namespace filter {
-    struct Token
-    {
-        virtual bool contains() = 0;
+    // define the tokens
+    enum class TokenType {
+        Seperator,
+        Mnemonic,
+        Index,
+        Filter,
+        Unknown
     };
 
-    struct Index : public Token
-    {
-        static const std::regex pattern = std::regex("\\d");
-        size_t index;
+    // Token abstract base class
+    class Token {
+    public:
+        Token() = default;
+        virtual ~Token() = default;
+        virtual TokenType type() const = 0;
+        virtual std::string str() const = 0;
+
+        /// \brief Check if the next token matches this token
+        /// \param iter std::string iterator for the query string
+        /// \param end std::string iterator for the end of the query string
+        /// \return true if the next token matches this token
+        virtual bool match(std::string::const_iterator &iter,
+                           std::string::const_iterator &end) const = 0;
     };
 
-    struct Operator : public Token
-    {
-    };
+    // template base class for tokens
+    template <class T>
+    class TokenBase : public Token {
+    public:
+        TokenBase() = default;
+        virtual ~TokenBase() = default;
 
-    struct RangeOperator : public Operator
-    {
-        static const char Seperator = '-';
-
-        size_t start;
-        size_t end;
-    };
-
-    struct List : public Operator
-    {
-        static const char Seperator = ',';
-
-        std::vector<Token> tokens;
-    };
-
-    typedef ObjectFactory<Token> TokenFactory;
-
-    class Tokenizer
-    {
-     public:
-        static std::vector<Token> tokenize(const std::string& str);
-    };
-}  // namespace filter
-
-namespace query {
-
-    struct Token
-    {
-        virtual std::vector<Token> parse() = 0;
-    };
-
-    typedef std::shared_ptr<Token> TokenType;
-
-    template<typename T>
-    struct TokenBase : public Token
-    {
-        static bool contains(std::string::const_iterator start, std::string::const_iterator end)
+        static std::shared_ptr<Token> parse(std::string::const_iterator &iter,
+                                            std::string::const_iterator &end)
         {
-            return std::regex_match(start, end, std::regex(T::pattern));
-        }
-    };
-
-    struct Seperator : TokenBase<Seperator>
-    {
-        constexpr static const char* pattern = "\\/";
-    };
-
-    struct Mnemonic : public TokenBase<Mnemonic>
-    {
-        constexpr static const char* pattern = "[A-Z]+";
-
-        std::string mmenonic;
-    };
-
-    struct Index : public TokenBase<Index>
-    {
-        constexpr static const char* pattern = "\\[\\d\\]";
-
-        size_t index;
-    };
-
-    struct Filter : public TokenBase<Filter>
-    {
-        constexpr static const char* pattern = "\\{.+\\}";
-
-        std::vector<TokenType> subTokens;
-    };
-
-
-    typedef ObjectFactory<TokenType> TokenFactory;
-
-    struct NullToken {};
-    template<typename Head, typename... Tail> struct TokenList
-    {
-        using head = Head;
-        using tail = TokenList<Tail...>;
-    };
-
-    template<typename Single> struct TokenList <Single>
-    {
-        using head = Single;
-        using tail = NullToken;
-    };
-
-    class Tokenizer
-    {
-     public:
-        template<typename... Tokens>
-        static std::vector<TokenType> tokenize(const std::string& query)
-        {
-            _tokenize(query.begin(), query.end());
-        }
-
-     private:
-        static std::vector<TokenType> _tokenize(std::string::const_iterator start,
-                                                std::string::const_iterator end)
-        {
-
-            // find seperators
-            // get mnemonic in each division
-            // check for indices
-            // check and tokenize filters
-
-            auto valid = std::regex(
-                "(\\*|[A-Z]+)(\\[\\d\\])?(\\/([A-Z]+))*\\/[A-Z]+((\\[\\d\\])|(\\{.+\\}))?")
-
-            auto seps = std::regex("\\/")
-
-            std::vector<TokenType> tokens;
-
-            while (true)
+            auto regex = T::regex(T::pattern);
+            std::smatch match;
+            if (std::regex_search(iter, end, match, regex))
             {
-                if (Mnemonic::contains(start, end))
-                {
-                    tokens.push_back(Mnemonic::make(start, end));
-                }
-                else if (Seperator::contains(start, end))
-                {
-                    tokens.push_back(Seperator::make(start, end));
-                }
-                else if (Index::contains(start, end))
-                {
+                iter += match.length();
+                return std::make_shared<T>(match.str());
+            }
+        }
 
-                }
-                else
+        /// \brief Check if the next token matches this token
+        /// \param iter std::string iterator for the query string
+        /// \param end std::string iterator for the end of the query string
+        /// \return true if the next token matches this token
+        bool match(std::string::const_iterator &iter,
+                   std::string::const_iterator &end) const final
+        {
+            // search the string and check the next substring matches this token
+            auto regex = std::regex(T::Pattern);
+            std::smatch match;
+            if (std::regex_search(iter, end, match, regex))
+            {
+                // check if the match is at the beginning of the string
+                if (match.position() == 0)
                 {
-                    break;
+                    // move the iterator to the end of the match
+                    iter += match.length();
+                    return true;
                 }
             }
 
-            return tokens;
+            return false;
+        }
+
+        TokenType type() const final
+        {
+            return T::Type;
         }
     };
-}  // namespace query
 
-}  // bufr
-}  // Ingester
+    class SeperatorToken : public TokenBase<SeperatorToken> {
+    public:
+        constexpr static const char* Pattern = "\\/";
+        constexpr static const TokenType Type = TokenType::Seperator;
+
+        explicit SeperatorToken(const std::string &target) {}
+        std::string str() const override { return "/"; }
+    };
+
+    class MnemonicToken : public TokenBase<MnemonicToken> {
+    public:
+        constexpr static const char* Pattern = "[A-Z0-9_]+";
+        constexpr static const TokenType Type = TokenType::Mnemonic;
+
+        explicit MnemonicToken(const std::string &mnemonic) : mnemonic_(mnemonic) {}
+        std::string str() const override { return mnemonic_; }
+    private:
+        std::string mnemonic_;
+    };
+
+    class IndexToken : public TokenBase<IndexToken> {
+    public:
+        constexpr static const char* Pattern = "\\[[0-9]\\]";
+        constexpr static const TokenType Type = TokenType::Index;
+
+        explicit IndexToken(const std::string &index) : index_(index) {}
+        std::string str() const override { return index_; }
+    private:
+        std::string index_;
+    };
+
+    class FilterToken : public TokenBase<FilterToken> {
+    public:
+        constexpr static const char* Pattern = "{[A-Z_] (,[A-Z_]+)?}";
+        constexpr static const TokenType Type = TokenType::Filter;
+
+        explicit FilterToken(const std::string &filter) : filter_(filter) {}
+        std::string str() const override { return filter_; }
+    private:
+        std::string filter_;
+    };
+
+    class UnknownToken : public TokenBase<UnknownToken> {
+    public:
+        constexpr static const char* Pattern = ".*";
+        constexpr static const TokenType Type = TokenType::Unknown;
+
+        explicit UnknownToken(const std::string &unknown = "") : unknown_(unknown) {}
+        std::string str() const override { return unknown_; }
+    private:
+        std::string unknown_;
+    };
+
+
+    // tokenizer to tokenize a query string in the format */ABCD/EFG/XYZ[1]
+    class Tokenizer
+    {
+    public:
+        Tokenizer() = default;
+        ~Tokenizer() = default;
+
+        // tokenize a query string
+        // return a vector of tokens
+        std::vector<std::shared_ptr<Token>> tokenize(const std::string &query);
+    };
+
+
+};  // namespace bufr
+}  // namespace Ingester
 

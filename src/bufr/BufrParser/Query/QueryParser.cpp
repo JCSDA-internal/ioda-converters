@@ -12,15 +12,19 @@
 
 #include "eckit/exception/Exceptions.h"
 
+#include "Parser/Tokenizer.h"
+
 namespace Ingester {
 namespace bufr {
     std::vector<Query> QueryParser::parse(const std::string& queryStr)
     {
         std::vector<Query> queries;
-        for (auto& subStr : QueryParser::splitMultiquery(queryStr))
-        {
-            queries.emplace_back(QueryParser::splitQueryStr(subStr));
-        }
+//        for (auto& subStr : QueryParser::splitMultiquery(queryStr))
+//        {
+//            queries.emplace_back(QueryParser::splitQueryStr(subStr));
+//        }
+
+        query::Tokenizer::tokenize(queryStr);
 
         return queries;
     }
