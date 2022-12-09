@@ -110,6 +110,10 @@ namespace Ingester
         /// \return Float data.
         virtual float getAsFloat(const Location& loc) const = 0;
 
+        /// \brief Is the element at the location the missing value.
+        /// \return bool data.
+        virtual bool isMissing(const Location& loc) const = 0;
+
         /// \brief Get the data at the index as an int.
         /// \return Int data.
         virtual int getAsInt(size_t idx) const = 0;
@@ -338,6 +342,14 @@ namespace Ingester
         /// \return String data.
         std::string getAsString(const Location& loc) const final { return _getAsString(loc); }
 
+        /// \brief Is the element at the location the missing value.
+        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
+        ///            at that coordinate).
+        /// \return bool data.
+        bool isMissing(const Location& loc) const final
+        {
+            return get(loc) == missingValue();
+        }
 
         /// \brief Get the data at the index into the internal 1d array as a int. This function
         ///        gives you direct access to the internal data and doesn't account for dimensional

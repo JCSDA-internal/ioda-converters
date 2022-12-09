@@ -29,6 +29,8 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/DatetimeVariable.cpp
   BufrParser/Exports/Variables/SpectralRadianceVariable.h
   BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
+  BufrParser/Exports/Variables/AircraftAltitudeVariable.h
+  BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp
   BufrParser/Exports/Variables/TimeoffsetVariable.h
   BufrParser/Exports/Variables/TimeoffsetVariable.cpp
   BufrParser/Exports/Variables/QueryVariable.h
