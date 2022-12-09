@@ -141,6 +141,7 @@ namespace Ingester
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::SpectralRadiance);
                 variable = std::make_shared<SpectralRadianceVariable>(key, groupByField, dtconf);
+            }
             else if (subConf.has(ConfKeys::Variable::AircraftAltitude))
             {
                 auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::AircraftAltitude);
