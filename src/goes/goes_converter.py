@@ -56,9 +56,9 @@ class GoesConverter:
         Constructor
         input_file_paths - A list of the absolute paths to all 16 ABI channels from the same hour
         latlon_file_path - The path to an existing GoesLatLon file or if it does not exist the path to write the file
-        output_file_path_rf - The path to write the IODAv2 reflectance factor data file
+        output_file_path_rf - The path to write the IODAv2 albedo (reflectance factor) data file
         output_file_path_bt - The path to write the IODAv2 brightness temperature data file
-        include_rf - Boolean value indicating whether to create the reflectance factor output data file: False (default)
+        include_rf - Boolean value indicating whether to create the albedo output data file: False (default)
         resolution - The resolution in km: 8 (default), 4, 8, 16, 32, 64
         """
         self._input_file_paths = input_file_paths
@@ -92,7 +92,7 @@ class GoesConverter:
 
     def _initialize(self):
         """
-        Create two local dictionaries contained the Goes class instances for reflectance factor (ABI channels 1-6)
+        Create two local dictionaries contained the Goes class instances for albedo (ABI channels 1-6)
         and brightness temperature (ABI channels 7-16). This function also assigns the file path for a template GOES file
         from ABI channel 7.
         """
@@ -311,7 +311,7 @@ class GoesConverter:
         Location = self._latlon_dataset.dimensions['Location'].size
         output_dataset.createDimension('Location', Location)
         output_dataset.createVariable('Location', 'i4', 'Location')
-        output_dataset.variables['Location'].setncattr('suggested_chunk_dim', round(Location*0.1))
+        output_dataset.variables['Location'].setncattr('suggested_chunk_dim', round(Location*0.01))
         output_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
 
     @staticmethod
@@ -368,9 +368,9 @@ class GoesConverter:
         """
         return dataset.dimensions['Location'].size
 
-    def _create_preqc_reflectance_factor_variable(self, output_dataset):
+    def _create_preqc_albedo_variable(self, output_dataset):
         """
-        Creates the /PreQC/albedo variable variable and associated attributes in an output netCDF4 dataset.
+        Creates the /PreQC/albedo variable and associated attributes in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
         temp_dict = {}
@@ -411,7 +411,7 @@ class GoesConverter:
                                                                   'good_pixel_qf,conditionally_usable_pixel_qf,'
                                                                   'out_of_range_pixel_qf,no_value_pixel_qf')
 
-    def _create_obsvalue_reflectance_factor_variable(self, output_dataset):
+    def _create_obsvalue_albedo_variable(self, output_dataset):
         """
         Creates the /ObsValue/albedo variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
@@ -448,7 +448,7 @@ class GoesConverter:
         output_dataset['/ObsValue/brightnessTemperature'][:] = data_array
         output_dataset['/ObsValue/brightnessTemperature'].setncattr('units', 'K')
 
-    def _create_obserror_reflectance_factor_variable(self, output_dataset):
+    def _create_obserror_albedo_variable(self, output_dataset):
         """
         Creates the /ObsError/albedo variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
@@ -513,7 +513,7 @@ class GoesConverter:
 
     def convert(self):
         """
-        Creates the reflectance factor (if include_rf is True) and brightness temperature IODAv2 data files.
+        Creates the albedo (if include_rf is True) and brightness temperature IODAv2 data files.
         This functions also checks for the existence and nadir change of the GoesLatLon data file.
         """
         self._initialize()
@@ -559,7 +559,7 @@ class GoesConverter:
 
     def _convert_rf(self):
         """
-        Creates the reflectance factor IODAv2 data file.
+        Creates the albedo IODAv2 data file.
         """
         dataset = Dataset(self._output_file_path_rf, 'w')
         GoesConverter._create_groups(dataset)
@@ -578,7 +578,7 @@ class GoesConverter:
         self._create_metadata_solar_zenith_angle_variable(dataset)
         self._create_metadata_solar_azimuth_angle_variable(dataset)
         self._create_metadata_time_variable(dataset)
-        self._create_obsvalue_reflectance_factor_variable(dataset)
-        self._create_obserror_reflectance_factor_variable(dataset)
-        self._create_preqc_reflectance_factor_variable(dataset)
+        self._create_obsvalue_albedo_variable(dataset)
+        self._create_obserror_albedo_variable(dataset)
+        self._create_preqc_albedo_variable(dataset)
         dataset.close()
