@@ -24,7 +24,10 @@ namespace bufr {
 //            queries.emplace_back(QueryParser::splitQueryStr(subStr));
 //        }
 
-        query::Tokenizer::tokenize(queryStr);
+//        Tokenizer::tokenize(queryStr);
+        Tokenizer::tokenize("*/ABC[2]");
+
+        exit(0);
 
         return queries;
     }

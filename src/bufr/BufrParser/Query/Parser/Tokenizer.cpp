@@ -7,27 +7,30 @@
 
 #include "Tokenizer.h"
 
+#include <memory>
+#include <vector>
+#include <string>
+
 namespace Ingester {
 namespace bufr {
     std::vector<std::shared_ptr<Token>> Tokenizer::tokenize(const std::string &query)
     {
+        // remove whitespace from query
+        const auto cleanedStr = std::regex_replace(query, std::regex("\\s"), "");
+
         std::vector<std::shared_ptr<Token>> tokens;
-        std::string::const_iterator iter = query.begin();
-        std::string::const_iterator end = query.end();
-        while (iter != end) {
-            // check if the next token matches a mnemonic
-            if (MnemonicToken::match(iter, end)) {
-                tokens.push_back(std::make_shared<MnemonicToken>(iter, end));
-            } else if (SeperatorToken::match(iter, end)) {
-                tokens.push_back(std::make_shared<SeperatorToken>(iter, end));
-            } else if (IndexToken::match(iter, end)) {
-                tokens.push_back(std::make_shared<IndexToken>(iter, end));
-            } else if (FilterToken::match(iter, end)) {
-                tokens.push_back(std::make_shared<FilterToken>(iter, end));
-            } else {
-                throw std::runtime_error("Tokenizer: Unknown token");
-            }
-        }
+
+        std::string::const_iterator iter = cleanedStr.begin();
+        std::string::const_iterator end = cleanedStr.end();
+
+        std::shared_ptr<Token> token = nullptr;
+        if ((token = MultiQueryToken::parse(iter, end))) {}
+        else if ((token = QueryToken::parse(iter, end))) {}
+        else { std::cout << "Tokenizer::tokenize: no match for " << query << std::endl; }
+
+        tokens.push_back(token);
+        std::cout << token->debugStr() << std::endl;
+
         return tokens;
     }
 }  // bufr

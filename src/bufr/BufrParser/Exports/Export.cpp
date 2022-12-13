@@ -192,7 +192,6 @@ namespace Ingester
 
         for (const auto& subConf : subConfs)
         {
-            std::cout << subConf.keys()[0] << std::endl;
             auto filter = filterFactory.create(subConf.keys()[0],
                                                subConf.getSubConfiguration(subConf.keys()[0]));
             filters_.push_back(filter);
