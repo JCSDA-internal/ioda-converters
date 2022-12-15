@@ -23,6 +23,10 @@
 namespace Ingester {
 namespace bufr {
 
+    class Token;
+    class QueryToken;
+    typedef std::vector<std::shared_ptr<Token>> Tokens;
+
     // Token abstract base class
     class Token {
      public:
@@ -30,10 +34,16 @@ namespace bufr {
         virtual ~Token() = default;
 
         std::string str() const  { return str_; };
+        Tokens tokens() const { return subTokens_; };
         virtual std::string debugStr() const = 0;
+        virtual std::vector<QueryToken> queryTokens() const
+        {
+            throw eckit::BadParameter("Token::queryTokens: called on wrong token type"
+                                      + debugStr());
+        }
 
     protected:
-        std::vector<std::shared_ptr<Token>> subTokens_;
+        Tokens subTokens_;
         std::string str_;
 
         virtual void tokenize() {}
@@ -53,7 +63,6 @@ namespace bufr {
             std::smatch matches;
             if (std::regex_search(start, end, matches, regex))
             {
-                std::cout << "TokenBase::parse: " << typeid(T).name() << std::endl;
                 if (matches.position() == 0)
                 {
                     start += matches[0].str().size();
@@ -69,7 +78,7 @@ namespace bufr {
         std::string debugStr() const override { return T::DebugStr; }
     };
 
-    class SeperatorToken : public TokenBase<SeperatorToken> {
+    class SeparatorToken : public TokenBase<SeparatorToken> {
     public:
         constexpr static const char* Pattern = "\\/";
         constexpr static const char* DebugStr = "<sep>";
@@ -114,11 +123,48 @@ namespace bufr {
 
     class FilterToken : public TokenBase<FilterToken> {
     public:
-        constexpr static const char* Pattern = "\\{[A-Z\\-](,[A-Z\\-]+)*\\}";
+        constexpr static const char* Pattern = "\\{[0-9\\-](\\,[0-9\\-]+)*\\}";
         constexpr static const char* DebugStr = "<filter>";
 
+        std::vector<size_t> indices() { return indices_; }
+
+        void tokenize() final
+        {
+            static const auto filterRegex =
+                std::regex("\\{(\\d+\\-\\d+|\\d+)(\\,(\\d+\\-\\d+|\\d+))?\\}");
+            static const auto rangeRegex = std::regex("(\\d+)\\-(\\d+)");
+            static const auto indexRegex = std::regex("[^\\-](\\d+)[^\\-]");
+
+            std::vector<size_t> indices;
+
+            // match index
+            std::smatch matches;
+            if (std::regex_match(str_, matches, filterRegex))
+            {
+                // match all ranges
+                std::smatch rangeMatches;
+                std::regex_search(str_, rangeMatches, rangeRegex);
+                for (auto rangeMatch : rangeMatches)
+                {
+                   std::cout << "rangeMatch: " << rangeMatch.str() << std::endl;
+                }
+
+                // match all ranges
+                std::smatch idxMatches;
+                std::regex_search(str_, idxMatches, indexRegex);
+                for (auto rangeMatch : rangeMatches)
+                {
+                    std::cout << "indexMatch: " << rangeMatch.str() << std::endl;
+                }
+            }
+            else
+            {
+                throw eckit::BadParameter("FilterToken::indices: invalid filter: " + str_);
+            }
+        }
+
     private:
-        std::vector<std::shared_ptr<FilterToken>> filterTokens;
+        std::vector<size_t> indices_;
     };
 
     class QueryToken : public TokenBase<QueryToken> {
@@ -133,7 +179,7 @@ namespace bufr {
             std::ostringstream debugStr;
 
             debugStr << "<query>";
-            for (const auto& token : tokens_)
+            for (const auto& token : subTokens_)
             {
                 debugStr << token->debugStr();
             }
@@ -151,22 +197,44 @@ namespace bufr {
             while (start != end)
             {
                 if (auto anySubset = AnySubset::parse(start, end))
-                    tokens_.push_back(anySubset);
+                    subTokens_.push_back(anySubset);
                 else if (auto mnemonic = MnemonicToken::parse(start, end))
-                    tokens_.push_back(mnemonic);
-                else if (auto sep = SeperatorToken::parse(start, end))
-                    tokens_.push_back(sep);
+                    subTokens_.push_back(mnemonic);
+                else if (auto sep = SeparatorToken::parse(start, end))
+                    subTokens_.push_back(sep);
                 else if (auto filter = FilterToken::parse(start, end))
-                    tokens_.push_back(filter);
+                    subTokens_.push_back(filter);
                 else if (auto index = IndexToken::parse(start, end))
-                    tokens_.push_back(index);
+                    subTokens_.push_back(index);
                 else
                     throw eckit::BadValue("Failed to parse query " + std::string(start, end));
             }
         }
 
-    private:
-        std::vector<std::shared_ptr<Token>> tokens_;
+        std::vector<QueryToken> queryTokens() const final
+        {
+            return {*this};
+        }
+
+        std::vector<Tokens> split() const
+        {
+            std::vector<Tokens> splitTokens;
+            splitTokens.emplace_back();
+
+            for (const auto& token : subTokens_)
+            {
+                if (auto sep = std::dynamic_pointer_cast<SeparatorToken>(token))
+                {
+                    splitTokens.emplace_back();
+                }
+                else
+                {
+                    splitTokens.back().push_back(token);
+                }
+            }
+
+            return splitTokens;
+        }
     };
 
     class MultiQueryToken : public TokenBase<MultiQueryToken> {
@@ -222,6 +290,42 @@ namespace bufr {
             }
         }
 
+        std::vector<QueryToken> queryTokens() const final
+        {
+            std::vector<QueryToken> queryTokens;
+            for (const auto& token : subTokens_)
+            {
+                if (auto query = std::dynamic_pointer_cast<QueryToken>(token))
+                {
+                    queryTokens.push_back(*query);
+                }
+                else
+                {
+                    throw eckit::BadParameter("ParseError: Expected list of queries" + str_ + ".");
+                }
+            }
+
+            return queryTokens;
+        }
+
+        Tokens split() const
+        {
+            Tokens queryTokens;
+            for (const auto& token : subTokens_)
+            {
+                if (auto sep = std::dynamic_pointer_cast<QueryToken>(token))
+                {
+                    queryTokens.push_back(token);
+                }
+                else
+                {
+                    throw eckit::BadParameter("ParseError: Expected list of queries" + str_ + ".");
+                }
+            }
+
+            return queryTokens;
+        }
+
      private:
         std::vector<std::shared_ptr<QueryToken>> queries_;
     };
@@ -235,7 +339,7 @@ namespace bufr {
 
         // tokenize a query string
         // return a vector of tokens
-        static std::vector<std::shared_ptr<Token>> tokenize(const std::string &query);
+        static Tokens tokenize(const std::string &query);
     };
 
 

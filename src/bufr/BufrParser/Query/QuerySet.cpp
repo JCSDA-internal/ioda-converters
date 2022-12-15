@@ -28,22 +28,22 @@ namespace bufr {
         {
             if (limitSubsets_.empty())
             {
-                if (query.subset == "*")
+                if (query.subset->str == "*")
                 {
                     includesAllSubsets_ = true;
                 }
 
-                presentSubsets_.insert(query.subset);
+                presentSubsets_.insert(query.subset->str);
             }
             else
             {
-                if (query.subset == "*")
+                if (query.subset->str == "*")
                 {
                     presentSubsets_ = limitSubsets_;
                 }
                 else
                 {
-                    presentSubsets_.insert(query.subset);
+                    presentSubsets_.insert(query.subset->str);
 
                     std::vector<std::string> newSubsets;
                     std::set_intersection(limitSubsets_.begin(),

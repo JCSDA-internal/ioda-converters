@@ -129,9 +129,10 @@ namespace bufr {
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(query.subset == "*" || query.subset == dataProvider_.getSubset());
+        bool targetMissing = !(query.subset->str == "*" ||
+                               query.subset->str == dataProvider_.getSubset());
         if (!targetMissing) {
-            branches.resize(query.mnemonics.size() - 1);
+            branches.resize(query.path.size() - 1);
 
             seqPath.push_back(dataProvider_.getInode());
 
@@ -145,7 +146,7 @@ namespace bufr {
                     dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
                     dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
                     if (isQueryNode(nodeIdx - 1)) {
-                        if (dataProvider_.getTag(nodeIdx) == query.mnemonics[mnemonicCursor + 1] &&
+                        if (dataProvider_.getTag(nodeIdx) == query.path[mnemonicCursor + 1]->str &&
                             tableCursor == mnemonicCursor) {
                             mnemonicCursor++;
                             branches[mnemonicCursor] = nodeIdx - 1;
@@ -153,9 +154,9 @@ namespace bufr {
                         tableCursor++;
                     }
                     seqPath.push_back(nodeIdx);
-                } else if (mnemonicCursor == static_cast<int>(query.mnemonics.size()) - 2 &&
+                } else if (mnemonicCursor == static_cast<int>(query.path.size()) - 2 &&
                            tableCursor == mnemonicCursor &&
-                           dataProvider_.getTag(nodeIdx) == query.mnemonics.back()) {
+                           dataProvider_.getTag(nodeIdx) == query.path.back()->str) {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
@@ -214,8 +215,10 @@ namespace bufr {
                 }
             }
 
-            if (query.index > 0 && query.index <= gsl::narrow<int>(targetNodes.size())) {
-                targetNodes = {targetNodes[query.index - 1]};
+            if (query.path.back()->index > 0 &&
+                query.path.back()->index <= gsl::narrow<int>(targetNodes.size()))
+            {
+                targetNodes = {targetNodes[query.path.back()->index - 1]};
             }
 
             if (targetNodes.size() > 1) {

@@ -18,137 +18,94 @@ namespace Ingester {
 namespace bufr {
     std::vector<Query> QueryParser::parse(const std::string& queryStr)
     {
+        const auto tokens = Tokenizer::tokenize(queryStr);
+
+        if (tokens.empty())
+        {
+            throw eckit::BadParameter("QueryParser::parse: Invalid query string: " + queryStr);
+        }
+
+        // parse into query components
         std::vector<Query> queries;
-//        for (auto& subStr : QueryParser::splitMultiquery(queryStr))
-//        {
-//            queries.emplace_back(QueryParser::splitQueryStr(subStr));
-//        }
-
-//        Tokenizer::tokenize(queryStr);
-        Tokenizer::tokenize("*/ABC[2]");
-
-        exit(0);
+        for (const auto& queryToken : tokens[0]->queryTokens())
+        {
+            queries.push_back(parseQueryToken(queryToken));
+            queries.back().queryStr = queryStr;
+        }
 
         return queries;
     }
 
-    std::vector<std::string> QueryParser::splitMultiquery(const std::string &query)
+    Query QueryParser::parseQueryToken(const QueryToken& queryToken)
     {
-        std::vector<std::string> subqueries;
+        Query query;
 
-        // Remove whitespace from query and assign to working_str
-        std::string working_str = query;
-        working_str.erase(
-                std::remove(working_str.begin(), working_str.end(), ' '), working_str.end());
+        // Get the subset component
+        auto componentTokens = queryToken.split();
+        auto subsetTokens = componentTokens[0];
+        if (subsetTokens.size() != 1)
+        {
+            throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid subset in query string: " + queryToken.str());
+        }
 
-        if (working_str.substr(0, 1) == "[") {
-            if (working_str.substr(working_str.length() - 1, 1) != "]") {
-                std::stringstream errMsg;
-                errMsg << "Query Parser: multi query is lacking closing brackets." << std::endl;
-                throw eckit::BadParameter(errMsg.str());
-            }
-
-            working_str = working_str.substr(1, working_str.length() - 2);
-
-            std::vector<size_t> comma_positions;
-
-            size_t last_pos = 0;
-            while (working_str.find(',', last_pos) != std::string::npos)
-            {
-                auto comma_idx = working_str.find(',', last_pos);
-                comma_positions.push_back(comma_idx);
-                last_pos = comma_idx + 1;
-            }
-
-            last_pos = 0;
-            subqueries.reserve(comma_positions.size() + 1);
-            for (size_t commaIdx = 0; commaIdx < comma_positions.size() + 1; ++commaIdx)
-            {
-                if (commaIdx < comma_positions.size())
-                {
-                    subqueries.push_back(
-                            working_str.substr(last_pos, comma_positions[commaIdx] - last_pos));
-                    last_pos = comma_positions[commaIdx] + 1;
-                }
-                else
-                {
-                    subqueries.push_back(
-                            working_str.substr(last_pos, working_str.length() - last_pos));
-                }
-            }
+        // Parse the subset component
+        auto subsetComponent = std::make_shared<SubsetComponent>();
+        if (std::dynamic_pointer_cast<AnySubset>(subsetTokens[0]) ||
+            std::dynamic_pointer_cast<MnemonicToken>(subsetTokens[0]))
+        {
+            subsetComponent->str = subsetTokens[0]->str();
+            query.subset = std::move(subsetComponent);
         }
         else
         {
-            subqueries.push_back(working_str);
+            throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid subset component: " + subsetTokens[0]->str());
         }
 
-        return subqueries;
-    }
-
-    Query QueryParser::splitQueryStr(const std::string& query)
-    {
-        // Find positions of slashes
-        std::vector<size_t> slashPositions;
-        size_t slashIdx = 0;
-        size_t charIdx = 0;
-        for (charIdx = 0; charIdx < query.length(); ++charIdx) {
-            if (charIdx > 0 && query[charIdx] == '/') {
-                slashPositions.push_back(charIdx);
-                slashIdx++;
-            }
-        }
-
-        if (slashPositions.size() < 1) {
-            std::stringstream errMsg;
-            errMsg << "Query Parser: Not a valid query string." << std::endl;
-            throw eckit::BadParameter(errMsg.str());
-        }
-
-        // Capture the subset string
-        auto subset = query.substr(0, slashPositions[0]);
-
-        std::vector<std::string> mnemonicStrings(slashPositions.size());
-
-        // Capture the sequence mnemonic strings
-        for (size_t mnemonicIdx = 0; mnemonicIdx < mnemonicStrings.size() - 1; ++mnemonicIdx)
+        for (auto compIt = componentTokens.begin() + 1; compIt != componentTokens.end(); ++compIt)
         {
-            mnemonicStrings[mnemonicIdx] =
-                    query.substr(slashPositions[mnemonicIdx] + 1,
-                                 slashPositions[mnemonicIdx + 1] - slashPositions[mnemonicIdx] - 1);
-        }
-
-        // Get the last element
-        std::string lastElement = query.substr(slashPositions[slashPositions.size() - 1] + 1);
-
-        // Parse last element
-        int index = -1;
-        size_t startSubscript = lastElement.find_first_of("[");
-        size_t endSubscript = lastElement.find_first_of("]");
-        if (startSubscript != std::string::npos && endSubscript != std::string::npos)
-        {
-            index = std::stoi(lastElement.substr(startSubscript + 1,
-                                                  endSubscript - startSubscript - 1));
-            mnemonicStrings[mnemonicStrings.size() - 1] = lastElement.substr(0, startSubscript);
-        }
-        else
-        {
-            if (endSubscript != std::string::npos || startSubscript != std::string::npos)
+            auto component = *compIt;
+            if (component.empty() || component.size() > 2)
             {
-                std::stringstream errMsg;
-                errMsg << "Query Parser: Not a valid query string. Extra brackets." << std::endl;
-                throw eckit::BadParameter(errMsg.str());
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid query string: " + queryToken.str());
             }
 
-            mnemonicStrings.back() = lastElement;
+            if (auto mnemonicToken = std::dynamic_pointer_cast<MnemonicToken>(component[0]))
+            {
+                auto pathComponent = std::make_shared<PathComponent>();
+                pathComponent->str = mnemonicToken->str();
+
+                if (component.size() == 2)
+                {
+                    if (auto indexToken = std::dynamic_pointer_cast<IndexToken>(component[1]))
+                    {
+                        pathComponent->index = indexToken->index();
+                    }
+                    else
+                    {
+                        throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid index token: " + component[1]->str());
+                    }
+                }
+
+                query.path.push_back(pathComponent);
+            }
+            else if (auto filterToken = std::dynamic_pointer_cast<FilterToken>(component[0]))
+            {
+                if (compIt != componentTokens.end() - 1)
+                {
+                    throw eckit::BadParameter("QueryParser::parseQueryToken: Filter must be at the end of the query string: " + queryToken.str());
+                }
+
+                auto filterComponent = std::make_shared<FilterComponent>();
+                filterComponent->indices = filterToken->indices();
+                query.filter = std::move(filterComponent);
+            }
+            else
+            {
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid query string: " + queryToken.str());
+            }
         }
 
-        auto queryObj = Query();
-        queryObj.queryStr = query;
-        queryObj.subset = subset;
-        queryObj.mnemonics = mnemonicStrings;
-        queryObj.index = index;
-
-        return queryObj;
+        return query;
     }
 }  // namespace bufr
 }  // namespace Ingester
