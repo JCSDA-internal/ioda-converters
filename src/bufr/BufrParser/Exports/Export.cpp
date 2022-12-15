@@ -16,6 +16,7 @@
 #include "Splits/CategorySplit.h"
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
+#include "Variables/AircraftAltitudeVariable.h"
 #include "Variables/TimeoffsetVariable.h"
 #include "ObjectFactory.h"
 
@@ -35,6 +36,11 @@ namespace
             const char* Datetime = "datetime";
             const char* Timeoffset = "timeoffset";
             const char* Query = "query";
+
+            const char* GroupByField = "group_by";  // Deprecated
+            const char* AircraftAltitude = "aircraftAltitude";
+            const char* Type = "type";
+
         }  // namespace Variable
 
         namespace Split
@@ -128,6 +134,41 @@ namespace Ingester
         {
             auto subConf = conf.getSubConfiguration(key);
 
+            if (subConf.has(ConfKeys::Variable::Datetime))
+            {
+                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Datetime);
+                variable = std::make_shared<DatetimeVariable>(key, groupByField, dtconf);
+            }
+            else if (subConf.has(ConfKeys::Variable::AircraftAltitude))
+            {
+                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::AircraftAltitude);
+                variable = std::make_shared<AircraftAltitudeVariable>(key, groupByField, dtconf);
+            }
+            else if (subConf.has(ConfKeys::Variable::Timeoffset))
+            {
+                auto dtconf = subConf.getSubConfiguration(ConfKeys::Variable::Timeoffset);
+                variable = std::make_shared<TimeoffsetVariable>(key, groupByField, dtconf);
+            }
+            else if (subConf.has(ConfKeys::Variable::Query))
+            {
+                Transforms transforms = TransformBuilder::makeTransforms(subConf);
+                const auto& query = subConf.getString(ConfKeys::Variable::Query);
+
+                if (subConf.has(ConfKeys::Variable::GroupByField))
+                {
+                    std::ostringstream errMsg;
+                    errMsg << "Obsolete format::exports::variable of group_by field for key";
+                    errMsg << key << std::endl;
+                    errMsg << "Use \"query:\" instead.";
+                    throw eckit::BadParameter(errMsg.str());
+                }
+
+                std::string type = "";
+                if (subConf.has(ConfKeys::Variable::Type))
+                {
+                    type = subConf.getString(ConfKeys::Variable::Type);
+                }
+            }
             std::shared_ptr<Variable> variable;
             if (subConf.has(ConfKeys::Variable::Query))
             {
