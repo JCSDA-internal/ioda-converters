@@ -36,16 +36,16 @@ namespace bufr {
         return queries;
     }
 
-    Query QueryParser::parseQueryToken(const QueryToken& queryToken)
+    Query QueryParser::parseQueryToken(std::shared_ptr<QueryToken> queryToken)
     {
         Query query;
 
         // Get the subset component
-        auto componentTokens = queryToken.split();
+        auto componentTokens = queryToken->split();
         auto subsetTokens = componentTokens[0];
         if (subsetTokens.size() != 1)
         {
-            throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid subset in query string: " + queryToken.str());
+            throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid subset in query string: " + queryToken->str());
         }
 
         // Parse the subset component
@@ -66,7 +66,7 @@ namespace bufr {
             auto component = *compIt;
             if (component.empty() || component.size() > 2)
             {
-                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid query string: " + queryToken.str());
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid query string: " + queryToken->str());
             }
 
             if (auto mnemonicToken = std::dynamic_pointer_cast<MnemonicToken>(component[0]))
@@ -86,13 +86,13 @@ namespace bufr {
                     }
                 }
 
-                query.path.push_back(pathComponent);
+                query.path.push_back(std::move(pathComponent));
             }
             else if (auto filterToken = std::dynamic_pointer_cast<FilterToken>(component[0]))
             {
                 if (compIt != componentTokens.end() - 1)
                 {
-                    throw eckit::BadParameter("QueryParser::parseQueryToken: Filter must be at the end of the query string: " + queryToken.str());
+                    throw eckit::BadParameter("QueryParser::parseQueryToken: Filter must be at the end of the query string: " + queryToken->str());
                 }
 
                 auto filterComponent = std::make_shared<FilterComponent>();
@@ -101,7 +101,7 @@ namespace bufr {
             }
             else
             {
-                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid query string: " + queryToken.str());
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid query string: " + queryToken->str());
             }
         }
 

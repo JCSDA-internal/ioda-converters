@@ -28,7 +28,7 @@ namespace bufr {
     typedef std::vector<std::shared_ptr<Token>> Tokens;
 
     // Token abstract base class
-    class Token {
+class Token {
      public:
         Token() = default;
         virtual ~Token() = default;
@@ -36,7 +36,7 @@ namespace bufr {
         std::string str() const  { return str_; };
         Tokens tokens() const { return subTokens_; };
         virtual std::string debugStr() const = 0;
-        virtual std::vector<QueryToken> queryTokens() const
+        virtual std::vector<std::shared_ptr<QueryToken>> queryTokens() const
         {
             throw eckit::BadParameter("Token::queryTokens: called on wrong token type"
                                       + debugStr());
@@ -211,9 +211,9 @@ namespace bufr {
             }
         }
 
-        std::vector<QueryToken> queryTokens() const final
+        std::vector<std::shared_ptr<QueryToken>> queryTokens() const final
         {
-            return {*this};
+            return { std::make_shared<QueryToken>(*this) };
         }
 
         std::vector<Tokens> split() const
@@ -290,22 +290,23 @@ namespace bufr {
             }
         }
 
-        std::vector<QueryToken> queryTokens() const final
+        std::vector<std::shared_ptr<QueryToken>> queryTokens() const final
         {
-            std::vector<QueryToken> queryTokens;
-            for (const auto& token : subTokens_)
-            {
-                if (auto query = std::dynamic_pointer_cast<QueryToken>(token))
-                {
-                    queryTokens.push_back(*query);
-                }
-                else
-                {
-                    throw eckit::BadParameter("ParseError: Expected list of queries" + str_ + ".");
-                }
-            }
+//            std::vector<QueryToken> queryTokens;
+//            for (const auto& token : subTokens_)
+//            {
+//                std::cout << token->debugStr() << std::endl;
+//                if (auto query = std::dynamic_pointer_cast<QueryToken>(token))
+//                {
+//                    queryTokens.push_back(*query);
+//                }
+//                else
+//                {
+//                    throw eckit::BadParameter("ParseError: Expected list of queries" + str_ + ".");
+//                }
+//            }
 
-            return queryTokens;
+            return queries_;
         }
 
         Tokens split() const

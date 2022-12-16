@@ -56,7 +56,7 @@ namespace bufr {
         /// \brief Private constructor.
         QueryParser();
 
-        static Query parseQueryToken(const QueryToken& query);
+        static Query parseQueryToken(std::shared_ptr<QueryToken> query);
     };
 }  // namespace bufr
 }  // namespace Ingester

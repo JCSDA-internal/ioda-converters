@@ -29,7 +29,6 @@ namespace bufr {
         else { std::cout << "Tokenizer::tokenize: no match for " << query << std::endl; }
 
         tokens.push_back(token);
-        std::cout << token->debugStr() << std::endl;
 
         return tokens;
     }

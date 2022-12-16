@@ -216,7 +216,7 @@ namespace bufr {
             }
 
             if (query.path.back()->index > 0 &&
-                query.path.back()->index <= gsl::narrow<int>(targetNodes.size()))
+                query.path.back()->index <= targetNodes.size())
             {
                 targetNodes = {targetNodes[query.path.back()->index - 1]};
             }
