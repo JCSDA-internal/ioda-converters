@@ -195,7 +195,7 @@ class GoesLatLon:
         Location = len(latitude)
         latlon_dataset.createDimension('Location', Location)
         latlon_dataset.createVariable('Location', 'i4', ('Location',))
-        latlon_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int64')
+        latlon_dataset.variables['Location'][:] = np.arange(1, Location + 1, 1, dtype='int32')
         nonexistent_indices = len(self._lat_fill_value_index_array[0])
         latlon_dataset.createDimension('nonexistent_indices', nonexistent_indices)
         latlon_dataset.createVariable('nonexistent_indices', 'i4', ('nonexistent_indices',))
