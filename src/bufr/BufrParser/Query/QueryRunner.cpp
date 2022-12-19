@@ -129,8 +129,8 @@ namespace bufr {
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(query.subset->str == "*" ||
-                               query.subset->str == dataProvider_.getSubset());
+        bool targetMissing = !(query.subset->isAnySubset ||
+                               query.subset->subset == dataProvider_.getSubset());
         if (!targetMissing) {
             branches.resize(query.path.size() - 1);
 
@@ -146,7 +146,8 @@ namespace bufr {
                     dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
                     dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
                     if (isQueryNode(nodeIdx - 1)) {
-                        if (dataProvider_.getTag(nodeIdx) == query.path[mnemonicCursor + 1]->str &&
+                        if (dataProvider_.getTag(nodeIdx) ==
+                                query.path[mnemonicCursor + 1]->mnemonic &&
                             tableCursor == mnemonicCursor) {
                             mnemonicCursor++;
                             branches[mnemonicCursor] = nodeIdx - 1;
@@ -156,7 +157,7 @@ namespace bufr {
                     seqPath.push_back(nodeIdx);
                 } else if (mnemonicCursor == static_cast<int>(query.path.size()) - 2 &&
                            tableCursor == mnemonicCursor &&
-                           dataProvider_.getTag(nodeIdx) == query.path.back()->str) {
+                           dataProvider_.getTag(nodeIdx) == query.path.back()->mnemonic) {
                     // We found a target
                     targetNodes.push_back(nodeIdx);
                     getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);

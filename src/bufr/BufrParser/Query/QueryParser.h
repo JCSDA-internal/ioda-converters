@@ -18,21 +18,94 @@ namespace bufr {
 
     struct QueryComponent
     {
-        std::string str;
     };
 
     struct SubsetComponent : QueryComponent
     {
+        std::string subset;
+        bool isAnySubset = false;
+
+        static auto parse(std::vector<std::shared_ptr<Token>> tokens)
+        {
+            const auto& token = tokens[0];
+
+            auto component = std::make_shared<SubsetComponent>();;
+            component->subset = token->str();
+            if (std::dynamic_pointer_cast<AnySubset>(token))
+            {
+                component->isAnySubset = true;
+            }
+            else if (std::dynamic_pointer_cast<MnemonicToken>(token))
+            {
+                component->isAnySubset = false;
+            }
+            else
+            {
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid subset in query "
+                                          "string: " + component->subset);
+            }
+
+            return component;
+        }
     };
 
     struct PathComponent : QueryComponent
     {
-        size_t index;
+        std::string mnemonic;
+        size_t index = 0;
+
+        static auto parse(std::vector<std::shared_ptr<Token>> tokens)
+        {
+            if (tokens.size() < 1 && tokens.size() > 2)
+            {
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid path component "
+                                          "query string: " + tokens[0]->str());
+            }
+
+            auto component = std::make_shared<PathComponent>();
+
+            if (std::dynamic_pointer_cast<MnemonicToken>(tokens[0]))
+            {
+                component->mnemonic = tokens[0]->str();
+            }
+            else
+            {
+                throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid path component "
+                                          "query string: " + tokens[0]->str());
+            }
+
+            if (tokens.size() == 2)
+            {
+                if (auto indexToken = std::dynamic_pointer_cast<IndexToken>(tokens[1]))
+                {
+                    component->index = indexToken->index();
+                }
+                else
+                {
+                    throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid path "
+                                              "component query string: " + tokens[1]->str());
+                }
+            }
+
+            return component;
+        }
     };
 
     struct FilterComponent : QueryComponent
     {
         std::vector<size_t> indices;
+
+        static auto parse(std::vector<std::shared_ptr<Token>> tokens)
+        {
+            std::shared_ptr<FilterComponent> component = nullptr;
+            if (const auto& token = std::dynamic_pointer_cast<FilterToken>(tokens[0]))
+            {
+                component = std::make_shared<FilterComponent>();
+                component->indices = token->indices();
+            }
+
+            return component;
+        }
     };
 
     struct Query
@@ -55,8 +128,6 @@ namespace bufr {
      private:
         /// \brief Private constructor.
         QueryParser();
-
-        static Query parseQueryToken(std::shared_ptr<QueryToken> query);
     };
 }  // namespace bufr
 }  // namespace Ingester

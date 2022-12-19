@@ -170,7 +170,7 @@ class Token {
     class QueryToken : public TokenBase<QueryToken> {
      public:
         constexpr static const char* Pattern =
-            "([A-Z0-9_\\*\\/]+((\\{[0-9\\-\\,]+\\})|(\\[\\d+\\]))?)";
+            "([A-Z0-9_\\*\\/]+(\\[\\d+\\])?)+(\\{[0-9\\-\\,]+\\})?";
         constexpr static const char* DebugStr = "<query>";
         constexpr static const char* SubPattern = "[^,]+";
 
@@ -292,20 +292,6 @@ class Token {
 
         std::vector<std::shared_ptr<QueryToken>> queryTokens() const final
         {
-//            std::vector<QueryToken> queryTokens;
-//            for (const auto& token : subTokens_)
-//            {
-//                std::cout << token->debugStr() << std::endl;
-//                if (auto query = std::dynamic_pointer_cast<QueryToken>(token))
-//                {
-//                    queryTokens.push_back(*query);
-//                }
-//                else
-//                {
-//                    throw eckit::BadParameter("ParseError: Expected list of queries" + str_ + ".");
-//                }
-//            }
-
             return queries_;
         }
 

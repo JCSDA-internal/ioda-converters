@@ -107,9 +107,11 @@ int main(int argc, char **argv)
         }
     }
 
+    Ingester::parse(yamlPath, numMsgs);
+
     try
     {
-        Ingester::parse(yamlPath, numMsgs);
+//        Ingester::parse(yamlPath, numMsgs);
     }
     catch (const std::exception &e)
     {
