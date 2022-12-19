@@ -3,6 +3,7 @@ list( APPEND libs
   ioda_conv_util.py
   ioda_conv_engines.py
   collect_sources.py
+  def_jedi_utils.py
   meteo_utils.py
   meteo_sounding_utils.py
   orddicts.py
