@@ -1,4 +1,8 @@
-from collections import OrderedDict, Callable
+try:
+    from collections.abc import Callable
+except ImportError:
+    from collections import Callable
+from collections import OrderedDict
 
 
 class DefaultOrderedDict(OrderedDict):
