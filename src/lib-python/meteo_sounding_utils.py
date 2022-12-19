@@ -68,7 +68,7 @@ def zext_up(pres_lower, pres_upper, temperature, hght_lower):
     """
     if pres_upper is None or pres_lower is None:
         return None
-    if pres_upper <= 0 or pres_lower <=0 or temperature is None or hght_lower is None:
+    if pres_upper <= 0 or pres_lower <= 0 or temperature is None or hght_lower is None:
         return None
 
     return hght_lower + (Rd * (temperature + CTOK) / G) * math.log(pres_lower / pres_upper)
@@ -88,7 +88,7 @@ def zext_down(pres_lower, pres_upper, temperature, hght_upper):
     """
     if pres_upper is None or pres_lower is None:
         return None
-    if pres_upper <= 0 or pres_lower <=0 or temperature is None or hght_upper is None:
+    if pres_upper <= 0 or pres_lower <= 0 or temperature is None or hght_upper is None:
         return None
 
     return hght_upper - (Rd * (temperature + CTOK) / G) * math.log(pres_lower / pres_upper)
