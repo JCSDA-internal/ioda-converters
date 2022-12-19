@@ -12,7 +12,7 @@ from pathlib import Path
 import os.path
 from os import getcwd
 import sys
-import pdb
+import time
 
 import h5py
 import numpy as np
@@ -26,6 +26,7 @@ from orddicts import DefaultOrderedDict
 
 # globals
 ISS_COWVR_WMO_sat_ID = 806
+ISS_TEMPEST_WMO_sat_ID = 922
 
 GlobalAttrs = {
     "platformCommonName": "COWVR",
@@ -47,6 +48,8 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 # epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 def main(args):
+
+    tic = record_time()
 
     output_filename = args.output
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
@@ -74,6 +77,8 @@ def main(args):
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
+    # report time
+    toc = record_time(tic=tic)
 
     nlocs_int32 = np.array(len(obs_data[('latitude', 'MetaData')]), dtype='float32')  # this is float32 in old convention
     nlocs = nlocs_int32.item()
@@ -111,6 +116,8 @@ def main(args):
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+    # report time
+    toc = record_time(tic=tic)
 
 
 def get_data_from_files(zfiles):
@@ -132,52 +139,63 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
 
     # "Geolocation and flags"
+    fore_aft = np.array(f['GeolocationAndFlags']['fore_aft_flag'], dtype='float32')
+    sensor_altitude = np.array(f['GeolocationAndFlags']['sat_alt'], dtype='float32')
+    sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
     obs_data[('latitude', 'MetaData')] = np.array(f['GeolocationAndFlags']['obs_lat'], dtype='float32')
     obs_data[('longitude', 'MetaData')] = np.array(f['GeolocationAndFlags']['obs_lon'], dtype='float32')
     obs_data[('channelNumber', 'MetaData')] = np.array(np.arange(12)+1, dtype='int32')
-    # obs_data[('scan_position', 'MetaData')] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
-    obs_data[('scan_position', 'MetaData')] = np.array(np.round(f['GeolocationAndFlags']['instr_scan_ang']), dtype='float32')
+
     obs_data[('solar_zenith_angle', 'MetaData')] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
     obs_data[('solar_azimuth_angle', 'MetaData')] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
     obs_data[('sensor_zenith_angle', 'MetaData')] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
     obs_data[('sensor_azimuth_angle', 'MetaData')] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
-    obs_data[('sensor_view_angle', 'MetaData')] = np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32')
+    obs_data[('sensor_view_angle', 'MetaData')] = compute_scan_angle(
+        np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
+        sensor_altitude, sat_alt_flag,
+        np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'))
+    obs_data[('scan_position', 'MetaData')] = np.array(np.round(f['GeolocationAndFlags']['instr_scan_ang']), dtype='float32')
+
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     # obs_data[('dateTime', 'MetaData')] = np.array(get_epoch_time(f['obs_time_utc']), dtype='int64')
     obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(f['GeolocationAndFlags']['time_string']), dtype=object)
     qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
+    solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
+    support_arm_flag = f['CalibratedSceneTemperatures']['support_arm_flag']
 
     nchans = len(obs_data[('channelNumber', 'MetaData')])
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('brightness_temperature', "ObsValue")] = np.array(
-        np.column_stack((f['CalibratedSceneTemperatures']['ta18'], 
-            f['CalibratedSceneTemperatures']['ta23'],
-            f['CalibratedSceneTemperatures']['ta23'])), dtype='float32') 
+        np.column_stack((f['CalibratedSceneTemperatures']['tb18_cfov'],
+            f['CalibratedSceneTemperatures']['tb23_cfov'],
+            f['CalibratedSceneTemperatures']['tb34_cfov'])), dtype='float32')
     obs_data[('brightness_temperature', "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[('brightness_temperature', "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
     if add_qc:
-        obs_data = cowvr_gross_quality_control(obs_data, qc_flag)
+        obs_data = cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm_flag)
 
     f.close()
 
     return obs_data
 
 
-def cowvr_gross_quality_control(obs_data, qc_flag):
+def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm_flag):
 
     tb_key = 'brightness_temperature'
-#   good = ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
-#       ( obs_data[(tb_key, "ObsValue")][:,0] < 400 ) & \
-#       ( obs_data[(tb_key, "ObsValue")][:,4] > 10 ) & \
-#       ( obs_data[(tb_key, "ObsValue")][:,4] < 400 ) & \
-#       ( obs_data[(tb_key, "ObsValue")][:,8] > 10 ) & \
-#       ( obs_data[(tb_key, "ObsValue")][:,8] < 400 ) & \
-#       ( obs_data[('latitude', 'MetaData')] >= -90 ) & \
-#       ( obs_data[('latitude', 'MetaData')] <= 90 ) & \
-#       ( qc_flag[:] == 0 )
-    good = qc_flag[:] == 0
+    good = \
+        ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,0] < 400 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,4] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,4] < 400 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,8] > 10 ) & \
+        ( obs_data[(tb_key, "ObsValue")][:,8] < 400 ) & \
+        ( obs_data[('latitude', 'MetaData')] >= -90 ) & \
+        ( obs_data[('latitude', 'MetaData')] <= 90 ) & \
+        (qc_flag[:] == 0) & \
+        (solar_array_flag[:] == 0) & \
+        (support_arm_flag[:])
 
     for k in obs_data:
         if "MetaData" in k[1] and 'channelNumber' not in k[0]:
@@ -186,6 +204,26 @@ def cowvr_gross_quality_control(obs_data, qc_flag):
             obs_data[k] = obs_data[k][good,:]
 
     return obs_data
+
+
+def compute_scan_angle(instr_scan_ang, sensor_altitude, sat_alt_flag, sensor_zenith):
+
+    earth_mean_radius_km = 6370.
+    iss_altitude_km = 408.
+    d2r = np.pi/180.
+    r2d = 180./np.pi
+    # compute default scan angle
+    ratio = np.empty_like(sensor_altitude)
+    ratio[:] = earth_mean_radius_km/(earth_mean_radius_km + iss_altitude_km)      # used a fixed value if not present in data
+    # compute scan angle
+    good = sat_alt_flag[:] == 0
+    if sum(good) > 0:
+        ratio[good] = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
+
+    # γ = arcsin(R / (R + h) * sin(theta)),h: sat alt; theta: sat zenith angle
+    scanang = np.arcsin(ratio*np.sin(abs(sensor_zenith)*d2r))*r2d
+
+    return scanang
 
 
 def get_WMO_satellite_ID(filename):
@@ -249,6 +287,21 @@ def init_obs_loc():
     }
 
     return obs
+
+
+#----------------------------------------------------------------------
+# Time function
+#----------------------------------------------------------------------
+def record_time(tic=None, print_log=True):
+
+    if not tic:
+        tic = time.perf_counter()
+        if print_log: print(f"  ... starting timer: {tic:0.3f}")
+        return tic
+    else:
+        toc = time.perf_counter()
+        if print_log: print(f"  ... elapsed time (sec): {toc - tic:0.3f}")
+        return toc
 
 
 def concat_obs_dict(obs_data, append_obs_data):
