@@ -8,6 +8,7 @@
 #
 
 import sys
+import os
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
@@ -22,6 +23,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
 
 vName = "seaSurfaceSalinity"
 
@@ -32,6 +34,9 @@ locationKeyList = [
 ]
 
 GlobalAttrs = {}
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class Salinity(object):
@@ -63,7 +68,7 @@ class Salinity(object):
             sss = ncd.variables['SSS_corr'][:]
             sss_err = ncd.variables['Sigma_SSS_corr'][:]
             sss_qc = ncd.variables['Dg_quality_SSS_corr'][:]
-            sss_qc = sss_qc.astype(int)
+            sss_qc = sss_qc.astype(np.int32)
 
             mask = np.logical_not(sss.mask)
             lon = lon[mask]
@@ -84,11 +89,9 @@ class Salinity(object):
                 MM1 = f[n+19+11:n+19+13]
                 SS1 = f[n+19+13:n+19+15]
                 #
-                seconds = (datetime.strptime(date1+HH1+MM1+SS1, '%Y%m%d%H%M%S') - datetime.strptime(
-                           date1, '%Y%m%d')).total_seconds()
-                basetime = datetime.strptime(date1, '%Y%m%d')
-                obs_date = basetime + timedelta(seconds=int(seconds))
-                locKey = lat[i], lon[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                this_dt = datetime.strptime(date1+HH1+MM1+SS1, '%Y%m%d%H%M%S')
+                time_offset = round((this_dt - epoch).total_seconds())
+                locKey = lat[i], lon[i], time_offset
                 self.data[locKey][valKey] = sss[i]
                 self.data[locKey][errKey] = sss_err[i]
                 self.data[locKey][qcKey] = sss_qc[i]
@@ -132,6 +135,7 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
     VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['units'] = 'PSU'
     VarAttrs[('seaSurfaceSalinity', 'ObsError')]['units'] = 'PSU'
     VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['_FillValue'] = 999
