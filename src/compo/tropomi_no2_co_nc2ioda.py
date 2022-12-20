@@ -40,8 +40,9 @@ DimDict = {
 
 
 class tropomi(object):
-    def __init__(self, filenames, columnType, qa_flg, thin, obsVar):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar):
         self.filenames = filenames
+        self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
@@ -54,10 +55,13 @@ class tropomi(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        if self.columnType == 'total':
-            iodavar = self.obsVar['nitrogendioxide_total_column']
-        elif self.columnType == 'tropo':
-            iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
+        varname_str = list(self.obsVar.keys())[0]
+        print('Processing variable: %s' % (varname_str), flush=1)
+        iodavar = self.obsVar[varname_str]
+        # if self.columnType == 'total':
+        #     iodavar = self.obsVar['nitrogendioxide_total_column']
+        # elif self.columnType == 'tropo':
+        #     iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -96,27 +100,37 @@ class tropomi(object):
             for t in range(len(time1[0])):
                 times[0, t, :] = time1[0, t][0:19]+'Z'
             times = times.ravel()
-            trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
-            total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
-            trop_airmass = ncd.groups['PRODUCT'].\
-                variables['air_mass_factor_troposphere'][:].ravel()
+            if self.varname == 'no2':
+                trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
+                total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
+                trop_airmass = ncd.groups['PRODUCT'].\
+                    variables['air_mass_factor_troposphere'][:].ravel()
+                # get info to construct the pressure level array
+                ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
+                    variables['surface_pressure'][:]
+                # bottom of layer is vertice 0, very top layer is TOA (0hPa)
+                ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
+                bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
+                # grab the averaging kernel
+                avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
+            elif self.varname == 'co':
+                preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
+                # grab the averaging kernel
+                avg_kernel = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['column_averaging_kernel'][:]
 
-            # get info to construct the pressure level array
-            ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
-                variables['surface_pressure'][:]
-
-            # bottom of layer is vertice 0, very top layer is TOA (0hPa)
-            ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
-            bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
-
-            # grab the averaging kernel
-            avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
             nlevs = len(avg_kernel[0, 0, 0])
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
+
             # scale the avk using AMF ratio and tropopause level for tropo column
-            nlocf = len(trop_layer[flg])
+            if self.varname == 'no2':
+                nlocf = len(trop_layer[flg])
+            elif self.varname == 'co':
+                nlocf = len(lats[flg])
+
             scaleAK = np.ones((nlocf, nlevs), dtype=np.float32)
-            if self.columnType == 'tropo':
+            if self.varname == 'no2' and self.columnType == 'tropo':
                 # do not loop over nlocs here this makes the execution very slow
                 for k in range(nlevs):
                     scaleAK[..., k][np.full((nlocf), k, dtype=int) > trop_layer[flg]] = 0
@@ -132,11 +146,18 @@ class tropomi(object):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
+                    if self.varname == 'no2':
+                        self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
+                    elif self.varname == 'co':
+                        rev_k = nlevs-k-1
+                        self.outdata[varname_pr] = preslv[..., rev_k].ravel()[flg]
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
-                self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
+                if self.varname == 'no2':
+                    self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
+                elif self.varname == 'co':
+                    self.outdata[varname_pr] = np.zeros((nlocf, nlevs), dtype=np.float32)
 
             else:
                 self.outdata[('datetime', 'MetaData')] = np.concatenate((
@@ -152,15 +173,23 @@ class tropomi(object):
                     self.outdata[varname_ak] = np.concatenate(
                         (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]))
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]))
+                    if varname == 'no2':
+                        pr_data = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
+                    elif varname == 'co':
+                        pr_data = preslv[..., k].ravel()[flg]
+                    self.outdata[varname_pr] = np.concatenate((self.outdata[varname_pr], pr_data))
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
-                self.outdata[varname_pr] = np.concatenate(
-                    (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
+                if self.varname == 'no2':
+                    self.outdata[varname_pr] = np.concatenate(
+                        (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
+                elif self.varname == 'co':
+                    self.outdata[varname_pr] = np.concatenate(
+                        (self.outdata[varname_pr], np.zeros((nlocf, nlevs), dtype=np.float32)))
 
             for ncvar, iodavar in self.obsVar.items():
 
-                if ncvar in ['nitrogendioxide_tropospheric_column']:
+                if ncvar in ['nitrogendioxide_tropospheric_column',
+                             'carbonmonoxide_total_column']:
                     data = ncd.groups['PRODUCT'].variables[ncvar][:].ravel()[flg]
                     err = ncd.groups['PRODUCT'].variables[ncvar+'_precision'][:].ravel()[flg]
                 else:
@@ -196,7 +225,7 @@ def main():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads TROPOMI NO2 netCDF files: official Copernicus product'
+            'Reads TROPOMI NO2/CO netCDF files: official Copernicus product'
             'and converts into IODA formatted output files. Multiple'
             'files are able to be concatenated.')
     )
@@ -204,11 +233,15 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of TROPOMI L2 NO2 observation netCDF input file(s)",
+        help="path of TROPOMI L2 NO2/CO observation netCDF input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
+        type=str, required=True)
+    required.add_argument(
+        '-v', '--variable',
+        help="name of varibale, available list: [no2, co]",
         type=str, required=True)
     required.add_argument(
         '-c', '--column',
@@ -218,9 +251,12 @@ def main():
     optional.add_argument(
         '-q', '--qa_value',
         help="qa value used to preflag data that goes into file before QC"
-        "default at 0.75 as suggested in the documentation. See:"
+        "default at 0.75 (no2) as suggested in the documentation. See:"
         "https://sentinel.esa.int/documents/247904/2474726/"
-        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6",
+        "Sentinel-5P-Level-2-Product-User-Manual-Nitrogen-Dioxide.pdf section 8.6"
+        "0.5 is suggested for co. See:"
+        "https://sentinel.esa.int/documents/247904/2474726/"
+        "Sentinel-5P-Level-2-Product-User-Manual-Carbon-Monoxide.pdf section 8.3",
         type=float, default=0.75)
     optional.add_argument(
         '-n', '--thin',
@@ -230,34 +266,44 @@ def main():
 
     args = parser.parse_args()
 
+    if args.variable == "co":
+        var_in_name = 'carbonmonoxide'
+        var_out_name = 'carbon_monoxide'
+        if args.column == "tropo":
+            print('CO is only available for total column, reset column to total', flush=1)
+            args.column = 'total'
+    elif args.variable == "no2":
+        var_in_name = 'nitrogendioxide'
+        var_out_name = 'nitrogen_dioxide'
+
     if args.column == "tropo":
 
         obsVar = {
-            'nitrogendioxide_tropospheric_column': 'nitrogen_dioxide_in_tropospheric_column'
+            var_in_name+'_tropospheric_column': var_out_name+'_in_tropospheric_column'
         }
 
         varDims = {
-            'nitrogen_dioxide_in_tropospheric_column': ['nlocs']
+            var_out_name+'_in_tropospheric_column': ['nlocs']
         }
 
     elif args.column == "total":
 
         obsVar = {
-            'nitrogendioxide_total_column': 'nitrogen_dioxide_in_total_column'
+            var_in_name+'_total_column': var_out_name+'_in_total_column'
         }
 
         varDims = {
-            'nitrogen_dioxide_in_total_column': ['nlocs']
+            var_out_name+'_in_total_column': ['nlocs']
         }
 
     # Read in the NO2 data
-    no2 = tropomi(args.input, args.column, args.qa_value, args.thin, obsVar)
+    var = tropomi(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildIoda(no2.outdata, varDims, no2.varAttrs, AttrData)
+    writer.BuildIoda(var.outdata, varDims, var.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
