@@ -139,7 +139,7 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
 
     # "Geolocation and flags"
-    fore_aft = np.array(f['GeolocationAndFlags']['fore_aft_flag'], dtype='float32')
+    # fore_aft = np.array(f['GeolocationAndFlags']['fore_aft_flag'], dtype='float32')
     sensor_altitude = np.array(f['GeolocationAndFlags']['sat_alt'], dtype='float32')
     sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
     obs_data[('latitude', 'MetaData')] = np.array(f['GeolocationAndFlags']['obs_lat'], dtype='float32')
@@ -185,17 +185,11 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
 
     tb_key = 'brightness_temperature'
     good = \
-        ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,0] < 400 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,4] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,4] < 400 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,8] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,8] < 400 ) & \
-        ( obs_data[('latitude', 'MetaData')] >= -90 ) & \
-        ( obs_data[('latitude', 'MetaData')] <= 90 ) & \
-        (qc_flag[:] == 0) & \
-        (solar_array_flag[:] == 0) & \
-        (support_arm_flag[:])
+        (obs_data[(tb_key,"ObsValue")][:,0] > 10) & (obs_data[(tb_key,"ObsValue")][:,0] < 400) & \
+        (obs_data[(tb_key,"ObsValue")][:,4] > 10) & (obs_data[(tb_key,"ObsValue")][:,4] < 400) & \
+        (obs_data[(tb_key,"ObsValue")][:,8] > 10) & (obs_data[(tb_key,"ObsValue")][:,8] < 400) & \
+        (obs_data[('latitude','MetaData')] >= -90) & (obs_data[('latitude','MetaData')] <= 90) & \
+        (qc_flag[:] == 0) & (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
 
     for k in obs_data:
         if "MetaData" in k[1] and 'channelNumber' not in k[0]:
