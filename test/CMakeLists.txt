@@ -74,6 +74,7 @@ list( APPEND test_input
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
+  testinput/tropomi_co.nc
 )
 
 list( APPEND test_output
@@ -143,6 +144,7 @@ list( APPEND test_output
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
+  testoutput/tropomi_co_total.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1010,9 +1012,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_total
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2_total.nc
+                          -v no2
                           -c total"
                           tropomi_no2_total.nc ${IODA_CONV_COMP_TOL_ZERO})
 
@@ -1022,9 +1025,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2_tropo.nc
+                          -v no2
                           -c tropo"
                           tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL})
 
@@ -1086,6 +1090,20 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -s testinput/airnow_sites.dat
                           -o testrun/airnow_2020081306.nc"
                           airnow_2020081306.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
+                          -i testinput/tropomi_co.nc
+                          -o testrun/tropomi_co_total.nc
+                          -v co
+                          -q 0.5
+                          -c total"
+                          tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
