@@ -386,8 +386,8 @@ class GoesConverter:
         output_dataset['/PreQC/albedo'][:] = data_array
         output_dataset['/PreQC/albedo'].setncattr('flag_values', '0,1,2,3')
         output_dataset['/PreQC/albedo'].setncattr('flag_meanings',
-                                                              'good_pixel_qf,conditionally_usable_pixel_qf,'
-                                                              'out_of_range_pixel_qf,no_value_pixel_qf')
+                                                  'good_pixel_qf,conditionally_usable_pixel_qf,'
+                                                  'out_of_range_pixel_qf,no_value_pixel_qf')
 
     def _create_preqc_brightness_temperature_variable(self, output_dataset):
         """
@@ -408,8 +408,8 @@ class GoesConverter:
         output_dataset['/PreQC/brightnessTemperature'][:] = data_array
         output_dataset['/PreQC/brightnessTemperature'].setncattr('flag_values', '0,1,2,3')
         output_dataset['/PreQC/brightnessTemperature'].setncattr('flag_meanings',
-                                                                  'good_pixel_qf,conditionally_usable_pixel_qf,'
-                                                                  'out_of_range_pixel_qf,no_value_pixel_qf')
+                                                                 'good_pixel_qf,conditionally_usable_pixel_qf,'
+                                                                 'out_of_range_pixel_qf,no_value_pixel_qf')
 
     def _create_obsvalue_albedo_variable(self, output_dataset):
         """
