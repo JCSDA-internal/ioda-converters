@@ -82,7 +82,6 @@ class OCL3(object):
 
         # Convert obstime from string to seconds since blah blah
 
-
         valKey = vName['chlor_a'], iconv.OvalName()
         errKey = vName['chlor_a'], iconv.OerrName()
         qcKey = vName['chlor_a'], iconv.OqcName()
