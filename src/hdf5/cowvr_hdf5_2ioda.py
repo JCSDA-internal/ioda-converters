@@ -202,7 +202,7 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
 
 def compute_scan_angle(instr_scan_ang, sensor_altitude, sat_alt_flag, sensor_zenith):
 
-    earth_mean_radius_km = 6370.
+    earth_mean_radius_km = 6378.1370  # WGS84
     iss_altitude_km = 408.
     d2r = np.pi/180.
     r2d = 180./np.pi
