@@ -382,7 +382,7 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/PreQC/reflectance_factor', 'f4', ('nlocs', 'nchans'), fill_value=-999)
+        output_dataset.createVariable('/PreQC/reflectance_factor', 'i4', ('nlocs', 'nchans'), fill_value=-999)
         output_dataset['/PreQC/reflectance_factor'][:] = data_array
         output_dataset['/PreQC/reflectance_factor'].setncattr('flag_values', '0,1,2,3')
         output_dataset['/PreQC/reflectance_factor'].setncattr('flag_meanings',
@@ -403,7 +403,7 @@ class GoesConverter:
         data_array = temp_dict[0]
         for i in range(1, counter):
             data_array = np.column_stack((data_array, temp_dict[i]))
-        output_dataset.createVariable('/PreQC/brightness_temperature', 'f4', ('nlocs', 'nchans'),
+        output_dataset.createVariable('/PreQC/brightness_temperature', 'i4', ('nlocs', 'nchans'),
                                       fill_value=-999)
         output_dataset['/PreQC/brightness_temperature'][:] = data_array
         output_dataset['/PreQC/brightness_temperature'].setncattr('flag_values', '0,1,2,3')
