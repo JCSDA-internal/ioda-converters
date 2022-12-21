@@ -25,16 +25,21 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
+# The setting of basetime is temporary as it will get modified in the data reading routine.
+basetime = datetime.fromisoformat('1970-01-01T00:00:00')
+
 output_var_names = ["radiance"]
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {
     'odb_version': 1,
+    'converter' : os.path.basename(__file__)
 }
 
 VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -43,7 +48,7 @@ DimDict = {}
 
 VarDims = {}
 
-chan_number = range(1, 250)  # we havew 120 Blue band 120 Red band and 9 SWRI
+chan_number = range(1, 250)  # we have 120 Blue band 120 Red band and 9 SWRI
 
 
 def read_input(input_args):
@@ -66,6 +71,7 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
     # get the base time (should only have 1 or 2 time slots)
     time_base = ncd.groups['scan_line_attributes'].variables['time'][:]
+    global basetime   # We wish to overrride the initial setting of basetime.
     basetime = dateutil.parser.parse(ncd.groups['scan_line_attributes'].variables['time'].units[-20:])
 
     # Determine the lat/lon grid.
@@ -123,10 +129,9 @@ def read_input(input_args):
     lats = lats[mask]
 
     # create a string version of the date for each observation
-    dates = []
+    dates = np.empty(len(lons), dtype=np.int64)
     for i in range(len(lons)):
-        obs_date = basetime + timedelta(seconds=float(time[i]))
-        dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        dates[i] = round(time[i])
 
     # output values
     nchans = len(chan_number)
@@ -147,18 +152,16 @@ def read_input(input_args):
     # allocate space for output depending on which variables are to be saved
 
     obs_data = {}
-    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
-    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('dateTime', 'MetaData')] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
-    obs_data[('time', 'MetaData')] = time.astype('float32')
-    obs_data[('height_above_mean_sea_level', 'MetaData')] = np.zeros((obs_dim), dtype=np.float32)
-    obs_data[('sensor_azimuth_angle', 'MetaData')] = data_in['sensor_azimuth']
-    obs_data[('sensor_zenith_angle', 'MetaData')] = data_in['sensor_zenith']
-    obs_data[('sensor_view_angle', 'MetaData')] = data_in['sensor_zenith']
-    obs_data[('solar_zenith_angle', 'MetaData')] = data_in['solar_zenith']
-    obs_data[('solar_azimuth_angle', 'MetaData')] = data_in['solar_azimuth']
-    obs_data[('sensor_band_central_radiation_wavenumber', 'VarMetaData')] = wavelength.astype('float32')
+    obs_data[('height', 'MetaData')] = np.zeros((obs_dim), dtype=np.float32)
+    obs_data[('sensorAzimuthAngle', 'MetaData')] = data_in['sensor_azimuth'].astype('float32')
+    obs_data[('sensorZenithAngle', 'MetaData')] = data_in['sensor_zenith'].astype('float32')
+    obs_data[('sensorViewAngle', 'MetaData')] = data_in['sensor_zenith'].astype('float32')
+    obs_data[('solarZenithAngle', 'MetaData')] = data_in['solar_zenith'].astype('float32')
+    obs_data[('solarAzimuthAngle', 'MetaData')] = data_in['solar_azimuth'].astype('float32')
+    obs_data[('sensorCentralWavenumber', 'MetaData')] = wavelength.astype('float32')
     obs_data[output_var_names[0], global_config['oval_name']] = val_radiance.astype('float32')
     obs_data[output_var_names[0], global_config['oerr_name']] = err.astype('float32')
     obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
@@ -221,9 +224,8 @@ def main():
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['thinning'] = args.thin
-    GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # determine which variables we are going to output
     selected_names = []
@@ -232,25 +234,22 @@ def main():
     # pass parameters to the IODA writer
     # (needed because we are bypassing ExtractObsData within BuildNetcdf)
     VarDims = {
-        'radiance': ['nlocs', 'nchans'],
-        'sensor_band_central_radiation_wavenumber': ['nchans']
+        'radiance': ['Location', 'Channel'],
+        'sensorCentralWavenumber': ['Channel']
     }
 
     nchans = len(chan_number)
     nlocs = len(obs_data[('longitude', 'MetaData')])
-    ndatetime = np.zeros((20), dtype=np.float32)
     DimDict = {
-        'nlocs': nlocs,
-        'nchans': list(chan_number),
-        'nvars': list(chan_number),
-        'ndatetime': list(ndatetime)
+        'Location': nlocs,
+        'Channel': list(chan_number),
     }
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    VarAttrs[('radiance', 'ObsValue')]['units'] = 'W m^-2 um^-1 sr^-1'
-    VarAttrs[('radiance', 'ObsError')]['units'] = 'W m^-2 um^-1 sr^-1'
-    VarAttrs[('radiance', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since ' + basetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+    VarAttrs[('radiance', 'ObsValue')]['units'] = 'W m-2 um-1 sr-1'
+    VarAttrs[('radiance', 'ObsError')]['units'] = 'W m-2 um-1 sr-1'
     VarAttrs[('radiance', 'ObsValue')]['_FillValue'] = -32767
     VarAttrs[('radiance', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('radiance', 'PreQC')]['_FillValue'] = 999
