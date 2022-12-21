@@ -11,7 +11,7 @@
 #include <vector>
 #include <memory>
 
-#include "Parser/Tokenizer.h"
+#include "Tokenizer.h"
 
 namespace Ingester {
 namespace bufr {
@@ -53,6 +53,7 @@ namespace bufr {
     {
         std::string mnemonic;
         size_t index = 0;
+        std::vector<size_t> filter;
 
         static auto parse(std::vector<std::shared_ptr<Token>> tokens)
         {
@@ -74,16 +75,15 @@ namespace bufr {
                                           "query string: " + tokens[0]->str());
             }
 
-            if (tokens.size() == 2)
+            for (const auto& token : tokens)
             {
-                if (auto indexToken = std::dynamic_pointer_cast<IndexToken>(tokens[1]))
+                if (auto indexToken = std::dynamic_pointer_cast<IndexToken>(token))
                 {
                     component->index = indexToken->index();
                 }
-                else
+                else if (auto filterToken = std::dynamic_pointer_cast<FilterToken>(token))
                 {
-                    throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid path "
-                                              "component query string: " + tokens[1]->str());
+                    component->filter = filterToken->indices();
                 }
             }
 
@@ -91,29 +91,12 @@ namespace bufr {
         }
     };
 
-    struct FilterComponent : QueryComponent
-    {
-        std::vector<size_t> indices;
-
-        static auto parse(std::vector<std::shared_ptr<Token>> tokens)
-        {
-            std::shared_ptr<FilterComponent> component = nullptr;
-            if (const auto& token = std::dynamic_pointer_cast<FilterToken>(tokens[0]))
-            {
-                component = std::make_shared<FilterComponent>();
-                component->indices = token->indices();
-            }
-
-            return component;
-        }
-    };
 
     struct Query
     {
         std::string queryStr;
         std::shared_ptr<SubsetComponent> subset;
         std::vector<std::shared_ptr<PathComponent>> path;
-        std::shared_ptr<FilterComponent> filter;
     };
 
 //    typedef std::vector<std::shared_ptr<QueryComponent>> Query;

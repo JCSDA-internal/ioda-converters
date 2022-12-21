@@ -12,7 +12,8 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "Parser/Tokenizer.h"
+#include "Tokenizer.h"
+#include "Target.h"
 
 namespace Ingester {
 namespace bufr {
@@ -48,8 +49,6 @@ namespace bufr {
             {
                 query.path.push_back(PathComponent::parse(*compIt));
             }
-
-            query.filter = FilterComponent::parse(componentTokens.back());
 
             queries.push_back(query);
         }

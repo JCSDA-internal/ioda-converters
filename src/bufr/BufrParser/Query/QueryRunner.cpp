@@ -133,7 +133,6 @@ namespace bufr {
                                query.subset->subset == dataProvider_.getSubset());
         if (!targetMissing) {
             branches.resize(query.path.size() - 1);
-
             seqPath.push_back(dataProvider_.getInode());
 
             int tableCursor = -1;
@@ -235,6 +234,13 @@ namespace bufr {
         target->queryStr = query.queryStr;
         target->seqPath = branches;
         target->nodeIds = targetNodes;
+
+        //print all the dimpaths to std::cout
+        for (auto dimPath : dimPaths) {
+            std::cout << "--" << query.queryStr << "-- " << dimPath << ", ";
+        }
+        std::cout << std::endl;
+
 
         if (targetNodes.size() > 0) {
             target->dimPaths = dimPaths;
