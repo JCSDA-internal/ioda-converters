@@ -19,6 +19,8 @@ from pathlib import Path
 
 import numpy as np
 import netCDF4 as nc
+from cartopy import geodesic
+from copy import deepcopy as dcop
 
 # set path to ioda_conv_engines module
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -124,6 +126,8 @@ dtypes = {'string': object,
           'long': np.int64,
           'float': np.float32,
           'double': np.float64}
+
+geod = geodesic.Geodesic()  # generate ellipsoid, defaults to Earth WGS84 parameters
 
 
 def loadStations(stationfile, skipIfLoaded=True):
@@ -811,6 +815,9 @@ def getPressureLevels(section, levels):
     section['levels'] = {}
     pressures = sorted(levels.keys(), reverse=True)
 
+    if len(pressures) < 1:
+        return
+
     # loop through each height and try to find surrounding heights with defined
     # levels to interpolate or extrapolate pressure level from
 
@@ -852,6 +859,9 @@ def getHeights(section, levels):
     :return:
     """
     pressures = sorted(levels.keys(), reverse=True)
+
+    if len(pressures) < 1:
+        return
 
     for pressure in sorted(section['levels'].keys(), reverse=True):
         pressurelo = pressures[0]
@@ -966,8 +976,12 @@ def change_vars(profile):
         if 'height' in levels[pressure] and levels[pressure]['height'] is not None:
             height = levels[pressure]['height']
             dz = height - heightKm1
-            # Typical radiosonde ascent rate is 5 m/s
-            this_datetime = previous_time + timedelta(seconds=dz*0.2)
+            # Legacy soundings produce null values at mandatory level below ground.
+            if (dz < 1.0):
+                this_datetime = previous_time
+            else:
+                # Typical radiosonde ascent rate is 5 m/s
+                this_datetime = previous_time + timedelta(seconds=dz*0.2)
             heightKm1 = height
         else:
             this_datetime = previous_time
@@ -993,6 +1007,39 @@ def change_vars(profile):
         new_profile['specific_humidity'].append(spfh)
         new_profile['eastward_wind'].append(u)
         new_profile['northward_wind'].append(v)
+
+    """
+    Based on height and time and the wind componenents, predict the lat, lon positions
+    as the balloon ascends.  Generally the balloon ascends at 5 m/s, which was already
+    assumed in the creation of each timestamp.
+    """
+
+    previous_idx = 0
+    location = [profile['lon'], profile['lat'], None]
+    previous_loc = [profile['lon'], profile['lat'], None]
+    delta_t = np.diff(new_profile['dateTime'])
+
+    for idx in range(1, len(delta_t)):
+
+        if (new_profile['eastward_wind'][idx-1] != float_missing_value and new_profile['northward_wind'][idx-1] != float_missing_value):
+            # move north-south
+            d_north = new_profile['northward_wind'][idx-1] * delta_t[idx-1]
+            location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north)[0]
+            new_profile['latitude'][idx] = location[1]
+            # move east-west
+            d_east = new_profile['eastward_wind'][idx-1] * delta_t[idx-1]
+            location = geod.direct(points=location[:2], azimuths=90., distances=d_east)[0]
+            new_profile['longitude'][idx] = location[0]
+        else:
+            new_profile['latitude'][idx] = new_profile['latitude'][idx-1]
+            new_profile['longitude'][idx] = new_profile['longitude'][idx-1]
+
+        # store location for next step calculations
+        previous_loc = dcop(location)
+
+    # Be sure to delete the prior location info before exiting
+    del location
+    del previous_loc
 
     return new_profile
 
@@ -1104,13 +1151,16 @@ if __name__ == "__main__":
             if profile:
                 nstations += 1
                 nlevels = len(profile['levels'])
-                ntotal += nlevels
-                logging.debug(f"   found sounding with {nlevels} levels")
-                if args.verbose:
-                    printProfile(profile)
-                if args.netcdf:
-                    new_profile = change_vars(profile)
-                    obs_data = append_ioda_data(new_profile, obs_data)
+                if nlevels > 1:
+                    ntotal += nlevels
+                    logging.debug(f"   found sounding with {nlevels} levels")
+                    if args.verbose:
+                        printProfile(profile)
+                    if args.netcdf:
+                        new_profile = change_vars(profile)
+                        obs_data = append_ioda_data(new_profile, obs_data)
+                else:
+                    logging.debug(f"  skipping sounding {station} with 1 or fewer ({nlevels}) levels")
 
     if args.netcdf:
         ioda_data = {}
