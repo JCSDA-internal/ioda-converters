@@ -216,7 +216,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/airep_wmoBUFR2ioda.yaml
     testinput/airep_wmo_multi.bufr
     testinput/bufr_wmo_amdar_multi.yaml
-    testinput/bufr_wmo_amdar_multi.bufr
+    testinput/amdar_wmo_multi.bufr
     testinput/gnssro_wmoBUFR2ioda.yaml
     testinput/gnssro_2020-306-2358C2E6.bufr
     testinput/buoy_wmoBUFR2ioda.yaml
