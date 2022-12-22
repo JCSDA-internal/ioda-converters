@@ -49,6 +49,7 @@ VarDims = {
 iso8601_string = 'seconds since 2000-01-01T12:00:00Z'
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
+
 class smap(object):
     def __init__(self, args):
         self.filename = args.input

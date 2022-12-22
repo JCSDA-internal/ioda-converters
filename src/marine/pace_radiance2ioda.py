@@ -39,7 +39,7 @@ locationKeyList = [
 
 GlobalAttrs = {
     'odb_version': 1,
-    'converter' : os.path.basename(__file__)
+    'converter': os.path.basename(__file__)
 }
 
 VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
