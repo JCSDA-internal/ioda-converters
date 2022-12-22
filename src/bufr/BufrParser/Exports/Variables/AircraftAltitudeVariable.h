@@ -37,12 +37,6 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        /// \brief For field
-        std::string groupByField_;
-
-        /// \brief The configuration
-        const eckit::LocalConfiguration conf_;
-
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
 

@@ -32,7 +32,6 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* GroupByField = "group_by";
     }  // namespace ConfKeys
 }  // namespace
 
@@ -41,14 +40,13 @@ namespace Ingester
 {
     DatetimeVariable::DatetimeVariable(const std::string& exportName,
                                        const std::string& groupByField,
-                                       const eckit::Configuration &conf) :
-      Variable(exportName),
+                                       const eckit::LocalConfiguration& conf) :
+      Variable(exportName, groupByField, conf),
       yearQuery_(conf.getString(ConfKeys::Year)),
       monthQuery_(conf.getString(ConfKeys::Month)),
       dayQuery_(conf.getString(ConfKeys::Day)),
       hourQuery_(conf.getString(ConfKeys::Hour)),
       minuteQuery_(conf.getString(ConfKeys::Minute)),
-      groupByField_(groupByField),
       hoursFromUtc_(0)
     {
         if (conf.has(ConfKeys::Second))
@@ -59,11 +57,6 @@ namespace Ingester
         if (conf.has(ConfKeys::HoursFromUtc))
         {
             hoursFromUtc_ = conf.getInt(ConfKeys::HoursFromUtc);
-        }
-
-        if (conf.has(ConfKeys::GroupByField))
-        {
-            groupByField_ = conf.getString(ConfKeys::GroupByField);
         }
 
         initQueryMap();
