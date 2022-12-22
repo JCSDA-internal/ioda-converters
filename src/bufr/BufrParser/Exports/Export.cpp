@@ -16,6 +16,7 @@
 #include "Splits/CategorySplit.h"
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
+#include "Variables/AircraftAltitudeVariable.h"
 #include "Variables/TimeoffsetVariable.h"
 #include "ObjectFactory.h"
 
@@ -34,6 +35,7 @@ namespace
         {
             const char* Datetime = "datetime";
             const char* Timeoffset = "timeoffset";
+            const char* AircraftAltitude = "aircraftAltitude";
             const char* Query = "query";
         }  // namespace Variable
 
@@ -116,6 +118,8 @@ namespace Ingester
         variableFactory.registerObject<QueryVariable>(ConfKeys::Variable::Query);
         variableFactory.registerObject<DatetimeVariable>(ConfKeys::Variable::Datetime);
         variableFactory.registerObject<TimeoffsetVariable>(ConfKeys::Variable::Timeoffset);
+        variableFactory.registerObject<AircraftAltitudeVariable>
+            (ConfKeys::Variable::AircraftAltitude);
 
         if (conf.keys().size() == 0)
         {
