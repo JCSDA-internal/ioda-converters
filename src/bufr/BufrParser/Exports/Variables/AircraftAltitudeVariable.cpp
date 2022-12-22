@@ -46,9 +46,7 @@ namespace Ingester
     AircraftAltitudeVariable::AircraftAltitudeVariable(const std::string& exportName,
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
-      Variable(exportName),
-      groupByField_(groupByField),
-      conf_(conf)
+      Variable(exportName, groupByField, conf)
     {
         initQueryMap();
     }
