@@ -815,6 +815,9 @@ def getPressureLevels(section, levels):
     section['levels'] = {}
     pressures = sorted(levels.keys(), reverse=True)
 
+    if len(pressures) < 1:
+        return
+
     # loop through each height and try to find surrounding heights with defined
     # levels to interpolate or extrapolate pressure level from
 
@@ -856,6 +859,9 @@ def getHeights(section, levels):
     :return:
     """
     pressures = sorted(levels.keys(), reverse=True)
+
+    if len(pressures) < 1:
+        return
 
     for pressure in sorted(section['levels'].keys(), reverse=True):
         pressurelo = pressures[0]
