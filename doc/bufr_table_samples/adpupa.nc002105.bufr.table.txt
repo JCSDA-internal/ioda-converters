@@ -1,0 +1,239 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC002105 | A51105 | MSG TYPE 002-105  PIBAL (BUFR)                           |
+|          |        |                                                          |
+| WMOBLKST | 301001 | IDENTIFICATION - WMO BLOCK AND STATION NUMBER            |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMMSS   | 301013 |                                                          |
+| LTLONH   | 301021 |                                                          |
+| IDLSIPTM | 301111 | IDENTIFICATION OF LAUNCH SITE AND INSTRUMENTATION        |
+| DATETMLN | 301113 | DATE/TIME OF LAUNCH                                      |
+| HAVCOLS  | 301114 | HORIZONTAL AND VERTICAL COORDINATES OF LAUNCH SITE       |
+| INFORDAS | 301128 | Additional information on radiosonde ascent              |
+| WIGOSID  | 301150 | WIGOS IDENTIFIER                                         |
+| BID      | 352001 | BULLETIN ID DATA                                         |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| CORNSQ   | 352005 | CORRECTED REPORT DATA                                    |
+| UARLVB   | 361124 | RADIOSONDE REPORT LEVEL DATA (BUFR)                      |
+| UATMP    | 361125 | RADIOSONDE TEMPERATURE DATA                              |
+| UAWND    | 361126 | RADIOSONDE WIND DATA                                     |
+| UAWSH    | 361127 | RADIOSONDE WIND SHEAR DATA                               |
+| UAGP07   | 361133 | RADIOSONDE CLASS 7 GEOPOTENTIAL DATA                     |
+| UAGP10   | 361134 | RADIOSONDE CLASS 10 GEOPOTENTIAL DATA                    |
+|          |        |                                                          |
+| WMOB     | 001001 | WMO BLOCK NUMBER                                         |
+| WMOS     | 001002 | WMO STATION NUMBER                                       |
+| SMID     | 001011 | SHIP OR MOBILE LAND STATION IDENTIFIER                   |
+| RSERL    | 001081 | RADIOSONDE SERIAL NUMBER                                 |
+| RASCN    | 001082 | RADIOSONDE ASCENSION NUMBER                              |
+| RRLSE    | 001083 | Radiosonde release number                                |
+| OBSVR    | 001095 | Observer identification                                  |
+| WGOSIDS  | 001125 | WIGOS IDENTIFIER SERIES                                  |
+| WGOSISID | 001126 | WIGOS ISSUER OF IDENTIFIER                               |
+| WGOSISNM | 001127 | WIGOS ISSUE NUMBER                                       |
+| WGOSLID  | 001128 | WIGOS LOCAL IDENTIFIER (CHARACTER)                       |
+| A4ME     | 002003 | TYPE OF MEASURING EQUIPMENT USED                         |
+| RATP     | 002011 | RADIOSONDE TYPE                                          |
+| SIRC     | 002013 | SOLAR AND INFRARED RADIATION CORRECTION                  |
+| TTSS     | 002014 | TRACKING TECHNIQUE/STATUS OF SYSTEM USED                 |
+| RACP     | 002015 | Radiosonde completeness                                  |
+| RCONF    | 002016 | Radiosonde configuration                                 |
+| CAHM     | 002017 | Correction algorithms for humidity measurements          |
+| RGRSY    | 002066 | Radiosonde ground receiving system                       |
+| RFREQ    | 002067 | RADIOSONDE OPERATING FREQUENCY                           |
+| BMFGR    | 002080 | Balloon manufacturer                                     |
+| BTYPE    | 002081 | Type of balloon                                          |
+| BWGHT    | 002082 | Weight of balloon                                        |
+| BSHEL    | 002083 | Type of balloon shelter                                  |
+| BGTYP    | 002084 | Type of gas used in balloon                              |
+| BGAMT    | 002085 | Amount of gas used in balloon                            |
+| BFTLN    | 002086 | Balloon flight train length                              |
+| PSENS    | 002095 | TYPE OF PRESSURE SENSOR                                  |
+| TSENS    | 002096 | TYPE OF TEMPERATURE SENSOR                               |
+| RHSENS   | 002097 | TYPE OF HUMIDITY SENSOR                                  |
+| RADO     | 002103 | Radome                                                   |
+| GHTC     | 002191 | Geopotential height calculation                          |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTE                                                   |
+| SECO     | 004006 | SECOND                                                   |
+| LTDS     | 004086 | LONG TIME PERIOD OR DISPLACEMENT                         |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| LATDH    | 005015 | LATITUDE DISPLACEMENT (HIGH ACCURACY)                    |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| LONDH    | 006015 | LONGITUDE DISPLACEMENT (HIGH ACCURACY)                   |
+| PRLC     | 007004 | PRESSURE                                                 |
+| GP07     | 007008 | GEOPOTENTIAL                                             |
+| TSIG     | 008021 | TIME SIGNIFICANCE                                        |
+| VSIGX    | 008042 | EXTENDED VERTICAL SOUNDING SIGNIFICANCE                  |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| GP10     | 010008 | GEOPOTENTIAL                                             |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| AWSB     | 011061 | ABSOLUTE WIND SHEAR IN 1 KM LAYER BELOW                  |
+| AWSA     | 011062 | ABSOLUTE WIND SHEAR IN 1 KM LAYER ABOVE                  |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| TMDP     | 012103 | DEW POINT TEMPERATURE                                    |
+| SOFTV    | 025061 | Software identification and version number               |
+| QMGP     | 033192 | SDMEDIT QUALITY MARK FOR GEOPOTENTIAL                    |
+| QMAT     | 033193 | SDMEDIT QUALITY MARK FOR TEMPERATURE                     |
+| QMDD     | 033194 | SDMEDIT QUALITY MARK FOR MOISTURE                        |
+| QMWN     | 033195 | SDMEDIT QUALITY MARK FOR WIND                            |
+| QMPR     | 033207 | SDMEDIT QUALITY MARK FOR PRESSURE                        |
+| CORN     | 033215 | CORRECTED REPORT INDICATOR                               |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| RTERM    | 035035 | Reason for termination                                   |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| BGVOL    | 002088 | Volume of gas used in balloon                            |
+| HSMSL    | 007030 | HEIGHT OF STATION GROUND ABOVE MEAN SEA LEVEL            |
+| HBMSL    | 007031 | HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL                 |
+| HEIT     | 007007 | HEIGHT                                                   |
+| QCEVR    | 033024 | STATION ELEVATION QUALITY MARK (FOR MOBIL STATIONS)      |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC002105 | WIGOSID  DATETMLN  RPID  {IDLSIPTM}  HAVCOLS  INFORDAS  BGVOL     |
+| NC002105 | (UARLVB)  {BID}  {RCPTIM}  {CORNSQ}                               |
+|          |                                                                   |
+| WIGOSID  | WGOSIDS  WGOSISID  WGOSISNM  WGOSLID                              |
+|          |                                                                   |
+| DATETMLN | TSIG  YYMMDD  HHMMSS                                              |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMMSS   | HOUR  MINU  SECO                                                  |
+|          |                                                                   |
+| IDLSIPTM | WMOBLKST  SMID  RATP  SIRC  TTSS  A4ME                            |
+|          |                                                                   |
+| WMOBLKST | WMOB  WMOS                                                        |
+|          |                                                                   |
+| HAVCOLS  | LTLONH  HSMSL  HBMSL  HEIT  QCEVR                                 |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| INFORDAS | RSERL  RASCN  RRLSE  OBSVR  RACP  RCONF  CAHM  RGRSY  RFREQ       |
+| INFORDAS | BMFGR  BTYPE  BWGHT  BSHEL  BGTYP  BGAMT  BFTLN  PSENS  TSENS     |
+| INFORDAS | RHSENS  RADO  GHTC  SOFTV  RTERM                                  |
+|          |                                                                   |
+| UARLVB   | VSIGX  LTDS  LATDH  LONDH  QMPR  207001  PRLC  207000  QMGP       |
+| UARLVB   | 207001  <UAGP07>  <UAGP10>  207000  <UATMP>  <UAWND>  <UAWSH>     |
+|          |                                                                   |
+| UAGP07   | GP07                                                              |
+|          |                                                                   |
+| UAGP10   | GP10                                                              |
+|          |                                                                   |
+| UATMP    | QMAT  TMDB  QMDD  TMDP                                            |
+|          |                                                                   |
+| UAWND    | QMWN  WDIR  WSPD                                                  |
+|          |                                                                   |
+| UAWSH    | AWSB  AWSA                                                        |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| CORNSQ   | CORN                                                              |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| WMOB     |    0 |           0 |   7 | NUMERIC                  |-------------|
+| WMOS     |    0 |           0 |  10 | NUMERIC                  |-------------|
+| SMID     |    0 |           0 |  72 | CCITT IA5                |-------------|
+| RSERL    |    0 |           0 | 160 | CCITT IA5                |-------------|
+| RASCN    |    0 |           0 |  14 | NUMERIC                  |-------------|
+| RRLSE    |    0 |           0 |   3 | NUMERIC                  |-------------|
+| OBSVR    |    0 |           0 |  32 | CCITT IA5                |-------------|
+| WGOSIDS  |    0 |           0 |   4 | NUMERIC                  |-------------|
+| WGOSISID |    0 |           0 |  16 | NUMERIC                  |-------------|
+| WGOSISNM |    0 |           0 |  16 | NUMERIC                  |-------------|
+| WGOSLID  |    0 |           0 | 128 | CCITT IA5                |-------------|
+| A4ME     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| RATP     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| SIRC     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| TTSS     |    0 |           0 |   7 | CODE TABLE               |-------------|
+| RACP     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| RCONF    |    0 |           0 |   5 | FLAG TABLE               |-------------|
+| CAHM     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| RGRSY    |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RFREQ    |   -5 |           0 |  15 | HZ                       |-------------|
+| BMFGR    |    0 |           0 |   6 | CODE TABLE               |-------------|
+| BTYPE    |    0 |           0 |   5 | CODE TABLE               |-------------|
+| BWGHT    |    3 |           0 |  12 | KG                       |-------------|
+| BSHEL    |    0 |           0 |   4 | CODE TABLE               |-------------|
+| BGTYP    |    0 |           0 |   4 | CODE TABLE               |-------------|
+| BGAMT    |    3 |           0 |  13 | KG                       |-------------|
+| BFTLN    |    1 |           0 |  10 | M                        |-------------|
+| PSENS    |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TSENS    |    0 |           0 |   5 | CODE TABLE               |-------------|
+| RHSENS   |    0 |           0 |   5 | CODE TABLE               |-------------|
+| RADO     |    0 |           0 |   2 | FLAG TABLE               |-------------|
+| GHTC     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | SECOND                   |-------------|
+| LTDS     |    0 |       -8192 |  15 | SECOND                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE(N+,S-)            |-------------|
+| LATDH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE(E+,W-)            |-------------|
+| LONDH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| PRLC     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| GP07     |    0 |      -10000 |  20 | (METERS/SECOND)**2       |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| VSIGX    |    0 |           0 |  18 | FLAG TABLE               |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| GP10     |    0 |      -10000 |  20 | (METERS/SECOND)**2       |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| AWSB     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| AWSA     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMDP     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| SOFTV    |    0 |           0 |  96 | CCITT IA5                |-------------|
+| QMGP     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMAT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMDD     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMWN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMPR     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CORN     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| RTERM    |    0 |           0 |   5 | CODE TABLE               |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+| UARDC    |    0 |           0 |   8 | CODE TABLE               |-------------|
+| BGVOL    |    3 |           0 |  13 | M**3                     |-------------|
+| HSMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| HBMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| HEIT     |    0 |       -1000 |  17 | METERS                   |-------------|
+| QCEVR    |    0 |           0 |   4 | CODE TABLE               |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

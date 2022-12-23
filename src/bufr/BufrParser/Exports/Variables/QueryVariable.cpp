@@ -12,20 +12,24 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "IngesterTypes.h"
+#include "Transforms/TransformBuilder.h"
+
+namespace
+{
+    namespace ConfKeys
+    {
+        const char *Query = "query";
+        const char *Type = "type";
+    }
+}
 
 
 namespace Ingester
 {
     QueryVariable::QueryVariable(const std::string& exportName,
-                                 const std::string& query,
                                  const std::string& groupByField,
-                                 const std::string& type,
-                                 const Transforms& transforms) :
-        Variable(exportName),
-        query_(query),
-        groupByField_(groupByField),
-        type_(type),
-        transforms_(transforms)
+                                 const eckit::LocalConfiguration& conf) :
+        Variable(exportName, groupByField, conf)
     {
         initQueryMap();
     }
@@ -42,7 +46,7 @@ namespace Ingester
 
         auto dataObject = map.at(getExportName());
 
-        for (auto transform : transforms_)
+        for (const auto& transform : TransformBuilder::makeTransforms(conf_))
         {
             transform->apply(dataObject);
         }
@@ -56,9 +60,14 @@ namespace Ingester
 
         QueryInfo info;
         info.name = getExportName();
-        info.query = query_;
+        info.query = conf_.getString(ConfKeys::Query);
         info.groupByField = groupByField_;
-        info.type = type_;
+
+        if (conf_.has(ConfKeys::Type))
+        {
+            info.type = conf_.getString(ConfKeys::Type);
+        }
+
         queries.push_back(info);
 
         return queries;
