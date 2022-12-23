@@ -17,13 +17,23 @@
 
 namespace Ingester {
 namespace bufr {
-
     struct TargetComponent
     {
-        std::string name;
+        enum class Type
+        {
+            Subset,
+            Binary,
+            Repeat
+        };
+
+        std::shared_ptr<QueryComponent> queryComponent;
         size_t branch;
-        bool addsDimension;
-        std::vector<size_t> filter;
+        Type type;
+
+        bool addsDimension() const
+        {
+            return type != Type::Binary;
+        }
     };
 
     /// \brief The information or Meta data for a BUFR field whose data we wish to capture when
@@ -43,7 +53,6 @@ namespace bufr {
         std::vector<int> exportDimIdxs;
         std::vector<int> seqPath;
 
-
         Target() = default;
 
         void setPath(const std::vector<std::shared_ptr<TargetComponent>>& components)
@@ -51,14 +60,11 @@ namespace bufr {
             std::string currentPath;
             for (const auto& component : components)
             {
-//                if (component->isQueryComponent)
-//                {
-//                    if (!currentPath.empty()) currentPath.append("/");
-//                    currentPath.append(component->name);
-//                    dimPaths.push_back(currentPath);
-//                }
+                if (!currentPath.empty()) currentPath.append("/");
+                currentPath.append(component->queryComponent->name);
+                dimPaths.push_back(currentPath);
 
-                if (component->addsDimension || component->filter.size() > 1)
+                if (component->addsDimension() || component->queryComponent->filter.size() > 1)
                 {
                     numDimensions++;
                 }

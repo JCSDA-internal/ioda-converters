@@ -18,11 +18,13 @@ namespace bufr {
 
     struct QueryComponent
     {
+        std::string name;
+        size_t index = 0;
+        std::vector<size_t> filter;
     };
 
     struct SubsetComponent : QueryComponent
     {
-        std::string subset;
         bool isAnySubset = false;
 
         static auto parse(std::vector<std::shared_ptr<Token>> tokens)
@@ -30,7 +32,7 @@ namespace bufr {
             const auto& token = tokens[0];
 
             auto component = std::make_shared<SubsetComponent>();;
-            component->subset = token->str();
+            component->name = token->str();
             if (std::dynamic_pointer_cast<AnySubset>(token))
             {
                 component->isAnySubset = true;
@@ -42,7 +44,7 @@ namespace bufr {
             else
             {
                 throw eckit::BadParameter("QueryParser::parseQueryToken: Invalid subset in query "
-                                          "string: " + component->subset);
+                                          "string: " + component->name);
             }
 
             return component;
@@ -51,10 +53,6 @@ namespace bufr {
 
     struct PathComponent : QueryComponent
     {
-        std::string mnemonic;
-        size_t index = 0;
-        std::vector<size_t> filter;
-
         static auto parse(std::vector<std::shared_ptr<Token>> tokens)
         {
             if (tokens.size() < 1 && tokens.size() > 2)
@@ -67,7 +65,7 @@ namespace bufr {
 
             if (std::dynamic_pointer_cast<MnemonicToken>(tokens[0]))
             {
-                component->mnemonic = tokens[0]->str();
+                component->name = tokens[0]->str();
             }
             else
             {

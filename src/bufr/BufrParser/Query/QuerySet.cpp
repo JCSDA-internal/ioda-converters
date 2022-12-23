@@ -29,7 +29,7 @@ namespace bufr {
             if (limitSubsets_.empty())
             {
                 includesAllSubsets_ = query.subset->isAnySubset;
-                presentSubsets_.insert(query.subset->subset);
+                presentSubsets_.insert(query.subset->name);
             }
             else
             {
@@ -39,7 +39,7 @@ namespace bufr {
                 }
                 else
                 {
-                    presentSubsets_.insert(query.subset->subset);
+                    presentSubsets_.insert(query.subset->name);
 
                     std::vector<std::string> newSubsets;
                     std::set_intersection(limitSubsets_.begin(),

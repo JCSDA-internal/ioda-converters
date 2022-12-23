@@ -123,124 +123,132 @@ namespace bufr {
     std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
                                                     const Query& query) const
     {
+
+
+        // If the query does not apply to this subset then return an empty target
+        if (!(query.subset->isAnySubset || query.subset->name == dataProvider_.getSubset()))
+        {
+            auto target = std::make_shared<Target>();
+            target->setPath({});
+            target->name = targetName;
+            target->queryStr = query.queryStr;
+            target->dimPaths = {"*"};
+            target->exportDimIdxs = {0};
+            target->typeInfo = TypeInfo();
+            return target;
+        }
+
+        std::vector<std::shared_ptr<TargetComponent>> targetComponents;
+
+
         std::vector<int> branches;
         std::vector<int> targetNodes;
         std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
-        bool targetMissing = !(query.subset->isAnySubset ||
-                               query.subset->subset == dataProvider_.getSubset());
-        if (!targetMissing) {
-            branches.resize(query.path.size() - 1);
-            seqPath.push_back(dataProvider_.getInode());
 
-            int tableCursor = -1;
-            int mnemonicCursor = -1;
+        branches.resize(query.path.size() - 1);
+        seqPath.push_back(dataProvider_.getInode());
 
-            for (auto nodeIdx = dataProvider_.getInode();
-                 nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
-                 nodeIdx++) {
-                if (dataProvider_.getTyp(nodeIdx) == Typ::Sequence ||
-                    dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
-                    dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
-                    if (isQueryNode(nodeIdx - 1)) {
-                        if (dataProvider_.getTag(nodeIdx) ==
-                                query.path[mnemonicCursor + 1]->mnemonic &&
-                            tableCursor == mnemonicCursor) {
-                            mnemonicCursor++;
-                            branches[mnemonicCursor] = nodeIdx - 1;
-                        }
-                        tableCursor++;
+        int tableCursor = -1;
+        int mnemonicCursor = -1;
+
+        for (auto nodeIdx = dataProvider_.getInode();
+             nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
+             nodeIdx++) {
+            if (dataProvider_.getTyp(nodeIdx) == Typ::Sequence ||
+                dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
+                dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
+                if (isQueryNode(nodeIdx - 1)) {
+                    if (dataProvider_.getTag(nodeIdx) == query.path[mnemonicCursor + 1]->name &&
+                        tableCursor == mnemonicCursor) {
+                        mnemonicCursor++;
+                        branches[mnemonicCursor] = nodeIdx - 1;
                     }
-                    seqPath.push_back(nodeIdx);
-                } else if (mnemonicCursor == static_cast<int>(query.path.size()) - 2 &&
-                           tableCursor == mnemonicCursor &&
-                           dataProvider_.getTag(nodeIdx) == query.path.back()->mnemonic) {
-                    // We found a target
-                    targetNodes.push_back(nodeIdx);
-                    getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
+                    tableCursor++;
                 }
+                seqPath.push_back(nodeIdx);
+            } else if (mnemonicCursor == static_cast<int>(query.path.size()) - 2 &&
+                       tableCursor == mnemonicCursor &&
+                       dataProvider_.getTag(nodeIdx) == query.path.back()->name) {
+                // We found a target
+                targetNodes.push_back(nodeIdx);
+                getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
+            }
 
-                // Step back up the tree (unfortunately this is finicky)
-                if (seqPath.size() > 1) {
-                    // Skip pure sequences not inside any kind of repeated sequence
-                    auto jumpBackNode = dataProvider_.getInode();
-                    if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+            // Step back up the tree (unfortunately this is finicky)
+            if (seqPath.size() > 1) {
+                // Skip pure sequences not inside any kind of repeated sequence
+                auto jumpBackNode = dataProvider_.getInode();
+                if (nodeIdx < dataProvider_.getIsc(dataProvider_.getInode()))
+                {
+                    jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
+                    if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
+                    while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
+                           dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
                     {
-                        jumpBackNode = dataProvider_.getJmpb(nodeIdx + 1);
-                        if (jumpBackNode == 0) jumpBackNode = dataProvider_.getInode();
-                        while (dataProvider_.getTyp(jumpBackNode) == Typ::Sequence &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::FixedRep &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
-                               dataProvider_.getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
+                        auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
+                        if (newJumpBackNode != jumpBackNode)
                         {
-                            auto newJumpBackNode = dataProvider_.getJmpb(jumpBackNode);
-                            if (newJumpBackNode != jumpBackNode)
-                            {
-                                jumpBackNode = newJumpBackNode;
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            jumpBackNode = newJumpBackNode;
                         }
-                    }
-
-
-                    // Peak ahead to see if the next node is inside one of the containing sequences
-                    // then go back up the approptiate number of sequences. You may have to exit
-                    // several sequences in a row if the current sequence is the last element in the
-                    // containing sequence.
-                    for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--) {
-                        if (seqPath[pathIdx] == jumpBackNode) {
-                            for (int rewindIdx = seqPath.size() - 1;
-                                 rewindIdx > pathIdx;
-                                 rewindIdx--) {
-                                // Exit the sequence
-                                if (isQueryNode(seqPath[rewindIdx] - 1)) {
-                                    if (mnemonicCursor > -1 && tableCursor == mnemonicCursor) {
-                                        mnemonicCursor--;
-                                    }
-
-                                    tableCursor--;
-                                }
-                                // Pop out of the current sequence
-                                seqPath.pop_back();
-                            }
+                        else
+                        {
                             break;
                         }
                     }
                 }
-            }
 
-            if (query.path.back()->index > 0 &&
-                query.path.back()->index <= targetNodes.size())
-            {
-                targetNodes = {targetNodes[query.path.back()->index - 1]};
-            }
 
-            if (targetNodes.size() > 1) {
-                std::ostringstream errMsg;
-                errMsg << "Query string must return 1 target. Are you missing an index? ";
-                errMsg << query.queryStr << ".";
-                throw eckit::BadParameter(errMsg.str());
+                // Peak ahead to see if the next node is inside one of the containing sequences
+                // then go back up the approptiate number of sequences. You may have to exit
+                // several sequences in a row if the current sequence is the last element in the
+                // containing sequence.
+                for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--) {
+                    if (seqPath[pathIdx] == jumpBackNode) {
+                        for (int rewindIdx = seqPath.size() - 1;
+                             rewindIdx > pathIdx;
+                             rewindIdx--) {
+                            // Exit the sequence
+                            if (isQueryNode(seqPath[rewindIdx] - 1)) {
+                                if (mnemonicCursor > -1 && tableCursor == mnemonicCursor) {
+                                    mnemonicCursor--;
+                                }
+
+                                tableCursor--;
+                            }
+                            // Pop out of the current sequence
+                            seqPath.pop_back();
+                        }
+                        break;
+                    }
+                }
             }
         }
 
+        if (query.path.back()->index > 0 &&
+            query.path.back()->index <= targetNodes.size())
+        {
+            targetNodes = {targetNodes[query.path.back()->index - 1]};
+        }
+
+        if (targetNodes.size() > 1) {
+            std::ostringstream errMsg;
+            errMsg << "Query string must return 1 target. Are you missing an index? ";
+            errMsg << query.queryStr << ".";
+            throw eckit::BadParameter(errMsg.str());
+        }
+
         auto target = std::make_shared<Target>();
+        target->setPath(targetComponents);
         target->name = targetName;
         target->queryStr = query.queryStr;
         target->seqPath = branches;
         target->nodeIds = targetNodes;
-
-        //print all the dimpaths to std::cout
-        for (auto dimPath : dimPaths) {
-            std::cout << "--" << query.queryStr << "-- " << dimPath << ", ";
-        }
-        std::cout << std::endl;
-
 
         if (targetNodes.size() > 0) {
             target->dimPaths = dimPaths;
@@ -254,6 +262,7 @@ namespace bufr {
 
         return target;
     }
+
 
     bool QueryRunner::isQueryNode(int nodeIdx) const {
         return (dataProvider_.getTyp(nodeIdx) == Typ::DelayedRep ||
