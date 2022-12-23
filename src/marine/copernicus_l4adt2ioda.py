@@ -105,8 +105,8 @@ class copernicus_l4adt2ioda(object):
                 time_offset = round((this_datetime - epoch).total_seconds())
             except Exception:
                 print(f"ABORT, failure to find timestamp; check format,"
-                        " it should be like 2014-07-29T12:00:00Z whereas"
-                        " you entered {self.datetime}")
+                       " it should be like 2014-07-29T12:00:00Z whereas"
+                       " you entered {self.datetime}")
                 sys.exit()
 
         # Same time stamp for all obs within 1 file
