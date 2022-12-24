@@ -99,6 +99,8 @@ namespace Ingester
         std::string getPath() const { return query_; }
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
+        bool hasSamePath(const std::shared_ptr<DataObjectBase>& dataObject);
+
         /// \brief Print the data object to a output stream.
         virtual void print(std::ostream &out) const = 0;
 
