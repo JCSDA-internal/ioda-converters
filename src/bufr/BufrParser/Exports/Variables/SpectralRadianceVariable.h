@@ -25,7 +25,7 @@ namespace Ingester
         SpectralRadianceVariable() = delete;
         SpectralRadianceVariable(const std::string& exportName,
                                  const std::string& groupByField,
-                                 const eckit::Configuration& conf);
+                                 const eckit::LocalConfiguration& conf);
 
         ~SpectralRadianceVariable() final = default;
 
@@ -37,12 +37,6 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        /// \brief For field (optional)
-        std::string groupByField_;
-
-        /// \brief The configuration
-        const eckit::LocalConfiguration conf_;
-
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
 

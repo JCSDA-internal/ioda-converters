@@ -122,6 +122,8 @@ namespace Ingester
         variableFactory.registerObject<TimeoffsetVariable>(ConfKeys::Variable::Timeoffset);
         variableFactory.registerObject<AircraftAltitudeVariable>
             (ConfKeys::Variable::AircraftAltitude);
+        variableFactory.registerObject<SpectralRadianceVariable>
+            (ConfKeys::Variable::SpectralRadiance);
 
         if (conf.keys().size() == 0)
         {

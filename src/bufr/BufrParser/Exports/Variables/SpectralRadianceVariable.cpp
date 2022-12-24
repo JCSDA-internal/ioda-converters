@@ -42,10 +42,8 @@ namespace Ingester
 {
     SpectralRadianceVariable::SpectralRadianceVariable(const std::string& exportName,
                                                        const std::string& groupByField,
-                                                       const eckit::Configuration &conf) :
-      Variable(exportName),
-      groupByField_(groupByField),
-      conf_(conf)
+                                                       const eckit::LocalConfiguration &conf) :
+      Variable(exportName, groupByField, conf)
     {
         initQueryMap();
     }
