@@ -165,6 +165,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.1bmhs.tm00.bufr_d
     testinput/gdas.t12z.esmhs.tm00.bufr_d
     testinput/gdas.t12z.mtiasi.tm00.bufr_d
+    testinput/gdas.t00z.atms.tm00.bufr_d
     testinput/gdas.t18z.1bmhs.tm00.bufr_d
     testinput/gdas.t00z.1bhrs4.tm00.bufr_d
     testinput/gdas.t00z.sevcsr.tm00.bufr_d
@@ -207,6 +208,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_satwnd_new_format.yaml
     testinput/bufr_ncep_sevcsr.yaml
     testinput/bufr_ncep_mtiasi.yaml
+    testinput/bufr_ncep_atms.yaml
     testinput/bufr_simple_groupby.yaml
     testinput/bufr_empty_fields.yaml
     testinput/bufr_sfcshp.yaml
@@ -265,6 +267,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005066.nc
     testoutput/gdas.t18z.satwnd_avhrr.tm00.nc
     testoutput/gdas.t12z.mtiasi.metop-c.tm00.nc
+    testoutput/gdas.t00z.atms.noaa-20.tm00.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
@@ -1322,6 +1325,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_mtiasi.yaml"
                     gdas.t12z.mtiasi.metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms.yaml"
+                    gdas.t00z.atms.noaa-20.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby
