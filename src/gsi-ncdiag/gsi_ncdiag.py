@@ -108,6 +108,7 @@ all_LocKeyList = {
     'Sol_Azimuth_Angle': ('solar_azimuth_angle', 'float'),
     'Scan_Angle': ('sensor_view_angle', 'float'),
     'Surface_type': ('surface_type', 'integer'),
+    'Dominant_Sfc_Type': ('surface_type', 'integer'),
     'MODIS_deep_blue_flag': ('modis_deep_blue_flag', 'integer'),
     'Reference_Pressure': ('air_pressure', 'float'),
     'Solar_Zenith_Angle': ('solar_zenith_angle', 'float'),
@@ -158,6 +159,7 @@ conv_gsivarnames = {
 
 gsi_add_vars_allsky = {
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -187,6 +189,7 @@ gsi_add_qcvars_allsky = {
 gsi_add_vars = {
     'ObsBias': 'GsiObsBias',
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -219,6 +222,7 @@ gsi_add_qcvars = {
 
 gsi_add_vars_uv = {
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -250,6 +254,7 @@ gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
     'ObsType',
+    'ObsSubType',
     'Analysis_Use_Flag',
 ]
 
