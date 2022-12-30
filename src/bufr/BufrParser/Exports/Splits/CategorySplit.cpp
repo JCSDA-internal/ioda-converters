@@ -11,16 +11,30 @@
 
 #include "eckit/exception/Exceptions.h"
 
+namespace
+{
+    namespace ConfKeys
+    {
+        const char* NameMap = "map";
+        const char* Variable = "variable";
+    }  // namespace ConfKeys
+}  // namespace
 
 namespace Ingester
 {
-    CategorySplit::CategorySplit(const std::string& name,
-                                 const std::string& variable,
-                                 const NameMap& nameMap) :
-        Split(name),
-        variable_(variable),
-        nameMap_(nameMap)
+    CategorySplit::CategorySplit(const std::string& name, const eckit::LocalConfiguration& conf) :
+        Split(name, conf),
+        variable_(conf.getString(ConfKeys::Variable))
     {
+        if (conf.has(ConfKeys::NameMap))
+        {
+            const auto& mapConf = conf.getSubConfiguration(ConfKeys::NameMap);
+            for (const std::string& mapKey : mapConf.keys())
+            {
+                auto intKey = mapKey.substr(1, mapKey.size());
+                nameMap_.insert({std::stoi(intKey), mapConf.getString(mapKey)});
+            }
+        }
     }
 
     std::vector<std::string> CategorySplit::subCategories(const BufrDataMap& dataMap)
