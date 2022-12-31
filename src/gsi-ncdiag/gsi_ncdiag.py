@@ -675,6 +675,23 @@ class Conv(BaseGSI):
                     print("No matching observations for Platform:%s Var:%s" % (p, v))
                     continue
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
+                if v == 'bend':
+                    # sort record_number
+                    record_number = self.var('record_number')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number")
+                    # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
+
+                    # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
+                    idx_tuples = np.where(idx.data)
+                    idx_id = idx_tuples[0]
+                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    # another check if idx_sorted is correct to sort record_number
+                    # record_number_new = self.var('record_number')[idx_sorted]
+                    # for isort in range(len(record_number_new)):
+                    #     print('isort, idx, record_number, record_number_new',isort,\
+                    #         record_number[isort], record_number_new[isort] )
+
                 # set up output file
                 ncout = nc.Dataset(outname, 'w', format='NETCDF4')
                 ncout.setncattr(
@@ -704,7 +721,10 @@ class Conv(BaseGSI):
                         if vname in geovals_metadata_dict.keys():
                             dims = ("nlocs",) + var.dimensions[1:]
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
-                            var_out[...] = vdata[idx, ...]
+                            if v == 'bend':
+                                var_out[...] = vdata[idx_sorted, ...]
+                            else:
+                                var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
@@ -715,7 +735,11 @@ class Conv(BaseGSI):
                                 else:
                                     dims = ("nlocs", "nlevs")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
-                            var_out[...] = vdata[idx, ...]
+                            if v == 'bend':
+                                var_out[...] = vdata[idx_sorted, ...]
+                            else:
+                                var_out[...] = vdata[idx, ...]
+
                 ncout.close()
 
     def toIODAobs(self, OutDir, clobber=True, platforms=None):
@@ -786,6 +810,23 @@ class Conv(BaseGSI):
                     varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
                     varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
                     varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
+                if v == 'bend':
+                    # sort record_number
+                    record_number = self.var('record_number')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number")
+                    # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
+                    # print('record_number:', record_number)
+                    # print('record_number.size:', record_number.size)
+                    # for isort in range(len(record_number_sorted)):
+                    #     print('isort, idx, record_number, record_number_sorted',isort, idx[isort],\
+                    #         record_number[isort], record_number_sorted[isort] )
+
+                    # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
+                    idx_tuples = np.where(idx.data)
+                    idx_id = idx_tuples[0]
+                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    idx = idx_sorted
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
