@@ -18,17 +18,18 @@
 
 namespace Ingester
 {
-    /// \brief Exports parsed data as datetimes using speciefied Mnemonics
-    class TimeoffsetVariable final : public Variable
+    /// \brief Exports parsed data as aircraftAltitudes using specified Mnemonics
+    class AircraftAltitudeVariable final : public Variable
     {
      public:
-        TimeoffsetVariable() = delete;
-        TimeoffsetVariable(const std::string& exportName,
-                           const std::string& groupByField,
-                           const eckit::LocalConfiguration& conf);
-        ~TimeoffsetVariable() final = default;
+        AircraftAltitudeVariable() = delete;
+        AircraftAltitudeVariable(const std::string& exportName,
+                                 const std::string& groupByField,
+                                 const eckit::LocalConfiguration& conf);
 
-        /// \brief Get the configured mnemonics and turn them into datetime strings
+        ~AircraftAltitudeVariable() final = default;
+
+        /// \brief Get the configured mnemonics and turn them into AircraftAltitude
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
 
@@ -40,6 +41,6 @@ namespace Ingester
         void checkKeys(const BufrDataMap& map);
 
         /// \brief get the export key string
-        std::string getExportKey(const char* name) const;
+        std::string getExportKey(const std::string& name) const;
     };
 }  // namespace Ingester
