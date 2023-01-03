@@ -14,6 +14,7 @@ import numpy as np
 from datetime import datetime, date, timedelta
 import os
 from pathlib import Path
+from pyhdf.SD import SD, SDC
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -33,8 +34,10 @@ locationKeyList = [
 obsvars = ["aerosolOpticalDepth"]
 
 # A dictionary of global attributes.  More filled in further down.
-AttrData = {}
-AttrData['ioda_object_type'] = 'AOD at 550nm'
+AttrData = {
+    'converter': os.path.basename(__file__),
+    'description': 'AOD at 550nm'
+}
 
 # A dictionary of variable dimensions.
 DimDict = {}
@@ -52,12 +55,19 @@ long_missing_value = nc.default_fillvals['i8']
 
 
 class AOD(object):
-    def __init__(self, filenames, obs_time_arg):
+    def __init__(self, filenames, obs_time, pltfrm):
         self.filenames = filenames
-        self.obs_time = obs_time_arg
+        self.obs_time = obs_time
+        self.pltfrm = pltfrm
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        # there's absolutely no difference in the hdf4 files attributes
+        # between Terra and Aqua files. So it is user specified
+        AttrData['platform'] = pltfrm
+        # sensor would be always MODIS for this converter
+        AttrData['sensor'] = 'MODIS'
+        AttrData['datetimeReference'] = obs_time
         self._read()
 
     def _read(self):
@@ -79,50 +89,45 @@ class AOD(object):
         self.varAttrs[('dateTime', metaDataName)]['units'] = 'seconds since 1993-01-01T00:00:00Z'
 
         # Make empty lists for the output vars
-        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float64)
-        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float64)
+        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float64)
-            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float64)
+            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         # loop through input filenames
         for f in self.filenames:
-            ncd = nc.Dataset(f, 'r')
-            ncd_str = str(ncd)
-            if 'Terra' in ncd_str:
-                AttrData['platform'] = 'Terra'
-            elif 'Aqua' in ncd_str:
-                AttrData['platform'] = 'Aqua'
-            if 'MODIS' in ncd_str:
-                AttrData['sensor'] = 'v.modis_terra'
+            hdf = SD(f, SDC.READ)
 
             #  Get variables
-            modis_time = ncd.variables['Scan_Start_Time'][:].ravel()
-            modis_time = modis_time.astype('float64')
-            lats = ncd.variables['Latitude'][:].ravel()
+            modis_time = hdf.select('Scan_Start_Time')[:].ravel()
+            print(f"length of time var: {len(modis_time)}")
+            modis_time = modis_time.astype('float32')
+            lats = hdf.select('Latitude')[:].ravel()
             lats = lats.astype('float32')
-            lons = ncd.variables['Longitude'][:].ravel()
+            lons = hdf.select('Longitude')[:].ravel()
             lons = lons.astype('float32')
-            aod = ncd.variables['AOD_550_Dark_Target_Deep_Blue_Combined'][:].ravel()
-            land_sea_flag = ncd.variables['Land_sea_Flag'][:].ravel()
-            QC_flag = ncd.variables['Land_Ocean_Quality_Flag'][:].ravel()
+            aod = hdf.select('AOD_550_Dark_Target_Deep_Blue_Combined')[:].ravel()
+            aod = aod.astype('float64')
+            land_sea_flag = hdf.select('Land_sea_Flag')[:].ravel()
+            QC_flag = hdf.select('Land_Ocean_Quality_Flag')[:].ravel()
             QC_flag = QC_flag.astype('int32')
-            sol_zen = ncd.variables['Solar_Zenith'][:].ravel()
-            sen_zen = ncd.variables['Sensor_Zenith'][:].ravel()
-            unc_land = ncd.variables['Deep_Blue_Aerosol_Optical_Depth_550_Land_Estimated_Uncertainty'][:].ravel()
+            sol_zen = hdf.select('Solar_Zenith')[:].ravel()
+            sen_zen = hdf.select('Sensor_Zenith')[:].ravel()
+            unc_land = hdf.select('Deep_Blue_Aerosol_Optical_Depth_550_Land_Estimated_Uncertainty')[:].ravel()
 
             # Remove undefined values
             pos_index = np.where(aod > 0)
             lats = lats[pos_index]
             lons = lons[pos_index]
-            aod = aod[pos_index]
+            aod = aod[pos_index] * 1E-3  # see scale factor
             land_sea_flag = land_sea_flag[pos_index]
             QC_flag = QC_flag[pos_index]
             sol_zen = sol_zen[pos_index]
             sen_zen = sen_zen[pos_index]
-            unc_land = unc_land[pos_index]
+            unc_land = unc_land[pos_index] * 1E-3  # see scale factor
             modis_time = modis_time[pos_index]
             obs_time = np.full(len(modis_time), long_missing_value, dtype=np.int64)
             for n, t in enumerate(modis_time):
@@ -151,7 +156,7 @@ class AOD(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -t Analysis_time /path/to/obs/2021060823.nc
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua> -t Analysis_time /path/to/obs/2021060823.nc
     # -o /path/to/ioda/20210608.nc
     # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
     # analysis window.
@@ -172,6 +177,10 @@ def main():
         help="Observation time in global attributes (YYYYMMDDHH)",
         type=int, required=True)
     required.add_argument(
+        '-p', '--platform',
+        help="AQUA or TERRA satellite?",
+        type=str, required=True)
+    required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
         type=str, required=True)
@@ -184,7 +193,7 @@ def main():
     obs_time = args.time
 
     # Read in the AOD data
-    aod_class = AOD(args.input, args.time)
+    aod_class = AOD(args.input, args.time, args.platform)
     # write everything out
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     writer.BuildIoda(aod_class.outdata, VarDims, aod_class.varAttrs, AttrData)

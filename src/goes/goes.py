@@ -2,8 +2,8 @@
 # goes.py
 #
 # This class loads, calculates, filters, and makes accessible the variables and attributes required by the
-# GoesConverter class for a single GOES-16 or GOES-17 LB1 ABI channel (1-16). The brightness temperature and reflectance
-# factor calculations used in this class are derived from sections 3.4.1.2 and 3.4.1.3 in the
+# GoesConverter class for a single GOES-16 or GOES-17 LB1 ABI channel (1-16). The brightness temperature and albedo
+# calculations used in this class are derived from sections 3.4.1.2 and 3.4.1.3 in the
 # "GOES-R Advanced Baseline Imager (ABI) Algorithm Theoretical Basis Document For Cloud and Moisture Imagery Product
 # (CMIP)" Version 3.0 July 30, 2012 (https://www.star.nesdis.noaa.gov/goesr/docs/ATBD/Imagery.pdf). The calculations for
 # the propagation of standard error are from section 2.5.5 of the "NIST/SEMATECH e-Handbook of Statistical Methods"
@@ -184,7 +184,7 @@ class Goes:
 
     def _create_obsvalue_rf_data_array(self):
         """
-        Creates a local data array variable containing the calculated obsvalue reflectance factor data
+        Creates a local data array variable containing the calculated obsvalue albedo data
         after fill value filtering by the DQF flags.
         """
         self._obsvalue_rf_data_array = self._rad_data_array * self._kappa0
@@ -199,7 +199,7 @@ class Goes:
 
     def _create_obserror_rf_data_array(self):
         """
-        Creates a local data array variable containing the calculated obserror reflectance factor data
+        Creates a local data array variable containing the calculated obserror albedo data
         after fill value filtering by the DQF flags.
         """
         sqrt_comp = np.power(self._kappa0, 2) * np.power(self._std_dev_radiance_value_of_valid_pixels, 2)
@@ -225,7 +225,7 @@ class Goes:
 
     def get_obsvalue_rf_data_array(self):
         """
-        Returns the obsvalue reflectance factor data array.
+        Returns the obsvalue albedo data array.
         """
         return self._obsvalue_rf_data_array
 
@@ -237,7 +237,7 @@ class Goes:
 
     def get_obserror_rf_data_array(self):
         """
-        Returns the obserror reflectance factor data array.
+        Returns the obserror albedo data array.
         """
         return self._obserror_rf_data_array
 

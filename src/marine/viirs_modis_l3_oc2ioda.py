@@ -38,10 +38,14 @@ DimDict = {}
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "string")
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {}
+
+# Prepare dateTime info
+iso8601_string = '1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[:-1])
 
 
 class OCL3(object):
@@ -71,9 +75,12 @@ class OCL3(object):
         GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
 
         timevar = ncd.getncattr('time_coverage_start')
-        obstime = timevar[:19]+'Z'
+        this_time = datetime.fromisoformat(timevar[:19])
+        obstime = np.int64(round((this_time - epoch).total_seconds()))
 
         ncd.close()
+
+        # Convert obstime from string to seconds since blah blah
 
         valKey = vName['chlor_a'], iconv.OvalName()
         errKey = vName['chlor_a'], iconv.OerrName()
@@ -84,6 +91,10 @@ class OCL3(object):
         self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
         self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
         self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
+
+        self.VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since ' + iso8601_string
+        self.VarAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
+        self.VarAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
 
         # apply thinning mask
         if self.thin > 0.0:

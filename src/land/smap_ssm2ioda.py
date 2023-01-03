@@ -22,11 +22,13 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("depthBelowSoilSurface", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 obsvars = {
@@ -42,6 +44,9 @@ DimDict = {
 VarDims = {
     'soilMoistureVolumetric': ['Location'],
 }
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class smap(object):
@@ -87,7 +92,7 @@ class smap(object):
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype=object)
+        times = np.empty_like(vals, dtype=np.int64)
 
         if self.mask:
             with np.errstate(invalid='ignore'):
@@ -104,7 +109,7 @@ class smap(object):
         str_split = self.filename.split("_")
         str_datetime = str_split[7]
         my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
-        base_datetime = my_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+        time_offset = round((my_datetime - epoch).total_seconds())
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
@@ -124,10 +129,11 @@ class smap(object):
             else:
                 qflg[i] = 1
 
-            times[i] = base_datetime
+            times[i] = time_offset
 
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
+        self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps

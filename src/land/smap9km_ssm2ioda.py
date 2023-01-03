@@ -22,11 +22,13 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("depthBelowSoilSurface", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 obsvars = {
@@ -42,6 +44,10 @@ DimDict = {
 VarDims = {
     'soilMoistureVolumetric': ['Location'],
 }
+
+# Usual reference time for these data is 12UTC 1Jan2000
+iso8601_string = 'seconds since 2000-01-01T12:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class smap(object):
@@ -92,7 +98,7 @@ class smap(object):
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype=object)
+        times = np.empty_like(vals, dtype=np.int64)
 
         if self.mask:
             with np.errstate(invalid='ignore'):
@@ -110,8 +116,6 @@ class smap(object):
             refsec = refsec[mask]
             times = times[mask]
 
-        # get datetime and reference time 12UTC 1Jan2000
-        base_date = datetime(2000, 1, 1, 12, 0)
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
@@ -124,11 +128,11 @@ class smap(object):
         ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
-            dt = base_date + timedelta(seconds=int(refsec[i]))
-            times[i] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            times[i] = int(refsec[i])
             errs[i] = 0.04
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
+        self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
@@ -136,7 +140,6 @@ class smap(object):
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
         self.outdata[('surfaceFlag', 'MetaData')] = sflg
-        self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
         self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
