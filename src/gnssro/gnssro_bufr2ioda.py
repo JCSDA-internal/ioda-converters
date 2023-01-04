@@ -93,8 +93,15 @@ def main(args):
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'Radians'
     VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'Radians'
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N'
-    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N'
+    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N units'
+    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N units'
+    VarAttrs[('height', 'MetaData')]['units'] = 'm'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
+    VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
+    VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
+    VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
 
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'ObsError')]['_FillValue'] = float_missing_value
@@ -194,10 +201,10 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     # ! Bit 3=Rising Occulation (1=rising; 0=setting)
     # ! Bit 4=Excess Phase non-nominal
     # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-5)
+    iasc = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-3)
     # add rising/setting (ascending/descending) bit
     obs_data[('satelliteAscendingFlag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
@@ -288,10 +295,10 @@ def quality_control(profile_meta_data, heights, lats, lons):
 def def_meta_data():
 
     meta_data_keys = {
-        "qualityFlag": 'radioOccultationDataQualityFlags',
+        "qualityFlags": 'radioOccultationDataQualityFlags',
         "geoidUndulation": 'geoidUndulation',
         "sensorAzimuthAngle": 'bearingOrAzimuth',
-        "timeIncrement": 'timeIncrement',
+        # "timeIncrement": 'timeIncrement',
         "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
         "satelliteIdentifier": 'satelliteIdentifier',
         "satelliteInstrument": 'satelliteInstruments',
@@ -312,7 +319,7 @@ def def_meta_types():
         'impactParameterRO': 'float',
         'impactHeightRO': 'float',
         'height': 'float',
-        "qualityFlag": 'integer',
+        "qualityFlags": 'integer',
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
         "satelliteIdentifier": 'integer',
