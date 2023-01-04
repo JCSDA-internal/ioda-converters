@@ -78,7 +78,7 @@ class tropess(object):
             fullPressure = np.concatenate((pressure, topPressure), axis=1)
 
             # Read other variables
-            x = dsCris['x'] # dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide (nlocsxnlevs)
+            x = dsCris['x'].values # dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide (nlocsxnlevs)
 
             # open observation_ops group
             dsCris_observation_ops= xr.open_dataset(filename, group='observation_ops')
@@ -97,6 +97,9 @@ class tropess(object):
             x_test = dsCris_observation_ops['x_test'].values
 
             # Empty array for QA and missing flags
+            # qa is not really used for now but can use dofs or other
+            # quantities in the retrieval product. No qa/qc provided
+            # in tropess cris product
             qa = np.zeros((nlocs,nlevs), dtype=np.float32)
             nan_flag = np.full((nlocs),True)
 
@@ -106,13 +109,41 @@ class tropess(object):
             # Calculate apriori term (ap) for each userLevel 
             ap = np.zeros((nlocs,len(userLevels)), dtype=np.float32)
 
+            # Keep track of the nominal levels
+            nom = np.zeros((nlocs,len(userLevels)), dtype=np.int32)
+    
             for lev, userLevel in enumerate(userLevels):
                 ak = averaging_kernel[:,int(userLevel),:]
                 this_term = ak*ln(xa)
 
                 ap[:,lev] = np.exp(ln(xa[:,lev])+ np.sum(this_term,axis=1))
+                nom[:,lev] = int(userLevel)
                 if(np.isnan(ap[:,lev]).any()):
                     nan_flag[np.argwhere(np.isnan(ap[:,lev]))] = False
+
+            # To keep the ufo part sane here we decide to add selected retrieval levels
+            # sequentially. Implying R diagonal... There is no point of passing
+            # all levels ot the DA as the info is very redundant (see DOFS for 
+            # each profile). Obs pre-proc could be done in the future using PCA/SVD 
+            # or other data compression techniques as seen in literature
+            ulevs = len(userLevels)
+
+            nom = nom.reshape(ulevs*nlocs)
+            ap = ap.reshape(ulevs*nlocs)
+            print(avergaging_kernel)
+            avergaging_kernel = averaging_kernel[:,userLevels,:].reshape(ulevs*nlocs,nlevs)
+            print(avergaging_kernel)
+            x = x[:,userLevels].reshape(ulevs*nlocs)
+            xa = xa[:,userLevels].reshape(ulevs*nlocs)
+            # Omit the off-diag terms in R...
+            log_obs_error = log_obs_error[:,userLevels,userLevels].reshape(ulevs*nlocs)
+ 
+            print(np.shape(avergaging_kernel))
+            print(np.shape(xa))
+            print(np.shape(x))
+            print(np.shape(ap))
+            print(np.shape(log_obs_error))
+            exit()
 
             # Thin using random uniform draw
             thin = np.random.uniform(size=nlocs) > self.thin
