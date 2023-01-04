@@ -75,7 +75,7 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 42, 43, 745, 825],
+    "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -108,6 +108,7 @@ all_LocKeyList = {
     'Sol_Azimuth_Angle': ('solar_azimuth_angle', 'float'),
     'Scan_Angle': ('sensor_view_angle', 'float'),
     'Surface_type': ('surface_type', 'integer'),
+    'Dominant_Sfc_Type': ('surface_type', 'integer'),
     'MODIS_deep_blue_flag': ('modis_deep_blue_flag', 'integer'),
     'Reference_Pressure': ('air_pressure', 'float'),
     'Solar_Zenith_Angle': ('solar_zenith_angle', 'float'),
@@ -158,6 +159,7 @@ conv_gsivarnames = {
 
 gsi_add_vars_allsky = {
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -187,6 +189,7 @@ gsi_add_qcvars_allsky = {
 gsi_add_vars = {
     'ObsBias': 'GsiObsBias',
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -219,6 +222,7 @@ gsi_add_qcvars = {
 
 gsi_add_vars_uv = {
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -250,6 +254,7 @@ gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
     'ObsType',
+    'ObsSubType',
     'Analysis_Use_Flag',
 ]
 
@@ -325,8 +330,8 @@ geovals_vars = {
     'surface_temperature': 'surface_temperature',
     'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geopotential_height',
-    'surface_geopotential_height': 'surface_geopotential_height',
+    'surface_height': 'surface_geometric_height',
+    'surface_geopotential_height': 'surface_geometric_height',
     'surface_altitude': 'surface_altitude',
     'surface_geometric_height': 'surface_geometric_height',
     'landmask': 'land_area_fraction',
@@ -367,7 +372,7 @@ geovals_vars = {
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
-    'Sfc_Height': 'surface_geopotential_height',
+    'Sfc_Height': 'surface_geometric_height',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -433,7 +438,7 @@ units_values = {
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
-    'surface_geopotential_height': 'm',
+    'surface_geometric_height': 'm',
     'surface_altitude': 'm',
     'geoid_height_above_reference_ellipsoid': 'Meters',
     'earth_radius_of_curvature': 'Meters',
@@ -670,6 +675,23 @@ class Conv(BaseGSI):
                     print("No matching observations for Platform:%s Var:%s" % (p, v))
                     continue
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
+                if v == 'bend':
+                    # sort record_number
+                    record_number = self.var('record_number')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number")
+                    # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
+
+                    # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
+                    idx_tuples = np.where(idx.data)
+                    idx_id = idx_tuples[0]
+                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    # another check if idx_sorted is correct to sort record_number
+                    # record_number_new = self.var('record_number')[idx_sorted]
+                    # for isort in range(len(record_number_new)):
+                    #     print('isort, idx, record_number, record_number_new',isort,\
+                    #         record_number[isort], record_number_new[isort] )
+
                 # set up output file
                 ncout = nc.Dataset(outname, 'w', format='NETCDF4')
                 ncout.setncattr(
@@ -699,7 +721,10 @@ class Conv(BaseGSI):
                         if vname in geovals_metadata_dict.keys():
                             dims = ("nlocs",) + var.dimensions[1:]
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
-                            var_out[...] = vdata[idx, ...]
+                            if v == 'bend':
+                                var_out[...] = vdata[idx_sorted, ...]
+                            else:
+                                var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
@@ -710,7 +735,11 @@ class Conv(BaseGSI):
                                 else:
                                     dims = ("nlocs", "nlevs")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
-                            var_out[...] = vdata[idx, ...]
+                            if v == 'bend':
+                                var_out[...] = vdata[idx_sorted, ...]
+                            else:
+                                var_out[...] = vdata[idx, ...]
+
                 ncout.close()
 
     def toIODAobs(self, OutDir, clobber=True, platforms=None):
@@ -781,6 +810,23 @@ class Conv(BaseGSI):
                     varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
                     varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
                     varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
+                if v == 'bend':
+                    # sort record_number
+                    record_number = self.var('record_number')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number")
+                    # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
+                    # print('record_number:', record_number)
+                    # print('record_number.size:', record_number.size)
+                    # for isort in range(len(record_number_sorted)):
+                    #     print('isort, idx, record_number, record_number_sorted',isort, idx[isort],\
+                    #         record_number[isort], record_number_sorted[isort] )
+
+                    # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
+                    idx_tuples = np.where(idx.data)
+                    idx_id = idx_tuples[0]
+                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    idx = idx_sorted
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
