@@ -113,7 +113,7 @@ namespace bufr {
         /// \param[in] mnemonicCursor The current position in the subset tree.
         /// \param[in, out] dimPaths The list of dimensioning query sub-paths
         /// \param[in, out] dimIdxs The idxs of the dimensioning elements in the query.
-        void getDimInfo(const std::vector<int>& branches,
+        void getDimInfo(const TargetComponents& components,
                         int mnemonicCursor,
                         std::vector<std::string>& dimPaths,
                         std::vector<int>& dimIdxs) const;

@@ -36,6 +36,8 @@ namespace bufr {
         }
     };
 
+    typedef std::vector<TargetComponent> TargetComponents;
+
     /// \brief The information or Meta data for a BUFR field whose data we wish to capture when
     /// we execute a query.
     struct Target
@@ -46,7 +48,7 @@ namespace bufr {
         TypeInfo typeInfo;
         std::vector<int> nodeIds;
         bool anySubset = false;
-        std::vector<std::shared_ptr<TargetComponent>> path;
+        TargetComponents path;
         size_t numDimensions = 0;
 
         std::vector<std::string> dimPaths;
@@ -55,16 +57,16 @@ namespace bufr {
 
         Target() = default;
 
-        void setPath(const std::vector<std::shared_ptr<TargetComponent>>& components)
+        void setPath(const TargetComponents& components)
         {
             std::string currentPath;
             for (const auto& component : components)
             {
                 if (!currentPath.empty()) currentPath.append("/");
-                currentPath.append(component->queryComponent->name);
+                currentPath.append(component.queryComponent->name);
                 dimPaths.push_back(currentPath);
 
-                if (component->addsDimension() || component->queryComponent->filter.size() > 1)
+                if (component.addsDimension() || component.queryComponent->filter.size() > 1)
                 {
                     numDimensions++;
                 }

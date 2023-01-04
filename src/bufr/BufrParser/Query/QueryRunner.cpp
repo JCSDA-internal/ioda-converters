@@ -123,8 +123,6 @@ namespace bufr {
     std::shared_ptr<Target> QueryRunner::findTarget(const std::string &targetName,
                                                     const Query& query) const
     {
-
-
         // If the query does not apply to this subset then return an empty target
         if (!(query.subset->isAnySubset || query.subset->name == dataProvider_.getSubset()))
         {
@@ -138,8 +136,8 @@ namespace bufr {
             return target;
         }
 
-        std::vector<std::shared_ptr<TargetComponent>> targetComponents;
 
+        TargetComponents targetComponents;
 
         std::vector<int> branches;
         std::vector<int> targetNodes;
@@ -148,6 +146,7 @@ namespace bufr {
         std::vector<int> dimIdxs;
 
 
+        targetComponents.resize(query.path.size() - 1);
         branches.resize(query.path.size() - 1);
         seqPath.push_back(dataProvider_.getInode());
 
@@ -164,6 +163,7 @@ namespace bufr {
                     if (dataProvider_.getTag(nodeIdx) == query.path[mnemonicCursor + 1]->name &&
                         tableCursor == mnemonicCursor) {
                         mnemonicCursor++;
+                        targetComponents[mnemonicCursor].branch = nodeIdx - 1;
                         branches[mnemonicCursor] = nodeIdx - 1;
                     }
                     tableCursor++;
@@ -174,7 +174,7 @@ namespace bufr {
                        dataProvider_.getTag(nodeIdx) == query.path.back()->name) {
                 // We found a target
                 targetNodes.push_back(nodeIdx);
-                getDimInfo(branches, mnemonicCursor, dimPaths, dimIdxs);
+                getDimInfo(targetComponents, mnemonicCursor, dimPaths, dimIdxs);
             }
 
             // Step back up the tree (unfortunately this is finicky)
@@ -243,6 +243,14 @@ namespace bufr {
             throw eckit::BadParameter(errMsg.str());
         }
 
+        int i = 0;
+        for (const auto& comp : targetComponents)
+        {
+            std::cout  << ">>>>> " << branches[i] << " "  << comp.branch << " " << std::endl;
+            branches.push_back(static_cast<int>(comp.branch));
+            i++;
+        }
+
         auto target = std::make_shared<Target>();
         target->setPath(targetComponents);
         target->name = targetName;
@@ -271,10 +279,10 @@ namespace bufr {
                 dataProvider_.getTyp(nodeIdx) == Typ::DelayedBinary);
     }
 
-    void QueryRunner::getDimInfo(const std::vector<int> &branches,
-                           int mnemonicCursor,
-                           std::vector<std::string> &dimPaths,
-                           std::vector<int> &dimIdxs) const {
+    void QueryRunner::getDimInfo(const TargetComponents& components,
+                                   int mnemonicCursor,
+                                   std::vector<std::string> &dimPaths,
+                                   std::vector<int> &dimIdxs) const {
         std::string currentDimPath;
         std::string mnemonicStr;
 
@@ -283,8 +291,8 @@ namespace bufr {
         dimIdxs = std::vector<int>();
 
         // Allocate enough memory to hold all the dim paths
-        dimPaths.reserve(branches.size() + 1);
-        dimIdxs.reserve(branches.size() + 1);
+        dimPaths.reserve(components.size() + 1);
+        dimIdxs.reserve(components.size() + 1);
 
         currentDimPath = "*";
         dimPaths.push_back(currentDimPath);
@@ -294,7 +302,7 @@ namespace bufr {
         if (mnemonicCursor >= 0) {
             int dimIdx = 1;
             for (int branchIdx = 0; branchIdx <= mnemonicCursor; branchIdx++) {
-                int nodeIdx = branches[branchIdx];
+                int nodeIdx = components[branchIdx].branch;
                 mnemonicStr = dataProvider_.getTag(nodeIdx);
 
                 std::ostringstream path;
