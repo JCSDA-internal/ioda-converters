@@ -15,14 +15,25 @@ namespace bufr {
 
     QuerySet::QuerySet(const std::vector<std::string>& subsets) :
         includesAllSubsets_(false),
+        addHasBeenCalled_(false),
         limitSubsets_(std::set<std::string>(subsets.begin(),
                                             subsets.end())),
         presentSubsets_({})
     {
+        if (limitSubsets_.empty())
+        {
+            includesAllSubsets_ = true;
+        }
     }
 
     void QuerySet::add(const std::string& name, const std::string& queryStr)
     {
+        if (!addHasBeenCalled_)
+        {
+            addHasBeenCalled_ = true;
+            includesAllSubsets_ = false;
+        }
+
         std::vector<Query> queries;
         for (const auto &query : QueryParser::parse(queryStr))
         {
@@ -68,7 +79,14 @@ namespace bufr {
         bool includesSubset = true;
         if (!includesAllSubsets_)
         {
-            includesSubset = (presentSubsets_.find(subset) != presentSubsets_.end());
+            if (queryMap_.empty())
+            {
+                includesSubset = (limitSubsets_.find(subset) != limitSubsets_.end());
+            }
+            else
+            {
+                includesSubset = (presentSubsets_.find(subset) != presentSubsets_.end());
+            }
         }
 
         return includesSubset;

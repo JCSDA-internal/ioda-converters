@@ -25,11 +25,10 @@ namespace Ingester
     class QueryVariable final : public Variable
     {
      public:
+        QueryVariable() = delete;
         explicit QueryVariable(const std::string& exportName,
-                               const std::string& query,
                                const std::string& groupByField,
-                               const std::string& type,
-                               const Transforms& transforms);
+                               const eckit::LocalConfiguration& conf);
 
         ~QueryVariable() final = default;
 
@@ -39,18 +38,5 @@ namespace Ingester
 
         /// \brief Get a list of queries for this variable
         QueryList makeQueryList() const final;
-
-     private:
-        /// \brief The query of interest
-        std::string query_;
-
-        /// \brief The for field of interest
-        std::string groupByField_;
-
-        /// \brief Optional type override string
-        std::string type_;
-
-        /// \brief Collection of transforms to apply to the data during export
-        Transforms transforms_;
     };
 }  // namespace Ingester

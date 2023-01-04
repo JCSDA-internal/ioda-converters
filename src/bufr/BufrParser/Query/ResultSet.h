@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
 

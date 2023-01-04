@@ -11,7 +11,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "eckit/config/LocalConfiguration.h"
+
 #include "IngesterTypes.h"
+
 
 namespace Ingester
 {
@@ -19,7 +22,10 @@ namespace Ingester
     class Split
     {
      public:
-        explicit Split(const std::string& name);
+        Split(const std::string& name, const eckit::LocalConfiguration& conf)  :
+            name_(name),
+            conf_(conf) {}
+
         virtual ~Split() = default;
 
         /// \brief Get set of sub categories this split will create
@@ -35,8 +41,11 @@ namespace Ingester
         /// \brief Get the split name
         inline std::string getName() const { return name_; }
 
-     private:
+     protected:
         /// \brief The name of the split as defined by the key in the YAML file.
         const std::string name_;
+
+        /// \brief Configuration associated with this split
+        const eckit::LocalConfiguration conf_;
     };
 }  // namespace Ingester
