@@ -137,7 +137,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
     'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
-    'releaseTime': ('releaseTime', 'integer'),
+    'LaunchTime': ('releaseTime', 'integer'),
 }
 
 checkuv = {
