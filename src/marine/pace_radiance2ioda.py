@@ -248,11 +248,18 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since ' + basetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-    VarAttrs[('radiance', 'ObsValue')]['units'] = 'W m-2 um-1 sr-1'
-    VarAttrs[('radiance', 'ObsError')]['units'] = 'W m-2 um-1 sr-1'
+    VarAttrs[('radiance', 'ObsValue')]['units'] = 'W m-2 sr-1'
+    VarAttrs[('radiance', 'ObsError')]['units'] = 'W m-2 sr-1'
     VarAttrs[('radiance', 'ObsValue')]['_FillValue'] = -32767
     VarAttrs[('radiance', 'ObsError')]['_FillValue'] = 999
     VarAttrs[('radiance', 'PreQC')]['_FillValue'] = 999
+    for k in list(obs_data.keys()):
+        if 'angle' in k[0].lower():
+            VarAttrs[(k[0], k[1])]['units'] = 'degree'
+        elif 'wavenumber' in k[0].lower():
+            VarAttrs[(k[0], k[1])]['units'] = 'm-1'
+        elif k[0] == 'height':
+            VarAttrs[(k[0], k[1])]['units'] = 'm'
 
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
