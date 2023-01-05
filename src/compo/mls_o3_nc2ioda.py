@@ -62,6 +62,11 @@ VarDims = {
     varname_ozone: ['Location'],
 }
 
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
 
 class mls(object):
     def __init__(self, filenames, lvmin, lvmax, sTAI, eTAI, nrt, qcOn, errorOn):
@@ -77,9 +82,11 @@ class mls(object):
         self.endTAI = eTAI
         self.nrt = nrt
         for v in list(ioda2nc.keys()):
-            if(v != 'valKey' and v != 'errKey'):
+            if(v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
+                pass
+            elif(v != 'valKey' and v != 'errKey'):
                 self.outdata[(v, 'MetaData')] = []
-        self.outdata[('level', 'MetaData')] = []
+        self.outdata[('referenceLevel', 'MetaData')] = []
         self._setVarDict(varname_ozone)
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
         if(self.qcOn):
@@ -89,21 +96,20 @@ class mls(object):
 
     # set ioda variable keys
     def _setVarDict(self, iodavar):
-        self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+        self.varDict[iodavar]['valKey'] = iodavar, obsValName
         if(self.qcOn):
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-        self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
+        self.varDict[iodavar]['qcKey'] = iodavar, qcName
 
     # set variable attributes for IODA
     def _setVarAttr(self, iodavar):
-        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'ppmv'
-        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'ppmv'
+        self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, obsValName]['units'] = 'ppmv'
+        self.varAttrs[iodavar, obsErrName]['units'] = 'ppmv'
 
         varsToAddUnits = list(ioda2nc.keys())
-        varsToAddUnits.append('level')
         for v in varsToAddUnits:
             if(v != 'valKey' and v != 'errKey'):
                 vkey = (v, 'MetaData')
@@ -111,8 +117,12 @@ class mls(object):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
-                elif('angle' in v.lower() or 'latitude' in v.lower() or 'longitude' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'degrees'
+                elif('latitude' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree_north'
+                elif('longitude' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree_east'
+                elif('angle' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree'
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
 
@@ -235,7 +245,11 @@ class mls(object):
                     d['errKey'].append(self._calc_error(
                         val, d['precision'][ival], d['level'][ival]-1))
             for v in list(d.keys()):
-                if(v != 'valKey' and v != 'errKey'):
+                if(v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
+                    pass
+                elif(v == 'level'):
+                    self.outdata[('referenceLevel', 'MetaData')].extend(d[v])
+                elif(v != 'valKey' and v != 'errKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
@@ -243,7 +257,8 @@ class mls(object):
                 if(self.errorOn):
                     self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
 
-        DimDict['Location'] = np.float32(len(self.outdata[('dateTime', 'MetaData')]))
+        nlocs = len(self.outdata[('dateTime', 'MetaData')])
+        DimDict['Location'] = nlocs
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
