@@ -136,7 +136,6 @@ namespace bufr {
             return target;
         }
 
-        std::vector<int> branches;
         std::vector<int> targetNodes;
         std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
@@ -151,7 +150,6 @@ namespace bufr {
         }
         targetComponents.back().type = TargetComponent::Type::Value;
 
-        branches.resize(query.path.size() - 1);
         seqPath.push_back(dataProvider_.getInode());
 
         int tableCursor = -1;
@@ -167,8 +165,7 @@ namespace bufr {
                     if (dataProvider_.getTag(nodeIdx) == query.path[mnemonicCursor + 1]->name &&
                         tableCursor == mnemonicCursor) {
                         mnemonicCursor++;
-                        targetComponents[mnemonicCursor].branch = nodeIdx - 1;
-                        branches[mnemonicCursor] = nodeIdx - 1;
+                        targetComponents[mnemonicCursor + 1].branch = nodeIdx - 1;
                     }
                     tableCursor++;
                 }
@@ -247,19 +244,10 @@ namespace bufr {
             throw eckit::BadParameter(errMsg.str());
         }
 
-//        int i = 0;
-//        for (const auto& comp : targetComponents)
-//        {
-//            std::cout << ">>>>> "  << branches[i] << " " << comp.branch << " " << std::endl;
-//            branches.push_back(static_cast<int>(comp.branch));
-//            i++;
-//        }
-
         auto target = std::make_shared<Target>();
         target->setPath(targetComponents);
         target->name = targetName;
         target->queryStr = query.queryStr;
-        target->seqPath = branches;
         target->nodeIds = targetNodes;
 
         if (targetNodes.size() > 0)
@@ -309,7 +297,7 @@ namespace bufr {
         if (mnemonicCursor >= 0) {
             int dimIdx = 1;
             for (int branchIdx = 0; branchIdx <= mnemonicCursor; branchIdx++) {
-                int nodeIdx = components[branchIdx].branch;
+                int nodeIdx = components[branchIdx + 1].branch;
                 mnemonicStr = dataProvider_.getTag(nodeIdx);
 
                 std::ostringstream path;

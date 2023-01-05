@@ -60,6 +60,7 @@ namespace bufr {
 
         void setPath(const TargetComponents& components)
         {
+            seqPath.reserve(components.size());
             std::string currentPath;
             for (const auto& component : components)
             {
@@ -70,6 +71,11 @@ namespace bufr {
                 if (component.addsDimension() || component.queryComponent->filter.size() > 1)
                 {
                     numDimensions++;
+                }
+
+                if (component.type == TargetComponent::Type::Repeat || component.type == TargetComponent::Type::Binary)
+                {
+                    seqPath.push_back(component.branch);
                 }
             }
 
