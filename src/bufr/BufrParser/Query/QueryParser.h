@@ -23,7 +23,7 @@ namespace bufr {
         std::vector<size_t> filter;
     };
 
-    struct SubsetComponent : QueryComponent
+    struct SubsetComponent : public QueryComponent
     {
         bool isAnySubset = false;
 
@@ -51,9 +51,9 @@ namespace bufr {
         }
     };
 
-    struct PathComponent : QueryComponent
+    struct PathComponent : public QueryComponent
     {
-        static auto parse(std::vector<std::shared_ptr<Token>> tokens)
+        static auto parse(const std::vector<std::shared_ptr<Token>> tokens)
         {
             if (tokens.size() < 1 && tokens.size() > 2)
             {

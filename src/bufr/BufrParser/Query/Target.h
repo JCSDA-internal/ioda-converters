@@ -23,7 +23,8 @@ namespace bufr {
         {
             Subset,
             Binary,
-            Repeat
+            Repeat,
+            Value
         };
 
         std::shared_ptr<QueryComponent> queryComponent;

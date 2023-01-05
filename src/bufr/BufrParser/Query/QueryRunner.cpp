@@ -136,17 +136,21 @@ namespace bufr {
             return target;
         }
 
-
-        TargetComponents targetComponents;
-
         std::vector<int> branches;
         std::vector<int> targetNodes;
         std::vector<size_t> seqPath;
         std::vector<std::string> dimPaths;
         std::vector<int> dimIdxs;
 
+        TargetComponents targetComponents;
+        targetComponents.reserve(query.path.size() + 1); // Path plus 1 subset
+        targetComponents.push_back({query.subset, 0, TargetComponent::Type::Subset});
+        for (const auto& pathComponent : query.path)
+        {
+            targetComponents.push_back({pathComponent, 0, TargetComponent::Type::Repeat});
+        }
+        targetComponents.back().type = TargetComponent::Type::Value;
 
-        targetComponents.resize(query.path.size() - 1);
         branches.resize(query.path.size() - 1);
         seqPath.push_back(dataProvider_.getInode());
 
@@ -243,13 +247,13 @@ namespace bufr {
             throw eckit::BadParameter(errMsg.str());
         }
 
-        int i = 0;
-        for (const auto& comp : targetComponents)
-        {
-            std::cout  << ">>>>> " << branches[i] << " "  << comp.branch << " " << std::endl;
-            branches.push_back(static_cast<int>(comp.branch));
-            i++;
-        }
+//        int i = 0;
+//        for (const auto& comp : targetComponents)
+//        {
+//            std::cout << ">>>>> "  << branches[i] << " " << comp.branch << " " << std::endl;
+//            branches.push_back(static_cast<int>(comp.branch));
+//            i++;
+//        }
 
         auto target = std::make_shared<Target>();
         target->setPath(targetComponents);
@@ -258,11 +262,14 @@ namespace bufr {
         target->seqPath = branches;
         target->nodeIds = targetNodes;
 
-        if (targetNodes.size() > 0) {
+        if (targetNodes.size() > 0)
+        {
             target->dimPaths = dimPaths;
             target->exportDimIdxs = dimIdxs;
             target->typeInfo = dataProvider_.getTypeInfo(targetNodes[0]);
-        } else {
+        }
+        else
+        {
             target->dimPaths = {"*"};
             target->exportDimIdxs = {0};
             target->typeInfo = TypeInfo();
