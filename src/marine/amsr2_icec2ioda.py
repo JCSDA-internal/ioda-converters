@@ -32,6 +32,9 @@ locationKeyList = [
     ("dateTime", "long")
 ]
 
+icec_FillValue = None
+icec_units = ''
+
 GlobalAttrs = {}
 
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
@@ -52,6 +55,9 @@ class iceconc(object):
         errKey = vName, iconv.OerrName()
         qcKey = vName, iconv.OqcName()
 
+        global icec_FillValue
+        global icec_units
+
         for f in self.filenames:
             print(" Reading file: ", f)
             ncd = nc.Dataset(f, 'r')
@@ -66,7 +72,8 @@ class iceconc(object):
             lat = ncd.variables['Latitude'][:]
             icec = ncd.variables['NASA_Team_2_Ice_Concentration'][:]
             icec_FillValue = ncd.variables['NASA_Team_2_Ice_Concentration']._FillValue
-            icec_units = ncd.variables['NASA_Team_2_Ice_Concentration'].units
+            icec_units = str(ncd.variables['NASA_Team_2_Ice_Concentration'].units)
+            print(f" units: {icec_units}")
             icec_qc = ncd.variables['Flags'][:]
             qc_FillValue = ncd.variables['Flags']._FillValue
             qc_units = ncd.variables['Flags'].units
@@ -87,14 +94,8 @@ class iceconc(object):
                 time_offset = round((avg - epoch).total_seconds())
                 locKey = lat[i], lon[i], time_offset
                 self.data[locKey][valKey] = icec[i] * 0.01
-                self.VarAttrs[locKey][valKey]['_FillValue'] = icec_FillValue
-                self.VarAttrs[locKey][valKey]['units'] = icec_units
                 self.data[locKey][errKey] = 0.1
-                self.VarAttrs[locKey][errKey]['_FillValue'] = icec_FillValue
-                self.VarAttrs[locKey][errKey]['units'] = icec_units
                 self.data[locKey][qcKey] = icec_qc[i]
-                self.VarAttrs[locKey][qcKey]['_FillValue'] = qc_FillValue
-                self.VarAttrs[locKey][qcKey]['units'] = qc_units
             ncd.close()
 
 
@@ -122,7 +123,7 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 #
     VarDims = {
-        'seaIceFraction': ['Location'],
+        vName: ['Location'],
     }
 
     # Read in the Ice concentration
@@ -135,6 +136,10 @@ def main():
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     icec.VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
+    icec.VarAttrs[(vName, 'ObsValue')]['units'] = icec_units
+    icec.VarAttrs[(vName, 'ObsValue')]['_FillValue'] = icec_FillValue
+    icec.VarAttrs[(vName, 'ObsError')]['units'] = icec_units
+    icec.VarAttrs[(vName, 'ObsError')]['_FillValue'] = icec_FillValue
     writer.BuildIoda(ObsVars, VarDims, icec.VarAttrs, GlobalAttrs)
 
 
