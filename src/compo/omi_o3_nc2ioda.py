@@ -53,7 +53,7 @@ ioda2nc['algorithm_flag'] = 'HDFEOS/SWATHS/OMI Column Amount O3/Data Fields/Algo
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'satellite': 'aura',
+    'platformCommonName': 'aura',
     'sensor': 'omi',
 }
 
@@ -66,6 +66,7 @@ VarDims = {
 
 missing_value = nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
+long_missing_value = nc.default_fillvals['i8']
 
 
 def is_bit_set(integer_value, bit_position):
@@ -85,9 +86,11 @@ class omi(object):
 
         # initialize dictionary with  empty list for MetaData variable to populate later.
         vars2output = list(ioda2nc.keys())
-        vars2output.append('scanPosition')
+        vars2output.append('sensorScanPosition')
         for v in vars2output:
-            if(v != 'valKey'):
+            if(v == 'quality_flag' or v == 'algorithm_flag' or v == 'prior_o3'):
+                pass
+            elif(v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
         self._read()
@@ -101,7 +104,7 @@ class omi(object):
         self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = missing_value
         varsToAddUnits = list(ioda2nc.keys())
-        varsToAddUnits.append('scanPosition')
+        varsToAddUnits.append('sensorScanPosition')
         for v in varsToAddUnits:
             if(v != 'valKey'):
                 vkey = (v, 'MetaData')
@@ -109,8 +112,13 @@ class omi(object):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
+                    self.varAttrs[vkey]['_FillValue'] = long_missing_value
+                elif('latitude' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree_north'
+                elif('longitude' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree_east'
                 elif('angle' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'degrees'
+                    self.varAttrs[vkey]['units'] = 'degree'
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
@@ -122,6 +130,8 @@ class omi(object):
         # use dictionary above to just read fields we want out of the netcdf.
         for k in list(ioda2nc.keys()):
             d[k] = ncd[ioda2nc[k]][...]
+            if k == 'dateTime':
+                d[k] = np.round(d[k])
             d[k].mask = False
         ncd.close()
         return d
@@ -137,8 +147,8 @@ class omi(object):
                 scn_tmp = scn_tmp.astype('float32')
                 tmp = tmp.astype(np.int64)
                 dd[k] = tmp.flatten().tolist()
-                dd['scanPosition'] = scn_tmp.flatten().tolist()
-            elif(k == 'Prior_O3'):
+                dd['sensorScanPosition'] = scn_tmp.flatten().tolist()
+            elif(k.lower() == 'prior_o3'):
                 dd[k] = d[k][:, :, 0].flatten().tolist()
             else:
                 dd[k] = d[k].flatten().tolist()
@@ -153,7 +163,7 @@ class omi(object):
         # intialize dictonary of qc'd variables
         dd = {}
         flatVars = list(ioda2nc.keys())
-        flatVars.append('scanPosition')
+        flatVars.append('sensorScanPosition')
         for v in flatVars:
             dd[v] = []
 
@@ -200,13 +210,13 @@ class omi(object):
                 if (six_set or eight_set or nine_set):
                     continue
                 # could simply this further with one if statement possibly more clever use of a bit masking.
-                dd['scanPosition'].append(float(iscan+1))
+                dd['sensorScanPosition'].append(float(iscan+1))
                 for v in flatVars:
                     if(v == 'dateTime'):
                         dd[v].append(d[v][itime])
                     elif(v == 'prior_o3'):
                         dd[v].append(d[v][itime, iscan, 0])
-                    elif(v != 'scanPosition'):
+                    elif(v != 'sensorScanPosition'):
                         dd[v].append(d[v][itime, iscan])
 
         return dd
@@ -227,13 +237,17 @@ class omi(object):
                 d = self._just_flatten(nc_data)
             # add MetaData variables.
             for v in list(d.keys()):
-                if(v != 'valKey'):
+                if(v == 'quality_flag' or v == 'algorithm_flag' or v == 'prior_o3'):
+                    pass
+                elif(v != 'valKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
 
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
                              ['valKey']].extend(d['valKey'])
-        DimDict['Location'] = len(self.outdata[('longitude', 'MetaData')])
+
+        nlocs = len(self.outdata[('longitude', 'MetaData')])
+        DimDict['Location'] = np.int64(nlocs)
         # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
         self.outdata[('pressure', 'MetaData')] = np.zeros(
             DimDict['Location']).tolist()
