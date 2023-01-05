@@ -27,7 +27,7 @@ import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
 output_var_names = [
-    "organicMatterMassContentAsCarbon",
+    "oceanMassParticulateAsCarbon",
     "chlorophyllMassConcentration"]
 
 DimDict = {}
@@ -41,6 +41,10 @@ locationKeyList = [
     ("longitude", "float"),
     ("dateTime", "long"),
 ]
+
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
 
 def read_input(input_args):
@@ -64,9 +68,9 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
 
     # get global attributes
-    GlobalAttrs['platform'] = ncd.getncattr('platform')
+    GlobalAttrs['platformCommonName'] = ncd.getncattr('platform')
     GlobalAttrs['sensor'] = ncd.getncattr('instrument')
-    GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
+    GlobalAttrs['processingLevel'] = str(ncd.getncattr('processing_level')+' processing')
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
@@ -123,19 +127,13 @@ def read_input(input_args):
     obs_dim = (len(lons))
     obs_data = {}
     if global_config['output_poc']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = \
-            np.zeros(obs_dim)
+        obs_data[(output_var_names[0], obsValName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], obsErrName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], qcName)] = np.zeros(obs_dim)
     if global_config['output_chl']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = \
-            np.zeros(obs_dim)
+        obs_data[(output_var_names[1], obsValName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], obsErrName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], qcName)] = np.zeros(obs_dim)
 
     # Add the metadata
     obs_data[('dateTime', 'MetaData')] = np.empty(len(dates), dtype=np.int64)
@@ -144,19 +142,13 @@ def read_input(input_args):
     obs_data[('longitude', 'MetaData')] = lons
 
     if global_config['output_poc']:
-        obs_data[output_var_names[0], global_config['oval_name']] = \
-            data_in['poc']
-        obs_data[output_var_names[0], global_config['oerr_name']] = \
-            data_in['poc']*0.0
-        obs_data[output_var_names[0], global_config['opqc_name']] = \
-            data_in['l2_flags']
+        obs_data[output_var_names[0], obsValName] = data_in['poc']
+        obs_data[output_var_names[0], obsErrName] = data_in['poc']*0.0
+        obs_data[output_var_names[0], qcName] = data_in['l2_flags']
     if global_config['output_chl']:
-        obs_data[output_var_names[1], global_config['oval_name']] = \
-            data_in['chlor_a']
-        obs_data[output_var_names[1], global_config['oerr_name']] = \
-            data_in['chlor_a']*0.0
-        obs_data[output_var_names[1], global_config['opqc_name']] = \
-            data_in['l2_flags']
+        obs_data[output_var_names[1], obsValName] = data_in['chlor_a']
+        obs_data[output_var_names[1], obsErrName] = data_in['chlor_a']*0.0
+        obs_data[output_var_names[1], qcName] = data_in['l2_flags']
 
     return (obs_data, GlobalAttrs, time_units)
 
@@ -219,9 +211,6 @@ def main():
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
-    global_config['oval_name'] = iconv.OvalName()
-    global_config['oerr_name'] = iconv.OerrName()
-    global_config['opqc_name'] = iconv.OqcName()
     global_config['output_poc'] = args.poc
     global_config['output_chl'] = args.chl
 
@@ -249,35 +238,25 @@ def main():
     GlobalAttrs['converter'] = os.path.basename(__file__)
     DimDict['Location'] = Location
 
-    VarAttrs[('dateTime', 'MetaData')]['units'] = time_units
+    VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since ' + time_units
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
 
     # determine which variables we are going to output
     if args.poc:
-        VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = \
-            'mg m-3'
-        VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
-            'mg m-3'
-        VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = \
-            -32767
-        VarDims["organicMatterMassContentAsCarbon"] = ['Location']
+        VarAttrs[output_var_names[0], obsValName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[0], obsErrName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[0], obsValName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[0], obsErrName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[0], qcName]['_FillValue'] = -32767
+        VarDims["oceanMassParticulateAsCarbon"] = ['Location']
 
     if args.chl:
-        VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
-            'mg m-3'
-        VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
-            'mg m-3'
-        VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[1], global_config['opqc_name']]['_FillValue'] = \
-            -32767
+        VarAttrs[output_var_names[1], obsValName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[1], obsErrName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[1], obsValName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[1], obsErrName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[1], qcName]['_FillValue'] = -32767
         VarDims["chlorophyllMassConcentration"] = ['Location']
 
     # setup the IODA writer
