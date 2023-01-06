@@ -7,6 +7,7 @@ list(APPEND programs
   sonde_bufr2ioda.py
   sonde_tac2ioda.py
   ship_bufr2ioda.py
+  sonde_tac2ioda.py
   synop_bufr2ioda.py
 )
 
