@@ -35,8 +35,7 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'converter': os.path.basename(__file__)
 }
 
 DimDict = {
@@ -108,7 +107,6 @@ class ostia_l4sst2ioda(object):
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(sst.nlocs, dtype=np.int32)
 
         DimDict['Location'] = sst.nlocs
-        AttrData['Location'] = np.int32(DimDict['Location'])
 
 
 def main():
