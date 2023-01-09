@@ -16,25 +16,43 @@
 #include "Eigen/Dense"
 
 
+namespace
+{
+    namespace ConfKeys
+    {
+        const char* Variable = "variable";
+        const char* UpperBound = "upperBound";
+        const char* LowerBound = "lowerBound";
+    }  // namespace ConfKeys
+}  // namespace
+
+
 namespace Ingester
 {
     typedef Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigArray;
 
-    BoundingFilter::BoundingFilter(const std::string& variable,
-                   std::shared_ptr<float> lowerBound,
-                   std::shared_ptr<float> upperBound) :
-      variable_(variable),
-      lowerBound_(lowerBound),
-      upperBound_(upperBound)
+    BoundingFilter::BoundingFilter(const eckit::LocalConfiguration& conf) :
+      Filter(conf),
+      variable_(conf.getString(ConfKeys::Variable))
     {
-        if (!upperBound && !lowerBound)
+        if (conf.has(ConfKeys::LowerBound))
+        {
+            lowerBound_ = std::make_shared<float>(conf.getFloat(ConfKeys::LowerBound));
+        }
+
+        if (conf.has(ConfKeys::UpperBound))
+        {
+            upperBound_ = std::make_shared<float>(conf.getFloat(ConfKeys::UpperBound));
+        }
+
+        if (!upperBound_ && !lowerBound_)
         {
             std::stringstream errStr;
             errStr << "BoundingFilter must contain either upperBound, lowerBound or both.";
             throw eckit::BadParameter(errStr.str());
         }
 
-        if (upperBound && lowerBound && (*upperBound < *lowerBound))
+        if (upperBound_ && lowerBound_ && (*upperBound_ < *lowerBound_))
         {
             std::stringstream errStr;
             errStr << "BoundingFilter upperBound must be greater or equal to lowerBound";

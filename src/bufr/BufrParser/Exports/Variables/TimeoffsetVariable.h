@@ -24,8 +24,8 @@ namespace Ingester
      public:
         TimeoffsetVariable() = delete;
         TimeoffsetVariable(const std::string& exportName,
-                         const std::string& groupByField,
-                         const eckit::LocalConfiguration& conf);
+                           const std::string& groupByField,
+                           const eckit::LocalConfiguration& conf);
         ~TimeoffsetVariable() final = default;
 
         /// \brief Get the configured mnemonics and turn them into datetime strings
@@ -36,12 +36,6 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
-        // \\brief The field to group by.
-        std::string groupByField_;
-
-        /// \brief Configuration for this variable
-        const eckit::LocalConfiguration conf_;
-
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
 
