@@ -177,18 +177,23 @@ class tropomi(object):
                     self.outdata[('qualityFlags', 'QualityMarker')], qa_value[flg]))
                 for k in range(nlevs):
                     vname = ('avgKernelLevel', 'RetrievalData')
-                    self.outdata[vname][..., k] = np.concatenate((self.outdata[vname][..., k], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]), axis=1)
+                    self.outdata[vname][..., k] = np.concatenate((self.outdata[vname][..., k],
+                                                  avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]), axis=1)
                     vname = ('referenceLevel', 'RetrievalData')
                     if self.varname == 'no2':
-                        self.outdata[vname][..., k] = np.concatenate((self.outdata[vname][..., k], ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]), axis=1)
+                        self.outdata[vname][..., k] = np.concatenate((self.outdata[vname][..., k],
+                                                      ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]), axis=1)
                     elif self.varname == 'co':
                         rev_k = nlevs-k-1
-                        self.outdata[vname][..., rev_k] = np.concatenate((self.outdata[vname][..., rev_k], preslv[..., rev_k].ravel()[flg]), axis=1)
+                        self.outdata[vname][..., rev_k] = np.concatenate((self.outdata[vname][..., rev_k],
+                                                          preslv[..., rev_k].ravel()[flg]), axis=1)
 
                 if self.varname == 'no2':
-                    self.outdata[vname][..., nlevs] = np.concatenate((self.outdata[vname][..., nlevs], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]), axis=1)
+                    self.outdata[vname][..., nlevs] = np.concatenate((self.outdata[vname][..., nlevs],
+                                                      ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]), axis=1)
                 elif self.varname == 'co':
-                    self.outdata[vname][..., nlevs] = np.concatenate((self.outdata[vname][..., nlevs], np.zeros(nlocf, dtype=np.float32) ), axis=1)
+                    self.outdata[vname][..., nlevs] = np.concatenate((self.outdata[vname][..., nlevs],
+                                                      np.zeros(nlocf, dtype=np.float32)), axis=1)
 
             for ncvar, iodavar in self.obsVar.items():
 
@@ -284,9 +289,9 @@ def main():
             args.column = 'total'
 
     if args.column == "tropo":
-        obsVar = { var_longname+'_tropospheric_column': var_longname+'Column' }
+        obsVar = {var_longname+'_tropospheric_column': var_longname+'Column'}
     elif args.column == "total":
-        obsVar = { var_longname+'_total_column': var_longname+'Total' }
+        obsVar = {var_longname+'_total_column': var_longname+'Total'}
 
     # Read in the NO2 or CO data
     var = tropomi(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
