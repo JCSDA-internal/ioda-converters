@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ###########################################################################
 # These functions decode WMO format soundings which contain at least the
 # mandatory levels (TTAA, TTCC), and also can include significant temperature

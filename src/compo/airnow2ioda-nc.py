@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-# read airnow data and convert to netcdf
-import netCDF4 as nc
-import numpy as np
-import inspect, os, sys, argparse
-import pandas as pd
+# Read airnow text data file and convert to IODA netcdf
+import os, sys
 from datetime import datetime
 from pathlib import Path
+import netCDF4 as nc
+import numpy as np
+import pandas as pd
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-import ioda_conv_engines as iconv
+
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
 
 os.environ["TZ"] = "UTC"
 
@@ -130,6 +131,8 @@ def add_data(infile, sitefile):
 
 
 if __name__ == '__main__':
+
+    import argparse
 
     parser = argparse.ArgumentParser(
         description=(
