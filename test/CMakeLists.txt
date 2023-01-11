@@ -103,6 +103,7 @@ list( APPEND test_output
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
   testoutput/viirs_jpss1_oc_l3.nc
+  testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
@@ -1081,7 +1082,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
@@ -1537,7 +1537,7 @@ if( iodaconv_eccodes_ENABLED )
                    COMMAND bash
                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                            netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_bufr2ioda.py
                            -i testinput/sonde_wmo_double.bufr
                            -o testrun/wmo_raob_double.nc4"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})

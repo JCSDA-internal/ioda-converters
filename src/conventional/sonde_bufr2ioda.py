@@ -32,7 +32,7 @@ locationKeyList = [
     ("longitude", "float", "degrees_east", "keep"),
     ("stationElevation", "float", "m", "keep"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-    ("launchTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
+    ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
     ("pressure", "float", "Pa", "keep"),
     ("geopotentialHeight", "float", "m", "keep"),
     ("vertSignificance", "integer", "", "toss"),
@@ -42,11 +42,11 @@ locationKeyList = [
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
     ("stationIdentification", "string", "", "keep"),
-    ("instrumentType", "integer", "", "keep"),
-    ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
-    ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
-    ("temperatureSensorType", "integer", "", "keep"),
-    ("humiditySensorType", "integer", "", "keep"),
+    ("instrumentIdentifier", "integer", "", "keep"),
+    # ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
+    # ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
+    # ("temperatureSensorType", "integer", "", "keep"),
+    # ("humiditySensorType", "integer", "", "keep"),
     ("year", "integer", "", "toss"),
     ("month", "integer", "", "toss"),
     ("day", "integer", "", "toss"),
@@ -62,7 +62,7 @@ metaDataKeyList = {
     'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
                          'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
-    'launchTime': ['Constructed'],
+    'releaseTime': ['Constructed'],
     'pressure': ['pressure', 'nonCoordinatePressure'],
     'geopotentialHeight': ['nonCoordinateGeopotentialHeight', 'geopotentialHeight'],
     'vertSignificance': ['extendedVerticalSoundingSignificance', 'verticalSoundingSignificance'],
@@ -73,11 +73,11 @@ metaDataKeyList = {
     'wmoStationNumber': ['stationNumber'],
     'stationIdentification': ['Constructed'],
     # "stationLongName": 'shipOrMobileLandStationIdentifier',
-    "instrumentType": ['radiosondeType'],
-    "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
-    "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
-    "temperatureSensorType": ['temperatureSensorType'],
-    "humiditySensorType": ['humiditySensorType'],
+    "instrumentIdentifier": ['radiosondeType'],
+    # "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
+    # "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
+    # "temperatureSensorType": ['temperatureSensorType'],
+    # "humiditySensorType": ['humiditySensorType'],
     # "instrumentSerialNum": 'radiosondeSerialNumber',
     # "instrumentSoftwareVersion": 'softwareVersionNumber',
     'year': ['year'],
@@ -626,13 +626,13 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
-            meta_data['launchTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
         else:
             meta_data['dateTime'][0] = specialty_time([0],
                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
-            meta_data['launchTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
 
         # Sondes also have lat/lon displacement from launch/release location.
         if temp_data['latDisplacement'] is not None and temp_data['lonDisplacement'] is not None:
