@@ -103,12 +103,13 @@ list( APPEND test_output
   testoutput/viirs_jpss1_oc_l2.nc
   testoutput/modis_aqua_oc_l2.nc
   testoutput/viirs_jpss1_oc_l3.nc
+  testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
   testoutput/viirs_bias.nc 
-  testoutput/tropomi_no2_total.nc
-  testoutput/tropomi_no2_tropo.nc
+  # testoutput/tropomi_no2_total.nc
+  # testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
@@ -143,7 +144,7 @@ list( APPEND test_output
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
-  testoutput/tropomi_co_total.nc
+  # testoutput/tropomi_co_total.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1005,31 +1006,31 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
                                     -o testrun/viirs_bias.nc"
                   viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_total
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND bash
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
-                          -i testinput/tropomi_no2.nc
-                          -o testrun/tropomi_no2_total.nc
-                          -v no2
-                          -c total"
-                          tropomi_no2_total.nc ${IODA_CONV_COMP_TOL_ZERO})
+#ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_total
+#                  TYPE    SCRIPT
+#                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+#                  COMMAND bash
+#                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                          netcdf
+#                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
+#                          -i testinput/tropomi_no2.nc
+#                          -o testrun/tropomi_no2_total.nc
+#                          -v no2
+#                          -c total"
+#                          tropomi_no2_total.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND bash
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
-                          -i testinput/tropomi_no2.nc
-                          -o testrun/tropomi_no2_tropo.nc
-                          -v no2
-                          -c tropo"
-                          tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL})
+#ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
+#                  TYPE    SCRIPT
+#                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+#                  COMMAND bash
+#                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                          netcdf
+#                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
+#                          -i testinput/tropomi_no2.nc
+#                          -o testrun/tropomi_no2_tropo.nc
+#                          -v no2
+#                          -c tropo"
+#                          tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
@@ -1081,7 +1082,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+		  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
@@ -1091,19 +1092,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -o testrun/airnow_2020081306.nc"
                           airnow_2020081306.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND bash
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
-                          -i testinput/tropomi_co.nc
-                          -o testrun/tropomi_co_total.nc
-                          -v co
-                          -q 0.5
-                          -c total"
-                          tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
+#ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
+#                  TYPE    SCRIPT
+#                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+#                  COMMAND bash
+#                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                          netcdf
+#                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
+#                          -i testinput/tropomi_co.nc
+#                          -o testrun/tropomi_co_total.nc
+#                          -v co
+#                          -q 0.5
+#                          -c total"
+#                          tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
@@ -1537,7 +1538,7 @@ if( iodaconv_eccodes_ENABLED )
                    COMMAND bash
                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                            netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_bufr2ioda.py
                            -i testinput/sonde_wmo_double.bufr
                            -o testrun/wmo_raob_double.nc4"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})

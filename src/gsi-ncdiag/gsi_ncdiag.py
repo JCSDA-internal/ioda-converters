@@ -111,7 +111,7 @@ all_LocKeyList = {
     'earth_radius_of_curvature': ('earthRadiusCurvature', 'float'),
     'reference_sat_id': ('satelliteTransmitterId', 'integer'),
     'occulting_sat_id': ('satelliteIdentifier', 'integer'),
-    'record_number': ('sequenceNumber', 'string'),
+    'record_number': ('sequenceNumber', 'integer'),
     'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
     'gnss_sat_class': ('satelliteConstellationRO', 'string'),
     'impact_height': ('impactHeightRO', 'float'),
@@ -143,7 +143,7 @@ all_LocKeyList = {
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
     'Vterminal': ('vterminal', 'float'),
-    'SWCM_spec_type': ('windComputationMethod', 'float'),
+    'SWCM_spec_type': ('windComputationMethod', 'integer'),
     'SAZA_sat_zen_angle': ('sensorZenithAngle', 'float'),
     'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
     'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
@@ -180,8 +180,7 @@ conv_gsivarnames = {
 }
 
 gsi_add_vars_allsky = {
-    'Observation_Type': 'observationTypeNum',
-    'Observation_Subtype': 'observationSubTypeNum',
+    'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -210,8 +209,7 @@ gsi_add_qcvars_allsky = {
 
 gsi_add_vars = {
     'ObsBias': 'GsiObsBias',
-    'Observation_Type': 'observationTypeNum',
-    'Observation_Subtype': 'observationSubTypeNum',
+    'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -243,8 +241,7 @@ gsi_add_qcvars = {
 }
 
 gsi_add_vars_uv = {
-    'Observation_Type': 'observationTypeNum',
-    'Observation_Subtype': 'observationSubTypeNum',
+    'Observation_Type': 'ObsType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -277,6 +274,8 @@ gsiint = [
     'GsiUseFlag',
     'ObsType',
     'Observation_Subtype',
+    'observationTypeNum',
+    'observationSubTypeNum',
     'Analysis_Use_Flag',
 ]
 
@@ -321,13 +320,13 @@ radar_sensors = [
 
 chan_metadata_dict = {
     'sensor_chan': 'sensorChannelNumber',
-    'use_flag': 'gsi_use_flag',
     'frequency': 'sensorCentralFrequency',
     'polarization': 'sensorPolarizationDirection',
     'wavenumber': 'sensorCentralWavenumber',
-    'error_variance': 'ObsError',
-    'mean_lapse_rate': 'lapseRate',
 }
+# 'use_flag': 'gsi_use_flag',
+# 'error_variance': 'ObsError',
+# 'mean_lapse_rate': 'lapseRate',
 
 chan_metadata_int = [
     'sensor_channel',
@@ -449,45 +448,50 @@ oz_lev_sensors = [
 # units
 # 'IODA/UFO_variable_name': 'Unit'
 units_values = {
+    'latitude': 'degree_north',
+    'longitude': 'degree_east',
+    'stationElevation': 'm',
+    'height': 'm',
+    'pressure': 'Pa',
+    'airTemperature': 'K',
+    'airTemperatureAt2M': 'K',
     'virtualTemperature': 'K',
-    'virtual_temperature': 'K',
-    'atmosphere_ln_pressure_coordinate': '1',
-    'specific_humidity': 'kg kg-1',
+    'virtualTemperatureAt2M': 'K',
     'specificHumidity': 'kg kg-1',
-    'northward_wind': 'm s-1',
+    'specificHumidityAt2M': 'kg kg-1',
+    'waterVaporMixingRatio': 'kg kg-1',
+    'relativeHumidity': '1',
     'windNorthward': 'm s-1',
-    'eastward_wind': 'm s-1',
     'windEastward': 'm s-1',
-    'geopotential_height': 'm',
-    'geopotential_height_levels': 'm',
-    'height_above_mean_sea_level': 'm',
+    'windSpeed': 'm s-1',
+    'windDirection': 'degree',
+    'windSpeedAt10M': 'm s-1',
+    'windDirectionAt10M': 'degree',
+    'geopotentialHeight': 'm',
+    'height': 'm',
     'heightOfSurface': 'm',
-    'surface_pressure': 'Pa',
     'stationPressure': 'Pa',
-    'sea_surface_temperature': 'K',
+    'seaSurfaceTemperature': 'K',
+    'atmosphere_ln_pressure_coordinate': '1',
+    'air_pressure_levels': 'Pa',
+    'geopotential_height_levels': 'm',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
     'surface_geometric_height': 'm',
     'surface_geopotential_height': 'm',
-    'surface_altitude': 'm',
-    'geoid_height_above_reference_ellipsoid': 'm',
-    'earth_radius_of_curvature': 'm',
-    'impact_height': 'm',
+    'geoidUndulation': 'm',
+    'earthRadiusCurvature': 'm',
     'impactHeightRO': 'm',
     'impactParameterRO': 'm',
-    'bending_angle': 'radians',
     'bendingAngle': 'radians',
-    'land_area_fraction': '1',
     'landAreaFraction': '1',
-    'air_temperature': 'K',
-    'airTemperature': 'K',
-    'pressure': 'Pa',
-    'air_pressure': 'Pa',
-    'air_pressure_levels': 'Pa',
-    'humidity_mixing_ratio': 'kg kg-1',
-    'mole_fraction_of_carbon_dioxide_in_air': '1',
-    'mole_fraction_of_ozone_in_air': '1',
-    'integrated_layer_ozone_in_air': 'DU',
+    'waterAreaFraction': '1',
+    'seaIceFraction': '1',
+    'surface_snow_area_fraction': '1',
+    'vegetation_area_fraction': '1',
+    'ozoneLayer': 'DU',
+    'ozoneTotal': 'DU',
+    'carbondioxideLayer': '1',
     'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
     'effective_radius_of_cloud_liquid_water_particle': 'm',
     'atmosphere_mass_content_of_cloud_ice': 'kg m-2',
@@ -496,26 +500,17 @@ units_values = {
     'effective_radius_of_rain_particle': '1e-6 m',
     'mass_content_of_snow_in_atmosphere_layer': 'kg m-2',
     'effective_radius_of_snow_particle': '1e-6 m',
-    'water_area_fraction': '1',
-    'land_area_fraction': '1',
-    'ice_area_fraction': '1',
-    'surface_snow_area_fraction': '1',
-    'vegetation_area_fraction': '1',
     'surface_temperature_where_sea': 'K',
     'surface_temperature_where_land': 'K',
     'surface_temperature_where_ice': 'K',
     'surface_temperature_where_snow': 'K',
-    'surface_wind_speed': 'm s-1',
-    'wind_speed': 'm s-1',
-    'surface_wind_from_direction': 'degree',
     'leaf_area_index': '1',
     'volume_fraction_of_condensed_water_in_soil': '1',
-    'soil_temperature': 'K',
+    'soilTemperature': 'K',
     'land_type_index_NPOESS': '1',
     'vegetation_type_index': '1',
     'soil_type': '1',
     'surface_snow_thickness': 'm',
-    'humidity_mixing_ratio': '1',
     'wind_reduction_factor_at_10m': '1',
     'sulf': '1',
     'bc1': '1',
@@ -531,12 +526,6 @@ units_values = {
     'seas2': '1',
     'seas3': '1',
     'seas4': '1',
-    'latitude': 'degree_north',
-    'longitude': 'degree_east',
-    'station_elevation': 'm',
-    'height': 'm',
-    'height_above_mean_sea_level': 'm',
-    'sensorScanPosition': '1',
     'sensorViewAngle': 'degree',
     'sensorZenithAngle': 'degree',
     'sensorAzimuthAngle': 'degree',
@@ -548,11 +537,11 @@ units_values = {
     'profile_ozone_error_flag': '1',
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
-    'tropopause_pressure': 'Pa',
+    'tropopausePressure': 'Pa',
     'brightness_temperature_jacobian_surface_temperature': '1',
     'brightness_temperature_jacobian_surface_emissivity': 'K',
     'brightness_temperature_jacobian_air_temperature': '1',
-    'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/Kg ',
+    'brightness_temperature_jacobian_humidity_mixing_ratio': 'K/g/kg ',
     'optical_thickness_of_atmosphere_layer': '1',
     'cloudWaterRetrievedFromObservation': 'kg m-2',
     'cloudWaterRetrievedFromSimulatedObservation': 'kg m-2',
@@ -563,7 +552,6 @@ units_values = {
     'brightnessTemperature': 'K',
     'percentConfidenceWithForecast': 'percent',
     'percentConfidenceWithoutForecast': 'percent',
-    'satelliteChannelCentreFrequency': 'Hz',
 }
 
 # @TestReference
@@ -954,6 +942,7 @@ class Conv(BaseGSI):
 
                 for lvar in LocVars:
                     loc_mdata_name = all_LocKeyList[lvar][0]
+                    dtype = all_LocKeyList[lvar][1]
                     if lvar == 'Station_ID':
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
@@ -999,7 +988,12 @@ class Conv(BaseGSI):
                             outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                     else:
-                        outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
+                        if dtype == 'integer':
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx].astype(np.int32)
+                        elif dtype == 'long':
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx].astype(np.int64)
+                        else:
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                         if loc_mdata_name in units_values.keys():
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
@@ -1017,7 +1011,7 @@ class Conv(BaseGSI):
                 writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
                 writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
 
-                print("ProcessedL %d Conventional obs processed to: %s" % (len(obsdata), outname))
+                print("Processed %d Conventional obs processed to: %s" % (len(obsdata), outname))
 
 
 def grabobsidx(obsdata, platform, var):
