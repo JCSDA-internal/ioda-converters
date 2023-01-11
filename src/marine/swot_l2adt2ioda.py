@@ -36,8 +36,7 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'converter': os.path.basename(__file__)
 }
 
 DimDict = {
@@ -98,8 +97,8 @@ class swot_l2adt2ioda(object):
         self.var_mdata[iodavar, iconv.OerrName()]['units'] = err_units
         self.var_mdata[iodavar, iconv.OvalName()]['_FillValue'] = Fillvalue
         self.var_mdata[iodavar, iconv.OerrName()]['_FillValue'] = err_Fillvalue
-        self.var_mdata[iodavar, iconv.OvalName()]['scale_factor'] = scale_factor
-        self.var_mdata[iodavar, iconv.OerrName()]['scale_factor'] = err_scale_factor
+        # self.var_mdata[iodavar, iconv.OvalName()]['scaleFactor'] = scale_factor
+        # self.var_mdata[iodavar, iconv.OerrName()]['scaleFactor'] = err_scale_factor
 
         # map swot adt to ioda data structure
         self.outdata[('dateTime', 'MetaData')] = self.time
@@ -114,7 +113,6 @@ class swot_l2adt2ioda(object):
         self.outdata[self.varDict[iodavar]['qcKey']] = self.qcflag.astype('int32')
 
         DimDict['Location'] = len(adt)
-        AttrData['Location'] = np.int32(DimDict['Location'])
 
 
 def main():

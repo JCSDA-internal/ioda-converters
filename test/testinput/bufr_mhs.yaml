@@ -20,8 +20,10 @@ observations:
               second: "*/SECO"
           height:
             query: "*/HMSL"
+            type: float
           hols:
             query: "*/HOLS"
+            type: float
           fovn:
             query: "*/FOVN"
           lsql:
@@ -42,7 +44,7 @@ observations:
             query: "*/BEARAZ"
           channels:
             query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
-          radiance:
+          brightnessTemp:
             query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
     
     ioda:
@@ -72,27 +74,7 @@ observations:
             
       variables:
 
-        - name: "stationElevation@MetaData"
-          source: variables/height
-          longName: "Station Elevation"
-          units: "meters"
-
-        - name: "heightOfSurface@MetaData"
-          source: variables/hols
-          longName: "Height of Land Surface"
-          units: "meters"
-
-        - name: "fieldOfViewNumber@MetaData"
-          source: variables/fovn
-          longName: "Field of View Number"
-          units: "none"
-
-        - name: "landSeaQualifier@MetaData"
-          source: variables/lsql
-          longName: "Land/Sea Qualifier"
-          units: "none"
-
-        - name: "dateTime@MetaData"
+        - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
@@ -109,33 +91,51 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "solarZenithAngle@MetaData"
+        - name: "MetaData/height"
+          source: variables/height
+          longName: "height"
+          units: "m"
+
+        - name: "MetaData/heightOfSurface"
+          source: variables/hols
+          longName: "Height of Land Surface"
+          units: "m"
+
+        - name: "MetaData/fieldOfViewNumber"
+          source: variables/fovn
+          longName: "Field of View Number"
+
+        - name: "MetaData/landSeaQualifier"
+          source: variables/lsql
+          longName: "Land/Sea Qualifier"
+
+        - name: "MetaData/solarZenithAngle"
           source: variables/sza
           longName: "Solar Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "solarAzimuthAngle@MetaData"
+        - name: "MetaData/solarAzimuthAngle"
           source: variables/saz
           longName: "Solar Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
 
-        - name: "sensorZenithAngle@MetaData"
+        - name: "MetaData/sensorZenithAngle"
           source: variables/vza
           longName: "Sensor Zenith Angle"
           units: "degrees"
           range: [0, 180]
 
-        - name: "sensorAzimuthAngle@MetaData"
+        - name: "MetaData/sensorAzimuthAngle"
           source: variables/vaz
           longName: "Sensor Azimuth Angle"
           units: "degrees"
           range: [-180, 180]
 
-        - name: "brightnessTemperature@ObsValue"
+        - name: "ObsValue/brightnessTemperature"
           coordinates: "longitude latitude Channel"
-          source: variables/radiance
+          source: variables/brightnessTemp
           longName: "Brightness Temperature"
           units: "K"
           range: [120, 500]

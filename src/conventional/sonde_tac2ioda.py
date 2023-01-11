@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ###########################################################################
 # These functions decode WMO format soundings which contain at least the
 # mandatory levels (TTAA, TTCC), and also can include significant temperature
@@ -69,8 +70,8 @@ MetaDataKeyList = [
     ("stationElevation", "float", "m"),
     ("height", "float", "m"),
     ("pressure", "float", "Pa"),
-    ("launchTime", "string", ""),
-    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+    ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
@@ -946,6 +947,7 @@ def change_vars(profile):
     # launch is usually initiated close to 11:05Z.
     this_datetime = datetime(profile['year'], profile['month'], profile['day'], profile['hour'], 0, 0)
     launch_time = this_datetime - timedelta(seconds=55*60)
+    time_offset1 = round((launch_time - epoch).total_seconds())
     previous_time = launch_time
 
     heightKm1 = profile['elev']
@@ -992,7 +994,7 @@ def change_vars(profile):
         new_profile['latitude'].append(profile['lat'])
         new_profile['longitude'].append(profile['lon'])
         new_profile['stationElevation'].append(profile['elev'])
-        new_profile['launchTime'].append(launch_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        new_profile['releaseTime'].append(time_offset1)
         new_profile['dateTime'].append(time_offset)
         new_profile['pressure'].append(pres)
         new_profile['height'].append(height)

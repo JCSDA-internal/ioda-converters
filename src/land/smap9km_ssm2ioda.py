@@ -139,12 +139,10 @@ class smap(object):
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
-        self.outdata[('surfaceFlag', 'MetaData')] = sflg
+        self.outdata[('surfaceQualifier', 'MetaData')] = sflg
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
-        self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
         self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
-        self.varAttrs[('easeColumnIndex', 'MetaData')]['units'] = '1'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals

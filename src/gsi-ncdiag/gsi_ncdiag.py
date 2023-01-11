@@ -75,7 +75,7 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 42, 43, 745, 825],
+    "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -104,8 +104,18 @@ wmo_instid = {
 
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
 all_LocKeyList = {
-    'Station_ID': ('stationIdentification', 'Fixed-length string'),
+    'Station_ID': ('stationIdentification', 'string'),
     'Time': ('dateTime', 'string'),
+    'time': ('time', 'string'),
+    'ascending_flag': ('satelliteAscendingFlag', 'integer'),
+    'earth_radius_of_curvature': ('earthRadiusCurvature', 'float'),
+    'reference_sat_id': ('satelliteTransmitterId', 'integer'),
+    'occulting_sat_id': ('satelliteIdentifier', 'integer'),
+    'record_number': ('sequenceNumber', 'string'),
+    'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
+    'gnss_sat_class': ('satelliteConstellationRO', 'string'),
+    'impact_height': ('impactHeightRO', 'float'),
+    'impact_parameter': ('impactParameterRO', 'float'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('stationElevation', 'float'),
@@ -119,9 +129,10 @@ all_LocKeyList = {
     'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
     'Sol_Azimuth_Angle': ('solarAzimuthAngle', 'float'),
     'Scan_Angle': ('sensorViewAngle', 'float'),
-    'Surface_type': ('surface_type', 'integer'),
+    'Surface_type': ('surfaceQualifier', 'integer'),
+    'Dominant_Sfc_Type': ('surfaceQualifier', 'integer'),
     'MODIS_deep_blue_flag': ('modis_deep_blue_flag', 'integer'),
-    'Reference_Pressure': ('air_pressure', 'float'),
+    'Reference_Pressure': ('pressure', 'float'),
     'Solar_Zenith_Angle': ('solarZenithAngle', 'float'),
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
     'TopLevelPressure': ('top_level_pressure', 'float'),
@@ -137,7 +148,8 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
     'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
-    'LaunchTime': ('LaunchTime', 'float'),
+    'Data_Vertical_Velocity': ('windUpward', 'float'),
+    'LaunchTime': ('releaseTime', 'float'),
 }
 
 checkuv = {
@@ -149,10 +161,10 @@ conv_varnames = {
     "tv": ["virtualTemperature"],
     "tsen": ["airTemperature"],
     "uv": ["windEastward", "windNorthward"],
-    "ps": ["surface_pressure"],
+    "ps": ["stationPressure"],
     "q": ["specificHumidity"],
     "bend": ["bendingAngle"],
-    "refract": ["refractivity"],
+    "refract": ["atmosphericRefractivity"],
     "sst": ["seaSurfaceTemperature"],
 }
 
@@ -168,7 +180,8 @@ conv_gsivarnames = {
 }
 
 gsi_add_vars_allsky = {
-    'Observation_Type': 'ObsType',
+    'Observation_Type': 'observationTypeNum',
+    'Observation_Subtype': 'observationSubTypeNum',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -197,7 +210,8 @@ gsi_add_qcvars_allsky = {
 
 gsi_add_vars = {
     'ObsBias': 'GsiObsBias',
-    'Observation_Type': 'ObsType',
+    'Observation_Type': 'observationTypeNum',
+    'Observation_Subtype': 'observationSubTypeNum',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -229,7 +243,8 @@ gsi_add_qcvars = {
 }
 
 gsi_add_vars_uv = {
-    'Observation_Type': 'ObsType',
+    'Observation_Type': 'observationTypeNum',
+    'Observation_Subtype': 'observationSubTypeNum',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
@@ -261,6 +276,7 @@ gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
     'ObsType',
+    'Observation_Subtype',
     'Analysis_Use_Flag',
 ]
 
@@ -305,13 +321,13 @@ radar_sensors = [
 
 chan_metadata_dict = {
     'sensor_chan': 'sensorChannelNumber',
+    'use_flag': 'gsi_use_flag',
     'frequency': 'sensorCentralFrequency',
     'polarization': 'sensorPolarizationDirection',
     'wavenumber': 'sensorCentralWavenumber',
+    'error_variance': 'ObsError',
+    'mean_lapse_rate': 'lapseRate',
 }
-# 'use_flag': 'gsi_use_flag',
-# 'error_variance': 'ObsError',
-# 'mean_lapse_rate': 'mean_lapse_rate',
 
 chan_metadata_int = [
     'sensor_channel',
@@ -326,7 +342,9 @@ geovals_vars = {
     'specific_humidity': 'specific_humidity',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
+    'geopotential_height_levels': 'geopotential_height_levels',
     'geopotential_height': 'geopotential_height',
+    'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
@@ -334,8 +352,10 @@ geovals_vars = {
     'surface_temperature': 'surface_temperature',
     'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geopotential_height',
-    'surface_geopotential_height': 'surface_geopotential_height',
+    'surface_height': 'surface_geometric_height',
+    'surface_geopotential_height': 'surface_geometric_height',
+    'surface_altitude': 'surface_altitude',
+    'surface_geometric_height': 'surface_geometric_height',
     'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
     'air_pressure': 'air_pressure',
@@ -369,12 +389,12 @@ geovals_vars = {
     'Lai': 'leaf_area_index',
     'Soil_Moisture': 'volume_fraction_of_condensed_water_in_soil',
     'Soil_Temperature': 'soil_temperature',
-    'Land_Type_Index': 'land_type_index',
+    'Land_Type_Index': 'land_type_index_NPOESS',
     'Vegetation_Type': 'vegetation_type_index',
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
-    'Sfc_Height': 'surface_geopotential_height',
+    'Sfc_Height': 'surface_geometric_height',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -411,15 +431,19 @@ aod_sensors = [
     'viirs',
 ]
 
-oz_sensors = [
+oz_lay_sensors = [
     'gome',
     'sbuv2',
     'omi',
     'ompsnp',
     'ompstc8',
-    'ompslp',
-    'mls55',
     'ompsnm',
+]
+
+oz_lev_sensors = [
+    'ompslp',
+    'ompslpnc',
+    'mls55',
 ]
 
 # units
@@ -428,28 +452,39 @@ units_values = {
     'virtualTemperature': 'K',
     'virtual_temperature': 'K',
     'atmosphere_ln_pressure_coordinate': '1',
-    'specific_humidity': '1',
-    'specificHumidity': '1',
+    'specific_humidity': 'kg kg-1',
+    'specificHumidity': 'kg kg-1',
     'northward_wind': 'm s-1',
     'windNorthward': 'm s-1',
     'eastward_wind': 'm s-1',
     'windEastward': 'm s-1',
     'geopotential_height': 'm',
+    'geopotential_height_levels': 'm',
     'height_above_mean_sea_level': 'm',
     'heightOfSurface': 'm',
     'surface_pressure': 'Pa',
-    'station{ressure': 'Pa',    # Is this for real, curly-brace??? or a typo that should be "p"?
+    'stationPressure': 'Pa',
     'sea_surface_temperature': 'K',
     'surface_temperature': 'K',
     'surface_roughness_length': 'm',
+    'surface_geometric_height': 'm',
     'surface_geopotential_height': 'm',
+    'surface_altitude': 'm',
+    'geoid_height_above_reference_ellipsoid': 'm',
+    'earth_radius_of_curvature': 'm',
+    'impact_height': 'm',
+    'impactHeightRO': 'm',
+    'impactParameterRO': 'm',
+    'bending_angle': 'radians',
+    'bendingAngle': 'radians',
     'land_area_fraction': '1',
+    'landAreaFraction': '1',
     'air_temperature': 'K',
     'airTemperature': 'K',
     'pressure': 'Pa',
     'air_pressure': 'Pa',
     'air_pressure_levels': 'Pa',
-    'humidity_mixing_ratio': '1',
+    'humidity_mixing_ratio': 'kg kg-1',
     'mole_fraction_of_carbon_dioxide_in_air': '1',
     'mole_fraction_of_ozone_in_air': '1',
     'integrated_layer_ozone_in_air': 'DU',
@@ -476,7 +511,7 @@ units_values = {
     'leaf_area_index': '1',
     'volume_fraction_of_condensed_water_in_soil': '1',
     'soil_temperature': 'K',
-    'land_type_index': '1',
+    'land_type_index_NPOESS': '1',
     'vegetation_type_index': '1',
     'soil_type': '1',
     'surface_snow_thickness': 'm',
@@ -501,6 +536,7 @@ units_values = {
     'station_elevation': 'm',
     'height': 'm',
     'height_above_mean_sea_level': 'm',
+    'sensorScanPosition': '1',
     'sensorViewAngle': 'degree',
     'sensorZenithAngle': 'degree',
     'sensorAzimuthAngle': 'degree',
@@ -521,7 +557,7 @@ units_values = {
     'cloudWaterRetrievedFromObservation': 'kg m-2',
     'cloudWaterRetrievedFromSimulatedObservation': 'kg m-2',
     'scatteringIndexRetrievedFromObservation': '1',
-    'LaunchTime': 'hours',
+    'releaseTime': 'seconds since 1970-01-01T00:00:00Z',
     'sensorCentralWavenumber': 'm-1',
     'sensorCentralFrequency': 'Hz',
     'brightnessTemperature': 'K',
@@ -681,6 +717,22 @@ class Conv(BaseGSI):
                     print("No matching observations for Platform:%s Var:%s" % (p, v))
                     continue
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
+                if v == 'bend':
+                    # sort record_number
+                    record_number = self.var('record_number')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number")
+                    # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
+
+                    # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
+                    idx_tuples = np.where(idx.data)
+                    idx_id = idx_tuples[0]
+                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    # another check if idx_sorted is correct to sort record_number
+                    # record_number_new = self.var('record_number')[idx_sorted]
+                    # for isort in range(len(record_number_new)):
+                    #     print('isort, idx, record_number, record_number_new',isort,\
+                    #         record_number[isort], record_number_new[isort] )
                 # set up output file
                 ncout = nc.Dataset(outname, 'w', format='NETCDF4')
                 ncout.setncattr(
@@ -710,17 +762,24 @@ class Conv(BaseGSI):
                         if vname in geovals_metadata_dict.keys():
                             dims = ("Location",) + var.dimensions[1:]
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
-                            var_out[...] = vdata[idx, ...]
+                            if v == 'bend':
+                                var_out[...] = vdata[idx_sorted, ...]
+                            else:
+                                var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
                             if (len(var.dimensions) == 1):
                                 dims = ("Location",)
                             else:
-                                if vname == "atmosphere_pressure_coordinate_interface":
+                                if (vname == "atmosphere_pressure_coordinate_interface") or (
+                                        vname == "geopotential_height_levels"):
                                     dims = ("Location", "ninterfaces")
                                 else:
                                     dims = ("Location", "Layer")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
-                            var_out[...] = vdata[idx, ...]
+                            if v == 'bend':
+                                var_out[...] = vdata[idx_sorted, ...]
+                            else:
+                                var_out[...] = vdata[idx, ...]
                 ncout.close()
 
     def toIODAobs(self, OutDir, clobber=True, platforms=None):
@@ -790,6 +849,24 @@ class Conv(BaseGSI):
                     varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
                     varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
                     varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
+
+                if v == 'bend':
+                    # sort record_number
+                    record_number = self.var('record_number')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number")
+                    # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
+                    # print('record_number:', record_number)
+                    # print('record_number.size:', record_number.size)
+                    # for isort in range(len(record_number_sorted)):
+                    #     print('isort, idx, record_number, record_number_sorted',isort, idx[isort],\
+                    #         record_number[isort], record_number_sorted[isort] )
+
+                    # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
+                    idx_tuples = np.where(idx.data)
+                    idx_id = idx_tuples[0]
+                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    idx = idx_sorted
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
@@ -881,7 +958,7 @@ class Conv(BaseGSI):
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
-                    elif lvar == 'Time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                    elif lvar == 'Time' or lvar == 'time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -1050,7 +1127,7 @@ class Radiances(BaseGSI):
         ncout.setncattr("sensor", self.sensor)
 
         # get nlocs
-        nlocs = self.nobs / self.nchans
+        nlocs = int(self.nobs / self.nchans)
         ncout.createDimension("Location", nlocs)
 
         # other dims
@@ -1109,7 +1186,7 @@ class Radiances(BaseGSI):
         ncout.setncattr("sensor", self.sensor)
 
         # get nlocs
-        nlocs = self.nobs / self.nchans
+        nlocs = int(self.nobs / self.nchans)
         ncout.createDimension("Location", nlocs)
 
         # other dims
@@ -1260,7 +1337,8 @@ class Radiances(BaseGSI):
         try:
             obserr = self.var('Input_Observation_Error')
         except IndexError:
-            obserr = 1./self.var('Inverse_Observation_Error')
+            # obserr = 1./self.var('Inverse_Observation_Error')
+            obserr = np.repeat(self.var('error_variance'), nlocs, axis=0)
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1323,11 +1401,11 @@ class Radiances(BaseGSI):
                 outdata[(loc_mdata_name+'1', 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name+'1', 'MetaData')]['units'] = units_values[loc_mdata_name]
-                tmp = self.var(lvar)[::nchans]
-                tmp[tmp > 4e8] = self.FLOAT_FILL
-                outdata[(loc_mdata_name, 'MetaData')] = tmp
-                if loc_mdata_name in units_values.keys():
-                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
+                # tmp = self.var(lvar)[::nchans]
+                # tmp[tmp > 4e8] = self.FLOAT_FILL
+                # outdata[(loc_mdata_name, 'MetaData')] = tmp
+                # if loc_mdata_name in units_values.keys():
+                #     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             else:
                 tmp = self.var(lvar)[::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
@@ -1505,6 +1583,7 @@ class Ozone(BaseGSI):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
         i = False
+        oz_sensors = oz_lay_sensors + oz_lev_sensors
         for s in oz_sensors:
             if s in splitfname:
                 i = splitfname.index(s)
@@ -1557,7 +1636,7 @@ class Ozone(BaseGSI):
 
         # other dims
         ncout.createDimension("Layer", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        if (self.sensor not in ["ompslp", "mls55"]):
+        if (self.sensor in oz_lay_sensors):
             ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1605,15 +1684,19 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
         vname = "integrated_layer_ozone_in_air"
-        if (self.sensor in ["ompslp", "mls55"]):
+        if (self.sensor in oz_lay_sensors):
             vname = "mole_fraction_of_ozone_in_air"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
-        VarDims[vname] = ['nlocs']
-        varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
-        varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
-        varAttrs[varDict[vname]['qcKey']]['units'] = 'unitless'
+        VarDims[vname] = ['Location']
+        if (self.sensor in oz_lev_sensors):
+            varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
+            varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
+        else:
+            varAttrs[varDict[vname]['valKey']]['units'] = 'DU'
+            varAttrs[varDict[vname]['errKey']]['units'] = 'DU'
+        # varAttrs[varDict[vname]['qcKey']]['units'] = 'unitless'
         varAttrs[varDict[vname]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['errKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['qcKey']]['_FillValue'] = self.INT_FILL
@@ -1622,14 +1705,15 @@ class Ozone(BaseGSI):
         try:
             tmp = self.var('Input_Observation_Error')
         except IndexError:
-            tmp = 1./self.var('Inverse_Observation_Error')
+            # tmp = 1./self.var('Inverse_Observation_Error')
+            tmp = np.repeat(self.var('error_variance'), nlocs, axis=0)
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
-            if lvar == 'Time':
+            if lvar == 'Time' or lvar == 'time':
                 tmp = self.var(lvar)
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -1641,7 +1725,7 @@ class Ozone(BaseGSI):
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
-            VarDims[(loc_mdata_name, 'MetaData')] = ['nlocs']
+            VarDims[(loc_mdata_name, 'MetaData')] = ['Location']
 
         for gsivar, iodavar in gsi_add_vars.items():
             # some special actions need to be taken depending on var name...

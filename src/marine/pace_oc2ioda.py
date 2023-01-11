@@ -63,9 +63,13 @@ def read_input(input_args):
     print("Reading ", input_file)
     ncd = nc.Dataset(input_file, 'r')
 
-    # get global attributes
-    for v in ('platform', 'instrument', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+    # get global attributes (dictionary key is incoming name, being renamed).
+    global_attribs = {'platform': 'platformCommonName',
+                      'instrument': 'sensor',
+                      'processing_level': 'processingLevel'}
+    for v in global_attribs.keys():
+        new_name = global_attribs[v]
+        GlobalAttrs[new_name] = ncd.getncattr(v)
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
