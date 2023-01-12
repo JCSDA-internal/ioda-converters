@@ -30,22 +30,20 @@ locationKeyList = [
     ("dateTime", "long"),
 ]
 
-varname_co = 'carbonmonoxideColumn'
-
-# This is apparently not used
 obsvars = {
     'carbonmonoxide_total_column': 'carbon_monoxide_in_total_column',
 }
 
 AttrData = {
     'converter': os.path.basename(__file__),
+    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    varname_co: ['Location'],
+    'carbon_monoxide_in_total_column': ['Location'],
 }
 
 # constants
@@ -66,7 +64,7 @@ class mopitt(object):
 
     def _read(self):
         # set up variable names for IODA
-        for iodavar in [varname_co, ]:
+        for iodavar in ['carbon_monoxide_in_total_column']:
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -75,6 +73,7 @@ class mopitt(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mol m-2'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mol m-2'
+            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
         # loop through input filenames
         first = True
         for f in self.filenames:
@@ -103,12 +102,11 @@ class mopitt(object):
             qa = dat.variables['RetrievalAnomalyDiagnostic'][:].sum(axis=1)
 
             # time data, we don't need precision beyond the second
-            inittime = datetime.strptime(StartDateTime[:19], "%Y-%m-%dT%H:%M:%S")
-            time_units = 'seconds since ' + StartDateTime[:19] + 'Z'
-            self.varAttrs[('dateTime', 'MetaData')]['units'] = time_units
-            times = [int(i) - int(secd[0]) for i in secd]
-            times = np.array(times)
-            AttrData['datetimeReference'] = StartDateTime[:19] + 'Z'
+            inittime = datetime.strptime(StartDateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
+            times = np.array([datetime.strftime(
+                inittime + timedelta(seconds=int(i)) - timedelta(seconds=int(secd[0])),
+                "%Y-%m-%dT%H:%M:%S")+"Z" for i in secd], dtype=object)
+            AttrData['date_time_string'] = times[0]
 
             # get ak
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
@@ -158,17 +156,15 @@ class mopitt(object):
 
             # date range to fit DA window
             date_start = datetime.strptime(self.time_range[0], "%Y%m%d%H")
-            time_offset1 = round((date_start - inittime).total_seconds())
             date_end = datetime.strptime(self.time_range[1], "%Y%m%d%H")
-            time_offset2 = round((date_end - inittime).total_seconds())
-            flg = []
-            for n, t in enumerate(times):
-                if t >= time_offset1 and t < time_offset2 and qaf[n]:
-                    flg.append(n)
+            date_list = [datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ") for date in times]
+            tsf = [(date_i >= date_start) & (date_i < date_end) for date_i in date_list]
+
+            flg = np.logical_and(qaf, tsf)
 
             if first:
                 # add metadata variables
-                self.outdata[('dateTime', 'MetaData')] = times[flg].astype(np.int64)
+                self.outdata[('dateTime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('apriori_term', 'RtrvlAncData')] = ap_tc[flg]
@@ -183,42 +179,44 @@ class mopitt(object):
 
                 self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]
                 self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]
-                self.outdata[self.varDict[iodavar]['qcKey']] = qa[flg].astype(np.int32)
+                self.outdata[self.varDict[iodavar]['qcKey']] = qa[flg]
 
             else:
-                self.outdata[('datetime', 'MetaData')] = np.concatenate(
-                    self.outdata[('datetime', 'MetaData')], times[flg].astype(np.int64))
-                self.outdata[('latitude', 'MetaData')] = np.concatenate(
-                    self.outdata[('latitude', 'MetaData')], lats[flg])
-                self.outdata[('longitude', 'MetaData')] = np.concatenate(
-                    self.outdata[('longitude', 'MetaData')], lons[flg])
-                self.outdata[('apriori_term', 'RtrvlAncData')] = np.concatenate(
-                    self.outdata[('apriori_term', 'RtrvlAncData')], ap_tc[flg])
+                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                    self.outdata[('dateTime', 'MetaData')], times[flg]))
+                self.outdata[('latitude', 'MetaData')] = np.concatenate((
+                    self.outdata[('latitude', 'MetaData')], lats[flg]))
+                self.outdata[('longitude', 'MetaData')] = np.concatenate((
+                    self.outdata[('longitude', 'MetaData')], lons[flg]))
+                self.outdata[('apriori_term', 'RtrvlAncData')] = np.concatenate((
+                    self.outdata[('apriori_term', 'RtrvlAncData')], ap_tc[flg]))
                 for k in range(nlevs):
                     varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_ak] = np.concatenate(
-                        self.outdata[varname_ak], ak_tc_dimless[:, k][flg])
+                        (self.outdata[varname_ak], ak_tc_dimless[:, k][flg]))
                 # add top vertice in IODA file, here it is 0hPa but can be different
                 # for other obs stream
                 for k in range(nlevs+1):
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
                     self.outdata[varname_pr] = np.concatenate(
-                        self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg])
+                        (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                        self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg])
+                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]))
                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                        self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg])
+                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]))
                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                        self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]).astype(np.int32)
+                        (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
             first = False
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+        AttrData['Location'] = np.int32(DimDict['Location'])
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)
             vkey = (varname, 'RtrvlAncData')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+            self.varAttrs[vkey]['units'] = ''
 
 
 def main():
