@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# (C) Copyright 2019 UCAR
+# (C) Copyright 2023 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -22,9 +22,8 @@ if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_ncio as iconv
 from orddicts import DefaultOrderedDict
-
+import ioda_conv_engines as iconv
 
 # obsIdDict is defined as obsid_dict in ocean_obs.py
 obsIdDict = {
@@ -36,7 +35,6 @@ obsIdDict = {
     6000: 'sea_ice_area_fraction',  # AICE
     6001: 'sea_ice_thickness'  # HICE
 }
-
 
 varDict = {
     'sea_water_salinity': 'sal',
@@ -108,7 +106,7 @@ class refGMAOobs(object):
 
 class IODA(object):
 
-    def __init__(self, filename, date, varName, obsList):
+    def __init__(self, filename, date, varName, obsList, valName):
         '''
         Initialize IODA writer class,
         transform to IODA data structure and,
@@ -140,13 +138,11 @@ class IODA(object):
             print('No %s observations for IODA!' % varName)
             return
 
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
-
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        self.keyDict[varName]['valKey'] = varName, self.writer.OvalName()
-        self.keyDict[varName]['errKey'] = varName, self.writer.OerrName()
-        self.keyDict[varName]['qcKey'] = varName, self.writer.OqcName()
+        self.keyDict[varName]['valKey'] = varName, iconv.OvalName()
+        self.keyDict[varName]['errKey'] = varName, iconv.OerrName()
+        self.keyDict[varName]['qcKey'] = varName, iconv.OqcName()
 
         # data is the dictionary containing IODA friendly data structure
         self.data = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -176,13 +172,41 @@ class IODA(object):
                 errKey = self.keyDict[varName]['errKey']
                 qcKey = self.keyDict[varName]['qcKey']
 
-                self.data[recKey][locKey][valKey] = oval
-                self.data[recKey][locKey][errKey] = oerr
-                self.data[recKey][locKey][qcKey] = 0
+                self.data[locKey][valKey] = oval
+                self.data[locKey][errKey] = oerr
+                self.data[locKey][qcKey] = 0
 
-        (ObsVars, LocMdata, VarMdata) = self.writer.ExtractObsData(self.data)
-        self.writer.BuildNetcdf(ObsVars, LocMdata, VarMdata, self.AttrData)
+        DimDict = {'nlocs': len(self.data)}
+        self.writer = iconv.IodaWriter(self.filename, self.locKeyList, DimDict)
+        ObsVars, nlocs = iconv.ExtractObsData(self.data, self.locKeyList)
 
+        GlobalAttrs = {}
+        VarDims = {
+            valName: ['nlocs']
+        }
+
+        VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        VarAttrs[('sea_water_salinity', 'ObsValue')]['units'] = 'PSU'
+        VarAttrs[('sea_water_salinity', 'ObsError')]['units'] = 'PSU'
+        VarAttrs[('sea_water_salinity', 'PreQC')]['units'] = 'unitless'
+        VarAttrs[('sea_water_temperature', 'ObsValue')]['units'] = 'degree_C'
+        VarAttrs[('sea_water_temperature', 'ObsError')]['units'] = 'degree_C'
+        VarAttrs[('sea_water_temperature', 'PreQC')]['units'] = 'unitless'
+        VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'degree_C'
+        VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'degree_C'
+        VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
+        VarAttrs[('absolute_dynamic_topography', 'ObsValue')]['units'] = 'm'
+        VarAttrs[('absolute_dynamic_topography', 'ObsError')]['units'] = 'm'
+        VarAttrs[('absolute_dynamic_topography', 'PreQC')]['units'] = 'un \
+                                                                        itless'
+        VarAttrs[('sea_ice_area_fraction', 'ObsValue')]['units'] = '1'
+        VarAttrs[('sea_ice_area_fraction', 'ObsError')]['units'] = '1'
+        VarAttrs[('sea_ice_area_fraction', 'PreQC')]['units'] = 'unitless'
+        VarAttrs[('sea_ice_thickness', 'ObsValue')]['units'] = 'm'
+        VarAttrs[('sea_ice_thickness', 'ObsError')]['units'] = 'm'
+        VarAttrs[('sea_ice_thickness', 'PreQC')]['units'] = 'unitless'
+
+        self.writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
         return
 
 
@@ -269,11 +293,11 @@ def main():
         '-i', '--input', help='name of the input GMAO ocean obs file(s)',
         type=str, nargs='+', required=True)
     parser.add_argument(
-        '-o', '--output', help='template name of the output IODA file (one per type)',
+        '-o', '--output', help='name of the IODA output file (one per type)',
         type=str, required=True)
     parser.add_argument(
-        '-d', '--date', help='datetime at the middle of the window', metavar='YYYYMMDDHH',
-        type=str, required=True)
+        '-d', '--date', help='datetime at the middle of the window',
+        metavar='YYYYMMDDHH', type=str, required=True)
     parser.add_argument(
         '--inputdates', help='dates of the input GMAO ocean obs file(s)',
         type=str, nargs='+', required=False, metavar='YYYYMMDDHH')
@@ -301,7 +325,7 @@ def main():
 
     for key, value in varDict.items():
         fout = '%s_%s.nc' % (foutput, value)
-        IODA(fout, fdate, key, obsDictSorted[key])
+        IODA(fout, fdate, key, obsDictSorted[key], value)
 
 
 if __name__ == '__main__':
