@@ -46,7 +46,7 @@ VarDims = {
     'carbonmonoxideTotal': ['Location'],
 }
 
-# constants	
+# constants
 avogadro = 6.02214076E23
 scm2sm = 1E4
 vmr2col = 2.12E13  # following Deeter 2009 MOPITT documentation

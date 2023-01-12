@@ -258,7 +258,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.variable == "co": 
+    if args.variable == "co":
         var_name = 'carbonmonoxide'
         if args.column == "tropo":
             print('CO is only available for total column, reset column to total', flush=1)
