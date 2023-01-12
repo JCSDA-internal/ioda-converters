@@ -10,133 +10,153 @@ observations:
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
+      mnemonicSets:
+        - mnemonics: [ACRN, OSQN, ACID, ACTN]
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO]
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [GNSA, FLVLST, GNSA, DPOF]
+        - mnemonics: [WDIR, WSPD]
+        - mnemonics: [ROLQ, TASP, ACTH]
+        - mnemonics: [TMDB, MIXR]
+
       exports:
         variables:
           timestamp:
             datetime:
-              year: "*/YEAR"
-              month: "*/MNTH"
-              day: "*/DAYS"
-              hour: "*/HOUR"
-              minute: "*/MINU"
-              second: "*/SECO"
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
           latitude:
-            query: "*/CLATH"
+            mnemonic: CLATH
           longitude:
-            query: "*/CLONH"
-          pressureAltitude:
-            query: "[*/FLVLST, */AMDARNOL/FLVLST]"
-            type: float
-          aircraftRegistrationNum:
-            query: "*/ACRN"
-          aircraftFlightNum:
-            query: "*/ACID"
-          aircraftTailNum:
-            query: "*/ACTN"
+            mnemonic: CLONH
+          height:
+            mnemonic: FLVLST
+          aircraftIdentifier:
+            mnemonic: ACID
+          aircraftTailNumber:
+            mnemonic: [ACTN, ACRN]
           observationSequenceNum:
-            query: "*/OSQN"
+            mnemonic: OSQN
           aircraftFlightPhase:
-            query: "*/DPOF"
-          aircraftTrueAirspeed:
-            query: "*/TASP"
+            mnemonic: DPOF
+          aircraftVelocity:
+            mnemonic: TASP
           aircraftHeading:
-            query: "*/ACTH"
+            mnemonic: ACTH
           aircraftRollAngleQuality:
-            query: "[*/ROLQ, */AMDARNOL/ROLQ]"
-          temperatureAir:
-            query: "[*/TMDB, */AMDARNOL/TMDB, */TMDBST]"
+            mnemonic: ROLQ
+          airTemperature:
+            mnemonic: TMDB
           waterVaporMixingRatio:
-            query: "*/MIXR"
+            mnemonic: MIXR
           windDirection:
-            query: "[*/WDIR, */AMDARNOL/WDIR]"
+            mnemonic: WDIR
           windSpeed:
-            query: "[*/WSPD, */AMDARNOL/WSPD]"
+            mnemonic: WSPD
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/bufr_wmo_amdar_multi.nc"
+      obsdataout: "./testrun/amdar_wmo_multi.nc"
 
       dimensions:
-        - name: AmdarSequence
-          path: "*/AMDARNOL"
+        - name: "Location"
+          size: variables/latitude.nrows
 
       variables:
         - name: "MetaData/dateTime"
           source: variables/timestamp
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
         - name: "MetaData/height"
-          coordinates: "longitude latitude AmdarSequence"
-          source: variables/pressureAltitude
-          longName: "Pressure altitude"
+          source: variables/height
+          dimensions: [ "Location" ]
+          longName: "Height"
           units: "m"
 
         - name: "MetaData/aircraftIdentifier"
-          source: variables/aircraftRegistrationNum
-          longName: "Aircraft registration number or other ID"
-
-        - name: "MetaData/aircraftFlightNumber"
-          source: variables/aircraftFlightNum
-          longName: "Aircraft flight number"
+          source: variables/aircraftIdentifier
+          dimensions: [ "Location" ]
+          longName: "Aircraft Identifier"
+          units: "none"
 
         - name: "MetaData/aircraftTailNumber"
-          source: variables/aircraftTailNum
+          source: variables/aircraftTailNumber
+          dimensions: [ "Location" ]
           longName: "Aircraft tail number"
+          units: "none"
 
-        - name: "MetaData/sequenceNumber"
+        - name: "MetaData/observationSequenceNum"
           source: variables/observationSequenceNum
+          dimensions: [ "Location" ]
           longName: "Observation sequence number"
+          units: "none"
 
         - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
+          dimensions: [ "Location" ]
           longName: "Aircraft flight phase (ascending/descending/level)"
+          units: "none"
 
         - name: "MetaData/aircraftVelocity"
-          source: variables/aircraftTrueAirspeed
-          longName: "Aircraft true airspeed"
+          source: variables/aircraftVelocity
+          dimensions: [ "Location" ]
+          longName: "Aircraft velocity"
           units: "m s-1"
 
         - name: "MetaData/aircraftHeading"
           source: variables/aircraftHeading
+          dimensions: [ "Location" ]
           longName: "Aircraft heading"
-          units: "degree"
+          units: "degrees"
 
-        # - name: "MetaData/aircraftRollAngleQuality"
-        #   coordinates: "longitude latitude AmdarSequence"
-        #   source: variables/aircraftRollAngleQuality
-        #   longName: "Aircraft roll angle quality"
+        - name: "MetaData/aircraftRollAngleQuality"
+          source: variables/aircraftRollAngleQuality
+          dimensions: [ "Location" ]
+          longName: "Aircraft roll angle"
+          units: "none"
 
         - name: "ObsValue/airTemperature"
-          coordinates: "longitude latitude AmdarSequence"
-          source: variables/temperatureAir
+          source: variables/airTemperature
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/specificHumidity"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/waterVaporMixingRatio"
           source: variables/waterVaporMixingRatio
-          longName: "specific humidity"
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Water Vapor Mixing Ratio"
           units: "kg kg-1"
 
         - name: "ObsValue/windDirection"
-          coordinates: "longitude latitude AmdarSequence"
           source: variables/windDirection
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Wind Direction"
           units: "degrees"
 
         - name: "ObsValue/windSpeed"
-          coordinates: "longitude latitude AmdarSequence"
           source: variables/windSpeed
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Wind Speed"
           units: "m s-1"

@@ -6,7 +6,7 @@
 
 observations:
   - obs space:
-      name: bufr_sevcsr
+      name: bufr
       obsdatain: "./testinput/gdas.t00z.sevcsr.tm00.bufr_d"
 
       exports:
@@ -89,6 +89,12 @@ observations:
           longName: "Sensor zenith angle"
           units: "degrees"
           range: [0, 90]
+
+        - name: "MetaData/observationSequenceNum"
+          source: variables/observationSequenceNum
+          dimensions: ["Location"]
+          longName: "Channel sequence number"
+          units: ""
 
         - name: "ObsValue/cloudAmount"
           coordinates: "longitude latitude Channel"

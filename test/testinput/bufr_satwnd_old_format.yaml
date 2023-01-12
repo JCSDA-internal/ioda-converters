@@ -7,135 +7,158 @@ observations:
   - obs space:
       name: bufr
       obsdatain: "./testinput/bufr_satwnd_old_format.bufr"
+      mnemonicSets:
+        - mnemonics: [SAID, CLAT, CLON, YEAR, MNTH, DAYS, HOUR, MINU, SECO, SWCM, SAZA, OGCE, SCCF, SWQM]
+        - mnemonics: [HAMD, PRLC, WDIR, WSPD]
+        - mnemonics: [GNAP, PCCF]
+          channels: 1-12
 
       exports:
-        variables:
-          satellite:
-            query: "*/SAID"
-          timestamp:
-            datetime:
-              year: "*/YEAR"
-              month: "*/MNTH"
-              day: "*/DAYS"
-              hour: "*/HOUR"
-              minute: "*/MINU"
-              second: "*/SECO"
-          longitude:
-            query: "*/CLON"
-          latitude:
-            query: "*/CLAT"
-          satellite_wind_calculation_method:
-            query: "*/SWCM"
-          satellite_zenith_angle:
-            query: "*/SAZA"
-          satellite_channel_center_frequency:
-            query: "*/SCCF"
-          originating_generating_center:
-            query: "*/OGCE"
-          satellite_wind_quality_mark:
-            query: "*/SWQM"
-          height_assignment_method:
-            query: "*/MDPT/HAMD"
-          pressure:
-            query: "*/PRLC"
-            type: float
-          wind_direction:
-            query: "*/WDIR"
-            type: float
-          wind_speed:
-            query: "*/WSPD"
-          generating_application:
-            query: "*/QCPRMS/GNAP[1]"
-          percent_confidence:
-            query: "*/QCPRMS/PCCF[1]"
-
         filters:
           - bounding:
-              variable: longitude
+              mnemonic: CLON
               lowerBound: -180
               upperBound: 180
+        variables:
+          satelliteIdentifier:
+            mnemonic: SAID
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          longitude:
+            mnemonic: CLON
+          latitude:
+            mnemonic: CLAT
+          windComputationMethod:
+            mnemonic: SWCM
+          sensorZenithAngle:
+            mnemonic: SAZA
+          sensorCentralFrequency:
+            mnemonic: SCCF
+          dataProviderOrigin:
+            mnemonic: OGCE
+          qualityFlags:
+            mnemonic: SWQM
+          windHeightAssignMethod:
+            mnemonic: HAMD
+          generatingApplication:
+            mnemonic: GNAP
+          windPercentConfidence:
+            mnemonic: PCCF
+          pressure:
+            mnemonic: PRLC
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/NC005066.nc"
 
       dimensions:
+        - name: "Location"
+          size: variables/windSpeed.nrows
         - name: "Confidence"
-          path: "*/QCPRMS"
+          size: variables/windPercentConfidence.ncols
 
       variables:
         - name: "MetaData/satelliteIdentifier"
-          source: variables/satellite
-          longName: "Satellite ID"
+          source: variables/satelliteIdentifier
+          dimensions: [ "Location" ]
+          longName: "Satellite Identifier"
+          units: ""
 
         - name: "MetaData/dateTime"
           source: variables/timestamp
+          dimensions: [ "Location" ]
           longName: "dateTime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/longitude"
           source: variables/longitude
+          dimensions: ["Location"]
           longName: "Longitude"
-          units: "degree_east"
+          units: "degrees_east"
           range: [-180, 180]
 
         - name: "MetaData/latitude"
           source: variables/latitude
+          dimensions: ["Location"]
           longName: "Latitude"
-          units: "degree_north"
+          units: "degrees_north"
           range: [-90, 90]
 
         - name: "MetaData/windComputationMethod"
-          source: variables/satellite_wind_calculation_method
+          source: variables/windComputationMethod
+          dimensions: [ "Location" ]
           longName: "Satellite Wind Calculation Method"
+          units: ""
 
         - name: "MetaData/sensorCentralFrequency"
-          source: variables/satellite_channel_center_frequency
+          source: variables/sensorCentralFrequency
+          dimensions: [ "Location" ]
           longName: "Satellite Channel Center Frequency"
           units: "Hz"
 
-        - name: "MetaData/satelliteZenithAngle"
-          source: variables/satellite_zenith_angle
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/sensorZenithAngle
+          dimensions: [ "Location" ]
           longName: "Satellite Zenith Angle"
-          units: "degree"
+          units: "degrees"
 
         - name: "MetaData/dataProviderOrigin"
-          source: variables/originating_generating_center
+          source: variables/dataProviderOrigin
+          dimensions: [ "Location" ]
           longName: "Originating/Generating Center"
+          units: ""
 
-        - name: "QualityMarker/qualityFlags"
-          source: variables/satellite_wind_quality_mark
+        - name: "MetaData/qualityFlags"
+          source: variables/qualityFlags
+          dimensions: [ "Location" ]
           longName: "Satellite Wind Quality Mark"
+          units: ""
 
         - name: "MetaData/windHeightAssignMethod"
-          source: variables/height_assignment_method
+          source: variables/windHeightAssignMethod
+          dimensions: [ "Location" ]
           longName: "Height Assignment Method"
+          units: ""
 
-        - name: "MetaData/windGeneratingApplication"
-          coordinates: "longitude latitude Confidence"
-          source: variables/generating_application
+        - name: "MetaData/generatingApplication"
+          source: variables/generatingApplication
+          dimensions: [ "Location" ]
           longName: "Generating Application"
+          units: ""
+
+        - name: "MetaData/windPercentConfidence"
+          source: variables/windPercentConfidence
+          dimensions: [ "Location", "Confidence"]
+          longName: "Percent Confidence"
+          units: "percent"
 
         - name: "MetaData/pressure"
-          coordinates: "longitude latitude"
           source: variables/pressure
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
           longName: "Pressure"
           units: "Pa"
 
         - name: "ObsValue/windDirection"
+          source: variables/windDirection
           coordinates: "longitude latitude"
-          source: variables/wind_direction
+          dimensions: [ "Location" ]
           longName: "Wind Direction"
-          units: "degree"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
+          source: variables/windSpeed
           coordinates: "longitude latitude"
-          source: variables/wind_speed
+          dimensions: [ "Location" ]
           longName: "Wind Speed"
           units: "m s-1"
-
-        - name: "MetaData/windPercentConfidence"
-          coordinates: "longitude latitude Confidence"
-          source: variables/percent_confidence
-          longName: "Percent Confidence"
-          units: "percent"

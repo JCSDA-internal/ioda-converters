@@ -5,7 +5,7 @@
 # 
 observations:
   - obs space:
-      name: bufr_aircft_no_amdar
+      name: bufr
 
       obsdatain: "testinput/gdas.t12z.aircft.tm00.bufr_d"
 
@@ -128,13 +128,13 @@ observations:
           source: variables/aircraftFlightNumber
           longName: "Aircraft Flight Number"
 
-        # - name: "MetaData/aircraftNavigationalSystem"
-        #   source: variables/aircraftNavigationalSystem
-        #   longName: "Aircraft Navigational System"
+        - name: "MetaData/aircraftNavigationalSystem"
+          source: variables/aircraftNavigationalSystem
+          longName: "Aircraft Navigational System"
 
-        # - name: "MetaData/commercialAircraftType"
-        #   source: variables/commercialAircraftType
-        #   longName: "Commercial Aircraft Type"
+        - name: "MetaData/commercialAircraftType"
+          source: variables/commercialAircraftType
+          longName: "Commercial Aircraft Type"
 
         - name: "MetaData/aircraftFlightPhase"
           source: variables/aircraftFlightPhase
@@ -148,31 +148,31 @@ observations:
           source: variables/dataProviderRestricted
           longName: "Data Provider Restricted"
 
-        # - name: "MetaData/dataRestrictedExpiration"
-        #   source: variables/dataRestrictedExpiration
-        #   longName: "Restricted Data Expiration"
-        #   units: "Hour"
+        - name: "MetaData/dataRestrictedExpiration"
+          source: variables/dataRestrictedExpiration
+          longName: "Restricted Data Expiration"
+          units: "Hour"
 
-        # - name: "MetaData/dataReceiptTimeHour"
-        #   source: variables/dataReceiptTimeHour
-        #   longName: "Receipt Time (Hour)"
-        #   units: "Hour"
+        - name: "MetaData/dataReceiptTimeHour"
+          source: variables/dataReceiptTimeHour
+          longName: "Receipt Time (Hour)"
+          units: "Hour"
 
-        # - name: "MetaData/dataReceiptTimeMinute"
-        #   source: variables/dataReceiptTimeMinute
-        #   longName: "Data Receipt Time (Minute)"
-        #   units: "Minute"
+        - name: "MetaData/dataReceiptTimeMinute"
+          source: variables/dataReceiptTimeMinute
+          longName: "Data Receipt Time (Minute)"
+          units: "Minute"
 
-        # - name: "MetaData/dataReceiptTimeSignificance"
-        #   source: variables/dataReceiptTimeSignificance
-        #   longName: "Data Receipt Time Significance"
+        - name: "MetaData/dataReceiptTimeSignificance"
+          source: variables/dataReceiptTimeSignificance
+          longName: "Data Receipt Time Significance"
 
-        - name: "MetaData/height"
+        - name: "MetaData/aircraftAltitude"
           source: variables/aircraftAltitude
           longName: "Aircraft Altitude"
           units: "m"
 
-        - name: "MetaData/humidityPercentConfidence"
+        - name: "MetaData/relativeHumidityPercentConfidence"
           source: variables/percentConfidenceRH
           longName: "Percent Confidence of Relative Humidity Quality"
           units: "percent"
@@ -236,3 +236,4 @@ observations:
         - name: "QualityMarker/windDirection"
           source: variables/windQM
           longName: "Quality Indicator for Wind Direction"
+

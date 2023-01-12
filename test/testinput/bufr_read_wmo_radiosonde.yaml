@@ -5,77 +5,78 @@
 
 observations:
   - obs space:
-      name: bufr_wmo_sonde
+      name: bufr
       obsdatain: "./testinput/bufr_read_wmo_radiosonde.bufr"
       isWmoFormat: true
       tablepath: "./testinput/bufr_tables"
 
+      mnemonicSets:
+        - mnemonics: [CLATH, CLONH]
+        - mnemonics: [TMDB, TMDP, WDIR, WSPD]
+          channels: 1-5880
+
       exports:
         variables:
-          timestamp:
-            datetime:
-              year: "*/YEAR"
-              month: "*/MNTH"
-              day: "*/DAYS"
-              hour: "*/HOUR"
-              minute: "*/MINU"
           latitude:
-            query: "*/CLATH"
+            mnemonic: CLATH
           longitude:
-            query: "*/CLONH"
-          air_temperature:
-            query: "*/TDWPRAOB/TMDB"
-          dewpoint_temperature:
-            query: "*/TDWPRAOB/TMDP"
-          wind_direction:
-            query: "*/TDWPRAOB/WDIR"
-          wind_speed:
-            query: "*/TDWPRAOB/WSPD"
+            mnemonic: CLONH
+          airTemperature:
+            mnemonic: TMDB
+          dewpointTemperature:
+            mnemonic: TMDP
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_read_wmo_radiosonde.nc"
 
       dimensions:
-        - name: Level
-          path: "*/TDWPRAOB"
+        - name: "Location"
+          size: variables/airTemperature.nrows
+        - name: "Level"
+          size: variables/airTemperature.ncols
 
       variables:
-        - name: "MetaData/dateTime"
-          source: variables/timestamp
-          longName: "dateTime"
-          units: "seconds since 1970-01-01T00:00:00Z"
-
         - name: "MetaData/latitude"
           source: variables/latitude
+          dimensions: [ "Location" ]
           longName: "Latitude"
           units: "degrees_north"
 
         - name: "MetaData/longitude"
           source: variables/longitude
+          dimensions: [ "Location" ]
           longName: "Longitude"
           units: "degrees_east"
 
         - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
           coordinates: "longitude latitude Level"
-          source: variables/air_temperature
+          dimensions: [ "Location", "Level" ]
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/dewPointTemperature"
+        - name: "ObsValue/dewpointTemperature"
+          source: variables/dewpointTemperature
           coordinates: "longitude latitude Level"
-          source: variables/dewpoint_temperature
+          dimensions: [ "Location", "Level" ]
           longName: "Dewpoint Temperature"
           units: "K"
 
         - name: "ObsValue/windDirection"
+          source: variables/windDirection
           coordinates: "longitude latitude Level"
-          source: variables/wind_direction
+          dimensions: [ "Location", "Level" ]
           longName: "Wind Direction"
-          units: "degree"
+          units: "degrees"
 
         - name: "ObsValue/windSpeed"
+          source: variables/windSpeed
           coordinates: "longitude latitude Level"
-          source: variables/wind_speed
+          dimensions: [ "Location", "Level" ]
           longName: "Wind Speed"
           units: "m s-1"
