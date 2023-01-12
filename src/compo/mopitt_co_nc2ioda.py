@@ -31,7 +31,7 @@ locationKeyList = [
 ]
 
 obsvars = {
-    'carbonmonoxide_total_column': 'carbon_monoxide_in_total_column',
+    'carbonmonoxide_total_column': 'carbonmonoxideTotal',
 }
 
 AttrData = {
@@ -43,10 +43,10 @@ DimDict = {
 }
 
 VarDims = {
-    'carbon_monoxide_in_total_column': ['Location'],
+    'carbonmonoxideTotal': ['Location'],
 }
 
-# constants
+# constants	
 avogadro = 6.02214076E23
 scm2sm = 1E4
 vmr2col = 2.12E13  # following Deeter 2009 MOPITT documentation
@@ -64,7 +64,7 @@ class mopitt(object):
 
     def _read(self):
         # set up variable names for IODA
-        for iodavar in ['carbon_monoxide_in_total_column']:
+        for iodavar in ['carbonmonoxideTotal']:
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
