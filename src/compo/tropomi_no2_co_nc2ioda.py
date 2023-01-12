@@ -259,33 +259,31 @@ def main():
     args = parser.parse_args()
 
     if args.variable == "co":
-        var_in_name = 'carbonmonoxide'
-        var_out_name = 'carbon_monoxide'
+        var_name = 'carbonmonoxide'
         if args.column == "tropo":
             print('CO is only available for total column, reset column to total', flush=1)
             args.column = 'total'
     elif args.variable == "no2":
-        var_in_name = 'nitrogendioxide'
-        var_out_name = 'nitrogen_dioxide'
+        var_name = 'nitrogendioxide'
 
     if args.column == "tropo":
 
         obsVar = {
-            var_in_name+'_tropospheric_column': var_out_name+'_in_tropospheric_column'
+            var_name+'_tropospheric_column': var_name+'Column'
         }
 
         varDims = {
-            var_out_name+'_in_tropospheric_column': ['Location']
+            var_name+'Column': ['Location']
         }
 
     elif args.column == "total":
 
         obsVar = {
-            var_in_name+'_total_column': var_out_name+'_in_total_column'
+            var_name+'_total_column': var_name+'Total'
         }
 
         varDims = {
-            var_out_name+'_in_total_column': ['Location']
+            var_name+'Total': ['Location']
         }
 
     # Read in the NO2 data
