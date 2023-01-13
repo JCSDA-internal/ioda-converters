@@ -24,16 +24,40 @@ namespace bufr {
             Subset,
             Binary,
             Repeat,
-            Value
+            Value,
+            Unkown
         };
 
         std::shared_ptr<QueryComponent> queryComponent;
         size_t branch;
         Type type;
 
+//        TargetComponent(std::shared_ptr<QueryComponent> queryComponent) :
+//            queryComponent(queryComponent),
+//            branch(0),
+//            type(Type::Unkown)
+//        {
+//        }
+
         bool addsDimension() const
         {
             return type != Type::Binary;
+        }
+
+        void setType(const Typ& bufrTyp)
+        {
+            static std::unordered_map<Typ, Type> typMap = {
+                {Typ::DelayedRep, Type::Repeat},
+                {Typ::FixedRep, Type::Repeat},
+                {Typ::DelayedRepStacked, Type::Repeat},
+                {Typ::DelayedBinary, Type::Binary},
+                {Typ::Repeat, Type::Repeat},
+                {Typ::StackedRepeat, Type::Repeat},
+                {Typ::Number, Type::Value},
+                {Typ::Character, Type::Value}
+            };
+
+            this->type = typMap.at(bufrTyp);
         }
     };
 

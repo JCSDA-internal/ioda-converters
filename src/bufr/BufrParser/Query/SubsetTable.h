@@ -30,6 +30,30 @@ namespace bufr {
         TypeInfo typeInfo;
     };
 
+    enum class NodeType
+    {
+        Unknown,
+        Subset,
+        Sequence,
+        Replication,
+        Scalar,
+        String
+    };
+
+    struct BufrNode
+    {
+        std::string mnemonic;
+        NodeType type;
+        std::vector<BufrNode> children;
+        size_t nodeIdx;
+
+        bool isLeaf() const { return children.empty(); }
+
+    private:
+        bool isContainer() const { return type == NodeType::Sequence; }
+    };
+
+
     /// \brief Parses the BUFR message subset Meta data tables.
     class SubsetTable
     {
@@ -55,6 +79,8 @@ namespace bufr {
         std::vector<std::string> makePathComponents(std::vector<size_t> seqPath, int nodeIdx);
         std::string mapKey(const std::vector<std::string>& pathComponents, size_t idx = 0) const;
         std::string mapKey(const std::shared_ptr<QueryData> query) const;
+
+       void processNode(BufrNode& parent);
 
 //        void parseSequence(std::shared_ptr<Node> parentNode, size_t& nodeIdx, size_t endIdx);
     };

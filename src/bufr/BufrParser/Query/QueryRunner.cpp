@@ -158,12 +158,15 @@ namespace bufr {
         for (auto nodeIdx = dataProvider_.getInode();
              nodeIdx <= dataProvider_.getIsc(dataProvider_.getInode());
              nodeIdx++) {
+
             if (dataProvider_.getTyp(nodeIdx) == Typ::Sequence ||
                 dataProvider_.getTyp(nodeIdx) == Typ::Repeat ||
                 dataProvider_.getTyp(nodeIdx) == Typ::StackedRepeat) {
-                if (isQueryNode(nodeIdx - 1)) {
+                if (isQueryNode(nodeIdx - 1))
+                {
                     if (dataProvider_.getTag(nodeIdx) == query.path[mnemonicCursor + 1]->name &&
-                        tableCursor == mnemonicCursor) {
+                        tableCursor == mnemonicCursor)
+                    {
                         mnemonicCursor++;
                         targetComponents[mnemonicCursor + 1].branch = nodeIdx - 1;
                     }
@@ -337,24 +340,37 @@ namespace bufr {
         for (size_t dataCursor = 1; dataCursor <= dataProvider_.getNVal(); ++dataCursor) {
             int nodeIdx = dataProvider_.getInv(dataCursor);
 
-            if (masks->valueNodeMask[nodeIdx]) {
+            if (masks->valueNodeMask[nodeIdx])
+            {
                 auto &values = dataTable[nodeIdx].values;
                 values.push_back(dataProvider_.getVal(dataCursor));
             }
+
+//            {
+//                const auto typ = dataProvider_.getTyp(nodeIdx);
+//                if (typ == Typ::FixedRep ||
+//                    typ == Typ::DelayedRep ||
+//                    typ == Typ::DelayedRepStacked)
+//                {
+//                    std::cout << dataProvider_.getTag(nodeIdx) << " " << dataProvider_.getVal(dataCursor) << std::endl;
+//                }
+//            }
 
             // Unfortuantely the fixed replicated sequences do not store their counts as values for
             // the Fixed Replication nodes. It's therefore necessary to discover this information by
             // manually tracing the nested sequences and counting everything manually. Since we have
             // to do it for fixed reps anyways, its easier just to do it for all the squences.
             if (dataProvider_.getJmpb(nodeIdx) > 0 &&
-                masks->pathNodeMask[dataProvider_.getJmpb(nodeIdx)]) {
+                masks->pathNodeMask[dataProvider_.getJmpb(nodeIdx)])
+            {
                 const auto typ = dataProvider_.getTyp(nodeIdx);
                 const auto jmpbTyp = dataProvider_.getTyp(dataProvider_.getJmpb(nodeIdx));
                 if ((typ == Typ::Sequence && (jmpbTyp == Typ::Sequence ||
                                               jmpbTyp == Typ::DelayedBinary ||
                                               jmpbTyp == Typ::FixedRep)) ||
                     typ == Typ::Repeat ||
-                    typ == Typ::StackedRepeat) {
+                    typ == Typ::StackedRepeat)
+                {
                     dataTable[nodeIdx].counts.back()++;
                 }
             }
@@ -424,10 +440,21 @@ namespace bufr {
             if (targ->nodeIds.size() == 0) {
                 dataField.data = {MissingValue};
                 dataField.seqCounts = {{1}};
-            } else {
+            }
+            else
+            {
                 dataField.seqCounts.resize(targ->seqPath.size() + 1);
                 dataField.seqCounts[0] = {1};
-                for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++) {
+                for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
+                {
+//                    if (!targ->path[pathIdx].queryComponent->filter.empty())
+//                    {
+//                        dataField.seqCounts[pathIdx + 1] = {1};
+//                    }
+//                    else
+//                    {
+//                        dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx]].counts;
+//                    }
                     dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
                 }
 
