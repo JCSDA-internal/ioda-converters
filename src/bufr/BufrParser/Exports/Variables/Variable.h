@@ -33,7 +33,13 @@ namespace Ingester
      public:
         Variable() = delete;
 
-        explicit Variable(const std::string& exportName) : exportName_(exportName) {}
+        explicit Variable(const std::string& exportName,
+                          const std::string& groupByField,
+                          const eckit::LocalConfiguration& conf) :
+            groupByField_(groupByField),
+            conf_(conf),
+            exportName_(exportName)
+        {}
 
         virtual ~Variable() = default;
 
@@ -47,6 +53,13 @@ namespace Ingester
         inline std::string getExportName() const { return exportName_; }
 
      protected:
+        /// \brief The for field of interest
+        const std::string groupByField_;
+
+        /// \brief The configuration object for this variable
+        const eckit::LocalConfiguration conf_;
+
+        /// \brief Initialize the query map
         inline void initQueryMap() { queryList_ = makeQueryList(); }
 
         /// \brief Make a map of name and queries

@@ -14,7 +14,8 @@
 
 #include "QuerySet.h"
 #include "ResultSet.h"
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
+#include "DataProvider/SubsetVariant.h"
 #include "Target.h"
 
 namespace Ingester {
@@ -60,7 +61,7 @@ namespace bufr {
         /// \param[in] dataProvider The BUFR data provider to use.
         QueryRunner(const QuerySet& querySet,
                     ResultSet& resultSet,
-                    const DataProvider& dataProvider);
+                    const DataProviderType& dataProvider);
         void accumulate();
 
         Targets getTargets()
@@ -79,11 +80,11 @@ namespace bufr {
      private:
         const QuerySet querySet_;
         ResultSet& resultSet_;
-        const DataProvider& dataProvider_;
+        const DataProviderType& dataProvider_;
 
-        std::unordered_map<std::string, Targets> targetCache_;
-        std::unordered_map<std::string, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
-        std::unordered_map<std::string, std::unordered_map<std::string, std::string>> unitCache_;
+        std::unordered_map<SubsetVariant, Targets> targetCache_;
+        std::unordered_map<SubsetVariant, std::shared_ptr<__details::ProcessingMasks>> maskCache_;
+        std::unordered_map<SubsetVariant, std::unordered_map<std::string, std::string>> unitCache_;
 
 
         /// \brief Look for the list of targets for the currently active BUFR message subset that

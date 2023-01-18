@@ -1,20 +1,66 @@
 #!/usr/bin/env python3
-# read airnow data and convert to netcdf
-import netCDF4 as nc
-import numpy as np
-import inspect, os, sys, argparse
-import pandas as pd
+# Read airnow text data file and convert to IODA netcdf
+import os, sys
 from datetime import datetime
 from pathlib import Path
+import netCDF4 as nc
+import numpy as np
+import pandas as pd
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
 sys.path.append(str(IODA_CONV_PATH.resolve()))
-import meteo_utils
-import ioda_conv_ncio as iconv
+
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
+
+os.environ["TZ"] = "UTC"
+
+# Dictionary of output variables (ObsVal, ObsError, and PreQC).
+# First is the incoming variable name followed by list of IODA outgoing name and units.
+
+varDict = {'PM2.5': ['particulatematter2p5Surface', 'mg m-3'],
+           'OZONE': ['ozoneSurface', 'ppmV']}
+
+locationKeyList = [("latitude", "float", "degrees_north"),
+                   ("longitude", "float", "degrees_east"),
+                   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+                   ("stationElevation", "float", "m"),
+                   ("height", "float", "m"),
+                   ("stationIdentification", "string", "")]
+meta_keys = [m_item[0] for m_item in locationKeyList]
+
+GlobalAttrs = {'converter': os.path.basename(__file__),
+               'ioda_version': 2,
+               'description': 'AIRNow data (converted from text/csv to IODA',
+               'source': 'Unknown (ftp)'}
+
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
+float_missing_value = nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
+dtypes = {'string': object,
+          'integer': np.int32,
+          'long': np.int64,
+          'float': np.float32,
+          'double': np.float64}
 
 
 def read_monitor_file(sitefile=None):
@@ -86,6 +132,8 @@ def add_data(infile, sitefile):
 
 if __name__ == '__main__':
 
+    import argparse
+
     parser = argparse.ArgumentParser(
         description=(
             'Reads single AIRNow text file '
@@ -113,46 +161,76 @@ if __name__ == '__main__':
     f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
     nlocs, columns = f3.shape
 
-    obsvars = {'pm25': 'pm25', 'o3': 'o3', }
-    AttrData = {'converter': os.path.basename(__file__), }
+    dt = f3.time[1].to_pydatetime()
+    time_offset = round((dt - epoch).total_seconds())
 
-    locationKeyList = [("latitude", "float"), ("longitude", "float"),
-                       ("station_elevation", "float"), ("height", "float"), ("station_id", "string"),
-                       ("datetime", "string")]
+    ioda_data = {}         # The final outputs.
+    data = {}              # Before assigning the output types into the above.
+    for key in varDict.keys():
+        data[key] = []
+    for key in meta_keys:
+        data[key] = []
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
+    # Fill the temporary data arrays from input file column data
+    data['stationIdentification'] = np.full(nlocs, f3.siteid, dtype='S20')
+    data['dateTime'] = np.full(nlocs, np.int64(time_offset))
+    data['latitude'] = np.array(f3['latitude'])
+    data['longitude'] = np.array(f3['longitude'])
+    data['stationElevation'] = np.array(f3['elevation'])
+    data['height'] = np.array(f3['elevation'])
+    for n in range(nlocs):
+        data['height'][n] = data['height'][n] + 10.0   # 10 meters above stationElevation
 
-    varDict = defaultdict(lambda: defaultdict(dict))
-    outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-    loc_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-    var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-    units = {}
-    units['pm25'] = 'microgram/m3'
-    units['o3'] = 'ppmV'
+    for n, key in enumerate(varDict.keys()):
+        if n == 0:
+            key1 = key
+            var1 = varDict[key][0]
+        elif n == 1:
+            key2 = key
+            var2 = varDict[key][0]
 
-    for i in ['pm25', 'o3']:
-        varDict[i]['valKey'] = i, writer.OvalName()
-        varDict[i]['errKey'] = i, writer.OerrName()
-        varDict[i]['qcKey'] = i, writer.OqcName()
+    data[var1] = np.array(f3[key1].fillna(float_missing_value))
+    data[var2] = np.array((f3[key2]/1000).fillna(float_missing_value))
 
-    d = np.empty([nlocs], 'S20')
-    d[:] = np.array(f3.time[1].strftime('%Y-%m-%dT%H:%M:%SZ'))
-    loc_mdata['datetime'] = writer.FillNcVector(d, 'datetime')
-    loc_mdata['latitude'] = np.array(f3['latitude'])
-    loc_mdata['longitude'] = np.array(f3['longitude'])
-    loc_mdata['height'] = np.full((nlocs), 10.)
-    loc_mdata['station_elevation'] = np.array(f3['elevation'])
+    DimDict = {'Location': nlocs}
 
-    c = np.empty([nlocs], dtype='S20')
-    c[:] = np.array(f3.siteid)
-    loc_mdata['station_id'] = writer.FillNcVector(c, 'string')
+    varDims = {}
+    for key in varDict.keys():
+        variable = varDict[key][0]
+        varDims[variable] = ['Location']
 
-    outdata[varDict['pm25']['valKey']] = np.array(f3['PM2.5'].fillna(nc.default_fillvals['f4']))
-    outdata[varDict['o3']['valKey']] = np.array((f3['OZONE']/1000).fillna(nc.default_fillvals['f4']))
-    for i in ['pm25', 'o3']:
-        outdata[varDict[i]['errKey']] = np.full((nlocs), 0.1)
-        outdata[varDict[i]['qcKey']] = np.full((nlocs), 0)
+    # Set units of the MetaData variables and all _FillValues.
+    varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    for key in meta_keys:
+        dtypestr = locationKeyList[meta_keys.index(key)][1]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
-    writer._nvars = 2
-    writer._nlocs = nlocs
-    writer.BuildNetcdf(outdata, loc_mdata, var_mdata, AttrData, units)
+    # Set units and FillValue attributes for groups associated with observed variable.
+    for key in varDict.keys():
+        variable = varDict[key][0]
+        units = varDict[key][1]
+        varAttrs[(variable, obsValName)]['units'] = units
+        varAttrs[(variable, obsErrName)]['units'] = units
+        varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, obsValName)]['_FillValue'] = float_missing_value
+        varAttrs[(variable, obsErrName)]['_FillValue'] = float_missing_value
+        varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
+
+    # Fill the final IODA data:  MetaData then ObsValues, ObsErrors, and QC
+    for key in meta_keys:
+        dtypestr = locationKeyList[meta_keys.index(key)][1]
+        ioda_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
+
+    for key in varDict.keys():
+        variable = varDict[key][0]
+        ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
+        ioda_data[(variable, obsErrName)] = np.full(nlocs, 0.1, dtype=np.float32)
+        ioda_data[(variable, qcName)] = np.full(nlocs, 2, dtype=np.int32)
+
+    # setup the IODA writer and write everything out.
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    writer.BuildIoda(ioda_data, varDims, varAttrs, GlobalAttrs)
