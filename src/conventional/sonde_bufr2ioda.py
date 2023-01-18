@@ -30,23 +30,23 @@ os.environ["TZ"] = "UTC"
 locationKeyList = [
     ("latitude", "float", "degrees_north", "keep"),
     ("longitude", "float", "degrees_east", "keep"),
-    ("station_elevation", "float", "m", "keep"),
+    ("stationElevation", "float", "m", "keep"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-    ("LaunchTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-    ("air_pressure", "float", "Pa", "keep"),
-    ("geopotential_height", "float", "m", "keep"),
+    ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
+    ("pressure", "float", "Pa", "keep"),
+    ("geopotentialHeight", "float", "m", "keep"),
     ("vertSignificance", "integer", "", "toss"),
     ("latDisplacement", "float", "degrees", "toss"),
     ("lonDisplacement", "float", "degrees", "toss"),
     ("timeDisplacement", "float", "s", "toss"),
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
-    ("station_id", "string", "", "keep"),
-    ("instrumentType", "integer", "", "keep"),
-    ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
-    ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
-    ("temperatureSensorType", "integer", "", "keep"),
-    ("humiditySensorType", "integer", "", "keep"),
+    ("stationIdentification", "string", "", "keep"),
+    ("instrumentIdentifier", "integer", "", "keep"),
+    # ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
+    # ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
+    # ("temperatureSensorType", "integer", "", "keep"),
+    # ("humiditySensorType", "integer", "", "keep"),
     ("year", "integer", "", "toss"),
     ("month", "integer", "", "toss"),
     ("day", "integer", "", "toss"),
@@ -59,25 +59,25 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 metaDataKeyList = {
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'station_elevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
-                          'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
+    'stationElevation': ['Constructed', 'heightOfBarometerAboveMeanSeaLevel',
+                         'heightOfStationGroundAboveMeanSeaLevel', 'heightOfStation', 'height'],
     'dateTime': ['Constructed'],
-    'LaunchTime': ['Constructed'],
-    'air_pressure': ['pressure', 'nonCoordinatePressure'],
-    'geopotential_height': ['nonCoordinateGeopotentialHeight', 'geopotentialHeight'],
+    'releaseTime': ['Constructed'],
+    'pressure': ['pressure', 'nonCoordinatePressure'],
+    'geopotentialHeight': ['nonCoordinateGeopotentialHeight', 'geopotentialHeight'],
     'vertSignificance': ['extendedVerticalSoundingSignificance', 'verticalSoundingSignificance'],
     'latDisplacement': ['latitudeDisplacement'],
     'lonDisplacement': ['longitudeDisplacement'],
     'timeDisplacement': ['timePeriod'],
     'wmoBlockNumber': ['blockNumber'],
     'wmoStationNumber': ['stationNumber'],
-    'station_id': ['Constructed'],
+    'stationIdentification': ['Constructed'],
     # "stationLongName": 'shipOrMobileLandStationIdentifier',
-    "instrumentType": ['radiosondeType'],
-    "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
-    "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
-    "temperatureSensorType": ['temperatureSensorType'],
-    "humiditySensorType": ['humiditySensorType'],
+    "instrumentIdentifier": ['radiosondeType'],
+    # "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
+    # "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
+    # "temperatureSensorType": ['temperatureSensorType'],
+    # "humiditySensorType": ['humiditySensorType'],
     # "instrumentSerialNum": 'radiosondeSerialNumber',
     # "instrumentSoftwareVersion": 'softwareVersionNumber',
     'year': ['year'],
@@ -92,16 +92,16 @@ metaDataKeyList = {
 raw_obsvars = ['airTemperature', 'dewpointTemperature', 'windDirection', 'windSpeed']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature', 'virtual_temperature', 'specific_humidity', 'eastward_wind', 'northward_wind']
+obsvars = ['airTemperature', 'virtualTemperature', 'specificHumidity', 'windEastward', 'windNorthward']
 obsvars_units = ['K', 'K', 'kg kg-1', 'm s-1', 'm s-1']
 obserrlist = [1.2, 1.2, 0.75E-3, 1.7, 1.7]
 
 VarDims = {
-    'air_temperature': ['nlocs'],
-    'virtual_temperature': ['nlocs'],
-    'specific_humidity': ['nlocs'],
-    'eastward_wind': ['nlocs'],
-    'northward_wind': ['nlocs']
+    'airTemperature': ['Location'],
+    'virtualTemperature': ['Location'],
+    'specificHumidity': ['Location'],
+    'windEastward': ['Location'],
+    'windNorthward': ['Location']
 }
 
 AttrData = {
@@ -175,7 +175,7 @@ def main(file_names, output_file, datetimeRef):
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = count[1]
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
 
     # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):
@@ -589,7 +589,7 @@ def read_bufr_message(f, count, start_pos, data):
                 target_number = len(temp_data['timeDisplacement'])
             elif temp_data['latDisplacement'] is not None:
                 target_number = len(temp_data['latDisplacement'])
-            elif temp_data['air_pressure'] is not None:
+            elif temp_data['pressure'] is not None:
                 target_number = len(temp_data['air_pressure'])
             elif temp_data['airTemperature'] is not None:
                 target_number = len(temp_data['airTemperature'])
@@ -626,13 +626,13 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['dateTime'] = specialty_time(temp_data['timeDisplacement'][b:e],
                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
-            meta_data['LaunchTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
         else:
             meta_data['dateTime'][0] = specialty_time([0],
                       meta_data['year'][0], meta_data['month'][0], meta_data['day'][0],      # noqa
                       meta_data['hour'][0], meta_data['minute'][0], meta_data['second'][0])  # noqa
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
-            meta_data['LaunchTime'] = np.full(target_number, meta_data['dateTime'][0])
+            meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
 
         # Sondes also have lat/lon displacement from launch/release location.
         if temp_data['latDisplacement'] is not None and temp_data['lonDisplacement'] is not None:
@@ -663,20 +663,20 @@ def read_bufr_message(f, count, start_pos, data):
             if (lat < -90 or lat > 90):
                 meta_data['latitude'][n] = meta_data['latitude'][n-1]
 
-        # Forcably create station_id 5-char string from WMO block+station number.
-        meta_data['station_id'] = np.full(target_number, string_missing_value, dtype='<S5')
+        # Forcably create stationIdentification 5-char string from WMO block+station number.
+        meta_data['stationIdentification'] = np.full(target_number, string_missing_value, dtype='<S5')
         for n, block in enumerate(meta_data['wmoBlockNumber']):
             number = meta_data['wmoStationNumber'][n]
             if (block > 0 and block < 100 and number > 0 and number < 1000):
-                meta_data['station_id'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+                meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
             if n == 0:
                 count[3] += 1
-                logging.info(f"Processing sonde for station: {meta_data['station_id'][n]}")
+                logging.info(f"Processing sonde for station: {meta_data['stationIdentification'][n]}")
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
-        if (meta_data['geopotential_height'][0] == 0 or meta_data['air_pressure'][0] == 0):
-            meta_data['geopotential_height'][0] = float_missing_value
-            meta_data['air_pressure'][0] = float_missing_value
+        if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
+            meta_data['geopotentialHeight'][0] = float_missing_value
+            meta_data['pressure'][0] = float_missing_value
 
         # And now processing the observed variables we care about.
         nbad = 0
@@ -723,7 +723,7 @@ def read_bufr_message(f, count, start_pos, data):
 
         spfh = np.full(target_number, float_missing_value)
         for n, dewpoint in enumerate(vals['dewpointTemperature']):
-            pres = meta_data['air_pressure'][n]
+            pres = meta_data['pressure'][n]
             if dewpoint and pres:
                 if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
                     spfh[n] = met_utils.specific_humidity(dewpoint, pres)
@@ -736,17 +736,17 @@ def read_bufr_message(f, count, start_pos, data):
 
         tvirt = np.full(target_number, float_missing_value)
         for n, temp in enumerate(airt):
-            pres = meta_data['air_pressure'][n]
+            pres = meta_data['pressure'][n]
             if (temp != float_missing_value and spfh[n] and pres < 108000 and pres > 10000):
                 qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
                 tvirt[n] = temp*(1.0 + 0.61*qvapor)
 
         # Finally fill up the output data dictionary with observed variables.
-        data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-        data['northward_wind'] = np.append(data['northward_wind'], vwnd)
-        data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
-        data['air_temperature'] = np.append(data['air_temperature'], airt)
-        data['virtual_temperature'] = np.append(data['virtual_temperature'], tvirt)
+        data['windEastward'] = np.append(data['windEastward'], uwnd)
+        data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+        data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+        data['airTemperature'] = np.append(data['airTemperature'], airt)
+        data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
 
         obnum += 1
 
