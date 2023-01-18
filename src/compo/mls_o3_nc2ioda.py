@@ -29,37 +29,43 @@ import ioda_conv_engines as iconv
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("air_pressure", "float"),
-    ("dateTime", "integer"),
+    ("pressure", "float"),
+    ("dateTime", "long"),
 ]
+
+varname_ozone = 'ozoneProfile'
 
 ioda2nc = {}
 ioda2nc['latitude'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/Latitude'
 ioda2nc['longitude'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/Longitude'
 ioda2nc['dateTime'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/Time'
-ioda2nc['air_pressure'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/Pressure'
+ioda2nc['pressure'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/Pressure'
 ioda2nc['valKey'] = 'HDFEOS/SWATHS/O3/Data Fields/O3'
 ioda2nc['precision'] = 'HDFEOS/SWATHS/O3/Data Fields/O3Precision'
 ioda2nc['convergence'] = 'HDFEOS/SWATHS/O3/Data Fields/Convergence'
 ioda2nc['status'] = 'HDFEOS/SWATHS/O3/Data Fields/Status'
 ioda2nc['quality'] = 'HDFEOS/SWATHS/O3/Data Fields/Quality'
-ioda2nc['solar_zenith_angle'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/SolarZenithAngle'
+ioda2nc['solarZenithAngle'] = 'HDFEOS/SWATHS/O3/Geolocation Fields/SolarZenithAngle'
 
 obsvars = {
-    'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
+    'mole_fraction_of_ozone_in_air': varname_ozone,
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'converter': os.path.basename(__file__)
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'mole_fraction_of_ozone_in_air': ['nlocs'],
+    varname_ozone: ['Location'],
 }
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
 
 class mls(object):
@@ -76,33 +82,34 @@ class mls(object):
         self.endTAI = eTAI
         self.nrt = nrt
         for v in list(ioda2nc.keys()):
-            if(v != 'valKey' and v != 'errKey'):
+            if(v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
+                pass
+            elif(v != 'valKey' and v != 'errKey'):
                 self.outdata[(v, 'MetaData')] = []
-        self.outdata[('level', 'MetaData')] = []
-        self._setVarDict('mole_fraction_of_ozone_in_air')
-        self.outdata[self.varDict['mole_fraction_of_ozone_in_air']['valKey']] = []
+        self.outdata[('referenceLevel', 'MetaData')] = []
+        self._setVarDict(varname_ozone)
+        self.outdata[self.varDict[varname_ozone]['valKey']] = []
         if(self.qcOn):
-            self.outdata[self.varDict['mole_fraction_of_ozone_in_air']['errKey']] = []
+            self.outdata[self.varDict[varname_ozone]['errKey']] = []
 
         self._read()
 
     # set ioda variable keys
     def _setVarDict(self, iodavar):
-        self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
+        self.varDict[iodavar]['valKey'] = iodavar, obsValName
         if(self.qcOn):
-            self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
-        self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
+        self.varDict[iodavar]['qcKey'] = iodavar, qcName
 
     # set variable attributes for IODA
     def _setVarAttr(self, iodavar):
-        self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'ppmv'
-        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'ppmv'
+        self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
+        self.varAttrs[iodavar, obsValName]['units'] = 'ppmv'
+        self.varAttrs[iodavar, obsErrName]['units'] = 'ppmv'
 
         varsToAddUnits = list(ioda2nc.keys())
-        varsToAddUnits.append('level')
         for v in varsToAddUnits:
             if(v != 'valKey' and v != 'errKey'):
                 vkey = (v, 'MetaData')
@@ -110,14 +117,14 @@ class mls(object):
                     self.varAttrs[vkey]['units'] = 'Pa'
                 elif(v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
-                elif('angle' in v.lower() or 'latitude' in v.lower() or 'longitude' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'degrees'
-                elif('flag' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'unitless'
+                elif('latitude' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree_north'
+                elif('longitude' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree_east'
+                elif('angle' in v.lower()):
+                    self.varAttrs[vkey]['units'] = 'degree'
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
-                else:
-                    self.varAttrs[vkey]['units'] = 'unitless'
 
     # Read data needed from raw MLS file.
     def _read_nc(self, filename, ifile, maxfile):
@@ -139,7 +146,7 @@ class mls(object):
 
         d = {}
         for k in list(ioda2nc.keys()):
-            if (k == 'air_pressure'):
+            if (k == 'pressure'):
                 d[k] = ncd[ioda2nc[k]][...]*100.  # convert to Pa
                 d[k].mask = False
             else:
@@ -179,13 +186,13 @@ class mls(object):
         dd['precision'] = d['precision'][idx, self.lmin:self.lmax+1]
         lvec = np.arange(self.lmin+1, self.lmax+2)
         dd['level'], dd['status'] = np.meshgrid(np.arange(self.lmin+1, self.lmax+2), d['status'][idx])
-        dd['air_pressure'], dd['dateTime'] = np.meshgrid(d['air_pressure'][self.lmin:self.lmax+1], d['dateTime'][idx])
+        dd['pressure'], dd['dateTime'] = np.meshgrid(d['pressure'][self.lmin:self.lmax+1], d['dateTime'][idx])
         dd['quality'] = np.tile(d['quality'][idx], (lvec.shape[0], 1)).T
         dd['convergence'] = np.tile(d['convergence'][idx], (lvec.shape[0], 1)).T
         dd['status'] = np.tile(d['status'][idx], (lvec.shape[0], 1)).T
         dd['latitude'] = np.tile(d['latitude'][idx], (lvec.shape[0], 1)).T
         dd['longitude'] = np.tile(d['longitude'][idx], (lvec.shape[0], 1)).T
-        dd['solar_zenith_angle'] = np.tile(d['solar_zenith_angle'][idx], (lvec.shape[0], 1)).T
+        dd['solarZenithAngle'] = np.tile(d['solarZenithAngle'][idx], (lvec.shape[0], 1)).T
         for k in list(dd.keys()):
             dd[k] = np.asarray(dd[k])
             dd[k] = dd[k].flatten().tolist()
@@ -209,9 +216,9 @@ class mls(object):
                 if(d['dateTime'][irec] < self.startTAI or d['dateTime'][irec] > self.endTAI):
                     continue
                 for k in list(d.keys()):
-                    if (len(d[k].shape) == 1 and k != 'air_pressure'):
+                    if (len(d[k].shape) == 1 and k != 'pressure'):
                         dd[k].append(d[k][irec])
-                    elif (k == 'air_pressure'):
+                    elif (k == 'pressure'):
                         dd[k].append(d[k][ilev])
                     elif k != 'errKey':
                         dd[k].append(d[k][irec, ilev])
@@ -220,7 +227,7 @@ class mls(object):
 
     def _read(self):
         # set up variable names for IODA
-        self._setVarAttr('mole_fraction_of_ozone_in_air')
+        self._setVarAttr(varname_ozone)
 
         # loop through input filenames
         for i, f in enumerate(self.filenames):
@@ -238,7 +245,11 @@ class mls(object):
                     d['errKey'].append(self._calc_error(
                         val, d['precision'][ival], d['level'][ival]-1))
             for v in list(d.keys()):
-                if(v != 'valKey' and v != 'errKey'):
+                if(v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
+                    pass
+                elif(v == 'level'):
+                    self.outdata[('referenceLevel', 'MetaData')].extend(d[v])
+                elif(v != 'valKey' and v != 'errKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
@@ -246,8 +257,8 @@ class mls(object):
                 if(self.errorOn):
                     self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
 
-        DimDict['nlocs'] = np.float32(len(self.outdata[('dateTime', 'MetaData')]))
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        nlocs = len(self.outdata[('dateTime', 'MetaData')])
+        DimDict['Location'] = nlocs
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
