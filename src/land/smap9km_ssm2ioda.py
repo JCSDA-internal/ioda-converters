@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2022 EMC/NCEP/NWS/NOAA
+# (C) Copyright 2020-2022 EMC/NCEP/NWS/NOAA
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -22,10 +22,13 @@ import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
+
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("depthBelowSoilSurface", "float"),
+    ("dateTime", "long")
 ]
 
 obsvars = {
@@ -33,21 +36,25 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'soilMoistureVolumetric': ['nlocs'],
+    'soilMoistureVolumetric': ['Location'],
 }
+
+# Usual reference time for these data is 12UTC 1Jan2000
+iso8601_string = 'seconds since 2000-01-01T12:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class smap(object):
-    def __init__(self, filename, mask):
-        self.filename = filename
-        self.mask = mask
+    def __init__(self, args):
+        self.filename = args.input
+        self.mask = args.maskMissing
+        self.assumedSoilDepth = args.assumedSoilDepth
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -65,20 +72,18 @@ class smap(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        self.satellite = "SMAP"
-        self.sensor = "radar and radiometer"
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
+        self.satellite = 789
+        self.sensor = 432
+        AttrData["platform"] = np.array([self.satellite], dtype=np.int32)
+        AttrData["sensor"] = np.array([self.sensor], dtype=np.int32)
 
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
         _FillValue = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('_FillValue')
-        self.varAttrs['soilMoistureVolumetric', iconv.OvalName()]['_FillValue'] = _FillValue
         valid_max = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_max')
         valid_min = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_min')
 
@@ -92,14 +97,16 @@ class smap(object):
         ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
-        times = np.empty_like(vals, dtype=object)
+        deps = np.full_like(vals, self.assumedSoilDepth)
+        times = np.empty_like(vals, dtype=np.int64)
 
-        if self.mask == "maskout":
+        if self.mask:
             with np.errstate(invalid='ignore'):
                 mask = (vals > valid_min) & (vals < valid_max)
             vals = vals[mask]
             lats = lats[mask]
             lons = lons[mask]
+            deps = deps[mask]
             errs = errs[mask]
             qflg = qflg[mask]
             sflg = sflg[mask]
@@ -109,11 +116,10 @@ class smap(object):
             refsec = refsec[mask]
             times = times[mask]
 
-        # get datetime and reference time 12UTC 1Jan2000
-        base_date = datetime(2000, 1, 1, 12, 0)
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
+        deps = deps.astype('float32')
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         sflg = sflg.astype('int32')
@@ -122,32 +128,28 @@ class smap(object):
         ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
-            dt = base_date + timedelta(seconds=int(refsec[i]))
-            times[i] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            times[i] = int(refsec[i])
             errs[i] = 0.04
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
+        self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
-        self.outdata[('surfaceFlag', 'MetaData')] = sflg
-        self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
+        self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
+        self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
+        self.outdata[('surfaceQualifier', 'MetaData')] = sflg
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
-        self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
-        self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
         self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
-        self.varAttrs[('easeColumnIndex', 'MetaData')]['units'] = '1'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        AttrData['date_time_string'] = times[0]
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():
@@ -165,14 +167,18 @@ def main():
                         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-m', '--mask',
-        help="maskout missing values: maskout/default, default=none",
-        type=str, required=True)
+        '-m', '--maskMissing',
+        help="switch to mask missing values: default=False",
+        default=False, action='store_true', required=False)
+    optional.add_argument(
+        '-d', '--assumedSoilDepth',
+        help="default assumed depth of soil moisture in meters",
+        type=float, default=0.025, required=False)
 
     args = parser.parse_args()
 
     # Read in the SMAP volumetric soil moisture data
-    ssm = smap(args.input, args.mask)
+    ssm = smap(args)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

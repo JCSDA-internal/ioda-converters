@@ -24,13 +24,13 @@ from orddicts import DefaultOrderedDict
 
 
 vName = {
-    'T': "sea_surface_temperature",
+    'T': "seaSurfaceTemperature",
 }
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {}
@@ -70,7 +70,7 @@ class Profile(object):
             count += 1
             dt = base_date + timedelta(hours=float(hrs[i]))
             locKey = lats[i], lons[i], dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            self.data[locKey][valKey] = vals[i]
+            self.data[locKey][valKey] = vals[i] + 273.15
             self.data[locKey][errKey] = errs[i]
             self.data[locKey][qcKey] = qcs[i]
 
@@ -93,25 +93,24 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     VarDims = {
-        'sea_surface_temperature': ['nlocs'],
+        'seaSurfaceTemperature': ['Location'],
     }
 
     # Read in the profiles
     prof = Profile(args.input, fdate)
 
     # write them out
-    ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(prof.data, locationKeyList)
 
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_surface_temperature', 'ObsValue')]['units'] = 'Celsius'
-    VarAttrs[('sea_surface_temperature', 'ObsError')]['units'] = 'Celsius'
-    VarAttrs[('sea_surface_temperature', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_temperature', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_temperature', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_temperature', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceTemperature', 'ObsValue')]['units'] = 'K'
+    VarAttrs[('seaSurfaceTemperature', 'ObsError')]['units'] = 'K'
+    VarAttrs[('seaSurfaceTemperature', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceTemperature', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceTemperature', 'PreQC')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 

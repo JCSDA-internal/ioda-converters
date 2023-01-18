@@ -8,25 +8,26 @@
 #include <string>
 #include <iostream>
 #include <ostream>
-#include <iomanip>
 
 #include "eckit/config/YAMLConfiguration.h"
 #include "eckit/exception/Exceptions.h"
 #include "eckit/filesystem/PathName.h"
 
-#include "BufrParser/BufrDescription.h"
 #include "BufrParser/BufrParser.h"
 #include "IodaEncoder/IodaDescription.h"
 #include "IodaEncoder/IodaEncoder.h"
-#include "DataContainer.h"
-
-#include "ParserFactory.h"
+#include "ObjectFactory.h"
 
 
 namespace Ingester
 {
+    typedef ObjectFactory<Ingester::Parser, const eckit::LocalConfiguration&> ParseFactory;
+
     void parse(const std::string& yamlPath, std::size_t numMsgs = 0)
     {
+        ParseFactory parseFactory;
+        parseFactory.registerObject<BufrParser>("bufr");
+
         std::unique_ptr<eckit::YAMLConfiguration>
             yaml(new eckit::YAMLConfiguration(eckit::PathName(yamlPath)));
 
@@ -41,7 +42,7 @@ namespace Ingester
                         "Incomplete obs found. All obs must have a obs space and ioda.");
                 }
 
-                auto parser = ParserFactory::create(obsConf.getSubConfiguration("obs space"));
+                auto parser = parseFactory.create("bufr", obsConf.getSubConfiguration("obs space"));
                 auto data = parser->parse(numMsgs);
 
                 auto encoder = IodaEncoder(obsConf.getSubConfiguration("ioda"));
@@ -52,11 +53,6 @@ namespace Ingester
         {
             eckit::BadParameter("No section named \"observations\"");
         }
-    }
-
-    void registerParsers()
-    {
-        ParserFactory::registerParser<BufrParser>("bufr");
     }
 }  // namespace Ingester
 
@@ -113,7 +109,6 @@ int main(int argc, char **argv)
 
     try
     {
-        Ingester::registerParsers();
         Ingester::parse(yamlPath, numMsgs);
     }
     catch (const std::exception &e)

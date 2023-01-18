@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <set>
 
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
 
 namespace Ingester {
 namespace bufr {
@@ -35,7 +35,7 @@ namespace bufr {
     {
      public:
         SubsetTable() = delete;
-        explicit SubsetTable(const DataProvider& dataProvider);
+        explicit SubsetTable(const DataProviderType& dataProvider);
         ~SubsetTable() = default;
 
         /// \brief Returns all the query data elements.
@@ -46,7 +46,7 @@ namespace bufr {
         QueryData dataForQuery(const std::vector<std::string>& queryComponents) const;
 
      private:
-        const DataProvider& dataProvider_;
+        const DataProviderType& dataProvider_;
         std::unordered_map<std::string, QueryData> queryMap_;
         std::vector<std::string> queryMapKeys_;
 

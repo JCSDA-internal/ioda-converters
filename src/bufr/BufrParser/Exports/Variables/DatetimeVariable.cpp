@@ -32,7 +32,6 @@ namespace
         const char* Minute = "minute";
         const char* Second = "second";
         const char* HoursFromUtc = "hoursFromUtc";
-        const char* GroupByField = "group_by";
     }  // namespace ConfKeys
 }  // namespace
 
@@ -41,14 +40,13 @@ namespace Ingester
 {
     DatetimeVariable::DatetimeVariable(const std::string& exportName,
                                        const std::string& groupByField,
-                                       const eckit::Configuration &conf) :
-      Variable(exportName),
+                                       const eckit::LocalConfiguration& conf) :
+      Variable(exportName, groupByField, conf),
       yearQuery_(conf.getString(ConfKeys::Year)),
       monthQuery_(conf.getString(ConfKeys::Month)),
       dayQuery_(conf.getString(ConfKeys::Day)),
       hourQuery_(conf.getString(ConfKeys::Hour)),
       minuteQuery_(conf.getString(ConfKeys::Minute)),
-      groupByField_(groupByField),
       hoursFromUtc_(0)
     {
         if (conf.has(ConfKeys::Second))
@@ -61,11 +59,6 @@ namespace Ingester
             hoursFromUtc_ = conf.getInt(ConfKeys::HoursFromUtc);
         }
 
-        if (conf.has(ConfKeys::GroupByField))
-        {
-            groupByField_ = conf.getString(ConfKeys::GroupByField);
-        }
-
         initQueryMap();
     }
 
@@ -74,6 +67,7 @@ namespace Ingester
         checkKeys(map);
         static const int missingInt = DataObject<int>::missingValue();
 
+        setenv("TZ", "UTC", 1);      // Force UTC time zone
         std::tm tm{};                // zero initialise
         tm.tm_year = 1970-1900;      // 1970
         tm.tm_mon = 0;               // Jan=0, Feb=1, ...
@@ -87,17 +81,18 @@ namespace Ingester
         std::vector<int64_t> timeOffsets;
         timeOffsets.reserve(map.at(getExportKey(ConfKeys::Year))->size());
 
+        auto yearVar = map.at(getExportKey(ConfKeys::Year));
+
         // Validation
-        if (map.at(getExportKey(ConfKeys::Year))->getDims().size() != 1 ||
-            map.at(getExportKey(ConfKeys::Month))->getDims().size() != 1 ||
-            map.at(getExportKey(ConfKeys::Day))->getDims().size() != 1 ||
+        if (!yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Month))) ||
+            !yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Day))) ||
             (!minuteQuery_.empty() &&
-                map.at(getExportKey(ConfKeys::Minute))->getDims().size() != 1) ||
+                !yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Minute)))) ||
             (!secondQuery_.empty() &&
-                map.at(getExportKey(ConfKeys::Second))->getDims().size() != 1))
+                !yearVar->hasSamePath(map.at(getExportKey(ConfKeys::Second)))))
         {
             std::ostringstream errStr;
-            errStr << "Datetime variables must be 1 dimensional.";
+            errStr << "Datetime variables are not all from the same path.";
             throw eckit::BadParameter(errStr.str());
         }
 
@@ -155,19 +150,17 @@ namespace Ingester
                 }
 
                 diff_time = static_cast<int64_t>(difftime(thisTime, epochDt)
-                                                 + hoursFromUtc_ * 3600);
+                    + hoursFromUtc_ * 3600);
             }
 
             timeOffsets.push_back(diff_time);
         }
 
-        Dimensions dims = {static_cast<int>(timeOffsets.size())};
-
         return std::make_shared<DataObject<int64_t>>(
                 timeOffsets,
                 getExportName(),
                 groupByField_,
-                dims,
+                map.at(getExportKey(ConfKeys::Year))->getDims(),
                 map.at(getExportKey(ConfKeys::Year))->getPath(),
                 map.at(getExportKey(ConfKeys::Year))->getDimPaths());
     }
