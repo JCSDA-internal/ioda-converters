@@ -18,6 +18,10 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
+          lat:
+            query: "*/CLAT"
+          lon:
+            query: "*/CLON"
           swellWavesDirection:
             query: "NC000000/WAVSQ3/DOSW"
           heightOfSwellWaves:
@@ -31,26 +35,36 @@ observations:
       obsdataout: "./testrun/bufr_empty_fields.nc"
 
       variables:
-        - name: "MetaData/datetime"
+        - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "ObsValue/swellWavesDirection"
+        - name: "MetaData/latitude"
+          source: variables/lat
+          longName: "latitude"
+          units: "degree_north"
+
+        - name: "MetaData/longitude"
+          source: variables/lon
+          longName: "longitude"
+          units: "degree_east"
+
+        - name: "ObsValue/meanWavePropagationDirection"
           coordinates: "longitude latitude"
           source: variables/swellWavesDirection
           longName: "Swell Waves Direction"
-          units: "Degrees True"
+          units: "degree"
 
-        - name: "ObsValue/heightOfSwellWaves"
+        - name: "ObsValue/heightOfWaves"
           coordinates: "longitude latitude"
           source: variables/heightOfSwellWaves
           longName: "Height of Swell Waves"
-          units: "Meter"
+          units: "m"
 
-        - name: "ObsValue/periodOfSwellWaves"
+        - name: "ObsValue/meanPeriodOfWaves"
           coordinates: "longitude latitude"
           source: variables/periodOfSwellWaves
           longName: "Period of Swell Waves"
-          units: "Second"
+          units: "s"
 

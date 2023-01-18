@@ -19,6 +19,7 @@
 #        -o: output IODA file
 
 import numpy as np
+import netCDF4 as nc
 import inspect, sys, os, argparse
 import pandas as pd
 from datetime import datetime, timedelta
@@ -123,6 +124,8 @@ if __name__ == '__main__':
     print(aeronetinv_chan)
     print(frequency)
 
+    long_missing_value = nc.default_fillvals['i8']
+
     nlocs, columns = f3.shape
     nchans = len(aeronetinv_chan)
     if nlocs == 0:
@@ -134,93 +137,123 @@ if __name__ == '__main__':
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    obsvars = {'aerosol_optical_depth': ['aod_coincident_input[440nm]', 'aod_coincident_input[675nm]',
-                                         'aod_coincident_input[870nm]', 'aod_coincident_input[1020nm]'],
-               'absorption_aerosol_optical_depth': ['absorption_aod[440nm]', 'absorption_aod[675nm]',
-                                                    'absorption_aod[870nm]', 'absorption_aod[1020nm]']}
+    obsvars = {'aerosolOpticalDepth': ['aod_coincident_input[440nm]', 'aod_coincident_input[675nm]',
+                                       'aod_coincident_input[870nm]', 'aod_coincident_input[1020nm]'],
+               'absorptionAerosolOpticalDepth': ['absorption_aod[440nm]', 'absorption_aod[675nm]',
+                                                 'absorption_aod[870nm]', 'absorption_aod[1020nm]']}
 
-    AttrData = {
-        'converter': os.path.basename(__file__)
-    }
+    # A dictionary of global attributes.  More filled in further down.
+    AttrData = {}
+    AttrData['ioda_object_type'] = 'absorptionAOD'
+    AttrData['sensor'] = 'aeronet'
 
-    DimDict = {
-    }
+    # A dictionary of variable dimensions.
+    DimDict = {}
 
+    # A dictionary of variable names and their dimensions.
     VarDims = {
-        'aerosol_optical_depth': ['nlocs', 'nchans'],
-        'absorption_aerosol_optical_depth': ['nlocs', 'nchans'],
-        'frequency': ['nchans'],
-        'sensor_channel': ['nchans']
+        'aerosolOpticalDepth': ['Location', 'Channel'],
+        'absorptionAerosolOpticalDepth': ['Location', 'Channel'],
+        'sensorCentralFrequency': ['Channel'],
+        'sensorChannelNumber': ['Channel']
     }
+
+    # Get the group names we use the most.
+    metaDataName = iconv.MetaDataName()
+    obsValName = iconv.OvalName()
+    obsErrName = iconv.OerrName()
+    qcName = iconv.OqcName()
 
     # Define varDict variables
     for key, value in obsvars.items():
-        varDict[key]['valKey'] = key, iconv.OvalName()
-        varAttrs[key, iconv.OvalName()]['_FillValue'] = -999.
-        varAttrs[key, iconv.OvalName()]['coordinates'] = 'longitude latitude station_elevation'
-        varAttrs[key, iconv.OvalName()]['units'] = '1'
-        varDict[key]['errKey'] = key, iconv.OerrName()
-        varAttrs[key, iconv.OerrName()]['_FillValue'] = -999.
-        varAttrs[key, iconv.OerrName()]['coordinates'] = 'longitude latitude station_elevation'
-        varAttrs[key, iconv.OerrName()]['units'] = '1'
-        varDict[key]['qcKey'] = key, iconv.OqcName()
-        varAttrs[key, iconv.OqcName()]['_FillValue'] = -999
-        varAttrs[key, iconv.OqcName()]['coordinates'] = 'longitude latitude station_elevation'
-        varAttrs[key, iconv.OqcName()]['units'] = 'unitless'
+        varDict[key]['valKey'] = key, obsValName
+        varDict[key]['errKey'] = key, obsErrName
+        varDict[key]['qcKey'] = key, qcName
+        varAttrs[key, obsValName]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[key, obsErrName]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[key, qcName]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[key, obsValName]['_FillValue'] = -9999.
+        varAttrs[key, obsErrName]['_FillValue'] = -9999.
+        varAttrs[key, qcName]['_FillValue'] = -9999
+        varAttrs[key, obsValName]['units'] = '1'
+        varAttrs[key, obsErrName]['units'] = '1'
 
     for key, value in obsvars.items():
-        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-999.))))
-        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
+        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-9999.))))
+        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-9999.),
                                                   1, 0)
-        if key in ["aerosol_optical_depth"]:
-            outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-999.),
-                                                       np.float32(-999.), np.float32(0.02))
+        if key in ["aerosolOpticalDepth"]:
+            outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-9999.),
+                                                       np.float32(-9999.), np.float32(0.02))
         else:
-            outdata[varDict[key]['errKey']] = np.full((nlocs, nchans), np.float32(-999.))
+            outdata[varDict[key]['errKey']] = np.full((nlocs, nchans), np.float32(-9999.))
 
-    outdata[('latitude', 'MetaData')] = np.array(np.float32(f3['latitude']))
-    outdata[('longitude', 'MetaData')] = np.array(np.float32(f3['longitude']))
-    outdata[('station_elevation', 'MetaData')] = np.array(np.float32(f3['elevation']))
-    varAttrs[('station_elevation', 'MetaData')]['units'] = 'm'
-    outdata[('surface_type', 'MetaData')] = np.full((nlocs), 1)
-    varAttrs[('surface_type', 'MetaData')]['units'] = 'unitless'
-
-    # Whether aaod reaches Level 2.0 without the threshold of aod440 >= 0.4 (0: yes, 1: no)
-    outdata[('aaod_l2_qc_without_aod440_le_0.4_threshold', 'MetaData')] = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1, 0, 1)
-    varAttrs[('aaod_l2_qc_without_aod440_le_0.4_threshold', 'MetaData')]['units'] = 'unitless'
+    outdata[('latitude', metaDataName)] = np.array(np.float32(f3['latitude']))
+    outdata[('longitude', metaDataName)] = np.array(np.float32(f3['longitude']))
+    outdata[('stationElevation', metaDataName)] = np.array(np.float32(f3['elevation']))
+    varAttrs[('stationElevation', metaDataName)]['units'] = 'm'
 
     # Whether Coincident_AOD440nm in aeronet_cad.txt reaches Level 2.0 (0: yes, 1: no)
-    outdata[('aod_l2_qc', 'MetaData')] = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
-    varAttrs[('aod_l2_qc', 'MetaData')]['units'] = 'unitless'
+    qcL2Aod = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
 
     # aaod inversion type: 0 for ALM20 and 1 for ALM15
-    outdata[('aaod_l2_qc', 'MetaData')] = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
-    varAttrs[('aaod_l2_qc', 'MetaData')]['units'] = 'unitless'
+    qcL2Aaod = np.where(f3['inversion_data_quality_level'] == 'lev20', 0, 1)
 
+    # Whether aaod reaches Level 2.0 without the threshold of aod440 >= 0.4 (0: yes, 1: no)
+    qcL2Aaod2 = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1, 0, 1)
+
+    qcAll = np.full(len(qcL2Aod), long_missing_value, dtype=np.int32)
+    for i in range(len(qcL2Aod)):
+        qc1 = qcL2Aod[i]
+        qc2 = qcL2Aaod[i]
+        qc3 = qcL2Aaod2[i]
+        if qc1 == 0 and qc2 == 0 and qc3 == 0:
+            # Both AOD and AAOD w/and w/o aod440>0.4 threshold reach L2.
+            qcAll[i] = 0
+        elif qc1 == 0 and qc2 == 0 and qc3 == 1:
+            # Both AOD and AAOD w/ aod440>0.4 threshold reaches L2,
+            # but AAOD w/o aod440>0.4 threshold does not.
+            qcAll[i] = 1
+        elif qc1 == 0 and qc2 == 1 and qc3 == 0:
+            # Both AOD and AAOD w/o aod440>0.4 threshold reaches L2,
+            # but AAOD w/ aod440>0.4 threshold does not.
+            qcAll[i] = 2
+        elif qc1 == 0 and qc2 == 1 and qc3 == 1:
+            # Only AOD reaches L2.
+            qcAll[i] = 3
+        elif qc1 == 1 and qc2 == 0 and qc3 == 0:
+            # AAOD w/ and w/o aod440>0.4 threshold reaches L2,
+            # but AOD does not.
+            qcAll[i] = 4
+        elif qc1 == 1 and qc2 == 0 and qc3 == 1:
+            # AAOD w/ aod440>0.4 threshold reaches L2,
+            # but AOD and AAOD w/o aod440>0.4 threshold do not.
+            qcAll[i] = 5
+        elif qc1 == 1 and qc2 == 1 and qc3 == 0:
+            # AAOD w/o  aod440>0.4 threshold reaches L2,
+            # but AOD and AAOD w/ aod440>0.4 threshold do not.
+            qcAll[i] = 6
+        elif qc1 == 1 and qc2 == 1 and qc3 == 1:
+            # Neither AOD or AAOD w/ and w/o aod440>0.4 threshold reaches L2.
+            qcAll[i] = 7
+
+    outdata[('qualityFlags', metaDataName)] = qcAll
     c = np.empty([nlocs], dtype=object)
     c[:] = np.array(f3.siteid)
-    outdata[('station_id', 'MetaData')] = c
-    varAttrs[('station_id', 'MetaData')]['units'] = ''
+    outdata[('stationIdentification', metaDataName)] = c
 
     d = np.empty([nlocs], dtype=object)
     for i in range(nlocs):
         d[i] = f3.time[i].strftime('%Y-%m-%dT%H:%M:%SZ')
-    outdata[('datetime', 'MetaData')] = d
-    varAttrs[('datetime', 'MetaData')]['units'] = ''
+    outdata[('dateTime', metaDataName)] = d
 
-    outdata[('frequency', 'MetaData')] = np.float32(frequency)
-    varAttrs[('frequency', 'MetaData')]['units'] = 'Hz'
-    outdata[('sensor_channel', 'MetaData')] = np.int32(aeronetinv_chan)
-    varAttrs[('sensor_channel', 'MetaData')]['units'] = 'unitless'
+    outdata[('sensorCentralFrequency', metaDataName)] = np.float32(frequency)
+    varAttrs[('sensorCentralFrequency', metaDataName)]['units'] = 'Hz'
+    outdata[('sensorChannelNumber', metaDataName)] = np.int32(aeronetinv_chan)
 
     # Add global atrributes
-    DimDict['nlocs'] = nlocs
-    DimDict['nchans'] = aeronetinv_chan
-    AttrData['nlocs'] = np.int32(DimDict['nlocs'])
-    AttrData['nchans'] = np.int32(nchans)
-    AttrData['observation_type'] = 'AAOD'
-    AttrData['sensor'] = 'aeronet'
-    AttrData['surface_type'] = 'ocean=0,land=1,costal=2'
+    DimDict['Location'] = nlocs
+    DimDict['Channel'] = aeronetinv_chan
 
     # Setup the IODA writer
     writer = iconv.IodaWriter(outfile, locationKeyList, DimDict)

@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 obsvars = {
@@ -42,8 +42,11 @@ DimDict = {
 }
 
 VarDims = {
-    'soilMoistureNormalized': ['nlocs'],
+    'soilMoistureNormalized': ['Location'],
 }
+
+iso8601_string = '1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[:-1])
 
 
 class ascat(object):
@@ -65,19 +68,20 @@ class ascat(object):
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'percent'
-            self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'percent'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+            self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
+            self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        AttrData["satellite"] = ncd.getncattr('source')
+        # A satellite ID is expected for satellite attribute, use sensor instead
+        AttrData['sensor'] = ncd.getncattr('source')
         AttrData['platform'] = ncd.getncattr('platform_long_name')
         lats = ncd.variables['lat'][:].ravel()
         lons = ncd.variables['lon'][:].ravel()
         vals = ncd.variables['soil_moisture'][:].ravel()
         errs = ncd.variables['soil_moisture_error'][:].ravel()
+        errs = errs*0.01     # Scale from zero to one.
         wflg = ncd.variables['wetland_flag'][:].ravel()
         tflg = ncd.variables['topography_flag'][:].ravel()
         times = np.empty_like(vals, dtype=object)
@@ -88,6 +92,7 @@ class ascat(object):
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
+        vals = vals*0.01
         qflg = 0*vals.astype('int32')
         wflg = wflg.astype('int32')
         tflg = tflg.astype('int32')
@@ -104,25 +109,26 @@ class ascat(object):
             secs = secs[mask]
             times = times[mask]
 
-        for i in range(len(lons)):
+        for i in range(len(secs)):
             base_date = datetime(2000, 1, 1) + timedelta(seconds=int(secs[i]))
-            base_datetime = base_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-            AttrData['date_time_string'] = base_datetime
-            times[i] = base_datetime
+            time_offset = np.int64(round((base_date - epoch).total_seconds()))
+            times[i] = time_offset
+
+        self.varAttrs['dateTime', 'MetaData']['units'] = 'seconds since ' + iso8601_string
 
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
-        self.outdata[('latitude', 'MetaData')] = lats
-        self.outdata[('longitude', 'MetaData')] = lons
-        self.outdata[('wetlandFraction', 'MetaData')] = wflg
-        self.outdata[('topographyComplexity', 'MetaData')] = tflg
+        self.outdata[('dateTime', 'MetaData')] = np.array(times, dtype=np.int64)
+        self.outdata[('latitude', 'MetaData')] = np.array(lats, dtype=np.float32)
+        self.outdata[('longitude', 'MetaData')] = np.array(lons, dtype=np.float32)
+        self.outdata[('wetlandFraction', 'MetaData')] = np.array(wflg, dtype=np.float32)
+        self.outdata[('topographyComplexity', 'MetaData')] = np.array(tflg, dtype=np.float32)
 
-        for iodavar in ['soilMoistureNormalized']:
-            self.outdata[self.varDict[iodavar]['valKey']] = vals
-            self.outdata[self.varDict[iodavar]['errKey']] = errs
-            self.outdata[self.varDict[iodavar]['qcKey']] = qflg
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        iodavar = 'soilMoistureNormalized'
+        self.outdata[self.varDict[iodavar]['valKey']] = np.array(vals, dtype=np.float32)
+        self.outdata[self.varDict[iodavar]['errKey']] = np.array(errs, dtype=np.float32)
+        self.outdata[self.varDict[iodavar]['qcKey']] = np.array(qflg, dtype=np.int32)
+
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():
@@ -156,8 +162,8 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    ssm.varAttrs[('wetlandFraction', 'MetaData')]['units'] = 'unitless'
-    ssm.varAttrs[('topographyComplexity', 'MetaData')]['units'] = 'unitless'
+    ssm.varAttrs[('wetlandFraction', 'MetaData')]['units'] = '1'
+    ssm.varAttrs[('topographyComplexity', 'MetaData')]['units'] = '1'
 
     # write everything out
     writer.BuildIoda(ssm.outdata, VarDims, ssm.varAttrs, AttrData)

@@ -46,9 +46,7 @@ namespace Ingester
     AircraftAltitudeVariable::AircraftAltitudeVariable(const std::string& exportName,
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
-      Variable(exportName),
-      groupByField_(groupByField),
-      conf_(conf)
+      Variable(exportName, groupByField, conf)
     {
         initQueryMap();
     }
@@ -90,7 +88,6 @@ namespace Ingester
 
         for (size_t idx = 0; idx < referenceObj->size(); idx++)
         {
-            std::cout << "idx = " << idx << std::endl;
             for (auto nameIt = includedFields.rbegin(); nameIt != includedFields.rend(); ++nameIt)
             {
                 const auto& fieldName = *nameIt;
@@ -104,14 +101,12 @@ namespace Ingester
                         {
                             aircraftAlts[idx]  =
                                 11000.0f - (std::log1p(value / 22630.0f) / 0.0001576106f);
-                            std::cout << "section 1" << std::endl;
                         }
                         else
                         {
                             aircraftAlts[idx]  =
                                 (1.0f - powf((value / 101325.0f),
                                              (1.0f / 5.256f))) * (288.15f / 0.0065f);
-                            std::cout << "section 2" << std::endl;
                         }
                     }
                     else if (includedFieldMap.find(ConfKeys::AircraftIndicatedAltitude)
@@ -121,7 +116,6 @@ namespace Ingester
                         {
                             aircraftAlts[idx] =
                              includedFieldMap[ConfKeys::AircraftIndicatedAltitude]->getAsFloat(idx);
-                            std::cout << "section 3" << std::endl;
                         }
                     }
                 }
@@ -129,16 +123,13 @@ namespace Ingester
                 {
                     // This variable is only used in conjunction with pressure.
                     continue;
-                    std::cout << "section 4" << std::endl;
                 }
                 else if (!fieldValues->isMissing(idx))
                 {
                     std::cout << " fieldValues = " << fieldValues << std::endl;
                     aircraftAlts[idx] = fieldValues->getAsFloat(idx);
-                    std::cout << "section 5" << std::endl;
                 }
             }
-        std::cout << "AA = " << aircraftAlts[idx] << std::endl;
         }
 
         return std::make_shared<DataObject<float>>(aircraftAlts,
