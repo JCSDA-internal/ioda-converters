@@ -26,7 +26,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
 
 obsvars = {
@@ -35,15 +35,17 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'adt': ['nlocs'],
+    'adt': ['Location'],
 }
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class copernicus(object):
@@ -58,7 +60,7 @@ class copernicus(object):
         self.lats = self.lats.ravel()
         self.adt = np.squeeze(ncd.variables['adt'][:]).ravel()
         self.err = np.squeeze(ncd.variables['err_sla'][:]).ravel()
-        self.date = ncd.getncattr('time_coverage_start')
+        self.time_coverage_start = ncd.getncattr('time_coverage_start')
         ncd.close()
 
         # Remove observations out of sane bounds
@@ -68,9 +70,6 @@ class copernicus(object):
         self.lats = self.lats[qci]
         self.adt = self.adt[qci].astype(np.single)
         self.err = self.err[qci].astype(np.single)
-        # Same time stamp for all obs within 1 file
-        self.datetime = np.empty_like(self.adt, dtype=object)
-        self.datetime[:] = self.date
 
 
 class copernicus_l4adt2ioda(object):
@@ -87,7 +86,7 @@ class copernicus_l4adt2ioda(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar = 'absolute_dynamic_topography'
+        iodavar = 'absoluteDynamicTopography'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -97,20 +96,33 @@ class copernicus_l4adt2ioda(object):
         # read input filename
         adt = copernicus(self.filename)
         # put the time at 00 between start and end coverage time
-        if self.datetime is not None:
-            ymdh = datetime.strptime(self.datetime, "%Y%m%d")
-            ymdhm = ymdh.strftime("%Y-%m-%dT%H:%M:%SZ")
-            adt.datetime[:] = ymdhm
+        if adt.time_coverage_start is not None:
+            this_datetime = datetime.strptime(adt.time_coverage_start[:-1], "%Y-%m-%dT%H:%M:%S")
+            time_offset = round((this_datetime - epoch).total_seconds())
+        else:
+            try:
+                this_datetime = datetime.strptime(adt.datetime, "%Y-%m-%dT%H:%M:%SZ")
+                time_offset = round((this_datetime - epoch).total_seconds())
+            except Exception:
+                print(f"ABORT, failure to find timestamp; check format,"
+                      " it should be like 2014-07-29T12:00:00Z whereas"
+                      " you entered {self.datetime}")
+                sys.exit()
+
+        # Same time stamp for all obs within 1 file
+        adt.datetime = np.empty_like(adt.adt, dtype=np.int64)
+        adt.datetime[:] = time_offset
+
         # map copernicus to ioda data structure
-        self.outdata[('datetime', 'MetaData')] = adt.datetime
+        self.outdata[('dateTime', 'MetaData')] = adt.datetime
+        self.var_mdata[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = adt.lats
         self.outdata[('longitude', 'MetaData')] = adt.lons
         self.outdata[self.varDict[iodavar]['valKey']] = adt.adt
         self.outdata[self.varDict[iodavar]['errKey']] = adt.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(adt.nlocs, dtype=np.int32)
 
-        DimDict['nlocs'] = adt.nlocs
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = adt.nlocs
 
 
 def main():

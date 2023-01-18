@@ -8,7 +8,7 @@
 #
 
 from __future__ import print_function
-import sys
+import os, sys
 import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
@@ -23,6 +23,9 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class Observation(object):
@@ -41,6 +44,7 @@ class Observation(object):
         datein = ncd.variables['time'][:] + 0.5
         reftime = dateutil.parser.parse(ncd.variables['time'].units[-20:])
         obs_date = reftime + timedelta(days=float(datein))
+        time_offset = round((obs_date - epoch).total_seconds())
 
         data_in = {}
         input_vars = (
@@ -90,7 +94,7 @@ class Observation(object):
             qc = qc[mask_thin]
 
         for i in range(len(lons)):
-            locKey = lats[i], lons[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+            locKey = lats[i], lons[i], time_offset
             self.data[locKey][valKey] = vals[i]
             self.VarAttrs[locKey][valKey]['_FillValue'] = vals_FillValue
             self.VarAttrs[locKey][valKey]['units'] = vals_units
@@ -100,20 +104,20 @@ class Observation(object):
             self.VarAttrs[locKey][errKey]['_FillValue'] = errs_FillValue
             self.VarAttrs[locKey][errKey]['units'] = errs_units
             self.data[locKey][qcKey] = 1
-            self.VarAttrs[locKey][qcKey]['units'] = 'unitless'
 
 
-vName = "sea_ice_area_fraction"
-
+vName = "seaIceFraction"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {
-    'odb_version': 1,
+    'converter': os.path.basename(__file__),
+    'ioda_version': 2,
+    'odb_version': 1
 }
 
 
@@ -148,16 +152,17 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        vName: ['nlocs'],
+        vName: ['Location'],
     }
     # Read in
     ice = Observation(args.input, args.thin, fdate)
 
     # write them out
     ObsVars, nlocs = iconv.ExtractObsData(ice.data, locationKeyList)
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
+    ice.VarAttrs['dateTime', 'MetaData']['units'] = iso8601_string
     writer.BuildIoda(ObsVars, VarDims, ice.VarAttrs, GlobalAttrs)
 
 
