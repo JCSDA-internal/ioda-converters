@@ -275,7 +275,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
 def quality_control(profile_meta_data, heights, lats, lons):
 
     try:
-        good = (heights > 0.) & (heights < 100000.) & (abs(lats) < 90.) & (abs(lons) < 360.)
+        good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
     except ValueError:
         print(f" quality control on impact_height and lat/lon did not pass")
         print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
