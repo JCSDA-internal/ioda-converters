@@ -52,13 +52,13 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string"),
-#   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
-#   ("dateTime", "object") this looks wrong
 ]
+#   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 # iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 # epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
 
 def main(args):
 
@@ -187,7 +187,6 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     # obs_data[('dateTime', 'MetaData')] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
     obs_data[('datetime', 'MetaData')] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
 
-
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('channelNumber', 'MetaData')])
     nlocs = len(obs_data[('latitude', 'MetaData')])
@@ -262,7 +261,7 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
     nlocs = len(obs_data[('latitude', 'MetaData')])
     obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     # obs_data[('dateTime', 'MetaData')] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
-    obs_data[('datetime', 'MetaData')] = np.array(create_string_dtg(g['All_Data']['ATMS-SDR_All']['BeamTime'][:,:].flatten()), dtype=object)
+    obs_data[('datetime', 'MetaData')] = np.array(create_string_dtg(g['All_Data']['ATMS-SDR_All']['BeamTime'][:, :].flatten()), dtype=object)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('channelNumber', 'MetaData')])
@@ -287,22 +286,22 @@ def atms_gross_quality_control(obs_data):
     # anomalous temperatures pre-Beta data
     # 20221125T12Z_PT6H and 20221127T06_PT6H
     # quality top values for ch15 330K arises from this
-    good = ( obs_data[(tb_key, "ObsValue")][:,0] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,0] < 400 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,14] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,14] < 330 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,16] > 10 ) & \
-        ( obs_data[(tb_key, "ObsValue")][:,16] < 400 ) & \
-        ( obs_data[('latitude', 'MetaData')] >= -90 ) & \
-        ( obs_data[('latitude', 'MetaData')] <= 90 ) & \
-        ( obs_data[('sensor_zenith_angle', 'MetaData')] > 0 ) & \
-        ( obs_data[('sensor_zenith_angle', 'MetaData')] < 80 )
+    good = (obs_data[(tb_key, "ObsValue")][:, 0] > 10) & \
+        (obs_data[(tb_key, "ObsValue")][:, 0] < 400) & \
+        (obs_data[(tb_key, "ObsValue")][:, 14] > 10) & \
+        (obs_data[(tb_key, "ObsValue")][:, 14] < 330) & \
+        (obs_data[(tb_key, "ObsValue")][:, 16] > 10) & \
+        (obs_data[(tb_key, "ObsValue")][:, 16] < 400) & \
+        (obs_data[('latitude', 'MetaData')] >= -90) & \
+        (obs_data[('latitude', 'MetaData')] <= 90) & \
+        (obs_data[('sensor_zenith_angle', 'MetaData')] > 0) & \
+        (obs_data[('sensor_zenith_angle', 'MetaData')] < 80)
 
     for k in obs_data:
         if "MetaData" in k[1] and 'channelNumber' not in k[0]:
             obs_data[k] = obs_data[k][good]
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good,:]
+            obs_data[k] = obs_data[k][good, :]
 
     return obs_data
 
@@ -318,7 +317,7 @@ def get_WMO_satellite_ID(filename):
         WMO_sat_ID = NOAA21_WMO_sat_ID
     else:
         WMO_sat_ID = -1
-        print("could not determine satellite from filename: %s" % afile)
+        print(f"could not determine satellite from filename: {afile}")
         sys.exit()
 
     return WMO_sat_ID
@@ -337,9 +336,9 @@ def get_epoch_time(obs_time_utc):
     # following examples here could be written better potentially
     iterables = [year, month, day, hour, minute, second]
     # ensure the year is plausible (65535 appears in some data) if not set to 01Jan1900 (revisit)
-    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5]) \
-        if adate[0] < 2200 else datetime(2200,1,1,0,0,0) \
-        for adate in zip(*iterables)]
+    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5])
+                     if adate[0] < 2200 else datetime(2200, 1, 1, 0, 0, 0)
+                     for adate in zip(*iterables)]
 
     time_offset = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
 
