@@ -62,7 +62,8 @@ TYPES = ['TTAA', 'TTBB', 'PPBB', 'TTCC', 'TTDD', 'PPDD']
 
 # Wind speed in radiosondes could be either knots or meters per second, which
 # is determined within code if the day of month is actually day of month + 50.
-scale_wspd = 0.51444   # convert from knots to meters per second
+scale_wspd = 1.0
+knots2mps = 0.51444   # convert from knots to meters per second
 
 STATIONS = {}
 
@@ -735,6 +736,8 @@ def getDayHour(str):
         if day < 0:
             day += 50
             scale_wspd = 1.0
+        else:
+            scale_wspd = knots2mps
         hour = int(str[2:4])
         return (day, hour)
     except Exception:
@@ -808,6 +811,8 @@ def getTempDew(str, last_dewdep):
             # dewpoint is missing or unparesable, so calculate it
             if temp and last_dewdep:
                 dew = temp - last_dewdep
+                if dew < -77:        # Near/In the stratosphere, no use trying.
+                    dew = None
 
     return (temp, dew)
 
@@ -822,6 +827,8 @@ def getPressureLevels(section, levels):
     """
     section['levels'] = {}
     pressures = sorted(levels.keys(), reverse=True)
+    if len(pressures) < 3:        # What would be the point of using it
+        return
 
     # loop through each height and try to find surrounding heights with defined
     # levels to interpolate or extrapolate pressure level from
@@ -849,7 +856,7 @@ def getPressureLevels(section, levels):
             heightup = levels[pressureup]['height']
             pressure = meteo_sounding_utils.p_interp(templo, tempup, pressurelo, pressureup, heightlo, heightup, height)
 
-        if pressure is not None:
+        if ((pressure is not None) and (pressure is not np.isnan(pressure))):
             level = section['heights'][height]
             level['height'] = height
             section['levels'][pressure] = level
@@ -864,6 +871,8 @@ def getHeights(section, levels):
     :return:
     """
     pressures = sorted(levels.keys(), reverse=True)
+    if len(pressures) < 3:        # What would be the point of using it
+        return
 
     for pressure in sorted(section['levels'].keys(), reverse=True):
         pressurelo = pressures[0]
@@ -891,7 +900,7 @@ def getHeights(section, levels):
             heightup = levels[pressureup]['height']
             height = meteo_sounding_utils.z_interp(templo, tempup, pressurelo, pressureup, pressure, heightlo, heightup)
 
-        if height is not None:
+        if ((height is not None) and (height is not np.isnan(height))):
             section['levels'][pressure]['height'] = height
 
 
