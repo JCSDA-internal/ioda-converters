@@ -51,12 +51,14 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("datetime", "string"),
+    ("dateTime", "object"),
 ]
 #   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 # iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
-# epoch = datetime.fromisoformat(iso8601_string[14:-1])
+iso8601_string = "seconds since 1970-01-01T00:00:00Z"
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 def main(args):
@@ -102,8 +104,10 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['datetimeRange'] = np.array([obs_data[('dateTime', metaDataName)][0].strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                             obs_data[('dateTime', metaDataName)][-1].strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
+    GlobalAttrs['datetimeRange'] = np.array([obs_data[('datetime', metaDataName)][0],
+                                             obs_data[('datetime', metaDataName)][-1]], dtype=object)
+#   GlobalAttrs['datetimeRange'] = np.array([obs_data[('dateTime', metaDataName)][0].strftime("%Y-%m-%dT%H:%M:%SZ"),
+#                                            obs_data[('dateTime', metaDataName)][-1].strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
     GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # pass parameters to the IODA writer
@@ -150,7 +154,7 @@ def get_data_from_files(zfiles):
     return obs_data
 
 
-def get_data_nasa_disc(f, g, obs_data, add_qc=True):
+def get_data_nasa_disc(f, g, obs_data, add_qc=False):
 
     # NASA GES DISC keys
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
@@ -169,7 +173,7 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     obs_data[('sensorViewAngle', metaDataName)] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteId', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
     obs_data[('datetime', metaDataName)] = np.array(get_string_dtg(g['obs_time_utc'][:, :, :]), dtype=object)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
@@ -205,7 +209,7 @@ def get_geo_noaa_class(afile):
     return g
 
 
-def get_data_noaa_class(f, g, obs_data, add_qc=True):
+def get_data_noaa_class(f, g, obs_data, add_qc=False):
 
     # NOAA CLASS h5 SDR-GEO  and SDR-Data
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
@@ -228,7 +232,7 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteId', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
     obs_data[('datetime', metaDataName)] = np.array(create_string_dtg(g['All_Data']['ATMS-SDR_All']['BeamTime'][:, :].flatten()), dtype=object)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
@@ -262,11 +266,11 @@ def atms_gross_quality_control(obs_data):
         (obs_data[(tb_key, obsValName)][:, 16] < 400) & \
         (obs_data[('latitude', metaDataName)] >= -90) & \
         (obs_data[('latitude', metaDataName)] <= 90) & \
-        (obs_data[('sensor_zenith_angle', metaDataName)] > 0) & \
-        (obs_data[('sensor_zenith_angle', metaDataName)] < 80)
+        (obs_data[('sensorZenithAngle', metaDataName)] > 0) & \
+        (obs_data[('sensorZenithAngle', metaDataName)] < 80)
 
     for k in obs_data:
-        if "MetaData" in k[1] and 'sensorChannelNumber' not in k[0]:
+        if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
             obs_data[k] = obs_data[k][good]
         elif tb_key in k[0]:
             obs_data[k] = obs_data[k][good, :]
