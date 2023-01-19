@@ -12,7 +12,6 @@ from pathlib import Path
 import os.path
 from os import getcwd
 import sys
-import pdb
 
 import h5py
 import numpy as np
@@ -267,7 +266,7 @@ def atms_gross_quality_control(obs_data):
         (obs_data[('sensor_zenith_angle', metaDataName)] < 80)
 
     for k in obs_data:
-        if "MetaData" in k[1] and 'channelNumber' not in k[0]:
+        if "MetaData" in k[1] and 'sensorChannelNumber' not in k[0]:
             obs_data[k] = obs_data[k][good]
         elif tb_key in k[0]:
             obs_data[k] = obs_data[k][good, :]
