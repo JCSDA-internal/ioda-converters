@@ -727,6 +727,7 @@ def getDayHour(str):
     Parse day of month and hour from the given string
     :param str: The string to parse
     :return: (day, hour)
+    When the day is coded as day+50, windspeed is in knots, otherwise m/s.
     """
     global scale_wspd
     try:
