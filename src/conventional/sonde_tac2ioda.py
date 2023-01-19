@@ -60,6 +60,10 @@ LEVEL_CODES = {
 # List of sounding data sections
 TYPES = ['TTAA', 'TTBB', 'PPBB', 'TTCC', 'TTDD', 'PPDD']
 
+# Wind speed in radiosondes could be either knots or meters per second, which
+# is determined within code if the day of month is actually day of month + 50.
+scale_wspd = 0.51444   # convert from knots to meters per second
+
 STATIONS = {}
 
 # The outgoing IODA MetaData variables, their data type, and units.
@@ -724,10 +728,12 @@ def getDayHour(str):
     :param str: The string to parse
     :return: (day, hour)
     """
+    global scale_wspd
     try:
         day = int(str[:2]) - 50
         if day < 0:
             day += 50
+            scale_wspd = 1.0
         hour = int(str[2:4])
         return (day, hour)
     except Exception:
@@ -753,7 +759,7 @@ def getWind(str):
             wdir -= 1
             wspd += 100
 
-        # wspd *= 0.51444, convert to m/s
+        wspd *= scale_wspd    # convert to m/s if needed.
 
         # calculate u and v
         md = 270 - wdir
