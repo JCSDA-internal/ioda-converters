@@ -17,6 +17,7 @@
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
 #include "Variables/SpectralRadianceVariable.h"
+#include "Variables/RemappedBrightnessTemperatureVariable.h"
 #include "Variables/AircraftAltitudeVariable.h"
 #include "Variables/TimeoffsetVariable.h"
 #include "ObjectFactory.h"
@@ -36,6 +37,7 @@ namespace
         {
             const char* Datetime = "datetime";
             const char* SpectralRadiance = "spectralRadiance";
+            const char* RemappedBrightnessTemperature = "remappedBrightnessTemperature";
             const char* Timeoffset = "timeoffset";
             const char* AircraftAltitude = "aircraftAltitude";
             const char* Query = "query";
@@ -124,6 +126,8 @@ namespace Ingester
             (ConfKeys::Variable::AircraftAltitude);
         variableFactory.registerObject<SpectralRadianceVariable>
             (ConfKeys::Variable::SpectralRadiance);
+        variableFactory.registerObject<RemappedBrightnessTemperatureVariable>
+            (ConfKeys::Variable::RemappedBrightnessTemperature);
 
         if (conf.keys().size() == 0)
         {
