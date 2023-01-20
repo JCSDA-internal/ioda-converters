@@ -21,13 +21,15 @@ Module ATMS_Spatial_Average_Mod
 ! Declare module level parameters
   real(r_double), parameter    :: Missing_Value=1.e11_r_double
 
+  private
+  public :: ATMS_Spatial_Average
+
 CONTAINS 
 
 ! SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, FOV, Time, BT_InOut, &
 !  SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, FOV, BT_InOut, &
 !       Scanline, Error_Status)
-  SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, Scanline, Error_Status)
-
+  SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, Scanline, Error_Status)
     IMPLICIT NONE
     
     ! Declare passed variables
@@ -35,7 +37,7 @@ CONTAINS
 !    integer(i_kind) ,intent(in   ) :: fov(num_obs)
 !!   real(r_kind)    ,intent(in   ) :: time(Num_Obs)
 !    real(r_kind)    ,intent(inout) :: bt_inout(NChanl,Num_Obs)
-    integer(i_kind) ,intent(  out) :: scanline(Num_Obs)
+    integer(i_kind) ,intent(  out) :: scanline(num_obs)
     integer(i_kind) ,intent(  out) :: error_status 
 
     real(r_kind):: i, j

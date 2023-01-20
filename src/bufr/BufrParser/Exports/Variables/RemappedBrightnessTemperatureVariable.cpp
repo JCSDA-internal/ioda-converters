@@ -74,13 +74,13 @@ namespace Ingester
         //>>emily test
 
         int error_status; 
-        std::vector<float> scanline(nobs, DataObject<float>::missingValue());
-//      float scanline[nobs];
+//        std::vector<float> scanline(nobs, DataObject<float>::missingValue());
+        float scanline[nobs];
 //      std::vector<float> fovn(nobs, DataObject<float>::missingValue());
 //      float fovn[nobs];
 
 //      ATMS_Spatial_Average_f(nobs, nchns, &fovnObj, &radObj, &scanline, &error_status); 
-        ATMS_Spatial_Average_f(nobs, nchns, &scanline, &error_status); 
+        ATMS_Spatial_Average_f(nobs, nchns, &scanline, &error_status);
 
         //<<emily test
        

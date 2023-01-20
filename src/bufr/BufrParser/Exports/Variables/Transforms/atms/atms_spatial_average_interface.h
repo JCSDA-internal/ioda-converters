@@ -18,7 +18,7 @@ extern "C" {
 //  void ATMS_Spatial_Average_f(int num_obs, int nchanl, void** FOV, void** BT, 
 //                              void* Scanline, int* error_status); 
 
-  void ATMS_Spatial_Average_f(int num_obs, int nchanl, void* Scanline, int* error_status); 
+  void ATMS_Spatial_Average_f(int num_obs, int nchanl, int** scanline, int* error_status);
 
 #ifdef __cplusplus
 }
