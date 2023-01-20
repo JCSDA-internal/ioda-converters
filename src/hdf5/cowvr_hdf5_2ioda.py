@@ -193,9 +193,9 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
 
     for k in obs_data:
         if "MetaData" in k[1] and 'channelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good]
+            obs_data[k] = obs_data[k][good][::33]
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good,:]
+            obs_data[k] = obs_data[k][good,:][::33]
 
     return obs_data
 
