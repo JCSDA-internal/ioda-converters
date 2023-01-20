@@ -100,7 +100,7 @@ class smap(object):
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype=object)
+        times = np.empty_like(vals, dtype=np.int64)
 
         if self.mask:
             with np.errstate(invalid='ignore'):
