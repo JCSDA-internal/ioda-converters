@@ -39,19 +39,7 @@ namespace bufr {
         void rewind();
 
      private:
-        const std::string filename_;
-        const int fileUnit_;
-        const int fileUnitTable1_;
-        const int fileUnitTable2_;
-        const bool isWmoFormat_;
-        const std::string wmoTablePath_;
-
-
-        /// \brief Open the BUFR file whose parameters where given in the constructor.
-        void open();
-
-        /// \brief Get the next available Fortran file unit number.
-        int nextFileUnit();
+        std::shared_ptr<DataProvider> dataProvider_;
     };
 }  // namespace bufr
 }  // namespace Ingester

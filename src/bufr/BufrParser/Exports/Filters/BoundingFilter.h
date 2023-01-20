@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-
 namespace Ingester
 {
     /// \brief Class that filter data given optional upper and lower bounds.
@@ -21,12 +20,8 @@ namespace Ingester
     {
      public:
         /// \brief Constructor
-        /// \param variable Variable to filter
-        /// \param lowerBound Lowest allowable value
-        /// \param upperBound Highest allowable value
-        BoundingFilter(const std::string& variable,
-                       std::shared_ptr<float> lowerBound,
-                       std::shared_ptr<float> upperBound);
+        /// \param conf The configuration for this filter
+        explicit BoundingFilter(const eckit::LocalConfiguration& conf);
 
         virtual ~BoundingFilter() = default;
 
@@ -36,7 +31,7 @@ namespace Ingester
         /// \param dataMap Map to modify by filtering out rel
      private:
          const std::string variable_;
-         const std::shared_ptr<float> lowerBound_;
-         const std::shared_ptr<float> upperBound_;
+         std::shared_ptr<float> lowerBound_;
+         std::shared_ptr<float> upperBound_;
     };
 }  // namespace Ingester

@@ -6,7 +6,7 @@
 
 observations:
   - obs space:
-      name: bufr
+      name: bufr_sevcsr
       obsdatain: "./testinput/gdas.t00z.sevcsr.tm00.bufr_d"
 
       exports:
@@ -104,7 +104,7 @@ observations:
           longName: "Brightness temperature"
           units: "K"
           range: [150, 350]
-          chunks: [1000, 15]
+          chunks: [1000, 12]
 
         - name: "ObsValue/brightnessTemperatureStandardDeviation"
           coordinates: "longitude latitude Channel"

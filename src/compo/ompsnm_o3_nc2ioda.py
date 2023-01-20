@@ -25,21 +25,27 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 from orddicts import DefaultOrderedDict
 import ioda_conv_engines as iconv
 
-
-# Global Dictionaries.
+# Dictionary of essential MetaData
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("dateTime", "long"),
 ]
 
+# Name to call the output ozone variable
+varname_ozone = 'ozoneTotal'
+
+# Dictionary of variable name found in input file and corresponding output name
+obsvars = {
+    'integrated_layer_ozone_in_air': varname_ozone,
+}
 
 # dictionary to map things we're putting into ioda and taking out of instrument native format
 ioda2nc = {}
 ioda2nc['latitude'] = 'GeolocationData/Latitude'
 ioda2nc['longitude'] = 'GeolocationData/Longitude'
 ioda2nc['dateTime'] = 'GeolocationData/Time'
-ioda2nc['solar_zenith_angle'] = 'GeolocationData/SolarZenithAngle'
+ioda2nc['solarZenithAngle'] = 'GeolocationData/SolarZenithAngle'
 ioda2nc['valKey'] = 'ScienceData/ColumnAmountO3'
 ioda2nc['ground_pixel_quality'] = 'GeolocationData/GroundPixelQualityFlags'
 ioda2nc['quality_flags'] = 'ScienceData/QualityFlags'
@@ -47,15 +53,9 @@ ioda2nc['algorithm_flags'] = 'ScienceData/AlgorithmFlags'
 ioda2nc['measurement_quality_flags'] = 'ScienceData/MeasurementQualityFlags'
 ioda2nc['instrument_quality_flags'] = 'GeolocationData/InstrumentQualityFlags'
 
-
-obsvars = {
-    'integrated_layer_ozone_in_air': 'integrated_layer_ozone_in_air',
-}
-
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
-    'satellite': 'npp',
+    'platformCommonName': 'npp',
     'sensor': 'ompsnm',
 }
 
@@ -63,7 +63,7 @@ DimDict = {
 }
 
 VarDims = {
-    'integrated_layer_ozone_in_air': ['nlocs'],
+    varname_ozone: ['Location'],
 }
 
 
@@ -75,17 +75,19 @@ class ompsnm(object):
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.startTAI = sTAI
         self.endTAI = eTAI
-        self._setVarDict('integrated_layer_ozone_in_air')
+        self._setVarDict(varname_ozone)
 
         vars2output = list(ioda2nc.keys())
-        vars2output.append('scan_position')
+        vars2output.append('sensorScanPosition')
         for v in vars2output:
-            if(v != 'valKey'):
+            if('quality' in v or 'flags' in v):
+                pass
+            elif(v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
-        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
+        self.outdata[self.varDict[varname_ozone]['valKey']] = []
 
-        self._setVarDict('integrated_layer_ozone_in_air')
-        self.outdata[self.varDict['integrated_layer_ozone_in_air']['valKey']] = []
+        self._setVarDict(varname_ozone)
+        self.outdata[self.varDict[varname_ozone]['valKey']] = []
 
         self._read()
 
@@ -98,7 +100,7 @@ class ompsnm(object):
         self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
 
         varsToAddUnits = list(ioda2nc.keys())
-        varsToAddUnits.append('scan_position')
+        varsToAddUnits.append('sensorScanPosition')
         for v in varsToAddUnits:
             if(v != 'valKey'):
                 vkey = (v, 'MetaData')
@@ -108,15 +110,11 @@ class ompsnm(object):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
                 elif('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degrees'
-                elif('flag' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'unitless'
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
-                else:
-                    self.varAttrs[vkey]['units'] = 'unitless'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
 
-        vkey = ('air_pressure', 'MetaData')
+        vkey = ('pressure', 'MetaData')
         self.varAttrs[vkey]['units'] = 'Pa'
 
     # Read data needed from raw OMPSNM file.
@@ -132,8 +130,8 @@ class ompsnm(object):
         # mesh time and scan_position to get flattened array instead of using loops
         time_vec = d['dateTime']
         scan_position_vec = np.arange(1, d['valKey'].shape[1]+1)
-        d['scan_position'], d['dateTime'] = np.meshgrid(scan_position_vec, time_vec)
-        d['scan_position'] = d['scan_position'].astype('float32')
+        d['sensorScanPosition'], d['dateTime'] = np.meshgrid(scan_position_vec, time_vec)
+        d['sensorScanPosition'] = d['sensorScanPosition'].astype('float32')
         d['measurement_quality_flags'].mask = False
         d['instrument_quality_flags'].mask = False
         d['measurement_quality_flags'] = np.tile(d['measurement_quality_flags'], (scan_position_vec.shape[0], 1)).T
@@ -144,7 +142,7 @@ class ompsnm(object):
 
     def _read(self):
         # set up variable names for IODA
-        for iodavar in ['integrated_layer_ozone_in_air', ]:
+        for iodavar in [varname_ozone, ]:
             # self._setVarDict(var)
             self._setVarAttr(iodavar)
         # loop through input filenames
@@ -152,15 +150,17 @@ class ompsnm(object):
             fileData, idx = self._read_nc(f)
             # add metadata variables
             for v in list(fileData.keys()):
-                if(v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
+                if('quality' in v or 'flags' in v):
+                    pass
+                elif(v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
                     #  add metadata variables
                     self.outdata[(v, 'MetaData')].extend(fileData[v][idx].flatten().tolist())
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]['valKey']].extend(fileData['valKey'][idx].flatten().tolist())
 
         # add dummy air_pressure so UFO will know this is a total column ob, and not partial.
-        nloc = len(self.outdata[('dateTime', 'MetaData')])
-        self.outdata[('air_pressure', 'MetaData')] = np.zeros(nloc).tolist()
+        nlocs = len(self.outdata[('dateTime', 'MetaData')])
+        self.outdata[('pressure', 'MetaData')] = np.zeros(nlocs).tolist()
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
@@ -168,8 +168,7 @@ class ompsnm(object):
                 self.outdata[k] = self.outdata[k].astype('float32')
             elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
-        DimDict['nlocs'] = self.outdata[('dateTime', 'MetaData')].shape[0]
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = nlocs
         self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype(np.int64)
         self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
 # end ompsnm object.
