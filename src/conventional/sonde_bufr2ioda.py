@@ -42,8 +42,9 @@ locationKeyList = [
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
     ("stationIdentification", "string", "", "keep"),
+    ("stationLongName", "string", "", "toss"),
     ("instrumentIdentifier", "integer", "", "keep"),
-    # ("instrumentRadiationCorrectionInfo", "integer", "", "keep"),
+    ("instrumentCorrectionInfo", "integer", "", "keep"),
     # ("instrumentHumidityCorrectionInfo", "integer", "", "keep"),
     # ("temperatureSensorType", "integer", "", "keep"),
     # ("humiditySensorType", "integer", "", "keep"),
@@ -72,14 +73,14 @@ metaDataKeyList = {
     'wmoBlockNumber': ['blockNumber'],
     'wmoStationNumber': ['stationNumber'],
     'stationIdentification': ['Constructed'],
-    # "stationLongName": 'shipOrMobileLandStationIdentifier',
-    "instrumentIdentifier": ['radiosondeType'],
-    # "instrumentRadiationCorrectionInfo": ['solarAndInfraredRadiationCorrection'],
+    'stationLongName': ['shipOrMobileLandStationIdentifier'],
+    'instrumentIdentifier': ['radiosondeType'],
+    'instrumentCorrectionInfo': ['solarAndInfraredRadiationCorrection'],
     # "instrumentHumidityCorrectionInfo": ['correctionAlgorithmsForHumidityMeasurements'],
     # "temperatureSensorType": ['temperatureSensorType'],
     # "humiditySensorType": ['humiditySensorType'],
-    # "instrumentSerialNum": 'radiosondeSerialNumber',
-    # "instrumentSoftwareVersion": 'softwareVersionNumber',
+    # "instrumentSerialNum": ['radiosondeSerialNumber'],
+    # "instrumentSoftwareVersion": ['softwareVersionNumber'],
     'year': ['year'],
     'month': ['month'],
     'day': ['day'],
@@ -90,6 +91,9 @@ metaDataKeyList = {
 
 # True incoming BUFR observed variables.
 raw_obsvars = ['airTemperature', 'dewpointTemperature', 'windDirection', 'windSpeed']
+
+# Keep track of the stations that were found.
+stations_found = []
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['airTemperature', 'virtualTemperature', 'specificHumidity', 'windEastward', 'windNorthward']
@@ -401,6 +405,7 @@ def specialty_time(tvals, year, month, day, hour, minute, second):
 
 def read_bufr_message(f, count, start_pos, data):
 
+    global stations_found  # As we find them, add to list.
     temp_data = {}         # A temporary dictionary to hold things.
     meta_data = {}         # All the various MetaData go in here.
     vals = {}              # Floating-point ObsValues variables go in here.
@@ -664,19 +669,38 @@ def read_bufr_message(f, count, start_pos, data):
                 meta_data['latitude'][n] = meta_data['latitude'][n-1]
 
         # Forcably create stationIdentification 5-char string from WMO block+station number.
+        # If no WMO numbers, there could be stationLongName
         meta_data['stationIdentification'] = np.full(target_number, string_missing_value, dtype='<S5')
         for n, block in enumerate(meta_data['wmoBlockNumber']):
             number = meta_data['wmoStationNumber'][n]
             if (block > 0 and block < 100 and number > 0 and number < 1000):
                 meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+            elif meta_data['stationLongName'][n] != string_missing_value:
+                meta_data['stationIdentification'][n] = meta_data['stationLongName'][n]
+                if n == 0:
+                    logging.info(f"  this site lacks WMO number, using stationLongName: {meta_data['stationIdentification'][n]}")
             if n == 0:
                 count[3] += 1
                 logging.info(f"Processing sonde for station: {meta_data['stationIdentification'][n]}")
+
+        if meta_data['stationIdentification'][0] in stations_found:
+            logging.debug(f"It appears {meta_data['stationIdentification'][0]} is a duplicate, skipping")
+            return data, count, start_pos
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
         if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
             meta_data['geopotentialHeight'][0] = float_missing_value
             meta_data['pressure'][0] = float_missing_value
+
+        # Very rarely the first level is way up high then followed by at surface. Toss first values.
+        if len(meta_data['pressure']) > 2:
+            if (meta_data['pressure'][0] < 60000 and meta_data['pressure'][1] > meta_data['pressure'][0]):
+                meta_data['pressure'][0] = float_missing_value
+                meta_data['geopotentialHeight'][0] = float_missing_value
+                temp_data['windDirection'][0] = float_missing_value
+                temp_data['windSpeed'][0] = float_missing_value
+                temp_data['airTemperature'][0] = float_missing_value
+                temp_data['dewpointTemperature'][0] = float_missing_value
 
         # And now processing the observed variables we care about.
         nbad = 0
@@ -749,6 +773,7 @@ def read_bufr_message(f, count, start_pos, data):
         data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
 
         obnum += 1
+        stations_found.append(meta_data['stationIdentification'][0])
 
     logging.info("number of observations so far: " + str(count[1]))
     logging.info("number of invalid or useless observations: " + str(count[2]))
