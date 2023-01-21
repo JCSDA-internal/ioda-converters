@@ -192,15 +192,19 @@ def getStationInfo(icaoId=None, synopId=None):
     return station
 
 
-def getProfile(filename, synopId, year, month):
+def getProfile(filename, synopId, target_date):
     """
     Get a parsed profile for the given station from the given RAOBS file
     :param filename:
     :param synopId:
-    :param year:
-    :param month:
+    :param target_date: format=2022-05-18T12:00:00Z
     :return: A parsed sounding dict, or None
     """
+
+    # Starting textual data contains no year or month, set from target_date
+    year = int(target_date[0:4])
+    month = int(target_date[5:7])
+
     sections = getSections(filename, [synopId])
     if not sections:
         return None
@@ -210,9 +214,9 @@ def getProfile(filename, synopId, year, month):
         sc = decode(sections[synopId][type], year, month)
         if sc is not None:
             s.append(sc)
+
+    # If merging sections still comes back empty, then it is from "NIL" being in the input.
     fullyMerged = mergeSections(s)
-    if fullyMerged is None:
-        logger.error(f"Can't merge sections - missing mandatory levels! at site: {synopId}")
 
     return fullyMerged
 
@@ -951,7 +955,7 @@ def printProfile(profile, output=sys.stdout):
               ("%.1f" % level, temp, dew, wspd, wdir, u, v, height, section), file=output)
 
 
-def change_vars(profile):
+def change_vars(profile, target_time):
     met_utils = meteo_utils.meteo_utils()
     new_profile = {}
     for var_name in meta_keys:
@@ -962,6 +966,15 @@ def change_vars(profile):
     # SPECIAL:  Most soundings launched 50-55 minutes prior to stated synoptic time, so a 12Z
     # launch is usually initiated close to 11:05Z.
     this_datetime = datetime(profile['year'], profile['month'], profile['day'], profile['hour'], 0, 0)
+    test_time = round((target_time - this_datetime).total_seconds())
+    if abs(test_time) > 3599:
+        logging.info(f" forcibly changing launch time at {profile['synop']} ({profile['day']},{profile['hour']})")
+        profile['year'] = int(target_time.strftime('%Y'))
+        profile['month'] = int(target_time.strftime('%m'))
+        profile['day'] = int(target_time.strftime('%d'))
+        profile['hour'] = int(target_time.strftime('%H'))
+        this_datetime = target_time
+
     launch_time = this_datetime - timedelta(seconds=55*60)
     time_offset1 = round((launch_time - epoch).total_seconds())
     previous_time = launch_time
@@ -1091,15 +1104,13 @@ if __name__ == "__main__":
     required.add_argument('-t', '--station-file', dest='station_file',
                           action='store', default=None, required=True,
                           help='station table file')
+    required.add_argument('-d', '--date', dest='date_string',
+                          action='store', default=None, help='date format: 2022-05-18T12:00:00Z')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
     parser.set_defaults(netCDF=False)
     optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('-y', '--year', dest='year',
-                          action='store', default=None, help='year')
-    optional.add_argument('-m', '--month', dest='month',
-                          action='store', default=None, help='month')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
@@ -1109,14 +1120,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.year:
-        year = int(args.year)
-    else:
-        year = today.year
-    if args.month:
-        month = int(args.month)
-    else:
-        month = today.month
+    try:
+        target_time = datetime.fromisoformat(args.date_string[:-1])
+    except Exception:
+        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
+        sys.exit()
 
     if args.debug:
         logging.basicConfig(level=logging.INFO)
@@ -1133,6 +1141,7 @@ if __name__ == "__main__":
 
     if not os.path.isfile(args.station_file):
         parser.error('Station table (-t option) file: ', args.station_file, ' does not exist')
+        sys.exit()
 
     loadStations(args.station_file)
 
@@ -1157,8 +1166,8 @@ if __name__ == "__main__":
 
         nstations = 0
         for n, station in enumerate(STATIONS.keys()):
-            logging.debug(f"\n seeking data from station {station} within {file_name} for year:{year} and month:{month}")
-            profile = getProfile(file_name, station, year, month)
+            logging.debug(f"\n seeking data from station {station} within {file_name} for {args.date_string}")
+            profile = getProfile(file_name, station, args.date_string)
 
             if profile:
                 nstations += 1
@@ -1169,7 +1178,7 @@ if __name__ == "__main__":
                     if args.verbose:
                         printProfile(profile)
                     if args.netcdf:
-                        new_profile = change_vars(profile)
+                        new_profile = change_vars(profile, target_time)
                         obs_data = append_ioda_data(new_profile, obs_data)
                 else:
                     logging.debug(f"  skipping sounding {station} with 1 or fewer ({nlevels}) levels")
