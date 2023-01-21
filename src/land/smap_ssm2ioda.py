@@ -104,13 +104,13 @@ class smap(object):
             qflg = qflg[mask]
             times = times[mask]
 
-        # get datetime from filename
-        # file provides yyyy-mm-dd as an attribute
-        str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
-        my_datetime = datetime.strptime(str_datetime, "%Y-%m-%d")
-        # str_split = self.filename.split("_")
-        # str_datetime = str_split[7]
-        # my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
+        ### file provides yyyy-mm-dd as an attribute
+        # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
+        # my_datetime = datetime.strptime(str_datetime, "%Y-%m-%d")
+        ### get datetime from filename
+        str_split = self.filename.split("_")
+        str_datetime = str_split[7]
+        my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
         time_offset = round((my_datetime - epoch).total_seconds())
         vals = vals.astype('float32')
         lats = lats.astype('float32')
