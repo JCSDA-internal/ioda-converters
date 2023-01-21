@@ -154,7 +154,7 @@ def get_data_from_files(zfiles):
     return obs_data
 
 
-def get_data_nasa_disc(f, g, obs_data, add_qc=False):
+def get_data_nasa_disc(f, g, obs_data, add_qc=True):
 
     # NASA GES DISC keys
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
@@ -209,7 +209,7 @@ def get_geo_noaa_class(afile):
     return g
 
 
-def get_data_noaa_class(f, g, obs_data, add_qc=False):
+def get_data_noaa_class(f, g, obs_data, add_qc=True):
 
     # NOAA CLASS h5 SDR-GEO  and SDR-Data
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
