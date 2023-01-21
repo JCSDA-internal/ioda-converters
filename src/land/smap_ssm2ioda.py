@@ -104,10 +104,10 @@ class smap(object):
             qflg = qflg[mask]
             times = times[mask]
 
-        ### file provides yyyy-mm-dd as an attribute
+        # file provides yyyy-mm-dd as an attribute
         # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
         # my_datetime = datetime.strptime(str_datetime, "%Y-%m-%d")
-        ### get datetime from filename
+        # get datetime from filename
         str_split = self.filename.split("_")
         str_datetime = str_split[7]
         my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
