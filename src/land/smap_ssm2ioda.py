@@ -12,6 +12,7 @@ import numpy as np
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
+import pdb
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -28,7 +29,7 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("depthBelowSoilSurface", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 obsvars = {
@@ -91,7 +92,7 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype=object)
+        times = np.empty_like(vals, dtype='int64')
         if self.mask:
             with np.errstate(invalid='ignore'):
                 mask = (vals > valid_min) & (vals < valid_max)
@@ -104,9 +105,12 @@ class smap(object):
             times = times[mask]
 
         # get datetime from filename
-        str_split = self.filename.split("_")
-        str_datetime = str_split[7]
-        my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
+        # file provides yyyy-mm-dd as an attribute
+        str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
+        my_datetime = datetime.strptime(str_datetime, "%Y-%m-%d")
+        # str_split = self.filename.split("_")
+        # str_datetime = str_split[7]
+        # my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
         time_offset = round((my_datetime - epoch).total_seconds())
         vals = vals.astype('float32')
         lats = lats.astype('float32')
