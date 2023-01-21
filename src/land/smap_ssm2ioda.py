@@ -12,7 +12,6 @@ import numpy as np
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-import pdb
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -92,7 +91,8 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype='int64')
+        times = np.empty_like(vals, dtype=np.int64)
+
         if self.mask:
             with np.errstate(invalid='ignore'):
                 mask = (vals > valid_min) & (vals < valid_max)
