@@ -90,6 +90,7 @@ class smap(object):
         lons = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['longitude'][:].ravel()
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
+
         deps = np.full_like(vals, self.assumedSoilDepth)
         times = np.empty_like(vals, dtype=np.int64)
 
