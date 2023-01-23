@@ -26,7 +26,7 @@ contains
 
     call c_f_pointer(scanline, scanline_f, [num_obs])
     call c_f_pointer(fovn, fovn_f, [num_obs])
-    call c_f_pointer(btobs, btobs_f, [nchanl*num_obs])
+    call c_f_pointer(btobs, btobs_f, [nchanl, num_obs])
 
     call ATMS_Spatial_Average(num_obs, nchanl, fovn_f, btobs_f, scanline_f, error_status)
   end subroutine ATMS_Spatial_Average_c
