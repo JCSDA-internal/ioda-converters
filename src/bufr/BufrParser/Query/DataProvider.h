@@ -66,6 +66,54 @@ namespace bufr {
 
             return is64Bit;
         }
+
+        std::string str()
+        {
+            std::string typeStr;
+
+            if (isString())
+            {
+                typeStr = "string";
+            }
+            else if (isInteger())
+            {
+                if (isSigned())
+                {
+                    if (is64Bit())
+                    {
+                        typeStr = "int64 ";
+                    }
+                    else
+                    {
+                        typeStr = "int   ";
+                    }
+                }
+                else
+                {
+                    if (is64Bit())
+                    {
+                        typeStr = "uint64";
+                    }
+                    else
+                    {
+                        typeStr = "uint  ";
+                    }
+                }
+            }
+            else
+            {
+                if (is64Bit())
+                {
+                    typeStr = "double";
+                }
+                else
+                {
+                    typeStr = "float ";
+                }
+            }
+
+            return typeStr;
+        }
     };
 
     /// \brief Responsible for exposing the data found in a BUFR file in a C friendly way.

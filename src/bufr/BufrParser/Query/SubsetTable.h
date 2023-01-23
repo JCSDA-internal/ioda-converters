@@ -40,6 +40,7 @@ namespace bufr {
         size_t nodeIdx;
         size_t copyIdx;
         bool hasDuplicates;
+        TypeInfo typeInfo;
 
         // \brief Do this nodes child sequences appear as parts of the query string?
         bool isQueryPathParentNode()
@@ -134,7 +135,6 @@ namespace bufr {
             }
         }
 
-
         std::vector<size_t> getSeqPath()
         {
             std::vector<size_t> path;
@@ -178,6 +178,8 @@ namespace bufr {
         }
     };
 
+    typedef std::vector<std::shared_ptr<Ingester::bufr::BufrNode>> BufrNodeVector;
+
 
     /// \brief Parses the BUFR message subset Meta data tables.
     class SubsetTable
@@ -186,6 +188,8 @@ namespace bufr {
         SubsetTable() = delete;
         explicit SubsetTable(const DataProvider& dataProvider);
         ~SubsetTable() = default;
+
+        std::vector<std::shared_ptr<BufrNode>> getLeaves() { return root_->getLeaves(); }
 
         /// \brief Returns all the query data elements.
         /// \returns BUFR table meta data for all the queries

@@ -37,6 +37,7 @@ namespace bufr {
             data.dimIdxs = leaf->getDimIdxs();
             data.requiresIdx = leaf->hasDuplicates;
             data.idx = leaf->copyIdx;
+            data.typeInfo = leaf->typeInfo;
 
             queryData.push_back(data);
         }
@@ -151,6 +152,12 @@ namespace bufr {
             }
 
             processNode(newNode);
+
+            if (newNode->isLeaf())
+            {
+                newNode->typeInfo = dataProvider_.getTypeInfo(newNode->nodeIdx);
+            }
+
             nodeIdx = dataProvider_.getLink(nodeIdx);
         }
     }
