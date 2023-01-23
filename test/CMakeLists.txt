@@ -815,7 +815,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
                           -i testinput/2021081612_RAOB_small.txt
                           -o testrun/2021081612_sonde_small.nc
                           -t share/raob_stations_small.json
-                          -y 2021 -m 8 --netcdf"
+                          --date 2021-08-16T12:00:00Z --netcdf"
                           2021081612_sonde_small.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
