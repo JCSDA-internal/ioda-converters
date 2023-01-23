@@ -45,9 +45,11 @@ VarDims = {
     'soilMoistureVolumetric': ['Location'],
 }
 
-# Usual reference time for these data is 12UTC 1Jan2000
-iso8601_string = 'seconds since 2000-01-01T12:00:00Z'
+# Usual reference time for these data is off j2000 base
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
+j2000_string = 'second since 2000-01-01T11:58:55Z'
+j2000_base_date = datetime(2000, 1, 1, 11, 58, 55, 816)
 
 
 class smap(object):
@@ -128,7 +130,8 @@ class smap(object):
         ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
-            times[i] = int(refsec[i])
+            dt = j2000_base_date + timedelta(seconds=int(refsec[i]))
+            times[i] = round((dt - epoch).total_seconds())
             errs[i] = 0.04
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
@@ -140,6 +143,7 @@ class smap(object):
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
         self.outdata[('surfaceQualifier', 'MetaData')] = sflg
+        self.varAttrs[('surfaceQualifier', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
         self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
