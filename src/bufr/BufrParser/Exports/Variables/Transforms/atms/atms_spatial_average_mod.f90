@@ -26,39 +26,41 @@ Module ATMS_Spatial_Average_Mod
 
 CONTAINS 
 
-! SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, FOV, Time, BT_InOut, &
-!  SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, FOV, BT_InOut, &
-!       Scanline, Error_Status)
   SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, fov, bt_inout, scanline, Error_Status)
     IMPLICIT NONE
     
     ! Declare passed variables
     integer(i_kind),          intent(in   ) :: num_obs, nchanl 
     integer(i_kind),          intent(in   ) :: fov(num_obs)
-    integer(i_kind),          intent(inout) :: scanline(num_obs)
 !   real(r_kind),             intent(in   ) :: time(num_obs)
+    integer(i_kind),          intent(inout) :: scanline(num_obs)
     real(r_kind),             intent(inout) :: bt_inout(nchanl*num_obs)
-    integer(i_kind),          intent(  out) :: error_status 
+    integer(i_kind),          intent(inout) :: error_status 
 
+!   Declare local variables
     integer(i_kind):: i, iscan 
 
+!   Check passed variables: dimension 
     write(6,*)'ATMS_Spatial_Average: checking dimension ... '
     write(6,*)'ATMS_Spatial_Average: num_obs = ', num_obs
     write(6,*)'ATMS_Spatial_Average: nchanl  = ', nchanl
 
+!   Check passed variable: fov
     write(6,*)'ATMS_Spatial_Average: checking fov ... '
     write(6,*)'ATMS_Spatial_Average: are we passing fov in here OK ? ... '
     write(6,*) 'minval/maxval fov = ', minval(fov), maxval(fov)
 
     write(6,*)'ATMS_Spatial_Average: chechking scanline ...'
     write(6,*)'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
-    
+
+!   Calculate scanline    
     do i = 1, num_obs 
        iscan = int(i/96)
        scanline(i) = iscan + 1  
     enddo
     write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
 
+!   Check passed variable: bt_inout
     write(6,*)'ATMS_Spatial_Average: chechking bt_inout ...'
     write(6,*)'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
     write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)

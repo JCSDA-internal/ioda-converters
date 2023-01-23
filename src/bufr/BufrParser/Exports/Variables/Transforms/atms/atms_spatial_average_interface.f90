@@ -22,11 +22,11 @@ contains
 
     integer(c_int), pointer :: scanline_f(:)
     integer(c_int), pointer :: fovn_f(:)
-    real(c_float), pointer :: btobs_f(:)
+    real(c_float),  pointer :: btobs_f(:,:)
 
     call c_f_pointer(scanline, scanline_f, [num_obs])
     call c_f_pointer(fovn, fovn_f, [num_obs])
-    call c_f_pointer(btobs, btobs_f, [num_obs*nchanl])
+    call c_f_pointer(btobs, btobs_f, [nchanl*num_obs])
 
     call ATMS_Spatial_Average(num_obs, nchanl, fovn_f, btobs_f, scanline_f, error_status)
   end subroutine ATMS_Spatial_Average_c

@@ -88,7 +88,6 @@ namespace Ingester
             size_t iloc = static_cast<size_t>(floor(idx / nchns));
             size_t ichn = static_cast<size_t>(floor(idx % nchns));
             btobs[idx] = radObj->getAsFloat(idx);
-//          btobs[ichn][iloc] = radObj->getAsFloat(idx);
         }
 
         int error_status; 
