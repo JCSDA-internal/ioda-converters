@@ -55,8 +55,11 @@ namespace Ingester
         auto& sensorChanObj = map.at(getExportKey(ConfKeys::SensorChannelNumber));
         auto& fovnObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
 
-        // Declare unscale spectral radiance data array from scaled spectral radiance
+        // Declare and initialize data arrays 
         std::vector<float> outData((radObj->size()), DataObject<float>::missingValue());
+        std::vector<int> fovn((fovnObj->size()), DataObject<int>::missingValue());
+        std::vector<int> scanline(fovnObj->size(), DataObject<int>::missingValue()); // scanline has the same dimension as fovn
+        std::vector<float> btobs((radObj->size()), DataObject<float>::missingValue());
 
         // Get dimensions
         int nchns = (radObj->getDims())[1];
@@ -68,21 +71,31 @@ namespace Ingester
         oops::Log::info() << "emily checking nobs = " << nobs  << std::endl;
         oops::Log::info() << "emily checking dim0 = " << dim0 << std::endl;
         oops::Log::info() << "emily checking dim1 = " << dim1  << std::endl;
-        oops::Log::info() << "emily checking radObj size  = " << radObj->size()  << std::endl;
-        oops::Log::info() << "emily checking fovnObj size = " << fovnObj->size() << std::endl;
+        oops::Log::info() << "emily checking radObj size  = "       << radObj->size()  << std::endl;
+        oops::Log::info() << "emily checking fovnObj size = "       << fovnObj->size() << std::endl;
+        oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
 
-        //>>emily test
+        // Fill in fov values from map  
+        for (size_t idx = 0; idx < fovnObj->size(); idx++)
+        {
+            fovn[idx] =  fovnObj->getAsInt(idx);
+        }
+
+        // Fill in obs values from map  
+        for (size_t idx = 0; idx < radObj->size(); idx++)
+        {
+            auto channel = sensorChanObj->getAsInt(idx);
+            size_t iloc = static_cast<size_t>(floor(idx / nchns));
+            size_t ichn = static_cast<size_t>(floor(idx % nchns));
+            btobs[idx] = radObj->getAsFloat(idx);
+//          btobs[ichn][iloc] = radObj->getAsFloat(idx);
+        }
 
         int error_status; 
-//        std::vector<float> scanline(nobs, DataObject<float>::missingValue());
-        float scanline[nobs];
-//      std::vector<float> fovn(nobs, DataObject<float>::missingValue());
-//      float fovn[nobs];
+//      int scanline[nobs];
 
 //      ATMS_Spatial_Average_f(nobs, nchns, &fovnObj, &radObj, &scanline, &error_status); 
-        ATMS_Spatial_Average_f(nobs, nchns, &scanline, &error_status);
-
-        //<<emily test
+        ATMS_Spatial_Average_f(nobs, nchns, &fovn, &btobs, &scanline, &error_status);
        
         // Perform FFT image remapping 
         for (size_t idx = 0; idx < radObj->size(); idx++)

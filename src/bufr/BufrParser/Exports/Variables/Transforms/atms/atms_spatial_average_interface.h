@@ -15,10 +15,9 @@ extern "C" {
 //  void ATMS_Spatial_Average_f(int num_obs, int nchanl, void** FOV, void** Time, void** BT, 
 //                              void** Scanline, int error_status); 
 
-//  void ATMS_Spatial_Average_f(int num_obs, int nchanl, void** FOV, void** BT, 
-//                              void* Scanline, int* error_status); 
-
-  void ATMS_Spatial_Average_f(int num_obs, int nchanl, int** scanline, int* error_status);
+//  not sure why void** fov and void** scanline do work ... :-(
+//  but void* fov and void* scanline work
+  void ATMS_Spatial_Average_f(int num_obs, int nchanl, void* fov, void* btobs, void* scanline, int* error_status);
 
 #ifdef __cplusplus
 }

@@ -29,36 +29,39 @@ CONTAINS
 ! SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, FOV, Time, BT_InOut, &
 !  SUBROUTINE ATMS_Spatial_Average(Num_Obs, NChanl, FOV, BT_InOut, &
 !       Scanline, Error_Status)
-  SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, Scanline, Error_Status)
+  SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, fov, bt_inout, scanline, Error_Status)
     IMPLICIT NONE
     
     ! Declare passed variables
-    integer(i_kind) ,intent(in   ) :: num_obs, nchanl 
-!    integer(i_kind) ,intent(in   ) :: fov(num_obs)
-!!   real(r_kind)    ,intent(in   ) :: time(Num_Obs)
-!    real(r_kind)    ,intent(inout) :: bt_inout(NChanl,Num_Obs)
-    integer(i_kind) ,intent(  out) :: scanline(num_obs)
-    integer(i_kind) ,intent(  out) :: error_status 
+    integer(i_kind),          intent(in   ) :: num_obs, nchanl 
+    integer(i_kind),          intent(in   ) :: fov(num_obs)
+    integer(i_kind),          intent(inout) :: scanline(num_obs)
+!   real(r_kind),             intent(in   ) :: time(num_obs)
+    real(r_kind),             intent(inout) :: bt_inout(nchanl*num_obs)
+    integer(i_kind),          intent(  out) :: error_status 
 
-    real(r_kind):: i, j
+    integer(i_kind):: i, iscan 
 
-    write(6,*)'emily checking: num_obs = ', num_obs
-    write(6,*)'emily checking: nchanl  = ', nchanl 
-!    do i = 1, num_obs 
-!       write(6,*)'emily checking: fov  = ', fov(i) 
-!    enddo
+    write(6,*)'ATMS_Spatial_Average: checking dimension ... '
+    write(6,*)'ATMS_Spatial_Average: num_obs = ', num_obs
+    write(6,*)'ATMS_Spatial_Average: nchanl  = ', nchanl
 
+    write(6,*)'ATMS_Spatial_Average: checking fov ... '
+    write(6,*)'ATMS_Spatial_Average: are we passing fov in here OK ? ... '
+    write(6,*) 'minval/maxval fov = ', minval(fov), maxval(fov)
+
+    write(6,*)'ATMS_Spatial_Average: chechking scanline ...'
+    write(6,*)'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
+    
     do i = 1, num_obs 
-       scanline(i) = i
-       write(6,*)'emily checking: scanline = ', scanline(i) 
+       iscan = int(i/96)
+       scanline(i) = iscan + 1  
     enddo
+    write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
 
-!    do i = 1, num_obs 
-!       do j = 1, nchanl 
-!          bt_inout(i,j) =  200_r_kind
-!          write(6,*)'emily checking: bt_inout = ', bt_inout(i,j) 
-!       enddo
-!    enddo
+    write(6,*)'ATMS_Spatial_Average: chechking bt_inout ...'
+    write(6,*)'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
+    write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
   
     error_status = 0
     write(6,*)'emily checking: error_status = ', error_status 
