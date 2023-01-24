@@ -100,26 +100,32 @@ class tropess(object):
             # qa is not really used for now but can use dofs or other
             # quantities in the retrieval product. No qa/qc provided
             # in tropess cris product
-            qa = np.zeros((nlocs,nlevs), dtype=np.float32)
+            qa = np.zeros((nlocs), dtype=np.float32)
             nan_flag = np.full((nlocs),True)
 
             # Create a list of integers from a list of strings.
             userLevels = [ int(lev) for lev in self.userLevels]
 
-            # Calculate apriori term (ap) for each userLevel 
-            ap = np.zeros((nlocs,len(userLevels)), dtype=np.float32)
-
             # Keep track of the nominal levels
             nom = np.zeros((nlocs,len(userLevels)), dtype=np.int32)
-    
+
+            # Calculate apriori term (ap) for each userLevel 
+            # do thinning and remove NaNs
+            ap = np.zeros((nlocs,len(userLevels)), dtype=np.float32)
+            flag = np.full((nlocs), True)
+            thin = np.random.uniform(size=nlocs) > self.thin
+ 
             for lev, userLevel in enumerate(userLevels):
                 ak = averaging_kernel[:,int(userLevel),:]
                 this_term = ak*ln(xa)
 
-                ap[:,lev] = np.exp(ln(xa[:,lev])+ np.sum(this_term,axis=1))
+                ap[:,lev] = np.exp(ln(xa[:,lev]) + np.sum(this_term,axis=1))
                 nom[:,lev] = int(userLevel)
+
                 if(np.isnan(ap[:,lev]).any()):
                     nan_flag[np.argwhere(np.isnan(ap[:,lev]))] = False
+                    flag = np.logical_and(nan_flag, flag)
+            flag = np.logical_and(nan_flag, thin)
 
             # To keep the ufo part sane here we decide to add selected retrieval levels
             # sequentially. Implying R diagonal... There is no point of passing
@@ -127,28 +133,21 @@ class tropess(object):
             # each profile). Obs pre-proc could be done in the future using PCA/SVD 
             # or other data compression techniques as seen in literature
             ulevs = len(userLevels)
-
-            nom = nom.reshape(ulevs*nlocs)
             ap = ap.reshape(ulevs*nlocs)
             averaging_kernel = averaging_kernel[:,userLevels,:].reshape(ulevs*nlocs,nlevs)
             x = x[:,userLevels].reshape(ulevs*nlocs)
             xa = xa[:,userLevels].reshape(ulevs*nlocs)
             # Omit the off-diag terms in R for now...
             log_obs_error = log_obs_error[:,userLevels,userLevels].reshape(ulevs*nlocs)
-            print(np.shape(xa))
-            print(np.shape(averaging_kernel))
 
             # Repeat ulevs times the coordinates
+            flag = flag.repeat(ulevs)
+            nom = nom.repeat(ulevs)
             times = times.repeat(ulevs)
             lats = lats.repeat(ulevs) 
             lons = lons.repeat(ulevs)
             fullPressure = fullPressure.repeat(ulevs,axis=0) 
-
-            # Thin using random uniform draw
-            thin = np.random.uniform(size=nlocs*ulevs) > self.thin
-            if(np.isnan(ap).any()):
-                nan_flag[np.argwhere(np.isnan(ap))] = False
-            flag = np.logical_and(nan_flag, thin)
+            qa = qa.repeat(ulevs)
 
             # ---- Write Metadata and data 
             if first:
@@ -158,22 +157,17 @@ class tropess(object):
                 self.outData[('latitude', 'MetaData')] = lats[flag]
                 self.outData[('longitude', 'MetaData')] = lons[flag]
 
-
-                for lev, userLevel in enumerate(userLevels):
-
                 # Write ap and xa
 
-
-
                 varname_ap = ('apriori_term', 'RtrvlAncData')
-                self.outData[varname_ap] = ap[:,lev][flag]
+                self.outData[varname_ap] = ap[flag]
                 self.varAttrs[varname_ap]['coordinates'] = 'longitude latitude'
                 self.varAttrs[varname_ap]['units'] = '1'
 
-                varname_xa = ('xa', 'RtrvlAncData')
-                self.outData[varname_xa] = xa[:,lev][flag]
-                self.varAttrs[varname_xa]['coordinates'] = 'longitude latitude'
-                self.varAttrs[varname_xa]['units'] = '1'
+                #varname_xa = ('xa', 'RtrvlAncData')
+                #self.outData[varname_xa] = xa[:,lev][flag]
+                #self.varAttrs[varname_xa]['coordinates'] = 'longitude latitude'
+                #self.varAttrs[varname_xa]['units'] = '1'
 
                 # Write pressure and ak level by level
                 for j in range(nlevs+1):
@@ -184,19 +178,21 @@ class tropess(object):
                          self.varAttrs[varname_ak]['units'] = '1'
 
                      varname_pr = ('pressure_level_'+str(j), 'RtrvlAncData')
-                     self.outData[varname_pr] = HPA2PA * pressure[:, j][flag]
+                     self.outData[varname_pr] = HPA2PA * fullPressure[:, j][flag]
                      self.varAttrs[varname_pr]['coordinates'] = 'longitude latitude'
                      self.varAttrs[varname_pr]['units'] = 'Pa'
-     
+                print(np.shape(qa)) 
+                print(np.shape(x)) 
+                print(np.shape(flag))
 
                 counter = 0
-                for i in self.obsvars.keys():
-                     self.outData[self.varDict[self.obsvars[i]]['valKey']] = \
-                          x[:,userLevels[counter]][flag]
-                     self.outData[self.varDict[self.obsvars[i]]['errKey']] = \
-                          log_obs_error[:,userLevels[counter],userLevels[counter]][flag]
-                     self.outData[self.varDict[self.obsvars[i]]['qcKey']] = \
-                          qa[:,userLevels[counter]][flag]
+                for var in self.obsvars:
+                     self.outData[self.varDict[var]['valKey']] = \
+                          x[flag]
+                     self.outData[self.varDict[var]['errKey']] = \
+                          log_obs_error[flag]
+                     self.outData[self.varDict[var]['qcKey']] = \
+                          qa[flag]
                      counter = counter+1
 
 
@@ -209,6 +205,14 @@ class tropess(object):
                 self.outData[('longitude', 'MetaData')] = np.concatenate(
                     (self.outData[('longitude', 'MetaData')], lons[flag]))
 
+                varname_ap = ('apriori_term', 'RtrvlAncData')
+                self.outData[varname_ap] = np.concatenate(
+                    (self.outData[varname_ap], ap[flag]))
+
+                #varname_xa = ('xa', 'RtrvlAncData')
+                #self.outData[varname_xa] = np.concatenate(
+                #    (self.outData[varname_xa], xa[:][flag]))
+
                 for j in range(nlevs+1):
                      if j < nlevs:
                           varname_ak = ('averaging_kernel_level_'+str(i), 'RtrvlAncData')
@@ -219,26 +223,18 @@ class tropess(object):
                      self.outData[varname_pr] = np.concatenate(
                          (self.outData[varname_pr], HPA2PA * pressure[:, j][flag]))
 
-                varname_ap = ('apriori_term', 'RtrvlAncData')
-                self.outData[varname_ap] = np.concatenate(
-                    (self.outData[varname_ap], ap[:][flag]))
+                for var in self.obsvars:
+                    self.outData[self.varDict[var]['valKey']] = np.concatenate(
+                        (self.outData[self.varDict[var]['valKey']],
+                         x[flag]))
 
-                varname_xa = ('xa', 'RtrvlAncData')
-                self.outData[varname_xa] = np.concatenate(
-                    (self.outData[varname_xa], xa[:][flag]))
+                    self.outData[self.varDict[var]['errKey']] = np.concatenate(
+                        (self.outData[self.varDict[var]['errKey']],
+                        log_obs_error[flag]))
 
-                for i in self.obsvars.keys():
-                    self.outData[self.varDict[self.obsvars[i]]['valKey']] = np.concatenate(
-                        (self.outData[self.varDict[self.obsvars[i]]['valKey']],
-                         x[:,userLevels[counter]][flag]))
-
-                    self.outData[self.varDict[self.obsvars[i]]['errKey']] = np.concatenate(
-                        (self.outData[self.varDict[self.obsvars[i]]['errKey']],
-                        log_obs_error[:,userLevels[counter],userLevels[counter]][flag]))
-
-                    self.outData[self.varDict[self.obsvars[i]]['qcKey']] = np.concatenate(
-                        (self.outData[self.varDict[self.obsvars[i]]['qcKey']],
-                         qa[:,userLevels[counter]][flag]))
+                    self.outData[self.varDict[var]['qcKey']] = np.concatenate(
+                        (self.outData[self.varDict[var]['qcKey']],
+                        qa[flag]))
                     counter = counter+1
                 first = False
 
@@ -263,7 +259,7 @@ class tropess(object):
         """
         obsvars = {}
 
-        obsvars = "carbon_monoxide_in_column"
+        obsvars = "carbonmonoxideColumn"
 
         self.obsvars= obsvars
 
@@ -282,7 +278,7 @@ class tropess(object):
         """
         """
         self.varDict = defaultdict(lambda: defaultdict(dict))
-        for key, item in self.obsvars.items():
+        for item in self.obsvars:
             self.varDict[item]['valKey'] = item, iconv.OvalName()
             self.varDict[item]['errKey'] = item, iconv.OerrName()
             self.varDict[item]['qcKey'] = item, iconv.OqcName()
@@ -291,7 +287,7 @@ class tropess(object):
         """
         """
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        for key, item in self.obsvars.items():
+        for item in self.obsvars:
             self.varAttrs[item, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[item, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[item, iconv.OqcName()]['coordinates'] = 'longitude latitude'
@@ -365,7 +361,7 @@ def main():
     locationKeyList = [
         ("latitude", "float"),
         ("longitude", "float"),
-        ("datetime", "string")
+        ("dateTime", "string")
     ]
 
     VarDims = {
