@@ -264,7 +264,7 @@ class tropess(object):
         Make a dictionary of AttrData based on obsvars that is created using
         the levels specified by the user (command line args).
         """
-        AttrDatai = {
+        AttrData = {
             'converter': os.path.basename(__file__),
             'nvars': np.int32(len(self.obsvars))
         }
