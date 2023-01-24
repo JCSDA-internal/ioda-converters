@@ -60,6 +60,11 @@ namespace Ingester
         }
 
         initQueryMap();
+
+        oops::Log::info() << "DatetimeVariable ... " << std::endl;
+        oops::Log::info() << "emily checking exportName   = " << exportName << std::endl;
+        oops::Log::info() << "emily checking groupByField = " << groupByField << std::endl;
+        oops::Log::info() << "emily checking conf         = " << conf << std::endl;
     }
 
     std::shared_ptr<DataObjectBase> DatetimeVariable::exportData(const BufrDataMap& map)
