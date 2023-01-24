@@ -1061,7 +1061,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropess_co_nc2ioda.py
                           -i testinput/tropess_cris_co.nc
                           -o testrun/tropess_cris_co.nc
-                          --thin 0.1
                           --levels 0 4 8 12"
                   tropess_cris_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
