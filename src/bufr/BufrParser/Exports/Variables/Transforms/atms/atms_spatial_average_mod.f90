@@ -38,79 +38,220 @@ CONTAINS
     real(r_kind),             intent(inout) :: bt_inout(nchanl*num_loc)
     integer(i_kind),          intent(inout) :: error_status 
 
-!   Declare local variables
-    integer(i_kind):: iscan, iobs, iloc, ichn
+    ! Declare local variables
+    logical          :: do_interface_check, do_output_check
+    integer(i_kind)  :: iobs, iloc, ichn
     integer(i_kind), dimension(nchanl, num_loc) :: channel_number
     real(r_kind),    dimension(nchanl, num_loc) :: bt_obs
 
-!   Check passed variables: dimension 
-    write(6,*)'ATMS_Spatial_Average: checking dimension ... '
-    write(6,*)'ATMS_Spatial_Average: num_loc = ', num_loc
-    write(6,*)'ATMS_Spatial_Average: nchanl  = ', nchanl
+    ! -------------------------------------------------------------------- 
+    ! Declare local parameters
+    integer(i_kind), parameter :: atms1c_h_wmosatid=224
+    integer(i_kind), parameter :: lninfile=15
+    integer(i_kind), parameter :: max_fov=96
+    real(r_kind), parameter    :: scan_interval = 8.0_r_kind/3.0_r_kind
+    ! Maximum number of channels 
+    integer(i_kind), parameter :: maxchans = 22
+    ! Minimum allowed BT as a function of channel number
+    real(r_kind), parameter :: minbt(maxchans) = &
+         (/ 120.0_r_kind, 120.0_r_kind, 190.0_r_kind, 190.0_r_kind, &
+            200.0_r_kind, 200.0_r_kind, 200.0_r_kind, 190.0_r_kind, &
+            190.0_r_kind, 180.0_r_kind, 180.0_r_kind, 180.0_r_kind, &
+            190.0_r_kind, 200.0_r_kind, 200.0_r_kind, 120.0_r_kind, &
+            120.0_r_kind, 120.0_r_kind, 150.0_r_kind, 170.0_r_kind, &
+            180.0_r_kind, 190.0_r_kind /)
+    ! Maximum allowed BT as a function of channel number
+    real(r_kind), parameter :: maxbt(maxchans) = &
+         (/ 320.0_r_kind, 320.0_r_kind, 300.0_r_kind, 300.0_r_kind, &
+            300.0_r_kind, 270.0_r_kind, 250.0_r_kind, 240.0_r_kind, &
+            240.0_r_kind, 250.0_r_kind, 250.0_r_kind, 270.0_r_kind, &
+            280.0_r_kind, 290.0_r_kind, 300.0_r_kind, 320.0_r_kind, &
+            320.0_r_kind, 300.0_r_kind, 300.0_r_kind, 300.0_r_kind, &
+            300.0_r_kind, 300.0_r_kind /)
 
-!   Check passed variable: channel 
-    write(6,*)'ATMS_Spatial_Average: checking channel ... '
-    write(6,*)'ATMS_Spatial_Average: are we passing channel in here OK ? ... '
-    write(6,*) 'minval/maxval channel = ', minval(channel), maxval(channel)
+    ! Declare local variables
+    character(30) :: Cline
 
-!   Check passed variable: fov
-    write(6,*)'ATMS_Spatial_Average: checking fov ... '
-    write(6,*)'ATMS_Spatial_Average: are we passing fov in here OK ? ... '
-    write(6,*) 'minval/maxval fov = ', minval(fov), maxval(fov)
+    integer(i_kind) :: i, iscan, ifov, ichan, nchannels, wmosatid, version
+    integer(i_kind) :: ios, max_scan, mintime
+    integer(i_kind) :: nxaverage(nchanl), nyaverage(nchanl)
+    integer(i_Kind) :: channelnumber(nchanl),qc_dist(nchanl)
+    integer(i_kind), ALLOCATABLE ::  scanline_back(:,:)
 
-    write(6,*)'ATMS_Spatial_Average: chechking scanline ...'
-    write(6,*)'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
+    real(r_kind) :: sampling_dist, beamwidth(nchanl)
+    real(r_kind) :: newwidth(nchanl), cutoff(nchanl),err(nchanl)
+    real(r_kind), allocatable, target :: bt_image(:,:,:)
 
-!   Check passed variable: scanline 
-!   Calculate scanline    
-    do iloc = 1, num_loc
-       iscan = int(iloc/96)
-       scanline(iloc) = iscan + 1  
-    enddo
+    ! ------------------------------------------------------------------------------
+
+    do_interface_check = .true.
+    do_output_check = .false.
+    if (do_output_check) do_interface_check = .true.
+
+    if (do_interface_check) then
+
+       ! Check passed variables: dimension 
+       write(6,*) 'ATMS_Spatial_Average: checking dimension ... '
+       write(6,*) 'ATMS_Spatial_Average: num_loc = ', num_loc
+       write(6,*) 'ATMS_Spatial_Average: nchanl  = ', nchanl
+
+       ! Check passed variable: channel 
+       write(6,*) 'ATMS_Spatial_Average: checking channel ... '
+       write(6,*) 'ATMS_Spatial_Average: are we passing channel in here OK ? ... '
+       write(6,*) 'minval/maxval channel = ', minval(channel), maxval(channel)
+
+       ! Check passed variable: fov
+       write(6,*) 'ATMS_Spatial_Average: checking fov ... '
+       write(6,*) 'ATMS_Spatial_Average: are we passing fov in here OK ? ... '
+       write(6,*) 'minval/maxval fov = ', minval(fov), maxval(fov)
+
+       write(6,*) 'ATMS_Spatial_Average: chechking scanline ...'
+       write(6,*) 'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
+
+       ! Check passed variable: scanline 
+       ! Calculate scanline    
+       do iloc = 1, num_loc
+          iscan = int(iloc/96)
+          scanline(iloc) = iscan + 1  
+       enddo
+       write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
+
+       ! Check passed variable: time
+       write(6,*) 'ATMS_Spatial_Average: checking time ... '
+       write(6,*) 'ATMS_Spatial_Average: are we passing time in here OK ? ... '
+       write(6,*) 'minval/maxval time = ', minval(time), maxval(time)
+
+       write(6,*) 'ATMS_Spatial_Average: chechking scanline ...'
+       write(6,*) 'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
+
+       ! Check passed variable: bt_inout
+       write(6,*) 'ATMS_Spatial_Average: chechking bt_inout ...'
+       write(6,*) 'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
+
+       ! print out for checking and debugging
+       bt_obs = reshape(bt_inout, (/nchanl, num_loc/))
+       channel_number = reshape(channel, (/nchanl, num_loc/))
+ 
+       if (do_output_check) then
+          write(6,  *) 'emily check 1 ... '
+          write(6,102) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
+          iobs = 1 
+          do iloc = 1, num_loc
+             do ichn = 1, nchanl 
+                write(6,101) iobs, iloc, time(iloc), fov(iloc), ichn, channel_number(ichn,iloc), bt_obs(ichn,iloc)
+                iobs = iobs+1
+             enddo
+          enddo
+101       format(i12,2x,i12,2x,i20,2x,3(i12,2x),f15.8)
+102       format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
+       endif
+       write(6,*) 'minval/maxval bt_obs = ', minval(bt_obs), maxval(bt_obs)
+
+       if (do_output_check) then
+
+          write(6,  *) 'emily check 2 ... '
+          write(6,202) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
+          do iobs = 0, num_loc*nchanl-1 
+             iloc = int(iobs/nchanl)
+             ichn = int(mod(iobs,nchanl)) 
+             write(6,201) iobs+1, iloc+1, time(iloc+1), fov(iloc+1), ichn+1, channel(iobs+1), bt_inout(iobs+1)
+          enddo 
+201       format(i12,2x,i12,2x,i20,2x,3(i12,2x),f15.8)
+202       format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
+       endif
+       write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
+       error_status = 0
+       write(6,*)'emily checking: error_status = ', error_status
+    endif ! do_interface_check
+
+    ! ------------------------------------------------------------------------------
+
+    error_status=0
+
+    write(6,*) 'emily checking nchanl = ', nchanl
+    if (nchanl > maxchans) then 
+       write(0,*) 'Unexpected number of ATMS channels: ',nchanl
+       error_status = 1
+       return 
+    endif
+
+    write(6,*) 'emily checking: begin reading the beamwidth requirement from file ...'
+    ! Read the beamwidth requirements
+    open(lninfile,file='atms_beamwidth.txt',form='formatted',status='old', &
+         iostat=ios)
+    write(6,*) 'emily checking: ios = ', ios
+    if (ios /= 0) then 
+       write(*,*) 'Unable to open atms_beamwidth.txt'
+       error_status=1
+       return 
+    endif 
+    wmosatid=999
+    read(lninfile,'(a30)',iostat=ios) cline
+    do while (wmosatid /= atms1c_h_wmosatid .AND. ios == 0)
+       write(6,*) 'emily checking: in do while loop reading ...'
+       do while (cline(1:1) == '#')
+          read(lninfile,'(a30)') cline
+       enddo 
+       read(cline,*) wmosatid
+       write(6,*) 'emily checking: wmosatid = ', wmosatid
+
+       read(lninfile,'(a30)') cline
+       do while (cline(1:1) == '#')
+          read(lninfile,'(a30)') cline
+       enddo 
+       read(cline,*) version
+       write(6,*) 'emily checking: version = ', version 
+
+       read(lninfile,'(a30)') cline
+       do while (cline(1:1) == '#')
+          read(lninfile,'(a30)') cline
+       enddo 
+       read(cline,*) sampling_dist
+       write(6,*) 'emily checking: sampleing_dist = ', sampling_dist 
+
+       read(lninfile,'(a30)') cline
+       do while (cline(1:1) == '#')
+          read(lninfile,'(a30)') cline
+       enddo 
+       read(cline,*) nchannels
+       write(6,*) 'emily checking: nchannels = ', nchannels 
+
+       read(lninfile,'(a30)') cline
+       if (nchannels > 0) then
+          do ichan=1,nchannels
+             read(lninfile,'(a30)') cline
+             do while (cline(1:1) == '#')
+                read(lninfile,'(a30)') cline
+             enddo 
+             read(cline,*) channelnumber(ichan),beamwidth(ichan), &
+                  newwidth(ichan),cutoff(ichan),nxaverage(ichan), &
+                  nyaverage(ichan), qc_dist(ichan)
+             write(6,*) channelnumber(ichan),beamwidth(ichan), &
+                  newwidth(ichan),cutoff(ichan),nxaverage(ichan), &
+                  nyaverage(ichan), qc_dist(ichan)
+          enddo 
+       end if
+       read(lninfile,'(a30)',iostat=ios) cline
+    enddo 
+    write(6,*) 'emily checking: done reading the beamwidth requirement from file ...'
+    if (wmosatid /= atms1c_h_wmosatid) then 
+       write(*,*) 'ATMS_Spatial_Averaging: sat id not matched in atms_beamwidth.dat'
+       error_status=1
+       return 
+    endif 
+    close(lninfile)
+
+    write(6,*) 'emily checking: determine scanline from time ...'
+    ! Determine scanline from time
+    mintime = minval(time)
+    scanline(:)   = nint((time(1:num_loc)-mintime)/scan_interval)+1
+    Max_Scan=maxval(scanline)
     write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
 
-!   Check passed variable: time
-    write(6,*)'ATMS_Spatial_Average: checking time ... '
-    write(6,*)'ATMS_Spatial_Average: are we passing time in here OK ? ... '
-    write(6,*) 'minval/maxval time = ', minval(time), maxval(time)
+    allocate(bt_image(max_fov, max_scan, nchanl))
+    allocate(scanline_back(max_fov, max_scan))
+    bT_image(:,:,:) = 1000.0_r_kind
 
-    write(6,*)'ATMS_Spatial_Average: chechking scanline ...'
-    write(6,*)'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
-
-!   Check passed variable: bt_inout
-    write(6,*)'ATMS_Spatial_Average: chechking bt_inout ...'
-    write(6,*)'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
-
-!   print out for checking and debugging
-    bt_obs = reshape(bt_inout, (/nchanl, num_loc/))
-    channel_number = reshape(channel, (/nchanl, num_loc/))
- 
-!    write(6,  *)'emily check 1 ... '
-!    write(6,102)'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
-!    iobs = 1 
-!    do iloc = 1, num_loc
-!       do ichn = 1, nchanl 
-!          write(6,101) iobs, iloc, time(iloc), fov(iloc), ichn, channel_number(ichn,iloc), bt_obs(ichn,iloc)
-!          iobs = iobs+1
-!       enddo
-!    enddo
-!101 format(i12,2x,i12,2x,i20,2x,3(i12,2x),f15.8)
-!102 format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
-!    write(6,*) 'minval/maxval bt_obs = ', minval(bt_obs), maxval(bt_obs)
-!
-!    write(6,  *)'emily check 2 ... '
-!    write(6,202)'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
-!    do iobs = 0, num_loc*nchanl-1 
-!       iloc = int(iobs/nchanl)
-!       ichn = int(mod(iobs,nchanl)) 
-!       write(6,201) iobs+1, iloc+1, time(iloc+1), fov(iloc+1), ichn+1, channel(iobs+1), bt_inout(iobs+1)
-!    enddo 
-!201 format(i12,2x,i12,2x,i20,2x,3(i12,2x),f15.8)
-!202 format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
-!
-    write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
-    error_status = 0
-    write(6,*)'emily checking: error_status = ', error_status
 
 END Subroutine ATMS_Spatial_Average
 
