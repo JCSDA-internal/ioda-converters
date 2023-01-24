@@ -27,7 +27,7 @@ from orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "string"),
 ]
 
 AttrData = {
@@ -58,10 +58,6 @@ class tropomi(object):
         varname_str = list(self.obsVar.keys())[0]
         print('Processing variable: %s' % (varname_str), flush=1)
         iodavar = self.obsVar[varname_str]
-        # if self.columnType == 'total':
-        #     iodavar = self.obsVar['nitrogendioxide_total_column']
-        # elif self.columnType == 'tropo':
-        #     iodavar = self.obsVar['nitrogendioxide_tropospheric_column']
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -124,11 +120,7 @@ class tropomi(object):
             AttrData['averaging_kernel_levels'] = np.int32(nlevs)
 
             # scale the avk using AMF ratio and tropopause level for tropo column
-            if self.varname == 'no2':
-                nlocf = len(trop_layer[flg])
-            elif self.varname == 'co':
-                nlocf = len(lats[flg])
-
+            nlocf = len(lats[flg])
             scaleAK = np.ones((nlocf, nlevs), dtype=np.float32)
             if self.varname == 'no2' and self.columnType == 'tropo':
                 # do not loop over nlocs here this makes the execution very slow
@@ -138,7 +130,7 @@ class tropomi(object):
 
             if first:
                 # add metadata variables
-                self.outdata[('datetime', 'MetaData')] = times[flg]
+                self.outdata[('dateTime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
@@ -157,11 +149,11 @@ class tropomi(object):
                 if self.varname == 'no2':
                     self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
                 elif self.varname == 'co':
-                    self.outdata[varname_pr] = np.zeros((nlocf, nlevs), dtype=np.float32)
+                    self.outdata[varname_pr] = np.zeros((nlocf), dtype=np.float32)
 
             else:
-                self.outdata[('datetime', 'MetaData')] = np.concatenate((
-                    self.outdata[('datetime', 'MetaData')], times[flg]))
+                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                    self.outdata[('dateTime', 'MetaData')], times[flg]))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
@@ -184,7 +176,7 @@ class tropomi(object):
                         (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
                 elif self.varname == 'co':
                     self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], np.zeros((nlocf, nlevs), dtype=np.float32)))
+                        (self.outdata[varname_pr], np.zeros((nlocf), dtype=np.float32)))
 
             for ncvar, iodavar in self.obsVar.items():
 
@@ -210,8 +202,8 @@ class tropomi(object):
 
             first = False
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+        AttrData['Location'] = np.int32(DimDict['Location'])
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)
@@ -267,33 +259,31 @@ def main():
     args = parser.parse_args()
 
     if args.variable == "co":
-        var_in_name = 'carbonmonoxide'
-        var_out_name = 'carbon_monoxide'
+        var_name = 'carbonmonoxide'
         if args.column == "tropo":
             print('CO is only available for total column, reset column to total', flush=1)
             args.column = 'total'
     elif args.variable == "no2":
-        var_in_name = 'nitrogendioxide'
-        var_out_name = 'nitrogen_dioxide'
+        var_name = 'nitrogendioxide'
 
     if args.column == "tropo":
 
         obsVar = {
-            var_in_name+'_tropospheric_column': var_out_name+'_in_tropospheric_column'
+            var_name+'_tropospheric_column': var_name+'Column'
         }
 
         varDims = {
-            var_out_name+'_in_tropospheric_column': ['nlocs']
+            var_name+'Column': ['Location']
         }
 
     elif args.column == "total":
 
         obsVar = {
-            var_in_name+'_total_column': var_out_name+'_in_total_column'
+            var_name+'_total_column': var_name+'Total'
         }
 
         varDims = {
-            var_out_name+'_in_total_column': ['nlocs']
+            var_name+'Total': ['Location']
         }
 
     # Read in the NO2 data
