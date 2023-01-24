@@ -29,24 +29,13 @@ namespace
         const char* FieldOfViewNumber = "fieldOfViewNumber";
         const char* SensorChannelNumber = "sensorChannelNumber";
         const char* BrightnessTemperature = "brightnessTemperature";
-        const char* Year = "year";
-        const char* Month = "month";
-        const char* Day = "day";
-        const char* Hour = "hour";
-        const char* Minute = "minute";
-        const char* Second = "second";
-        const char* HoursFromUtc = "hoursFromUtc";
+        const char* ObsTime = "obsTime";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
                                                  ConfKeys::SensorChannelNumber,
                                                  ConfKeys::BrightnessTemperature,
-                                                 ConfKeys::Year,
-                                                 ConfKeys::Month,
-                                                 ConfKeys::Day,
-                                                 ConfKeys::Hour,
-                                                 ConfKeys::Minute,
-                                                 ConfKeys::Second};
+                                                 ConfKeys::ObsTime};
 }  // namespace
 
 
@@ -55,7 +44,8 @@ namespace Ingester
     RemappedBrightnessTemperatureVariable::RemappedBrightnessTemperatureVariable(const std::string& exportName,
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
-      Variable(exportName, groupByField, conf)
+      Variable(exportName, groupByField, conf), 
+      datetime_(exportName, groupByField, conf_.getSubConfiguration(ObsTime))
     {
         initQueryMap();
         oops::Log::info() << "RemappedBrightnessTemperatureVariable ..." << std::endl;
@@ -75,11 +65,10 @@ namespace Ingester
 
         // Declare and initialize data arrays 
         std::vector<float> outData((radObj->size()), DataObject<float>::missingValue());
-        std::vector<int> fovn((fovnObj->size()), DataObject<int>::missingValue());
+        std::vector<int> fovn(fovnObj->size(), DataObject<int>::missingValue());
         std::vector<int> scanline(fovnObj->size(), DataObject<int>::missingValue()); // scanline has the same dimension as fovn
         std::vector<float> btobs((radObj->size()), DataObject<float>::missingValue());
         std::vector<int> channel((sensorChanObj->size()), DataObject<int>::missingValue());
-        std::vector<int64_t> obstime((fovnObj->size()), DataObject<int64_t>::missingValue());
 
         // Get dimensions
         int nchns = (radObj->getDims())[1];
@@ -96,28 +85,35 @@ namespace Ingester
         oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
 
         // Get observation time (obstime) variable
-        oops::Log::info() << "emily checking conf.getSubConfiguration = " << conf_.getSubConfiguration("obstime") << std::endl;
-        DatetimeVariable("obstime", "", conf_.getSubConfiguration("obstime"));
+        oops::Log::info() << "emily checking conf.getSubConfiguration = " << conf_.getSubConfiguration(ObsTime) << std::endl;
+        auto datetimeObj = datetime_.exportData(map);
+
+        std::vector<int64_t> obstime;
+        if (auto obstimeObj = std::dynamic_pointer_cast<DataObject<int64_t>>(datetimeObj))
+        {
+           obstime = obstimeObj->getRawData();
+        } 
 
         // Fill in fov values from map  
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
-            fovn[idx] =  fovnObj->getAsInt(idx);
+            fovn[idx] = fovnObj->getAsInt(idx);
         }
 
-        // Fill in obs values from map  
+        // Fill in  bs values from map  
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
             size_t iloc = static_cast<size_t>(floor(idx / nchns));
             size_t ichn = static_cast<size_t>(floor(idx % nchns));
             btobs[idx] = radObj->getAsFloat(idx);
             channel[idx] = sensorChanObj->getAsInt(idx);
-//          oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
-//                             << std::setw(10) << "iloc    " << std::setw(10) << iloc
-//                             << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
-//                             << std::setw(10) << "channel " << std::setw(10) << channel[idx]
-//                             << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
-//                             << std::endl;   
+            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
+                               << std::setw(10) << "iloc    " << std::setw(10) << iloc
+                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
+                               << std::setw(10) << "obstime " << std::setw(20) << obstime[iloc]   
+                               << std::setw(10) << "channel " << std::setw(10) << channel[idx]
+                               << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
+                               << std::endl;   
         }
 
         int error_status; 
@@ -193,6 +189,20 @@ namespace Ingester
                 queries.push_back(info);
             }
         }
+
+        auto datetimequerys = datetime_.makeQueryList();
+        queries.insert(queries.end(), datetimequerys.begin(), datetimequerys.end());
+
+//        for (const auto& fieldName : DatetimeFieldNames)
+//        {
+//            if (conf_.has(fieldName))
+//            {
+//                QueryInfo info;
+//                info.name = getExportKey(fieldName);
+//                info.query = conf_.getString(fieldName);
+//                queries.push_back(info);
+//            }
+//        }
 
         return queries;
     }

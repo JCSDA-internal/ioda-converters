@@ -13,6 +13,7 @@
 
 #include "eckit/config/LocalConfiguration.h"
 
+#include "DatetimeVariable.h"
 #include "Variable.h"
 
 
@@ -37,6 +38,8 @@ namespace Ingester
         QueryList makeQueryList() const final;
 
      private:
+        DatetimeVariable datetime_;
+
         /// \brief makes sure the bufr data map has all the required keys.
         void checkKeys(const BufrDataMap& map);
 
