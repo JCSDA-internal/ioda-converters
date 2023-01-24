@@ -70,6 +70,8 @@ class tropess(object):
 
             # Read pressure
             pressure = dsCris['pressure'].values # hPa (nlocsxnlevs)
+            # Nominal pressures is not part of the metadata but put in the userdoc..
+            nom_pressure = [1040., 908., 681., 510., 383., 287., 215., 161., 121., 90.8, 51.0, 28.7, 4.64, 0.10]
             nlocs = pressure.shape[0]
             nlevs = pressure.shape[1]
 
@@ -79,7 +81,7 @@ class tropess(object):
 
             # Read other variables
             x = dsCris['x'].values # dry_atmosphere_volume_mixing_ratio_of_carbon_monoxide (nlocsxnlevs)
-
+ 
             # open observation_ops group
             dsCris_observation_ops= xr.open_dataset(filename, group='observation_ops')
 
@@ -107,7 +109,7 @@ class tropess(object):
             userLevels = [ int(lev) for lev in self.userLevels]
 
             # Keep track of the nominal levels
-            nom = np.zeros((nlocs,len(userLevels)), dtype=np.int32)
+            nom = np.zeros((nlocs,len(userLevels)))
 
             # Calculate apriori term (ap) for each userLevel 
             # do thinning and remove NaNs
@@ -120,7 +122,7 @@ class tropess(object):
                 this_term = ak*ln(xa)
 
                 ap[:,lev] = np.exp(ln(xa[:,lev]) + np.sum(this_term,axis=1))
-                nom[:,lev] = int(userLevel)
+                nom[:,lev] = nom_pressure[int(userLevel)]
 
                 if(np.isnan(ap[:,lev]).any()):
                     nan_flag[np.argwhere(np.isnan(ap[:,lev]))] = False
@@ -134,15 +136,18 @@ class tropess(object):
             # or other data compression techniques as seen in literature
             ulevs = len(userLevels)
             ap = ap.reshape(ulevs*nlocs)
+            nom = nom.reshape(ulevs*nlocs)
             averaging_kernel = averaging_kernel[:,userLevels,:].reshape(ulevs*nlocs,nlevs)
             x = x[:,userLevels].reshape(ulevs*nlocs)
             xa = xa[:,userLevels].reshape(ulevs*nlocs)
             # Omit the off-diag terms in R for now...
             log_obs_error = log_obs_error[:,userLevels,userLevels].reshape(ulevs*nlocs)
+            # TEMP FIX: Space of this error covariacne is mysterious, documentations doesn't
+            # explain in which space it is... only says that error is about 7% of retrieval
+            log_obs_error = 0.07 * x 
 
             # Repeat ulevs times the coordinates
             flag = flag.repeat(ulevs)
-            nom = nom.repeat(ulevs)
             times = times.repeat(ulevs)
             lats = lats.repeat(ulevs) 
             lons = lons.repeat(ulevs)
@@ -153,21 +158,20 @@ class tropess(object):
             if first:
 
                 # add metadata variables
-                self.outData[('datetime', 'MetaData')] = times[flag]
+                self.outData[('dateTime', 'MetaData')] = times[flag]
                 self.outData[('latitude', 'MetaData')] = lats[flag]
                 self.outData[('longitude', 'MetaData')] = lons[flag]
 
                 # Write ap and xa
-
                 varname_ap = ('apriori_term', 'RtrvlAncData')
                 self.outData[varname_ap] = ap[flag]
                 self.varAttrs[varname_ap]['coordinates'] = 'longitude latitude'
-                self.varAttrs[varname_ap]['units'] = '1'
+                self.varAttrs[varname_ap]['units'] = 'mol/mol'
 
-                #varname_xa = ('xa', 'RtrvlAncData')
-                #self.outData[varname_xa] = xa[:,lev][flag]
-                #self.varAttrs[varname_xa]['coordinates'] = 'longitude latitude'
-                #self.varAttrs[varname_xa]['units'] = '1'
+                varname_np = ('nominalPressure', 'RtrvlAncData')
+                self.outData[varname_np] = HPA2PA * nom[flag]
+                self.varAttrs[varname_np]['coordinates'] = 'longitude latitude'
+                self.varAttrs[varname_np]['units'] = 'Pa'
 
                 # Write pressure and ak level by level
                 for j in range(nlevs+1):
@@ -181,9 +185,6 @@ class tropess(object):
                      self.outData[varname_pr] = HPA2PA * fullPressure[:, j][flag]
                      self.varAttrs[varname_pr]['coordinates'] = 'longitude latitude'
                      self.varAttrs[varname_pr]['units'] = 'Pa'
-                print(np.shape(qa)) 
-                print(np.shape(x)) 
-                print(np.shape(flag))
 
                 counter = 0
                 for var in self.obsvars:
@@ -198,8 +199,8 @@ class tropess(object):
 
             # If not the first file concatenate
             else:
-                self.outData[('datetime', 'MetaData')] = np.concatenate(
-                    (self.outData[('datetime', 'MetaData')], times[flag]))
+                self.outData[('dateTime', 'MetaData')] = np.concatenate(
+                    (self.outData[('dateTime', 'MetaData')], times[flag]))
                 self.outData[('latitude', 'MetaData')] = np.concatenate(
                     (self.outData[('latitude', 'MetaData')], lats[flag]))
                 self.outData[('longitude', 'MetaData')] = np.concatenate(
@@ -209,9 +210,9 @@ class tropess(object):
                 self.outData[varname_ap] = np.concatenate(
                     (self.outData[varname_ap], ap[flag]))
 
-                #varname_xa = ('xa', 'RtrvlAncData')
-                #self.outData[varname_xa] = np.concatenate(
-                #    (self.outData[varname_xa], xa[:][flag]))
+                varname_np = ('nominalPressure', 'RtrvlAncData')
+                self.outData[varname_np] = np.concatenate(
+                    (self.outData[varname_np], HPA2PA * nom[flag]))
 
                 for j in range(nlevs+1):
                      if j < nlevs:
@@ -238,8 +239,8 @@ class tropess(object):
                     counter = counter+1
                 first = False
 
-            self.DimDict['nlocs'] = len(self.outData[('datetime', 'MetaData')])
-            self.AttrData['nlocs'] = np.int32(self.DimDict['nlocs'])
+            self.DimDict['Location'] = len(self.outData[('dateTime', 'MetaData')])
+            self.AttrData['Location'] = np.int32(self.DimDict['Location'])
 
     def make_dictionaries (self):
         """
@@ -257,9 +258,9 @@ class tropess(object):
         """
         Make a dictionary of obsvars based on the levels specified by the user (command line args).
         """
-        obsvars = {}
+        #obsvars = {}
 
-        obsvars = "carbonmonoxideColumn"
+        obsvars = {"carbonmonoxideColumn"}
 
         self.obsvars= obsvars
 
@@ -291,8 +292,8 @@ class tropess(object):
             self.varAttrs[item, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[item, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[item, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-            self.varAttrs[item, iconv.OvalName()]['units'] = '1'
-            self.varAttrs[item, iconv.OerrName()]['units'] = '1'
+            self.varAttrs[item, iconv.OvalName()]['units'] = 'mol/mol'
+            self.varAttrs[item, iconv.OerrName()]['units'] = 'mol/mol'
             self.varAttrs[item, iconv.OqcName()]['units'] = 'unitless'
 
     def __str__(self):
@@ -345,6 +346,7 @@ def get_parser():
         help="User levels. [default: %(default)s] ",
         dest="userLevels",
         required=False,
+        type=int,
         nargs='+',
         default = [0,4],
         )
@@ -365,7 +367,7 @@ def main():
     ]
 
     VarDims = {
-        'x': ['nlocs']
+        'x': ['Location']
     }
     # -- read command line arguments
     parser = get_parser()
