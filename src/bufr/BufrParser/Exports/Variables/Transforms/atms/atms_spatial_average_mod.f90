@@ -13,7 +13,7 @@ Module ATMS_Spatial_Average_Mod
 !    2017-07-13   yanqiu zhu - fix index bugs in subroutine ATMS_Spatial_Average
 ! 
 
-  use kinds, only: r_kind,r_double,i_kind
+  use kinds, only: r_kind,r_double,i_kind, i_llong
 
   implicit none     
 
@@ -26,27 +26,26 @@ Module ATMS_Spatial_Average_Mod
 
 CONTAINS 
 
-  SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, fov, channel, bt_inout, scanline, Error_Status)
+  SUBROUTINE ATMS_Spatial_Average(num_loc, nchanl, time, fov, channel, bt_inout, scanline, Error_Status)
     IMPLICIT NONE
     
     ! Declare passed variables
-    integer(i_kind),          intent(in   ) :: num_obs, nchanl 
-    integer(i_kind),          intent(in   ) :: fov(num_obs)
-!   real(r_kind),             intent(in   ) :: time(num_obs)
-    integer(i_kind),          intent(in   ) :: channel(nchanl*num_obs)
-    integer(i_kind),          intent(inout) :: scanline(num_obs)
-    real(r_kind),             intent(inout) :: bt_inout(nchanl*num_obs)
+    integer(i_kind),          intent(in   ) :: num_loc, nchanl 
+    integer(i_kind),          intent(in   ) :: fov(num_loc)
+    integer(i_llong),         intent(in   ) :: time(num_loc)
+    integer(i_kind),          intent(in   ) :: channel(nchanl*num_loc)
+    integer(i_kind),          intent(inout) :: scanline(num_loc)
+    real(r_kind),             intent(inout) :: bt_inout(nchanl*num_loc)
     integer(i_kind),          intent(inout) :: error_status 
 
 !   Declare local variables
-    integer(i_kind):: i, j
-    integer(i_kind):: iscan, iloc, ichn
-    integer(i_kind), dimension(nchanl, num_obs) :: channel_number
-    real(r_kind),    dimension(nchanl, num_obs) :: bt_obs
+    integer(i_kind):: iscan, iobs, iloc, ichn
+    integer(i_kind), dimension(nchanl, num_loc) :: channel_number
+    real(r_kind),    dimension(nchanl, num_loc) :: bt_obs
 
 !   Check passed variables: dimension 
     write(6,*)'ATMS_Spatial_Average: checking dimension ... '
-    write(6,*)'ATMS_Spatial_Average: num_obs = ', num_obs
+    write(6,*)'ATMS_Spatial_Average: num_loc = ', num_loc
     write(6,*)'ATMS_Spatial_Average: nchanl  = ', nchanl
 
 !   Check passed variable: channel 
@@ -62,38 +61,53 @@ CONTAINS
     write(6,*)'ATMS_Spatial_Average: chechking scanline ...'
     write(6,*)'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
 
+!   Check passed variable: scanline 
 !   Calculate scanline    
-    do i = 1, num_obs 
-       iscan = int(i/96)
-       scanline(i) = iscan + 1  
+    do iloc = 1, num_loc
+       iscan = int(iloc/96)
+       scanline(iloc) = iscan + 1  
     enddo
     write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
+
+!   Check passed variable: time
+    write(6,*)'ATMS_Spatial_Average: checking time ... '
+    write(6,*)'ATMS_Spatial_Average: are we passing time in here OK ? ... '
+    write(6,*) 'minval/maxval time = ', minval(time), maxval(time)
+
+    write(6,*)'ATMS_Spatial_Average: chechking scanline ...'
+    write(6,*)'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
 
 !   Check passed variable: bt_inout
     write(6,*)'ATMS_Spatial_Average: chechking bt_inout ...'
     write(6,*)'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
 
 !   print out for checking and debugging
-    bt_obs = reshape(bt_inout, (/nchanl, num_obs/))
-    channel_number = reshape(channel, (/nchanl, num_obs/))
+    bt_obs = reshape(bt_inout, (/nchanl, num_loc/))
+    channel_number = reshape(channel, (/nchanl, num_loc/))
  
-    write(6,*)'emily check 1 ... '
-    iloc = 1 
-    do j = 1, num_obs
-       do i = 1, nchanl 
-          write(6,*) iloc, j, fov(j), i, channel_number(i,j), bt_obs(i,j)
-          iloc = iloc+1
-       enddo
-    enddo
-    write(6,*) 'minval/maxval bt_obs = ', minval(bt_obs), maxval(bt_obs)
-
-    write(6,*)'emily check 2 ... '
-    do i = 0, num_obs*nchanl-1 
-       iloc = int(i/nchanl)
-       ichn = int(mod(i,nchanl)) 
-       write(6,*) i+1, iloc+1, fov(iloc+1), ichn+1, channel(i+1), bt_inout(i+1)
-    enddo 
-
+!    write(6,  *)'emily check 1 ... '
+!    write(6,102)'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
+!    iobs = 1 
+!    do iloc = 1, num_loc
+!       do ichn = 1, nchanl 
+!          write(6,101) iobs, iloc, time(iloc), fov(iloc), ichn, channel_number(ichn,iloc), bt_obs(ichn,iloc)
+!          iobs = iobs+1
+!       enddo
+!    enddo
+!101 format(i12,2x,i12,2x,i20,2x,3(i12,2x),f15.8)
+!102 format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
+!    write(6,*) 'minval/maxval bt_obs = ', minval(bt_obs), maxval(bt_obs)
+!
+!    write(6,  *)'emily check 2 ... '
+!    write(6,202)'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
+!    do iobs = 0, num_loc*nchanl-1 
+!       iloc = int(iobs/nchanl)
+!       ichn = int(mod(iobs,nchanl)) 
+!       write(6,201) iobs+1, iloc+1, time(iloc+1), fov(iloc+1), ichn+1, channel(iobs+1), bt_inout(iobs+1)
+!    enddo 
+!201 format(i12,2x,i12,2x,i20,2x,3(i12,2x),f15.8)
+!202 format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
+!
     write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
     error_status = 0
     write(6,*)'emily checking: error_status = ', error_status
