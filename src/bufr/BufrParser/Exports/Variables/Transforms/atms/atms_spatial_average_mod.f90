@@ -252,6 +252,72 @@ CONTAINS
     allocate(scanline_back(max_fov, max_scan))
     bT_image(:,:,:) = 1000.0_r_kind
 
+    write(6,*) 'emily checking: loading bt image array for FFT transform ...'
+    scanLine_back(:,:) = -1
+    do i = 1, num_loc
+       bt_image(fov(i),scanline(i),:) = bt_obs(:,i)
+       scanline_back(fov(i),scanline(i)) = i
+       write(6, 301) fov(i), scanline(i), bt_image(fov(i), scanline(i), 1:nchanl) 
+    end do 
+301 format(i6,2x,i6,2x,22(f8.3))
+
+    ! Do FFT transform
+    write(6,*) 'emily checking: begin doing FFT transform ...'
+    DO ichan = 1, nchanl
+
+       err(ichan) = 0
+
+       ! Set all scan positions to missing in a scanline if one is missing
+       do iscan = 1,max_scan
+          if (any(bt_image(:, iscan, ichan) > 500.0_r_kind)) &
+                  bt_image(:, iscan, ichan)=1000.0_r_kind
+       enddo
+
+       ! If the channel number is present in the channelnumber array we should
+       ! process it 
+       ! (otherwise bt_inout just keeps the same value):
+       do i = 1, nchannels
+
+          if (channelnumber(i) == ichan) then
+
+             call MODIFY_BEAMWIDTH ( max_fov, max_scan, bt_image(:,:,ichan),   &
+                                     sampling_dist, beamwidth(i), newwidth(i), &
+                                     cutoff(i), nxaverage(i), nyaverage(i),    &
+                                     qc_dist(i), minbt(Ichan), maxbt(ichan), ios)
+          
+             ! Load the transform image array back
+             if (ios == 0) THEN
+                do iscan = 1, max_scan
+                   do ifov = 1, max_fov
+                      if (scanline_back(ifov, iscan) > 0) &
+                        bt_obs(ichan, scanline_back(ifov, iscan)) = &
+                        bt_image(ifov, iscan, ichan)
+                   enddo
+                enddo
+             else 
+                err(ichan) = 1
+             end if 
+          end if
+       enddo
+    enddo 
+    write(6,*) 'emily checking: end doing FFT transform ...'
+
+    write(6,*) 'emily checking: checking error status for each channel ...'
+    do ichan = 1,nchanl
+      if(err(ichan) >= 1)then
+         error_status = 1
+         return
+      end if
+    end do
+
+    write(6,*) 'emily checking: reshape bt_obs to bt_inout for output ...'
+    ! Reshape for output
+    bt_inout = reshape(bt_obs, (/nchanl*num_loc/))
+
+    write(6,*) 'emily checking: deallocating ...'
+    deallocate(bt_image, scanline_back)
+
+    write(6,*) 'emily checking: DONE!!'
 
 END Subroutine ATMS_Spatial_Average
 
