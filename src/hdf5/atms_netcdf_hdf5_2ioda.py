@@ -161,14 +161,14 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     obs_data[('latitude', metaDataName)] = np.array(g['lat'][:, :].flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(g['lon'][:, :].flatten(), dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['sat_azi'][:, :].flatten(), dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = np.array(g['view_ang'][:, :].flatten(), dtype='float32')
     nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteId', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
@@ -216,7 +216,7 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
     nscans = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[0]
     nbeam_pos = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[1]
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(np.shape(g['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarAzimuthAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteZenithAngle'][:, :].flatten(), dtype='float32')
@@ -226,7 +226,7 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
     obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('scan_position', metaDataName)] - 1.0) * 1.11 - 52.726
 
     nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteId', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
