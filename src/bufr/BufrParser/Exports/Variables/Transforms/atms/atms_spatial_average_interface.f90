@@ -1,6 +1,6 @@
 module atms_spatial_average_c_interface_mod
 
-  use iso_c_binding  
+  use iso_c_binding
 
   implicit none
 
@@ -8,8 +8,8 @@ module atms_spatial_average_c_interface_mod
   public:: ATMS_Spatial_Average_c
 
 contains
-
-  subroutine ATMS_Spatial_Average_c(num_obs, nchanl, fovn, channel, btobs, scanline, error_status) bind(C, name='ATMS_Spatial_Average_f')
+  subroutine ATMS_Spatial_Average_c(num_obs, nchanl, fovn, channel, btobs, &
+                                    scanline, error_status) bind(C, name='ATMS_Spatial_Average_f')
     use atms_spatial_average_mod, only: ATMS_Spatial_Average
     use kinds, only: i_kind
 
