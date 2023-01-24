@@ -26,24 +26,33 @@ Module ATMS_Spatial_Average_Mod
 
 CONTAINS 
 
-  SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, fov, bt_inout, scanline, Error_Status)
+  SUBROUTINE ATMS_Spatial_Average(num_obs, nchanl, fov, channel, bt_inout, scanline, Error_Status)
     IMPLICIT NONE
     
     ! Declare passed variables
     integer(i_kind),          intent(in   ) :: num_obs, nchanl 
     integer(i_kind),          intent(in   ) :: fov(num_obs)
 !   real(r_kind),             intent(in   ) :: time(num_obs)
+    integer(i_kind),          intent(in   ) :: channel(nchanl*num_obs)
     integer(i_kind),          intent(inout) :: scanline(num_obs)
     real(r_kind),             intent(inout) :: bt_inout(nchanl*num_obs)
     integer(i_kind),          intent(inout) :: error_status 
 
 !   Declare local variables
-    integer(i_kind):: i, iscan 
+    integer(i_kind):: i, j
+    integer(i_kind):: iscan, iloc, ichn
+    integer(i_kind), dimension(nchanl, num_obs) :: channel_number
+    real(r_kind),    dimension(nchanl, num_obs) :: bt_obs
 
 !   Check passed variables: dimension 
     write(6,*)'ATMS_Spatial_Average: checking dimension ... '
     write(6,*)'ATMS_Spatial_Average: num_obs = ', num_obs
     write(6,*)'ATMS_Spatial_Average: nchanl  = ', nchanl
+
+!   Check passed variable: channel 
+    write(6,*)'ATMS_Spatial_Average: checking channel ... '
+    write(6,*)'ATMS_Spatial_Average: are we passing channel in here OK ? ... '
+    write(6,*) 'minval/maxval channel = ', minval(channel), maxval(channel)
 
 !   Check passed variable: fov
     write(6,*)'ATMS_Spatial_Average: checking fov ... '
@@ -63,10 +72,31 @@ CONTAINS
 !   Check passed variable: bt_inout
     write(6,*)'ATMS_Spatial_Average: chechking bt_inout ...'
     write(6,*)'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
+
+!   print out for checking and debugging
+    bt_obs = reshape(bt_inout, (/nchanl, num_obs/))
+    channel_number = reshape(channel, (/nchanl, num_obs/))
+ 
+    write(6,*)'emily check 1 ... '
+    iloc = 1 
+    do j = 1, num_obs
+       do i = 1, nchanl 
+          write(6,*) iloc, j, fov(j), i, channel_number(i,j), bt_obs(i,j)
+          iloc = iloc+1
+       enddo
+    enddo
+    write(6,*) 'minval/maxval bt_obs = ', minval(bt_obs), maxval(bt_obs)
+
+    write(6,*)'emily check 2 ... '
+    do i = 0, num_obs*nchanl-1 
+       iloc = int(i/nchanl)
+       ichn = int(mod(i,nchanl)) 
+       write(6,*) i+1, iloc+1, fov(iloc+1), ichn+1, channel(i+1), bt_inout(i+1)
+    enddo 
+
     write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
-  
     error_status = 0
-    write(6,*)'emily checking: error_status = ', error_status 
+    write(6,*)'emily checking: error_status = ', error_status
 
 END Subroutine ATMS_Spatial_Average
 

@@ -17,6 +17,7 @@
 #include "oops/util/Logger.h"
 
 #include "DataObject.h"
+#include "DatetimeVariable.h"
 #include "RemappedBrightnessTemperatureVariable.h"
 #include "Transforms/atms/atms_spatial_average_interface.h"
 
@@ -28,11 +29,24 @@ namespace
         const char* FieldOfViewNumber = "fieldOfViewNumber";
         const char* SensorChannelNumber = "sensorChannelNumber";
         const char* BrightnessTemperature = "brightnessTemperature";
+        const char* Year = "year";
+        const char* Month = "month";
+        const char* Day = "day";
+        const char* Hour = "hour";
+        const char* Minute = "minute";
+        const char* Second = "second";
+        const char* HoursFromUtc = "hoursFromUtc";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
                                                  ConfKeys::SensorChannelNumber,
-                                                 ConfKeys::BrightnessTemperature};
+                                                 ConfKeys::BrightnessTemperature,
+                                                 ConfKeys::Year,
+                                                 ConfKeys::Month,
+                                                 ConfKeys::Day,
+                                                 ConfKeys::Hour,
+                                                 ConfKeys::Minute,
+                                                 ConfKeys::Second};
 }  // namespace
 
 
@@ -44,6 +58,10 @@ namespace Ingester
       Variable(exportName, groupByField, conf)
     {
         initQueryMap();
+        oops::Log::info() << "RemappedBrightnessTemperatureVariable ..." << std::endl;
+        oops::Log::info() << "emily checking exportName   = " << exportName << std::endl;
+        oops::Log::info() << "emily checking groupByField = " << groupByField << std::endl;
+        oops::Log::info() << "emily checking conf         = " << conf << std::endl;
     }
 
     std::shared_ptr<DataObjectBase> RemappedBrightnessTemperatureVariable::exportData(const BufrDataMap& map)
@@ -60,6 +78,8 @@ namespace Ingester
         std::vector<int> fovn((fovnObj->size()), DataObject<int>::missingValue());
         std::vector<int> scanline(fovnObj->size(), DataObject<int>::missingValue()); // scanline has the same dimension as fovn
         std::vector<float> btobs((radObj->size()), DataObject<float>::missingValue());
+        std::vector<int> channel((sensorChanObj->size()), DataObject<int>::missingValue());
+        std::vector<int64_t> obstime((fovnObj->size()), DataObject<int64_t>::missingValue());
 
         // Get dimensions
         int nchns = (radObj->getDims())[1];
@@ -75,6 +95,10 @@ namespace Ingester
         oops::Log::info() << "emily checking fovnObj size = "       << fovnObj->size() << std::endl;
         oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
 
+        // Get observation time (obstime) variable
+        oops::Log::info() << "emily checking conf.getSubConfiguration = " << conf_.getSubConfiguration("obstime") << std::endl;
+        DatetimeVariable("obstime", "", conf_.getSubConfiguration("obstime"));
+
         // Fill in fov values from map  
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
@@ -84,17 +108,23 @@ namespace Ingester
         // Fill in obs values from map  
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
-            auto channel = sensorChanObj->getAsInt(idx);
             size_t iloc = static_cast<size_t>(floor(idx / nchns));
             size_t ichn = static_cast<size_t>(floor(idx % nchns));
             btobs[idx] = radObj->getAsFloat(idx);
+            channel[idx] = sensorChanObj->getAsInt(idx);
+//          oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
+//                             << std::setw(10) << "iloc    " << std::setw(10) << iloc
+//                             << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
+//                             << std::setw(10) << "channel " << std::setw(10) << channel[idx]
+//                             << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
+//                             << std::endl;   
         }
 
         int error_status; 
 //      int scanline[nobs];
 
 //      ATMS_Spatial_Average_f(nobs, nchns, &fovnObj, &radObj, &scanline, &error_status); 
-        ATMS_Spatial_Average_f(nobs, nchns, &fovn, &btobs, &scanline, &error_status);
+        ATMS_Spatial_Average_f(nobs, nchns, &fovn, &channel, &btobs, &scanline, &error_status);
        
         // Perform FFT image remapping 
         for (size_t idx = 0; idx < radObj->size(); idx++)
