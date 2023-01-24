@@ -29,13 +29,14 @@ namespace
         const char* FieldOfViewNumber = "fieldOfViewNumber";
         const char* SensorChannelNumber = "sensorChannelNumber";
         const char* BrightnessTemperature = "brightnessTemperature";
-        const char* ObsTime = "obsTime";
+//      const char* ObsTime = "obsTime";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
                                                  ConfKeys::SensorChannelNumber,
                                                  ConfKeys::BrightnessTemperature,
-                                                 ConfKeys::ObsTime};
+//                                               ConfKeys::ObsTime
+                                                };
 }  // namespace
 
 
@@ -45,7 +46,7 @@ namespace Ingester
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
       Variable(exportName, groupByField, conf), 
-      datetime_(exportName, groupByField, conf_.getSubConfiguration("obstime"))
+      datetime_(exportName, groupByField, conf_.getSubConfiguration("obsTime"))
     {
         initQueryMap();
         oops::Log::info() << "RemappedBrightnessTemperatureVariable ..." << std::endl;
@@ -85,7 +86,6 @@ namespace Ingester
         oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
 
         // Get observation time (obstime) variable
-        oops::Log::info() << "emily checking conf.getSubConfiguration = " << conf_.getSubConfiguration("obstime") << std::endl;
         auto datetimeObj = datetime_.exportData(map);
 
         std::vector<int64_t> obstime;
@@ -107,20 +107,20 @@ namespace Ingester
             size_t ichn = static_cast<size_t>(floor(idx % nchns));
             btobs[idx] = radObj->getAsFloat(idx);
             channel[idx] = sensorChanObj->getAsInt(idx);
-            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
-                               << std::setw(10) << "iloc    " << std::setw(10) << iloc
-                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
-                               << std::setw(10) << "obstime " << std::setw(20) << obstime[iloc]   
-                               << std::setw(10) << "channel " << std::setw(10) << channel[idx]
-                               << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
-                               << std::endl;   
+//            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
+//                               << std::setw(10) << "iloc    " << std::setw(10) << iloc
+//                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
+//                               << std::setw(10) << "obstime " << std::setw(20) << obstime[iloc]   
+//                               << std::setw(10) << "channel " << std::setw(10) << channel[idx]
+//                               << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
+//                               << std::endl;   
         }
 
         int error_status; 
 //      int scanline[nobs];
 
 //      ATMS_Spatial_Average_f(nobs, nchns, &fovnObj, &radObj, &scanline, &error_status); 
-        ATMS_Spatial_Average_f(nobs, nchns, &fovn, &channel, &btobs, &scanline, &error_status);
+        ATMS_Spatial_Average_f(nobs, nchns, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
        
         // Perform FFT image remapping 
         for (size_t idx = 0; idx < radObj->size(); idx++)
