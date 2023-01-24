@@ -1062,7 +1062,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
                           -i testinput/tropess_cris_co.nc
                           -o testrun/tropess_cris_co.nc
                           --thin 0.1
-                          --levels 0 4 8 12
+                          --levels 0 4 8 12"
                   tropess_cris_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
