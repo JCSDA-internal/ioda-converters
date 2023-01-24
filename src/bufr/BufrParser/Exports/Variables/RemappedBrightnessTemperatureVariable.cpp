@@ -29,7 +29,7 @@ namespace
         const char* FieldOfViewNumber = "fieldOfViewNumber";
         const char* SensorChannelNumber = "sensorChannelNumber";
         const char* BrightnessTemperature = "brightnessTemperature";
-        const char* ObsTime = "obsTime";
+        const char* ObsTime = "obstime";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
@@ -45,7 +45,7 @@ namespace Ingester
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
       Variable(exportName, groupByField, conf), 
-      datetime_(exportName, groupByField, conf_.getSubConfiguration("obstime"))
+      datetime_(exportName, groupByField, conf_.getSubConfiguration(ConfKeys::ObsTime))
     {
         initQueryMap();
         oops::Log::info() << "RemappedBrightnessTemperatureVariable ..." << std::endl;
@@ -85,7 +85,7 @@ namespace Ingester
         oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
 
         // Get observation time (obstime) variable
-        oops::Log::info() << "emily checking conf.getSubConfiguration = " << conf_.getSubConfiguration("obstime") << std::endl;
+        oops::Log::info() << "emily checking conf.getSubConfiguration = " << conf_.getSubConfiguration(ConfKeys::ObsTime) << std::endl;
         auto datetimeObj = datetime_.exportData(map);
 
         std::vector<int64_t> obstime;
