@@ -39,6 +39,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
+  testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
@@ -111,6 +112,7 @@ list( APPEND test_output
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
+  testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
