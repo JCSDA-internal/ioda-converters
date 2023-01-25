@@ -172,7 +172,7 @@ namespace bufr {
     class SubsetTable
     {
      public:
-        SubsetTable() = default;
+        SubsetTable() = delete;
         explicit SubsetTable(const DataProvider& dataProvider);
         ~SubsetTable() = default;
 
@@ -185,7 +185,11 @@ namespace bufr {
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
 
+        /// \brief Initializes the subset table.
         void initialize();
+
+        /// \brief Parses the BUFR message subset Meta data tables in a recursive ve fashion.
+        /// \param[in] parent The current parent node in the tree.
         void processNode(std::shared_ptr<BufrNode>& parent);
     };
 }  // namespace bufr
