@@ -22,52 +22,6 @@ namespace bufr {
         initialize();
     }
 
-    std::vector<QueryData> SubsetTable::allQueryData()
-    {
-        std::vector<QueryData> queryData;
-
-        for (const auto& leaf : root_->getLeaves())
-        {
-            QueryData data;
-            data.isMissing = false;
-            data.nodeId = leaf->nodeIdx;
-            data.pathComponents = leaf->getPath();
-            data.isString = leaf->type == Typ::Character;
-            data.seqPath = leaf->getSeqPath();
-            data.dimIdxs = leaf->getDimIdxs();
-            data.requiresIdx = leaf->hasDuplicates;
-            data.idx = leaf->copyIdx;
-            data.typeInfo = leaf->typeInfo;
-
-            queryData.push_back(data);
-        }
-
-        return queryData;
-    }
-
-
-    QueryData SubsetTable::dataForQuery(const std::vector<std::string>& queryComponents) const
-    {
-        QueryData queryData;
-        auto key = mapKey(queryComponents);
-        if (queryMap_.find(key) != queryMap_.end())
-        {
-            queryData = queryMap_.at(key);
-        }
-        else
-        {
-            queryData.isMissing = true;
-            queryData.nodeId = 0;
-            queryData.pathComponents = {};
-            queryData.isString = false;
-            queryData.seqPath = {};
-            queryData.dimIdxs = {};
-        }
-
-        return queryData;
-    }
-
-
     void SubsetTable::initialize()
     {
         root_ = std::make_shared<BufrNode>();
@@ -77,39 +31,9 @@ namespace bufr {
 
         // Recursively parse the entire tree of BUFR nodes
         processNode(root_);
-    }
 
-
-    std::string SubsetTable::mapKey(const std::vector<std::string>& pathComponents,
-                                    size_t idx) const
-    {
-        std::ostringstream ostr;
-        for (size_t pathIdx = 1; pathIdx < pathComponents.size(); pathIdx++)
-        {
-            ostr << "/" << pathComponents[pathIdx];
-        }
-
-        if (idx > 0)
-        {
-            ostr << "[" << idx << "]";
-        }
-
-        return ostr.str();
-    }
-
-    std::string SubsetTable::mapKey(const std::shared_ptr<QueryData> query) const
-    {
-        std::string key;
-        if (query->requiresIdx)
-        {
-            key = mapKey(query->pathComponents, query->idx);
-        }
-        else
-        {
-            key = mapKey(query->pathComponents);
-        }
-
-        return key;
+        // Find all the leaves of the tree
+        leaves_ = root_->getLeaves();
     }
 
     void SubsetTable::processNode(std::shared_ptr<BufrNode>& parent)

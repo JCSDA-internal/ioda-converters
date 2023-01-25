@@ -33,39 +33,11 @@ std::set<std::string> getSubsets(int fileUnit)
     return subsets;
 }
 
-
-std::vector<std::pair<int, std::string>>
-getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
-{
-    std::map<std::string, std::pair<int, std::string>> dimPathMap;
-    for (auto& query : queryData)
-    {
-        std::stringstream pathStream;
-        pathStream << "*";
-        for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
-        {
-            pathStream << "/" << query.pathComponents[idx];
-        }
-
-        dimPathMap[pathStream.str()] =
-                std::make_pair(query.dimIdxs.size(),
-                               pathStream.str());
-    }
-
-    std::vector<std::pair<int, std::string>> result;
-    for (auto& dimPath : dimPathMap)
-    {
-        result.push_back(dimPath.second);
-    }
-
-    return result;
-}
-
 std::vector<std::pair<int, std::string>>
 getDimPaths(const Ingester::bufr::BufrNodeVector& leaves)
 {
     std::map<std::string, std::pair<int, std::string>> dimPathMap;
-    for (auto& leaf : leaves)
+    for (const auto& leaf : leaves)
     {
         std::stringstream pathStream;
         pathStream << "*";
@@ -89,9 +61,9 @@ getDimPaths(const Ingester::bufr::BufrNodeVector& leaves)
 }
 
 
-Ingester::bufr::BufrNodeVector getLeaves(int fileUnit,
-                                         const std::string& subset,
-                                         Ingester::bufr::DataProvider& dataProvider)
+std::shared_ptr<Ingester::bufr::SubsetTable> getTable(int fileUnit,
+                                                      const std::string& subset,
+                                                      Ingester::bufr::DataProvider& dataProvider)
 {
     static const int SubsetLen = 9;
 
@@ -101,7 +73,7 @@ Ingester::bufr::BufrNodeVector getLeaves(int fileUnit,
     char current_subset[9];
     bool subsetFound = false;
 
-    std::vector<std::shared_ptr<Ingester::bufr::BufrNode>> leaves;
+    std::shared_ptr<Ingester::bufr::SubsetTable> table = nullptr;
 
     while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
     {
@@ -118,7 +90,7 @@ Ingester::bufr::BufrNodeVector getLeaves(int fileUnit,
             {
                 status_f(fileUnit, &bufrLoc, &il, &im);
                 dataProvider.updateData(bufrLoc);
-                leaves = Ingester::bufr::SubsetTable(dataProvider).getLeaves();
+                table = std::make_shared<Ingester::bufr::SubsetTable> (dataProvider);
                 subsetFound = true;
             }
         }
@@ -126,50 +98,8 @@ Ingester::bufr::BufrNodeVector getLeaves(int fileUnit,
         if (subsetFound) break;
     }
 
-    return leaves;
+    return table;
 }
-
-
-std::vector<Ingester::bufr::QueryData> getQueries(int fileUnit,
-                                                  const std::string& subset,
-                                                  Ingester::bufr::DataProvider& dataProvider)
-{
-    static const int SubsetLen = 9;
-
-    int iddate;
-    int bufrLoc;
-    int il, im; // throw away
-    char current_subset[9];
-    bool subsetFound = false;
-
-    std::vector<Ingester::bufr::QueryData> queryData;
-
-    while (ireadmg_f(fileUnit, current_subset, &iddate, SubsetLen) == 0)
-    {
-        auto msg_subset = std::string(current_subset);
-        msg_subset.erase(
-            remove_if(msg_subset.begin(), msg_subset.end(), isspace), msg_subset.end());
-
-        status_f(fileUnit, &bufrLoc, &il, &im);
-        dataProvider.updateData(bufrLoc);
-
-        if (msg_subset == subset)
-        {
-            while (ireadsb_f(fileUnit) == 0)
-            {
-                status_f(fileUnit, &bufrLoc, &il, &im);
-                dataProvider.updateData(bufrLoc);
-                queryData = Ingester::bufr::SubsetTable(dataProvider).allQueryData();
-                subsetFound = true;
-            }
-        }
-
-        if (subsetFound) break;
-    }
-
-    return queryData;
-}
-
 
 void printHelp()
 {
@@ -198,35 +128,6 @@ void printDimPaths(std::vector<std::pair<int, std::string>> dimPaths)
     for (auto& dimPath : dimPaths)
     {
         std::cout << "  " << dimPath.first << "d  " << dimPath.second << std::endl;
-    }
-}
-
-void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
-{
-    for (auto query : queries)
-    {
-        std::ostringstream ostr;
-        ostr << dimStyledStr(query.dimIdxs.size()) << "  ";
-        ostr << query.typeInfo.str() << "  ";
-        ostr << query.pathComponents[0];
-        for (size_t pathIdx = 1; pathIdx < query.pathComponents.size(); pathIdx++)
-        {
-            if (std::find(query.dimIdxs.begin(), query.dimIdxs.end(), pathIdx) != query.dimIdxs.end())
-            {
-                ostr << "/" << query.pathComponents[pathIdx];
-            }
-            else
-            {
-                ostr << "/" << query.pathComponents[pathIdx];
-            }
-        }
-
-        if (query.requiresIdx)
-        {
-            ostr << "[" << query.idx << "]";
-        }
-
-        std::cout << "  " << ostr.str() << std::endl;
     }
 }
 
@@ -284,13 +185,13 @@ void printQueries(const std::string& filePath,
     auto dataProvider = Ingester::bufr::DataProvider(FileUnit);
     if (!subset.empty())
     {
-        auto queries = getLeaves(FileUnit, subset.c_str(), dataProvider);
+        auto table = getTable(FileUnit, subset.c_str(), dataProvider);
         std::cout << subset << std::endl;
         std::cout << " Dimensioning Sub-paths: " << std::endl;
-        printDimPaths(getDimPaths(queries));
+        printDimPaths(getDimPaths(table->getLeaves()));
         std::cout << std::endl;
         std::cout << " Queries: " << std::endl;
-        printQueryList(queries);
+        printQueryList(table->getLeaves());
         std::cout << std::endl;
     }
     else
@@ -328,14 +229,14 @@ void printQueries(const std::string& filePath,
                 mtinfo_f(tablePath.c_str(), FileUnitTable1, FileUnitTable2);
             }
 
-            auto queries = getQueries(FileUnit, subset.c_str(), dataProvider);
+            auto table = getTable(FileUnit, subset.c_str(), dataProvider);
 
             std::cout << subset << std::endl;
             std::cout << " Dimensioning Sub-paths: " << std::endl;
-            printDimPaths(getDimPaths(queries));
+            printDimPaths(getDimPaths(table->getLeaves()));
             std::cout << std::endl;
             std::cout << " Queries: " << std::endl;
-            printQueryList(queries);
+            printQueryList(table->getLeaves());
             std::cout << std::endl;
         }
     }

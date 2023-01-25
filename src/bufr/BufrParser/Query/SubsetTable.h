@@ -11,25 +11,12 @@
 #include <string>
 #include <unordered_map>
 #include <set>
+#include <iostream>
 
 #include "DataProvider.h"
 
 namespace Ingester {
 namespace bufr {
-
-    /// \brief Meta data for a query according to the BUFR subset table.
-    struct QueryData
-    {
-        bool isMissing;
-        int nodeId;
-        std::vector<std::string> pathComponents;
-        bool isString;
-        std::vector<size_t> seqPath;
-        std::vector<size_t> dimIdxs;
-        size_t idx;
-        bool requiresIdx;
-        TypeInfo typeInfo;
-    };
 
     struct BufrNode : public std::enable_shared_from_this<BufrNode>
     {
@@ -55,7 +42,7 @@ namespace bufr {
         bool isQueryPathNode()
         {
             bool isQueryPath = true;
-            if (parent.lock() != nullptr)
+            if (!parent.expired())
             {
                 isQueryPath = parent.lock()->isQueryPathParentNode();
             }
@@ -100,7 +87,7 @@ namespace bufr {
 
         std::vector<std::string> getPath(std::vector<std::string>& components)
         {
-            if (parent.lock() != nullptr)
+            if (!parent.expired())
             {
                 components = parent.lock()->getPath(components);
             }
@@ -143,7 +130,7 @@ namespace bufr {
 
         std::vector<size_t> getSeqPath(std::vector<size_t>& path)
         {
-            if (parent.lock() != nullptr)
+            if (!parent.expired())
             {
                 path = parent.lock()->getSeqPath(path);
             }
@@ -163,7 +150,7 @@ namespace bufr {
 
         std::vector<size_t> getDimIdxs(std::vector<size_t>& idxs, size_t& depth)
         {
-            if (parent.lock() != nullptr)
+            if (!parent.expired())
             {
                 idxs = parent.lock()->getDimIdxs(idxs, depth);
             }
@@ -185,34 +172,21 @@ namespace bufr {
     class SubsetTable
     {
      public:
-        SubsetTable() = delete;
+        SubsetTable() = default;
         explicit SubsetTable(const DataProvider& dataProvider);
         ~SubsetTable() = default;
 
-        std::vector<std::shared_ptr<BufrNode>> getLeaves() { return root_->getLeaves(); }
-
-        /// \brief Returns all the query data elements.
-        /// \returns BUFR table meta data for all the queries
-        std::vector<QueryData> allQueryData();
-
-        /// \brief Get meta data for the query with the given components.
-        QueryData dataForQuery(const std::vector<std::string>& queryComponents) const;
+        /// \brief Returns all the leaf data elements in the subset table.
+        /// \returns A vector of BufrNode objects.
+        const BufrNodeVector& getLeaves() const { return leaves_; }
 
      private:
         const DataProvider& dataProvider_;
         std::shared_ptr<BufrNode> root_;
-        std::unordered_map<std::string, QueryData> queryMap_;
-        std::vector<std::string> queryMapKeys_;
+        BufrNodeVector leaves_;
 
         void initialize();
-        std::vector<size_t> dimPathIdxs(std::vector<size_t> seqPath) const;
-        std::vector<std::string> makePathComponents(std::vector<size_t> seqPath, int nodeIdx);
-        std::string mapKey(const std::vector<std::string>& pathComponents, size_t idx = 0) const;
-        std::string mapKey(const std::shared_ptr<QueryData> query) const;
-
-       void processNode(std::shared_ptr<BufrNode>& parent);
-
-//        void parseSequence(std::shared_ptr<Node> parentNode, size_t& nodeIdx, size_t endIdx);
+        void processNode(std::shared_ptr<BufrNode>& parent);
     };
 }  // namespace bufr
 }  // namespace Ingester
