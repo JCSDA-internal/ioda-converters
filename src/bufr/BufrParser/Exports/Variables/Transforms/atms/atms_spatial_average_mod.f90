@@ -125,7 +125,7 @@ CONTAINS
        write(6,*) 'ATMS_Spatial_Average: are we passing and getting scanline in here OK ? ... '
 
        ! Check passed variable: bt_inout
-       write(6,*) 'ATMS_Spatial_Average: chechking bt_inout ...'
+       write(6,*) 'ATMS_Spatial_Average: chechking bt_inout (original) ...'
        write(6,*) 'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
 
        ! print out for checking and debugging
@@ -257,7 +257,7 @@ CONTAINS
     do i = 1, num_loc
        bt_image(fov(i),scanline(i),:) = bt_obs(:,i)
        scanline_back(fov(i),scanline(i)) = i
-       write(6, 301) fov(i), scanline(i), bt_image(fov(i), scanline(i), 1:nchanl) 
+!      write(6, 301) fov(i), scanline(i), bt_image(fov(i), scanline(i), 1:nchanl) 
     end do 
 301 format(i6,2x,i6,2x,22(f8.3))
 
@@ -313,6 +313,8 @@ CONTAINS
     write(6,*) 'emily checking: reshape bt_obs to bt_inout for output ...'
     ! Reshape for output
     bt_inout = reshape(bt_obs, (/nchanl*num_loc/))
+    write(6,*) 'ATMS_Spatial_Average: chechking bt_inout (remapped) ...'
+    write(6,*) 'minval/maxval bt_inout (remapped) = ', minval(bt_obs), maxval(bt_obs)
 
     write(6,*) 'emily checking: deallocating ...'
     deallocate(bt_image, scanline_back)

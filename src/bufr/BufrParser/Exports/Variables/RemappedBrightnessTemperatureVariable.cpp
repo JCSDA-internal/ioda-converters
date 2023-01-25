@@ -49,6 +49,7 @@ namespace Ingester
       datetime_(exportName, groupByField, conf_.getSubConfiguration("obsTime"))
     {
         initQueryMap();
+        // Diagnostic output (will remove it later)
         oops::Log::info() << "RemappedBrightnessTemperatureVariable ..." << std::endl;
         oops::Log::info() << "emily checking exportName   = " << exportName << std::endl;
         oops::Log::info() << "emily checking groupByField = " << groupByField << std::endl;
@@ -62,51 +63,60 @@ namespace Ingester
         // Read the variables from the map
         auto& radObj = map.at(getExportKey(ConfKeys::BrightnessTemperature));
         auto& sensorChanObj = map.at(getExportKey(ConfKeys::SensorChannelNumber));
-        auto& fovnObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
-
-        // Declare and initialize data arrays 
-        std::vector<float> outData((radObj->size()), DataObject<float>::missingValue());
-        std::vector<int> fovn(fovnObj->size(), DataObject<int>::missingValue());
-        std::vector<int> scanline(fovnObj->size(), DataObject<int>::missingValue()); // scanline has the same dimension as fovn
-        std::vector<float> btobs((radObj->size()), DataObject<float>::missingValue());
-        std::vector<int> channel((sensorChanObj->size()), DataObject<int>::missingValue());
+        auto& fovnumObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
 
         // Get dimensions
         int nchns = (radObj->getDims())[1];
         int dim1 = (radObj->getDims())[1];
         int dim0 = (radObj->getDims())[0];
-        int nobs = (fovnObj->getDims())[0];
+        int nobs = (fovnumObj->getDims())[0];
 
+        // Diagnostic output (will remove it later)
         oops::Log::info() << "emily checking nchs = " << nchns << std::endl;
         oops::Log::info() << "emily checking nobs = " << nobs  << std::endl;
         oops::Log::info() << "emily checking dim0 = " << dim0 << std::endl;
         oops::Log::info() << "emily checking dim1 = " << dim1  << std::endl;
         oops::Log::info() << "emily checking radObj size  = "       << radObj->size()  << std::endl;
-        oops::Log::info() << "emily checking fovnObj size = "       << fovnObj->size() << std::endl;
+        oops::Log::info() << "emily checking fovnumObj size = "     << fovnumObj->size() << std::endl;
         oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
+
+        // Declare and initialize scanline arrays 
+        std::vector<int> scanline(fovnumObj->size(), DataObject<int>::missingValue()); // scanline has the same dimension as fovn
 
         // Get observation time (obstime) variable
         auto datetimeObj = datetime_.exportData(map);
-
         std::vector<int64_t> obstime;
         if (auto obstimeObj = std::dynamic_pointer_cast<DataObject<int64_t>>(datetimeObj))
         {
            obstime = obstimeObj->getRawData();
         } 
 
-        // Fill in fov values from map  
-        for (size_t idx = 0; idx < fovnObj->size(); idx++)
+        // Get field-of-view number
+        std::vector<int> fovn;
+        if (auto fovnObj = std::dynamic_pointer_cast<DataObject<int>>(fovnumObj))
         {
-            fovn[idx] = fovnObj->getAsInt(idx);
-        }
+           fovn = fovnObj->getRawData();
+        } 
 
-        // Fill in  bs values from map  
-        for (size_t idx = 0; idx < radObj->size(); idx++)
+        // Get sensor channel
+        std::vector<int> channel;
+        if (auto channelObj = std::dynamic_pointer_cast<DataObject<int>>(sensorChanObj))
         {
-            size_t iloc = static_cast<size_t>(floor(idx / nchns));
-            size_t ichn = static_cast<size_t>(floor(idx % nchns));
-            btobs[idx] = radObj->getAsFloat(idx);
-            channel[idx] = sensorChanObj->getAsInt(idx);
+           channel = channelObj->getRawData();
+        } 
+
+        // Get brightness temperature (observation)
+        std::vector<float> btobs;
+        if (auto btobsObj = std::dynamic_pointer_cast<DataObject<float>>(radObj))
+        {
+           btobs = btobsObj->getRawData();
+        } 
+
+        // Diagnostic output (will remove it later)
+//        for (size_t idx = 0; idx < radObj->size(); idx++)
+//        {
+//            size_t iloc = static_cast<size_t>(floor(idx / nchns));
+//            size_t ichn = static_cast<size_t>(floor(idx % nchns));
 //            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
 //                               << std::setw(10) << "iloc    " << std::setw(10) << iloc
 //                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
@@ -114,23 +124,15 @@ namespace Ingester
 //                               << std::setw(10) << "channel " << std::setw(10) << channel[idx]
 //                               << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
 //                               << std::endl;   
-        }
-
-        // Perform FFT image remapping 
-        int error_status; 
-        ATMS_Spatial_Average_f(nobs, nchns, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
-       
-//        for (size_t idx = 0; idx < radObj->size(); idx++)
-//        {
-//            auto channel = sensorChanObj->getAsInt(idx);
-//
-//            if (!radObj->isMissing(idx))
-//            {
-//                outData[idx] = btobs[idx];
-//            }
 //        }
 
-//      return std::make_shared<DataObject<float>>(outData,
+        // Perform FFT image remapping 
+        // input only variables: nobs, nchns obstime, fovn, channel
+        // input & output variables: btobs, scanline, error_status
+        int error_status; 
+        ATMS_Spatial_Average_f(nobs, nchns, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
+      
+        // Export remapped observation (btobs)
         return std::make_shared<DataObject<float>>(btobs,
                                                    getExportName(),
                                                    groupByField_,
