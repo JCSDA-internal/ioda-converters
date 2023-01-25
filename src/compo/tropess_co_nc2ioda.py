@@ -122,7 +122,7 @@ class tropess(object):
                 ak = averaging_kernel[:, int(userLevel), :]
                 this_term = ak * ln(xa)
 
-                ap[:, lev] = np.exp(ln(xa[:, lev]) + np.sum(this_term, axis=1))
+                ap[:, lev] = ln(xa[:, lev]) - np.sum(this_term, axis=1))
                 nom[:, lev] = nom_pressure[int(userLevel)]
 
                 if(np.isnan(ap[:, lev]).any()):
@@ -137,6 +137,7 @@ class tropess(object):
             # or other data compression techniques as seen in literature
             ulevs = len(userLevels)
             ap = ap.reshape(ulevs * nlocs)
+            ap = ap.astype('float32')
             nom = nom.reshape(ulevs * nlocs)
             averaging_kernel = averaging_kernel[:, userLevels, :].reshape(ulevs * nlocs, nlevs)
             x = x[:, userLevels].reshape(ulevs * nlocs)
