@@ -116,24 +116,22 @@ namespace Ingester
 //                               << std::endl;   
         }
 
+        // Perform FFT image remapping 
         int error_status; 
-//      int scanline[nobs];
-
-//      ATMS_Spatial_Average_f(nobs, nchns, &fovnObj, &radObj, &scanline, &error_status); 
         ATMS_Spatial_Average_f(nobs, nchns, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
        
-        // Perform FFT image remapping 
-        for (size_t idx = 0; idx < radObj->size(); idx++)
-        {
-            auto channel = sensorChanObj->getAsInt(idx);
+//        for (size_t idx = 0; idx < radObj->size(); idx++)
+//        {
+//            auto channel = sensorChanObj->getAsInt(idx);
+//
+//            if (!radObj->isMissing(idx))
+//            {
+//                outData[idx] = btobs[idx];
+//            }
+//        }
 
-            if (!radObj->isMissing(idx))
-            {
-                outData[idx] = radObj->getAsFloat(idx);
-            }
-        }
-
-        return std::make_shared<DataObject<float>>(outData,
+//      return std::make_shared<DataObject<float>>(outData,
+        return std::make_shared<DataObject<float>>(btobs,
                                                    getExportName(),
                                                    groupByField_,
                                                    radObj->getDims(),
