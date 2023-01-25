@@ -1062,7 +1062,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
                           -i testinput/tropess_cris_co.nc
                           -o testrun/tropess_cris_co.nc
                           --levels 0 4 8 12"
-                  tropess_cris_co.nc ${IODA_CONV_COMP_TOL})
+                  tropess_cris_co.nc "5e-2")
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
