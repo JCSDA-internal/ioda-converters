@@ -18,8 +18,9 @@ import os
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict
 
-output_var_names = [
-    "mass_concentration_of_chlorophyll_in_sea_water"]
+os.environ["TZ"] = "UTC"
+
+output_var_names = ["chlorophyllMassConcentration"]
 
 DimDict = {}
 
@@ -30,7 +31,7 @@ VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
 
 
@@ -54,9 +55,13 @@ def read_input(input_args):
     print("Reading ", input_file)
     ncd = nc.Dataset(input_file, 'r')
 
-    # get global attributes
-    for v in ('platform', 'instrument', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+    # get global attributes (dictionary key is incoming name, being renamed).
+    global_attribs = {'platform': 'platformCommonName',
+                      'instrument': 'sensor',
+                      'processing_level': 'processingLevel'}
+    for v in global_attribs.keys():
+        new_name = global_attribs[v]
+        GlobalAttrs[new_name] = ncd.getncattr(v)
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
@@ -107,10 +112,9 @@ def read_input(input_args):
         data_in[v] = data_in[v][mask]
 
     # create a string version of the date for each observation
-    dates = []
+    dates = np.empty(len(lons), dtype=np.int64)
     for i in range(len(lons)):
-        obs_date = basetime + timedelta(seconds=float(data_in['time'][i]))
-        dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        dates[i] = round(data_in['time'][i])
 
     # allocate space for output depending on which variables are to be saved
     obs_dim = (len(lons))
@@ -121,8 +125,7 @@ def read_input(input_args):
     obs_data[(output_var_names[0], global_config['opqc_name'])] = np.zeros(obs_dim)
 
     # Add the metadata
-    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
-    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('dateTime', 'MetaData')] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
 
@@ -131,7 +134,7 @@ def read_input(input_args):
     obs_data[output_var_names[0], global_config['oerr_name']] = data_in['chlor_a']*0.0
     obs_data[output_var_names[0], global_config['opqc_name']] = data_in['l2_flags']
 
-    return (obs_data, GlobalAttrs)
+    return (obs_data, basetime, GlobalAttrs)
 
 
 def main():
@@ -194,7 +197,7 @@ def main():
     obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, GlobalAttrs = obs[0]
+    obs_data, basetime, GlobalAttrs = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
     # Get the nlocs
@@ -202,19 +205,18 @@ def main():
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    DimDict['nlocs'] = nlocs
-    GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict['Location'] = nlocs
 
-    VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = 'mg ^m-3'
-    VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = 'mg ^m-3'
-    VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = 'unitless'
+    VarAttrs['dateTime', 'MetaData']['units'] = 'seconds since ' + basetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+    VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = 'mg m-3'
+    VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = 'mg m-3'
     VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = -32767.
     VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = -32767.
     VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = -32767
-    VarDims["mass_concentration_of_chlorophyll_in_sea_water"] = ['nlocs']
+    VarDims["chlorophyllMassConcentration"] = ['Location']
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

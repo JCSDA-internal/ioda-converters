@@ -19,7 +19,7 @@ from lib_python.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
 
 obsvars = {
@@ -27,15 +27,14 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'converter': os.path.basename(__file__)
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'adt': ['nlocs'],
+    'adt': ['Location'],
 }
 
 
@@ -43,7 +42,6 @@ class swot_l2adt2ioda(object):
     def __init__(self, filename):
         self.filename = filename
         self.varDict = defaultdict(lambda: defaultdict(dict))
-        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
@@ -64,20 +62,25 @@ class swot_l2adt2ioda(object):
         err_units = ncd.variables['ssh_karin'].units
         err_scale_factor = ncd.variables['ssh_karin'].scale_factor
         self.qcflag = ncd.variables['ssha_karin_qual'][:].ravel()
-        # get the time data, convert to timestamps
+        # get the time data, chop off milliseconds, set the units
         time_var = ncd.variables['time']
+        time_units = time_var.units[:-2] + "Z"
+        s = list(time_units)
+        s[24] = "T"
+        time_units = "".join(s)
         num_pixels = ncd.dimensions['num_pixels'].size
-        self.time = nc.num2date(np.repeat(time_var[:], num_pixels),
-                                time_var.units)  # only_use_cftime_datetimes=False)
-        for t in range(len(self.time)):
-            self.time[t] = self.time[t].strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.time = np.zeros(len(time_var)*num_pixels, dtype=np.int64)
+        for t in range(len(time_var)):
+            for n in range(num_pixels):
+                self.time[n + t*num_pixels] = np.round(time_var[t])
+
         ncd.close()
 
         # estimate adt from SSH and Geoid height
         adt = np.where(self.ssha == Fillvalue, Fillvalue, self.ssha + self.mssh - self.geoid)
 
         # set up variable names for IODA
-        iodavar = 'absolute_dynamic_topography'
+        iodavar = 'absoluteDynamicTopography'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -85,20 +88,22 @@ class swot_l2adt2ioda(object):
         self.var_mdata[iodavar, iconv.OerrName()]['units'] = err_units
         self.var_mdata[iodavar, iconv.OvalName()]['_FillValue'] = Fillvalue
         self.var_mdata[iodavar, iconv.OerrName()]['_FillValue'] = err_Fillvalue
-        self.var_mdata[iodavar, iconv.OvalName()]['scale_factor'] = scale_factor
-        self.var_mdata[iodavar, iconv.OerrName()]['scale_factor'] = err_scale_factor
+        # self.var_mdata[iodavar, iconv.OvalName()]['scaleFactor'] = scale_factor
+        # self.var_mdata[iodavar, iconv.OerrName()]['scaleFactor'] = err_scale_factor
 
         # map swot adt to ioda data structure
-        self.outdata[('datetime', 'MetaData')] = self.time
-        self.outdata[('latitude', 'MetaData')] = self.lats
-        self.outdata[('longitude', 'MetaData')] = self.lons
+        self.outdata[('dateTime', 'MetaData')] = self.time
+        self.var_mdata[('dateTime', 'MetaData')]['units'] = time_units
+        self.outdata[('latitude', 'MetaData')] = self.lats.astype('float32')
+        self.var_mdata[('latitude', 'MetaData')]['units'] = "degrees_north"
+        self.outdata[('longitude', 'MetaData')] = self.lons.astype('float32')
+        self.var_mdata[('longitude', 'MetaData')]['units'] = "degrees_east"
         self.outdata[self.varDict[iodavar]['valKey']] = adt
         # The current uncertainity values seem to be wrong so setting error to 1
         self.outdata[self.varDict[iodavar]['errKey']] = np.ones(np.shape(self.err))
         self.outdata[self.varDict[iodavar]['qcKey']] = self.qcflag.astype('int32')
 
-        DimDict['nlocs'] = len(adt)
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(adt)
 
 
 def main():

@@ -20,7 +20,7 @@ from lib_python.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
 
 obsvars = {
@@ -28,15 +28,14 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
+    'converter': os.path.basename(__file__)
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'sst': ['nlocs'],
+    'sst': ['Location'],
 }
 
 
@@ -50,19 +49,16 @@ class ostia(object):
         self.lons = self.lons.ravel()
         self.lats = self.lats.ravel()
         self.sst = np.squeeze(ncd.variables['analysed_sst'][:]).ravel()
-        self.sst = self.sst-273.15
         self.err = np.squeeze(ncd.variables['analysis_error'][:]).ravel()
-        self.time = ncd.variables['time'][:]
+        this_datetime = ncd.variables['time'][:].astype(np.int)
         ncd.close()
 
         # Same time stamp for all obs within 1 file
-        self.datetime = np.empty_like(self.sst, dtype=object)
-        base_date = datetime(1981, 1, 1)
-        dt = base_date + timedelta(days=float(self.time/86400.0))
-        self.datetime[:] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.datetime = np.full(len(self.lats), this_datetime)
+        self.time_units = 'seconds since 1981-01-01T00:00:00Z'
 
         # Remove observations out of sane bounds
-        qci = np.where(np.abs(self.sst) < 99.0)
+        qci = np.where(np.abs(self.sst) < 355.0)
         self.nlocs = len(qci[0])
         self.lons = self.lons[qci].astype(np.single)
         self.lats = self.lats[qci].astype(np.single)
@@ -75,7 +71,6 @@ class ostia_l4sst2ioda(object):
     def __init__(self, filename):
         self.filename = filename
         self.varDict = defaultdict(lambda: defaultdict(dict))
-        self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.var_mdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
@@ -83,26 +78,28 @@ class ostia_l4sst2ioda(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar = 'sea_surface_temperature'
+        iodavar = 'seaSurfaceTemperature'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
-        self.var_mdata[iodavar, iconv.OvalName()]['units'] = 'c'
-        self.var_mdata[iodavar, iconv.OerrName()]['units'] = 'c'
+        self.var_mdata[iodavar, iconv.OvalName()]['units'] = 'K'
+        self.var_mdata[iodavar, iconv.OerrName()]['units'] = 'K'
 
         # read input filename
         sst = ostia(self.filename)
 
         # map ostia to ioda data structure
-        self.outdata[('datetime', 'MetaData')] = sst.datetime
+        self.outdata[('dateTime', 'MetaData')] = sst.datetime
+        self.var_mdata[('dateTime', 'MetaData')]['units'] = sst.time_units
         self.outdata[('latitude', 'MetaData')] = sst.lats
+        self.var_mdata[('latitude', 'MetaData')]['units'] = 'degrees_north'
         self.outdata[('longitude', 'MetaData')] = sst.lons
+        self.var_mdata[('longitude', 'MetaData')]['units'] = 'degrees_east'
         self.outdata[self.varDict[iodavar]['valKey']] = sst.sst
         self.outdata[self.varDict[iodavar]['errKey']] = sst.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(sst.nlocs, dtype=np.int32)
 
-        DimDict['nlocs'] = sst.nlocs
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = sst.nlocs
 
 
 def main():

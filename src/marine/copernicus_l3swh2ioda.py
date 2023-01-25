@@ -21,8 +21,10 @@ from lib_python.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
+
+time_units = 'seconds since 2000-01-01T00:00:00Z'
 
 obsvars = {
     'swh': 'swh',
@@ -30,14 +32,13 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'swh': ['nlocs'],
+    'swh': ['Location'],
 }
 
 
@@ -55,9 +56,9 @@ class copernicus(object):
         ncd.close()
 
         # set time stamp for all obs
-        self.datetime = np.empty_like(self.swh, dtype=object)
+        self.datetime = np.empty_like(self.swh, dtype=np.int64)
         for t in range(len(self.datetime)):
-            self.datetime[t] = datetime.utcfromtimestamp(self.time[t]+datetime(2000, 1, 1, 0, tzinfo=pytz.UTC).timestamp()).strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.datetime[t] = self.time[t]
 
         # Remove observations out of sane bounds
         qci = np.where(self.swh > 0.0)
@@ -82,7 +83,7 @@ class copernicus_l3swh2ioda(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar = 'sea_surface_wave_significant_height'
+        iodavar = 'waveHeightSignificant'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -93,15 +94,15 @@ class copernicus_l3swh2ioda(object):
         swh = copernicus(self.filename, self.factor)
 
         # map copernicus to ioda data structure
-        self.outdata[('datetime', 'MetaData')] = swh.datetime
+        self.outdata[('dateTime', 'MetaData')] = swh.datetime
+        self.var_mdata[('dateTime', 'MetaData')]['units'] = time_units
         self.outdata[('latitude', 'MetaData')] = swh.lats
         self.outdata[('longitude', 'MetaData')] = swh.lons
         self.outdata[self.varDict[iodavar]['valKey']] = swh.swh
         self.outdata[self.varDict[iodavar]['errKey']] = swh.err
         self.outdata[self.varDict[iodavar]['qcKey']] = np.zeros(swh.nlocs, dtype=np.int32)
 
-        DimDict['nlocs'] = swh.nlocs
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = swh.nlocs
 
 
 def main():

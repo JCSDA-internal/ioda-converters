@@ -16,20 +16,27 @@ from lib_python.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {'eastward_wind': ['eastward_wind', 'm s-1'],
-           'northward_wind': ['northward_wind', 'm s-1']}
+varDict = {'windEastward': ['windEastward', 'm s-1'],
+           'windNorthward': ['windNorthward', 'm s-1']}
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
-                   ("air_pressure", "float", "Pa"),
+                   ("pressure", "float", "Pa"),
                    ("sensorCentralFrequency", "float", "Hz"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
                    ("windHeightAssignMethod", "integer", ""),
-                   ("satelliteID", "integer", "")]
+                   ("satelliteIdentifier", "integer", "")]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
+
+GlobalAttrs = {
+    'converter': os.path.basename(__file__),
+    'ioda_version': 2,
+    'description': 'Satellite atmospheric motion vectors (AMV)',
+    'source': 'SSEC (ftp)'
+}
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -121,12 +128,12 @@ def main(args):
 
     nlocs = len(data['dateTime'])
     logging.info(f" found a total of {nlocs} observations")
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
 
     varDims = {}
     for key in varDict.keys():
         variable = varDict[key][0]
-        varDims[variable] = ['nlocs']
+        varDims[variable] = ['Location']
 
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
@@ -187,20 +194,15 @@ def read_file(file_name, data):
 
         for row in reader:
             try:
-                year = int(row['day'][0:4])
-                month = int(row['day'][4:6])
-                day = int(row['day'][6:])
-                hour = int(row['hms'][0:2])
-                minute = int(row['hms'][2:])
-                second = 0
-                dtg = datetime(year, month, day, hour, minute, second)
+                dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
                 local_data['dateTime'] = np.append(local_data['dateTime'], time_offset)
                 local_data['longitude'] = np.append(local_data['longitude'], float(row['lon']))
                 local_data['latitude'] = np.append(local_data['latitude'], float(row['lat']))
 
                 pres = float(row['pre'])*100.
-                local_data['air_pressure'] = np.append(local_data['air_pressure'], pres)
+                local_data['pressure'] = np.append(local_data['pressure'], pres)
+
                 wdir = float(row['dir'])*1.0
                 wspd = float(row['spd'])*1.0
                 if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
@@ -209,8 +211,8 @@ def read_file(file_name, data):
                     uwnd = float_missing_value
                     vwnd = float_missing_value
 
-                local_data['eastward_wind'] = np.append(local_data['eastward_wind'], uwnd)
-                local_data['northward_wind'] = np.append(local_data['northward_wind'], vwnd)
+                local_data['windEastward'] = np.append(local_data['windEastward'], uwnd)
+                local_data['windNorthward'] = np.append(local_data['windNorthward'], vwnd)
 
                 if row['type'] in known_freq.keys():
                     freq = known_freq[row['type']]
@@ -224,8 +226,8 @@ def read_file(file_name, data):
                 else:
                     satid = int_missing_value
                     unk_sat.append(row['sat'])
-                local_data['satelliteID'] = np.append(local_data['satelliteID'], satid)
 
+                local_data['satelliteIdentifier'] = np.append(local_data['satelliteIdentifier'], satid)
                 local_data['sensorZenithAngle'] = np.append(local_data['sensorZenithAngle'], float(row['rff']))
                 local_data['windTrackingCorrelation'] = np.append(local_data['windTrackingCorrelation'], float(row['qi']))
                 local_data['windHeightAssignMethod'] = np.append(local_data['windHeightAssignMethod'], int(row['int']))
@@ -236,8 +238,8 @@ def read_file(file_name, data):
                 keyerr = True
 
                 if (e.args[0] == 'dir') or (e.args[0] == 'spd'):
-                    local_data['eastward_wind'] = np.append(local_data['eastward_wind'], float_missing_value)
-                    local_data['northward_wind'] = np.append(local_data['northward_wind'], float_missing_value)
+                    local_data['windEastward'] = np.append(local_data['windEastward'], float_missing_value)
+                    local_data['windNorthward'] = np.append(local_data['windNorthward'], float_missing_value)
                 else:
                     local_data[known_var[e.args[0]][0]] = np.append(local_data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
 
@@ -283,6 +285,7 @@ if __name__ == "__main__":
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
     parser.set_defaults(date=" ")
+
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
