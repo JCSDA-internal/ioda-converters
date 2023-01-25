@@ -121,8 +121,7 @@ class tropess(object):
             for lev, userLevel in enumerate(userLevels):
                 ak = averaging_kernel[:, int(userLevel), :]
                 this_term = ak * ln(xa)
-
-                ap[:, lev] = ln(xa[:, lev]) - np.sum(this_term, axis=1))
+                ap[:, lev] = ln(xa[:, lev]) - np.sum(this_term, axis=1)
                 nom[:, lev] = nom_pressure[int(userLevel)]
 
                 if(np.isnan(ap[:, lev]).any()):
