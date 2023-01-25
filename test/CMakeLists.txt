@@ -39,6 +39,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
+  testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
@@ -111,6 +112,7 @@ list( APPEND test_output
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
+  testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
@@ -1049,6 +1051,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                           -o testrun/mopitt_co.nc
                           -r 2021092903 2021092921"
                   mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropess_co_nc2ioda.py
+                          -i testinput/tropess_cris_co.nc
+                          -o testrun/tropess_cris_co.nc
+                          --levels 0 4 8 12"
+                  tropess_cris_co.nc "5e-2")
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
