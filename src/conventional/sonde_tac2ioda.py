@@ -209,6 +209,7 @@ def getProfile(filename, synopId, target_date):
     if not sections:
         return None
 
+    logging.info(f" retrieving data for site: {synopId}")
     s = []
     for type in sections[synopId].keys():
         sc = decode(sections[synopId][type], year, month)
@@ -965,7 +966,10 @@ def change_vars(profile, target_time):
 
     # SPECIAL:  Most soundings launched 50-55 minutes prior to stated synoptic time, so a 12Z
     # launch is usually initiated close to 11:05Z.
-    this_datetime = datetime(profile['year'], profile['month'], profile['day'], profile['hour'], 0, 0)
+    try:
+        this_datetime = datetime(profile['year'], profile['month'], profile['day'], profile['hour'], 0, 0)
+    except Exception:
+        this_datetime = target_time
     test_time = round((target_time - this_datetime).total_seconds())
     if abs(test_time) > 3599:
         logging.info(f" forcibly changing launch time at {profile['synop']} ({profile['day']},{profile['hour']})")
@@ -994,7 +998,7 @@ def change_vars(profile, target_time):
             temp = levels[pressure]['temp'] + 273.15
         if 'dew' in levels[pressure] and levels[pressure]['dew'] is not None:
             dewp = levels[pressure]['dew'] + 273.15
-        if (temp > 75 and temp < 355 and dewp > 50 and dewp < 325 and dewp <= temp*1.05 and pres > 100 and pres < 109900):
+        if (temp > 75 and temp < 355 and dewp > 196 and dewp < 325 and dewp <= temp*1.05 and pres > 100 and pres < 109900):
             spfh = met_utils.specific_humidity(dewp, pres)
             qvapor = max(1.0e-12, spfh/(1.0-spfh))
             tvirt = temp*(1.0 + 0.61*qvapor)
@@ -1002,7 +1006,7 @@ def change_vars(profile, target_time):
             height = levels[pressure]['height']
             dz = height - heightKm1
             # Legacy soundings produce null values at mandatory level below ground.
-            if (dz < 1.0):
+            if (dz < 1.0 or dz > 10000.0):
                 this_datetime = previous_time
             else:
                 # Typical radiosonde ascent rate is 5 m/s
