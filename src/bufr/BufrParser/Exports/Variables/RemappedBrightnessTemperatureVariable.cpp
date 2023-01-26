@@ -29,13 +29,12 @@ namespace
         const char* FieldOfViewNumber = "fieldOfViewNumber";
         const char* SensorChannelNumber = "sensorChannelNumber";
         const char* BrightnessTemperature = "brightnessTemperature";
-//      const char* ObsTime = "obsTime";
+        const char* ObsTime = "obsTime";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
                                                  ConfKeys::SensorChannelNumber,
                                                  ConfKeys::BrightnessTemperature,
-//                                               ConfKeys::ObsTime
                                                 };
 }  // namespace
 
@@ -46,7 +45,7 @@ namespace Ingester
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
       Variable(exportName, groupByField, conf), 
-      datetime_(exportName, groupByField, conf_.getSubConfiguration("obsTime"))
+      datetime_(exportName, groupByField, conf_.getSubConfiguration(ConfKeys::ObsTime))
     {
         initQueryMap();
         // Diagnostic output (will remove it later)
@@ -63,60 +62,52 @@ namespace Ingester
         // Read the variables from the map
         auto& radObj = map.at(getExportKey(ConfKeys::BrightnessTemperature));
         auto& sensorChanObj = map.at(getExportKey(ConfKeys::SensorChannelNumber));
-        auto& fovnumObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
+        auto& fovnObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
 
         // Get dimensions
-        int nchns = (radObj->getDims())[1];
-        int dim1 = (radObj->getDims())[1];
-        int dim0 = (radObj->getDims())[0];
-        int nobs = (fovnumObj->getDims())[0];
+        if (radObj->getDims().size() != 2)
+        {
+            oops::Log::info () << "Observartion dimension shoule be 2 " << std::endl; 
+            oops::Log::error() << "Incorrect observartion dimension : " << radObj->getDims().size() << std::endl; 
+        } 
+        int nobs = (radObj->getDims())[0];
+        int nchn = (radObj->getDims())[1];
 
-        // Diagnostic output (will remove it later)
-        oops::Log::info() << "emily checking nchs = " << nchns << std::endl;
-        oops::Log::info() << "emily checking nobs = " << nobs  << std::endl;
-        oops::Log::info() << "emily checking dim0 = " << dim0 << std::endl;
-        oops::Log::info() << "emily checking dim1 = " << dim1  << std::endl;
-        oops::Log::info() << "emily checking radObj size  = "       << radObj->size()  << std::endl;
-        oops::Log::info() << "emily checking fovnumObj size = "     << fovnumObj->size() << std::endl;
-        oops::Log::info() << "emily checking sensorChanObj size = " << sensorChanObj->size() << std::endl;
-
-        // Declare and initialize scanline arrays 
-        std::vector<int> scanline(fovnumObj->size(), DataObject<int>::missingValue()); // scanline has the same dimension as fovn
+        // Declare and initialize scanline array
+        // scanline has the same dimension as fovn
+        std::vector<int> scanline(fovnObj->size(), DataObject<int>::missingValue());
 
         // Get observation time (obstime) variable
         auto datetimeObj = datetime_.exportData(map);
         std::vector<int64_t> obstime;
-        if (auto obstimeObj = std::dynamic_pointer_cast<DataObject<int64_t>>(datetimeObj))
-        {
-           obstime = obstimeObj->getRawData();
-        } 
+        obstime = std::dynamic_pointer_cast<DataObject<int64_t>>(datetimeObj)->getRawData();
 
         // Get field-of-view number
         std::vector<int> fovn;
-        if (auto fovnObj = std::dynamic_pointer_cast<DataObject<int>>(fovnumObj))
+        for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
-           fovn = fovnObj->getRawData();
+           fovn[idx] = fovnObj->getAsInt(idx);
         } 
 
         // Get sensor channel
         std::vector<int> channel;
-        if (auto channelObj = std::dynamic_pointer_cast<DataObject<int>>(sensorChanObj))
+        for (size_t idx = 0; idx < sensorChanObj->size(); idx++)
         {
-           channel = channelObj->getRawData();
+           channel[idx] = sensorChanObj->getAsInt(idx);
         } 
 
         // Get brightness temperature (observation)
         std::vector<float> btobs;
-        if (auto btobsObj = std::dynamic_pointer_cast<DataObject<float>>(radObj))
+        for (size_t idx = 0; idx < radObj->size(); idx++)
         {
-           btobs = btobsObj->getRawData();
+           btobs[idx] = radObj->getAsFloat(idx);
         } 
 
         // Diagnostic output (will remove it later)
 //        for (size_t idx = 0; idx < radObj->size(); idx++)
 //        {
-//            size_t iloc = static_cast<size_t>(floor(idx / nchns));
-//            size_t ichn = static_cast<size_t>(floor(idx % nchns));
+//            size_t iloc = static_cast<size_t>(floor(idx / nchn));
+//            size_t ichn = static_cast<size_t>(floor(idx % nchn));
 //            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
 //                               << std::setw(10) << "iloc    " << std::setw(10) << iloc
 //                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
@@ -127,10 +118,10 @@ namespace Ingester
 //        }
 
         // Perform FFT image remapping 
-        // input only variables: nobs, nchns obstime, fovn, channel
+        // input only variables: nobs, nchn obstime, fovn, channel
         // input & output variables: btobs, scanline, error_status
         int error_status; 
-        ATMS_Spatial_Average_f(nobs, nchns, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
+        ATMS_Spatial_Average_f(nobs, nchn, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
       
         // Export remapped observation (btobs)
         return std::make_shared<DataObject<float>>(btobs,
@@ -192,17 +183,6 @@ namespace Ingester
 
         auto datetimequerys = datetime_.makeQueryList();
         queries.insert(queries.end(), datetimequerys.begin(), datetimequerys.end());
-
-//        for (const auto& fieldName : DatetimeFieldNames)
-//        {
-//            if (conf_.has(fieldName))
-//            {
-//                QueryInfo info;
-//                info.name = getExportKey(fieldName);
-//                info.query = conf_.getString(fieldName);
-//                queries.push_back(info);
-//            }
-//        }
 
         return queries;
     }

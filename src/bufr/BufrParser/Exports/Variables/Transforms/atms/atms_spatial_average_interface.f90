@@ -12,7 +12,6 @@ contains
   subroutine ATMS_Spatial_Average_c(num_loc, nchanl, time, fovn, channel, btobs, scanline, error_status) bind(C, name='ATMS_Spatial_Average_f')
 
     use atms_spatial_average_mod, only: ATMS_Spatial_Average
-    use kinds, only: i_kind
 
     integer(c_int), value, intent(in)    :: num_loc
     integer(c_int), value, intent(in)    :: nchanl
@@ -36,6 +35,7 @@ contains
     call c_f_pointer(btobs, btobs_f, [nchanl, num_loc])
 
     call ATMS_Spatial_Average(num_loc, nchanl, time_f, fovn_f, channel_f, btobs_f, scanline_f, error_status)
+
   end subroutine ATMS_Spatial_Average_c
 
 end module atms_spatial_average_c_interface_mod

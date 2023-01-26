@@ -32,11 +32,11 @@ CONTAINS
     ! Declare passed variables
     integer(i_kind),          intent(in   ) :: num_loc, nchanl 
     integer(i_kind),          intent(in   ) :: fov(num_loc)
-    integer(i_llong),         intent(in   ) :: time(num_loc)
     integer(i_kind),          intent(in   ) :: channel(nchanl*num_loc)
+    integer(i_llong),         intent(in   ) :: time(num_loc)
     integer(i_kind),          intent(inout) :: scanline(num_loc)
-    real(r_kind),             intent(inout) :: bt_inout(nchanl*num_loc)
     integer(i_kind),          intent(inout) :: error_status 
+    real(r_kind),             intent(inout) :: bt_inout(nchanl*num_loc)
 
     ! Declare local variables
     logical          :: do_interface_check, do_output_check
@@ -46,12 +46,14 @@ CONTAINS
 
     ! -------------------------------------------------------------------- 
     ! Declare local parameters
-    integer(i_kind), parameter :: atms1c_h_wmosatid=224
-    integer(i_kind), parameter :: lninfile=15
-    integer(i_kind), parameter :: max_fov=96
+    integer(i_kind), parameter :: atms1c_h_wmosatid = 224
+    integer(i_kind), parameter :: lninfile = 15
+    integer(i_kind), parameter :: max_fov = 96
     real(r_kind), parameter    :: scan_interval = 8.0_r_kind/3.0_r_kind
+
     ! Maximum number of channels 
     integer(i_kind), parameter :: maxchans = 22
+
     ! Minimum allowed BT as a function of channel number
     real(r_kind), parameter :: minbt(maxchans) = &
          (/ 120.0_r_kind, 120.0_r_kind, 190.0_r_kind, 190.0_r_kind, &
@@ -70,13 +72,13 @@ CONTAINS
             300.0_r_kind, 300.0_r_kind /)
 
     ! Declare local variables
-    character(30) :: Cline
+    character(30) :: cline
 
     integer(i_kind) :: i, iscan, ifov, ichan, nchannels, wmosatid, version
     integer(i_kind) :: ios, max_scan, mintime
     integer(i_kind) :: nxaverage(nchanl), nyaverage(nchanl)
     integer(i_Kind) :: channelnumber(nchanl),qc_dist(nchanl)
-    integer(i_kind), ALLOCATABLE ::  scanline_back(:,:)
+    integer(i_kind), allocatable ::  scanline_back(:,:)
 
     real(r_kind) :: sampling_dist, beamwidth(nchanl)
     real(r_kind) :: newwidth(nchanl), cutoff(nchanl),err(nchanl)
@@ -128,12 +130,11 @@ CONTAINS
        write(6,*) 'ATMS_Spatial_Average: chechking bt_inout (original) ...'
        write(6,*) 'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
 
-       ! print out for checking and debugging
+       ! Print out for checking and debugging
        bt_obs = reshape(bt_inout, (/nchanl, num_loc/))
        channel_number = reshape(channel, (/nchanl, num_loc/))
  
        if (do_output_check) then
-          write(6,  *) 'emily check 1 ... '
           write(6,102) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
           iobs = 1 
           do iloc = 1, num_loc
@@ -149,7 +150,6 @@ CONTAINS
 
        if (do_output_check) then
 
-          write(6,  *) 'emily check 2 ... '
           write(6,202) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
           do iobs = 0, num_loc*nchanl-1 
              iloc = int(iobs/nchanl)
@@ -160,8 +160,7 @@ CONTAINS
 202       format(a12,2x,a12,2x,a20,2x,3(a12,2x),a15)
        endif
        write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
-       error_status = 0
-       write(6,*)'emily checking: error_status = ', error_status
+
     endif ! do_interface_check
 
     ! ------------------------------------------------------------------------------
@@ -200,21 +199,18 @@ CONTAINS
           read(lninfile,'(a30)') cline
        enddo 
        read(cline,*) version
-       write(6,*) 'emily checking: version = ', version 
 
        read(lninfile,'(a30)') cline
        do while (cline(1:1) == '#')
           read(lninfile,'(a30)') cline
        enddo 
        read(cline,*) sampling_dist
-       write(6,*) 'emily checking: sampleing_dist = ', sampling_dist 
 
        read(lninfile,'(a30)') cline
        do while (cline(1:1) == '#')
           read(lninfile,'(a30)') cline
        enddo 
        read(cline,*) nchannels
-       write(6,*) 'emily checking: nchannels = ', nchannels 
 
        read(lninfile,'(a30)') cline
        if (nchannels > 0) then
