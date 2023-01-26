@@ -115,6 +115,8 @@ def p_interp(temp_lower, temp_upper, pres_lower, pres_upper, hght_lower, hght_up
         s = G / (Rd * (temp_lower + CTOK))
         pm1 = pres_lower * math.exp(s * (hght_lower - height))
         pm2 = pres_upper * math.exp(s * (hght_upper - height))
+    elif hght_lower == hght_upper:
+        return pres_lower
     else:
         tl = temp_lower + CTOK
         tu = temp_upper + CTOK
@@ -156,6 +158,9 @@ def z_interp(temp_lower, temp_upper, pres_lower, pres_upper, pressure, hght_lowe
         s = Rd * (temp_lower + CTOK) / G
         z1 = hght_lower - s * math.log(pressure / pres_lower)
         z2 = hght_upper + s * math.log(pres_upper / pressure)
+    elif hght_lower == hght_upper:
+        z1 = hght_lower
+        z2 = hght_upper
     else:
         tl = temp_lower + CTOK
         tu = temp_upper + CTOK
