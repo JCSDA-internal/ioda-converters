@@ -9,6 +9,7 @@
 
 import numpy as np
 
+
 def concat_obs_dict(obs_data, append_obs_data):
     # For now we are assuming that the obs_data dictionary has the "golden" list
     # of variables. If one is missing from append_obs_data, the obs_data variable
