@@ -83,21 +83,21 @@ namespace Ingester
         obstime = std::dynamic_pointer_cast<DataObject<int64_t>>(datetimeObj)->getRawData();
 
         // Get field-of-view number
-        std::vector<int> fovn;
+        std::vector<int> fovn(fovnObj->size(), DataObject<int>::missingValue());
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
            fovn[idx] = fovnObj->getAsInt(idx);
         } 
 
         // Get sensor channel
-        std::vector<int> channel;
+        std::vector<int> channel(sensorChanObj->size(), DataObject<int>::missingValue());
         for (size_t idx = 0; idx < sensorChanObj->size(); idx++)
         {
            channel[idx] = sensorChanObj->getAsInt(idx);
         } 
 
         // Get brightness temperature (observation)
-        std::vector<float> btobs;
+        std::vector<float> btobs(radObj->size(), DataObject<float>::missingValue());
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
            btobs[idx] = radObj->getAsFloat(idx);
