@@ -19,12 +19,8 @@
 #        -o: output IODA file
 
 import numpy as np
-<<<<<<< HEAD
-import os, argparse
-=======
 import netCDF4 as nc
-import inspect, sys, os, argparse
->>>>>>> develop
+import os, argparse
 import pandas as pd
 from datetime import datetime
 from builtins import str
