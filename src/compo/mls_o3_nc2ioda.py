@@ -16,13 +16,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict, OrderedDict, Counter
 
-# Append pyioda paths so ioda_conv_engines can be loaded
-IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
 
 
 # Global Dictionaries.

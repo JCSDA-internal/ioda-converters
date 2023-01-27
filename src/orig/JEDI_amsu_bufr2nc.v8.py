@@ -4,9 +4,7 @@ from __future__ import print_function
 import ncepbufr
 import numpy as np
 import netCDF4
-import numbers
 import sys
-from netCDF4 import Dataset
 import re
 
 # original routine from Scott Gregory 

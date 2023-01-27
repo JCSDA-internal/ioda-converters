@@ -1106,7 +1106,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/airnow2ioda-nc.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/airnow2ioda_nc.py
                           -i testinput/airnow_2020081306.dat
                           -s testinput/airnow_sites.dat
                           -o testrun/airnow_2020081306.nc"
