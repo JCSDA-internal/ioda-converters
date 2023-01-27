@@ -167,7 +167,7 @@ if __name__ == '__main__':
     for key in meta_keys:
         data[key] = []
 
-    writer = iconio.NcWriter(args.output, locationKeyList)
+    writer = iconv.NcWriter(args.output, locationKeyList)
     # Fill the temporary data arrays from input file column data
     data['stationIdentification'] = np.full(nlocs, f3.siteid, dtype='S20')
     data['dateTime'] = np.full(nlocs, np.int64(time_offset))
