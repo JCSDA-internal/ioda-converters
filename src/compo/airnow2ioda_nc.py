@@ -105,7 +105,7 @@ def long_to_wide(df):
 def add_data(infile, sitefile):
     df = pd.read_csv(infile, delimiter='|',
                      header=None,
-                     error_bad_lines=False,
+                     on_bad_lines='skip',
                      encoding='ISO-8859-1')
     cols = ['date', 'time', 'siteid', 'site', 'utcoffset', 'variable', 'units',
             'obs', 'source']
@@ -167,7 +167,6 @@ if __name__ == '__main__':
     for key in meta_keys:
         data[key] = []
 
-    writer = iconv.NcWriter(args.output, locationKeyList)
     # Fill the temporary data arrays from input file column data
     data['stationIdentification'] = np.full(nlocs, f3.siteid, dtype='S20')
     data['dateTime'] = np.full(nlocs, np.int64(time_offset))
