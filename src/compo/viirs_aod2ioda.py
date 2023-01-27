@@ -11,6 +11,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 import os
+from datetime import datetime
 
 import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
