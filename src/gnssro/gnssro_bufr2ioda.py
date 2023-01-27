@@ -70,8 +70,6 @@ def main(args):
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
     GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
-    date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
-    GlobalAttrs['date_time'] = date_time_int32.item()
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
