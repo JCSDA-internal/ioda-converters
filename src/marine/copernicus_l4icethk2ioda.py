@@ -38,16 +38,17 @@ obsvars = {
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvars)),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'sith': ['nlocs'],
+    'sith': ['Location'],
 }
 
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 class copernicus(object):
     def __init__(self, filename):
@@ -58,7 +59,7 @@ class copernicus(object):
         lats = ncd.variables['lat'][:].ravel()
         sith = np.squeeze(ncd.variables['sea_ice_thickness'][:]).ravel()
         err = np.squeeze(ncd.variables['uncertainty'][:]).ravel()
-        self.date = ncd.getncattr('time_coverage_start')
+        self.time_coverage_start = ncd.getncattr('time_coverage_start')
         ncd.close()
         # masked out the Nan values
         sithdata = {'lon': lons, 'lat': lats, 'sith': sith, 'err': err}
@@ -69,10 +70,6 @@ class copernicus(object):
         self.sith = df2['sith']
         self.err = df2['err']
         self.nlocs = len(self.sith)
-        # Same time stamp for all obs within 1 file
-        self.datetime = np.empty_like(self.sith, dtype=object)
-        self.datetime[:] = self.date
-
 
 class copernicus_l4icethk2ioda(object):
 
@@ -88,7 +85,7 @@ class copernicus_l4icethk2ioda(object):
     # Open input file and read relevant info
     def _read(self):
         # set up variable names for IODA
-        iodavar = 'sea_ice_thickness'
+        iodavar = 'seaIceThickness'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
         self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -97,12 +94,25 @@ class copernicus_l4icethk2ioda(object):
         # read input filename
         sith = copernicus(self.filename)
         # put the time at 00 between start and end coverage time
-        if self.datetime is not None:
-            ymdh = datetime.strptime(self.datetime, "%Y%m%d%H")
-            ymdhm = ymdh.strftime("%Y-%m-%dT%H:%M:%SZ")
-            sith.datetime[:] = ymdhm
+        if sith.time_coverage_start is not None:
+            this_datetime = datetime.strptime(sith.time_coverage_start[:-1], "%Y-%m-%dT%H:%M:%S")
+            time_offset = round((this_datetime - epoch).total_seconds())
+        else:
+            try:
+                this_datetime = datetime.strptime(sith.datetime, "%Y-%m-%dT%H:%M:%SZ")
+                time_offset = round((this_datetime - epoch).total_seconds())
+            except Exception:
+                print(f"ABORT, failure to find timestamp; check format,"
+                      " it should be like 2014-07-29T12:00:00Z whereas"
+                      " you entered {self.datetime}")
+                sys.exit()
+
+        # Same time stamp for all obs within 1 file
+        sith.datetime = np.empty_like(sith.sith, dtype=np.int64)
+        sith.datetime[:] = time_offset
         # map copernicus to ioda data structure
         self.outdata[('dateTime', 'MetaData')] = sith.datetime
+        self.var_mdata[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = sith.lats
         self.outdata[('longitude', 'MetaData')] = sith.lons
         self.outdata[self.varDict[iodavar]['valKey']] = sith.sith
