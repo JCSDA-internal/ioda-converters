@@ -50,6 +50,7 @@ VarDims = {
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
+
 class copernicus(object):
     def __init__(self, filename):
         # Create a simple data structure for Copernicus L4 sith product obtained from
@@ -70,6 +71,7 @@ class copernicus(object):
         self.sith = df2['sith']
         self.err = df2['err']
         self.nlocs = len(self.sith)
+
 
 class copernicus_l4icethk2ioda(object):
 
