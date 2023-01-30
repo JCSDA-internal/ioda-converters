@@ -2,7 +2,6 @@
 
 import sys
 import os
-from pathlib import Path
 import time
 from datetime import datetime
 import csv
@@ -10,16 +9,10 @@ import numpy as np
 import netCDF4 as nc
 import logging
 
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 # These modules need the path to lib-python modules
-import ioda_conv_engines as iconv
-import meteo_utils
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+import lib_python.meteo_utils as meteo_utils
+from lib_python.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
@@ -78,10 +71,15 @@ known_freq = {'IR': 2.99792458E+14/10.7,
               'VIS': 2.99792458E+14/0.65}
 
 known_sat = {'HMWR08': 173,
-             'MET11': 70,
+             'HMWR09': 174,
              'MET8': 55,
+             'MET9': 56,
+             'MET10': 57,
+             'MET11': 70,
              'GOES16': 270,
-             'GOES17': 271}
+             'GOES17': 271,
+             'GOES18': 272,
+             'GOES19': 273}
 
 known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'sat': ['satellite', int_missing_value],
@@ -89,7 +87,7 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'hms': ['dateTime', int_missing_value],
              'lat': ['latitude', float_missing_value],
              'lon': ['longitude', float_missing_value],
-             'pre': ['air_pressure', float_missing_value],
+             'pre': ['pressure', float_missing_value],
              'rff': ['sensorZenithAngle', float_missing_value],
              'qi': ['windTrackingCorrelation', float_missing_value],
              'int': ['windHeightAssignMethod', int_missing_value],
@@ -97,7 +95,12 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'dir': ['direction', float_missing_value]}
 
 
-def main(file_names, output_file, datetimeRef):
+def main(args):
+
+    file_names = args.input
+    output_file = args.output
+    dtg = datetime.strptime(args.date, '%Y%m%d%H')
+    datetimeRef = dtg.isoformat() + "Z"
 
     start_time = time.time()
 
@@ -194,7 +197,7 @@ def read_file(file_name, data):
                 dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
                 local_data['dateTime'] = np.append(local_data['dateTime'], time_offset)
-                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon']))
+                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon'])*-1.0)
                 local_data['latitude'] = np.append(local_data['latitude'], float(row['lat']))
 
                 pres = float(row['pre'])*100.
@@ -269,18 +272,20 @@ if __name__ == "__main__":
     )
 
     required = parser.add_argument_group(title='required arguments')
-    required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
+    required.add_argument('-i', '--input', nargs='+',
                           action='store', default=None, required=True,
                           help='input files')
-    required.add_argument('-o', '--output-file', dest='output_file',
+    required.add_argument('-o', '--output',
                           action='store', default=None, required=True,
                           help='output file')
-    required.add_argument('-d', '--date', dest='datetimeReference',
+    required.add_argument('-d', '--date',
                           action='store',
                           help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
+    parser.set_defaults(date=" ")
+
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
@@ -296,11 +301,8 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
-    for file_name in args.file_names:
+    for file_name in args.input:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
-    datetimeRef = dtg.isoformat() + "Z"
-
-    main(args.file_names, args.output_file, datetimeRef)
+    main(args)

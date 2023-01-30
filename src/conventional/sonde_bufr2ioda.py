@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-import dateutil.parser
 import os
-from pathlib import Path
 import sys
 import time
 import logging
 
-from itertools import compress
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
 
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 # These modules need the path to lib-python modules
-import ioda_conv_engines as iconv
-import meteo_utils
-from orddicts import DefaultOrderedDict
-from collections import defaultdict, OrderedDict
+import lib_python.ioda_conv_engines as iconv
+import lib_python.meteo_utils as meteo_utils
+from lib_python.orddicts import DefaultOrderedDict
+from collections import defaultdict
 
 os.environ["TZ"] = "UTC"
 
@@ -692,16 +683,6 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['geopotentialHeight'][0] = float_missing_value
             meta_data['pressure'][0] = float_missing_value
 
-        # Very rarely the first level is way up high then followed by at surface. Toss first values.
-        if len(meta_data['pressure']) > 2:
-            if (meta_data['pressure'][0] < 60000 and meta_data['pressure'][1] > meta_data['pressure'][0]):
-                meta_data['pressure'][0] = float_missing_value
-                meta_data['geopotentialHeight'][0] = float_missing_value
-                temp_data['windDirection'][0] = float_missing_value
-                temp_data['windSpeed'][0] = float_missing_value
-                temp_data['airTemperature'][0] = float_missing_value
-                temp_data['dewpointTemperature'][0] = float_missing_value
-
         # And now processing the observed variables we care about.
         nbad = 0
         for variable in raw_obsvars:
@@ -749,7 +730,7 @@ def read_bufr_message(f, count, start_pos, data):
         for n, dewpoint in enumerate(vals['dewpointTemperature']):
             pres = meta_data['pressure'][n]
             if dewpoint and pres:
-                if (dewpoint > 50 and dewpoint < 325 and pres > 100 and pres < 109900):
+                if (dewpoint > 196 and dewpoint < 325 and pres > 100 and pres < 109900):
                     spfh[n] = met_utils.specific_humidity(dewpoint, pres)
 
         airt = np.full(target_number, float_missing_value)
@@ -761,7 +742,7 @@ def read_bufr_message(f, count, start_pos, data):
         tvirt = np.full(target_number, float_missing_value)
         for n, temp in enumerate(airt):
             pres = meta_data['pressure'][n]
-            if (temp != float_missing_value and spfh[n] and pres < 108000 and pres > 10000):
+            if (temp != float_missing_value and spfh[n] != float_missing_value and pres < 108000 and pres > 10000):
                 qvapor = max(1.0e-12, spfh[n]/(1.0-spfh[n]))
                 tvirt[n] = temp*(1.0 + 0.61*qvapor)
 

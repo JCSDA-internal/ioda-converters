@@ -75,6 +75,7 @@ phases:
       - cp -r cmake /jcsda/ioda-bundle/
       - cp /jcsda/ioda-bundle/cmake/CTestConfig.cmake /jcsda/ioda-bundle/
       - sed -i "s@CDASH_URL@$CDASH_URL@g" /jcsda/ioda-bundle/CTestConfig.cmake
+      - chmod 777 -R /jcsda/ioda-bundle
       - ls /jcsda/ioda-bundle/
 
   build:
@@ -101,6 +102,10 @@ phases:
         && sed -i 's/nonroot/nonroot\/ioda/' DartConfiguration.tcl
         && cat DartConfiguration.tcl
         && ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4"
+
+      # Install python-based ioda-converters
+      - su - nonroot -c "cd /jcsda/ioda-bundle/iodaconv
+        && python3 -m pip install -e ."
 
       - su - nonroot -c "cd /home/nonroot/iodaconv
         && export FC=mpifort

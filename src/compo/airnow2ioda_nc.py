@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 # Read airnow text data file and convert to IODA netcdf
 import os, sys
 from datetime import datetime
@@ -7,14 +8,9 @@ import netCDF4 as nc
 import numpy as np
 import pandas as pd
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
 
 os.environ["TZ"] = "UTC"
 
@@ -109,7 +105,7 @@ def long_to_wide(df):
 def add_data(infile, sitefile):
     df = pd.read_csv(infile, delimiter='|',
                      header=None,
-                     error_bad_lines=False,
+                     on_bad_lines='skip',
                      encoding='ISO-8859-1')
     cols = ['date', 'time', 'siteid', 'site', 'utcoffset', 'variable', 'units',
             'obs', 'source']

@@ -99,6 +99,10 @@ phases:
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
+      # Install python-based ioda-converters
+      - cd /jcsda/ioda-bundle/iodaconv
+      - python3 -m pip install -e .
+
       # Build ioda-converters
       - cd /build_container/iodaconv
       - cp ../DartConfiguration.tcl .
