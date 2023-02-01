@@ -1,0 +1,190 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/rap.t06z.adpsfc.prepbufr.tm00"
+
+      exports:
+        variables:
+          # MetaData
+          obsTimeMinusCycleTime:
+            query: "*/DHR"
+          prepbufrDataLevelCategory:
+            query: "*/CAT"
+          prepbufrReportType:
+            query: "*/TYP"
+          dumpReportType:
+            query: "*/T29"
+          longitude:
+            query: "*/XOB"
+          latitude:
+            query: "*/YOB"
+          stationIdentification:
+            query: "*/SID"
+          stationElevation:
+            query: "*/ELV"
+
+          # ObsValue - cloud, cloud ceiling, visibility, gust wind, min/max temperature, weather  
+          # note: cloud ceiling is a derivative of HOCB, the height of cloud base
+          cloudCoverTotal:
+            query: "*/CLOU2SEQ/TOCC"
+            type: float
+            transforms:
+              - scale: 0.01
+          cloudAmountDescription:
+            query: "*/CLOUDSEQ/CLAM"
+          cloudCeiling:
+            query: "*/CLOU3SEQ/CEILING"
+          heightAboveSurfaceOfBaseOfLowestCloud:
+            query: "*/CLOU2SEQ/HBLCS"
+          heightOfBaseOfCloud:
+            query: "*/CLOUDSEQ/HOCB"
+          verticalSignificanceSurfaceObservations:
+            query: "*/CLOUDSEQ/VSSO"
+          verticalVisibility:
+            query: "*/VISB1SEQ/VTVI_SEQ/VTVI"
+          horizontalVisibility:
+            query: "*/VISB1SEQ/HOVI"
+          minimumTemperature:
+            query: "*/TMXMNSEQ/MITM"
+          maximumTemperature:
+            query: "*/TMXMNSEQ/MXTM"
+          maximumWindGustSpeed:
+            query: "*/GUST1SEQ/MXGS"
+          presentWeather:
+            query: "*/PREWXSEQ/PRWE"
+
+    ioda:
+      backend: netcdf 
+      obsdataout: "./testrun/rrfs.t06z.adpsfc.prepbufr.nc"
+
+      dimensions:
+        - name: CloudSequence 
+          path: "*/CLOUDSEQ"
+        - name: MaxMinTemperatureSequence
+          path: "*/TMXMNSEQ" 
+        - name: PresentWeatherSequence
+          path: "*/PREWXSEQ"
+
+      variables:
+
+        # MetaData
+        - name: "MetaData/obsTimeMinusCycleTime"
+          coordinates: "longitude latitude"
+          source: variables/obsTimeMinusCycleTime
+          longName: "Observation Time Minus Cycle Time"
+          units: "Hour"
+
+        - name: "MetaData/prepbufrDataLevelCategory"
+          coordinates: "longitude latitude"
+          source: variables/prepbufrDataLevelCategory
+          longName: "Prepbufr Data Level Category"
+
+        - name: "MetaData/prepbufrReportType"
+          coordinates: "longitude latitude"
+          source: variables/prepbufrReportType
+          longName: "Prepbufr Report Type"
+
+        - name: "MetaData/dumpReportType"
+          coordinates: "longitude latitude"
+          source: variables/dumpReportType
+          longName: "Data Dump Report Type"
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degree_east"
+          range: [0, 360]
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station Identification"
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Elevation of Observing Location"
+          units: "m"
+
+        # Observation - cloud, visibility, gust wind, min/max temperature
+        - name: "ObsValue/cloudCoverTotal"
+          coordinates: "longitude latitude"
+          source: variables/cloudCoverTotal
+          longName: "Total Cloud Coverage"
+          units: "1"
+
+        - name: "ObsValue/cloudAmountDescription"
+          coordinates: "longitude latitude"
+          source: variables/cloudAmountDescription
+          longName: "Cloud Amount Description"
+
+        - name: "ObsValue/cloudCeiling"
+          coordinates: "longitude latitude"
+          source: variables/cloudCeiling
+          longName: "Cloud Ceiling"
+          units: "m"
+
+        - name: "ObsValue/heightAboveSurfaceOfBaseOfLowestCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightAboveSurfaceOfBaseOfLowestCloud
+          longName: "Height above Surface of Base of Lowest Cloud Seen"
+
+        - name: "ObsValue/heightOfBaseOfCloud"
+          coordinates: "longitude latitude"
+          source: variables/heightOfBaseOfCloud
+          longName: "Height of Base of Cloud"
+          units: "m" 
+
+        - name: "ObsValue/verticalSignificanceSurfaceObservations"
+          coordinates: "longitude latitude"
+          source: variables/verticalSignificanceSurfaceObservations
+          longName: "Description of Vertical Significance (Surface Observations)"
+ 
+        - name: "ObsValue/horizontalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/horizontalVisibility
+          longName: "Horizontal Visibility"
+          units: "m"
+
+        - name: "ObsValue/verticalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/verticalVisibility
+          longName: "Vertical Visibility"
+          units: "m"
+
+        - name: "ObsValue/minimumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/minimumTemperature
+          longName: "Minimum Temperature at Height and Over Period Specified"
+          units: "K"
+
+        - name: "ObsValue/maximumTemperature"
+          coordinates: "longitude latitude"
+          source: variables/maximumTemperature
+          longName: "Maximum Temperature at Height and Over Period Specified"
+          units: "K"
+
+        - name: "ObsValue/maximumWindGustSpeed"
+          coordinates: "longitude latitude"
+          source: variables/maximumWindGustSpeed
+          longName: "Maximum Wind Gust Speed"
+          units: "m s-1"
+
+        - name: "ObsValue/presentWeather"
+          coordinates: "longitude latitude"
+          source: variables/presentWeather
+          longName: "Description of Present Weather"

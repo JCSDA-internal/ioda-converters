@@ -55,27 +55,23 @@ observations:
           heightOfStation:
             query: "*/SELV"
 
-          startChannel:
-            query: "*/IASIL1CB/STCH"
-
-          endChannel:
-            query: "*/IASIL1CB/ENCH"
-
-          channelScaleFactor:
-            query: "*/IASIL1CB/CHSF"
-
-          sensorChannelNumber:
-            query: "*/IASICHN/CHNM"
-
-          # ObsValue
-          scaledSpectralRadiance:
-            query: "*/IASICHN/SCRA"
-
           fractionOfClearPixelsInFov:
             query: "*/IASIL1CS/FCPH"
             type: float
             transforms:
                - scale: 0.01
+
+          sensorChannelNumber:
+            query: "*/IASICHN/CHNM"
+
+          # ObsValue
+          spectralRadiance:
+            spectralRadiance:
+              sensorChannelNumber: "*/IASICHN/CHNM"
+              startChannel: "*/IASIL1CB/STCH"
+              endChannel: "*/IASIL1CB/ENCH"
+              scaleFactor: "*/IASIL1CB/CHSF"
+              scaledSpectralRadiance: "*/IASICHN/SCRA"
 
         splits:
           satId:
@@ -124,7 +120,6 @@ observations:
         - name: "MetaData/longitude"
           source: variables/longitude
           longName: "Longitude"
-          type: float 
           units: "degree_east"
           range: [ -180, 180 ]
 
@@ -177,30 +172,17 @@ observations:
           longName: "Altitude of Satellite"
           units: "m"
 
-        - name: "MetaData/startChannel"
-          source: variables/startChannel
-          longName: "Start Channel"
-
-        - name: "MetaData/endChannel"
-          source: variables/endChannel
-          longName: "End Channel"
-
-        - name: "MetaData/channelScaleFactor"
-          source: variables/channelScaleFactor
-          longName: "Channel Scale Factor"
-
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
           longName: "Sensor Channel Number"
-
-        # ObsValue
-        - name: "ObsValue/scaledSpectralRadiance"
-          source: variables/scaledSpectralRadiance
-          longName: "Scaled IASI Spectral Radiance"
-          units: "W m-2 sr-1 m"
 
         - name: "MetaData/fractionOfClearPixelsInFov"
           source: variables/fractionOfClearPixelsInFov
           longName: "Fraction of Clear Pixels in a Field of View"
           units: "1"
           range: [0, 1]
+
+        - name: "ObsValue/spectralRadiance"
+          source: variables/spectralRadiance
+          longName: "IASI Spectral Radiance"
+          units: "W m-2 sr-1 m"

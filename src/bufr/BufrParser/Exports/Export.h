@@ -16,6 +16,8 @@
 #include "Splits/Split.h"
 #include "Variables/Variable.h"
 
+#include "ObjectFactory.h"
+
 
 namespace Ingester
 {
@@ -42,6 +44,7 @@ namespace Ingester
         Variables  variables_;
         Filters filters_;
         std::vector<std::string> subsets_;
+
 
         /// \brief Create Variables exports from config.
         void addVariables(const eckit::Configuration &conf,

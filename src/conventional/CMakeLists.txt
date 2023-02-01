@@ -1,9 +1,11 @@
 list(APPEND programs
   amv_ssec_ascii2ioda.py
   amdar_bufr2ioda.py
+  amv_ssec_ascii2ioda.py
   buoy_bufr2ioda.py
   metar_csv2ioda.py
-  decode_bufr_LDM_raob.py
+  sonde_bufr2ioda.py
+  sonde_tac2ioda.py
   ship_bufr2ioda.py
   sonde_tac2ioda.py
   synop_bufr2ioda.py

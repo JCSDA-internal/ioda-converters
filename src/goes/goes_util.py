@@ -33,7 +33,7 @@ class GoesUtil:
         Sets the resolution variable and array slicing increment for sub_sampling
         resolution - the resolution
         """
-        self._resolution = resolution
+        self._resolution = int(resolution)
         self._increment = int(self._resolution / 2)
 
     def set_nonexistent_indices_data_array(self, nonexistent_indices_data_array):
