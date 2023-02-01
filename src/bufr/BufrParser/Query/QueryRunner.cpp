@@ -11,8 +11,11 @@
 
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include "Constants.h"
+#include "SubsetTable.h"
+
 
 namespace Ingester {
 namespace bufr {
@@ -37,10 +40,87 @@ namespace bufr {
         std::shared_ptr<__details::ProcessingMasks> masks;
 
         findTargets(targets, masks);
+
+        Targets targets2;
+        old_findTargets(targets2, masks);
+
         collectData(targets, masks, resultSet_);
     }
 
     void QueryRunner::findTargets(Targets &targets,
+                                  std::shared_ptr<__details::ProcessingMasks> &masks)
+    {
+        // Check if the target list for this subset is cached
+        if (targetCache_.find(dataProvider_.getSubset()) != targetCache_.end())
+        {
+            targets = targetCache_.at(dataProvider_.getSubset());
+            masks = maskCache_.at(dataProvider_.getSubset());
+            return;
+        }
+
+        auto table = SubsetTable(dataProvider_);
+
+        for (const auto& name : querySet_.names())
+        {
+            // Find the table node for the query. Loop through all the sub-queries until you find one.
+            Query foundQuery;
+            std::shared_ptr<BufrNode> tableNode;
+            for (const auto& query : querySet_.queriesFor(name))
+            {
+                tableNode = table.getNodeForPath(query.path);
+                foundQuery = query;
+                if (tableNode != nullptr) break;
+            }
+
+            auto target = std::make_shared<Target>();
+
+            // There was no corresponding table node for any of the sub-queries so create empty target.
+            if (tableNode == nullptr)
+            {
+                // Create empty target
+                target->name = name;
+                target->queryStr = querySet_.queriesFor(name)[0].queryStr;
+                target->dimPaths = {"*"};
+                target->exportDimIdxs = {0};
+                target->typeInfo = TypeInfo();
+                targets.push_back(target);
+
+                continue;
+            }
+
+            // Create the target
+            target->name = name;
+            target->queryStr = foundQuery.queryStr;
+
+            // make targetComponent
+            std::vector<TargetComponent> path(foundQuery.path.size() + 1);
+
+            int pathIdx = 0;
+            path[pathIdx].queryComponent = foundQuery.subset;
+            path[pathIdx].branch = 0;
+            path[pathIdx].setType(Typ::Subset);
+            pathIdx++;
+
+            auto nodes = tableNode->getPathNodes();
+            for (auto nodeIdx = 1; nodeIdx < nodes.size(); nodeIdx++)
+            {
+                path[pathIdx].queryComponent = foundQuery.path[nodeIdx - 1];
+                path[pathIdx].branch = nodes[nodeIdx]->nodeIdx;
+                path[pathIdx].setType(nodes[nodeIdx]->type);
+                pathIdx++;
+            }
+
+            target->setPath(path);
+            target->typeInfo = tableNode->typeInfo;
+            target->nodeIdx = tableNode->nodeIdx;
+            target->dimPaths = tableNode->getDimPaths();
+            target->exportDimIdxs = tableNode->getDimIdxs();
+
+            targets.push_back(target);
+        }
+    }
+
+    void QueryRunner::old_findTargets(Targets &targets,
                                   std::shared_ptr<__details::ProcessingMasks> &masks)
     {
         // Check if the target list for this subset is cached
@@ -71,10 +151,10 @@ namespace bufr {
 
                 target = findTarget(queryName, subQuery);
 
-                if (target->nodeIds.size() > 0)
+                if (target->nodeIdx > 0)
                 {
                     // Collect mask data
-                    masks->valueNodeMask[target->nodeIds[0]] = true;
+                    masks->valueNodeMask[target->nodeIdx] = true;
                     for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx) {
                         masks->pathNodeMask[target->seqPath[pathIdx]] = true;
                     }
@@ -251,7 +331,7 @@ namespace bufr {
         target->setPath(targetComponents);
         target->name = targetName;
         target->queryStr = query.queryStr;
-        target->nodeIds = targetNodes;
+        target->nodeIdx = (targetNodes.size()) ? targetNodes[0] : 0;
 
         if (targetNodes.size() > 0)
         {
@@ -437,7 +517,7 @@ namespace bufr {
             auto &dataField = dataFrame.fieldAtIdx(targetIdx);
             dataField.target = targ;
 
-            if (targ->nodeIds.size() == 0) {
+            if (targ->nodeIdx == 0) {
                 dataField.data = {MissingValue};
                 dataField.seqCounts = {{1}};
             }
@@ -458,7 +538,7 @@ namespace bufr {
                     dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
                 }
 
-                dataField.data = dataTable[targ->nodeIds[0]].values;
+                dataField.data = dataTable[targ->nodeIdx].values;
             }
         }
     }

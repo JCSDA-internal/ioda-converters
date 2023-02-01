@@ -94,6 +94,9 @@ namespace bufr {
         void findTargets(Targets& targets,
                          std::shared_ptr<__details::ProcessingMasks>& masks);
 
+        void old_findTargets(Targets& targets,
+                             std::shared_ptr<__details::ProcessingMasks>& masks);
+
 
         /// \brief Find the target associated with a specific user provided query string.
         /// \param[in] targetName The name specified for the target.

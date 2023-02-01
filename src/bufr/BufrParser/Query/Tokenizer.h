@@ -17,7 +17,6 @@
 #include <sstream>
 
 #include "eckit/exception/Exceptions.h"
-#include "ObjectFactory.h"
 
 
 namespace Ingester {

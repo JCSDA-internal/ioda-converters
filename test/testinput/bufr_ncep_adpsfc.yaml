@@ -12,7 +12,7 @@ observations:
 
       exports:
         variables:
-          # MetaData
+#          # MetaData
           timestamp:
             datetime:
               year: "*/YEAR[1]"
@@ -53,13 +53,13 @@ observations:
             type: float
 
           # ObsValue - ocean
-          # DBSS (depth below water surface) not found 
+          # DBSS (depth below water surface) not found
           waterTemperature:
             query: "*/SST1"
           heightOfWaves:
             query: "*/WAVSQ1/HOWV"
 
-          # ObsValue - cloud, visibility, gust wind, min/max temperature, weather 
+          # ObsValue - cloud, visibility, gust wind, min/max temperature, weather
           # CEILING (cloud ceiling) not found
           cloudCoverTotal:
             query: "*/TOCC"
@@ -119,7 +119,7 @@ observations:
 
         # MetaData
         - name: "MetaData/dateTime"
-          coordinates: "longitude latitude"        
+          coordinates: "longitude latitude"
           source: variables/timestamp
           longName: "Datetime"
           units: "seconds since 1970-01-01T00:00:00Z"
@@ -210,7 +210,7 @@ observations:
           longName: "Height of Waves"
           units: "m"
 
-        # ObsValue - cloud, visibility, gust wind, min/max temperature, weather 
+        # ObsValue - cloud, visibility, gust wind, min/max temperature, weather
         - name: "ObsValue/cloudCoverTotal"
           coordinates: "longitude latitude"
           source: variables/cloudCoverTotal

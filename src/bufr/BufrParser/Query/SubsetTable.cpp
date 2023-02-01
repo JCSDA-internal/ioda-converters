@@ -8,9 +8,9 @@
 #include "SubsetTable.h"
 
 #include <algorithm>
-#include <iostream>
 #include <memory>
-#include <sstream>
+
+#include "QueryParser.h"
 
 
 namespace Ingester {
@@ -85,5 +85,32 @@ namespace bufr {
             nodeIdx = dataProvider_.getLink(nodeIdx);
         }
     }
+
+    std::shared_ptr<BufrNode> SubsetTable::getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path)
+    {
+        auto node = root_;
+        for (const auto& component : path)
+        {
+            if (node->isContainer())
+            {
+                auto child = node->getChild(component->name, component->index);
+                if (child)
+                {
+                    node = child;
+                }
+                else
+                {
+                    return nullptr;
+                }
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+
+        return node;
+    }
+
 }  // namespace bufr
 }  // namespace Ingester

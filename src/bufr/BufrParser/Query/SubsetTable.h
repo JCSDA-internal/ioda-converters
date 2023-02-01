@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include "DataProvider.h"
+#include "QueryParser.h"
 
 namespace Ingester {
 namespace bufr {
@@ -100,6 +101,82 @@ namespace bufr {
             return components;
         }
 
+        std::vector<std::shared_ptr<BufrNode>> getPathNodes()
+        {
+            std::vector<std::shared_ptr<BufrNode>> components;
+            return getPathNodes(components);
+        }
+
+        std::vector<std::shared_ptr<BufrNode>> getPathNodes(std::vector<std::shared_ptr<BufrNode>>& components)
+        {
+            if (!parent.expired())
+            {
+                components = parent.lock()->getPathNodes(components);
+            }
+
+            if (isQueryPathNode() || isLeaf())
+            {
+                components.push_back(shared_from_this());
+            }
+
+            return components;
+        }
+
+        std::string getPathStr()
+        {
+            std::vector<std::string> path = getPath();
+            std::string pathString;
+
+            for (auto it = path.begin(); it != path.end(); ++it)
+            {
+                pathString += *it;
+                if (it != path.end() - 1)
+                {
+                    pathString += "/";
+                }
+            }
+
+            return pathString;
+        }
+
+        std::vector<std::string> getDimPaths()
+        {
+            std::vector<std::string> components;
+            getDimPaths(components);
+            return components;
+        }
+
+        void getDimPaths(std::vector<std::string>& components)
+        {
+            if (!parent.expired())
+            {
+                parent.lock()->getDimPaths(components);
+            }
+
+            if (parent.expired())
+            {
+                components.push_back("*");
+            }
+            else if (parent.lock()->isDimensioningNode() && isQueryPathNode())
+            {
+                std::ostringstream pathSubStr;
+                auto subPath = getPath();
+                for (auto it = subPath.begin(); it != subPath.end(); ++it)
+                {
+                    if (it == subPath.begin())
+                    {
+                        pathSubStr << "*"; // Always insert * for the subset
+                    }
+                    else
+                    {
+                        pathSubStr << "/" << *it;
+                    }
+                }
+
+                components.push_back(pathSubStr.str());
+            }
+        }
+
         std::vector<std::shared_ptr<BufrNode>> getLeaves()
         {
             std::vector<std::shared_ptr<BufrNode>> leaves;
@@ -141,14 +218,14 @@ namespace bufr {
         }
 
 
-        std::vector<size_t> getDimIdxs()
+        std::vector<int> getDimIdxs()
         {
-            std::vector<size_t> idxs;
-            size_t depth = 0;
+            std::vector<int> idxs;
+            int depth = 0;
             return getDimIdxs(idxs, depth);
         }
 
-        std::vector<size_t> getDimIdxs(std::vector<size_t>& idxs, size_t& depth)
+        std::vector<int> getDimIdxs(std::vector<int>& idxs, int& depth)
         {
             if (!parent.expired())
             {
@@ -163,6 +240,43 @@ namespace bufr {
 
             return idxs;
         }
+
+        std::shared_ptr<BufrNode> getChild(const std::string& mnemonic, size_t index)
+        {
+            size_t currentIdx = 0;
+            for (const auto& child : children)
+            {
+                if (child->isContainer() && !child->isQueryPathNode())
+                {
+                    auto node = child->getChild(mnemonic, index);
+                    if (node != nullptr) return node;
+                }
+                else if (child->mnemonic == mnemonic)
+                {
+                    currentIdx++;
+                    if (currentIdx == index || index == 0) return child;
+                }
+            }
+
+            return nullptr;
+        }
+
+        size_t queryPathIdx()
+        {
+            size_t idx = 0;
+            if (!parent.expired())
+            {
+                idx = parent.lock()->queryPathIdx();
+            }
+
+            if (isQueryPathNode())
+            {
+                idx++;
+            }
+
+            return idx;
+        }
+
     };
 
     typedef std::vector<std::shared_ptr<Ingester::bufr::BufrNode>> BufrNodeVector;
@@ -180,6 +294,13 @@ namespace bufr {
         /// \returns A vector of BufrNode objects.
         const BufrNodeVector& getLeaves() const { return leaves_; }
 
+        const std::shared_ptr<BufrNode> getRoot() const { return root_; }
+
+        /// \brief Gets the node for the path that is passed in.
+        /// \param path The path to the node.
+        /// \returns A shared pointer to the node.
+        std::shared_ptr<BufrNode> getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path);
+
      private:
         const DataProvider& dataProvider_;
         std::shared_ptr<BufrNode> root_;
@@ -191,6 +312,7 @@ namespace bufr {
         /// \brief Parses the BUFR message subset Meta data tables in a recursive ve fashion.
         /// \param[in] parent The current parent node in the tree.
         void processNode(std::shared_ptr<BufrNode>& parent);
+
     };
 }  // namespace bufr
 }  // namespace Ingester

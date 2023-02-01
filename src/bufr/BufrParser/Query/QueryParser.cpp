@@ -12,9 +12,6 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#include "Tokenizer.h"
-#include "Target.h"
-
 namespace Ingester {
 namespace bufr {
     std::vector<Query> QueryParser::parse(const std::string& queryStr)

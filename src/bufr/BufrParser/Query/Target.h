@@ -47,12 +47,14 @@ namespace bufr {
         void setType(const Typ& bufrTyp)
         {
             static std::unordered_map<Typ, Type> typMap = {
+                {Typ::Subset, Type::Subset},
                 {Typ::DelayedRep, Type::Repeat},
                 {Typ::FixedRep, Type::Repeat},
                 {Typ::DelayedRepStacked, Type::Repeat},
                 {Typ::DelayedBinary, Type::Binary},
                 {Typ::Repeat, Type::Repeat},
                 {Typ::StackedRepeat, Type::Repeat},
+                {Typ::Sequence, Type::Repeat},
                 {Typ::Number, Type::Value},
                 {Typ::Character, Type::Value}
             };
@@ -71,7 +73,7 @@ namespace bufr {
         std::string queryStr;
         std::string unit;
         TypeInfo typeInfo;
-        std::vector<int> nodeIds;
+        size_t nodeIdx;
         bool anySubset = false;
         TargetComponents path;
         size_t numDimensions = 0;
