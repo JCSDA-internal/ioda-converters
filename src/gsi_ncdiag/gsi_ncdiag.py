@@ -8,13 +8,15 @@
 
 import os
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+#from lib_python.orddicts import DefaultOrderedDict
+from orddicts import DefaultOrderedDict
 
 import numpy as np
 import datetime as dt
 import netCDF4 as nc
 
-import lib_python.ioda_conv_engines as iconv
+#import lib_python.ioda_conv_engines as iconv
+import ioda_conv_engines as iconv
 
 __ALL__ = ['conv_platforms']
 
@@ -150,6 +152,17 @@ all_LocKeyList = {
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
     'Data_Vertical_Velocity': ('windUpward', 'float'),
     'LaunchTime': ('releaseTime', 'float'),
+    # below are for Brett Hoover's AMV QC testing
+    'wind_computation_method': ('windComputationMethod', 'integer'),
+    'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
+    'satellite_identifier': ('satelliteIdentifier', 'integer'),
+    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
+    'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
+    'expected_error': ('expectedError', 'float'),
+    'coefficient_of_variation': ('coefficientOfVariation', 'float'),
+    # end AMV QC
+    # SEVIRI cloud_fraction
+    'Cloud_Frac': ('cloud_frac','float'),
 }
 
 checkuv = {
@@ -193,9 +206,11 @@ gsi_add_vars_allsky = {
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Obs_Minus_Forecast_unadjusted_clear': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
+    'Input_Observation_Error': 'GsiInputObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
+    'standard_deviation_clear_bt': 'ClearSkyStdDev',
 }
 
 gsi_add_qcvars_allsky = {
@@ -351,8 +366,8 @@ geovals_vars = {
     'surface_temperature': 'surface_temperature',
     'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geometric_height',
-    'surface_geopotential_height': 'surface_geometric_height',
+    'surface_height': 'surface_geopotential_height',
+    'surface_geopotential_height': 'surface_geopotential_height',
     'surface_altitude': 'surface_altitude',
     'surface_geometric_height': 'surface_geometric_height',
     'landmask': 'land_area_fraction',
@@ -393,7 +408,8 @@ geovals_vars = {
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
-    'Sfc_Height': 'surface_geometric_height',
+#   'Sfc_Height': 'surface_geometric_height',
+    'Sfc_Height': 'surface_geopotential_height',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -1122,27 +1138,31 @@ class Radiances(BaseGSI):
 
         # get nlocs
         nlocs = int(self.nobs / self.nchans)
-        ncout.createDimension("Location", nlocs)
+#       ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        ncout.createDimension("Layer", self.df.dimensions["air_temperature_arr_dim"].size)
-        ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+#       ncout.createDimension("Layer", self.df.dimensions["air_temperature_arr_dim"].size)
+#       ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
+        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+
 
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("Location",)
+                dims = ("nlocs",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
@@ -1544,8 +1564,8 @@ class Radiances(BaseGSI):
                 pass
 
         # global attributes
-        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
+        #globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
+        #globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
@@ -1626,12 +1646,15 @@ class Ozone(BaseGSI):
 
         # get nlocs
         nlocs = self.nobs
-        ncout.createDimension("Location", nlocs)
+   #    ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        ncout.createDimension("Layer", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+   #    ncout.createDimension("Layer", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         if (self.sensor in oz_lay_sensors):
-            ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+   #        ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1641,11 +1664,14 @@ class Ozone(BaseGSI):
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+   #                dims = ("Location",)
+                    dims = ("nlocs",)
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+   #                dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevs")
                 else:
-                    dims = ("Location", "Layer")
+   #                dims = ("Location", "Layer")
+                    dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
