@@ -97,6 +97,7 @@ wmo_instid = {
     'amsua': 570,
     'atms': 621,
     'iasi': 221,
+    'cris-fsr': 202,
     'abi': 617,
     'omps': 947,
     'sbuv': 956,
@@ -1556,8 +1557,8 @@ class Radiances(BaseGSI):
                 pass
 
         # global attributes
-        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
+        #globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
+        #globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
