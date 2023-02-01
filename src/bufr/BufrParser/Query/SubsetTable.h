@@ -114,7 +114,11 @@ namespace bufr {
                 components = parent.lock()->getPathNodes(components);
             }
 
-            if (isQueryPathNode() || isLeaf())
+            if (isQueryPathNode())
+            {
+                components.push_back(parent.lock());
+            }
+            else if (isLeaf())
             {
                 components.push_back(shared_from_this());
             }

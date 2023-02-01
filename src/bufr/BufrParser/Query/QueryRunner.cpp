@@ -41,8 +41,10 @@ namespace bufr {
 
         findTargets(targets, masks);
 
-        Targets targets2;
-        old_findTargets(targets2, masks);
+//
+//        std::shared_ptr<__details::ProcessingMasks> masks2;
+//        Targets targets2;
+//        old_findTargets(targets2, masks2);
 
         collectData(targets, masks, resultSet_);
     }
@@ -56,6 +58,13 @@ namespace bufr {
             targets = targetCache_.at(dataProvider_.getSubset());
             masks = maskCache_.at(dataProvider_.getSubset());
             return;
+        }
+
+        masks = std::make_shared<__details::ProcessingMasks>();
+        {  // Initialize Masks
+            size_t numNodes = dataProvider_.getIsc(dataProvider_.getInode());
+            masks->valueNodeMask.resize(numNodes, false);
+            masks->pathNodeMask.resize(numNodes, false);
         }
 
         auto table = SubsetTable(dataProvider_);
@@ -117,6 +126,16 @@ namespace bufr {
             target->exportDimIdxs = tableNode->getDimIdxs();
 
             targets.push_back(target);
+
+            if (target->nodeIdx > 0)
+            {
+                // Collect mask data
+                masks->valueNodeMask[target->nodeIdx] = true;
+                for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx)
+                {
+                    masks->pathNodeMask[target->seqPath[pathIdx]] = true;
+                }
+            }
         }
     }
 
