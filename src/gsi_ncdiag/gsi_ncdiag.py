@@ -99,6 +99,7 @@ wmo_instid = {
     'amsua': 570,
     'atms': 621,
     'iasi': 221,
+    'cris-fsr': 202,
     'abi': 617,
     'omps': 947,
     'sbuv': 956,
@@ -238,6 +239,7 @@ gsi_add_vars = {
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
+    'standard_deviation_clear_bt': 'ClearSkyStdDev',
 }
 
 gsi_add_qcvars = {
@@ -882,7 +884,8 @@ class Conv(BaseGSI):
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
                     # below is a temporary hack until missing ObsError support returns to IODA/UFO
-                    obserr[mask] = 1e8
+                    #obserr[mask] = 1e8
+                    obserr[:] = self.FLOAT_FILL
                     # obserr[mask] = self.FLOAT_FILL
                     # obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
@@ -1349,10 +1352,11 @@ class Radiances(BaseGSI):
                 ibc += 1
         obsdata = self.var('Observation')
         try:
-            obserr = self.var('Input_Observation_Error')
+            obserr = self.var('Input_Observation_Error').astype(np.float32)
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
             obserr = np.repeat(self.var('error_variance'), nlocs, axis=0)
+        obserr[:] = self.FLOAT_FILL
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1730,6 +1734,7 @@ class Ozone(BaseGSI):
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
+        obserr[:] = self.FLOAT_FILL
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
@@ -1928,6 +1933,7 @@ class Radar(BaseGSI):
             qcvarname = radar_qc[key]
             obserr = self.var(errvarname)
             obserr[np.isinf(obserr)] = self.FLOAT_FILL
+            obserr[:] = self.FLOAT_FILL
             obsqc = self.var(qcvarname).astype(np.int32)
             # observation data
             outdata[varDict[value]['valKey']] = obsdata
