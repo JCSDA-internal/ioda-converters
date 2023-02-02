@@ -1355,7 +1355,7 @@ class Radiances(BaseGSI):
             obserr = self.var('Input_Observation_Error').astype(np.float32)
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
-            obserr = np.repeat(self.var('error_variance'), nlocs, axis=0)
+            obserr = np.repeat(self.var('error_variance').astype(np.float32), nlocs, axis=0)
         obserr[:] = self.FLOAT_FILL
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
