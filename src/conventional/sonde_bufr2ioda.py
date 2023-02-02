@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
+import dateutil.parser
 import os
+from pathlib import Path
 import sys
 import time
 import logging
 
+from itertools import compress
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
 
+# set path to ioda_conv_engines module
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
 # These modules need the path to lib-python modules
-import lib_python.ioda_conv_engines as iconv
-import lib_python.meteo_utils as meteo_utils
-from lib_python.orddicts import DefaultOrderedDict
-from collections import defaultdict
+import ioda_conv_engines as iconv
+import meteo_utils
+from orddicts import DefaultOrderedDict
+from collections import defaultdict, OrderedDict
 
 os.environ["TZ"] = "UTC"
 

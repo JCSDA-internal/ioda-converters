@@ -14,10 +14,16 @@ import argparse
 import numpy as np
 import netCDF4 as nc
 from datetime import datetime, timedelta
+from pathlib import Path
 import numpy.ma as ma
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 

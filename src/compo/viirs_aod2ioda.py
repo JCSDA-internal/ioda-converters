@@ -7,15 +7,21 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
+import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
+from datetime import datetime, date, timedelta
 import os
-from datetime import datetime
+from pathlib import Path
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import lib_python.ioda_conv_engines as iconv
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
