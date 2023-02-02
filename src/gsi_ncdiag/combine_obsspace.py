@@ -13,9 +13,9 @@ from lib_python.orddicts import DefaultOrderedDict
 loc_vars = [
     'MetaData/latitude',
     'MetaData/longitude',
-    'MetaData/station_elevation',
-    'MetaData/air_pressure',
-    'MetaData/station_id',
+    'MetaData/stationElevation',
+    'MetaData/pressure',
+    'MetaData/stationIdentification',
     'MetaData/height',
     'MetaData/datetime',
 ]
@@ -25,7 +25,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     # get lists of all variables
     AllVarNames = []
     LocVarNames = []
-    AllVarNames.append('nlocs')
+    AllVarNames.append('Location')
     VarAttrFiles = {}
     VarTypes = {}
     for f in FileList:
@@ -40,7 +40,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                     AllVarNames.append(vname)
                     VarAttrFiles[vname] = f
         del obsspace
-    AllVarNames.remove('nlocs')
+    AllVarNames.remove('Location')
     # output variables
     LocKeyList = []
     DimDict = {}
@@ -67,8 +67,8 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             if attr not in ['DIMENSION_LIST']:
                 gname, vname = fullvname.split('/')
                 varAttrs[(vname, gname)][attr] = _var.read_attr(attr)
-        # for now going to assume all are just 'nlocs' dim
-        VarDims[fullvname] = ['nlocs']
+        # for now going to assume all are just 'Location' dim
+        VarDims[fullvname] = ['Location']
         del _var
         del obsspace
 
@@ -107,7 +107,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     MetaVarData = np.vstack(MetaVarData)
     MetaVarUnique, idx, inv, cnt = np.unique(MetaVarData, return_index=True,
                                              return_inverse=True, return_counts=True, axis=1)
-    DimDict['nlocs'] = len(idx)
+    DimDict['Location'] = len(idx)
     for idx2, fullvname in enumerate(LocVarNames):
         gname, vname = fullvname.split('/')
         OutData[(vname, gname)] = MetaVarUnique[idx2, ...].astype(VarTypes[fullvname])
@@ -123,7 +123,8 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 _var = obsspace.Variable(fullvname)
                 tmpdata = np.array(_var.read_data())
             else:
-                tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
+#               tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
+                tmpdata = np.full((obsspace.Location), iconv.get_default_fill_val(VarTypes[fullvname]),
                                   dtype=VarTypes[fullvname])
             tmpvardata.append(tmpdata)
         tmpvardata = np.hstack(tmpvardata)
