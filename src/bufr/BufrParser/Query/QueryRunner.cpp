@@ -88,6 +88,7 @@ namespace bufr {
             {
                 // Create empty target
                 target->name = name;
+                target->nodeIdx = 0;
                 target->queryStr = querySet_.queriesFor(name)[0].queryStr;
                 target->dimPaths = {"*"};
                 target->exportDimIdxs = {0};
@@ -101,7 +102,7 @@ namespace bufr {
             target->name = name;
             target->queryStr = foundQuery.queryStr;
 
-            // make targetComponent
+            // Create the target components
             std::vector<TargetComponent> path(foundQuery.path.size() + 1);
 
             int pathIdx = 0;
@@ -127,16 +128,17 @@ namespace bufr {
 
             targets.push_back(target);
 
-            if (target->nodeIdx > 0)
+            // Set the mask
+            masks->valueNodeMask[target->nodeIdx] = true;
+            for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx)
             {
-                // Collect mask data
-                masks->valueNodeMask[target->nodeIdx] = true;
-                for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx)
-                {
-                    masks->pathNodeMask[target->seqPath[pathIdx]] = true;
-                }
+                masks->pathNodeMask[target->seqPath[pathIdx]] = true;
             }
         }
+
+        // Cache the targets and masks we just found
+        targetCache_.insert({dataProvider_.getSubset(), targets});
+        maskCache_.insert({dataProvider_.getSubset(), masks});
     }
 
     void QueryRunner::old_findTargets(Targets &targets,
