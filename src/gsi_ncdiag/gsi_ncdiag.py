@@ -746,11 +746,11 @@ class Conv(BaseGSI):
                         self.validtime.strftime("%Y%m%d%H")))
                 # get nlocs
                 nlocs = np.sum(idx)
-                ncout.createDimension("Location", nlocs)
+                ncout.createDimension("nlocs", nlocs)
                 # other dims
                 if (v != "sst"):
                     ncout.createDimension(
-                        "Layer", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+                        "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
                     ncout.createDimension(
                         "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
@@ -766,7 +766,7 @@ class Conv(BaseGSI):
                         vdata = np.frombuffer(vdata, dtype=var.dtype)
                         vdata = np.reshape(vdata, dims)
                         if vname in geovals_metadata_dict.keys():
-                            dims = ("Location",) + var.dimensions[1:]
+                            dims = ("nlocs",) + var.dimensions[1:]
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
@@ -774,13 +774,13 @@ class Conv(BaseGSI):
                                 var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
                             if (len(var.dimensions) == 1):
-                                dims = ("Location",)
+                                dims = ("nlocs",)
                             else:
                                 if (vname == "atmosphere_pressure_coordinate_interface") or (
                                         vname == "geopotential_height_levels"):
-                                    dims = ("Location", "ninterfaces")
+                                    dims = ("nlocs", "ninterfaces")
                                 else:
-                                    dims = ("Location", "Layer")
+                                    dims = ("nlocs", "nlevs")
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
@@ -1141,12 +1141,9 @@ class Radiances(BaseGSI):
 
         # get nlocs
         nlocs = int(self.nobs / self.nchans)
-#       ncout.createDimension("Location", nlocs)
         ncout.createDimension("nlocs", nlocs)
 
         # other dims
-#       ncout.createDimension("Layer", self.df.dimensions["air_temperature_arr_dim"].size)
-#       ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
 
@@ -1204,13 +1201,13 @@ class Radiances(BaseGSI):
 
         # get nlocs
         nlocs = int(self.nobs / self.nchans)
-        ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        Layer = self.df.dimensions["air_pressure_arr_dim"].size
-        Level = self.df.dimensions["air_pressure_levels_arr_dim"].size
+        nlevs = self.df.dimensions["air_pressure_arr_dim"].size
+        nlevsp1 = self.df.dimensions["air_pressure_levels_arr_dim"].size
 
-        ncout.createDimension("Layer", self.df.dimensions["air_pressure_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
 
         # get channel info and list
         chan_number = self.darr('sensor_chan')
@@ -1224,7 +1221,7 @@ class Radiances(BaseGSI):
         for var in self.df.variables.values():
             vname = var.name
             if vname in obsdiag_metadata_dict.keys():
-                dims = ("Location",)
+                dims = ("nlocs",)
                 var_out = ncout.createVariable(obsdiag_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
@@ -1232,7 +1229,7 @@ class Radiances(BaseGSI):
             elif vname in obsdiag_vars.keys():
                 # print("toObsdiag: var.shape = ", var.shape)
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                     for c in range(len(chanlist)):
                         var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
@@ -1244,9 +1241,9 @@ class Radiances(BaseGSI):
                         vdata = vdata[idx]
                         var_out[:] = vdata
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevs")
                     for c in range(len(chanlist)):
                         var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
@@ -1650,14 +1647,11 @@ class Ozone(BaseGSI):
 
         # get nlocs
         nlocs = self.nobs
-   #    ncout.createDimension("Location", nlocs)
         ncout.createDimension("nlocs", nlocs)
 
         # other dims
-   #    ncout.createDimension("Layer", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         if (self.sensor in oz_lay_sensors):
-   #        ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1668,13 +1662,10 @@ class Ozone(BaseGSI):
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-   #                dims = ("Location",)
                     dims = ("nlocs",)
                 elif "_levels" in vname:
-   #                dims = ("Location", "Level")
-                    dims = ("nlocs", "nlevs")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-   #                dims = ("Location", "Layer")
                     dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
@@ -1856,24 +1847,24 @@ class Radar(BaseGSI):
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         # get nlocs
         nlocs = self.nobs
-        ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
         # other dims
-        ncout.createDimension("Layer", self.df.dimensions["Layer"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["nlevs"].size)
         # ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("Location",)
+                dims = ("nlocs",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Layer")
+                    dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
