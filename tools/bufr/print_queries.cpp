@@ -41,7 +41,7 @@ getDimPaths(const Ingester::bufr::BufrNodeVector& leaves)
     {
         std::stringstream pathStream;
         pathStream << "*";
-        for (size_t idx=1; idx <= leaf->getDimIdxs().back(); idx++)
+        for (size_t idx=1; idx <= static_cast<size_t>(leaf->getDimIdxs().back()); idx++)
         {
             pathStream << "/" << leaf->getPath()[idx];
         }

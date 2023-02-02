@@ -126,23 +126,6 @@ namespace bufr {
             return components;
         }
 
-        std::string getPathStr()
-        {
-            std::vector<std::string> path = getPath();
-            std::string pathString;
-
-            for (auto it = path.begin(); it != path.end(); ++it)
-            {
-                pathString += *it;
-                if (it != path.end() - 1)
-                {
-                    pathString += "/";
-                }
-            }
-
-            return pathString;
-        }
-
         std::vector<std::string> getDimPaths()
         {
             std::vector<std::string> components;
@@ -203,24 +186,6 @@ namespace bufr {
             }
         }
 
-        std::vector<size_t> getSeqPath()
-        {
-            std::vector<size_t> path;
-            return getSeqPath(path);
-        }
-
-        std::vector<size_t> getSeqPath(std::vector<size_t>& path)
-        {
-            if (!parent.expired())
-            {
-                path = parent.lock()->getSeqPath(path);
-            }
-
-            path.push_back(nodeIdx);
-
-            return path;
-        }
-
 
         std::vector<int> getDimIdxs()
         {
@@ -264,23 +229,6 @@ namespace bufr {
 
             return nullptr;
         }
-
-        size_t queryPathIdx()
-        {
-            size_t idx = 0;
-            if (!parent.expired())
-            {
-                idx = parent.lock()->queryPathIdx();
-            }
-
-            if (isQueryPathNode())
-            {
-                idx++;
-            }
-
-            return idx;
-        }
-
     };
 
     typedef std::vector<std::shared_ptr<Ingester::bufr::BufrNode>> BufrNodeVector;
