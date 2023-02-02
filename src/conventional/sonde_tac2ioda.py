@@ -1163,7 +1163,7 @@ if __name__ == "__main__":
     ntotal = 0
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
-            parser.error('Input (-i option) file: ', file_name, ' does not exist')
+            parser.error(f'Input (-i option) file: {file_name} does not exist')
         if args.netcdf:
             AttrData['sourceFiles'] += ", " + file_name
         logging.debug(f"Reading input file: {file_name}")
