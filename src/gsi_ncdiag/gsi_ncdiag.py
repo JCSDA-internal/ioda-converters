@@ -1781,8 +1781,8 @@ class Ozone(BaseGSI):
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
 
-        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
+        #globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
+        #globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
