@@ -1,15 +1,15 @@
 
 add_subdirectory(compo)
-add_subdirectory(gsi_ncdiag)
+add_subdirectory(gsi-ncdiag)
 add_subdirectory(goes)
 add_subdirectory(hdf5)
 add_subdirectory(land)
-add_subdirectory(lib_python)
+add_subdirectory(lib-python)
 add_subdirectory(marine)
 add_subdirectory(conventional)
 add_subdirectory(ncep)
 add_subdirectory(ssec)
-add_subdirectory(wrfda_ncdiag)
+add_subdirectory(wrfda-ncdiag)
 add_subdirectory(single_observation)
 
 # Optional components

@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 # script to run to test if the WRFDA ncdiag converters are still working
+import sys
 import argparse
+from pathlib import Path
 
-import wrfda_ncdiag.wrfda_ncdiag as wrfdad
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+import wrfda_ncdiag as wrfdad
 
 parser = argparse.ArgumentParser(
     description=('Test for WRFDA netCDF diag file to IODA Obs files converters'))

@@ -15,11 +15,16 @@ import dateutil.parser
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import os
+from pathlib import Path
 from itertools import repeat
 import netCDF4 as nc
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 from eccodes import *
 
@@ -43,7 +48,7 @@ locationKeyList = [
 
 def main(args):
 
-    dtg = datetime.strptime(args.date, '%Y%m%d%H')
+    args.date = datetime.strptime(args.date, '%Y%m%d%H')
     qc = args.qualitycontrol
 
     # read / process files in parallel
@@ -69,7 +74,7 @@ def main(args):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
-    GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
@@ -281,6 +286,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
 
 
 def quality_control(profile_meta_data, heights, lats, lons):
+
     try:
         good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
     except ValueError:

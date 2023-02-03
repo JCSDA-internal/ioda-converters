@@ -1,36 +1,36 @@
-list( APPEND libs
-  wrfda_ncdiag.py
-)
+list(APPEND libs
+  gsi_ncdiag.py
+  combine_obsspace.py)
 
 list( APPEND programs
-  proc_wrfda_ncdiag.py
-  test_wrfdadiag.py
-)
+  proc_gsi_ncdiag.py
+  test_gsidiag.py
+  combine_obsspace.py)
 
 set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
-                   wrfda_ncdiag_scripts_deps)
+                   gsi_ncdiag_lib_deps )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
 conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
-                   bin_wrfda_ncdiag_scripts_deps)
-execute_process(COMMAND chmod +x ${bin_wrfda_ncdiag_scripts_deps})
+                   gsi_ncdiag_bin_deps)
+execute_process(COMMAND chmod +x ${gsi_ncdiag_bin_deps})
 
 # Configure files for install prefix bin
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
 conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
-                   install_bin_wrfda_ncdiag_scripts_deps)
+                   gsi_ncdiag_bin_install_deps)
 
-install( PROGRAMS ${install_bin_wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
+install( PROGRAMS ${gsi_ncdiag_bin_install_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES ${wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
+install( FILES ${gsi_ncdiag_lib_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
 
-ecbuild_add_test( TARGET  ${PROJECT_NAME}_wrfda_ncdiag_coding_norms
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_gsi-ncdiag_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
                   ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )
