@@ -8,15 +8,24 @@
 # Author:
 # 2020-11-17, 2021-10-18, 2022-01-09: James McCreight
 
+from datetime import datetime
 import numpy as np
 import os
 import pandas as pd
+import pathlib
+from pathlib import Path
 import sys
 import warnings
 
-import lib_python.ioda_conv_engines as iconv
+
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from orddicts import DefaultOrderedDict
 
 arg_parse_description = (
     """Reads snow OWP observations in CSV files and converts

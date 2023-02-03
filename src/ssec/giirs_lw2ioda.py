@@ -8,13 +8,22 @@
 #
 
 from __future__ import print_function
+import sys
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
+import re
+import dateutil.parser
+from pathlib import Path
 
-import lib_python.ioda_conv_ncio as iconv
-from lib_python.orddicts import DefaultOrderedDict
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+import ioda_conv_ncio as iconv
+from orddicts import DefaultOrderedDict
 
 
 vName = "longwave_radiance"
