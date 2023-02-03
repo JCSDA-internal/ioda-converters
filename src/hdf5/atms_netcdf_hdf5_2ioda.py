@@ -16,6 +16,8 @@ import sys
 import h5py
 import numpy as np
 
+from apply_BG.apply_BG import apply_BG_class
+
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -79,21 +81,26 @@ def main(args):
 
     WMO_sat_ID = get_WMO_satellite_ID(input_files[0])
     GlobalAttrs['platform'] = np.int32(WMO_sat_ID)
-    for afile in input_files:
-        file_obs_data = get_data_from_files(afile)
-        WMO_sat_ID = get_WMO_satellite_ID(afile)
-        if not file_obs_data:
-            print("INFO: non-nominal file skipping")
-            continue
-        if obs_data:
-            concat_obs_dict(obs_data, file_obs_data)
-        else:
-            obs_data = file_obs_data
-        if WMO_sat_ID != GlobalAttrs['platform']:
-            print(' ERROR:  IODA and subsequent UFO expect individual files to be a single satellite and sensor ')
-            print('    .... initial file satellite: ', GlobalAttrs['platform'])
-            print('    ...... final file satellite: ', WMO_sat_ID)
-            sys.exit()
+    remap = args.remap
+    if remap == "BG":
+        file_obs_data = remapBG(input_files)
+        obs_data = file_obs_data
+    else:
+        for afile in input_files:
+            file_obs_data = get_data_from_files(afile)
+            WMO_sat_ID = get_WMO_satellite_ID(afile)
+            if not file_obs_data:
+                print("INFO: non-nominal file skipping")
+                continue
+            if obs_data:
+                concat_obs_dict(obs_data, file_obs_data)
+            else:
+                obs_data = file_obs_data
+            if WMO_sat_ID != GlobalAttrs['platform']:
+                print(' ERROR:  IODA and subsequent UFO expect individual files to be a single satellite and sensor ')
+                print('    .... initial file satellite: ', GlobalAttrs['platform'])
+                print('    ...... final file satellite: ', WMO_sat_ID)
+                sys.exit()
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
@@ -392,6 +399,83 @@ def set_obspace_attributes(VarAttrs):
 
     return VarAttrs
 
+def remapBG(input_files):
+
+    print('Remap ATMS: Backus–Gilbert Inversion method')
+
+    obs_data = init_obs_loc()
+
+    src_ch=[1,2]
+    tgt_ch=[1,2]
+    src_bm=5.2
+    tgt_bm=3.3
+    nfov=96
+
+    orb='des'
+    orbit_num='non'
+    ta_vmin,ta_vmax=210,275
+    dif_vmin,dif_vmax=-5,5
+
+    coef_dir=str(Path(__file__).parent/'apply_BG'/'Coeff_5.2to3.3')
+    apply_BG_obj=apply_BG_class(input_files,
+                                orb,orbit_num,
+                                src_ch,
+                                coef_dir,
+                                nfov,
+                                ta_vmin,ta_vmax,
+                                dif_vmin,dif_vmax)
+    apply_BG_obj.ingest()
+    apply_BG_obj.prepcoef()
+
+    lat = []
+    lon = []
+    ta = []
+    ta_rmp = []
+    satzen = []
+    satazi = []
+    solzen = []
+    solazi = []
+    tim =[]
+    taAllCh = []
+    viewang = []
+    [viewang,taAllCh,lat,lon,satzen,satazi,solzen,solazi,tim] = apply_BG_obj.apply()
+
+    g = h5py.File(input_files[0], 'r')
+    WMO_sat_ID = get_WMO_satellite_ID(input_files[0])
+    # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
+    nscans = lat.shape[0]
+    print('nscans=',nscans)
+    nbeam_pos = lat.shape[1]
+    print('nbeam_pos=',nbeam_pos)
+    obs_data[('latitude', metaDataName)] =  np.array(lat.flatten(), dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(lon.flatten(), dtype='float32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
+    obs_data[('solarZenithAngle', 'MetaData')] = np.array(solzen.flatten(),dtype='float32')
+    obs_data[('solarAzimuthAngle', 'MetaData')] = np.array(solazi.flatten(),dtype='float32')
+    obs_data[('sensorZenithAngle', 'MetaData')] = np.array(satzen.flatten(),dtype='float32')
+    obs_data[('sensorAzimuthAngle', 'MetaData')] = np.array(satazi.flatten(),dtype='float32')
+
+    obs_data[('sensorViewAngle', metaDataName)] = np.array(viewang.flatten(), dtype='float32')
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+
+    # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
+    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+    nlocs = len(obs_data[('latitude', metaDataName)])
+
+    obs_data[('brightnessTemperature', obsValName)] = np.array(np.vstack(taAllCh), dtype='float32')
+    obs_data[('brightnessTemperature', obsErrName)] = np.full((nlocs, nchans), 5.0, dtype='float32')
+    obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    for timearray in tim:
+        timearray[:1]=timearray[0]
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(timearray), dtype='int64')
+
+    #if add_qc:
+    #    obs_data = atms_gross_quality_control(obs_data)
+
+    return obs_data
 
 if __name__ == "__main__":
 
@@ -422,6 +506,10 @@ if __name__ == "__main__":
     optional.add_argument(
         '-o', '--output',
         help='path to output ioda file',
+        type=str, default=os.getcwd())
+    optional.add_argument(
+        '-m', '--remap',
+        help="method for remapping ATMS: BG",
         type=str, default=os.getcwd())
 
     args = parser.parse_args()
