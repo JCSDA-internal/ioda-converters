@@ -66,11 +66,8 @@ def zext_up(pres_lower, pres_upper, temperature, hght_lower):
     :param hght_lower: Height of lower layer (m)
     :return: Extrapolated height (m)
     """
-    if pres_upper is None or pres_lower is None:
+    if pres_upper <= 0 or pres_lower is None or temperature is None or hght_lower is None:
         return None
-    if pres_upper <= 0 or pres_lower <= 0 or temperature is None or hght_lower is None:
-        return None
-
     return hght_lower + (Rd * (temperature + CTOK) / G) * math.log(pres_lower / pres_upper)
 
 # --+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -86,11 +83,8 @@ def zext_down(pres_lower, pres_upper, temperature, hght_upper):
     :param hght_upper: Height of upper layer (m)
     :return: Extrapolated height (m)
     """
-    if pres_upper is None or pres_lower is None:
+    if pres_upper <= 0 or pres_lower is None or temperature is None or hght_upper is None:
         return None
-    if pres_upper <= 0 or pres_lower <= 0 or temperature is None or hght_upper is None:
-        return None
-
     return hght_upper - (Rd * (temperature + CTOK) / G) * math.log(pres_lower / pres_upper)
 
 # --+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -121,6 +115,8 @@ def p_interp(temp_lower, temp_upper, pres_lower, pres_upper, hght_lower, hght_up
         s = G / (Rd * (temp_lower + CTOK))
         pm1 = pres_lower * math.exp(s * (hght_lower - height))
         pm2 = pres_upper * math.exp(s * (hght_upper - height))
+    elif hght_lower == hght_upper:
+        return pres_lower
     else:
         tl = temp_lower + CTOK
         tu = temp_upper + CTOK
@@ -162,6 +158,9 @@ def z_interp(temp_lower, temp_upper, pres_lower, pres_upper, pressure, hght_lowe
         s = Rd * (temp_lower + CTOK) / G
         z1 = hght_lower - s * math.log(pressure / pres_lower)
         z2 = hght_upper + s * math.log(pres_upper / pressure)
+    elif hght_lower == hght_upper:
+        z1 = hght_lower
+        z2 = hght_upper
     else:
         tl = temp_lower + CTOK
         tu = temp_upper + CTOK

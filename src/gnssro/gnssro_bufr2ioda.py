@@ -17,6 +17,7 @@ import numpy as np
 import os
 from pathlib import Path
 from itertools import repeat
+import netCDF4 as nc
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -30,13 +31,18 @@ from eccodes import *
 # globals
 ioda_float_type = 'float32'
 ioda_int_type = 'int32'
-float_missing_value = -1.0e+37
-int_missing_value = -2147483647
+float_missing_value = nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 
@@ -54,7 +60,7 @@ def main(args):
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
         for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc)):
             if not file_obs_data:
-                print("INFO: non-nominal file skipping")
+                print(f"INFO: non-nominal file skipping")
                 continue
             if obs_data:
                 concat_obs_dict(obs_data, file_obs_data)
@@ -68,42 +74,45 @@ def main(args):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    date_time_int32 = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
-    GlobalAttrs['date_time'] = date_time_int32.item()
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
     VarDims = {
-        'bending_angle': ['nlocs'],
-        'refractivity': ['nlocs']
+        'bendingAngle': ['Location'],
+        'atmosphericRefractivity': ['Location']
     }
 
     # write them out
-    nlocs = obs_data[('bending_angle', 'ObsValue')].shape[0]
-    DimDict = {'nlocs': nlocs}
+    nlocs = obs_data[('bendingAngle', 'ObsValue')].shape[0]
+    DimDict = {'Location': nlocs}
     meta_data_types = def_meta_types()
     for k, v in meta_data_types.items():
         locationKeyList.append((k, v))
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('bending_angle', 'ObsValue')]['units'] = 'Radians'
-    VarAttrs[('bending_angle', 'ObsError')]['units'] = 'Radians'
-    VarAttrs[('bending_angle', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('refractivity', 'ObsValue')]['units'] = 'N'
-    VarAttrs[('refractivity', 'ObsError')]['units'] = 'N'
-    VarAttrs[('refractivity', 'PreQC')]['units'] = 'unitless'
+    VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'Radians'
+    VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'Radians'
+    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N units'
+    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N units'
+    VarAttrs[('height', 'MetaData')]['units'] = 'm'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
+    VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
+    VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
+    VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
 
-    VarAttrs[('bending_angle', 'ObsValue')]['_FillValue'] = float_missing_value
-    VarAttrs[('bending_angle', 'ObsError')]['_FillValue'] = float_missing_value
-    VarAttrs[('bending_angle', 'PreQC')]['_FillValue'] = int_missing_value
-    VarAttrs[('refractivity', 'ObsValue')]['_FillValue'] = float_missing_value
-    VarAttrs[('refractivity', 'ObsError')]['_FillValue'] = float_missing_value
-    VarAttrs[('refractivity', 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[('bendingAngle', 'ObsError')]['_FillValue'] = float_missing_value
+    VarAttrs[('bendingAngle', 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[('atmosphericRefractivity', 'ObsError')]['_FillValue'] = float_missing_value
+    VarAttrs[('atmosphericRefractivity', 'PreQC')]['_FillValue'] = int_missing_value
 
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('altitude', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -153,10 +162,13 @@ def get_meta_data(bufr):
     hour = codes_get(bufr, 'hour')
     minute = codes_get(bufr, 'minute')
     second = codes_get(bufr, 'second')  # non-integer value
+    second = round(second)
 
-    # should really add seconds
-    dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (year, month, day, hour, minute))
-    profile_meta_data['datetime'] = datetime.strptime(dtg, "%Y-%m-%dT%H:%M:%SZ")
+    # get string date, translate to a datetime object, then offset from epoch
+    dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:%.2iZ" % (year, month, day, hour, minute, second))
+    this_datetime = datetime.strptime(dtg, "%Y-%m-%dT%H:%M:%SZ")
+    time_offset = round((this_datetime - epoch).total_seconds())
+    profile_meta_data['dateTime'] = np.int64(time_offset)
 
     return profile_meta_data
 
@@ -171,16 +183,22 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     # array([247, 247, 200])
 
     drepfac = codes_get_array(bufr, 'delayedDescriptorReplicationFactor')
-    # len(drepfac) Out[13]: 247   # ALL values all 3
-    # sequence is 3 *(freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
-    #  note the label bendingAngle is used for both the value and its error !!!
+    # L1, L2, combined -- only care about combined
+    if drepfac[0] == 1:
+        offset = 0
+    elif drepfac[0] == 3:
+        offset = 2
+    else:
+        raise NotImplementedError(f"expect repeat factor to be either 3 (L1, L2, and combined) or 1 (combined): {drepfac[0]}")
 
+    # sequence is either 1 or 3 *(freq,impact,bendang,first-ord stat, bendang error, first-ord sat)
+    #  note the label bendingAngle is used for both the value and its error !!!
     # get the bending angle
     lats = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons = codes_get_array(bufr, 'longitude')[1:]
-    bang = codes_get_array(bufr, 'bendingAngle')[4::drepfac[0]*2]    # L1, L2, combined -- only care about combined
-    bang_err = codes_get_array(bufr, 'bendingAngle')[5::drepfac[0]*2]
-    impact = codes_get_array(bufr, 'impactParameter')[2::drepfac[0]]
+    impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
+    bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
+    bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
@@ -189,12 +207,12 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     # ! Bit 3=Rising Occulation (1=rising; 0=setting)
     # ! Bit 4=Excess Phase non-nominal
     # ! Bit 5=Bending Angle non-nominal
-    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-1)
-    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-4)
-    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-5)
-    iasc = get_normalized_bit(profile_meta_data['qualityFlag'], bit_index=16-3)
+    i_non_nominal = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-1)
+    i_phase_non_nominal = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-4)
+    i_bang_non_nominal = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-5)
+    iasc = get_normalized_bit(profile_meta_data['qualityFlags'], bit_index=16-3)
     # add rising/setting (ascending/descending) bit
-    obs_data[('ascending_flag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
+    obs_data[('satelliteAscendingFlag', 'MetaData')] = np.array(np.repeat(iasc, krepfac[0]), dtype=ioda_int_type)
 
     # print( " ... RO QC flags: %i  %i  %i  %i" % (i_non_nominal, i_phase_non_nominal, i_bang_non_nominal, iasc) )
 
@@ -203,9 +221,9 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
         return {}
 
     # value, ob_error, qc
-    obs_data[('bending_angle', "ObsValue")] = assign_values(bang)
-    obs_data[('bending_angle', "ObsError")] = assign_values(bang_err)
-    obs_data[('bending_angle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
+    obs_data[('bendingAngle', "ObsValue")] = assign_values(bang)
+    obs_data[('bendingAngle', "ObsError")] = assign_values(bang_err)
+    obs_data[('bendingAngle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     # (geometric) height is read as integer but expected as float in output
     height = codes_get_array(bufr, 'height', ktype=float)
@@ -216,31 +234,32 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     refrac_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
 
     # value, ob_error, qc
-    obs_data[('refractivity', "ObsValue")] = assign_values(refrac)
-    obs_data[('refractivity', "ObsError")] = assign_values(refrac_err)
-    obs_data[('refractivity', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
+    obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
+    obs_data[('atmosphericRefractivity', "ObsError")] = assign_values(refrac_err)
+    obs_data[('atmosphericRefractivity', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     meta_data_types = def_meta_types()
 
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
-    obs_data[('impact_parameter', 'MetaData')] = assign_values(impact)
-    obs_data[('altitude', 'MetaData')] = assign_values(height)
+    obs_data[('impactParameterRO', 'MetaData')] = assign_values(impact)
+    obs_data[('height', 'MetaData')] = assign_values(height)
     for k, v in profile_meta_data.items():
-        if type(v) is int:
+        if type(v) is np.int64:
+            obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=np.int64)
+        elif type(v) is int:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=ioda_int_type)
         elif type(v) is float:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=ioda_float_type)
-        else:  # something else (datetime for instance)
-            string_array = np.repeat(v.strftime("%Y-%m-%dT%H:%M:%SZ"), krepfac[0])
-            obs_data[(k, 'MetaData')] = string_array.astype(object)
+        else:  # something else (what do we do with it)
+            print(f"Found neither float nor in, type={type(v)}; skipping")
 
     # set record number (multi file procesing will change this)
     if record_number is None:
         nrec = 1
     else:
         nrec = record_number
-    obs_data[('record_number', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
+    obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
     # get derived profiles
     geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
@@ -250,16 +269,16 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
 
     # Compute impact height
-    obs_data[('impact_height', 'MetaData')] = \
-        obs_data[('impact_parameter', 'MetaData')] - \
-        obs_data[('geoid_height_above_reference_ellipsoid', 'MetaData')] - \
-        obs_data[('earth_radius_of_curvature', 'MetaData')]
+    obs_data[('impactHeightRO', 'MetaData')] = \
+        obs_data[('impactParameterRO', 'MetaData')] - \
+        obs_data[('geoidUndulation', 'MetaData')] - \
+        obs_data[('earthRadiusCurvature', 'MetaData')]
 
     if add_qc:
         good = quality_control(profile_meta_data, height, lats, lons)
         if len(lats[good]) == 0:
-            return{}
             # exit if entire profile is missing
+            return{}
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
@@ -268,12 +287,17 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
 
 def quality_control(profile_meta_data, heights, lats, lons):
 
-    good = (heights > 0.) & (heights < 100000.) & (abs(lats) < 90.) & (abs(lons) < 360.)
+    try:
+        good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
+    except ValueError:
+        print(f" quality control on impact_height and lat/lon did not pass")
+        print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
+        return []
 
     # bad radius or
     # large geoid undulation
-    if (profile_meta_data['earth_radius_of_curvature'] > 6450000.) or (profile_meta_data['earth_radius_of_curvature'] < 6250000.) or \
-       (abs(profile_meta_data['geoid_height_above_reference_ellipsoid']) > 200):
+    if (profile_meta_data['earthRadiusCurvature'] > 6450000.) or (profile_meta_data['earthRadiusCurvature'] < 6250000.) or \
+       (abs(profile_meta_data['geoidUndulation']) > 200):
         good = []
         # bad profile
     return good
@@ -282,16 +306,16 @@ def quality_control(profile_meta_data, heights, lats, lons):
 def def_meta_data():
 
     meta_data_keys = {
-        "qualityFlag": 'radioOccultationDataQualityFlags',
-        "geoid_height_above_reference_ellipsoid": 'geoidUndulation',
-        "sensor_azimuth_angle": 'bearingOrAzimuth',
-        "time": 'timeIncrement',
-        "earth_radius_of_curvature": 'earthLocalRadiusOfCurvature',
-        "occulting_sat_id": 'satelliteIdentifier',
-        "occulting_sat_is": 'satelliteInstruments',
-        "process_center": 'centre',
-        "reference_sat_id": 'platformTransmitterIdNumber',
-        "gnss_sat_class": 'satelliteClassification',
+        "qualityFlags": 'radioOccultationDataQualityFlags',
+        "geoidUndulation": 'geoidUndulation',
+        "sensorAzimuthAngle": 'bearingOrAzimuth',
+        # "timeIncrement": 'timeIncrement',
+        "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
+        "satelliteIdentifier": 'satelliteIdentifier',
+        "satelliteInstrument": 'satelliteInstruments',
+        "dataProviderOrigin": 'centre',
+        "satelliteTransmitterId": 'platformTransmitterIdNumber',
+        "satelliteConstellationRO": 'satelliteClassification',
     }
 
     return meta_data_keys
@@ -302,18 +326,18 @@ def def_meta_types():
     meta_data_types = {
         "latitude": "float",
         "longitude": "float",
-        "datetime": "string",
-        'impact_parameter': 'float',
-        'impact_height': 'float',
+        "dateTime": "long",
+        'impactParameterRO': 'float',
+        'impactHeightRO': 'float',
         'height': 'float',
-        "qualityFlag": 'integer',
-        "geoid_height_above_reference_ellipsoid": 'float',
-        "earth_radius_of_curvature": 'float',
-        "occulting_sat_id": 'integer',
-        "occulting_sat_is": 'integer',
-        "process_center": 'string',
-        "reference_sat_id": 'integer',
-        "gnss_sat_class": 'integer',
+        "qualityFlags": 'integer',
+        "geoidUndulation": 'float',
+        "earthRadiusCurvature": 'float',
+        "satelliteIdentifier": 'integer',
+        "satelliteInstrument": 'integer',
+        "dataProviderOrigin": 'string',
+        "satelliteTransmitterId": 'integer',
+        "satelliteConstellationRO": 'integer',
     }
 
     return meta_data_types
@@ -347,11 +371,13 @@ def concat_obs_dict(obs_data, append_obs_data):
         else:
             if obs_data[gv_key].dtype == float:
                 fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
+            elif obs_data[gv_key].dtype == np.int64:
+                fill_data = np.repeat(long_missing_value, append_length, dtype=np.int64)
             elif obs_data[gv_key].dtype == int:
                 fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
             elif obs_data[gv_key].dtype == object:
-                # string type, extend with empty strings
-                fill_data = np.repeat("", append_length, dtype=object)
+                # string type, extend with string missing value
+                fill_data = np.repeat(string_missing_value, append_length, dtype=object)
             obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
 
 

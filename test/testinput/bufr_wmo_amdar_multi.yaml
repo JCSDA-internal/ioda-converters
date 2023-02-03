@@ -26,6 +26,7 @@ observations:
             query: "*/CLONH"
           pressureAltitude:
             query: "[*/FLVLST, */AMDARNOL/FLVLST]"
+            type: float
           aircraftRegistrationNum:
             query: "*/ACRN"
           aircraftFlightNum:
@@ -40,7 +41,7 @@ observations:
             query: "*/TASP"
           aircraftHeading:
             query: "*/ACTH"
-          aircraftRollAngle:
+          aircraftRollAngleQuality:
             query: "[*/ROLQ, */AMDARNOL/ROLQ]"
           temperatureAir:
             query: "[*/TMDB, */AMDARNOL/TMDB, */TMDBST]"
@@ -54,6 +55,10 @@ observations:
     ioda:
       backend: netcdf
       obsdataout: "./testrun/bufr_wmo_amdar_multi.nc"
+
+      dimensions:
+        - name: AmdarSequence
+          path: "*/AMDARNOL"
 
       variables:
         - name: "MetaData/dateTime"
@@ -72,23 +77,24 @@ observations:
           units: "degrees_east"
 
         - name: "MetaData/height"
+          coordinates: "longitude latitude AmdarSequence"
           source: variables/pressureAltitude
           longName: "Pressure altitude"
           units: "m"
 
-        - name: "MetaData/aircraftRegistrationNum"
+        - name: "MetaData/aircraftIdentifier"
           source: variables/aircraftRegistrationNum
           longName: "Aircraft registration number or other ID"
 
-        - name: "MetaData/aircraftFlightNum"
+        - name: "MetaData/aircraftFlightNumber"
           source: variables/aircraftFlightNum
           longName: "Aircraft flight number"
 
-        - name: "MetaData/aircraftTailNum"
+        - name: "MetaData/aircraftTailNumber"
           source: variables/aircraftTailNum
           longName: "Aircraft tail number"
 
-        - name: "MetaData/observationSequenceNum"
+        - name: "MetaData/sequenceNumber"
           source: variables/observationSequenceNum
           longName: "Observation sequence number"
 
@@ -96,7 +102,7 @@ observations:
           source: variables/aircraftFlightPhase
           longName: "Aircraft flight phase (ascending/descending/level)"
 
-        - name: "MetaData/aircraftTrueAirspeed"
+        - name: "MetaData/aircraftVelocity"
           source: variables/aircraftTrueAirspeed
           longName: "Aircraft true airspeed"
           units: "m s-1"
@@ -104,32 +110,33 @@ observations:
         - name: "MetaData/aircraftHeading"
           source: variables/aircraftHeading
           longName: "Aircraft heading"
-          units: "deg"
+          units: "degree"
 
-        - name: "MetaData/aircraftRollAngle"
-          source: variables/aircraftRollAngle
-          longName: "Aircraft roll angle quality"
+        # - name: "MetaData/aircraftRollAngleQuality"
+        #   coordinates: "longitude latitude AmdarSequence"
+        #   source: variables/aircraftRollAngleQuality
+        #   longName: "Aircraft roll angle quality"
 
-        - name: "ObsValue/air_temperature"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude AmdarSequence"
           source: variables/temperatureAir
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/specific_humidity"
+        - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude"
           source: variables/waterVaporMixingRatio
           longName: "specific humidity"
           units: "kg kg-1"
 
-        - name: "ObsValue/wind_direction"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude AmdarSequence"
           source: variables/windDirection
           longName: "Wind Direction"
           units: "degrees"
 
-        - name: "ObsValue/wind_speed"
-          coordinates: "longitude latitude"
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude AmdarSequence"
           source: variables/windSpeed
           longName: "Wind Speed"
           units: "m s-1"
