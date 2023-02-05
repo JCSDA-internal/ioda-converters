@@ -803,8 +803,11 @@ def read_bufr_message(f, count, start_pos, data, datetimeRef):
             return data, count, start_pos
 
         count[4] += 1
-        logging.debug(f"Processing sonde for station: {meta_data['stationIdentification'][0]},   # noqa
-                      {meta_data['latitude'][0]}, {meta_data['longitude'][0]}, {meta_data['stationElevation'][0]}")
+        this_id = meta_data['stationIdentification'][0]
+        this_lat = meta_data['latitude'][0]
+        this_lon = meta_data['longitude'][0]
+        this_ele = meta_data['stationElevation'][0]
+        logging.debug(f"Processing sonde for station: {this_id}  {this_lat}, {this_lon}, {this_ele}")
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
         if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
