@@ -6,12 +6,19 @@ import sys
 import time
 import logging
 import json
+from pathlib import Path
 
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
 from cartopy import geodesic
 from copy import deepcopy as dcop
+
+# set path to ioda_conv_engines module
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 # These modules need the path to lib-python modules
 import ioda_conv_engines as iconv
@@ -765,7 +772,7 @@ def read_bufr_message(f, count, start_pos, data, datetimeRef):
                 meta_data['longitude'][n] = meta_data['longitude'][n] - 360.0
 
         # We will do anything we possibly can to rescue data having missing lat/lon info.
-        if (meta_data['latitude'][0] == float_missing_value) or (meta_data['latitude'][0] == float_missing_value):
+        if (meta_data['latitude'][0] == float_missing_value) or (meta_data['longitude'][0] == float_missing_value):
             station_str = meta_data['stationIdentification'][0].decode('UTF-8')
             station = getStationInfo(wmoId=station_str)
             if station is None:
@@ -796,7 +803,8 @@ def read_bufr_message(f, count, start_pos, data, datetimeRef):
             return data, count, start_pos
 
         count[4] += 1
-        logging.debug(f"Processing sonde for station: {meta_data['stationIdentification'][0]}, {meta_data['latitude'][0]}, {meta_data['longitude'][0]}, {meta_data['stationElevation'][0]}")
+        logging.debug(f"Processing sonde for station: {meta_data['stationIdentification'][0]},   # noqa
+                      {meta_data['latitude'][0]}, {meta_data['longitude'][0]}, {meta_data['stationElevation'][0]}")
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
         if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
