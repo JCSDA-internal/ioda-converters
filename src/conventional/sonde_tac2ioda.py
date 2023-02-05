@@ -23,18 +23,12 @@ import netCDF4 as nc
 from cartopy import geodesic
 from copy import deepcopy as dcop
 
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 # These modules need the path to lib-python modules
-from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
 import ioda_conv_engines as iconv
-import meteo_utils
-import meteo_sounding_utils
+import meteo_utils as meteo_utils
+import meteo_sounding_utils as meteo_sounding_utils
+from orddicts import DefaultOrderedDict
+from collections import defaultdict
 
 os.environ["TZ"] = "UTC"
 
@@ -1042,6 +1036,8 @@ def change_vars(profile, target_time):
     as the balloon ascends.  Generally the balloon ascends at 5 m/s, which was already
     assumed in the creation of each timestamp.
     """
+
+    new_profile['positionEstimated'] = np.full(len(new_profile['dateTime']), 1)
 
     previous_idx = 0
     location = [profile['lon'], profile['lat'], None]
