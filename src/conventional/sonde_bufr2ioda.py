@@ -15,7 +15,7 @@ from copy import deepcopy as dcop
 
 # These modules need the path to lib-python modules
 import ioda_conv_engines as iconv
-import meteo_utils as meteo_utils
+import meteo_utils
 from orddicts import DefaultOrderedDict
 from collections import defaultdict
 

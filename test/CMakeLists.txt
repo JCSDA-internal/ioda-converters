@@ -1578,7 +1578,9 @@ if( iodaconv_eccodes_ENABLED )
                            netcdf
                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_bufr2ioda.py
                            -i testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_double.nc4"
+                           -o testrun/wmo_raob_double.nc4
+			   -t share/raob_stations_small.json
+			   --date 2021-02-01T12:00:00Z"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
