@@ -67,6 +67,7 @@ MetaDataKeyList = [
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("stationElevation", "float", "m"),
+    ("positionEstimated", "integer", ""),
     ("height", "float", "m"),
     ("pressure", "float", "Pa"),
     ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z"),

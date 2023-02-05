@@ -841,10 +841,6 @@ def read_bufr_message(f, count, start_pos, data, datetimeRef):
 
         count[1] += target_number
 
-        # Finally transfer the meta_data to the output array.
-        for key in meta_keys:
-            data[key] = np.append(data[key], meta_data[key])
-
         '''
           Need to transform some variables (wind speed/direction to components for example).
           In the ideal world, we could assume that the meteorological variables were given
@@ -924,6 +920,10 @@ def read_bufr_message(f, count, start_pos, data, datetimeRef):
 
         obnum += 1
         stations_found.append(meta_data['stationIdentification'][0])
+
+        # Finally transfer the meta_data to the output array.
+        for key in meta_keys:
+            data[key] = np.append(data[key], meta_data[key])
 
     logging.info("number of observations so far: " + str(count[1]))
     logging.info("number of invalid or useless observations: " + str(count[2]))
