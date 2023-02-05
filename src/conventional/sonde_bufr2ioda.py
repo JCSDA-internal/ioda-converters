@@ -1,31 +1,27 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-import dateutil.parser
 import os
-from pathlib import Path
 import sys
 import time
 import logging
+import json
 
-from itertools import compress
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
-
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
+from cartopy import geodesic
+from copy import deepcopy as dcop
 
 # These modules need the path to lib-python modules
-import ioda_conv_engines as iconv
-import meteo_utils
-from orddicts import DefaultOrderedDict
-from collections import defaultdict, OrderedDict
+import lib_python.ioda_conv_engines as iconv
+import lib_python.meteo_utils as meteo_utils
+from lib_python.orddicts import DefaultOrderedDict
+from collections import defaultdict
 
 os.environ["TZ"] = "UTC"
+
+geod = geodesic.Geodesic()  # generate ellipsoid, defaults to Earth WGS84 parameters
 
 locationKeyList = [
     ("latitude", "float", "degrees_north", "keep"),
@@ -39,8 +35,10 @@ locationKeyList = [
     ("latDisplacement", "float", "degrees", "toss"),
     ("lonDisplacement", "float", "degrees", "toss"),
     ("timeDisplacement", "float", "s", "toss"),
+    ("positionEstimated", "integer", "", "keep"),
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
+    ("wigosIdentifier", "string", "", "toss"),
     ("stationIdentification", "string", "", "keep"),
     ("stationLongName", "string", "", "toss"),
     ("instrumentIdentifier", "integer", "", "keep"),
@@ -70,8 +68,10 @@ metaDataKeyList = {
     'latDisplacement': ['latitudeDisplacement'],
     'lonDisplacement': ['longitudeDisplacement'],
     'timeDisplacement': ['timePeriod'],
+    'positionEstimated': ['Constructed'],
     'wmoBlockNumber': ['blockNumber'],
     'wmoStationNumber': ['stationNumber'],
+    'wigosIdentifier': ['wigosLocalIdentifierCharacter'],
     'stationIdentification': ['Constructed'],
     'stationLongName': ['shipOrMobileLandStationIdentifier'],
     'instrumentIdentifier': ['radiosondeType'],
@@ -92,8 +92,12 @@ metaDataKeyList = {
 # True incoming BUFR observed variables.
 raw_obsvars = ['airTemperature', 'dewpointTemperature', 'windDirection', 'windSpeed']
 
-# Keep track of the stations that were found.
+# A dictionary of station ID, lat, lon, elev is needed in case missing from BUFR msg.
+STATIONS = {}
+
+# Keep track of the stations that were found and those that are not.
 stations_found = []
+sites_not_found = []
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['airTemperature', 'virtualTemperature', 'specificHumidity', 'windEastward', 'windNorthward']
@@ -146,10 +150,10 @@ iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
-def main(file_names, output_file, datetimeRef):
+def main(file_names, station_table, output_file, datetimeRef):
 
     # initialize
-    count = [1, 0, 0, 0]
+    count = [1, 0, 0, 0, 0]
     start_time = time.time()
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -161,12 +165,17 @@ def main(file_names, output_file, datetimeRef):
     for key in meta_keys:
         data[key] = []
 
+    # Load a static list (json) of station info: WMO number, lat, lon, elev
+    STATIONS = loadStations(station_table)
+
     # Open one input file at a time.
     for fname in file_names:
+        count[4] = 0
         AttrData['sourceFiles'] += ", " + fname
 
         # Read from a BUFR file.
-        data, count = read_file(fname, count, data)
+        data, count = read_file(fname, count, data, datetimeRef)
+        print(f"Finished reading {fname} and found {count[4]} distinct sites\n")
 
     AttrData['datetimeReference'] = datetimeRef
     AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
@@ -175,6 +184,12 @@ def main(file_names, output_file, datetimeRef):
     if not data:
         logging.critical("ABORT: no message data was captured, stopping execution.")
         sys.exit()
+
+    if len(sites_not_found) > 0:
+        print(f"\nList of stations with no lat/lon info and not in lookup table...")
+        for site in sites_not_found:
+            print(f"{site}")
+        print("\n")
 
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
@@ -219,7 +234,7 @@ def main(file_names, output_file, datetimeRef):
     logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, count, data):
+def read_file(file_name, count, data, datetimeRef):
 
     f = open(file_name, 'rb')
     fsize = os.path.getsize(file_name)
@@ -229,7 +244,7 @@ def read_file(file_name, count, data):
     while True:
         logging.info(f"  within file, reading BUFR msg ({count[0]}) starting at: {start_pos}")
         # Use eccodes to decode each bufr message in the file
-        data, count, start_pos = read_bufr_message(f, count, start_pos, data)
+        data, count, start_pos = read_bufr_message(f, count, start_pos, data, datetimeRef)
         count[0] += 1
 
         if ((start_pos is None) or (start_pos >= fsize)):
@@ -403,13 +418,15 @@ def specialty_time(tvals, year, month, day, hour, minute, second):
     return result
 
 
-def read_bufr_message(f, count, start_pos, data):
+def read_bufr_message(f, count, start_pos, data, datetimeRef):
 
-    global stations_found  # As we find them, add to list.
-    temp_data = {}         # A temporary dictionary to hold things.
-    meta_data = {}         # All the various MetaData go in here.
-    vals = {}              # Floating-point ObsValues variables go in here.
-    avals = []             # Temporarily hold array of values.
+    global STATIONS         # From JSON file of station ID, lat, lon, elev
+    global stations_found   # As we find them, add to list.
+    global sites_not_found  # Some sites missing lat/lon entirely; also do not exist in station table.
+    temp_data = {}          # A temporary dictionary to hold things.
+    meta_data = {}          # All the various MetaData go in here.
+    vals = {}               # Floating-point ObsValues variables go in here.
+    avals = []              # Temporarily hold array of values.
     start_pos = f.tell()
 
     met_utils = meteo_utils.meteo_utils()
@@ -512,13 +529,26 @@ def read_bufr_message(f, count, start_pos, data):
             else:
                 temp_data[k] = None
 
-    # These meta data elements are so critical that we should quit quickly if lacking them:
+    # Let us hope that date info is present, but there are no guarantees.
     if (temp_data['year'] is None) and (temp_data['month'] is None) and \
             (temp_data['day'] is None) and (temp_data['hour'] is None):
-        logging.warning("Useless ob without date info.")
-    if (temp_data['wmoBlockNumber'] is None) and (temp_data['wmoStationNumber'] is None) and \
-            (temp_data['latitude'] is None) and (temp_data['longitude'] is None):
-        logging.warning("Useless ob without lat,lon or station number info.")
+        logging.warning(f"BUFR msg contains NO DATE INFO. Assuming {datetimeRef}")
+        temp_data['year'] = int(datetimeRef[0:4])
+        temp_data['month'] = int(datetimeRef[5:7])
+        temp_data['day'] = int(datetimeRef[8:10])
+        temp_data['hour'] = int(datetimeRef[11:13])
+
+    # There should also be latitude and longitude info, but also no guarantees.
+    if (temp_data['latitude'] is None) and (temp_data['longitude'] is None):
+        logging.warning("BUFR msg contains NO LAT/LON INFO, will try to find via station lookup.")
+    else:
+        lat_found = False
+        for n, lat in enumerate(temp_data['latitude']):
+            if lat > -90 and lat < 90:
+                lat_found = True
+                break
+        if not lat_found:
+            logging.warning(f"BUFR msg contains no valid latitude, will try to find via station lookup.")
 
     # Next, get the raw observed weather variables we want.
     # TO-DO: currently all ObsValue variables are float type, might need integer/other.
@@ -639,15 +669,89 @@ def read_bufr_message(f, count, start_pos, data):
             meta_data['dateTime'] = np.full(target_number, meta_data['dateTime'][0])
             meta_data['releaseTime'] = np.full(target_number, meta_data['dateTime'][0])
 
-        # Sondes also have lat/lon displacement from launch/release location.
+        # Forcably create stationIdentification 5-char string from WMO block+station number.
+        # If no WMO numbers, there could be WIGOS identifer or stationLongName
+        meta_data['stationIdentification'] = np.full(target_number, string_missing_value, dtype='<S5')
+        for n, block in enumerate(meta_data['wmoBlockNumber']):
+            number = meta_data['wmoStationNumber'][n]
+            if (block > 0 and block < 100 and number > 0 and number < 1000):
+                meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+                meta_data['stationIdentification'][n] = meta_data['stationIdentification'][n]
+            elif meta_data['wigosIdentifier'][n] != string_missing_value:
+                if n == 0:
+                    logging.info(f"  this site lacks WMO number, using wigosIdentifier: {meta_data['wigosIdentifier'][n]}")
+                    try:
+                        block = int(meta_data['stationIdentification'][n][0:2])
+                        number = int(meta_data['stationIdentification'][n][2:5])
+                        meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
+                    except Exception:
+                        meta_data['stationIdentification'][n] = meta_data['wigosIdentifier'][n]
+                meta_data['stationIdentification'][n] = meta_data['stationIdentification'][0]
+            elif meta_data['stationLongName'][n] != string_missing_value:
+                meta_data['stationIdentification'][n] = meta_data['stationLongName'][n]
+                if n == 0:
+                    logging.info(f"  this site lacks WMO number, using stationLongName: {meta_data['stationIdentification'][n]}")
+        count[3] += 1
+        logging.debug(f"Processing sonde for station: {meta_data['stationIdentification'][0]}")
+
+        # Sondes often have lat/lon displacement from launch/release location.
         if temp_data['latDisplacement'] is not None and temp_data['lonDisplacement'] is not None:
+            need_guess_trajectory = False
             for n, delta_lat in enumerate(temp_data['latDisplacement'][b:e]):
                 delta_lon = temp_data['lonDisplacement'][n+b]
                 meta_data['latitude'][n] = meta_data['latitude'][0] + delta_lat
                 meta_data['longitude'][n] = meta_data['longitude'][0] + delta_lon
         else:
-            meta_data['latitude'] = np.full(target_number, meta_data['latitude'][0])
-            meta_data['longitude'] = np.full(target_number, meta_data['longitude'][0])
+            need_guess_trajectory = True
+            lenl = len(meta_data['latitude'])
+            if lenl == 1:
+                if (meta_data['latitude'][0] == float_missing_value) or (meta_data['longitude'][0] == float_missing_value):
+                    logging.critical(f"MISSING lat,lon of launch location for site {meta_data['stationIdentification'][0]}.")
+                    # Get launch location from lookup table using stationId (perhaps)
+                    station_str = meta_data['stationIdentification'][0].decode('UTF-8')
+                    station = getStationInfo(wmoId=station_str)
+                    if station is None:
+                        logging.critical(f"NO match for {meta_data['stationIdentification'][0]} in station table.")
+                        logging.critical(" there is literally no way to rescue this sounding data without lat/lon.")
+                        sites_not_found.append(station_str)
+                        count[2] += target_number
+                        return data, count, start_pos
+                    else:
+                        logging.critical(f"MUST use launch location from table since missing in the data for {station_str}.")
+                        meta_data['latitude'][0] = station['lat']
+                        meta_data['longitude'][0] = station['lon']
+                        meta_data['stationElevation'][0] = station['elev']
+                        meta_data['latitude'] = np.full(target_number, meta_data['latitude'][0])
+                        meta_data['longitude'] = np.full(target_number, meta_data['longitude'][0])
+                        meta_data['stationElevation'] = np.full(target_number, meta_data['stationElevation'][0])
+                else:
+                    meta_data['latitude'] = np.full(target_number, meta_data['latitude'][0])
+                    meta_data['longitude'] = np.full(target_number, meta_data['longitude'][0])
+            elif lenl != target_number:
+                logging.critical(f"POSSIBLE problem, mismatch in number: target = {target_number} but {lenl} found.")
+                count[2] += target_number
+                return data, count, start_pos
+            else:
+                yy = all(y == float_missing_value for y in meta_data['latitude'])
+                xx = all(x == float_missing_value for x in meta_data['longitude'])
+                if xx or yy:
+                    station_str = meta_data['stationIdentification'][0].decode('UTF-8')
+                    station = getStationInfo(wmoId=station_str)
+                    if station is None:
+                        logging.critical(f"NO match for {meta_data['stationIdentification'][0]} in station table.")
+                        logging.critical(" there is literally no way to rescue this sounding data without lat/lon.")
+                        sites_not_found.append(station_str)
+                        count[2] += target_number
+                        return data, count, start_pos
+                    else:
+                        logging.critical(f"MUST use launch location from table since missing in the data for {station_str}.")
+                        meta_data['latitude'][0] = station['lat']
+                        meta_data['longitude'][0] = station['lon']
+                        meta_data['stationElevation'][0] = station['elev']
+                        meta_data['stationElevation'] = np.full(target_number, meta_data['stationElevation'][0])
+                        need_guess_trajectory = True
+                else:
+                    need_guess_trajectory = False
 
         # Force longitude into space of -180 to +180 only. Reset both lat/lon missing if either absent.
         mask_lat = np.logical_or(meta_data['latitude'] < -90.0, meta_data['latitude'] > 90.0)
@@ -660,7 +764,25 @@ def read_bufr_message(f, count, start_pos, data):
             if (meta_data['longitude'][n] != float_missing_value and meta_data['longitude'][n] > 180):
                 meta_data['longitude'][n] = meta_data['longitude'][n] - 360.0
 
-        # It is NOT IDEAL, but if missing a lat or lon, fill with prior known value for now.
+        # We will do anything we possibly can to rescue data having missing lat/lon info.
+        if (meta_data['latitude'][0] == float_missing_value) or (meta_data['latitude'][0] == float_missing_value):
+            station_str = meta_data['stationIdentification'][0].decode('UTF-8')
+            station = getStationInfo(wmoId=station_str)
+            if station is None:
+                logging.critical(f"NO match for {meta_data['stationIdentification'][0]} in station table.")
+                logging.critical(" there is literally no way to rescue this sounding data without lat/lon.")
+                sites_not_found.append(station_str)
+                count[2] += target_number
+                return data, count, start_pos
+            else:
+                logging.critical(f"MUST use launch location from table since missing in the data for {station_str}.")
+                meta_data['latitude'][0] = station['lat']
+                meta_data['longitude'][0] = station['lon']
+                meta_data['stationElevation'][0] = station['elev']
+                meta_data['stationElevation'] = np.full(target_number, meta_data['stationElevation'][0])
+                need_guess_trajectory = True
+
+        # It is NOT IDEAL, but if missing a lat or lon during ascent, fill with prior known value for now.
         for n, lon in enumerate(meta_data['longitude']):
             lat = meta_data['latitude'][n]
             if (lon < -180 or lon > 180):
@@ -668,29 +790,31 @@ def read_bufr_message(f, count, start_pos, data):
             if (lat < -90 or lat > 90):
                 meta_data['latitude'][n] = meta_data['latitude'][n-1]
 
-        # Forcably create stationIdentification 5-char string from WMO block+station number.
-        # If no WMO numbers, there could be stationLongName
-        meta_data['stationIdentification'] = np.full(target_number, string_missing_value, dtype='<S5')
-        for n, block in enumerate(meta_data['wmoBlockNumber']):
-            number = meta_data['wmoStationNumber'][n]
-            if (block > 0 and block < 100 and number > 0 and number < 1000):
-                meta_data['stationIdentification'][n] = "{:02d}".format(block) + "{:03d}".format(number)
-            elif meta_data['stationLongName'][n] != string_missing_value:
-                meta_data['stationIdentification'][n] = meta_data['stationLongName'][n]
-                if n == 0:
-                    logging.info(f"  this site lacks WMO number, using stationLongName: {meta_data['stationIdentification'][n]}")
-            if n == 0:
-                count[3] += 1
-                logging.info(f"Processing sonde for station: {meta_data['stationIdentification'][n]}")
-
+        # TO-DO: test if more sounding levels in newer data compared to previous to decide to keep/skip.
         if meta_data['stationIdentification'][0] in stations_found:
             logging.debug(f"It appears {meta_data['stationIdentification'][0]} is a duplicate, skipping")
             return data, count, start_pos
+
+        count[4] += 1
+        logging.debug(f"Processing sonde for station: {meta_data['stationIdentification'][0]}, {meta_data['latitude'][0]}, {meta_data['longitude'][0]}, {meta_data['stationElevation'][0]}")
 
         # Very odd, sometimes the first level of data has some variables set to zero. Reset to missing.
         if (meta_data['geopotentialHeight'][0] == 0 or meta_data['pressure'][0] == 0):
             meta_data['geopotentialHeight'][0] = float_missing_value
             meta_data['pressure'][0] = float_missing_value
+
+        # If all dateTime elements are the same (i.e., release time), then assume balloon ascends 5 m/s.
+        tt = all(t == meta_data['dateTime'][0] for t in meta_data['dateTime'])
+        if tt:
+            for nt in range(1, len(meta_data['dateTime'])):
+                prev_time = meta_data['dateTime'][nt-1]
+                z2 = meta_data['geopotentialHeight'][nt]
+                z1 = meta_data['geopotentialHeight'][nt-1]
+                if (z1 != float_missing_value) and (z2 != float_missing_value):
+                    dtime = (z2-z1)*0.2
+                    meta_data['dateTime'][nt] = prev_time + dtime
+                else:
+                    meta_data['dateTime'][nt] = prev_time
 
         # And now processing the observed variables we care about.
         nbad = 0
@@ -762,6 +886,42 @@ def read_bufr_message(f, count, start_pos, data):
         data['airTemperature'] = np.append(data['airTemperature'], airt)
         data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
 
+        """
+        If the lat/lon were missing, psuedo-guess the trajectory.
+        Based on height and time and the wind componenents, predict the lat, lon positions
+        as the balloon ascends.  Generally the balloon ascends at 5 m/s, which was already
+        assumed in the creation of each timestamp.
+        """
+
+        if need_guess_trajectory:
+            meta_data['positionEstimated'] = np.full(target_number, 1)
+            location = [meta_data['longitude'][0], meta_data['latitude'][0], None]
+            previous_loc = [meta_data['longitude'][0], meta_data['latitude'][0], None]
+            delta_t = np.diff(meta_data['dateTime'])
+
+            for idx in range(1, len(delta_t)):
+                if (data['windEastward'][idx-1] != float_missing_value and data['windNorthward'][idx-1] != float_missing_value):
+                    # move north-south
+                    d_north = data['windNorthward'][idx-1] * delta_t[idx-1]
+                    location = geod.direct(points=previous_loc[:2], azimuths=0., distances=d_north)[0]
+                    meta_data['latitude'][idx] = location[1]
+                    # move east-west
+                    d_east = data['windEastward'][idx-1] * delta_t[idx-1]
+                    location = geod.direct(points=location[:2], azimuths=90., distances=d_east)[0]
+                    meta_data['longitude'][idx] = location[0]
+                else:
+                    meta_data['latitude'][idx] = meta_data['latitude'][idx-1]
+                    meta_data['longitude'][idx] = meta_data['longitude'][idx-1]
+
+                # store location for next step calculations
+                previous_loc = dcop(location)
+
+            # Be sure to delete the prior location info upon finishing
+            del location
+            del previous_loc
+        else:
+            meta_data['positionEstimated'] = np.full(target_number, 0)
+
         obnum += 1
         stations_found.append(meta_data['stationIdentification'][0])
 
@@ -770,6 +930,62 @@ def read_bufr_message(f, count, start_pos, data):
     logging.info("number of sonde locations: " + str(count[3]))
     start_pos = f.tell()
     return data, count, start_pos
+
+
+def loadStations(stationfile, skipIfLoaded=True):
+    """
+    Load station info from a .json file into the global station list. This info is needed
+    when parsing data that is missing lat, lon, or elevation data at a site.
+    :param stationfile: The filename to load
+    :param skipIfLoaded: If True, don't load the station file if one has already been loaded
+    :return: True on success, False on error
+    """
+
+    global STATIONS
+
+    if skipIfLoaded and len(STATIONS) > 0:
+        return True
+
+    try:
+        fh = open(stationfile, "r")
+        data = fh.read()
+        fh.close()
+        STATIONS = json.loads(data)
+        return True
+    except Exception as e:
+        logger.error("Could not read station info from json file '%s': %s" % (stationfile, e))
+        sys.exit()
+
+
+def getStationInfo(icaoId=None, wmoId=None):
+    """
+    Get info for a station given either an icaoId or a wmoId
+    :param icaoId:
+    :param wmoId:
+    :return: A dict containing station info or None
+    """
+    if icaoId is None and wmoId is None:
+        return None
+
+    if len(STATIONS) == 0:
+        logger.warning("Station file not loaded")
+        return None
+
+    station = None
+    if wmoId:
+        station = STATIONS[wmoId] if wmoId in STATIONS else None
+    else:
+        for synop in STATIONS:
+            st = STATIONS[synop]
+            if st['icao'].lower() == icaoId.lower():
+                station = st
+                wmoId = synop
+                break
+
+    if station:
+        station['wmo'] = wmoId
+
+    return station
 
 
 if __name__ == "__main__":
@@ -788,6 +1004,9 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output-file', dest='output_file',
                           action='store', default=None, required=True,
                           help='output file')
+    required.add_argument('-t', '--table', dest='station_table',
+                          action='store', default=None, required=True,
+                          help='Station table file (JSON)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
@@ -812,7 +1031,7 @@ if __name__ == "__main__":
 
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
-            parser.error('Input (-i option) file: ', file_name, ' does not exist')
+            parser.error(f"Input (-i option) file: {file_name} does not exist")
 
     args.output_file = os.path.abspath(args.output_file)
     apath, afile = os.path.split(args.output_file)
@@ -821,4 +1040,4 @@ if __name__ == "__main__":
         print("creating output directory: ", apath)
         os.makedirs(apath)
 
-    main(args.file_names, args.output_file, args.datetimeReference)
+    main(args.file_names, args.station_table, args.output_file, args.datetimeReference)
