@@ -296,7 +296,14 @@ namespace bufr {
 
     void QueryRunner::collectData(Targets& targets,
                             std::shared_ptr<__details::ProcessingMasks> masks,
-                            ResultSet &resultSet) const {
+                            ResultSet &resultSet) const
+    {
+        // Skip the frame if this is an empty subset.
+        if (dataProvider_->getIsc(dataProvider_->getInode()) <= dataProvider_->getInode())
+        {
+            return;
+        }
+
         std::vector<int> currentPath;
         std::vector<int> currentPathReturns;
 
