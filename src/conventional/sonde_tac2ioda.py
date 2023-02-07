@@ -30,11 +30,11 @@ if not IODA_CONV_PATH.is_dir():
 sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 # These modules need the path to lib-python modules
-from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
 import ioda_conv_engines as iconv
 import meteo_utils
 import meteo_sounding_utils
+from orddicts import DefaultOrderedDict
+from collections import defaultdict
 
 os.environ["TZ"] = "UTC"
 
@@ -73,6 +73,7 @@ MetaDataKeyList = [
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("stationElevation", "float", "m"),
+    ("positionEstimated", "integer", ""),
     ("height", "float", "m"),
     ("pressure", "float", "Pa"),
     ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z"),
@@ -1043,6 +1044,8 @@ def change_vars(profile, target_time):
     assumed in the creation of each timestamp.
     """
 
+    new_profile['positionEstimated'] = np.full(len(new_profile['dateTime']), 1)
+
     previous_idx = 0
     location = [profile['lon'], profile['lat'], None]
     previous_loc = [profile['lon'], profile['lat'], None]
@@ -1163,7 +1166,7 @@ if __name__ == "__main__":
     ntotal = 0
     for file_name in args.file_names:
         if not os.path.isfile(file_name):
-            parser.error('Input (-i option) file: ', file_name, ' does not exist')
+            parser.error(f'Input (-i option) file: {file_name} does not exist')
         if args.netcdf:
             AttrData['sourceFiles'] += ", " + file_name
         logging.debug(f"Reading input file: {file_name}")
