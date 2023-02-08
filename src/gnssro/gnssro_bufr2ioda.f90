@@ -321,7 +321,7 @@ if (nrec==0) then
 endif
 
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
-call check( nf90_def_dim(ncid, 'nlocs', ndata,   nlocs_dimid) )
+call check( nf90_def_dim(ncid, 'Location', ndata,   nlocs_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda2 file') )
 call check( nf90_def_grp(ncid, 'MetaData', grpid_metadata) )
