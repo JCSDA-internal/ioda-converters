@@ -25,7 +25,7 @@ integer, parameter :: r_kind  = selected_real_kind(15)  !8
 ! output obs data stucture
 integer   :: ncid
 integer   :: nobs_dimid,nlocs_dimid,nvars_dimid,nrecs_dimid
-integer   :: varid_lat,varid_lon,varid_time,varid_epochtime
+integer   :: varid_lat,varid_lon,varid_epochtime
 integer   :: varid_said,varid_siid,varid_ptid,varid_sclf,varid_asce,varid_ogce
 integer   :: varid_recn
 integer   :: varid_geoid, varid_rfict
@@ -40,8 +40,7 @@ character(len=10)         :: anatime
 integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,siid,ptid,sclf,asce,ogce
 integer(i_kind)           :: lnbufr    = 10
 integer(i_kind)           :: nread,ndata,nvars,nrec, ndata0
-integer(i_kind)           :: idate5(6), idate,iadate5(6)
-integer(i_kind)           :: mincy,minobs
+integer(i_kind)           :: idate5(6), idate 
 integer(i_64)             :: epochtime
 
 logical                   :: good,outside
@@ -51,7 +50,6 @@ integer(i_kind)           :: ibit(mxib),nib
 integer(i_kind),parameter :: maxlevs=500
 integer(i_kind),parameter :: n1ahdr=13
 integer(i_kind)           :: maxobs
-real(r_kind) :: timeo
 type gnssro_type
       integer(i_kind), allocatable, dimension(:)    :: said
       integer(i_kind), allocatable, dimension(:)    :: siid
@@ -60,7 +58,6 @@ type gnssro_type
       integer(i_kind), allocatable, dimension(:)    :: recn
       integer(i_kind), allocatable, dimension(:)    :: asce
       integer(i_kind), allocatable, dimension(:)    :: ogce
-      real(r_kind), allocatable, dimension(:)       :: time
       integer(i_64),allocatable, dimension(:)     :: epochtime
       real(r_kind), allocatable, dimension(:)     :: lat
       real(r_kind), allocatable, dimension(:)     :: lon
@@ -110,13 +107,6 @@ call getarg(1,anatime)
 call getarg(2,infile)
 call getarg(3,outfile)
 
-read(anatime(1:4),'(i4)')  iadate5(1)
-read(anatime(5:6),'(i4)')  iadate5(2)
-read(anatime(7:8),'(i4)')  iadate5(3)
-read(anatime(9:10),'(i4)') iadate5(4)
-iadate5(5) = 0
-call w3fs21(iadate5,mincy)
-
 open(lnbufr,file=trim(infile),form='unformatted')
 call openbf(lnbufr,'IN',lnbufr)
 call datelen(10)
@@ -142,7 +132,6 @@ allocate(gnssro_data%ptid(maxobs))
 allocate(gnssro_data%recn(maxobs))
 allocate(gnssro_data%asce(maxobs))
 allocate(gnssro_data%ogce(maxobs))
-allocate(gnssro_data%time(maxobs))
 allocate(gnssro_data%epochtime(maxobs))
 allocate(gnssro_data%lat(maxobs))
 allocate(gnssro_data%lon(maxobs))
@@ -184,8 +173,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
      sclf = bfr1ahdr(12)       ! Satellite classification
      ogce = bfr1ahdr(13)       ! Identification of originating/generating centre
 
-     call w3fs21(idate5,minobs)
-     timeo=real(minobs-mincy,r_kind)/60.0
      call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
      if( roc>6450000.0_r_kind .or. roc<6250000.0_r_kind  .or.       &
@@ -281,7 +268,6 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gnssro_data%recn(ndata)     = nrec
        gnssro_data%lat(ndata)      = rlat
        gnssro_data%lon(ndata)      = rlon
-       gnssro_data%time(ndata)     = timeo
        gnssro_data%epochtime(ndata)= epochtime
        gnssro_data%said(ndata)     = said
        gnssro_data%siid(ndata)     = siid
@@ -335,11 +321,6 @@ call check( nf90_def_var_fill(grpid_metadata, varid_lat, 0, real(r_missing)))
 call check( nf90_def_var(grpid_metadata, "longitude",     NF90_FLOAT, nlocs_dimid, varid_lon) )
 call check( nf90_put_att(grpid_metadata, varid_lon, "units",  "degree_east" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_lon, 0, real(r_missing)))
-
-call check( nf90_def_var(grpid_metadata, "time",          NF90_FLOAT, nlocs_dimid, varid_time) )
-call check( nf90_put_att(grpid_metadata, varid_time, "longname", "time offset to analysis time" ))
-call check( nf90_put_att(grpid_metadata, varid_time, "units", "hour" ))
-call check( nf90_def_var_fill(grpid_metadata, varid_time, 0, real(r_missing)))
 
 call check( nf90_def_var(grpid_metadata, "dateTime",     NF90_INT64, nlocs_dimid, varid_epochtime) )
 call check( nf90_put_att(grpid_metadata, varid_epochtime, "units","seconds since 1970-01-01T00:00:00Z" ))
@@ -451,7 +432,6 @@ call check( nf90_put_var(grpid_obsvalue, varid_bnd,gnssro_data%bend_ang(1:ndata)
 call check( nf90_put_var(grpid_obserror, varid_bndoe,gnssro_data%bndoe_gsi(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)) )
-call check( nf90_put_var(grpid_metadata, varid_time, gnssro_data%time(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_epochtime,gnssro_data%epochtime(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)) )
 call check( nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)) )
@@ -477,7 +457,6 @@ deallocate(gnssro_data%ptid)
 deallocate(gnssro_data%recn)
 deallocate(gnssro_data%asce)
 deallocate(gnssro_data%ogce)
-deallocate(gnssro_data%time)
 deallocate(gnssro_data%epochtime)
 deallocate(gnssro_data%lat)
 deallocate(gnssro_data%lon)
@@ -589,38 +568,6 @@ endif
 
 end subroutine bendingangle_err_gsi
 !!!!!!________________________________________________________
-
-!!!!!! SUBROUTINE W3FS21 was copied from GSI/src/libs/w3nco_v2.0.6/w3fs21.f and iw3jdn.f
-SUBROUTINE W3FS21(IDATE, NMIN)
-    INTEGER  IDATE(5)
-    INTEGER  NMIN
-    INTEGER  IYEAR, NDAYS, IJDN
-    INTEGER  JDN78
-    DATA  JDN78 / 2443510 /
-    NMIN  = 0
-
-    IYEAR = IDATE(1)
-
-    IF (IYEAR.LE.99) THEN
-        IF (IYEAR.LT.78) THEN
-            IYEAR = IYEAR + 2000
-        ELSE
-            IYEAR = IYEAR + 1900
-        ENDIF
-    ENDIF
-
-!   COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
-    IJDN  = IDATE(3) - 32075      &
-             + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
-             + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
-             - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
-
-!   SUBTRACT JULIAN DAY NUMBER OF JAN 1,1978 TO GET THE
-!   NUMBER OF DAYS BETWEEN DATES
-    NDAYS = IJDN - JDN78
-    NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
-    RETURN
-END SUBROUTINE W3FS21
 
 !-------------------------------------------------------------
 ! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
