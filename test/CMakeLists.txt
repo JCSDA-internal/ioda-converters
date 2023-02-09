@@ -8,6 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
+  testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
   testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
@@ -39,6 +40,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
+  testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
@@ -78,6 +80,7 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
+  testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
@@ -111,6 +114,7 @@ list( APPEND test_output
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
+  testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
@@ -422,6 +426,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
                           -o testrun/nsidc_l4_icec.nc
                           -d 2019010112"
                           nsidc_l4_icec.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4icethk
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/copernicus_l4icethk2ioda.py
+                          -i testinput/icethk_coperl4.nc
+                          -o testrun/icethk_coperl4.nc -d 2019011500"
+                          icethk_coperl4.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsr2_l2icec
                   TYPE    SCRIPT
@@ -1050,6 +1065,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                           -r 2021092903 2021092921"
                   mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropess_co_nc2ioda.py
+                          -i testinput/tropess_cris_co.nc
+                          -o testrun/tropess_cris_co.nc
+                          --levels 0 4 8 12"
+                  tropess_cris_co.nc "5e-2")
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1564,7 +1591,9 @@ if( iodaconv_eccodes_ENABLED )
                            netcdf
                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_bufr2ioda.py
                            -i testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_double.nc4"
+                           -o testrun/wmo_raob_double.nc4
+			   -t share/raob_stations_small.json
+			   --date 2021-02-01T12:00:00Z"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
