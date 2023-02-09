@@ -378,7 +378,7 @@ call check( nf90_def_var_chunking(grpid_metadata,varid_siid,NF90_CHUNKED, chunks
 call check( nf90_def_var_deflate(grpid_metadata,varid_siid,       &
                                  shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_siid, "longname", "satellite instrument"))
-call check( nf90_put_att(grpid_metadata, varid_siid, "unts",  "1" ))
+call check( nf90_put_att(grpid_metadata, varid_siid, "units",  "1" ))
 
 call check( nf90_def_var(grpid_metadata, "satelliteAscendingFlag",  NF90_INT, nlocs_dimid, varid_asce))
 call check( nf90_def_var_chunking(grpid_metadata,varid_asce, NF90_CHUNKED, chunksizes) )
