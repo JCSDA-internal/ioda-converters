@@ -26,7 +26,7 @@ loc_vars = [
     'MetaData/pressure',
     'MetaData/stationIdentification',
     'MetaData/height',
-    'MetaData/dateTime',
+    'MetaData/datetime',
 ]
 
 
