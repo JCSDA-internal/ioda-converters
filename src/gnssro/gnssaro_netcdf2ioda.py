@@ -103,7 +103,7 @@ def main(args):
     VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
     VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
     VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
-    VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'm'
+    VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'gpm'
 
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'ObsError')]['_FillValue'] = float_missing_value
@@ -157,12 +157,12 @@ def get_meta_data(ifile):
         profile_meta_data[k] = codes_get(ifile, v)
 
     # do the hokey time structure to time structure
-    year = ifile.attrs['year'][0])
-    month = ifile.attrs['month'][0])
-    day = ifile.attrs['day'][0])
-    hour = ifile.attrs['hour'][0])
-    minute = ifile.attrs['minute'][0])
-    second = ifile.attrs['second'][0])  # non-integer value
+    year = ifile.attrs['year'][0]
+    month = ifile.attrs['month'][0]
+    day = ifile.attrs['day'][0]
+    hour = ifile.attrs['hour'][0]
+    minute = ifile.attrs['minute'][0]
+    second = ifile.attrs['second'][0]  # non-integer value
     second = round(second)
 
     # get string date, translate to a datetime object, then offset from epoch
@@ -182,25 +182,25 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     # get data from file
     file_stamp = ifile['fileStamp'].split('.')
     nlocations = ifile['MSL_alt'].size
-    recordN = ifile['record_number']    
+    recordN = ifile['record_number']
     satelliteC = np.full((nlocations), get_satelliteC(file_stamp[5][0]), dtype=ioda_int_type)
     satelliteT = np.full((nlocations), int(file_stamp[5][1:3]), dtype=ioda_int_type)
     aircraftId = np.full((nlocations), get_aircraftIdentifier(ifile.attrs['aircraftIdentifer'][0]), dtype=ioda_int_type)
     aircraftIs = np.full((nlocations), get_aircraftInstrument(ifile.attrs['aircraftAROInstrument'][0]), dtype=ioda_int_type)
-    tailNumber = np.full((nlocations), get_aircrafttailnumber(ifile.attrs['aircraftTailNumber'][0]), dtype=ioda_int_type) 
+    tailNumber = np.full((nlocations), get_aircrafttailnumber(ifile.attrs['aircraftTailNumber'][0]), dtype=ioda_int_type)
     assendingF = np.full((nlocations), get_ascendingflag(ifile.attrs['irs'][0]), dtype=ioda_int_type)
-    procC = np.full((nlocations), 61, dtype=ioda_int_type) # 61 for IGPP/SIO/UCSD
-    impactP = ifile['Impact_parm'][:]*10e2,  # km to m
+    procC = np.full((nlocations), 61, dtype=ioda_int_type)  # 61 for IGPP/SIO/UCSD
+    impactP = ifile['Impact_parm'][:]*10e2  # km to m
     impactH = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
-    geoidH = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type) # km to m
-    earthR = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type) # km to m 
+    geoidH = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)  # km to m
+    earthR = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)  # km to m
     lats = ifile['Lat'][:]
     lons = ifile['Lon'][:]
-    height = ifile['MSL_alt'][:]*10e2 # km to m
+    height = ifile['MSL_alt'][:]*10e2  # km to m
     hgeop = geometric2geopotential(ifile.attrs['lat'][0], height)
     azim = ['Azim']
     bang = ifile['Bend_ang']
-    bang_err = ifile['Bend_ang_stdv']       
+    bang_err = ifile['Bend_ang_stdv']
     refrac = ifile['Ref']
     refrac_err = ifile['Ref_stdv']
     partialBang = ifile['Opt_bend_ang']
@@ -211,7 +211,7 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     obs_data[('bendingAngle', "ObsValue")] = assign_values(bang)
     obs_data[('bendingAngle', "ObsError")] = assign_values(bang_err)
     obs_data[('bendingAngle', "PreQC")] = assing_value(qc)
-    
+
     # value, ob_error, qc
     obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
     obs_data[('atmosphericRefractivity', "ObsError")] = assign_values(refrac_err)
@@ -220,24 +220,24 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     meta_data_types = def_meta_types()
 
     # metadata
-    obs_data[('latitude', 'MetaData')]                 = assign_values(lats)
-    obs_data[('longitude', 'MetaData')]                = assign_values(lons)
-    obs_data[('impactParameterRO', 'MetaData')]        = assign_values(impactP)
-    obs_data[('impactHeightRO', 'MetaData')]           = assign_values(impactH)
-    obs_data[('height', 'MetaData')]                   = assign_values(height)
-    obs_data[('sensorAzimuthAngle', 'MetaData')]       = assign_values(azim)
-    obs_data[('sequenceNumber', 'MetaData')]           = assign_values(recordN)
+    obs_data[('latitude', 'MetaData')] = assign_values(lats)
+    obs_data[('longitude', 'MetaData')] = assign_values(lons)
+    obs_data[('impactParameterRO', 'MetaData')] = assign_values(impactP)
+    obs_data[('impactHeightRO', 'MetaData')] = assign_values(impactH)
+    obs_data[('height', 'MetaData')] = assign_values(height)
+    obs_data[('sensorAzimuthAngle', 'MetaData')] = assign_values(azim)
+    obs_data[('sequenceNumber', 'MetaData')] = assign_values(recordN)
     obs_data[('satelliteConstellationRO', 'MetaData')] = assign_values(satelliteC)
-    obs_data[('satelliteTransmitterId', 'MetaData')]   = assign_values(satelliteT)
-    obs_data[('aircraftIdentifier', 'MetaData')]       = assign_values(aircraftId)
-    obs_data[('aircraftAROInstrument', 'MetaData')]    = assign_values(aircraftIs)
-    obs_data[('aircraftTailNumber', 'MetaData')]       = assign_values(tailNumber)
-    obs_data[('satelliteAscendingFlag', 'MetaData')]   = assign_values(assendingF)
-    obs_data[('dataProviderOrigin', 'MetaData')]       = assign_values(procC)
-    obs_data[('geoidUndulation', 'MetaData')]          = assign_values(geoidH)
-    obs_data[('earthRadiusCurvature', 'MetaData')]     = assign_values(earthR)
-    obs_data[('geopotentialHeight', 'MetaData')]       = assign_values(hgeop)
-    obs_data[('partialBendingAngle', 'MetaData')]      = assign_values(partialBang)
+    obs_data[('satelliteTransmitterId', 'MetaData')] = assign_values(satelliteT)
+    obs_data[('aircraftIdentifier', 'MetaData')] = assign_values(aircraftId)
+    obs_data[('aircraftAROInstrument', 'MetaData')] = assign_values(aircraftIs)
+    obs_data[('aircraftTailNumber', 'MetaData')] = assign_values(tailNumber)
+    obs_data[('satelliteAscendingFlag', 'MetaData')] = assign_values(assendingF)
+    obs_data[('dataProviderOrigin', 'MetaData')] = assign_values(procC)
+    obs_data[('geoidUndulation', 'MetaData')] = assign_values(geoidH)
+    obs_data[('earthRadiusCurvature', 'MetaData')] = assign_values(earthR)
+    obs_data[('geopotentialHeight', 'MetaData')] = assign_values(hgeop)
+    obs_data[('partialBendingAngle', 'MetaData')] = assign_values(partialBang)
 
     if add_qc:
         good = quality_control(profile_meta_data, height, lats, lons)
@@ -311,7 +311,7 @@ def def_meta_types():
         "geopotentialHeight": 'float',
         "sensorAzimuthAngle": 'float',
         "sequenceNumber": 'integer',
-        
+
     }
 
     return meta_data_types
@@ -357,7 +357,7 @@ def concat_obs_dict(obs_data, append_obs_data):
 
 def get_satelliteC(satelliteC):
     if satelliteC == 'G':
-        satelliteC_ID = 401 
+        satelliteC_ID = 401
     elif satelliteC == 'R':
         satelliteC_ID = 402
     elif satelliteC == 'E':
@@ -367,43 +367,43 @@ def get_satelliteC(satelliteC):
 
 def get_aircraftIdentifier(arcftId):
     if arcftId == 'N49T':
-      arcftid = 790
+        arcftid = 790
     if arcftId == 'C130':
-      arcftid = 791
+        arcftid = 791
     return arcftid
 
 
-def get_aircraftInstrument(arcftIs): #TODO: check this id for the intrument
+def get_aircraftInstrument(arcftIs):  # check this id for the intrument
     if arcftIs == 'AsteRx-U':
-      arcftis = 1
+        arcftis = 1
     else:
-      arcftis = 2
+        arcftis = 2
     return arcftis
 
 
-def get_aircrafttailnumber(tailN): #TODO: check this id for the intrument
+def get_aircrafttailnumber(tailN):  # check this id for the intrument
     if tailN == 'N49RF':
-      tailnumber = 1
+        tailnumber = 1
     else:
-      tailnumber = 2
+        tailnumber = 2
     return tailnumber
 
 
 def get_ascendingflag(ascendingflag):
-  if ascendingflag == -1: # rising (from bottom to top): ascending
-    ascendingflagid = 1
-  elif ascendingflag == 1: # setting (from top to bottom): descending
-    ascendingflagid = 0
-  return ascendingflagid
+    if ascendingflag == -1:  # rising (from bottom to top): ascending
+        ascendingflagid = 1
+    elif ascendingflag == 1:  # setting (from top to bottom): descending
+        ascendingflagid = 0
+    return ascendingflagid
 
 
 def cal_impactHeightRO(impactparam, rfict):
-    impactheight = (impactparam - rfict)*10e2 # km to m
+    impactheight = (impactparam - rfict)*10e2  # km to m
     return impactheight
 
 
 def geometric2geopotential(dlat, height):
-    ## ABOUT: 28.12.2016: vectorized for speed
+    # ABOUT: 28.12.2016: vectorized for speed
     # geom2geop converts geometric to geopotential height expressed in
     # geopotential meters
     #
@@ -456,12 +456,12 @@ def geometric2geopotential(dlat, height):
     # Define dimension of atmospheric profile
     ndim = len(height)
 
-    # convert latitude in degree to radians 
+    # convert latitude in degree to radians
     pi = np.arccos(-1.0)
     deg2rad = pi/180.0
     lat = dlat*deg2rad
-  
-    ## DERIVE GRAVITY
+
+    # DERIVE GRAVITY
     # 1.1. Calculate effective radius [m]
     R_eff = a_earth/(1 + f_earth + gm_ratio - 2.*f_earth*np.sin(lat)**2)
 
@@ -471,7 +471,7 @@ def geometric2geopotential(dlat, height):
     g = g_equat*(1 + k_somig*np.sin(lat)**2)/np.sqrt(1 - e2_earth*np.sin(lat)**2)
 
     # Geopotential height
-    hgeop = (g/g0)*(np.dot(R_eff, height)/(R_eff + height)) 
+    hgeop = (g/g0)*(np.dot(R_eff, height)/(R_eff + height))
 
     return hgeop
 
