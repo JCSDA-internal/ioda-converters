@@ -34,6 +34,8 @@ integer   :: varid_bnd,varid_bndoe,varid_impp, varid_imph,varid_azim
 integer   :: nlev_dimid
 integer   :: varid_geo_temp,varid_geo_pres,varid_geo_shum,varid_geo_geop, varid_geo_geop_sfc
 integer   :: grpid_metadata,grpid_obserror,grpid_obsvalue
+integer   :: deflate_level
+integer,  dimension(2)    :: chunksizes
 character(len=256)        :: infile, outfile
 character,dimension(8)    :: subset
 character(len=10)         :: anatime
@@ -102,6 +104,7 @@ nrec =0
 ndata=0
 nvars=2
 maxobs=0
+deflate_level=6
 
 call getarg(1,anatime)
 call getarg(2,infile)
@@ -306,6 +309,7 @@ if (nrec==0) then
     stop 2
 endif
 
+chunksizes=(/ndata,ndata/)
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
 call check( nf90_def_dim(ncid, 'Location', ndata,   nlocs_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime) )
@@ -315,115 +319,178 @@ call check( nf90_def_grp(ncid, 'ObsValue', grpid_obsvalue) )
 call check( nf90_def_grp(ncid, 'ObsError', grpid_obserror) )
 
 call check( nf90_def_var(grpid_metadata, "latitude",      NF90_FLOAT, nlocs_dimid, varid_lat) )
-call check( nf90_put_att(grpid_metadata, varid_lat, "units",  "degree_north" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_lat, 0, real(r_missing)))
+call check( nf90_def_var_chunking(grpid_metadata, varid_lat, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_lat,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
+call check( nf90_put_att(grpid_metadata, varid_lat, "units",  "degree_north" ))
 
 call check( nf90_def_var(grpid_metadata, "longitude",     NF90_FLOAT, nlocs_dimid, varid_lon) )
-call check( nf90_put_att(grpid_metadata, varid_lon, "units",  "degree_east" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_lon, 0, real(r_missing)))
+call check( nf90_def_var_chunking(grpid_metadata, varid_lon, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_lon,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
+call check( nf90_put_att(grpid_metadata, varid_lon, "units",  "degree_east" ))
 
 call check( nf90_def_var(grpid_metadata, "dateTime",     NF90_INT64, nlocs_dimid, varid_epochtime) )
-call check( nf90_put_att(grpid_metadata, varid_epochtime, "units","seconds since 1970-01-01T00:00:00Z" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_epochtime, 0, i64_missing ))
+call check( nf90_def_var_chunking(grpid_metadata, varid_epochtime, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_epochtime, &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
+call check( nf90_put_att(grpid_metadata, varid_epochtime, "units","seconds since 1970-01-01T00:00:00Z" ))
 
 call check( nf90_def_var(grpid_metadata, "sequenceNumber",   NF90_INT, nlocs_dimid, varid_recn))
+call check( nf90_def_var_fill(grpid_metadata, varid_recn, 0, i_missing )) 
+call check( nf90_def_var_chunking(grpid_metadata, varid_recn,NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_recn,      &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_recn, "longname", "GNSS RO profile identifier" ))
 call check( nf90_put_att(grpid_metadata, varid_recn, "units",  "1" ))
-call check( nf90_def_var_fill(grpid_metadata, varid_recn, 0, i_missing ))
 
 call check( nf90_def_var(grpid_metadata, "satelliteConstellationRO",  NF90_INT, nlocs_dimid, varid_sclf))
-call check( nf90_put_att(grpid_metadata, varid_sclf, "longname", "GNSS satellite classification, &
-                                                     &e.g., 401=GPS, 402=GLONASS" ))
-call check( nf90_put_att(grpid_metadata, varid_sclf, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_sclf, 0, i_missing ))
+call check( nf90_def_var_chunking(grpid_metadata,varid_sclf,NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_sclf,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
+call check( nf90_put_att(grpid_metadata, varid_sclf, "longname", "GNSS satellite classification, &
+                                                      e.g., 401=GPS, 402=GLONASS" ))
+call check( nf90_put_att(grpid_metadata, varid_sclf, "units",  "1" ))
 
 call check( nf90_def_var(grpid_metadata, "satelliteTransmitterId", NF90_INT, nlocs_dimid, varid_ptid))
+call check( nf90_def_var_fill(grpid_metadata, varid_ptid, 0, i_missing ))
+call check( nf90_def_var_chunking(grpid_metadata,varid_ptid,NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_ptid,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)" ))
 call check( nf90_put_att(grpid_metadata, varid_ptid, "units",  "1" ))
-call check( nf90_def_var_fill(grpid_metadata, varid_ptid, 0, i_missing ))
 
 call check( nf90_def_var(grpid_metadata, "satelliteIdentifier", NF90_INT, nlocs_dimid, varid_said))
-call check( nf90_put_att(grpid_metadata, varid_said, "longname", "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755" ))
-call check( nf90_put_att(grpid_metadata, varid_said, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_said, 0, i_missing ))
+call check( nf90_def_var_chunking(grpid_metadata,varid_said, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_said,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
+call check( nf90_put_att(grpid_metadata, varid_said, "longname", "Low Earth Orbit satellite identifier, &
+                                                      e.g., COSMIC2=750-755" ))
+call check( nf90_put_att(grpid_metadata, varid_said, "units",  "1" ))
 
 call check( nf90_def_var(grpid_metadata, "occulting_sat_is", NF90_INT, nlocs_dimid, varid_siid))
+call check( nf90_def_var_chunking(grpid_metadata,varid_siid,NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_siid,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_siid, "longname", "satellite instrument"))
-call check( nf90_put_att(grpid_metadata, varid_siid, "units",  "1" ))
-call check( nf90_def_var_fill(grpid_metadata, varid_siid, 0, i_missing ))
+call check( nf90_put_att(grpid_metadata, varid_siid, "unts",  "1" ))
 
 call check( nf90_def_var(grpid_metadata, "satelliteAscendingFlag",  NF90_INT, nlocs_dimid, varid_asce))
+call check( nf90_def_var_chunking(grpid_metadata,varid_asce, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_asce,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_asce, "longname", "the original occultation ascending/descending flag" ))
 call check( nf90_put_att(grpid_metadata, varid_asce, "valid_range", int((/ 0, 1 /))) )
 call check( nf90_put_att(grpid_metadata, varid_asce, "flag_values", int((/ 0, 1 /))) )
 call check( nf90_put_att(grpid_metadata, varid_asce, "flag_meanings", "descending ascending") )
 call check( nf90_put_att(grpid_metadata, varid_asce, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing ))
-
+ 
 call check( nf90_def_var(grpid_metadata, "process_center",NF90_INT,nlocs_dimid, varid_ogce))
+call check( nf90_def_var_chunking(grpid_metadata,varid_ogce, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_ogce,       &
+                                 shuffle=1, deflate=1,deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_ogce, "longname", "originally data processing_center, &
                                                      &e.g., 60 for UCAR, 94 for DMI, 78 for GFZ" ))
 call check( nf90_put_att(grpid_metadata, varid_ogce, "units",  "1" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing ))
 
 call check( nf90_def_var(grpid_obsvalue, "atmosphericRefractivity", NF90_FLOAT, nlocs_dimid, varid_ref) )
+call check( nf90_def_var_chunking(grpid_obsvalue, varid_ref, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_obsvalue, varid_ref,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_obsvalue, varid_ref, "longname", "Atmospheric refractivity" ))
 call check( nf90_put_att(grpid_obsvalue, varid_ref, "units", "N" ))
 call check( nf90_put_att(grpid_obsvalue, varid_ref, "valid_range", real((/ 0.0, 500.0 /))) )
 call check( nf90_def_var_fill(grpid_obsvalue, varid_ref, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_obserror, "atmosphericRefractivity", NF90_FLOAT, nlocs_dimid, varid_refoe))
+call check( nf90_def_var_chunking(grpid_obserror, varid_refoe, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_obserror, varid_refoe,     &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_obserror, varid_refoe, "longname", "Input error in atmospheric refractivity" ))
 call check( nf90_put_att(grpid_obserror, varid_refoe, "units", "N" ))
 call check( nf90_put_att(grpid_obserror, varid_refoe, "valid_range", real((/ 0.0, 10.0 /))) )
 call check( nf90_def_var_fill(grpid_obserror, varid_refoe, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "height", NF90_FLOAT, nlocs_dimid, varid_msl) )
+call check( nf90_def_var_chunking(grpid_metadata,varid_msl, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_msl,       &
+                                 shuffle=1, deflate=1,deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_msl, "longname", "Geometric altitude" ))
 call check( nf90_put_att(grpid_metadata, varid_msl, "units", "m" ))
 call check( nf90_def_var_fill(grpid_metadata, varid_msl, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_obsvalue, "bendingAngle", NF90_FLOAT, nlocs_dimid, varid_bnd) )
+call check( nf90_def_var_chunking(grpid_obsvalue, varid_bnd, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_obsvalue, varid_bnd,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_obsvalue, varid_bnd, "longname", "Bending Angle" ))
 call check( nf90_put_att(grpid_obsvalue, varid_bnd, "units", "radian" ))
 call check( nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", real((/ -0.001, 0.08 /))) )
 call check( nf90_def_var_fill(grpid_obsvalue, varid_bnd, 0, real(r_missing) ))
+call check(nf90_def_var_chunking(grpid_obsvalue,varid_bnd,NF90_CHUNKED,[10,101]) )
+call check(nf90_def_var_deflate(grpid_obsvalue,varid_bnd,shuffle=1,deflate=1,deflate_level=deflate_level))
 
 call check( nf90_def_var(grpid_obserror, "bendingAngle", NF90_FLOAT, nlocs_dimid, varid_bndoe) )
+call check( nf90_def_var_chunking(grpid_obserror, varid_bndoe, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_obserror, varid_bndoe,     &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_obserror, varid_bndoe, "longname", "Input error in Bending Angle" ))
 call check( nf90_put_att(grpid_obserror, varid_bndoe, "units", "radian" ))
 call check( nf90_put_att(grpid_obserror, varid_bndoe, "valid_range", real((/ 0.0, 0.008 /))) )
 call check( nf90_def_var_fill(grpid_obserror, varid_bndoe, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "impactParameterRO", NF90_FLOAT, nlocs_dimid, varid_impp))
+call check( nf90_def_var_chunking(grpid_metadata, varid_impp, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_impp,      &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_impp, "longname", "distance from centre of curvature" ))
 call check( nf90_put_att(grpid_metadata, varid_impp, "units", "m" ))
 call check( nf90_put_att(grpid_metadata, varid_impp, "valid_range", real((/ 6200000.0, 6600000.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_impp, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "impactHeightRO", NF90_FLOAT, nlocs_dimid, varid_imph))
+call check( nf90_def_var_chunking(grpid_metadata, varid_imph, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_imph,      &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_imph, "longname", "distance from mean sea level" ))
 call check( nf90_put_att(grpid_metadata, varid_imph, "units", "m" ))
 call check( nf90_put_att(grpid_metadata, varid_imph, "valid_range", real((/ 0.0, 200000.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_imph, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "sensorAzimuthAngle", NF90_FLOAT, nlocs_dimid, varid_azim))
+call check( nf90_def_var_chunking(grpid_metadata,varid_azim, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata,varid_azim,       &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_azim, "longname", "GNSS->LEO line of sight" ))
 call check( nf90_put_att(grpid_metadata, varid_azim, "units", "degree" ))
 call check( nf90_put_att(grpid_metadata, varid_azim, "valid_range", real((/ 0.0, 360.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_azim, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "geoidUndulation", NF90_FLOAT, nlocs_dimid, varid_geoid))
+call check( nf90_def_var_chunking(grpid_metadata ,varid_geoid, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_geoid,     &
+                                 shuffle=1, deflate=1, deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_geoid, "longname", "Geoid height above WGS-84 ellipsoid" ))
 call check( nf90_put_att(grpid_metadata, varid_geoid, "units", "m" ))
 call check( nf90_put_att(grpid_metadata, varid_geoid, "valid_range", real((/ -200.0, 200.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_geoid, 0, real(r_missing) ))
 
 call check( nf90_def_var(grpid_metadata, "earthRadiusCurvature", NF90_FLOAT, nlocs_dimid, varid_rfict))
+call check( nf90_def_var_chunking(grpid_metadata, varid_rfict, NF90_CHUNKED, chunksizes) )
+call check( nf90_def_var_deflate(grpid_metadata, varid_rfict,     &
+                                 shuffle=1, deflate=1,deflate_level=deflate_level) )
 call check( nf90_put_att(grpid_metadata, varid_rfict, "longname", "Earth’s local radius of curvature" ))
 call check( nf90_put_att(grpid_metadata, varid_rfict, "units", "m" ))
 call check( nf90_put_att(grpid_metadata, varid_rfict, "valid_range", real((/ 6200000.0, 6600000.0 /))) )
 call check( nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing) ))
+
 call check( nf90_enddef(ncid) )
 
 call check( nf90_put_var(grpid_obsvalue, varid_ref, gnssro_data%ref(1:ndata)) )
