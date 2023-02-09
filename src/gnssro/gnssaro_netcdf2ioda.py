@@ -203,6 +203,7 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     bang_err = ifile['Bend_ang_stdv']       
     refrac = ifile['Ref']
     refrac_err = ifile['Ref_stdv']
+    partialBang = ifile['Opt_bend_ang']
     qc = np.full((nlocations), get_ascendingflag(ifile.attrs['bad'][0]), dtype=ioda_int_type)
 
     # Populate the obs_data dictionary
@@ -236,6 +237,7 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     obs_data[('geoidUndulation', 'MetaData')]          = assign_values(geoidH)
     obs_data[('earthRadiusCurvature', 'MetaData')]     = assign_values(earthR)
     obs_data[('geopotentialHeight', 'MetaData')]       = assign_values(hgeop)
+    obs_data[('partialBendingAngle', 'MetaData')]      = assign_values(partialBang)
 
     if add_qc:
         good = quality_control(profile_meta_data, height, lats, lons)
@@ -269,7 +271,7 @@ def quality_control(profile_meta_data, heights, lats, lons):
 def def_meta_data():
 
     meta_data_keys = {
-        "qualityFlags": 'radioOccultationDataQualityFlags',
+        "satelliteAscendingFlag": 'radioOccultationDataQualityFlags',
         "geoidUndulation": 'geoidUndulation',
         "sensorAzimuthAngle": 'bearingOrAzimuth',
         # "timeIncrement": 'timeIncrement',
@@ -281,6 +283,8 @@ def def_meta_data():
         "aircraftAROInstrument": 'AROInstrument',
         "aircraftTailNumber": 'aircraftTailNumber',
         "geopotentialHeight": 'geopotentialHeight',
+        "sensorAzimuthAngle": 'sensorAzimuthAngle',
+        "sequenceNumber": 'recordNumber',
     }
 
     return meta_data_keys
@@ -298,8 +302,6 @@ def def_meta_types():
         "qualityFlags": 'integer',
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
-        "satelliteIdentifier": 'integer',
-        "satelliteInstrument": 'integer',
         "dataProviderOrigin": 'string',
         "satelliteTransmitterId": 'integer',
         "satelliteConstellationRO": 'integer',
@@ -307,6 +309,8 @@ def def_meta_types():
         "aircraftAROInstrument": 'integer',
         "aircraftTailNumber": 'integer',
         "geopotentialHeight": 'float',
+        "sensorAzimuthAngle": 'float',
+        "sequenceNumber": 'integer',
         
     }
 
