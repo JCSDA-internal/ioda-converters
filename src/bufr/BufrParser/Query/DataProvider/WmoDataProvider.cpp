@@ -36,7 +36,7 @@ namespace bufr {
         isOpen_ = true;
     }
 
-    void WmoDataProvider::updateTableData(const std::string& subset)
+    void WmoDataProvider::updateTable(const std::string& subset)
     {
         deleteData();
 

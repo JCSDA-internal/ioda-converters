@@ -70,7 +70,7 @@ namespace bufr {
         get_inode_f(bufrLoc, &inode_);
         get_nval_f(bufrLoc, &nval_);
 
-        updateTableData(subset_);
+        updateTable(subset_);
 
         get_val_f(bufrLoc, &dataPtr, &size);
         val_ = gsl::span<const double>(dataPtr, size);

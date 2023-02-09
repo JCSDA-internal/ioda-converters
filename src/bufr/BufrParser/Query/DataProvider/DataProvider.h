@@ -245,7 +245,7 @@ namespace bufr {
 
         /// \brief Update the table data for the currently loaded subset.
         /// \param subset The subset string.
-        virtual void updateTableData(const std::string& subset) = 0;
+        virtual void updateTable(const std::string& subset) = 0;
 
         /// \brief Read the data from the BUFR interface for the current subset and reset the
         /// internal data structures.

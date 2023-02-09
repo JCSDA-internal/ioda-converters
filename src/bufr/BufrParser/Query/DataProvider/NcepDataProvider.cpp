@@ -10,6 +10,9 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
+
+#include "eckit/exception/Exceptions.h"
 
 
 namespace Ingester {
@@ -27,15 +30,21 @@ namespace bufr {
         isOpen_ = true;
     }
 
-    void NcepDataProvider::updateTableData(const std::string& subset)
+    void NcepDataProvider::updateTable(const std::string& subset)
     {
         int size = 0;
         int *intPtr = nullptr;
         int strLen = 0;
         char *charPtr = nullptr;
 
-        if (currentTableData_ == nullptr)
+        if (currentTableData_ = tableCache_[subset])
         {
+            return;
+        }
+
+        if (currentTableData_ == nullptr || getTag(getInode()) != subset) {
+            deleteData();  // in case we previously loaded data
+
             currentTableData_ = std::make_shared<TableData>();
 
             get_isc_f(&intPtr, &size);
@@ -49,16 +58,14 @@ namespace bufr {
 
             get_typ_f(&charPtr, &strLen, &size);
             currentTableData_->typ.resize(size);
-            for (int wordIdx = 0; wordIdx < size; wordIdx++)
-            {
+            for (int wordIdx = 0; wordIdx < size; wordIdx++) {
                 auto typ = std::string(&charPtr[wordIdx * strLen], strLen);
                 currentTableData_->typ[wordIdx] = TypMap.at(typ);
             }
 
             get_tag_f(&charPtr, &strLen, &size);
             currentTableData_->tag.resize(size);
-            for (int wordIdx = 0; wordIdx < size; wordIdx++)
-            {
+            for (int wordIdx = 0; wordIdx < size; wordIdx++) {
                 auto tag = std::string(&charPtr[wordIdx * strLen], strLen);
                 currentTableData_->tag[wordIdx] = tag.substr(0, tag.find_first_of(' '));
             }
@@ -66,6 +73,8 @@ namespace bufr {
             get_jmpb_f(&intPtr, &size);
             currentTableData_->jmpb = std::vector<int>(intPtr, intPtr + size);
         }
+
+        tableCache_[subset] = currentTableData_;
     }
 
     size_t NcepDataProvider::variantId() const

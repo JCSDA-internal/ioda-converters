@@ -59,7 +59,7 @@ namespace bufr {
 
         /// \brief Update the table data for the currently loaded subset.
         /// \param subset The subset string.
-        void updateTableData(const std::string& subset) final;
+        void updateTable(const std::string& subset) final;
 
         /// \brief Get the currently valid subset table data
         inline std::shared_ptr<TableData> getTableData() const final { return currentTableData_; };
