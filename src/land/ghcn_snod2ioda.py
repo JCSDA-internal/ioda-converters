@@ -5,16 +5,23 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 #
 
-import os
+import time, os, sys
 import argparse
+import netCDF4 as nc
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.parser import parse
+from pathlib import Path
 
-import lib_python.ioda_conv_engines as iconv
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),

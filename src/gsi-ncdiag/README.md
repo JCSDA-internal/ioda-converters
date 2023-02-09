@@ -1,4 +1,4 @@
-# gsi_ncdiag
+# gsi-ncdiag
 
 ## gsincdiag.py
 Currently the gsincdiag library supports four different classes of GSI netCDF diag files:
