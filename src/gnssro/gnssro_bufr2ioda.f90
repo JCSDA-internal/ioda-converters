@@ -1,9 +1,10 @@
 !!!--------  README --------------------------------------------------------------------
 !  this is a temporary routine to generate netcdf4 file
 !  for jedi/ufo/gnssro/ operator test
-!  IODA VERSION 2
+!  IODA VERSION 3
 !  Copyright UCAR 2022
 !  Author: Hailing Zhang
+!  Last upate: Feb 9 2023
 
 !!!---------  to run   -----------------------------------------------------------------
 !  ./gnssro_bufr2ioda2 yyyymmddhh $bufrfile_input $netcdffile_output
@@ -11,7 +12,7 @@
 ! Return codes:
 !  0 - Success.
 !  1 - Unrecoverable system or logical error.
-!  2 - All provided observations are invalid.  Cannot create NetCDF IODA2 file.
+!  2 - All provided observations are invalid.  Cannot create NetCDF IODA3 file.
 
 
 program gnssro_bufr2ioda2
