@@ -132,8 +132,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 _var = obsspace.Variable(fullvname)
                 tmpdata = np.array(_var.read_data())
             else:
-#               tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
-                tmpdata = np.full((obsspace.Location), iconv.get_default_fill_val(VarTypes[fullvname]),
+                tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
                                   dtype=VarTypes[fullvname])
             tmpvardata.append(tmpdata)
         tmpvardata = np.hstack(tmpvardata)
