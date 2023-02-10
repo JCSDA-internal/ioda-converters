@@ -874,7 +874,7 @@ class Conv(BaseGSI):
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
-                    if outvars[o] == 'surface_pressure':
+                    if outvars[o] == 'stationPressure':
                         if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
                         obsdata[obsdata > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for surface_pressure
