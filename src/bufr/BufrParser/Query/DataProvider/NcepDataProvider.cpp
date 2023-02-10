@@ -42,7 +42,10 @@ namespace bufr {
             return;
         }
 
-        if (currentTableData_ == nullptr || getTag(getInode()) != subset) {
+        if (currentTableData_ == nullptr ||      // If the table is not in the cache
+            getInode() > numTags() ||            // or there are not enough tags
+            getTag(getInode()) != subset)   // or the tag is inconsistent with the subset we expect
+        {
             deleteData();  // in case we previously loaded data
 
             currentTableData_ = std::make_shared<TableData>();

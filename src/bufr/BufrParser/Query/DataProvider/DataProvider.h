@@ -217,6 +217,9 @@ namespace bufr {
         /// \param idx BUFR table node index
         inline std::string getTag(FortranIdx idx) const { return getTableData()->tag[idx - 1]; }
 
+        /// \brief Get the number of BUFR table nodes in the current subset.
+        inline size_t numTags() const { return getTableData()->tag.size(); }
+
         /// \brief Gets the variant number for the currently loaded subset.
         virtual size_t variantId() const = 0;
 
