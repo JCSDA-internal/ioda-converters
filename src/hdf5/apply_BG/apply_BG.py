@@ -1,7 +1,11 @@
 """
-J. Zhou, H. Yang and R. Iacovazzi, "Improving ATMS Remapping Accuracy Using Adaptive Window and Noise-Tuning Method in Backus–Gilbert Inversion," in IEEE Transactions on Geoscience and Remote Sensing, vol. 60, pp. 1-12, 2022, Art no. 5304412, doi: 10.1109/TGRS.2022.3182630.
+J. Zhou, H. Yang and R. Iacovazzi,
+"Improving ATMS Remapping Accuracy Using Adaptive Window and Noise-Tuning Method in Backus–Gilbert Inversion,"
+in IEEE Transactions on Geoscience and Remote Sensing,
+vol. 60, pp. 1-12, 2022, Art no. 5304412, doi: 10.1109/TGRS.2022.3182630.
 
-Original source code written by Jun Zhou @UMD can be found at: https://github.com/JunUMD/BG_AdaptiveWindow_v1
+Original source code written by Jun Zhou @UMD can be found at:
+https://github.com/JunUMD/BG_AdaptiveWindow_v1
 """
 from pathlib import Path
 import os, glob, time
@@ -11,10 +15,11 @@ import numpy as np
 import statistics
 from scipy.interpolate import griddata
 
+
 class apply_BG_class:
     def __init__(self,
                  input_files,
-                 orb,orbit_num,
+                 orb, orbit_num,
                  src_ch, coef_dir,
                  nfov,
                  ta_vmin, ta_vmax,
@@ -49,9 +54,9 @@ class apply_BG_class:
             self.windowsize_all.append([])
             self.windowindx_all.append([])
             self.idx_src_all.append([])
-            for ifv in range(self.nfov): 
+            for ifv in range(self.nfov):
                 with open(self.coef_dir+'/tgt_ifr'+str(ifv)+'.pickle', 'rb') as f:
-                    [windowsize, windowindx, idx_src, alpha_bst]=pickle.load(f)
+                    [windowsize, windowindx, idx_src, alpha_bst] = pickle.load(f)
 
                 self.alpha_all[ich].append(alpha_bst)
                 self.windowsize_all[ich].append(windowsize)
@@ -74,22 +79,23 @@ class apply_BG_class:
                     windowindx[i][0] = windowindx[i][0]-isc_cen
                     windowindx[i][1] = windowindx[i][1]-ifr_cen
 
-                alpha=alpha/np.sum(alpha)
+                alpha = alpha/np.sum(alpha)
                 for isc in range(self.nscan):
                     temp = 0.0
                     flag = 0
                     for iwin in range(windowsize):
-                        [i,j] = np.array(windowindx[iwin])+np.array([isc, ifr])
+                        [i, j] = np.array(windowindx[iwin])+np.array([isc, ifr])
                         if i >= 0 and i < self.nscan and j >= 0 and j < self.nfov:
                             temp += alpha[iwin]*self.ta[ich, i, j]
                         else:
                             flag = 1
                             break
                     if flag == 0:
-                        ta_rmp[isc,i fr] = temp
+                        ta_rmp[isc, i fr] = temp
             self.taAllCh[:, :, ich] = ta_rmp
 
-        return [self.viewang, self.taAllCh, self.lat[ich,:,:], self.lon[ich,:,:], self.satzen, self.satazi, self.solzen, self.solazi, self.tim]
+        return [self.viewang, self.taAllCh, self.lat[ich, :, :], self.lon[ich, :, :], self.satzen, self.satazi, self.solzen, self.solazi, self.tim]
+
     def do_ingest(self):
 
         self.ta = []
@@ -118,9 +124,10 @@ class apply_BG_class:
             self.tim.append([])
 
         for ifile, filename in enumerate(self.input_files):
-            [viewang,temAllCh, ta, lat, lon, satzen, satazi, satran, tim, vel, nscan, solzen, solazi] = self.read_granule(filename)
+            [viewang, temAllCh, ta, lat, lon, satzen, satazi, satran, tim, vel, nscan, solzen, solazi] = self.read_granule(filename)
             for isc in range(nscan):
-                if (vel[isc,-1] > 0 and self.orb == 'des') or (vel[isc,-1] < 0 and self.orb == 'asc'): continue
+                if (vel[isc, -1] > 0 and self.orb == 'des') or (vel[isc, -1] < 0 and self.orb == 'asc'):
+                    continue
                 self.nscan += 1
                 for i, ich in enumerate(self.select_chs):
                     self.ta[i].append(ta[isc, :, int(ich)-1])

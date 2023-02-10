@@ -399,31 +399,32 @@ def set_obspace_attributes(VarAttrs):
 
     return VarAttrs
 
+
 def remapBG(input_files):
 
     print('Remap ATMS: Backus–Gilbert Inversion method')
 
     obs_data = init_obs_loc()
 
-    src_ch = [1,2]
-    tgt_ch = [1,2]
+    src_ch = [1, 2]
+    tgt_ch = [1, 2]
     src_bm = 5.2
     tgt_bm = 3.3
     nfov = 96
 
     orb = 'des'
     orbit_num = 'non'
-    ta_vmin,ta_vmax = 210, 275
-    dif_vmin,dif_vmax = -5, 5
+    ta_vmin, ta_vmax = 210, 275
+    dif_vmin, dif_vmax = -5, 5
 
     coef_dir = str(Path(__file__).parent/'apply_BG'/'Coeff_5.2to3.3')
     apply_BG_obj = apply_BG_class(input_files,
-                                orb, orbit_num,
-                                src_ch,
-                                coef_dir,
-                                nfov,
-                                ta_vmin, ta_vmax,
-                                dif_vmin, dif_vmax)
+                                  orb, orbit_num,
+                                  src_ch,
+                                  coef_dir,
+                                  nfov,
+                                  ta_vmin, ta_vmax,
+                                  dif_vmin, dif_vmax)
     apply_BG_obj.ingest()
     apply_BG_obj.prepcoef()
 
@@ -447,7 +448,7 @@ def remapBG(input_files):
     print('nscans=', nscans)
     nbeam_pos = lat.shape[1]
     print('nbeam_pos=', nbeam_pos)
-    obs_data[('latitude', metaDataName)] =  np.array(lat.flatten(), dtype='float32')
+    obs_data[('latitude', metaDataName)] = np.array(lat.flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(lon.flatten(), dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')
     obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
