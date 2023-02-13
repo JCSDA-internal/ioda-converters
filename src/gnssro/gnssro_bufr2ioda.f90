@@ -12,7 +12,7 @@
 ! Return codes:
 !  0 - Success.
 !  1 - Unrecoverable system or logical error.
-!  2 - All provided observations are invalid.  Cannot create NetCDF IODA3 file.
+!  2 - All provided observations are invalid.  Cannot create NetCDF IODA file.
 
 
 program gnssro_bufr2ioda2
@@ -314,7 +314,7 @@ chunksizes=(/ndata,ndata/)
 call check( nf90_create(trim(outfile), NF90_NETCDF4, ncid))
 call check( nf90_def_dim(ncid, 'Location', ndata,   nlocs_dimid) )
 call check( nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime) )
-call check( nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda v3 file') )
+call check( nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'Fortran generated ioda file') )
 call check( nf90_def_grp(ncid, 'MetaData', grpid_metadata) )
 call check( nf90_def_grp(ncid, 'ObsValue', grpid_obsvalue) )
 call check( nf90_def_grp(ncid, 'ObsError', grpid_obserror) )
