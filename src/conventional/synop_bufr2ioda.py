@@ -1,40 +1,30 @@
 #!/usr/bin/env python3
 
-from datetime import datetime, timedelta
-import dateutil.parser
+from datetime import datetime
 import os
-from pathlib import Path
-import sys
 import time
 import logging
 
 import numpy as np
 import netCDF4 as nc
 import eccodes as ecc
-from multiprocessing import Pool
-
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 # These modules need the path to lib-python modules
-from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
-import meteo_utils
+from collections import defaultdict
+from lib_python.orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+import lib_python.meteo_utils as meteo_utils
 
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
-    ("station_id", "string", "", "keep"),
+    ("stationIdentification", "string", "", "keep"),
     # ("station_name", "string", "", "keep"),
     ("wmoBlockNumber", "integer", "", "toss"),
     ("wmoStationNumber", "integer", "", "toss"),
     ("latitude", "float", "degrees_north", "keep"),
     ("longitude", "float", "degrees_east", "keep"),
-    ("station_elevation", "float", "m", "keep"),
+    ("stationElevation", "float", "m", "keep"),
     ("height", "float", "m", "keep"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z", "keep"),
     ("year", "integer", "", "toss"),
@@ -52,11 +42,11 @@ metaDataKeyList = {
     # 'station_name': ['stationOrSiteName'],   This fails due to unicode characters
     'latitude': ['latitude'],
     'longitude': ['longitude'],
-    'station_elevation': ['heightOfStationGroundAboveMeanSeaLevel'],
+    'stationElevation': ['heightOfStationGroundAboveMeanSeaLevel'],
     'height': ['Constructed',
                'heightOfBarometerAboveMeanSeaLevel',
                'heightOfStationGroundAboveMeanSeaLevel'],
-    'station_id': ['Constructed'],
+    'stationIdentification': ['Constructed'],
     'dateTime': ['Constructed'],
     'year': ['year'],
     'month': ['month'],
@@ -76,22 +66,22 @@ raw_obsvars = ['airTemperature',
                'nonCoordinatePressure']
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['air_temperature',
-           'specific_humidity',
-           'virtual_temperature',
-           'eastward_wind',
-           'northward_wind',
-           'surface_pressure']
+obsvars = ['airTemperature',
+           'specificHumidity',
+           'virtualTemperature',
+           'windEastward',
+           'windNorthward',
+           'stationPressure']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1', 'Pa']
 obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7, 120.0]
 
 VarDims = {
-    'air_temperature': ['nlocs'],
-    'specific_humidity': ['nlocs'],
-    'virtual_temperature': ['nlocs'],
-    'eastward_wind': ['nlocs'],
-    'northward_wind': ['nlocs'],
-    'surface_pressure': ['nlocs']
+    'airTemperature': ['Location'],
+    'specificHumidity': ['Location'],
+    'virtualTemperature': ['Location'],
+    'windEastward': ['Location'],
+    'windNorthward': ['Location'],
+    'stationPressure': ['Location']
 }
 
 metaDataName = iconv.MetaDataName()
@@ -104,7 +94,7 @@ AttrData = {
     'ioda_version': 2,
     'description': 'Surface (SYNOP) observations converted from BUFR',
     'source': 'LDM at NCAR-RAL',
-    'source_files': ''
+    'sourceFiles': ''
 }
 
 DimDict = {
@@ -151,12 +141,12 @@ def main(file_names, output_file):
 
     for fname in file_names:
         logging.debug("Reading file: " + fname)
-        AttrData['source_files'] += ", " + fname
+        AttrData['sourceFiles'] += ", " + fname
 
         data, count, start_pos = read_file(fname, count, start_pos, data)
 
-    AttrData['source_files'] = AttrData['source_files'][2:]
-    logging.debug("All source files: " + AttrData['source_files'])
+    AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
+    logging.debug("All source files: " + AttrData['sourceFiles'])
 
     if not data:
         logging.critical("ABORT: no message data was captured, stopping execution.")
@@ -164,8 +154,7 @@ def main(file_names, output_file):
     logging.info("--- {:9.4f} BUFR read seconds ---".format(time.time() - start_time))
 
     nlocs = len(data['dateTime'])
-    DimDict = {'nlocs': nlocs}
-    AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict = {'Location': nlocs}
 
     # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):
@@ -177,7 +166,6 @@ def main(file_names, output_file):
         varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
         varAttrs[iodavar, obsValName]['units'] = obsvars_units[n]
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
-        varAttrs[iodavar, qcName]['units'] = 'unitless'
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
@@ -499,7 +487,7 @@ def read_bufr_message(f, count, start_pos, data):
     meta_data['height'][mask_height] = float_missing_value
 
     # If the height of the observation (sensor) is missing, try to fill it with station_elevation.
-    for n, elev in enumerate(meta_data['station_elevation']):
+    for n, elev in enumerate(meta_data['stationElevation']):
         if (elev > -425 and elev < 8500):
             meta_data['height'][n] = elev + 2
 
@@ -579,12 +567,12 @@ def read_bufr_message(f, count, start_pos, data):
                     tvirt[n] = airt[n]*(1.0 + 0.61*qvapor)
 
     # Finally fill up the output data dictionary with observed variables.
-    data['eastward_wind'] = np.append(data['eastward_wind'], uwnd)
-    data['northward_wind'] = np.append(data['northward_wind'], vwnd)
-    data['specific_humidity'] = np.append(data['specific_humidity'], spfh)
-    data['air_temperature'] = np.append(data['air_temperature'], airt)
-    data['virtual_temperature'] = np.append(data['virtual_temperature'], tvirt)
-    data['surface_pressure'] = np.append(data['surface_pressure'], psfc)
+    data['windEastward'] = np.append(data['windEastward'], uwnd)
+    data['windNorthward'] = np.append(data['windNorthward'], vwnd)
+    data['specificHumidity'] = np.append(data['specificHumidity'], spfh)
+    data['airTemperature'] = np.append(data['airTemperature'], airt)
+    data['virtualTemperature'] = np.append(data['virtualTemperature'], tvirt)
+    data['stationPressure'] = np.append(data['stationPressure'], psfc)
 
     logging.info(f"number of observations so far: {count[1]} from {count[0]} BUFR msgs.")
     logging.info(f"number of invalid or useless observations: {count[2]}")

@@ -6,32 +6,30 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
-
 import sys
+import os
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
+import lib_python.ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+os.environ["TZ"] = "UTC"
 
-
-vName = "sea_surface_salinity"
+vName = "seaSurfaceSalinity"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {}
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class Salinity(object):
@@ -63,7 +61,7 @@ class Salinity(object):
             sss = ncd.variables['SSS_corr'][:]
             sss_err = ncd.variables['Sigma_SSS_corr'][:]
             sss_qc = ncd.variables['Dg_quality_SSS_corr'][:]
-            sss_qc = sss_qc.astype(int)
+            sss_qc = sss_qc.astype(np.int32)
 
             mask = np.logical_not(sss.mask)
             lon = lon[mask]
@@ -84,11 +82,9 @@ class Salinity(object):
                 MM1 = f[n+19+11:n+19+13]
                 SS1 = f[n+19+13:n+19+15]
                 #
-                seconds = (datetime.strptime(date1+HH1+MM1+SS1, '%Y%m%d%H%M%S') - datetime.strptime(
-                           date1, '%Y%m%d')).total_seconds()
-                basetime = datetime.strptime(date1, '%Y%m%d')
-                obs_date = basetime + timedelta(seconds=int(seconds))
-                locKey = lat[i], lon[i], obs_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                this_dt = datetime.strptime(date1+HH1+MM1+SS1, '%Y%m%d%H%M%S')
+                time_offset = round((this_dt - epoch).total_seconds())
+                locKey = lat[i], lon[i], time_offset
                 self.data[locKey][valKey] = sss[i]
                 self.data[locKey][errKey] = sss_err[i]
                 self.data[locKey][qcKey] = sss_qc[i]
@@ -99,7 +95,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read JPL/RSS SMOS sea surface salinity (SSS) file(s) and convert'
+            'Read JPL/RSS SMOS seaSurfaceSalinity (SSS) file(s) and convert'
             ' to a concatenated IODA formatted output file.')
     )
     required = parser.add_argument_group(title='required arguments')
@@ -119,25 +115,25 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 #
     VarDims = {
-        'sea_surface_salinity': ['nlocs'],
+        'seaSurfaceSalinity': ['Location'],
     }
 
-    # Read in the salinity
+    # Read in the seaSurfaceSalinity
     sal = Salinity(args.input, fdate)
 
     # write them out
-    ObsVars, nlocs = iconv.ExtractObsData(sal.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(sal.data, locationKeyList)
 
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sea_surface_salinity', 'ObsValue')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'ObsError')]['units'] = 'PSU'
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['units'] = 'unitless'
-    VarAttrs[('sea_surface_salinity', 'ObsValue')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_salinity', 'ObsError')]['_FillValue'] = 999
-    VarAttrs[('sea_surface_salinity', 'PreQC')]['_FillValue'] = 999
+    VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['units'] = 'PSU'
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['units'] = 'PSU'
+    VarAttrs[('seaSurfaceSalinity', 'ObsValue')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'ObsError')]['_FillValue'] = 999
+    VarAttrs[('seaSurfaceSalinity', 'PreQC')]['_FillValue'] = 999
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 
 

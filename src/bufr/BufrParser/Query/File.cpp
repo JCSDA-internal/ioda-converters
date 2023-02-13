@@ -13,96 +13,70 @@
 
 #include "QueryRunner.h"
 #include "QuerySet.h"
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
+#include "DataProvider/NcepDataProvider.h"
+#include "DataProvider/WmoDataProvider.h"
 
 
 namespace Ingester {
 namespace bufr {
-    File::File(const std::string &filename, bool isWmoFormat, const std::string &wmoTablePath) :
-            filename_(filename),
-            fileUnit_(nextFileUnit()),
-            fileUnitTable1_(nextFileUnit()),
-            fileUnitTable2_(nextFileUnit()),
-            isWmoFormat_(isWmoFormat),
-            wmoTablePath_(wmoTablePath)
+    File::File(const std::string &filename, bool isWmoFormat, const std::string &wmoTablePath)
     {
-        open();
-    }
-
-    void File::open()
-    {
-        open_f(fileUnit_, filename_.c_str());
-
-        if (!isWmoFormat_)
+        if (!isWmoFormat)
         {
-            openbf_f(fileUnit_, "IN", fileUnit_);
+            dataProvider_ = std::make_shared<Ingester::bufr::NcepDataProvider>(filename);
         }
         else
         {
-            openbf_f(fileUnit_, "SEC3", fileUnit_);
-
-            if (!wmoTablePath_.empty())
-            {
-                mtinfo_f(wmoTablePath_.c_str(), fileUnitTable1_, fileUnitTable2_);
-            }
+            dataProvider_ = std::make_shared<Ingester::bufr::WmoDataProvider>(filename,
+                                                                             wmoTablePath);
         }
+
+        dataProvider_->open();
     }
 
     void File::close()
     {
-        closbf_f(fileUnit_);
-        close_f(fileUnit_);
+        dataProvider_->close();
     }
 
-    void File::rewind() {
-        close();
-        open();
+    void File::rewind()
+    {
+        dataProvider_->rewind();
     }
 
     ResultSet File::execute(const QuerySet &querySet, size_t next)
     {
-        static int SubsetLen = 9;
-        unsigned int messageNum = 0;
-        char subsetChars[SubsetLen];
-        int iddate;
-
-        int bufrLoc;
-        int il, im;  // throw away
-
-        auto dataProvider = DataProvider(fileUnit_);
-
+        size_t msgCnt = 0;
         auto resultSet = ResultSet(querySet.names());
-        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider);
+        auto queryRunner = QueryRunner(querySet, resultSet, dataProvider_);
 
-        while (ireadmg_f(fileUnit_, subsetChars, &iddate, SubsetLen) == 0)
+        auto processMsg = [&msgCnt] () mutable
         {
-            auto subset = std::string(subsetChars);
-            subset.erase(std::remove_if(subset.begin(), subset.end(), isspace), subset.end());
+            msgCnt++;
+        };
 
-            if (querySet.includesSubset(subset))
+        auto processSubset = [&queryRunner]() mutable
+        {
+            queryRunner.accumulate();
+        };
+
+        auto continueProcessing = [next, &msgCnt]() -> bool
+        {
+            if (next > 0)
             {
-                while (ireadsb_f(fileUnit_) == 0)
-                {
-                    status_f(fileUnit_, &bufrLoc, &il, &im);
-                    dataProvider.updateData(bufrLoc);
-                    queryRunner.accumulate();
-                }
-
-                if (next > 0 && ++messageNum >= next) break;
+               return  msgCnt < next;
             }
-        }
 
-        resultSet.setTargets(queryRunner.getTargets());
+            return true;
+        };
 
-        dataProvider.deleteData();
+        dataProvider_->run(querySet,
+                           processSubset,
+                           processMsg,
+                           continueProcessing);
 
         return resultSet;
-    }
-
-    int File::nextFileUnit()
-    {
-        static int lastFileUnit = 11;  // Numbers 12 and above are valid.
-        return ++lastFileUnit;
     }
 }  // namespace bufr
 }  // namespace Ingester

@@ -26,6 +26,8 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Variable.h
   BufrParser/Exports/Variables/DatetimeVariable.h
   BufrParser/Exports/Variables/DatetimeVariable.cpp
+  BufrParser/Exports/Variables/SpectralRadianceVariable.h
+  BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
   BufrParser/Exports/Variables/AircraftAltitudeVariable.h
   BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp
   BufrParser/Exports/Variables/TimeoffsetVariable.h
@@ -39,8 +41,12 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
   BufrParser/Exports/Variables/Transforms/TransformBuilder.h
   BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
-  BufrParser/Query/DataProvider.h
-  BufrParser/Query/DataProvider.cpp
+  BufrParser/Query/DataProvider/DataProvider.h
+  BufrParser/Query/DataProvider/DataProvider.cpp
+  BufrParser/Query/DataProvider/NcepDataProvider.h
+  BufrParser/Query/DataProvider/NcepDataProvider.cpp
+  BufrParser/Query/DataProvider/WmoDataProvider.h
+  BufrParser/Query/DataProvider/WmoDataProvider.cpp
   BufrParser/Query/File.h
   BufrParser/Query/File.cpp
   BufrParser/Query/VectorMath.h

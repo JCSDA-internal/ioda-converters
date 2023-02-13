@@ -7,31 +7,24 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
 import os
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
 
 obsvars = {
-    'carbonmonoxide_total_column': 'carbon_monoxide_in_total_column',
+    'carbonmonoxide_total_column': 'carbonmonoxideTotal',
 }
 
 AttrData = {
@@ -43,7 +36,7 @@ DimDict = {
 }
 
 VarDims = {
-    'carbon_monoxide_in_total_column': ['nlocs'],
+    'carbonmonoxideTotal': ['Location'],
 }
 
 # constants
@@ -64,7 +57,7 @@ class mopitt(object):
 
     def _read(self):
         # set up variable names for IODA
-        for iodavar in ['carbon_monoxide_in_total_column']:
+        for iodavar in ['carbonmonoxideTotal']:
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
@@ -164,7 +157,7 @@ class mopitt(object):
 
             if first:
                 # add metadata variables
-                self.outdata[('datetime', 'MetaData')] = times[flg]
+                self.outdata[('dateTime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('apriori_term', 'RtrvlAncData')] = ap_tc[flg]
@@ -182,8 +175,8 @@ class mopitt(object):
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa[flg]
 
             else:
-                self.outdata[('datetime', 'MetaData')] = np.concatenate((
-                    self.outdata[('datetime', 'MetaData')], times[flg]))
+                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                    self.outdata[('dateTime', 'MetaData')], times[flg]))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
@@ -209,8 +202,8 @@ class mopitt(object):
                         (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
             first = False
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+        AttrData['Location'] = np.int32(DimDict['Location'])
 
         for k in range(nlevs):
             varname = 'averaging_kernel_level_'+str(k+1)

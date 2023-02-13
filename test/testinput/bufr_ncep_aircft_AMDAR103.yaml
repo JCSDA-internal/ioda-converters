@@ -5,7 +5,7 @@
 # 
 observations:
   - obs space:
-      name: bufr
+      name: bufr_amdar
 
       obsdatain: "testinput/gdas.t12z.aircft.tm00.bufr_d"
 
@@ -88,15 +88,15 @@ observations:
           source: variables/aircraftFlightNumber
           longName: "Aircraft Flight Number"
 
-        - name: "MetaData/aircraftNavigationalSystem"
-          source: variables/aircraftNavigationalSystem
-          longName: "Aircraft Navigational System"
+        # - name: "MetaData/aircraftNavigationalSystem"
+        #   source: variables/aircraftNavigationalSystem
+        #   longName: "Aircraft Navigational System"
 
         - name: "MetaData/aircraftIdentifier"
           source: variables/aircraftIdentifier
           longName: "Aircraft Identifier (Station Identification)"
 
-        - name: "MetaData/aircraftAltitude"
+        - name: "MetaData/height"
           source: variables/aircraftAltitude
           longName: "Aircraft Altitude"
           units: "m"
@@ -107,7 +107,7 @@ observations:
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/dewpointTemperature"
+        - name: "ObsValue/dewPointTemperature"
           source: variables/dewpointTemperature
           longName: "Dewpoint Temperature"
           units: "K"
@@ -143,4 +143,3 @@ observations:
         - name: "QualityMarker/windDirection"
           source: variables/windQM
           longName: "Quality Indicator for Wind Direction"
-

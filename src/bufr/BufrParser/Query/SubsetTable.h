@@ -239,7 +239,7 @@ namespace bufr {
     {
      public:
         SubsetTable() = delete;
-        explicit SubsetTable(const DataProvider& dataProvider);
+        explicit SubsetTable(const DataProviderType& dataProvider);
         ~SubsetTable() = default;
 
         /// \brief Returns all the leaf data elements in the subset table.
@@ -254,7 +254,7 @@ namespace bufr {
         std::shared_ptr<BufrNode> getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path);
 
      private:
-        const DataProvider& dataProvider_;
+        const DataProviderType& dataProvider_;
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
 

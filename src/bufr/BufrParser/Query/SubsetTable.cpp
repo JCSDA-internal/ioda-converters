@@ -25,9 +25,9 @@ namespace bufr {
     void SubsetTable::initialize()
     {
         root_ = std::make_shared<BufrNode>();
-        root_->mnemonic = dataProvider_.getTag(dataProvider_.getInode());
+        root_->mnemonic = dataProvider_->getTag(dataProvider_->getInode());
         root_->type = Typ::Subset;
-        root_->nodeIdx = dataProvider_.getInode();
+        root_->nodeIdx = dataProvider_->getInode();
 
         // Recursively parse the entire tree of BUFR nodes
         processNode(root_);
@@ -44,8 +44,8 @@ namespace bufr {
         }
 
         auto nodeIdx = static_cast<int> (parent->nodeIdx + 1);
-        auto lastNode = static_cast<int>(dataProvider_.getLink(parent->nodeIdx) - 1);
-        if (lastNode == -1) lastNode = dataProvider_.getIsc(dataProvider_.getInode());
+        auto lastNode = static_cast<int>(dataProvider_->getLink(parent->nodeIdx) - 1);
+        if (lastNode == -1) lastNode = dataProvider_.getIsc(dataProvider_->getInode());
 
         auto mnemonicCounts = std::unordered_map<std::string, size_t>();
         auto mnemonicMaps = std::unordered_map<std::string, std::vector<std::shared_ptr<BufrNode>>>();
@@ -55,8 +55,8 @@ namespace bufr {
             parent->children.push_back(std::make_shared<BufrNode>());
             auto& newNode = parent->children.back();
             newNode->nodeIdx = nodeIdx;
-            newNode->mnemonic = dataProvider_.getTag(nodeIdx);
-            newNode->type = dataProvider_.getTyp(nodeIdx);
+            newNode->mnemonic = dataProvider_->getTag(nodeIdx);
+            newNode->type = dataProvider_->getTyp(nodeIdx);
             newNode->parent = parent;
 
             // add to and increment duplicate mnemonic count, update duplicate status if there are duplicates

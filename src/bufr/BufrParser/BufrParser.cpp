@@ -128,6 +128,10 @@ namespace Ingester {
                 std::ostringstream pathStr;
                 pathStr << "variables/" << var->getExportName();
 
+                std::string ovar;
+                ovar = var->getExportName();
+                oops::Log::debug() << "Exporting variable = " << ovar << std::endl;
+
                 exportData->add(pathStr.str(),
                                 var->exportData(dataPair.second),
                                 dataPair.first);

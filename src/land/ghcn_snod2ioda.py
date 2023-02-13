@@ -1,33 +1,26 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2021-2022 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 #
 
-import time, os, sys
+import os
 import argparse
-import netCDF4 as nc
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.parser import parse
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("height", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 obsvars = {
@@ -35,14 +28,13 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'totalSnowDepth': ['nlocs'],
+    'totalSnowDepth': ['Location'],
 }
 
 
@@ -70,9 +62,8 @@ class ghcn(object):
         self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
-        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
-        self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
+        self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm'
+        self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm'
 
         def assignValue(colrowValue, df400):
             if colrowValue == '' or pd.isnull(colrowValue):
@@ -162,14 +153,14 @@ class ghcn(object):
         my_date = datetime.strptime(startdate, "%Y%m%d")
         start_datetime = my_date.strftime('%Y-%m-%d')
         base_datetime = start_datetime + 'T18:00:00Z'
-        AttrData['date_time_string'] = base_datetime
 
         for i in range(len(vals)):
             if vals[i] >= 0.0:
-                errs[i] = 40.0
+                errs[i] = 0.04
+                vals[i] = 0.001*vals[i]
             times[i] = base_datetime
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
@@ -180,8 +171,7 @@ class ghcn(object):
         self.outdata[self.varDict[iodavar]['errKey']] = errs
         self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():

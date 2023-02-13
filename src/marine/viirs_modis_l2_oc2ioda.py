@@ -8,27 +8,19 @@
 #
 
 from __future__ import print_function
-import sys
 import argparse
 import netCDF4 as nc
 from datetime import datetime, timedelta
-import dateutil.parser
 import numpy as np
 from multiprocessing import Pool
 import os
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 output_var_names = [
-    "ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon",
-    "mass_concentration_of_chlorophyll_in_sea_water"]
+    "oceanMassParticulateAsCarbon",
+    "chlorophyllMassConcentration"]
 
 DimDict = {}
 
@@ -39,8 +31,12 @@ VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string"),
+    ("dateTime", "long"),
 ]
+
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
 
 
 def read_input(input_args):
@@ -64,8 +60,9 @@ def read_input(input_args):
     ncd = nc.Dataset(input_file, 'r')
 
     # get global attributes
-    for v in ('platform', 'instrument', 'processing_level'):
-        GlobalAttrs[v] = ncd.getncattr(v)
+    GlobalAttrs['platformCommonName'] = ncd.getncattr('platform')
+    GlobalAttrs['sensor'] = ncd.getncattr('instrument')
+    GlobalAttrs['processingLevel'] = str(ncd.getncattr('processing_level')+' processing')
 
     # get QC flags, and calculate a mask from the non-missing values
     # since L2 OC files are quite empty, need a mask applied immediately
@@ -91,6 +88,7 @@ def read_input(input_args):
     time = (np.repeat(sla.variables['msec'][:].ravel(),
             pixels_per_line).ravel() - sla.variables['msec'][0])/1000.0
     data_in['time'] = time[mask]
+    time_units = basetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # load in all the other data and apply the missing value mask
     input_vars = ('poc', 'chlor_a')
@@ -115,49 +113,36 @@ def read_input(input_args):
     # create a string version of the date for each observation
     dates = []
     for i in range(len(lons)):
-        obs_date = basetime + timedelta(seconds=float(data_in['time'][i]))
-        dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        dates.append(np.int64(data_in['time'][i]))
 
     # allocate space for output depending on which variables are to be saved
     obs_dim = (len(lons))
     obs_data = {}
     if global_config['output_poc']:
-        obs_data[(output_var_names[0], global_config['oval_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['oerr_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[0], global_config['opqc_name'])] = \
-            np.zeros(obs_dim)
+        obs_data[(output_var_names[0], obsValName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], obsErrName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[0], qcName)] = np.zeros(obs_dim)
     if global_config['output_chl']:
-        obs_data[(output_var_names[1], global_config['oval_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['oerr_name'])] = \
-            np.zeros(obs_dim)
-        obs_data[(output_var_names[1], global_config['opqc_name'])] = \
-            np.zeros(obs_dim)
+        obs_data[(output_var_names[1], obsValName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], obsErrName)] = np.zeros(obs_dim)
+        obs_data[(output_var_names[1], qcName)] = np.zeros(obs_dim)
 
     # Add the metadata
-    obs_data[('datetime', 'MetaData')] = np.empty(len(dates), dtype=object)
-    obs_data[('datetime', 'MetaData')][:] = dates
+    obs_data[('dateTime', 'MetaData')] = np.empty(len(dates), dtype=np.int64)
+    obs_data[('dateTime', 'MetaData')][:] = dates
     obs_data[('latitude', 'MetaData')] = lats
     obs_data[('longitude', 'MetaData')] = lons
 
     if global_config['output_poc']:
-        obs_data[output_var_names[0], global_config['oval_name']] = \
-            data_in['poc']
-        obs_data[output_var_names[0], global_config['oerr_name']] = \
-            data_in['poc']*0.0
-        obs_data[output_var_names[0], global_config['opqc_name']] = \
-            data_in['l2_flags']
+        obs_data[output_var_names[0], obsValName] = data_in['poc']
+        obs_data[output_var_names[0], obsErrName] = data_in['poc']*0.0
+        obs_data[output_var_names[0], qcName] = data_in['l2_flags']
     if global_config['output_chl']:
-        obs_data[output_var_names[1], global_config['oval_name']] = \
-            data_in['chlor_a']
-        obs_data[output_var_names[1], global_config['oerr_name']] = \
-            data_in['chlor_a']*0.0
-        obs_data[output_var_names[1], global_config['opqc_name']] = \
-            data_in['l2_flags']
+        obs_data[output_var_names[1], obsValName] = data_in['chlor_a']
+        obs_data[output_var_names[1], obsErrName] = data_in['chlor_a']*0.0
+        obs_data[output_var_names[1], qcName] = data_in['l2_flags']
 
-    return (obs_data, GlobalAttrs)
+    return (obs_data, GlobalAttrs, time_units)
 
 
 def main():
@@ -218,9 +203,6 @@ def main():
     global_config = {}
     global_config['date'] = args.date
     global_config['thin'] = args.thin
-    global_config['oval_name'] = iconv.OvalName()
-    global_config['oerr_name'] = iconv.OerrName()
-    global_config['opqc_name'] = iconv.OqcName()
     global_config['output_poc'] = args.poc
     global_config['output_chl'] = args.chl
 
@@ -235,50 +217,39 @@ def main():
     obs = pool.map(read_input, pool_inputs)
 
     # concatenate the data from the files
-    obs_data, GlobalAttrs = obs[0]
+    obs_data, GlobalAttrs, time_units = obs[0]
     for i in range(1, len(obs)):
         obs_data.update(obs[i][0])
-    # Get the nlocs
-    nlocs = len(obs_data[('longitude', 'MetaData')])
+    # Get the Location
+    Location = len(obs_data[('longitude', 'MetaData')])
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs['date_time_string'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    DimDict['nlocs'] = nlocs
-    GlobalAttrs['nlocs'] = np.int32(DimDict['nlocs'])
+    DimDict['Location'] = Location
+
+    VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since ' + time_units
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
 
     # determine which variables we are going to output
     if args.poc:
-        VarAttrs[output_var_names[0], global_config['oval_name']]['units'] = \
-            'mg ^m-3'
-        VarAttrs[output_var_names[0], global_config['oerr_name']]['units'] = \
-            'mg ^m-3'
-        VarAttrs[output_var_names[0], global_config['opqc_name']]['units'] = \
-            'unitless'
-        VarAttrs[output_var_names[0], global_config['oval_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[0], global_config['oerr_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[0], global_config['opqc_name']]['_FillValue'] = \
-            -32767
-        VarDims["ocean_mass_content_of_particulate_organic_matter_expressed_as_carbon"] = ['nlocs']
+        VarAttrs[output_var_names[0], obsValName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[0], obsErrName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[0], obsValName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[0], obsErrName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[0], qcName]['_FillValue'] = -32767
+        VarDims["oceanMassParticulateAsCarbon"] = ['Location']
 
     if args.chl:
-        VarAttrs[output_var_names[1], global_config['oval_name']]['units'] = \
-            'mg ^m-3'
-        VarAttrs[output_var_names[1], global_config['oerr_name']]['units'] = \
-            'mg ^m-3'
-        VarAttrs[output_var_names[1], global_config['opqc_name']]['units'] = \
-            'unitless'
-        VarAttrs[output_var_names[1], global_config['oval_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[1], global_config['oerr_name']]['_FillValue'] = \
-            -32767.
-        VarAttrs[output_var_names[1], global_config['opqc_name']]['_FillValue'] = \
-            -32767
-        VarDims["mass_concentration_of_chlorophyll_in_sea_water"] = ['nlocs']
+        VarAttrs[output_var_names[1], obsValName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[1], obsErrName]['units'] = 'mg m-3'
+        VarAttrs[output_var_names[1], obsValName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[1], obsErrName]['_FillValue'] = -32767.
+        VarAttrs[output_var_names[1], qcName]['_FillValue'] = -32767
+        VarDims["chlorophyllMassConcentration"] = ['Location']
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

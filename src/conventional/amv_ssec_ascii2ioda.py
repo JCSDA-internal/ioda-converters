@@ -2,7 +2,6 @@
 
 import sys
 import os
-from pathlib import Path
 import time
 from datetime import datetime
 import csv
@@ -10,33 +9,34 @@ import numpy as np
 import netCDF4 as nc
 import logging
 
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 # These modules need the path to lib-python modules
-import ioda_conv_engines as iconv
-import meteo_utils
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+import lib_python.meteo_utils as meteo_utils
+from lib_python.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {'eastward_wind': ['eastward_wind', 'm s-1'],
-           'northward_wind': ['northward_wind', 'm s-1']}
+varDict = {'windEastward': ['windEastward', 'm s-1'],
+           'windNorthward': ['windNorthward', 'm s-1']}
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
-                   ("air_pressure", "float", "Pa"),
+                   ("pressure", "float", "Pa"),
                    ("sensorCentralFrequency", "float", "Hz"),
                    ("sensorZenithAngle", "float", "degrees"),
                    ("windTrackingCorrelation", "float", "1"),
                    ("windHeightAssignMethod", "integer", ""),
-                   ("satelliteID", "integer", "")]
+                   ("satelliteIdentifier", "integer", "")]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
+
+GlobalAttrs = {
+    'converter': os.path.basename(__file__),
+    'ioda_version': 2,
+    'description': 'Satellite atmospheric motion vectors (AMV)',
+    'source': 'SSEC (ftp)'
+}
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -71,10 +71,15 @@ known_freq = {'IR': 2.99792458E+14/10.7,
               'VIS': 2.99792458E+14/0.65}
 
 known_sat = {'HMWR08': 173,
-             'MET11': 70,
+             'HMWR09': 174,
              'MET8': 55,
+             'MET9': 56,
+             'MET10': 57,
+             'MET11': 70,
              'GOES16': 270,
-             'GOES17': 271}
+             'GOES17': 271,
+             'GOES18': 272,
+             'GOES19': 273}
 
 known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'sat': ['satellite', int_missing_value],
@@ -82,7 +87,7 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'hms': ['dateTime', int_missing_value],
              'lat': ['latitude', float_missing_value],
              'lon': ['longitude', float_missing_value],
-             'pre': ['air_pressure', float_missing_value],
+             'pre': ['pressure', float_missing_value],
              'rff': ['sensorZenithAngle', float_missing_value],
              'qi': ['windTrackingCorrelation', float_missing_value],
              'int': ['windHeightAssignMethod', int_missing_value],
@@ -90,7 +95,12 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'dir': ['direction', float_missing_value]}
 
 
-def main(file_names, output_file, datetimeRef):
+def main(args):
+
+    file_names = args.input
+    output_file = args.output
+    dtg = datetime.strptime(args.date, '%Y%m%d%H')
+    datetimeRef = dtg.isoformat() + "Z"
 
     start_time = time.time()
 
@@ -118,12 +128,12 @@ def main(file_names, output_file, datetimeRef):
 
     nlocs = len(data['dateTime'])
     logging.info(f" found a total of {nlocs} observations")
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
 
     varDims = {}
     for key in varDict.keys():
         variable = varDict[key][0]
-        varDims[variable] = ['nlocs']
+        varDims[variable] = ['Location']
 
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
@@ -184,20 +194,15 @@ def read_file(file_name, data):
 
         for row in reader:
             try:
-                year = int(row['day'][0:4])
-                month = int(row['day'][4:6])
-                day = int(row['day'][6:])
-                hour = int(row['hms'][0:2])
-                minute = int(row['hms'][2:])
-                second = 0
-                dtg = datetime(year, month, day, hour, minute, second)
+                dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
                 local_data['dateTime'] = np.append(local_data['dateTime'], time_offset)
-                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon']))
+                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon'])*-1.0)
                 local_data['latitude'] = np.append(local_data['latitude'], float(row['lat']))
 
                 pres = float(row['pre'])*100.
-                local_data['air_pressure'] = np.append(local_data['air_pressure'], pres)
+                local_data['pressure'] = np.append(local_data['pressure'], pres)
+
                 wdir = float(row['dir'])*1.0
                 wspd = float(row['spd'])*1.0
                 if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
@@ -206,8 +211,8 @@ def read_file(file_name, data):
                     uwnd = float_missing_value
                     vwnd = float_missing_value
 
-                local_data['eastward_wind'] = np.append(local_data['eastward_wind'], uwnd)
-                local_data['northward_wind'] = np.append(local_data['northward_wind'], vwnd)
+                local_data['windEastward'] = np.append(local_data['windEastward'], uwnd)
+                local_data['windNorthward'] = np.append(local_data['windNorthward'], vwnd)
 
                 if row['type'] in known_freq.keys():
                     freq = known_freq[row['type']]
@@ -221,8 +226,8 @@ def read_file(file_name, data):
                 else:
                     satid = int_missing_value
                     unk_sat.append(row['sat'])
-                local_data['satelliteID'] = np.append(local_data['satelliteID'], satid)
 
+                local_data['satelliteIdentifier'] = np.append(local_data['satelliteIdentifier'], satid)
                 local_data['sensorZenithAngle'] = np.append(local_data['sensorZenithAngle'], float(row['rff']))
                 local_data['windTrackingCorrelation'] = np.append(local_data['windTrackingCorrelation'], float(row['qi']))
                 local_data['windHeightAssignMethod'] = np.append(local_data['windHeightAssignMethod'], int(row['int']))
@@ -233,8 +238,8 @@ def read_file(file_name, data):
                 keyerr = True
 
                 if (e.args[0] == 'dir') or (e.args[0] == 'spd'):
-                    local_data['eastward_wind'] = np.append(local_data['eastward_wind'], float_missing_value)
-                    local_data['northward_wind'] = np.append(local_data['northward_wind'], float_missing_value)
+                    local_data['windEastward'] = np.append(local_data['windEastward'], float_missing_value)
+                    local_data['windNorthward'] = np.append(local_data['windNorthward'], float_missing_value)
                 else:
                     local_data[known_var[e.args[0]][0]] = np.append(local_data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
 
@@ -267,19 +272,20 @@ if __name__ == "__main__":
     )
 
     required = parser.add_argument_group(title='required arguments')
-    required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
+    required.add_argument('-i', '--input', nargs='+',
                           action='store', default=None, required=True,
                           help='input files')
-    required.add_argument('-o', '--output-file', dest='output_file',
+    required.add_argument('-o', '--output',
                           action='store', default=None, required=True,
                           help='output file')
-    required.add_argument('-d', '--date', dest='datetimeReference',
+    required.add_argument('-d', '--date',
                           action='store',
                           help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
-    parser.set_defaults(datetimeReference=" ")
+    parser.set_defaults(date=" ")
+
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
@@ -295,11 +301,8 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
-    for file_name in args.file_names:
+    for file_name in args.input:
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    dtg = datetime.strptime(args.datetimeReference, '%Y%m%d%H')
-    datetimeRef = dtg.isoformat() + "Z"
-
-    main(args.file_names, args.output_file, datetimeRef)
+    main(args)

@@ -7,7 +7,7 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-import sys
+import os, sys
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
@@ -22,16 +22,23 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 import ioda_conv_engines as iconv
 from orddicts import DefaultOrderedDict
 
+os.environ["TZ"] = "UTC"
 
-vName = "sea_ice_area_fraction"
+vName = "seaIceFraction"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
+icec_FillValue = None
+icec_units = ''
+
 GlobalAttrs = {}
+
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 class iceconc(object):
@@ -48,6 +55,9 @@ class iceconc(object):
         errKey = vName, iconv.OerrName()
         qcKey = vName, iconv.OqcName()
 
+        global icec_FillValue
+        global icec_units
+
         for f in self.filenames:
             print(" Reading file: ", f)
             ncd = nc.Dataset(f, 'r')
@@ -62,7 +72,8 @@ class iceconc(object):
             lat = ncd.variables['Latitude'][:]
             icec = ncd.variables['NASA_Team_2_Ice_Concentration'][:]
             icec_FillValue = ncd.variables['NASA_Team_2_Ice_Concentration']._FillValue
-            icec_units = ncd.variables['NASA_Team_2_Ice_Concentration'].units
+            icec_units = str(ncd.variables['NASA_Team_2_Ice_Concentration'].units)
+            print(f" units: {icec_units}")
             icec_qc = ncd.variables['Flags'][:]
             qc_FillValue = ncd.variables['Flags']._FillValue
             qc_units = ncd.variables['Flags'].units
@@ -71,7 +82,7 @@ class iceconc(object):
             lon = lon[mask]
             lat = lat[mask]
             icec = icec[mask]
-            icec_qc = icec_qc[mask]
+            icec_qc = icec_qc[mask].astype(np.int32)
 
             for i in range(len(lon)):
                 # get date from filename
@@ -80,16 +91,11 @@ class iceconc(object):
                 date1 = datetime.strptime(datestart, "%Y-%m-%dT%H:%M:%S.%fZ")
                 date2 = datetime.strptime(dateend, "%Y-%m-%dT%H:%M:%S.%fZ")
                 avg = date1 + (date2 - date1) * 0.5
-                locKey = lat[i], lon[i], avg.strftime("%Y-%m-%dT%H:%M:%SZ")
+                time_offset = round((avg - epoch).total_seconds())
+                locKey = lat[i], lon[i], time_offset
                 self.data[locKey][valKey] = icec[i] * 0.01
-                self.VarAttrs[locKey][valKey]['_FillValue'] = icec_FillValue
-                self.VarAttrs[locKey][valKey]['units'] = icec_units
                 self.data[locKey][errKey] = 0.1
-                self.VarAttrs[locKey][errKey]['_FillValue'] = icec_FillValue
-                self.VarAttrs[locKey][errKey]['units'] = icec_units
                 self.data[locKey][qcKey] = icec_qc[i]
-                self.VarAttrs[locKey][qcKey]['_FillValue'] = qc_FillValue
-                self.VarAttrs[locKey][qcKey]['units'] = qc_units
             ncd.close()
 
 
@@ -117,7 +123,7 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 #
     VarDims = {
-        'sea_ice_area_fraction': ['nlocs'],
+        vName: ['Location'],
     }
 
     # Read in the Ice concentration
@@ -126,9 +132,14 @@ def main():
     # write them out
     ObsVars, nlocs = iconv.ExtractObsData(icec.data, locationKeyList)
 
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
+    icec.VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
+    icec.VarAttrs[(vName, 'ObsValue')]['units'] = icec_units
+    icec.VarAttrs[(vName, 'ObsValue')]['_FillValue'] = icec_FillValue
+    icec.VarAttrs[(vName, 'ObsError')]['units'] = icec_units
+    icec.VarAttrs[(vName, 'ObsError')]['_FillValue'] = icec_FillValue
     writer.BuildIoda(ObsVars, VarDims, icec.VarAttrs, GlobalAttrs)
 
 

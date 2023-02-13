@@ -8,21 +8,13 @@
 #
 
 from __future__ import print_function
-import sys
 import argparse
 import netCDF4 as nc
-from datetime import datetime, timedelta
-import dateutil.parser
+from datetime import datetime
 import numpy as np
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-from orddicts import DefaultOrderedDict
-import ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
 
 
 class Observation(object):
@@ -74,12 +66,12 @@ class Observation(object):
                 self.data[locKey][qcKey] = qc[i]
 
 
-vName = "sea_ice_area_fraction"
+vName = "seaIceFraction"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 GlobalAttrs = {
@@ -96,7 +88,7 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="EMC ice fraction obs input file(s)",
+        help="EMC sea ice fraction obs input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
@@ -117,20 +109,19 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
     VarDims = {
-        vName: ['nlocs'],
+        vName: ['Location'],
     }
     # Read in
     ice = Observation(args.input, args.thin, fdate)
 
     # write them out
-    ObsVars, nlocs = iconv.ExtractObsData(ice.data, locationKeyList)
-    DimDict = {'nlocs': nlocs}
+    ObsVars, Location = iconv.ExtractObsData(ice.data, locationKeyList)
+    DimDict = {'Location': Location}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[vName, iconv.OvalName()]['units'] = '1'
     VarAttrs[vName, iconv.OerrName()]['units'] = '1'
-    VarAttrs[vName, iconv.OqcName()]['units'] = 'unitless'
 
     writer.BuildIoda(ObsVars, VarDims, VarAttrs, GlobalAttrs)
 

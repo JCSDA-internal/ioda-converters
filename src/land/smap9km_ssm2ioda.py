@@ -1,32 +1,27 @@
 #!/usr/bin/env python3
 #
-# (C) Copyright 2022 EMC/NCEP/NWS/NOAA
+# (C) Copyright 2020-2022 EMC/NCEP/NWS/NOAA
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
-import time, os, sys
+import os
 import argparse
 import netCDF4 as nc
 import numpy as np
-import re
 from datetime import datetime, timedelta
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
+
+os.environ["TZ"] = "UTC"
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("depthBelowSoilSurface", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 obsvars = {
@@ -34,15 +29,20 @@ obsvars = {
 }
 
 AttrData = {
-    'converter': os.path.basename(__file__),
 }
 
 DimDict = {
 }
 
 VarDims = {
-    'soilMoistureVolumetric': ['nlocs'],
+    'soilMoistureVolumetric': ['Location'],
 }
+
+# Usual reference time for these data is off j2000 base
+iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+j2000_string = 'second since 2000-01-01T11:58:55Z'
+j2000_base_date = datetime(2000, 1, 1, 11, 58, 55, 816)
 
 
 class smap(object):
@@ -67,20 +67,18 @@ class smap(object):
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm3 m-3'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm3 m-3'
-            self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
 
         # open input file name
         ncd = nc.Dataset(self.filename, 'r')
         # set and get global attributes
-        self.satellite = "SMAP"
-        self.sensor = "radar and radiometer"
-        AttrData["satellite"] = self.satellite
-        AttrData["sensor"] = self.sensor
+        self.satellite = 789
+        self.sensor = 432
+        AttrData["platform"] = np.array([self.satellite], dtype=np.int32)
+        AttrData["sensor"] = np.array([self.sensor], dtype=np.int32)
 
         data = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'][:]
         vals = data[:].ravel()
         _FillValue = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('_FillValue')
-        self.varAttrs['soilMoistureVolumetric', iconv.OvalName()]['_FillValue'] = _FillValue
         valid_max = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_max')
         valid_min = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture'].getncattr('valid_min')
 
@@ -95,7 +93,7 @@ class smap(object):
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
 
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype=object)
+        times = np.empty_like(vals, dtype=np.int64)
 
         if self.mask:
             with np.errstate(invalid='ignore'):
@@ -113,8 +111,6 @@ class smap(object):
             refsec = refsec[mask]
             times = times[mask]
 
-        # get datetime and reference time 12UTC 1Jan2000
-        base_date = datetime(2000, 1, 1, 12, 0)
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
@@ -127,34 +123,30 @@ class smap(object):
         ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
-            dt = base_date + timedelta(seconds=int(refsec[i]))
-            times[i] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            dt = j2000_base_date + timedelta(seconds=int(refsec[i]))
+            times[i] = round((dt - epoch).total_seconds())
             errs[i] = 0.04
         # add metadata variables
-        self.outdata[('datetime', 'MetaData')] = times
+        self.outdata[('dateTime', 'MetaData')] = times
+        self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
         self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
-        self.outdata[('surfaceFlag', 'MetaData')] = sflg
-        self.varAttrs[('surfaceFlag', 'MetaData')]['units'] = 'unitless'
+        self.outdata[('surfaceQualifier', 'MetaData')] = sflg
+        self.varAttrs[('surfaceQualifier', 'MetaData')]['units'] = 'unitless'
         self.outdata[('vegetationOpacity', 'MetaData')] = vegop
-        self.varAttrs[('vegetationOpacity', 'MetaData')]['units'] = 'unitless'
         self.outdata[('easeRowIndex', 'MetaData')] = erowi
-        self.varAttrs[('easeRowIndex', 'MetaData')]['units'] = '1'
         self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
-        self.varAttrs[('easeColumnIndex', 'MetaData')]['units'] = '1'
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
             self.outdata[self.varDict[iodavar]['errKey']] = errs
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
-        AttrData['date_time_string'] = times[0]
-        DimDict['nlocs'] = len(self.outdata[('datetime', 'MetaData')])
-        AttrData['nlocs'] = np.int32(DimDict['nlocs'])
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
 def main():
