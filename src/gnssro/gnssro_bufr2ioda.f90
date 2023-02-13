@@ -1,7 +1,6 @@
 !!!--------  README --------------------------------------------------------------------
 !  this is a temporary routine to generate netcdf4 file
 !  for jedi/ufo/gnssro/ operator test
-!  IODA VERSION 3
 !  Copyright UCAR 2022
 !  Author: Hailing Zhang
 !  Last upate: Feb 9 2023
