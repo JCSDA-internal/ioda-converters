@@ -13,7 +13,7 @@
 #include <set>
 #include <iostream>
 
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
 #include "QueryParser.h"
 
 namespace Ingester {
@@ -254,7 +254,7 @@ namespace bufr {
         std::shared_ptr<BufrNode> getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path);
 
      private:
-        const DataProviderType& dataProvider_;
+        const DataProviderType dataProvider_;
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
 

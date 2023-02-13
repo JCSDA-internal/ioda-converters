@@ -25,7 +25,7 @@ namespace bufr {
     {
     }
 
-    std::vector<QueryData> NcepQueryPrinter::getQueries(const SubsetVariant& variant)
+    std::shared_ptr<SubsetTable> NcepQueryPrinter::getQueries(const SubsetVariant& variant)
     {
         if (dataProvider_->isFileOpen())
         {
@@ -36,17 +36,15 @@ namespace bufr {
 
         bool finished = false;
 
-        std::vector<QueryData> queryData;
-
         dataProvider_->open();
 
+        std::shared_ptr<SubsetTable> subsetTable;
         auto& dataProvider = dataProvider_;
-        auto processSubset = [&queryData, &finished, &dataProvider]() mutable
+        auto processSubset = [&subsetTable, &finished, &dataProvider]() mutable
         {
-            queryData = SubsetTable(dataProvider).allQueryData();
+            subsetTable = std::make_shared<SubsetTable>(dataProvider);
             finished = true;
         };
-
 
         auto continueProcessing = [&finished]() -> bool
         {
@@ -60,7 +58,7 @@ namespace bufr {
 
         dataProvider_->close();
 
-        return queryData;
+        return subsetTable;
     }
 
     std::set<SubsetVariant> NcepQueryPrinter::getSubsetVariants() const

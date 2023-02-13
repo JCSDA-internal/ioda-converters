@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <sstream>
 
 #include "eckit/exception/Exceptions.h"
@@ -26,7 +27,7 @@ namespace bufr {
     {
     }
 
-    std::vector<QueryData> WmoQueryPrinter::getQueries(const SubsetVariant& variant)
+    std::shared_ptr<SubsetTable> WmoQueryPrinter::getQueries(const SubsetVariant& variant)
     {
         if (dataProvider_->isFileOpen())
         {
@@ -37,29 +38,35 @@ namespace bufr {
 
         dataProvider_->open();
 
-        std::unordered_map<SubsetVariant, std::vector<QueryData>> dataMap;
+        std::unordered_map<SubsetVariant, BufrNodeVector> dataMap;
 
+        std::unordered_set<std::string> knownQueries;
+
+        size_t maxLeaves = 0;
+        std::shared_ptr<SubsetTable> subsetTable;
         auto& dataProvider = dataProvider_;
-        auto processSubset = [&variant, &dataMap, &dataProvider]() mutable
+        auto processSubset = [&variant, &subsetTable, &maxLeaves, &dataProvider]() mutable
         {
             auto subsetVariant = dataProvider->getSubsetVariant();
             if (subsetVariant == variant)
             {
-                dataMap.insert({variant,SubsetTable(dataProvider).allQueryData()});
+                auto thisTable = std::make_shared<SubsetTable>(dataProvider);
+                auto leaves = thisTable->getLeaves();
+
+                // Unfortunately the subsets for a variant are sometimes inconsistent
+                // (have more queries than others) so we need to pick the largest one.
+                if (leaves.size() > maxLeaves)
+                {
+                    maxLeaves = leaves.size();
+                    subsetTable = thisTable;
+                }
             }
         };
 
         dataProvider_->run(QuerySet({variant.subset}), processSubset);
-
-        std::vector<QueryData> queryData;
-        for (const auto& queryObjs : dataMap)
-        {
-            queryData.insert(queryData.end(), queryObjs.second.begin(), queryObjs.second.end());
-        }
-
         dataProvider_->close();
 
-        return queryData;
+        return subsetTable;
     }
 
     std::set<SubsetVariant> WmoQueryPrinter::getSubsetVariants() const

@@ -11,7 +11,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "DataProvider.h"
+#include "DataProvider/DataProvider.h"
 #include "Tokenizer.h"
 #include "QueryParser.h"
 

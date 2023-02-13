@@ -18,16 +18,17 @@
 
 
 namespace Ingester {
-namespace bufr {
-
-    struct NodeData {
+namespace bufr
+{
+    struct NodeData
+    {
         std::vector<double> values;
         std::vector<int> counts;
     };
 
     QueryRunner::QueryRunner(const QuerySet &querySet,
-                 ResultSet &resultSet,
-                 const DataProviderType &dataProvider) :
+                             ResultSet &resultSet,
+                             const DataProviderType &dataProvider) :
         querySet_(querySet),
         resultSet_(resultSet),
         dataProvider_(dataProvider)
@@ -49,26 +50,26 @@ namespace bufr {
         // Check if the target list for this subset is cached
         if (targetCache_.find(dataProvider_->getSubsetVariant()) != targetCache_.end())
         {
-            targets = targetCache_.at(dataProvider_.getSubset());
-            masks = maskCache_.at(dataProvider_.getSubset());
+            targets = targetCache_.at(dataProvider_->getSubsetVariant());
+            masks = maskCache_.at(dataProvider_->getSubsetVariant());
             return;
         }
 
         masks = std::make_shared<__details::ProcessingMasks>();
         {  // Initialize Masks
-        size_t numNodes = dataProvider_->getIsc(dataProvider_->getInode());
+            size_t numNodes = dataProvider_->getIsc(dataProvider_->getInode());
             masks->valueNodeMask.resize(numNodes, false);
             masks->pathNodeMask.resize(numNodes, false);
         }
 
         auto table = SubsetTable(dataProvider_);
 
-        for (const auto& name : querySet_.names())
+        for (const auto &name: querySet_.names())
         {
             // Find the table node for the query. Loop through all the sub-queries until you find one.
             Query foundQuery;
             std::shared_ptr<BufrNode> tableNode;
-            for (const auto& query : querySet_.queriesFor(name))
+            for (const auto &query: querySet_.queriesFor(name))
             {
                 tableNode = table.getNodeForPath(query.path);
                 foundQuery = query;
@@ -93,12 +94,6 @@ namespace bufr {
             }
 
             // Create the target
-                if (seqPath.size() > 1) {
-                    // Skip pure sequences not inside any kind of repeated sequence
-                    auto jumpBackNode = dataProvider_->getInode();
-                    if (nodeIdx < dataProvider_->getIsc(dataProvider_->getInode()))
-                    {
-                        jumpBackNode = dataProvider_->getJmpb(nodeIdx + 1);
             target->name = name;
             target->queryStr = foundQuery.queryStr;
 
@@ -137,20 +132,22 @@ namespace bufr {
         }
 
         // Cache the targets and masks we just found
-        targetCache_.insert({dataProvider_.getSubset(), targets});
-        maskCache_.insert({dataProvider_.getSubset(), masks});
+        targetCache_.insert({dataProvider_->getSubsetVariant(), targets});
+        maskCache_.insert({dataProvider_->getSubsetVariant(), masks});
     }
 
-    bool QueryRunner::isQueryNode(int nodeIdx) const {
+    bool QueryRunner::isQueryNode(int nodeIdx) const
+    {
         return (dataProvider_->getTyp(nodeIdx) == Typ::DelayedRep ||
                 dataProvider_->getTyp(nodeIdx) == Typ::FixedRep ||
                 dataProvider_->getTyp(nodeIdx) == Typ::DelayedRepStacked ||
                 dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary);
     }
 
-    void QueryRunner::collectData(Targets& targets,
-                            std::shared_ptr<__details::ProcessingMasks> masks,
-                            ResultSet &resultSet) const {
+    void QueryRunner::collectData(Targets &targets,
+                                  std::shared_ptr<__details::ProcessingMasks> masks,
+                                  ResultSet &resultSet) const
+    {
         std::vector<int> currentPath;
         std::vector<int> currentPathReturns;
 
@@ -164,15 +161,15 @@ namespace bufr {
         // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all
         // the data a bunch of times)
         auto dataTable = __details::OffsetArray<NodeData>(
-                dataProvider_->getInode(),
-                dataProvider_->getIsc(dataProvider_->getInode()));
+            dataProvider_->getInode(),
+            dataProvider_->getIsc(dataProvider_->getInode()));
 
-        for (size_t dataCursor = 1; dataCursor <= dataProvider_->getNVal(); ++dataCursor) {
+        for (size_t dataCursor = 1; dataCursor <= dataProvider_->getNVal(); ++dataCursor)
+        {
             int nodeIdx = dataProvider_->getInv(dataCursor);
 
             if (masks->valueNodeMask[nodeIdx])
             {
-                auto &values = dataTable[nodeIdx].values;
                 dataTable[nodeIdx].values.push_back(dataProvider_->getVal(dataCursor));
             }
 
@@ -181,7 +178,7 @@ namespace bufr {
             // manually tracing the nested sequences and counting everything manually. Since we have
             // to do it for fixed reps anyways, its easier just to do it for all the squences.
             if (dataProvider_->getJmpb(nodeIdx) > 0 &&
-                masks->pathNodeMask[dataProvider_->getJmpb(nodeIdx)]) {
+                masks->pathNodeMask[dataProvider_->getJmpb(nodeIdx)])
             {
                 const auto typ = dataProvider_->getTyp(nodeIdx);
                 const auto jmpbTyp = dataProvider_->getTyp(dataProvider_->getJmpb(nodeIdx));
@@ -195,22 +192,27 @@ namespace bufr {
                 }
             }
 
-            if (currentPath.size() >= 1) {
+            if (currentPath.size() >= 1)
+            {
                 if (nodeIdx == returnNodeIdx ||
                     dataCursor == dataProvider_->getNVal() ||
-                    (currentPath.size() > 1 && nodeIdx == *(currentPath.end() - 1) + 1)) {
+                    (currentPath.size() > 1 && nodeIdx == *(currentPath.end() - 1) + 1))
+                {
                     // Look for the first path return idx that is not 0 and check if its this node
                     // idx. Exit the sequence if its appropriate. A return idx of 0 indicates a
                     // sequence that occurs as the last element of another sequence.
                     for (int pathIdx = currentPathReturns.size() - 1;
                          pathIdx >= lastNonZeroReturnIdx;
-                         --pathIdx) {
+                         --pathIdx)
+                    {
                         currentPathReturns.pop_back();
                         auto seqNodeIdx = currentPath.back();
                         currentPath.pop_back();
 
                         const auto typSeqNode = dataProvider_->getTyp(seqNodeIdx);
-                        if (typSeqNode == Typ::DelayedRep || typSeqNode == Typ::DelayedRepStacked) {
+                        if (typSeqNode == Typ::DelayedRep ||
+                            typSeqNode == Typ::DelayedRepStacked)
+                        {
                             dataTable[seqNodeIdx + 1].counts.back()--;
                         }
                     }
@@ -220,26 +222,35 @@ namespace bufr {
                 }
             }
 
-            if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx)) {
+            if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
+            {
                 if (dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary &&
-                    dataProvider_->getVal(dataCursor) == 0) {
+                    dataProvider_->getVal(dataCursor) == 0)
+                {
                     // Ignore the node if it is a delayed binary and the value is 0
-                } else {
+                }
+                else
+                {
                     currentPath.push_back(nodeIdx);
                     const auto tmpReturnNodeIdx = dataProvider_->getLink(nodeIdx);
                     currentPathReturns.push_back(tmpReturnNodeIdx);
 
-                    if (tmpReturnNodeIdx != 0) {
+                    if (tmpReturnNodeIdx != 0)
+                    {
                         lastNonZeroReturnIdx = currentPathReturns.size() - 1;
                         returnNodeIdx = tmpReturnNodeIdx;
-                    } else {
+                    }
+                    else
+                    {
                         lastNonZeroReturnIdx = 0;
                         returnNodeIdx = 0;
 
-                        if (dataCursor != dataProvider_->getNVal()) {
-                            for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx) {
+                        if (dataCursor != dataProvider_->getNVal())
+                        {
+                            for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
+                            {
                                 returnNodeIdx = dataProvider_->getLink(
-                                        dataProvider_->getJmpb(currentPath[pathIdx]));
+                                    dataProvider_->getJmpb(currentPath[pathIdx]));
                                 lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx;
 
                                 if (returnNodeIdx != 0) break;
@@ -252,12 +263,14 @@ namespace bufr {
             }
         }
 
-        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++) {
+        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++)
+        {
             const auto &targ = targets.at(targetIdx);
             auto &dataField = dataFrame.fieldAtIdx(targetIdx);
             dataField.target = targ;
 
-            if (targ->nodeIds.size() == 0) {
+            if (targ->nodeIdx == 0)
+            {
                 dataField.data = {MissingValue};
                 dataField.seqCounts = {{1}};
             }
@@ -267,7 +280,8 @@ namespace bufr {
                 dataField.seqCounts[0] = {1};
                 for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
                 {
-                    dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
+                    dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] +
+                                                                 1].counts;
                 }
 
                 dataField.data = dataTable[targ->nodeIdx].values;

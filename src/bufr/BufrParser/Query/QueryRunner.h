@@ -95,16 +95,6 @@ namespace bufr {
         void findTargets(Targets& targets,
                          std::shared_ptr<__details::ProcessingMasks>& masks);
 
-        void old_findTargets(Targets& targets,
-                             std::shared_ptr<__details::ProcessingMasks>& masks);
-
-
-        /// \brief Find the target associated with a specific user provided query string.
-        /// \param[in] targetName The name specified for the target.
-        /// \param[in] query The query string to use.
-        std::shared_ptr<Target> findTarget(const std::string &targetName,
-                                           const Query& query) const;
-
 
         /// \brief Does the node idx correspond to an element you'd find in a query string (repeat
         /// or binary sequence)?

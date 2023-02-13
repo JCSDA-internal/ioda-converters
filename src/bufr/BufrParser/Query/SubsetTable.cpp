@@ -16,7 +16,7 @@
 namespace Ingester {
 namespace bufr {
 
-    SubsetTable::SubsetTable(const DataProvider& dataProvider) :
+    SubsetTable::SubsetTable(const DataProviderType& dataProvider) :
       dataProvider_(dataProvider)
     {
         initialize();
@@ -45,7 +45,7 @@ namespace bufr {
 
         auto nodeIdx = static_cast<int> (parent->nodeIdx + 1);
         auto lastNode = static_cast<int>(dataProvider_->getLink(parent->nodeIdx) - 1);
-        if (lastNode == -1) lastNode = dataProvider_.getIsc(dataProvider_->getInode());
+        if (lastNode == -1) lastNode = dataProvider_->getIsc(dataProvider_->getInode());
 
         auto mnemonicCounts = std::unordered_map<std::string, size_t>();
         auto mnemonicMaps = std::unordered_map<std::string, std::vector<std::shared_ptr<BufrNode>>>();
@@ -79,10 +79,10 @@ namespace bufr {
 
             if (newNode->isLeaf())
             {
-                newNode->typeInfo = dataProvider_.getTypeInfo(newNode->nodeIdx);
+                newNode->typeInfo = dataProvider_->getTypeInfo(newNode->nodeIdx);
             }
 
-            nodeIdx = dataProvider_.getLink(nodeIdx);
+            nodeIdx = dataProvider_->getLink(nodeIdx);
         }
     }
 
