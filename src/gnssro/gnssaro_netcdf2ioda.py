@@ -93,6 +93,7 @@ def main(args):
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'Radians'
+    VarAttrs[('partialBendingAngle', 'ObsValue')]['units'] = 'Radians'
     VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'Radians'
     VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N units'
     VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N units'
@@ -103,9 +104,10 @@ def main(args):
     VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
     VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
     VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
-    VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'gpm'
+    VarAttrs[('geopotentialHeight', 'ObsValue')]['units'] = 'gpm'
 
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[('partialBendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'PreQC')]['_FillValue'] = int_missing_value
     VarAttrs[('atmosphericRefractivity', 'ObsValue')]['_FillValue'] = float_missing_value
@@ -115,7 +117,7 @@ def main(args):
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('geopotentialHeight', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('geopotentialHeight', 'ObsValue')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -188,15 +190,16 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     aircraftId = np.full((nlocations), get_aircraftIdentifier(ifile.attrs['aircraftIdentifer'][0]), dtype=ioda_int_type)
     aircraftIs = np.full((nlocations), get_aircraftInstrument(ifile.attrs['aircraftAROInstrument'][0]), dtype=ioda_int_type)
     tailNumber = np.full((nlocations), get_aircrafttailnumber(ifile.attrs['aircraftTailNumber'][0]), dtype=ioda_int_type)
-    assendingF = np.full((nlocations), get_ascendingflag(ifile.attrs['irs'][0]), dtype=ioda_int_type)
-    procC = np.full((nlocations), 61, dtype=ioda_int_type)  # 61 for IGPP/SIO/UCSD
-    impactP = ifile['Impact_parm'][:]*10e2  # km to m
+    aroAntenna = np.full((nlocations), get_aircraftAntenna(ifile.attrs['aircraftAROAntenna'][0]), dtype=ioda_int_type)
+    assendingF = np.full((nlocations), 0, dtype=ioda_int_type)  # descending: from top to bottom
+    procC = np.full((nlocations), ifile.attrs['center'][0], dtype=ioda_int_type)
+    impactP = ifile['Impact_parm'][:]*10e2
     impactH = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
-    geoidH = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)  # km to m
-    earthR = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)  # km to m
+    geoidH = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
+    earthR = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
     lats = ifile['Lat'][:]
     lons = ifile['Lon'][:]
-    height = ifile['MSL_alt'][:]*10e2  # km to m
+    height = ifile['MSL_alt'][:]*10e2
     hgeop = geometric2geopotential(ifile.attrs['lat'][0], height)
     azim = ifile['Azim']
     bang = ifile['Bend_ang']
@@ -204,11 +207,12 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     refrac = ifile['Ref']
     refrac_err = ifile['Ref_stdv']
     partialBang = ifile['Opt_bend_ang']
-    qc = np.full((nlocations), get_ascendingflag(ifile.attrs['bad'][0]), dtype=ioda_int_type)
+    qc = np.full((nlocations), ifile.attrs['bad'][0], dtype=ioda_int_type)
 
     # Populate the obs_data dictionary
     # value, ob_error, qc
     obs_data[('bendingAngle', "ObsValue")] = assign_values(bang)
+    obs_data[('partialBendingAngle', 'ObsValue')] = assign_values(partialBang)
     obs_data[('bendingAngle', "ObsError")] = assign_values(bang_err)
     obs_data[('bendingAngle', "PreQC")] = assing_value(qc)
 
@@ -232,12 +236,12 @@ def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
     obs_data[('aircraftIdentifier', 'MetaData')] = assign_values(aircraftId)
     obs_data[('aircraftAROInstrument', 'MetaData')] = assign_values(aircraftIs)
     obs_data[('aircraftTailNumber', 'MetaData')] = assign_values(tailNumber)
+    obs_data[('aircraftAROAntenna', 'MetaData')] = assign_values(aroAntenna)
     obs_data[('satelliteAscendingFlag', 'MetaData')] = assign_values(assendingF)
     obs_data[('dataProviderOrigin', 'MetaData')] = assign_values(procC)
     obs_data[('geoidUndulation', 'MetaData')] = assign_values(geoidH)
     obs_data[('earthRadiusCurvature', 'MetaData')] = assign_values(earthR)
-    obs_data[('geopotentialHeight', 'MetaData')] = assign_values(hgeop)
-    obs_data[('partialBendingAngle', 'MetaData')] = assign_values(partialBang)
+    obs_data[('geopotentialHeight', 'ObsValue')] = assign_values(hgeop)
 
     if add_qc:
         good = quality_control(profile_meta_data, height, lats, lons)
@@ -368,37 +372,65 @@ def get_satelliteC(satelliteC):
 def get_aircraftIdentifier(arcftId):
     if arcftId == 'N49T':
         arcftid = 790
-    if arcftId == 'C130':
+    elif  arcftId == 'N42T':
         arcftid = 791
+    elif arcftId == 'N43T':
+        arcftid = 792
+    elif arcftId == 'R44T':
+        arcftid = 793
+    elif arcftId == 'R45T':
+        arcftid = 794
+    elif arcftId == 'R46T':
+        arcftid = 795
+    elif arcftId == 'R47T':
+        arcftid = 796
     return arcftid
 
 
-def get_aircraftInstrument(arcftIs):  # check this id for the intrument
-    if arcftIs == 'AsteRx-U':
+def get_aircraftInstrument(arcftIs):
+    if arcftIs == 'SEPT ASTERXU':
         arcftis = 1
-    else:
+    elif arcftIs == 'SEPT ASTERXSB3':
         arcftis = 2
     return arcftis
 
 
-def get_aircrafttailnumber(tailN):  # check this id for the intrument
-    if tailN == 'N49RF':
-        tailnumber = 1
-    else:
-        tailnumber = 2
+def get_aircrafttailnumber(tailN):
+    if tailN == 'NOAA2':
+        tailnumber = 42
+    if tailN == 'NOAA3':
+        tailnumber = 43
+    if tailN == 'NOAA9':
+        tailnumber = 49
+    elif tailN == 'AF300':
+        tailnumber = 5300
+    elif tailN == 'AF303':
+        tailnumber = 5303
+    elif tailN == 'AF304':
+        tailnumber = 5304
+    elif tailN == 'AF305':
+        tailnumber = 5305
+    elif tailN == 'AF306':
+        tailnumber = 5306
+    elif tailN == 'AF307':
+        tailnumber = 5307
+    elif tailN == 'AF308':
+        tailnumber = 5308
+    elif tailN == 'AF309':
+        tailnumber = 5309
     return tailnumber
 
 
-def get_ascendingflag(ascendingflag):
-    if ascendingflag == -1:  # rising (from bottom to top): ascending
-        ascendingflagid = 1
-    elif ascendingflag == 1:  # setting (from top to bottom): descending
-        ascendingflagid = 0
-    return ascendingflagid
+def get_aircraftAntenna(arcftAn):
+    if arcftAn == 'AERAT1675_381 NONE':
+        arcftan = 1
+    elif arcftAn == 'NOV42G1215A NONE':
+        arcftan = 2
+    return arcftan
 
 
 def cal_impactHeightRO(impactparam, rfict):
-    impactheight = (impactparam - rfict)*10e2  # km to m
+    impactheight = (impactparam - rfict)*10e2
     return impactheight
 
 
