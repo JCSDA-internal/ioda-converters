@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 # combine IODA ObsSpaces together into one ObsSpace to write to a file
 
+import sys
+import netCDF4 as nc
 import numpy as np
 import argparse
 import ioda_obs_space as ios
 from collections import defaultdict, OrderedDict
+import datetime as dt
+from pathlib import Path
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
+if not IODA_CONV_PATH.is_dir():
+    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
+sys.path.append(str(IODA_CONV_PATH.resolve()))
+
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 # these are the variables that can be used to match up locations
 loc_vars = [
@@ -62,9 +71,14 @@ def combine_obsspace(FileList, OutFile, GeoDir):
         iodafile = VarAttrFiles[fullvname]
         obsspace = ios.ObsSpace(iodafile)
         _var = obsspace.Variable(fullvname)
-        VarTypes[fullvname] = _var.numpy_dtype()
+        if fullvname == 'MetaData/dateTime':
+            VarTypes[fullvname] = np.dtype('object')
+        else:
+            VarTypes[fullvname] = _var.numpy_dtype()
         for attr in _var.attrs:
-            if attr not in ['DIMENSION_LIST']:
+            if attr not in ['DIMENSION_LIST', '_FillValue']:
+                if attr in ['units'] and fullvname == 'MetaData/dateTime':
+                    continue
                 gname, vname = fullvname.split('/')
                 varAttrs[(vname, gname)][attr] = _var.read_attr(attr)
         # for now going to assume all are just 'Location' dim
@@ -123,100 +137,88 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                 _var = obsspace.Variable(fullvname)
                 tmpdata = np.array(_var.read_data())
             else:
-#               tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
-                tmpdata = np.full((obsspace.Location), iconv.get_default_fill_val(VarTypes[fullvname]),
+                tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(VarTypes[fullvname]),
                                   dtype=VarTypes[fullvname])
             tmpvardata.append(tmpdata)
         tmpvardata = np.hstack(tmpvardata)
         DataVarData.append(tmpvardata)
     DataVarData = np.vstack(DataVarData)
-    DataVarUnique = np.empty((len(DataVarData), len(idx)))
+    DataVarUnique = np.empty((len(DataVarData), len(idx)), dtype='O')
     for idx2, fullvname in enumerate(AllVarNames):
         gname, vname = fullvname.split('/')
-        fillval = iconv.get_default_fill_val(VarTypes[fullvname])
+        if fullvname == 'MetaData/dateTime':
+            fillval = iconv.get_default_fill_val(VarTypes[fullvname], isDateTime=True)
+        else:
+            fillval = iconv.get_default_fill_val(VarTypes[fullvname])
         mask = ~(DataVarData[idx2, ...] == fillval)
         DataVarUnique[idx2, ...] = fillval
         DataVarUnique[idx2, inv[mask]] = DataVarData[idx2, mask]
     for idx2, fullvname in enumerate(AllVarNames):
         gname, vname = fullvname.split('/')
-        OutData[(vname, gname)] = DataVarUnique[idx2, ...].astype(VarTypes[fullvname])
+        if fullvname == 'MetaData/dateTime':
+            OutData[(vname, gname)] = DataVarUnique[idx2, ...].astype(np.dtype('object'))
+        else:
+            OutData[(vname, gname)] = DataVarUnique[idx2, ...].astype(VarTypes[fullvname])
 
     writer = iconv.IodaWriter(OutFile, LocKeyList, DimDict)
     writer.BuildIoda(OutData, VarDims, varAttrs, globalAttrs)
 
     # now write out combined GeoVaLs file
     if GeoDir:
-        GeoOutData = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        GeoLocKeyList = ['latitude', 'longitude', 'time']
+        # get list of geoval files
         GeoFileList = []
         GeoVarNames2 = []
-        GeoVarTypes = {}
-        GeoVarDims = {}
-        GeoVarFiles = {}
+        GeoVarTypes2 = []
         GeoVarNames3 = []
+        GeoVarTypes3 = []
         GeoVarNames31 = []
+        GeoVarTypes31 = []
         for f in FileList:
             inob = f.split('/')[-1]
             ingeo = inob.replace('obs', 'geoval')
             g = GeoDir+'/'+ingeo
             GeoFileList.append(g)
+        # figure out possible variable names
         for f in GeoFileList:
-            obsspace = ios.ObsSpace(f)
-            nlevs = obsspace.Variable('nlevs').dimsizes[0]
-            ninterfaces = obsspace.Variable('ninterfaces').dimsizes[0]
-            for vname in obsspace.variables:
-                if vname not in ['nlocs', 'nlevs', 'ninterfaces'] and 'maxstrlen' not in vname:
-                    _var = obsspace.Variable(vname)
-                    if len(_var.dimsizes) == 1 and vname not in GeoVarNames2:
-                        GeoVarNames2.append(vname)
-                        GeoVarFiles[vname] = f
-                        GeoVarDims[vname] = ['nlocs']
-                    elif len(_var.dimsizes) == 2:
-                        if _var.dimsizes[1] == nlevs and vname not in GeoVarNames3:
-                            GeoVarNames3.append(vname)
-                            GeoVarFiles[vname] = f
-                            GeoVarDims[vname] = ['nlocs', 'nlevs']
-                        elif _var.dimsizes[1] == ninterfaces and vname not in GeoVarNames31:
-                            GeoVarNames31.append(vname)
-                            GeoVarFiles[vname] = f
-                            GeoVarDims[vname] = ['nlocs', 'ninterfaces']
+            ncf = nc.Dataset(f, mode='r')
+            for key, value in ncf.variables.items():
+                if key not in GeoVarNames2 and key not in GeoVarNames3 and key not in GeoVarNames31:
+                    if value.ndim == 1:
+                        GeoVarNames2.append(key)
+                        GeoVarTypes2.append(ncf.variables[key].dtype)
                     else:
-                        pass
-                    del _var
-            del obsspace
-        # figure out variable type and dims
-        for vname in GeoVarNames2 + GeoVarNames3 + GeoVarNames31:
-            iodafile = GeoVarFiles[vname]
-            obsspace = ios.ObsSpace(iodafile)
-            _var = obsspace.Variable(vname)
-            GeoVarTypes[vname] = _var.numpy_dtype()
-            del _var
-            del obsspace
+                        if 'nlevs' in value.dimensions:
+                            GeoVarNames3.append(key)
+                            GeoVarTypes3.append(ncf.variables[key].dtype)
+                        else:
+                            GeoVarNames31.append(key)
+                            GeoVarTypes31.append(ncf.variables[key].dtype)
 
-        # start to extract geovals from files
+            ncf.close()
         GeoVarData2 = []
         GeoVarIdx2 = []
         GeoVarData3 = []
         GeoVarIdx3 = []
         GeoVarData31 = []
         GeoVarIdx31 = []
-
-        # 2D fields
         for idx2, v in enumerate(GeoVarNames2):
             tmpgeodata = []
             tmpgeoidx = []
             for f in GeoFileList:
-                obsspace = ios.ObsSpace(f)
-                if v in obsspace.variables:
-                    _var = obsspace.Variable(v)
-                    tmpdata = np.array(_var.read_data())
-                    del _var
-                else:
-                    tmpdata = np.full((obsspace.nlocs), iconv.get_default_fill_val(GeoVarTypes[v]),
-                                      dtype=GeoVarTypes[v])
-                tmpgeodata.append(tmpdata)
-                tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
-                del obsspace
+                ncf = nc.Dataset(f, mode='r')
+                try:
+                    tmpdata = np.array(ncf.variables[v])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                except KeyError:
+                    tmpdata = np.ones_like(np.array(ncf.variables['time'])).astype(GeoVarTypes2[idx2])
+                    if GeoVarTypes2[idx2] == np.int32:
+                        tmpdata = tmpdata * nc.default_fillvals['i4']
+                    else:
+                        tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                ncf.close()
             tmpgeodata = np.hstack(tmpgeodata)
             tmpgeoidx = np.hstack(tmpgeoidx)
             GeoVarData2.append(tmpgeodata)
@@ -225,89 +227,97 @@ def combine_obsspace(FileList, OutFile, GeoDir):
         GeoVarIdx2 = np.vstack(GeoVarIdx2)
         GeoVarData2 = np.transpose(GeoVarData2)
         GeoVarIdx2 = np.transpose(GeoVarIdx2)
-        GeoVarUnique2 = np.empty((len(idx), len(GeoVarData2[0])))
-
-        # 3D fields on full levels
+        GeoVarUnique2 = np.ones((len(idx), len(GeoVarData2[0])))*np.abs(nc.default_fillvals['f4'])
         for idx2, v in enumerate(GeoVarNames3):
             tmpgeodata = []
             tmpgeoidx = []
             for f in GeoFileList:
-                obsspace = ios.ObsSpace(f)
-                if v in obsspace.variables:
-                    _var = obsspace.Variable(v)
-                    tmpdata = np.array(_var.read_data())
-                    del _var
-                else:
-                    tmpdata = np.full((obsspace.nlocs, nlevs), iconv.get_default_fill_val(GeoVarTypes[v]),
-                                      dtype=GeoVarTypes[v])
-                tmpgeodata.append(tmpdata)
-                tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
-                del obsspace
+                ncf = nc.Dataset(f, mode='r')
+                try:
+                    tmpdata = np.array(ncf.variables[v])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                except KeyError:
+                    try:
+                        tmpdata = np.ones_like(np.array(ncf.variables['air_pressure'])).astype(GeoVarTypes3[idx2])
+                    except KeyError:
+                        tmpdata = np.ones_like(np.array(ncf.variables['atmosphere_ln_pressure_coordinate'])).astype(GeoVarTypes3[idx2])
+                    if GeoVarTypes3[idx2] == np.int32:
+                        tmpdata = tmpdata * nc.default_fillvals['i4']
+                    else:
+                        tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
             tmpgeodata = np.vstack(tmpgeodata)
             tmpgeoidx = np.vstack(tmpgeoidx)
             GeoVarData3.append(tmpgeodata)
             GeoVarIdx3.append(tmpgeoidx)
         GeoVarData3 = np.dstack(GeoVarData3)
         GeoVarIdx3 = np.dstack(GeoVarIdx3)
-        GeoVarUnique3 = np.empty((len(idx), len(GeoVarData3[0]), len(GeoVarData3[0, 0, :])))
-
-        # 3D fields on half levels
+        GeoVarUnique3 = np.ones((len(idx), len(GeoVarData3[0]), len(GeoVarData3[0, 0, :])))*np.abs(nc.default_fillvals['f4'])
         for idx2, v in enumerate(GeoVarNames31):
             tmpgeodata = []
             tmpgeoidx = []
             for f in GeoFileList:
-                obsspace = ios.ObsSpace(f)
-                if v in obsspace.variables:
-                    _var = obsspace.Variable(v)
-                    tmpdata = np.array(_var.read_data())
-                    del _var
-                else:
-                    tmpdata = np.full((obsspace.nlocs, ninterfaces), iconv.get_default_fill_val(GeoVarTypes[v]),
-                                      dtype=GeoVarTypes[v])
-                tmpgeodata.append(tmpdata)
-                tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
-                del obsspace
+                ncf = nc.Dataset(f, mode='r')
+                try:
+                    tmpdata = np.array(ncf.variables[v])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
+                except KeyError:
+                    try:
+                        tmpdata = np.ones_like(np.array(ncf.variables['air_pressure_levels'])).astype(GeoVarTypes31[idx2])
+                    except KeyError:
+                        tmpdata = np.ones_like(np.array(ncf.variables['atmosphere_ln_pressure_interface_coordinate'])).astype(GeoVarTypes31[idx2])
+                    if GeoVarTypes31[idx2] == np.int32:
+                        tmpdata = tmpdata * nc.default_fillvals['i4']
+                    else:
+                        tmpdata = tmpdata * np.abs(nc.default_fillvals['f4'])
+                    tmpgeodata.append(tmpdata)
+                    tmpgeoidx.append(np.ones_like(tmpdata).astype(int)*int(idx2))
             tmpgeodata = np.vstack(tmpgeodata)
             tmpgeoidx = np.vstack(tmpgeoidx)
             GeoVarData31.append(tmpgeodata)
             GeoVarIdx31.append(tmpgeoidx)
         GeoVarData31 = np.dstack(GeoVarData31)
         GeoVarIdx31 = np.dstack(GeoVarIdx31)
-        GeoVarUnique31 = np.empty((len(idx), len(GeoVarData31[0]), len(GeoVarData31[0, 0, :])))
-
-        # arrange the output data
+        GeoVarUnique31 = np.ones((len(idx), len(GeoVarData31[0]), len(GeoVarData31[0, 0, :])))*np.abs(nc.default_fillvals['f4'])
         for ii, jj in np.ndindex(GeoVarData2.shape):
             j = GeoVarIdx2[ii, jj]
             i = inv[ii]
-            if GeoVarData2[ii, jj] != iconv.get_default_fill_val('float32'):
+            if GeoVarData2[ii, jj] != nc.default_fillvals['i4'] and GeoVarData2[ii, jj] != np.abs(nc.default_fillvals['f4']):
                 GeoVarUnique2[i, j] = GeoVarData2[ii, jj]
-        for idx2, v in enumerate(GeoVarNames2):
-            GeoOutData[v] = GeoVarUnique2[:, idx2].astype(GeoVarTypes[v])
         for ii, kk, jj in np.ndindex(GeoVarData3.shape):
             j = GeoVarIdx3[ii, kk, jj]
             i = inv[ii]
-            if GeoVarData3[ii, kk, jj] != iconv.get_default_fill_val('float32'):
+            if GeoVarData3[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData3[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
                 GeoVarUnique3[i, kk, j] = GeoVarData3[ii, kk, jj]
-        for idx2, v in enumerate(GeoVarNames3):
-            GeoOutData[v] = GeoVarUnique3[..., idx2].astype(GeoVarTypes[v])
         for ii, kk, jj in np.ndindex(GeoVarData31.shape):
             j = GeoVarIdx31[ii, kk, jj]
             i = inv[ii]
-            if GeoVarData31[ii, kk, jj] != iconv.get_default_fill_val('float32'):
+            if GeoVarData31[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData31[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
                 GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
-        for idx2, v in enumerate(GeoVarNames31):
-            GeoOutData[v] = GeoVarUnique31[..., idx2].astype(GeoVarTypes[v])
-
-        # write out the file
-        GeoDimDict = {}
-        GeoGlobalAttrs = {}
-        GeoDimDict['nlocs'] = len(GeoVarUnique2)
-        GeoDimDict['nlevs'] = nlevs
-        GeoDimDict['ninterfaces'] = ninterfaces
         OutGeoFile = OutFile.replace('obs', 'geoval')
-        GeoGlobalAttrs['input_files'] = ';'.join(GeoFileList)
-        gwriter = iconv.IodaWriter(OutGeoFile, GeoLocKeyList, GeoDimDict)
-        gwriter.BuildIoda(GeoOutData, GeoVarDims, {}, GeoGlobalAttrs, geovals=True)
+        of = nc.Dataset(OutGeoFile, 'w', format='NETCDF4')
+        of.setncattr("date_time", ncf.getncattr("date_time"))
+        nlocs = len(GeoVarUnique3)
+        nlevs = len(GeoVarUnique3[0])
+        ninterfaces = len(GeoVarUnique31[0])
+        of.createDimension("nlocs", nlocs)
+        of.createDimension("nlevs", nlevs)
+        of.createDimension("ninterfaces", ninterfaces)
+        for ivar, var in enumerate(GeoVarNames2):
+            dims = ("nlocs", )
+            var_out = of.createVariable(var, GeoVarTypes2[ivar], dims)
+            var_out[...] = GeoVarUnique2[..., ivar]
+        for ivar, var in enumerate(GeoVarNames3):
+            dims = ("nlocs", "nlevs")
+            var_out = of.createVariable(var, GeoVarTypes3[ivar], dims)
+            var_out[...] = GeoVarUnique3[..., ivar]
+        for ivar, var in enumerate(GeoVarNames31):
+            dims = ("nlocs", "ninterfaces")
+            var_out = of.createVariable(var, GeoVarTypes31[ivar], dims)
+            var_out[...] = GeoVarUnique31[..., ivar]
 
 
 ######################################################
