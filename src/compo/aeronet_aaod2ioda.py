@@ -20,7 +20,7 @@
 
 import numpy as np
 import netCDF4 as nc
-import os, argparse
+import argparse
 import pandas as pd
 from datetime import datetime
 from builtins import str
