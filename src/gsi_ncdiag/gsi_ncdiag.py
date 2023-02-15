@@ -164,6 +164,11 @@ all_LocKeyList = {
     # end AMV QC
     # SEVIRI cloud_fraction
     'Cloud_Frac': ('cloud_frac','float'),
+    'cloudAmountInSegment': ('cloudAmount','float'),
+    'amountSegmentCloudFree': ('cloudFree','float'),
+    'SSMIS_ScatteringIndexPred9': ('SIPred9', 'float'),
+    'SSMIS_ScatteringIndexPred10': ('SIPred10', 'float'),
+    'SSMIS_ScatteringIndexPred11': ('SIPred11', 'float'),
 }
 
 checkuv = {
@@ -200,6 +205,8 @@ gsi_add_vars_allsky = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'TotalBias': 'GsiObsBias',     #emily
+    'Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
@@ -235,7 +242,9 @@ gsi_add_vars = {
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
+    'TotalBias': 'GsiObsBias',     #emily
     'Inverse_Observation_Error': 'GsiFinalObsError',
+    'Input_Observation_Error': 'GsiInputObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
@@ -255,6 +264,17 @@ gsi_add_qcvars = {
     'Inverse_Observation_Error_after_clddet': 'GsiObsError_after_clddet',
     'Inverse_Observation_Error_after_nsstret': 'GsiObsError_after_nsstret',
     'Inverse_Observation_Error_after_jsfcchk': 'GsiObsError_after_jsfcchk',
+    'Inverse_Observation_Error_after_grossroutinechk_ocean': 'GsiObsError_after_grossroutinechk_ocean',
+    'Inverse_Observation_Error_after_grossroutinechk': 'GsiObsError_after_grossroutinechk',
+    'Inverse_Observation_Error_after_grosschk': 'GsiObsError_after_grosschk',
+    'Inverse_Observation_Error_after_topochk': 'GsiObsError_after_topochk',
+    'Inverse_Observation_Error_after_sfcchk': 'GsiObsError_after_sfcchk',
+    'Inverse_Observation_Error_after_ch2chk': 'GsiObsError_after_ch2chk',
+    'Inverse_Observation_Error_after_scatteringchk': 'GsiObsError_after_scatteringchk',
+    'Inverse_Observation_Error_after_sfcterrianchk': 'GsiObsError_after_sfcterrianchk',
+    'Inverse_Observation_Error_after_stdchk': 'GsiObsError_after_stdchk',
+    'Inverse_Observation_Error_after_stdadj': 'GsiObsError_after_stdadj',
+    'Inverse_Observation_Error_after_clrfracchk': 'GsiObsError_after_clrfracchk',
 }
 
 gsi_add_vars_uv = {
@@ -884,8 +904,8 @@ class Conv(BaseGSI):
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
                     # below is a temporary hack until missing ObsError support returns to IODA/UFO
-                    #obserr[mask] = 1e8
-                    obserr[:] = self.FLOAT_FILL
+                    # obserr[mask] = 1e8
+                    # obserr[:] = self.FLOAT_FILL   # emily: commented out this line so obserr stores the initial obs error
                     # obserr[mask] = self.FLOAT_FILL
                     # obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
@@ -1353,7 +1373,7 @@ class Radiances(BaseGSI):
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
             obserr = np.repeat(self.var('error_variance').astype(np.float32), nlocs, axis=0)
-        obserr[:] = self.FLOAT_FILL
+#       obserr[:] = self.FLOAT_FILL  # emily: commented this line so the obserr stores initial obs error
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1725,7 +1745,7 @@ class Ozone(BaseGSI):
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
-        obserr[:] = self.FLOAT_FILL
+#       obserr[:] = self.FLOAT_FILL  # emily: commented out this line so obserr stores the initial obs error
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
