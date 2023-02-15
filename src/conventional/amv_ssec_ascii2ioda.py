@@ -87,7 +87,7 @@ known_var = {'type': ['sensorCentralFrequency', float_missing_value],
              'hms': ['dateTime', int_missing_value],
              'lat': ['latitude', float_missing_value],
              'lon': ['longitude', float_missing_value],
-             'pre': ['air_pressure', float_missing_value],
+             'pre': ['pressure', float_missing_value],
              'rff': ['sensorZenithAngle', float_missing_value],
              'qi': ['windTrackingCorrelation', float_missing_value],
              'int': ['windHeightAssignMethod', int_missing_value],
@@ -197,7 +197,7 @@ def read_file(file_name, data):
                 dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
                 time_offset = np.int64(round((dtg - epoch).total_seconds()))
                 local_data['dateTime'] = np.append(local_data['dateTime'], time_offset)
-                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon']))
+                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon'])*-1.0)
                 local_data['latitude'] = np.append(local_data['latitude'], float(row['lat']))
 
                 pres = float(row['pre'])*100.

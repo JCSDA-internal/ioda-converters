@@ -157,10 +157,11 @@ class tropomi(object):
                     self.outdata[varname_ak] = np.concatenate(
                         (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]))
                     varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    if varname == 'no2':
+                    if self.varname == 'no2':
                         pr_data = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
-                    elif varname == 'co':
-                        pr_data = preslv[..., k].ravel()[flg]
+                    elif self.varname == 'co':
+                        rev_k = nlevs-k-1
+                        pr_data = preslv[..., rev_k].ravel()[flg]
                     self.outdata[varname_pr] = np.concatenate((self.outdata[varname_pr], pr_data))
                 varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
                 if self.varname == 'no2':
