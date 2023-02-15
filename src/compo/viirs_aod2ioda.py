@@ -30,16 +30,16 @@ locationKeyList = [
 ]
 
 obsvars = ["aerosolOpticalDepth"]
-
+channels = [4]
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
-AttrData['ioda_object_type'] = 'AOD at 550nm'
+AttrData['ioda_object_type'] = 'AOD'
 
 # A dictionary of variable dimensions.
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location']}
+VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -152,7 +152,7 @@ class AOD(object):
                     self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
-
+        DimDict['Channel'] = np.array(channels)
 
 def main():
 
