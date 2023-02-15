@@ -50,16 +50,16 @@ locationKeyList = [
 def main(args):
 
     args.date = datetime.strptime(args.date, '%Y%m%d%H')
-    qc = args.qualitycontrol
 
     # read / process files in parallel
     pool_input_01 = args.input
-    pool_input_02 = np.arange(len(args.input))+args.recordnumber
+    pool_input_02 = np.arange(len(args.input))
     pool_inputs = [[i, j] for i, j in zip(pool_input_01, pool_input_02)]
     obs_data = {}
+
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc)):
+        for file_obs_data in executor.map(read_input, pool_inputs):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -81,7 +81,9 @@ def main(args):
     # pass parameters to the IODA writer
     VarDims = {
         'bendingAngle': ['Location'],
-        'atmosphericRefractivity': ['Location']
+        'atmosphericRefractivity': ['Location'],
+        'partialBendingAngle': ['Location'],
+        'geopotentialHeight': ['Location']
     }
 
     # write them out
@@ -123,7 +125,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_file_and_record, add_qc):
+def read_input(input_file):
     """
     Reads/converts input file(s)
 
@@ -136,27 +138,63 @@ def read_input(input_file_and_record, add_qc):
 
         A dictionary holding the variables (obs_data) needed by the IODA writer
     """
-    input_file = input_file_and_record[0]
-    record_number = input_file_and_record[1]
+    input_file = input_file[0]
     print("Reading: %s" % input_file)
     ifile = h5.File(input_file, 'r')
 
-    profile_meta_data = get_meta_data(ifile)
-
-    obs_data = get_obs_data(f, profile_meta_data, add_qc, record_number=record_number)
+    obs_data = get_obs_data(ifile)
 
     return obs_data
 
 
-def get_meta_data(ifile):
+def get_obs_data(ifile):
 
-    # get some of the global attributes that we are interested in
-    meta_data_keys = def_meta_data()
+    # allocate space for output depending on which variables are to be saved
+    obs_data = {}
 
-    # these are the MetaData we are interested in
-    profile_meta_data = {}
-    for k, v in meta_data_keys.items():
-        profile_meta_data[k] = codes_get(ifile, v)
+    # get data from file
+    file_stamp = str(ifile.attrs['fileStamp'])[2:-1].split('.')
+    nlocations = ifile['MSL_alt'].size
+    height = ifile['MSL_alt'][:]*10e2
+
+    # Populate the obs_data dictionary
+    # value, ob_error, qualityFlag
+    obs_data[('bendingAngle', "ObsValue")] = ifile['Bend_ang'][:]
+    obs_data[('partialBendingAngle', 'ObsValue')] = ifile['Opt_bend_ang'][:]
+    obs_data[('bendingAngle', "ObsError")] = ifile['Bend_ang_stdv'][:]
+    obs_data[('bendingAngle', "PreQC")] = np.full((nlocations), int(str(ifile.attrs['bad'])[2:-1]), dtype=ioda_int_type)
+
+    # value, ob_error, qc
+    obs_data[('atmosphericRefractivity', "ObsValue")] = ifile['Ref'][:]
+    obs_data[('atmosphericRefractivity', "ObsError")] = ifile['Ref_stdv'][:]
+    obs_data[('atmosphericRefractivity', "PreQC")] = np.full((nlocations), int(str(ifile.attrs['bad'])[2:-1]), dtype=ioda_int_type)
+
+    obs_data[('geopotentialHeight', 'ObsValue')] = geometric2geopotential(ifile.attrs['lat'][0], height)
+
+    # metadata
+    obs_data[('latitude', 'MetaData')] = ifile['Lat'][:]
+    obs_data[('longitude', 'MetaData')] = ifile['Lon'][:]
+    obs_data[('dateTime', 'MetaData')] = np.full((nlocations), get_dateTime(ifile), dtype=object)
+    obs_data[('impactParameterRO', 'MetaData')] = ifile['Impact_parm'][:]*10e2
+    obs_data[('impactHeightRO', 'MetaData')] = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
+    obs_data[('height', 'MetaData')] = height
+    obs_data[('sensorAzimuthAngle', 'MetaData')] = ifile['Azim'][:]
+    obs_data[('sequenceNumber', 'MetaData')] = ifile['record_number'][:]
+    obs_data[('satelliteConstellationRO', 'MetaData')] = np.full((nlocations), get_satelliteC(file_stamp[5][0]), dtype=ioda_int_type)
+    obs_data[('satelliteTransmitterId', 'MetaData')] = np.full((nlocations), int(file_stamp[5][1:3]), dtype=ioda_int_type)
+    obs_data[('aircraftIdentifier', 'MetaData')] = np.full((nlocations), get_aircraftIdentifier(file_stamp[0]), dtype=ioda_int_type)
+    obs_data[('aircraftAROInstrument', 'MetaData')] = np.full((nlocations), get_aircraftInstrument(str(ifile.attrs['aircraftAROInstrument'])[2:-1]), dtype=ioda_int_type)
+    obs_data[('aircraftTailNumber', 'MetaData')] = np.full((nlocations), get_aircrafttailnumber(str(ifile.attrs['aircraftTailNumber'])[2:-1]), dtype=ioda_int_type)
+    obs_data[('aircraftAROAntenna', 'MetaData')] = np.full((nlocations), -999, dtype=ioda_int_type) # get_aircraftAntenna(str(ifile.attrs['aircraftAROAntenna'])[2:-1])
+    obs_data[('satelliteAscendingFlag', 'MetaData')] = np.full((nlocations), 0, dtype=ioda_int_type)  # descending: from top to bottom
+    obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), 61, dtype=ioda_int_type)  # 61 for IGPP/SIO/UCSD (provisionally)
+    obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
+    obs_data[('earthRadiusCurvature', 'MetaData')] = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
+
+    return obs_data
+
+
+def get_dateTime(ifile):
 
     # do the hokey time structure to time structure
     year = ifile.attrs['year'][0]
@@ -171,124 +209,32 @@ def get_meta_data(ifile):
     dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:%.2iZ" % (year, month, day, hour, minute, second))
     this_datetime = datetime.strptime(dtg, "%Y-%m-%dT%H:%M:%SZ")
     time_offset = round((this_datetime - epoch).total_seconds())
-    profile_meta_data['dateTime'] = np.int64(time_offset)
+    dateTime = np.int64(time_offset)
 
-    return profile_meta_data
-
-
-def get_obs_data(ifile, profile_meta_data, add_qc, record_number=None):
-
-    # allocate space for output depending on which variables are to be saved
-    obs_data = {}
-
-    # get data from file
-    file_stamp = ifile['fileStamp'].split('.')
-    nlocations = ifile['MSL_alt'].size
-    recordN = ifile['record_number']
-    satelliteC = np.full((nlocations), get_satelliteC(file_stamp[5][0]), dtype=ioda_int_type)
-    satelliteT = np.full((nlocations), int(file_stamp[5][1:3]), dtype=ioda_int_type)
-    aircraftId = np.full((nlocations), get_aircraftIdentifier(ifile.attrs['aircraftIdentifer'][0]), dtype=ioda_int_type)
-    aircraftIs = np.full((nlocations), get_aircraftInstrument(ifile.attrs['aircraftAROInstrument'][0]), dtype=ioda_int_type)
-    tailNumber = np.full((nlocations), get_aircrafttailnumber(ifile.attrs['aircraftTailNumber'][0]), dtype=ioda_int_type)
-    aroAntenna = np.full((nlocations), get_aircraftAntenna(ifile.attrs['aircraftAROAntenna'][0]), dtype=ioda_int_type)
-    assendingF = np.full((nlocations), 0, dtype=ioda_int_type)  # descending: from top to bottom
-    procC = np.full((nlocations), ifile.attrs['center'][0], dtype=ioda_int_type)
-    impactP = ifile['Impact_parm'][:]*10e2
-    impactH = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
-    geoidH = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
-    earthR = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
-    lats = ifile['Lat'][:]
-    lons = ifile['Lon'][:]
-    height = ifile['MSL_alt'][:]*10e2
-    hgeop = geometric2geopotential(ifile.attrs['lat'][0], height)
-    azim = ifile['Azim']
-    bang = ifile['Bend_ang']
-    bang_err = ifile['Bend_ang_stdv']
-    refrac = ifile['Ref']
-    refrac_err = ifile['Ref_stdv']
-    partialBang = ifile['Opt_bend_ang']
-    qc = np.full((nlocations), ifile.attrs['bad'][0], dtype=ioda_int_type)
-
-    # Populate the obs_data dictionary
-    # value, ob_error, qc
-    obs_data[('bendingAngle', "ObsValue")] = assign_values(bang)
-    obs_data[('partialBendingAngle', 'ObsValue')] = assign_values(partialBang)
-    obs_data[('bendingAngle', "ObsError")] = assign_values(bang_err)
-    obs_data[('bendingAngle', "PreQC")] = assing_value(qc)
-
-    # value, ob_error, qc
-    obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
-    obs_data[('atmosphericRefractivity', "ObsError")] = assign_values(refrac_err)
-    obs_data[('atmosphericRefractivity', "PreQC")] = assing_value(qc)
-
-    meta_data_types = def_meta_types()
-
-    # metadata
-    obs_data[('latitude', 'MetaData')] = assign_values(lats)
-    obs_data[('longitude', 'MetaData')] = assign_values(lons)
-    obs_data[('impactParameterRO', 'MetaData')] = assign_values(impactP)
-    obs_data[('impactHeightRO', 'MetaData')] = assign_values(impactH)
-    obs_data[('height', 'MetaData')] = assign_values(height)
-    obs_data[('sensorAzimuthAngle', 'MetaData')] = assign_values(azim)
-    obs_data[('sequenceNumber', 'MetaData')] = assign_values(recordN)
-    obs_data[('satelliteConstellationRO', 'MetaData')] = assign_values(satelliteC)
-    obs_data[('satelliteTransmitterId', 'MetaData')] = assign_values(satelliteT)
-    obs_data[('aircraftIdentifier', 'MetaData')] = assign_values(aircraftId)
-    obs_data[('aircraftAROInstrument', 'MetaData')] = assign_values(aircraftIs)
-    obs_data[('aircraftTailNumber', 'MetaData')] = assign_values(tailNumber)
-    obs_data[('aircraftAROAntenna', 'MetaData')] = assign_values(aroAntenna)
-    obs_data[('satelliteAscendingFlag', 'MetaData')] = assign_values(assendingF)
-    obs_data[('dataProviderOrigin', 'MetaData')] = assign_values(procC)
-    obs_data[('geoidUndulation', 'MetaData')] = assign_values(geoidH)
-    obs_data[('earthRadiusCurvature', 'MetaData')] = assign_values(earthR)
-    obs_data[('geopotentialHeight', 'ObsValue')] = assign_values(hgeop)
-
-    if add_qc:
-        good = quality_control(profile_meta_data, height, lats, lons)
-        if len(lats[good]) == 0:
-            # exit if entire profile is missing
-            return{}
-        for k in obs_data.keys():
-            obs_data[k] = obs_data[k][good]
-
-    return obs_data
-
-
-def quality_control(profile_meta_data, heights, lats, lons):
-
-    try:
-        good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
-    except ValueError:
-        print(f" quality control on impact_height and lat/lon did not pass")
-        print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
-        return []
-
-    # bad radius or
-    # large geoid undulation
-    if (profile_meta_data['earthRadiusCurvature'] > 6450000.) or (profile_meta_data['earthRadiusCurvature'] < 6250000.) or \
-       (abs(profile_meta_data['geoidUndulation']) > 200):
-        good = []
-        # bad profile
-    return good
+    return dateTime
 
 
 def def_meta_data():
 
     meta_data_keys = {
-        "satelliteAscendingFlag": 'radioOccultationDataQualityFlags',
-        "geoidUndulation": 'geoidUndulation',
+        #"qualityFlags": 'radioOccultationDataQualityFlags',
+        "latitude": 'latitude',
+        "longitude": 'longitude',
+        "impactParameterRO": 'impactParameterRO',
+        "impactHeightRO": 'impactHeightRO',
+        "height": 'geometricAltitude',
         "sensorAzimuthAngle": 'bearingOrAzimuth',
-        # "timeIncrement": 'timeIncrement',
-        "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
-        "dataProviderOrigin": 'centre',
-        "satelliteTransmitterId": 'platformTransmitterIdNumber',
-        "satelliteConstellationRO": 'satelliteClassification',
-        "aircraftIdentifier": 'aircraftIdentifier',
-        "aircraftAROInstrument": 'AROInstrument',
-        "aircraftTailNumber": 'aircraftTailNumber',
-        "geopotentialHeight": 'geopotentialHeight',
-        "sensorAzimuthAngle": 'sensorAzimuthAngle',
         "sequenceNumber": 'recordNumber',
+        "satelliteConstellationRO": 'satelliteClassification',
+        "satelliteTransmitterId": 'platformTransmitterIdNumber',
+        "aircraftIdentifier": 'aircraftIdentifier',
+        "aircraftAROInstrument": 'aircraftAROInstrument',
+        "aircraftTailNumber": 'aircraftAROTailNumber',
+        "aircraftAROAntenna": 'aircraftAROSAntenna',
+        "satelliteAscendingFlag": 'originalOccultationAscendingDescendingFlag',
+        "dataProviderOrigin": 'centre',
+        "geoidUndulation": 'geoidUndulation',
+        "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
     }
 
     return meta_data_keys
@@ -303,35 +249,22 @@ def def_meta_types():
         'impactParameterRO': 'float',
         'impactHeightRO': 'float',
         'height': 'float',
-        "qualityFlags": 'integer',
-        "geoidUndulation": 'float',
-        "earthRadiusCurvature": 'float',
-        "dataProviderOrigin": 'string',
-        "satelliteTransmitterId": 'integer',
+        "sensorAzimuthAngle": 'float',
+        "sequenceNumber": 'integer',
         "satelliteConstellationRO": 'integer',
+        "satelliteTransmitterId": 'integer',
         "aircraftIdentifier": 'integer',
         "aircraftAROInstrument": 'integer',
         "aircraftTailNumber": 'integer',
-        "geopotentialHeight": 'float',
-        "sensorAzimuthAngle": 'float',
-        "sequenceNumber": 'integer',
-
+        "aircraftAROAntenna": 'integer',
+        "satelliteAscendingFlag": 'integer',
+        "dataProviderOrigin": 'integer',
+        "geoidUndulation": 'float',
+        "earthRadiusCurvature": 'float',
+        #"qualityFlags": 'integer',
     }
 
     return meta_data_types
-
-
-def get_normalized_bit(value, bit_index):
-    return(value >> bit_index) & 1
-
-
-def assign_values(data):
-    if data.dtype == float:
-        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
-        return np.array(data, dtype=ioda_float_type)
-    elif data.dtype == int:
-        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
-        return np.array(data, dtype=ioda_int_type)
 
 
 def concat_obs_dict(obs_data, append_obs_data):
@@ -388,7 +321,7 @@ def get_aircraftIdentifier(arcftId):
 
 
 def get_aircraftInstrument(arcftIs):
-    if arcftIs == 'SEPT ASTERXU':
+    if arcftIs == 'AsteRx-U':  #SEPT ASTERXU
         arcftis = 1
     elif arcftIs == 'SEPT ASTERXSB3':
         arcftis = 2
@@ -400,7 +333,7 @@ def get_aircrafttailnumber(tailN):
         tailnumber = 42
     if tailN == 'NOAA3':
         tailnumber = 43
-    if tailN == 'NOAA9':
+    if tailN == 'N49RF': #'NOAA9':
         tailnumber = 49
     elif tailN == 'AF300':
         tailnumber = 5300
@@ -539,15 +472,6 @@ if __name__ == "__main__":
         help='multiple threads can be used to load input files in parallel.'
              '(default: %(default)s)',
         type=int, default=1)
-    optional.add_argument(
-        '-r', '--recordnumber',
-        help=' optional record number to associate with profile ',
-        type=int, default=1)
-
-    optional.add_argument(
-        '-q', '--qualitycontrol',
-        help='turn on quality control georeality checks',
-        default=False, action='store_true', required=False)
 
     args = parser.parse_args()
     main(args)
