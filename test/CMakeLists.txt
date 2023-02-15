@@ -8,6 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
+  testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
   testinput/amsr2_icec_l2p.nc
   testinput/gds2_sst_l2p.nc
@@ -39,6 +40,7 @@ list( APPEND test_input
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
+  testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
@@ -74,9 +76,11 @@ list( APPEND test_input
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
+  testinput/tropomi_co.nc
 )
 
 list( APPEND test_output
+  testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
   testoutput/gds2_sst_l2p.nc
@@ -110,6 +114,7 @@ list( APPEND test_output
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
+  testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
@@ -143,6 +148,7 @@ list( APPEND test_output
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
+  testoutput/tropomi_co_total.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -185,6 +191,9 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.adpsfc.prepbufr
     testinput/gdas.t06z.adpsfc.tm00.bufr_d
     testinput/gdas.t12z.adpsfc.tm00.bufr_d
+    testinput/gdas.t12z.aircar.tm00.bufr_d
+    testinput/gdas.t12z.aircft.tm00.bufr_d
+    testinput/gdas.t12z.acft_profiles.prepbufr
     testinput/bufr_ncep_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
     testinput/bufr_ncep_1bamua.yaml
@@ -193,6 +202,10 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_esamua.yaml
     testinput/bufr_ncep_esmhs.yaml
     testinput/bufr_ncep_satwind_avhrr.yaml
+    testinput/bufr_ncep_aircar.yaml
+    testinput/bufr_ncep_aircft_AMDAR103.yaml
+    testinput/bufr_ncep_aircft_noAMDAR103.yaml
+    testinput/bufr_ncep_prepbufr_aircft.yaml
     testinput/bufr_read_wmo_radiosonde.yaml
     testinput/bufr_satwnd_old_format.yaml
     testinput/bufr_satwnd_new_format.yaml
@@ -206,7 +219,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
     testinput/airep_wmo_multi.bufr
-    testinput/amdar_wmoBUFR2ioda.yaml
+    testinput/bufr_wmo_amdar_multi.yaml
     testinput/amdar_wmo_multi.bufr
     testinput/gnssro_wmoBUFR2ioda.yaml
     testinput/gnssro_2020-306-2358C2E6.bufr
@@ -229,6 +242,10 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.aircft.tm00.bufr_d
     testinput/bufr_specific_subsets_by_query.yaml
     testinput/bufr_specifying_subsets.yaml
+    testinput/rap.t06z.lgycld.tm00.bufr_d
+    testinput/rap.t06z.adpsfc.prepbufr.tm00
+    testinput/bufr_ncep_lgycld_rrfs.yaml
+    testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml
   )
 
   list( APPEND test_output
@@ -245,6 +262,10 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t12z.adpsfc.prepbufr.nc
     testoutput/gdas.t12z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
+    testoutput/gdas.t12z.aircar.tm00.nc
+    testoutput/gdas.t12z.aircft_AMDAR103.tm00.nc
+    testoutput/gdas.t12z.aircft_noAMDAR103.tm00.nc
+    testoutput/gdas.t12z.acft_profiles.prepbufr.nc
     testoutput/gdas.t00z.sevcsr.tm00.nc
     testoutput/bufr_read_2_dim_blocks.nc
     testoutput/bufr_read_wmo_radiosonde.nc
@@ -258,7 +279,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/adpupa_prepbufr.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
-    testoutput/amdar_wmo_multi.nc
+    testoutput/bufr_wmo_amdar_multi.nc
     testoutput/amdar_wmo_multi2.nc
     testoutput/gnssro_2020-306-2358C2E6.nc
     testoutput/buoy_wmo_multi.nc
@@ -273,6 +294,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/satwind_Insat.nc
     testoutput/vadwinds_wmo_multi.nc
     testoutput/bufr_specifying_subsets.nc
+    testoutput/rrfs.t06z.lgycld.bufr.nc
+    testoutput/rrfs.t06z.adpsfc.prepbufr.nc
   )
 endif()
 
@@ -403,6 +426,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
                           -o testrun/nsidc_l4_icec.nc
                           -d 2019010112"
                           nsidc_l4_icec.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4icethk
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/copernicus_l4icethk2ioda.py
+                          -i testinput/icethk_coperl4.nc
+                          -o testrun/icethk_coperl4.nc -d 2019011500"
+                          icethk_coperl4.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsr2_l2icec
                   TYPE    SCRIPT
@@ -783,7 +817,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
                           -i testinput/2021081612_RAOB_small.txt
                           -o testrun/2021081612_sonde_small.nc
                           -t share/raob_stations_small.json
-                          -y 2021 -m 8 --netcdf"
+                          --date 2021-08-16T12:00:00Z --netcdf"
                           2021081612_sonde_small.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
@@ -999,9 +1033,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_total
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2_total.nc
+                          -v no2
                           -c total"
                           tropomi_no2_total.nc ${IODA_CONV_COMP_TOL_ZERO})
 
@@ -1011,9 +1046,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_nc2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
                           -i testinput/tropomi_no2.nc
                           -o testrun/tropomi_no2_tropo.nc
+                          -v no2
                           -c tropo"
                           tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL})
 
@@ -1028,6 +1064,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                           -o testrun/mopitt_co.nc
                           -r 2021092903 2021092921"
                   mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropess_co_nc2ioda.py
+                          -i testinput/tropess_cris_co.nc
+                          -o testrun/tropess_cris_co.nc
+                          --levels 0 4 8 12"
+                  tropess_cris_co.nc "5e-2")
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                   TYPE    SCRIPT
@@ -1067,6 +1115,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aaod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                   TYPE    SCRIPT
+		  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
@@ -1075,6 +1124,20 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -s testinput/airnow_sites.dat
                           -o testrun/airnow_2020081306.nc"
                           airnow_2020081306.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  	ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tropomi_no2_co_nc2ioda.py
+                          -i testinput/tropomi_co.nc
+                          -o testrun/tropomi_co_total.nc
+                          -v co
+                          -q 0.5
+                          -c total"
+	                   tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
@@ -1204,6 +1267,42 @@ if(iodaconv_bufr_ENABLED)
                             gdas.t06z.adpsfc_snow.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_aircar2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircar.yaml"
+                            gdas.t12z.aircar.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_aircft_noamdar2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircft_noAMDAR103.yaml"
+                            gdas.t12z.aircft_noAMDAR103.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_aircft_amdar2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_aircft_AMDAR103.yaml"
+                            gdas.t12z.aircft_AMDAR103.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
+                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_read_2_dim_blocks
                     TYPE    SCRIPT
@@ -1322,6 +1421,24 @@ if(iodaconv_bufr_ENABLED)
                     bufr_specifying_subsets.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_lgycld
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_lgycld_rrfs.yaml"
+                    rrfs.t06z.lgycld.bufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpsfc_cloud
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml"
+                    rrfs.t06z.adpsfc.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
 #  FIXME: Greg Thompson
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
@@ -1341,14 +1458,14 @@ if(iodaconv_bufr_ENABLED)
 #                    airep_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
 #
-#  ecbuild_add_test( TARGET  test_iodaconv_bufr_amdar_wmo_bufr
-#                    TYPE    SCRIPT
-#                    COMMAND bash
-#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                            netcdf
-#                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/amdar_wmoBUFR2ioda.yaml"
-#                    amdar_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
-#                    DEPENDS bufr2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_wmo_amdar_multi
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_wmo_amdar_multi.yaml"
+                    bufr_wmo_amdar_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
 #
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_gnssro_wmo_bufr
 #                    TYPE    SCRIPT
@@ -1472,9 +1589,11 @@ if( iodaconv_eccodes_ENABLED )
                    COMMAND bash
                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                            netcdf
-                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/decode_bufr_LDM_raob.py
+                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_bufr2ioda.py
                            -i testinput/sonde_wmo_double.bufr
-                           -o testrun/wmo_raob_double.nc4"
+                           -o testrun/wmo_raob_double.nc4
+			   -t share/raob_stations_small.json
+			   --date 2021-02-01T12:00:00Z"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================

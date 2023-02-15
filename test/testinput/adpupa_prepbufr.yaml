@@ -129,17 +129,17 @@ observations:
           path: "*/PRSLEVEL"
         - name: Depth
           path: "*/SST_INFO/SSTEVENT"
-        - name: cloudseq_Dim
+        - name: CloudSequence
           path: "*/CLOUDSEQ"
-        - name: pevent_Dim
+        - name: PressureEvent
           path: "*/PRSLEVEL/P___INFO/P__EVENT"
-        - name: qevent_Dim
+        - name: HumidityEvent
           path: "*/PRSLEVEL/Q___INFO/Q__EVENT"
-        - name: tevent_Dim
+        - name: TemperatureEvent
           path: "*/PRSLEVEL/T___INFO/T__EVENT"
-        - name: zevent_Dim
+        - name: HeightEvent
           path: "*/PRSLEVEL/Z___INFO/Z__EVENT"
-        - name: wevent_Dim
+        - name: WindEvent
           path: "*/PRSLEVEL/W___INFO/W__EVENT"
 
       variables:
@@ -178,7 +178,7 @@ observations:
           longName: "Station elevation"
           units: "m"
 
-        - name: "MetaData/air_pressure"
+        - name: "MetaData/pressure"
           coordinates: "longitude latitude Level"
           source: variables/pressure
           longName: "Pressure"
@@ -190,43 +190,43 @@ observations:
           longName: "Height"
           units: "m"
 
-        - name: "ObsValue/air_temperature"
+        - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude Level"
           source: variables/airTemperature
           longName: "Temperature"
           units: "K"
 
-        - name: "ObsValue/dewpoint_temperature"
+        - name: "ObsValue/dewPointTemperature"
           coordinates: "longitude latitude Level"
           source: variables/dewpointTemperature
           longName: "Dewpoint temperature"
           units: "K"
 
-        - name: "ObsValue/virtual_temperature"
+        - name: "ObsValue/virtualTemperature"
           coordinates: "longitude latitude Level"
           source: variables/virtualTemperature
           longName: "Virtual temperature"
           units: "K"
 
-        - name: "ObsValue/specific_humidity"
+        - name: "ObsValue/specificHumidity"
           coordinates: "longitude latitude Level"
           source: variables/specificHumidity
           longName: "Specific humidity"
           units: "kg kg-1"
 
-        - name: "ObsValue/eastward_wind"
+        - name: "ObsValue/windEastward"
           coordinates: "longitude latitude Level"
           source: variables/windEastward
           longName: "Eastward wind"
           units: "m s-1"
 
-        - name: "ObsValue/northward_wind"
+        - name: "ObsValue/windNorthward"
           coordinates: "longitude latitude Level"
           source: variables/windNorthward
           longName: "Northward wind"
           units: "m s-1"
 
-        - name: "ObsValue/sea_surface_temperature"
+        - name: "ObsValue/seaSurfaceTemperature"
           coordinates: "longitude latitude Depth"
           source: variables/seaSurfaceTemperature
           longName: "Sea surface temperature"
@@ -243,27 +243,27 @@ observations:
           source: variables/heightQM
           longName: "Height quality marker"
 
-        - name: "QualityMarker/air_temperature"
+        - name: "QualityMarker/airTemperature"
           coordinates: "longitude latitude Level"
           source: variables/airTemperatureQM
           longName: "Temperature quality marker"
 
-        - name: "QualityMarker/specific_humidity"
+        - name: "QualityMarker/specificHumidity"
           coordinates: "longitude latitude Level"
           source: variables/specificHumidityQM
           longName: "Moisture quality marker"
 
-        - name: "QualityMarker/eastward_wind"
+        - name: "QualityMarker/windEastward"
           coordinates: "longitude latitude Level"
           source: variables/windQM
           longName: "U-Component of wind quality marker"
 
-        - name: "QualityMarker/northward_wind"
+        - name: "QualityMarker/windNorthward"
           coordinates: "longitude latitude Level"
           source: variables/windQM
           longName: "V-Component of wind quality marker"
 
-        - name: "QualityMarker/sea_surface_temperature"
+        - name: "QualityMarker/seaSurfaceTemperature"
           coordinates: "longitude latitude Depth"
           source: variables/seaSurfaceTemperatureQM
           longName: "Sea surface temperature quality marker"
@@ -275,61 +275,61 @@ observations:
           longName: "Pressure ObsError"
           units: "Pa"
 
-        - name: "ObsError/air_temperature"
+        - name: "ObsError/airTemperature"
           coordinates: "longitude latitude Level"
           source: variables/airTemperatureError
           longName: "Temperature ObsError"
           units: "K"
 
-        - name: "ObsError/relative_humidity"
+        - name: "ObsError/relativeHumidity"
           coordinates: "longitude latitude Level"
           source: variables/relativeHumidityError
           longName: "Relative Humidity ObsError"
           units: "1"
 
-        - name: "ObsError/eastward_wind"
+        - name: "ObsError/windEastward"
           coordinates: "longitude latitude Level"
           source: variables/windError
           longName: "Easthward wind ObsError"
           units: "m s-1"
 
-        - name: "ObsError/northward_wind"
+        - name: "ObsError/windNorthward"
           coordinates: "longitude latitude Level"
           source: variables/windError
           longName: "Northward wind ObsError"
           units: "m s-1"
 
-        - name: "ObsError/sea_surface_temperature"
+        - name: "ObsError/seaSurfaceTemperature"
           coordinates: "longitude latitude Depth"
           source: variables/seaSurfaceTemperatureError
           longName: "Sea surface temperature ObsError"
           units: "K"
 
 # Extra Info
-        - name: "MetaData/verticalSignificance"
-          coordinates: "longitude latitude"
-          source: variables/verticalSignificance
-          longName: "Vertical Significance"
+        # - name: "MetaData/verticalSignificance"
+        #   coordinates: "longitude latitude"
+        #   source: variables/verticalSignificance
+        #   longName: "Vertical Significance"
 
-        - name: "MetaData/prepbufrType"
-          coordinates: "longitude latitude"
-          source: variables/prepbufrReportType
-          longName: "Prepbufr report type"
+        # - name: "MetaData/prepbufrType"
+        #   coordinates: "longitude latitude"
+        #   source: variables/prepbufrReportType
+        #   longName: "Prepbufr report type"
 
-        - name: "MetaData/dumpReportType"
-          coordinates: "longitude latitude"
-          source: variables/dumpReportType
-          longName: "Data dump report type"
+        # - name: "MetaData/dumpReportType"
+        #   coordinates: "longitude latitude"
+        #   source: variables/dumpReportType
+        #   longName: "Data dump report type"
 
-        - name: "MetaData/prepbufrDataLvlCat"
-          coordinates: "longitude latitude Level"
-          source: variables/prepbufrDataLvlCat
-          longName: "Prepbufr data level category"
+        # - name: "MetaData/prepbufrDataLvlCat"
+        #   coordinates: "longitude latitude Level"
+        #   source: variables/prepbufrDataLvlCat
+        #   longName: "Prepbufr data level category"
 
-        - name: "MetaData/waterTemperatureMethod"
-          coordinates: "longitude latitude"
-          source: variables/waterTemperatureMethod
-          longName: "Method of sea surface temperature measurement"
+        # - name: "MetaData/waterTemperatureMethod"
+        #   coordinates: "longitude latitude"
+        #   source: variables/waterTemperatureMethod
+        #   longName: "Method of sea surface temperature measurement"
 
         - name: "ObsValue/presentWeather"
           coordinates: "longitude latitude"
@@ -340,6 +340,7 @@ observations:
           coordinates: "longitude latitude"
           source: variables/cloudAmount
           longName: "Cloud Amount"
+          units: "1"
 
         - name: "ObsValue/cloudType"
           coordinates: "longitude latitude"
@@ -358,7 +359,7 @@ observations:
           longName: "Cloud Cover"
           units: "1"
 
-        - name: "MetaData/depthBelowSeaSurface"
+        - name: "MetaData/depthBelowWaterSurface"
           coordinates: "longitude latitude Depth"
           source: variables/depthBelowSeaSurface
           longName: "Depth below sea surface"

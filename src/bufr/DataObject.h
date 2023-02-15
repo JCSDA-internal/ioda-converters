@@ -99,6 +99,8 @@ namespace Ingester
         std::string getPath() const { return query_; }
         std::vector<std::string> getDimPaths() const { return dimPaths_; }
 
+        bool hasSamePath(const std::shared_ptr<DataObjectBase>& dataObject);
+
         /// \brief Print the data object to a output stream.
         virtual void print(std::ostream &out) const = 0;
 
@@ -109,6 +111,10 @@ namespace Ingester
         /// \brief Get the data at the location as an float.
         /// \return Float data.
         virtual float getAsFloat(const Location& loc) const = 0;
+
+        /// \brief Is the element at the location the missing value.
+        /// \return bool data.
+        virtual bool isMissing(const Location& loc) const = 0;
 
         /// \brief Get the data at the index as an int.
         /// \return Int data.
@@ -338,6 +344,14 @@ namespace Ingester
         /// \return String data.
         std::string getAsString(const Location& loc) const final { return _getAsString(loc); }
 
+        /// \brief Is the element at the location the missing value.
+        /// \param loc The coordinate for the data point (ex: if data 2d then loc {2,4} gets data
+        ///            at that coordinate).
+        /// \return bool data.
+        bool isMissing(const Location& loc) const final
+        {
+            return get(loc) == missingValue();
+        }
 
         /// \brief Get the data at the index into the internal 1d array as a int. This function
         ///        gives you direct access to the internal data and doesn't account for dimensional

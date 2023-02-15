@@ -26,11 +26,11 @@ from orddicts import DefaultOrderedDict
 
 
 vName = {
-    'chlor_a': "mass_concentration_of_chlorophyll_in_sea_water",
+    'chlor_a': "chlorophyllMassConcentration",
 }
 
 VarDims = {
-    vName['chlor_a']: ['nlocs']
+    vName['chlor_a']: ['Location']
 }
 
 DimDict = {}
@@ -38,10 +38,14 @@ DimDict = {}
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {}
+
+# Prepare dateTime info
+iso8601_string = '1970-01-01T00:00:00Z'
+epoch = datetime.fromisoformat(iso8601_string[:-1])
 
 
 class OCL3(object):
@@ -66,11 +70,17 @@ class OCL3(object):
         lons = lons.ravel()[mask]
         lats = lats.ravel()[mask]
 
-        # get global attributes
-        for v in ('platform', 'instrument', 'processing_version',
-                  'time_coverage_start'):
-            GlobalAttrs[v] = ncd.getncattr(v)
+        GlobalAttrs['platform'] = ncd.getncattr('platform')
+        GlobalAttrs['sensor'] = ncd.getncattr('instrument')
+        GlobalAttrs['description'] = str(ncd.getncattr('processing_level')+' processing')
+
+        timevar = ncd.getncattr('time_coverage_start')
+        this_time = datetime.fromisoformat(timevar[:19])
+        obstime = np.int64(round((this_time - epoch).total_seconds()))
+
         ncd.close()
+
+        # Convert obstime from string to seconds since blah blah
 
         valKey = vName['chlor_a'], iconv.OvalName()
         errKey = vName['chlor_a'], iconv.OerrName()
@@ -81,7 +91,10 @@ class OCL3(object):
         self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['_FillValue'] = -32767
         self.VarAttrs[vName['chlor_a'], iconv.OvalName()]['units'] = 'mg m^-3'
         self.VarAttrs[vName['chlor_a'], iconv.OerrName()]['units'] = 'mg m^-3'
-        self.VarAttrs[vName['chlor_a'], iconv.OqcName()]['units'] = 'unitless'
+
+        self.VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since ' + iso8601_string
+        self.VarAttrs[('latitude', 'MetaData')]['units'] = 'degrees_north'
+        self.VarAttrs[('longitude', 'MetaData')]['units'] = 'degrees_east'
 
         # apply thinning mask
         if self.thin > 0.0:
@@ -91,7 +104,7 @@ class OCL3(object):
             vals = vals[mask_thin]
 
         for i in range(len(vals)):
-            locKey = lats[i], lons[i], GlobalAttrs['time_coverage_start']
+            locKey = lats[i], lons[i], obstime
             self.data[locKey][valKey] = vals[i]
             self.data[locKey][errKey] = vals[i] * 0.25
             self.data[locKey][qcKey] = 0
@@ -123,12 +136,12 @@ def main():
     chl = OCL3(args.input, fdate, args.thin)
 
     # Extract the obs data
-    ObsVars, nlocs = iconv.ExtractObsData(chl.data, locationKeyList)
+    ObsVars, Location = iconv.ExtractObsData(chl.data, locationKeyList)
 
     # Set Attributes
     GlobalAttrs['thinning'] = args.thin
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    DimDict['nlocs'] = nlocs
+    DimDict['Location'] = Location
 
     # Set up the writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

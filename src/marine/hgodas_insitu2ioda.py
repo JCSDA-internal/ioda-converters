@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2019-2021 UCAR
+# (C) Copyright 2019-2022 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -10,8 +10,9 @@
 from __future__ import print_function
 import sys
 import argparse
+import numpy as np
 import netCDF4 as nc
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
@@ -25,15 +26,15 @@ from orddicts import DefaultOrderedDict
 
 vName = {
     #          var name,            units
-    2210: ["sea_water_temperature", "C"],
-    2220: ["sea_water_salinity", "PSU"]
+    2210: ["waterTemperature", "K"],
+    2220: ["salinity", "1"]
 }
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("depth", "float"),
-    ("datetime", "string")
+    ("depthBelowWaterSurface", "float"),
+    ("dateTime", "long")
 ]
 
 GlobalAttrs = {
@@ -50,6 +51,11 @@ class Profile(object):
         self.VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.floatDefFillVal = iconv.get_default_fill_val('float32')
         self.intDefFillVal = iconv.get_default_fill_val('int32')
+
+        self.VarAttrs['depthBelowWaterSurface', 'MetaData']['units'] = 'm'
+        self.VarAttrs['latitude', 'MetaData']['units'] = 'degrees_north'
+        self.VarAttrs['longitude', 'MetaData']['units'] = 'degrees_east'
+        self.VarAttrs['dateTime', 'MetaData']['units'] = 'seconds since 1970-01-01T00:00:00Z'
         self._read()
 
     def _read(self):
@@ -65,9 +71,7 @@ class Profile(object):
         qcs = ncd.variables['qc'][:]
         ncd.close()
 
-        base_date = datetime(1970, 1, 1) + timedelta(seconds=int(time[0]))
-
-        self.VarAttrs['depth', 'MetaData']['units'] = 'm'
+        dt = np.full(len(qcs), 0, dtype=np.int64)
         for i in range(len(hrs)):
             # there shouldn't be any bad obs, but just in case remove them all
             if qcs[i] != 0:
@@ -80,15 +84,16 @@ class Profile(object):
             self.VarAttrs[varName, iconv.OqcName()]['_FillValue'] = self.intDefFillVal
             self.VarAttrs[varName, iconv.OvalName()]['units'] = varUnits
             self.VarAttrs[varName, iconv.OerrName()]['units'] = varUnits
-            self.VarAttrs[varName, iconv.OqcName()]['units'] = 'unitless'
 
             valKey = varName, iconv.OvalName()
             errKey = varName, iconv.OerrName()
             qcKey = varName, iconv.OqcName()
 
-            dt = base_date + timedelta(hours=float(hrs[i]))
-            locKey = lats[i], lons[i], dpth[i], dt.strftime(
-                "%Y-%m-%dT%H:%M:%SZ")
+            if obid[i] == 2210:
+                vals[i] = vals[i] + 273.15
+
+            dt[i] = time[0] + hrs[i]*3600
+            locKey = lats[i], lons[i], dpth[i], dt[i]
             self.data[locKey][valKey] = vals[i]
             self.data[locKey][errKey] = errs[i]
             self.data[locKey][qcKey] = qcs[i]
@@ -119,18 +124,17 @@ def main():
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
     VarDims = {
-        'sea_water_temperature': ['nlocs'],
-        'sea_water_salinity': ['nlocs'],
+        'watertemperature': ['Location'],
+        'salinity': ['Location'],
     }
 
     # Read in the profiles
     prof = Profile(args.input, fdate)
 
     # write them out
-    GlobalAttrs['date_time_string'] = fdate.strftime("%Y-%m-%dT%H:%M:%SZ")
     ObsVars, nlocs = iconv.ExtractObsData(prof.data, locationKeyList)
 
-    DimDict = {'nlocs': nlocs}
+    DimDict = {'Location': nlocs}
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     writer.BuildIoda(ObsVars, VarDims, prof.VarAttrs, GlobalAttrs)
 
