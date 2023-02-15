@@ -5,7 +5,7 @@ Python code to ingest netCDF4 or HDF5 COWVR data
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 import glob
 # from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -16,6 +16,8 @@ import time
 
 import h5py
 import numpy as np
+
+import pdb
 
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
@@ -173,8 +175,7 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteId', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['obs_time_utc']), dtype='int64')
-    obs_data[('datetime', metaDataName)] = np.array(get_string_dtg(f['GeolocationAndFlags']['time_string']), dtype=object)
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
     qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
     solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
     support_arm_flag = f['CalibratedSceneTemperatures']['support_arm_flag']
@@ -243,23 +244,9 @@ def get_WMO_satellite_ID(filename):
     return WMO_sat_ID
 
 
-def get_epoch_time(obs_time_utc):
+def get_epoch_time(obs_time_iso):
 
-    # ugh this does not seem generic
-    year = obs_time_utc[:, :, 0].flatten()
-    month = obs_time_utc[:, :, 1].flatten()
-    day = obs_time_utc[:, :, 2].flatten()
-    hour = obs_time_utc[:, :, 3].flatten()
-    minute = obs_time_utc[:, :, 4].flatten()
-    second = obs_time_utc[:, :, 5].flatten()
-
-    # following examples here could be written better potentially
-    iterables = [year, month, day, hour, minute, second]
-    # ensure the year is plausible (65535 appears in some data) if not set to 01Jan1900 (revisit)
-    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5]) \
-        if adate[0] < 2200 else datetime(2200,1,1,0,0,0) \
-        for adate in zip(*iterables)]
-
+    this_datetime = [datetime.fromisoformat(adate.decode("utf-8")[:-5]) for adate in obs_time_iso]
     time_offset = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
 
     return time_offset
