@@ -111,7 +111,6 @@ namespace bufr
             {
                 path[pathIdx].queryComponent = foundQuery.path[nodeIdx - 1];
                 path[pathIdx].branch = nodes[nodeIdx]->nodeIdx;
-                std::cout << " * " << path[pathIdx].branch << "-" << dataProvider_->getTag(path[pathIdx].branch) << std::endl;
                 path[pathIdx].setType(nodes[nodeIdx]->type);
                 pathIdx++;
             }
