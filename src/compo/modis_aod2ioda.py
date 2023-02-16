@@ -130,9 +130,7 @@ class AOD(object):
             sen_zen = sen_zen[pos_index]
             unc_land = unc_land[pos_index] * 1E-3  # see scale factor
             modis_time = modis_time[pos_index]
-            obs_time = np.full(len(modis_time), long_missing_value, dtype=np.int64)
-            for n, t in enumerate(modis_time):
-                obs_time[n] = round(t)
+            obs_time = np.full(len(modis_time), np.around(modis_time), dtype=np.int64)
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
