@@ -69,9 +69,20 @@ namespace bufr {
             mnemonicMaps[mnemonic].push_back(newNode);
             newNode->copyIdx = mnemonicMaps[mnemonic].size();
 
+            if (parent->isQueryPathParentNode() && parent->hasDuplicates)
+            {
+                newNode->copyIdx = parent->copyIdx;
+            }
+
             if (newNode->copyIdx > 1)
             {
+                // We need to fix the initial nodes to indicate that they are duplicates
                 mnemonicMaps[mnemonic][0]->hasDuplicates = true;
+                if (mnemonicMaps[mnemonic][0]->isQueryPathParentNode())
+                {
+                    mnemonicMaps[mnemonic][0]->children[0]->hasDuplicates = true;
+                }
+
                 newNode->hasDuplicates = true;
             }
 

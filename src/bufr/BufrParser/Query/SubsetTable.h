@@ -266,6 +266,8 @@ namespace bufr {
         void processNode(std::shared_ptr<BufrNode>& parent);
 
     };
+
+    typedef std::shared_ptr<SubsetTable> SubsetTableType;
 }  // namespace bufr
 }  // namespace Ingester
 

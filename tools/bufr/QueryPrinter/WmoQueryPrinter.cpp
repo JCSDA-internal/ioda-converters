@@ -27,12 +27,12 @@ namespace bufr {
     {
     }
 
-    std::shared_ptr<SubsetTable> WmoQueryPrinter::getQueries(const SubsetVariant& variant)
+    SubsetTableType WmoQueryPrinter::getTable(const SubsetVariant& variant)
     {
         if (dataProvider_->isFileOpen())
         {
             std::ostringstream errStr;
-            errStr << "Tried to call QueryPrinter::getQueries, but the file is already open!";
+            errStr << "Tried to call QueryPrinter::getTable, but the file is already open!";
             throw eckit::BadParameter(errStr.str());
         }
 
