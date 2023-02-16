@@ -69,7 +69,7 @@ def main(args):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
-    GlobalAttrs['date_time_string'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
     GlobalAttrs['date_time'] = date_time_int32.item()
     GlobalAttrs['converter'] = os.path.basename(__file__)
