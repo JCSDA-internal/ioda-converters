@@ -106,9 +106,7 @@ class AOD(object):
             errs = ncd.variables['Residual'][:].ravel()
             qcpath = ncd.variables['QCPath'][:].ravel()
             qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
-            obs_time = np.empty_like(qcall, dtype=object)
-            for t in range(len(obs_time)):
-                obs_time[t] = base_datetime
+            obs_time = np.full(np.shape(qcall), base_datetime, dtype=object)
             if self.mask == "maskout":
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
