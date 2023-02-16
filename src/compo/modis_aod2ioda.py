@@ -43,7 +43,8 @@ AttrData = {
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location']}
+VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
+channels = [4]
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -151,6 +152,7 @@ class AOD(object):
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']], np.array(QC_flag, dtype=np.int32))
 
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
+        DimDict['Channel'] = np.array(channels)
 
 
 def main():
