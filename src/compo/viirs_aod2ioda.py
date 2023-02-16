@@ -152,6 +152,7 @@ class AOD(object):
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = np.array(channels)
 
+
 def main():
 
     # get command line arguments
