@@ -31,6 +31,8 @@ list(APPEND _ingester_srcs
 #>>emily
   BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.h
   BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.cpp
+  BufrParser/Exports/Variables/SensorScanAngleVariable.h
+  BufrParser/Exports/Variables/SensorScanAngleVariable.cpp
 #<<emily
   BufrParser/Exports/Variables/AircraftAltitudeVariable.h
   BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp
