@@ -156,6 +156,13 @@ def get_obs_data(ifile):
     file_stamp = str(ifile.attrs['fileStamp'])[2:-1].split('.')
     nlocations = ifile['MSL_alt'].size
     height = ifile['MSL_alt'][:]*10e2
+    satelliteC = get_satelliteC(file_stamp[5][0])
+    aircraftId = get_aircraftIdentifier(file_stamp[0])
+    aircraftIs = get_aircraftInstrument(str(ifile.attrs['aircraftAROInstrument'])[2:-1])
+    aircraftTn = get_aircrafttailnumber(str(ifile.attrs['aircraftTailNumber'])[2:-1])
+    aircraftAn = get_aircraftAntenna(str(ifile.attrs['aircraftAROAntenna'])[2:-1])
+    ascFlag = 0  # descending: from top to bottom
+    centerP = get_centerId(str(ifile.attrs['center'])[2:-1])
 
     # Populate the obs_data dictionary
     # value, ob_error, qualityFlag
@@ -180,14 +187,14 @@ def get_obs_data(ifile):
     obs_data[('height', 'MetaData')] = height
     obs_data[('sensorAzimuthAngle', 'MetaData')] = ifile['Azim'][:]
     obs_data[('sequenceNumber', 'MetaData')] = ifile['record_number'][:]
-    obs_data[('satelliteConstellationRO', 'MetaData')] = np.full((nlocations), get_satelliteC(file_stamp[5][0]), dtype=ioda_int_type)
+    obs_data[('satelliteConstellationRO', 'MetaData')] = np.full((nlocations), satelliteC, dtype=ioda_int_type)
     obs_data[('satelliteTransmitterId', 'MetaData')] = np.full((nlocations), int(file_stamp[5][1:3]), dtype=ioda_int_type)
-    obs_data[('aircraftIdentifier', 'MetaData')] = np.full((nlocations), get_aircraftIdentifier(file_stamp[0]), dtype=ioda_int_type)
-    obs_data[('aircraftAROInstrument', 'MetaData')] = np.full((nlocations), get_aircraftInstrument(str(ifile.attrs['aircraftAROInstrument'])[2:-1]), dtype=ioda_int_type)
-    obs_data[('aircraftTailNumber', 'MetaData')] = np.full((nlocations), get_aircrafttailnumber(str(ifile.attrs['aircraftTailNumber'])[2:-1]), dtype=ioda_int_type)
-    obs_data[('aircraftAROAntenna', 'MetaData')] = np.full((nlocations), -999, dtype=ioda_int_type) # get_aircraftAntenna(str(ifile.attrs['aircraftAROAntenna'])[2:-1])
-    obs_data[('satelliteAscendingFlag', 'MetaData')] = np.full((nlocations), 0, dtype=ioda_int_type)  # descending: from top to bottom
-    obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), 61, dtype=ioda_int_type)  # 61 for IGPP/SIO/UCSD (provisionally)
+    obs_data[('aircraftIdentifier', 'MetaData')] = np.full((nlocations), aircraftId, dtype=ioda_int_type)
+    obs_data[('aircraftAROInstrument', 'MetaData')] = np.full((nlocations), aircraftIs, dtype=ioda_int_type)
+    obs_data[('aircraftTailNumber', 'MetaData')] = np.full((nlocations), aircraftTn, dtype=ioda_int_type)
+    obs_data[('aircraftAROAntenna', 'MetaData')] = np.full((nlocations), aircraftAn, dtype=ioda_int_type)
+    obs_data[('satelliteAscendingFlag', 'MetaData')] = np.full((nlocations), ascFlag, dtype=ioda_int_type)
+    obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), centerP, dtype=ioda_int_type)
     obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
     obs_data[('earthRadiusCurvature', 'MetaData')] = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
 
@@ -217,7 +224,7 @@ def get_dateTime(ifile):
 def def_meta_data():
 
     meta_data_keys = {
-        #"qualityFlags": 'radioOccultationDataQualityFlags',
+        # "qualityFlags": 'radioOccultationDataQualityFlags',
         "latitude": 'latitude',
         "longitude": 'longitude',
         "impactParameterRO": 'impactParameterRO',
@@ -261,7 +268,7 @@ def def_meta_types():
         "dataProviderOrigin": 'integer',
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
-        #"qualityFlags": 'integer',
+        # "qualityFlags": 'integer',
     }
 
     return meta_data_types
@@ -292,6 +299,12 @@ def concat_obs_dict(obs_data, append_obs_data):
             obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
 
 
+def get_centerId(center):
+    if center == 'IGPP/SIO/UCSD':
+        centerId = 61  # Id for IGPP/SIO/UCSD (provisionally)
+    return centerId
+
+
 def get_satelliteC(satelliteC):
     if satelliteC == 'G':
         satelliteC_ID = 401
@@ -305,7 +318,7 @@ def get_satelliteC(satelliteC):
 def get_aircraftIdentifier(arcftId):
     if arcftId == 'N49T':
         arcftid = 790
-    elif  arcftId == 'N42T':
+    elif arcftId == 'N42T':
         arcftid = 791
     elif arcftId == 'N43T':
         arcftid = 792
@@ -321,7 +334,7 @@ def get_aircraftIdentifier(arcftId):
 
 
 def get_aircraftInstrument(arcftIs):
-    if arcftIs == 'AsteRx-U':  #SEPT ASTERXU
+    if arcftIs == 'SEPT ASTERXU':
         arcftis = 1
     elif arcftIs == 'SEPT ASTERXSB3':
         arcftis = 2
@@ -333,7 +346,7 @@ def get_aircrafttailnumber(tailN):
         tailnumber = 42
     if tailN == 'NOAA3':
         tailnumber = 43
-    if tailN == 'N49RF': #'NOAA9':
+    if tailN == 'NOAA9':
         tailnumber = 49
     elif tailN == 'AF300':
         tailnumber = 5300
