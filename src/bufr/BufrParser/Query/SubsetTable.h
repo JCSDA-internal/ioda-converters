@@ -215,15 +215,20 @@ namespace bufr {
             size_t currentIdx = 0;
             for (const auto& child : children)
             {
-                if (child->isContainer() && !child->isQueryPathNode())
-                {
-                    auto node = child->getChild(mnemonic, index);
-                    if (node != nullptr) return node;
-                }
-                else if (child->mnemonic == mnemonic)
+                if (child->mnemonic == mnemonic)
                 {
                     currentIdx++;
                     if (currentIdx == index || index == 0) return child;
+                }
+                else if (child->isQueryPathParentNode() && child->children[0]->mnemonic == mnemonic)
+                {
+                    currentIdx++;
+                    if (currentIdx == index || index == 0) return child->children[0];
+                }
+                else if (child->isContainer() && !child->isQueryPathNode())
+                {
+                    auto node = child->getChild(mnemonic, index);
+                    if (node != nullptr) return node;
                 }
             }
 
