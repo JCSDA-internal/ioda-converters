@@ -17,8 +17,6 @@ import time
 import h5py
 import numpy as np
 
-import pdb
-
 IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
 if not IODA_CONV_PATH.is_dir():
     IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
@@ -86,8 +84,6 @@ def main(args):
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
-    # report time
-    toc = record_time(tic=tic)
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
@@ -133,6 +129,7 @@ def main(args):
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+
     # report time
     toc = record_time(tic=tic)
 
@@ -161,27 +158,25 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
     sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
     obs_data[('latitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lat'], dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lon'], dtype='float32')
-    obs_data[('channelNumber', metaDataName)] = np.array(np.arange(12)+1, dtype='int32')
-
-    obs_data[('solar_zenith_angle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
-    obs_data[('solar_azimuth_angle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
-    obs_data[('sensor_zenith_angle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
-    obs_data[('sensor_azimuth_angle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
-    obs_data[('sensor_view_angle', metaDataName)] = compute_scan_angle(
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(12)+1, dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.array(np.round(f['GeolocationAndFlags']['instr_scan_ang']), dtype='float32')
+    obs_data[('solarZenithAngle', metaDataName)] =  np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
+    obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
         sensor_altitude, sat_alt_flag,
         np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'))
-    obs_data[('scan_position', metaDataName)] = np.array(np.round(f['GeolocationAndFlags']['instr_scan_ang']), dtype='float32')
 
     nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteId', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
     qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
     solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
     support_arm_flag = f['CalibratedSceneTemperatures']['support_arm_flag']
 
-    nchans = len(obs_data[('channelNumber', metaDataName)])
-    nlocs = len(obs_data[('latitude', metaDataName)])
+    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(
         np.column_stack((f['CalibratedSceneTemperatures']['tb18_cfov'],
             f['CalibratedSceneTemperatures']['tb23_cfov'],
@@ -208,7 +203,7 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
         (qc_flag[:] == 0) & (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
 
     for k in obs_data:
-        if "MetaData" in k[1] and 'channelNumber' not in k[0]:
+        if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
             obs_data[k] = obs_data[k][good][::33]
         elif tb_key in k[0]:
             obs_data[k] = obs_data[k][good,:][::33]
@@ -269,17 +264,17 @@ def init_obs_loc():
         ('brightnessTemperature', obsValName): [],
         ('brightnessTemperature', obsErrName): [],
         ('brightnessTemperature', qcName): [],
-        ('satelliteId', metaDataName): [],
-        ('channelNumber', metaDataName): [],
+        ('sensorChannelNumber', metaDataName): [],
         ('latitude', metaDataName): [],
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
-        ('scan_position', metaDataName): [],
-        ('solar_zenith_angle', metaDataName): [],
-        ('solar_azimuth_angle', metaDataName): [],
-        ('sensor_zenith_angle', metaDataName): [],
-        ('sensor_view_angle', metaDataName): [],
-        ('sensor_azimuth_angle', metaDataName): [],
+        ('sensorScanPosition', metaDataName): [],
+        ('solarZenithAngle', metaDataName): [],
+        ('solarAzimuthAngle', metaDataName): [],
+        ('sensorZenithAngle', metaDataName): [],
+        ('sensorAzimuthAngle', metaDataName): [],
+        ('sensorViewAngle', metaDataName): [],
+        ('satelliteIdentifier', metaDataName): [],
     }
 
     return obs
