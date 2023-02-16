@@ -77,13 +77,13 @@ class AOD(object):
             self.varAttrs[iodavar, obsErrName]['units'] = '1'
 
         # Make empty lists for the output vars
-        self.outdata[('latitude', metaDataName)] = []
-        self.outdata[('longitude', metaDataName)] = []
+        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
         for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = []
-            self.outdata[self.varDict[iodavar]['errKey']] = []
-            self.outdata[self.varDict[iodavar]['qcKey']] = []
+            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         # loop through input filenamess
         for f in self.filenames:
