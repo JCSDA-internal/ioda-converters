@@ -60,16 +60,16 @@ observations:
             query: "*/WSPD"
 
           windSpeedGeneratingApplication:
-            query: "*/GQCPRMS/GNAP[1]"
+            query: "*/GQCPRMS[1]/GNAP"
 
           windDirectionGeneratingApplication:
-            query: "*/GQCPRMS/GNAP[2]"
+            query: "*/GQCPRMS[2]/GNAP"
 
           windSpeedPercentConfidence:
-            query: "*/GQCPRMS/PCCF[1]"
+            query: "*/GQCPRMS[1]/PCCF"
 
           windDirectionPercentConfidence:
-            query: "*/GQCPRMS/PCCF[2]"
+            query: "*/GQCPRMS[2]/PCCF"
 
     ioda:
       backend: netcdf
