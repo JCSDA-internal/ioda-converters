@@ -126,7 +126,6 @@ namespace Ingester
                 }
                 else if (!fieldValues->isMissing(idx))
                 {
-                    std::cout << " fieldValues = " << fieldValues << std::endl;
                     aircraftAlts[idx] = fieldValues->getAsFloat(idx);
                 }
             }
