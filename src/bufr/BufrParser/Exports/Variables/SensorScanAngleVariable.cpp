@@ -26,6 +26,8 @@ namespace
     {
         const char* FieldOfViewNumber = "fieldOfViewNumber";
         const char* HeightOfStation = "heightOfStation";
+        const char* ScanStart = "scanStart";
+        const char* ScanStep = "scanStep";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
@@ -42,16 +44,25 @@ namespace Ingester
       Variable(exportName, groupByField, conf) 
     {
         initQueryMap();
-        // Diagnostic output (will remove it later)
-        oops::Log::info() << "SensorScanAngleVariable ..." << std::endl;
-        oops::Log::info() << "emily checking exportName   = " << exportName << std::endl;
-        oops::Log::info() << "emily checking groupByField = " << groupByField << std::endl;
-        oops::Log::info() << "emily checking conf         = " << conf << std::endl;
     }
 
     std::shared_ptr<DataObjectBase> SensorScanAngleVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
+
+        // Get input parameters for sensor scan angle calculation
+        float start;
+        float step; 
+        if (conf_.has(ConfKeys::ScanStart) & conf_.has(ConfKeys::ScanStep))
+        {
+             start = conf_.getFloat(ConfKeys::ScanStart);
+             step = conf_.getFloat(ConfKeys::ScanStep);
+        }
+        else
+        {
+            throw eckit::BadParameter("Mising required input parameters: scan starting angle and scan step "
+                                      "Check your configuration.");
+        }
 
         // Read the variables from the map
         auto& satghtObj = map.at(getExportKey(ConfKeys::HeightOfStation));
@@ -69,22 +80,10 @@ namespace Ingester
         } 
 
         // Calculate sensor scan angle
-        float start = -52.725;
-        float step = 1.110; 
-
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
            scanang[idx] = start + float(fovn[idx]-1) * step;
         } 
-
-        // Diagnostic output (will remove it later)
-        for (size_t idx = 0; idx < fovnObj->size(); idx++)
-        {
-            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
-                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[idx]   
-                               << std::setw(10) << "scanang " << std::setw(10) << scanang[idx]   
-                               << std::endl;   
-        }
 
         // Export sensor scan angle (view angle) 
         return std::make_shared<DataObject<float>>(scanang,

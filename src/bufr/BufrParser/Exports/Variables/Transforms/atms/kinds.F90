@@ -105,7 +105,7 @@ module kinds
 #ifdef _REAL16_
   integer, parameter, private :: default_real = 3  ! 3=quad
 #endif
-  integer, parameter, private :: default_real = 1  ! 1=single  !emily
+  integer, parameter, private :: default_real = 1  ! 1=single 
   integer, parameter, public  :: r_kind = real_kinds( default_real )
   integer, parameter, public  :: dp = real_kinds( default_real )
   integer, parameter, public  :: sp = r_single

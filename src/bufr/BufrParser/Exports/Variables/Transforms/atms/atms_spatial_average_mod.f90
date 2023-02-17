@@ -167,18 +167,15 @@ CONTAINS
 
     error_status=0
 
-    write(6,*) 'emily checking nchanl = ', nchanl
     if (nchanl > maxchans) then 
        write(0,*) 'Unexpected number of ATMS channels: ',nchanl
        error_status = 1
        return 
     endif
 
-    write(6,*) 'emily checking: begin reading the beamwidth requirement from file ...'
     ! Read the beamwidth requirements
     open(lninfile,file='atms_beamwidth.txt',form='formatted',status='old', &
          iostat=ios)
-    write(6,*) 'emily checking: ios = ', ios
     if (ios /= 0) then 
        write(*,*) 'Unable to open atms_beamwidth.txt'
        error_status=1
@@ -187,12 +184,10 @@ CONTAINS
     wmosatid=999
     read(lninfile,'(a30)',iostat=ios) cline
     do while (wmosatid /= atms1c_h_wmosatid .AND. ios == 0)
-       write(6,*) 'emily checking: in do while loop reading ...'
        do while (cline(1:1) == '#')
           read(lninfile,'(a30)') cline
        enddo 
        read(cline,*) wmosatid
-       write(6,*) 'emily checking: wmosatid = ', wmosatid
 
        read(lninfile,'(a30)') cline
        do while (cline(1:1) == '#')
@@ -229,7 +224,6 @@ CONTAINS
        end if
        read(lninfile,'(a30)',iostat=ios) cline
     enddo 
-    write(6,*) 'emily checking: done reading the beamwidth requirement from file ...'
     if (wmosatid /= atms1c_h_wmosatid) then 
        write(*,*) 'ATMS_Spatial_Averaging: sat id not matched in atms_beamwidth.dat'
        error_status=1
@@ -237,7 +231,6 @@ CONTAINS
     endif 
     close(lninfile)
 
-    write(6,*) 'emily checking: determine scanline from time ...'
     ! Determine scanline from time
     mintime = minval(time)
     scanline(:)   = nint((time(1:num_loc)-mintime)/scan_interval)+1
@@ -248,7 +241,6 @@ CONTAINS
     allocate(scanline_back(max_fov, max_scan))
     bT_image(:,:,:) = 1000.0_r_kind
 
-    write(6,*) 'emily checking: loading bt image array for FFT transform ...'
     scanLine_back(:,:) = -1
     do i = 1, num_loc
        bt_image(fov(i),scanline(i),:) = bt_obs(:,i)
@@ -258,7 +250,6 @@ CONTAINS
 301 format(i6,2x,i6,2x,22(f8.3))
 
     ! Do FFT transform
-    write(6,*) 'emily checking: begin doing FFT transform ...'
     DO ichan = 1, nchanl
 
        err(ichan) = 0
@@ -296,9 +287,7 @@ CONTAINS
           end if
        enddo
     enddo 
-    write(6,*) 'emily checking: end doing FFT transform ...'
 
-    write(6,*) 'emily checking: checking error status for each channel ...'
     do ichan = 1,nchanl
       if(err(ichan) >= 1)then
          error_status = 1
@@ -306,16 +295,12 @@ CONTAINS
       end if
     end do
 
-    write(6,*) 'emily checking: reshape bt_obs to bt_inout for output ...'
     ! Reshape for output
     bt_inout = reshape(bt_obs, (/nchanl*num_loc/))
     write(6,*) 'ATMS_Spatial_Average: chechking bt_inout (remapped) ...'
     write(6,*) 'minval/maxval bt_inout (remapped) = ', minval(bt_obs), maxval(bt_obs)
 
-    write(6,*) 'emily checking: deallocating ...'
     deallocate(bt_image, scanline_back)
-
-    write(6,*) 'emily checking: DONE!!'
 
 END Subroutine ATMS_Spatial_Average
 
