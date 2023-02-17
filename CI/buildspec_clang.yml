@@ -89,6 +89,9 @@ phases:
 
       - cd /build_container
       - source /etc/profile.d/z10_spack_environment.sh
+      # Set PYTHONPATH for pyioda
+      - export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
+      - export | grep PYTHONPATH
       - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=ClangContainer -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle
 
       # Build ioda
@@ -98,10 +101,6 @@ phases:
       - sed -i 's/build_container/build_container\/ioda/' DartConfiguration.tcl
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
-
-      # Set PYTHONPATH for pyioda
-      - export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
-      - export | grep PYTHONPATH
 
       # Install python-based ioda-converters
       - cd /jcsda/ioda-bundle/iodaconv
