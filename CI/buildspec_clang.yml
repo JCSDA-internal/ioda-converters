@@ -99,6 +99,10 @@ phases:
       - cat DartConfiguration.tcl
       - ctest -C RelWithDebInfo -V -D ExperimentalBuild -j4
 
+      # Set PYTHONPATH for pyioda
+      - export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
+      - export | grep PYTHONPATH
+
       # Install python-based ioda-converters
       - cd /jcsda/ioda-bundle/iodaconv
       - python3 -m pip install -e .
@@ -129,7 +133,7 @@ phases:
       #- exit 1
       # run ctest
       - cd /build_container/iodaconv
-      - PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH" ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose
+      - ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose
       - ctest -C RelWithDebInfo -D ExperimentalTest
 
     finally:
