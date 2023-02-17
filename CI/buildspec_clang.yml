@@ -119,8 +119,8 @@ phases:
 
       # run ctest
       - cd /build_container/iodaconv
+      - ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose
       - ctest -C RelWithDebInfo -D ExperimentalTest
-      - ctest -C RelWithDebInfo -D ExperimentalTest --verbose --rerun-failed
 
     finally:
       - cd /build_container/iodaconv
