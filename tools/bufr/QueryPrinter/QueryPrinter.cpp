@@ -78,16 +78,10 @@ namespace bufr {
         std::map<std::string, std::pair<int, std::string>> dimPathMap;
         for (const auto& leaf : table->getLeaves())
         {
-            std::stringstream pathStream;
-            pathStream << "*";
-            for (size_t idx=1; idx <= static_cast<size_t>(leaf->getDimIdxs().back()); idx++)
+            for (const auto& path : leaf->getDimPaths())
             {
-                pathStream << "/" << leaf->getPath()[idx];
+                dimPathMap[path] = std::make_pair(leaf->getDimIdxs().size(), path);
             }
-
-            dimPathMap[pathStream.str()] =
-                std::make_pair(leaf->getDimIdxs().size(),
-                               pathStream.str());
         }
 
         std::vector<std::pair<int, std::string>> result;
