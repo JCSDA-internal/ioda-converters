@@ -8,6 +8,7 @@
 #
 
 import argparse
+from datetime import datetime
 import netCDF4 as nc
 import numpy as np
 import os
@@ -19,7 +20,7 @@ from lib_python.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "integer")
+    ("dateTime", "long")
 ]
 
 obsvars = ["aerosolOpticalDepth"]
