@@ -39,6 +39,7 @@ phases:
   pre_build:
     on-failure: CONTINUE
     commands:
+      - exit 1
       - echo Executing pre_build phase
       - mkdir -p /jcsda/ioda-bundle
 

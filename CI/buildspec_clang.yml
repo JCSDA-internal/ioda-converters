@@ -117,6 +117,14 @@ phases:
         fi
       - echo $BUILD_STATUS
 
+      - echo "1"
+      - ls -l /build_container/iodaconv
+      - echo "2"
+      - ls -l /build_container/iodaconv/*
+      - echo "3"
+      - ls -l /opt/view/lib/python3.10/site-packages
+
+      - exit 1
       # run ctest
       - cd /build_container/iodaconv
       - ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose

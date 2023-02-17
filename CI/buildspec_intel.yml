@@ -25,6 +25,7 @@ phases:
 
   pre_build:
     commands:
+      - exit 1
       - echo Executing pre_build phase
       - git lfs install # creates .gitconfig
 
