@@ -8,7 +8,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import yaml
 
-import lib_python.ioda_conv_ncio as iconv
+import lib_python.ioda_conv_ncio as iconio
 from lib_python.orddicts import DefaultOrderedDict
 
 
@@ -38,7 +38,7 @@ class singleob(object):
             locKeys.append(value)
         self.keyDict = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-        self.writer = iconv.NcWriter(self.filename, self.locKeyList)
+        self.writer = iconio.NcWriter(self.filename, self.locKeyList)
 
         # set up variable name
         key = 'oneob'
