@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import netCDF4 as nc
 
-import lib_python.ioda_conv_ncio as iconv
+import lib_python.ioda_conv_ncio as iconio
 
 
 class Giirs2Ioda:
@@ -50,7 +50,7 @@ class Giirs2Ioda:
             center_datetime = datetime.strptime(center_datetime, '%Y%m%d%H')
         self.center_datetime = center_datetime
         self.outfile = Path(out_file)
-        self.writer = iconv.NcWriter(str(out_file), [], self.LOCATION_KEYS)
+        self.writer = iconio.NcWriter(str(out_file), [], self.LOCATION_KEYS)
 
         self.data = collections.defaultdict(dict)
         self.units_values = {}  # cannot use an ordered dict for this
