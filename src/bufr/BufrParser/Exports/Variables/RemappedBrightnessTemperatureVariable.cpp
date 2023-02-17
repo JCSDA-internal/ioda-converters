@@ -48,11 +48,6 @@ namespace Ingester
       datetime_(exportName, groupByField, conf_.getSubConfiguration(ConfKeys::ObsTime))
     {
         initQueryMap();
-        // Diagnostic output (will remove it later)
-        oops::Log::info() << "RemappedBrightnessTemperatureVariable ..." << std::endl;
-        oops::Log::info() << "emily checking exportName   = " << exportName << std::endl;
-        oops::Log::info() << "emily checking groupByField = " << groupByField << std::endl;
-        oops::Log::info() << "emily checking conf         = " << conf << std::endl;
     }
 
     std::shared_ptr<DataObjectBase> RemappedBrightnessTemperatureVariable::exportData(const BufrDataMap& map)
@@ -102,20 +97,6 @@ namespace Ingester
         {
            btobs[idx] = radObj->getAsFloat(idx);
         } 
-
-        // Diagnostic output (will remove it later)
-//        for (size_t idx = 0; idx < radObj->size(); idx++)
-//        {
-//            size_t iloc = static_cast<size_t>(floor(idx / nchn));
-//            size_t ichn = static_cast<size_t>(floor(idx % nchn));
-//            oops::Log::info()  << std::setw(10) << "idx     " << std::setw(10) << idx   
-//                               << std::setw(10) << "iloc    " << std::setw(10) << iloc
-//                               << std::setw(10) << "fovn    " << std::setw(10) << fovn[iloc]   
-//                               << std::setw(10) << "obstime " << std::setw(20) << obstime[iloc]   
-//                               << std::setw(10) << "channel " << std::setw(10) << channel[idx]
-//                               << std::setw(10) << "btobs   " << std::setw(10) << btobs[idx]   
-//                               << std::endl;   
-//        }
 
         // Perform FFT image remapping 
         // input only variables: nobs, nchn obstime, fovn, channel
