@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
-# read airnow data and convert to netcdf
-import netCDF4 as nc
-import numpy as np
-import os, argparse
-import pandas as pd
 
-import lib_python.ioda_conv_ncio as iconio
-from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
 # Read airnow text data file and convert to IODA netcdf
-import os, sys
+import os
 from datetime import datetime
 from pathlib import Path
 import netCDF4 as nc
@@ -17,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 import lib_python.ioda_conv_engines as iconv
+import lib_python.ioda_conv_ncio as iconio
 from collections import defaultdict, OrderedDict
 from lib_python.orddicts import DefaultOrderedDict
 
@@ -113,7 +106,7 @@ def long_to_wide(df):
 def add_data(infile, sitefile):
     df = pd.read_csv(infile, delimiter='|',
                      header=None,
-                     error_bad_lines=False,
+                     on_bad_lines='warn',
                      encoding='ISO-8859-1')
     cols = ['date', 'time', 'siteid', 'site', 'utcoffset', 'variable', 'units',
             'obs', 'source']
@@ -175,7 +168,6 @@ if __name__ == '__main__':
     for key in meta_keys:
         data[key] = []
 
-    writer = iconio.NcWriter(args.output, locationKeyList)
     # Fill the temporary data arrays from input file column data
     data['stationIdentification'] = np.full(nlocs, f3.siteid, dtype='S20')
     data['dateTime'] = np.full(nlocs, np.int64(time_offset))
