@@ -894,6 +894,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ncep_bufr
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gen_singleob
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
@@ -908,6 +909,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gen_singleob
 # use the non-zero tolerance for this test since the script is doing a variable change
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_giirs_ssec2ioda
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
@@ -919,6 +921,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_giirs_ssec2ioda
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_giirs_lw
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
