@@ -123,11 +123,13 @@ phases:
       - ls -l /build_container/iodaconv/*
       - echo "3"
       - ls -l /opt/view/lib/python3.10/site-packages
+      - echo "4"
+      - ls -l /jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda
 
-      - exit 1
+      #- exit 1
       # run ctest
       - cd /build_container/iodaconv
-      - ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose
+      - PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH" ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose
       - ctest -C RelWithDebInfo -D ExperimentalTest
 
     finally:
