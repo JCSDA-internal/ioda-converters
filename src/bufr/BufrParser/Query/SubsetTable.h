@@ -57,7 +57,6 @@ namespace bufr {
             return type == Typ::DelayedRep ||
                    type == Typ::FixedRep ||
                    type == Typ::DelayedRepStacked ||
-                   type == Typ::StackedRepeat ||
                    type == Typ::Subset;
         }
 
@@ -76,6 +75,7 @@ namespace bufr {
                    type == Typ::DelayedBinary ||
                    type == Typ::FixedRep ||
                    type == Typ::Repeat ||
+                   type == Typ::StackedRepeat ||
                    type == Typ::Sequence ||
                    type == Typ::Subset;
         }
@@ -204,6 +204,10 @@ namespace bufr {
             if (isDimensioningNode())
             {
                 idxs.push_back(depth);
+            }
+
+            if (isQueryPathNode())
+            {
                 depth++;
             }
 
