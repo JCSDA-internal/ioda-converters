@@ -90,6 +90,13 @@ namespace bufr
                 target->typeInfo = TypeInfo();
                 targets.push_back(target);
 
+                // Print message to inform the user of the missing target
+                oops::Log::warning() << "Warning: Query String ";
+                oops::Log::warning() << querySet_.queriesFor(name)[0].queryStr;
+                oops::Log::warning() << " didn't apply to subset ";
+                oops::Log::warning() << dataProvider_->getSubsetVariant().str();
+                oops::Log::warning() << std::endl;
+
                 continue;
             }
 
