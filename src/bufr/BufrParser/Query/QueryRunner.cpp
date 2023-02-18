@@ -71,9 +71,14 @@ namespace bufr
             std::shared_ptr<BufrNode> tableNode;
             for (const auto &query: querySet_.queriesFor(name))
             {
-                tableNode = table.getNodeForPath(query.path);
-                foundQuery = query;
-                if (tableNode != nullptr) break;
+                if (query.subset->isAnySubset ||
+                    (query.subset->name == dataProvider_->getSubsetVariant().subset &&
+                     query.subset->index == dataProvider_->getSubsetVariant().variantId))
+                {
+                    tableNode = table.getNodeForPath(query.path);
+                    foundQuery = query;
+                    if (tableNode != nullptr) break;
+                }
             }
 
             auto target = std::make_shared<Target>();
