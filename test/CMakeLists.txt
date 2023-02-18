@@ -260,7 +260,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
     testoutput/gdas.t12z.1bamua.noaa-15.tm00.nc
     testoutput/gdas.t12z.1bamua.metop-c.tm00.nc
-    testoutput/gdas.t00z.atms.noaa-20.tm00.nc
+    testoutput/gdas.t00z.atms_n20.tm00.nc
     testoutput/gdas.t12z.esamua.noaa-18.tm00.nc
     testoutput/gdas.t12z.1bmhs.metop-b.tm00.nc
     testoutput/gdas.t12z.esmhs.noaa-19.tm00.nc
@@ -1369,7 +1369,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms.yaml"
-                    gdas.t00z.atms.noaa-20.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby

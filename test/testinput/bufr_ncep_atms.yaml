@@ -25,8 +25,6 @@ observations:
 
           longitude:
             query: "*/CLONH"
-            transforms:
-              - offset: 360
 
           satelliteIdentifier:
             query: "*/SAID"
@@ -80,7 +78,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.atms.{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/2021080100/gdas.t00z.atms_{splits/satId}.tm00.nc"
 
       dimensions:
         - name: Channel

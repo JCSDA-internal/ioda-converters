@@ -25,8 +25,6 @@ observations:
 
           longitude:
             query: "*/CLONH"
-            transforms:
-              - offset: 360
 
           satelliteIdentifier:
             query: "*/SAID"
@@ -90,7 +88,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.atms_remap.{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/2021080100/gdas.t00z.atms_{splits/satId}_remap.tm00.nc"
 
       dimensions:
         - name: Channel
@@ -178,6 +176,6 @@ observations:
         # Remapped Brightness Temperature
         - name: "ObsValue/brightnessTemperature"
           source: variables/remappedBT
-          longName: "Remapped Brightness Temperature"
+          longName: "3-by-3 Averaged Brightness Temperature"
           units: "K"
           chunks: [10000, 22]
