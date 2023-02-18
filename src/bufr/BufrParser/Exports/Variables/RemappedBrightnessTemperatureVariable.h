@@ -30,7 +30,7 @@ namespace Ingester
 
         ~RemappedBrightnessTemperatureVariable() final = default;
 
-        /// \brief Get the configured mnemonics and turn them into RemappedBrightnessTemperature 
+        /// \brief Get the configured mnemonics and turn them into RemappedBrightnessTemperature
         /// \param map BufrDataMap that contains the parsed data for each mnemonic
         std::shared_ptr<DataObjectBase> exportData(const BufrDataMap& map) final;
 

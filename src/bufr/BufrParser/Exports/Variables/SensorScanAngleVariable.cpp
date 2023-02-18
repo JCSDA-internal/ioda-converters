@@ -41,7 +41,7 @@ namespace Ingester
     SensorScanAngleVariable::SensorScanAngleVariable(const std::string& exportName,
                                                      const std::string& groupByField,
                                                      const eckit::LocalConfiguration &conf) :
-      Variable(exportName, groupByField, conf) 
+      Variable(exportName, groupByField, conf)
     {
         initQueryMap();
     }
@@ -52,7 +52,7 @@ namespace Ingester
 
         // Get input parameters for sensor scan angle calculation
         float start;
-        float step; 
+        float step;
         if (conf_.has(ConfKeys::ScanStart) & conf_.has(ConfKeys::ScanStep))
         {
              start = conf_.getFloat(ConfKeys::ScanStart);
@@ -60,7 +60,7 @@ namespace Ingester
         }
         else
         {
-            throw eckit::BadParameter("Mising required input parameters: scan starting angle and scan step "
+            throw eckit::BadParameter("Missing required parameters: scan starting angle and step "
                                       "Check your configuration.");
         }
 
@@ -77,15 +77,15 @@ namespace Ingester
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
            fovn[idx] = fovnObj->getAsInt(idx);
-        } 
+        }
 
         // Calculate sensor scan angle
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
-           scanang[idx] = start + float(fovn[idx]-1) * step;
-        } 
+           scanang[idx] = start + static_cast<float>(fovn[idx]-1) * step;
+        }
 
-        // Export sensor scan angle (view angle) 
+        // Export sensor scan angle (view angle)
         return std::make_shared<DataObject<float>>(scanang,
                                                    getExportName(),
                                                    groupByField_,

@@ -41,16 +41,18 @@ namespace
 
 namespace Ingester
 {
-    RemappedBrightnessTemperatureVariable::RemappedBrightnessTemperatureVariable(const std::string& exportName,
+    RemappedBrightnessTemperatureVariable::RemappedBrightnessTemperatureVariable(
+                                                       const std::string& exportName,
                                                        const std::string& groupByField,
                                                        const eckit::LocalConfiguration &conf) :
-      Variable(exportName, groupByField, conf), 
+      Variable(exportName, groupByField, conf),
       datetime_(exportName, groupByField, conf_.getSubConfiguration(ConfKeys::ObsTime))
     {
         initQueryMap();
     }
 
-    std::shared_ptr<DataObjectBase> RemappedBrightnessTemperatureVariable::exportData(const BufrDataMap& map)
+    std::shared_ptr<DataObjectBase> RemappedBrightnessTemperatureVariable::exportData(
+                                                       const BufrDataMap& map)
     {
         checkKeys(map);
 
@@ -62,9 +64,10 @@ namespace Ingester
         // Get dimensions
         if (radObj->getDims().size() != 2)
         {
-            oops::Log::info () << "Observartion dimension shoule be 2 " << std::endl; 
-            oops::Log::error() << "Incorrect observartion dimension : " << radObj->getDims().size() << std::endl; 
-        } 
+           oops::Log::info()  << "Observartion dimension shoule be 2 " << std::endl;
+           oops::Log::error() << "Incorrect observartion dimension : " << radObj->getDims().size()
+                                                                       << std::endl;
+        }
         int nobs = (radObj->getDims())[0];
         int nchn = (radObj->getDims())[1];
 
@@ -82,28 +85,29 @@ namespace Ingester
         for (size_t idx = 0; idx < fovnObj->size(); idx++)
         {
            fovn[idx] = fovnObj->getAsInt(idx);
-        } 
+        }
 
         // Get sensor channel
         std::vector<int> channel(sensorChanObj->size(), DataObject<int>::missingValue());
         for (size_t idx = 0; idx < sensorChanObj->size(); idx++)
         {
            channel[idx] = sensorChanObj->getAsInt(idx);
-        } 
+        }
 
         // Get brightness temperature (observation)
         std::vector<float> btobs(radObj->size(), DataObject<float>::missingValue());
         for (size_t idx = 0; idx < radObj->size(); idx++)
         {
            btobs[idx] = radObj->getAsFloat(idx);
-        } 
+        }
 
-        // Perform FFT image remapping 
+        // Perform FFT image remapping
         // input only variables: nobs, nchn obstime, fovn, channel
         // input & output variables: btobs, scanline, error_status
-        int error_status; 
-        ATMS_Spatial_Average_f(nobs, nchn, &obstime, &fovn, &channel, &btobs, &scanline, &error_status);
-      
+        int error_status;
+        ATMS_Spatial_Average_f(nobs, nchn, &obstime, &fovn, &channel, &btobs,
+                                           &scanline, &error_status);
+
         // Export remapped observation (btobs)
         return std::make_shared<DataObject<float>>(btobs,
                                                    getExportName(),
