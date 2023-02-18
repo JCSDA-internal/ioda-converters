@@ -84,7 +84,7 @@ observations:
               variable: satelliteIdentifier
               map:
                 _224: npp 
-                _225: noaa-20 
+                _225: n20 
 
     ioda:
       backend: netcdf
