@@ -48,7 +48,8 @@ namespace bufr {
         if (lastNode == -1) lastNode = dataProvider_->getIsc(dataProvider_->getInode());
 
         auto mnemonicCounts = std::unordered_map<std::string, size_t>();
-        auto mnemonicMaps = std::unordered_map<std::string, std::vector<std::shared_ptr<BufrNode>>>();
+        auto mnemonicMaps =
+            std::unordered_map<std::string, std::vector<std::shared_ptr<BufrNode>>>();
 
         while (nodeIdx != 0 && nodeIdx <= lastNode)
         {
@@ -59,7 +60,8 @@ namespace bufr {
             newNode->type = dataProvider_->getTyp(nodeIdx);
             newNode->parent = parent;
 
-            // add to and increment duplicate mnemonic count, update duplicate status if there are duplicates
+            // add to and increment duplicate mnemonic count, update duplicate status if there are
+            // duplicates
             const auto& mnemonic = newNode->mnemonic;
             if (mnemonicMaps.find(mnemonic) == mnemonicMaps.end())
             {
@@ -97,7 +99,8 @@ namespace bufr {
         }
     }
 
-    std::shared_ptr<BufrNode> SubsetTable::getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path)
+    std::shared_ptr<BufrNode>
+        SubsetTable::getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path)
     {
         auto node = root_;
         for (const auto& component : path)

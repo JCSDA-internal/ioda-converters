@@ -107,7 +107,8 @@ namespace bufr {
             return getPathNodes(components);
         }
 
-        std::vector<std::shared_ptr<BufrNode>> getPathNodes(std::vector<std::shared_ptr<BufrNode>>& components)
+        std::vector<std::shared_ptr<BufrNode>>
+            getPathNodes(std::vector<std::shared_ptr<BufrNode>>& components)
         {
             if (!parent.expired())
             {
@@ -152,7 +153,7 @@ namespace bufr {
                 {
                     if (it == subPath.begin())
                     {
-                        pathSubStr << "*"; // Always insert * for the subset
+                        pathSubStr << "*";  // Always insert * for the subset
                     }
                     else
                     {
@@ -260,7 +261,8 @@ namespace bufr {
         /// \brief Gets the node for the path that is passed in.
         /// \param path The path to the node.
         /// \returns A shared pointer to the node.
-        std::shared_ptr<BufrNode> getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path);
+        std::shared_ptr<BufrNode>
+            getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path);
 
      private:
         const DataProviderType dataProvider_;
@@ -273,7 +275,6 @@ namespace bufr {
         /// \brief Parses the BUFR message subset Meta data tables in a recursive ve fashion.
         /// \param[in] parent The current parent node in the tree.
         void processNode(std::shared_ptr<BufrNode>& parent);
-
     };
 
     typedef std::shared_ptr<SubsetTable> SubsetTableType;

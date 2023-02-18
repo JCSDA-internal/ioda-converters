@@ -64,12 +64,13 @@ namespace bufr
 
         auto table = SubsetTable(dataProvider_);
 
-        for (const auto &name: querySet_.names())
+        for (const auto &name : querySet_.names())
         {
-            // Find the table node for the query. Loop through all the sub-queries until you find one.
+            // Find the table node for the query. Loop through all the sub-queries until you find
+            // one.
             Query foundQuery;
             std::shared_ptr<BufrNode> tableNode;
-            for (const auto &query: querySet_.queriesFor(name))
+            for (const auto &query : querySet_.queriesFor(name))
             {
                 if (query.subset->isAnySubset ||
                     (query.subset->name == dataProvider_->getSubsetVariant().subset &&
@@ -83,7 +84,8 @@ namespace bufr
 
             auto target = std::make_shared<Target>();
 
-            // There was no corresponding table node for any of the sub-queries so create empty target.
+            // There was no corresponding table node for any of the sub-queries so create empty
+            // target.
             if (tableNode == nullptr)
             {
                 // Create empty target

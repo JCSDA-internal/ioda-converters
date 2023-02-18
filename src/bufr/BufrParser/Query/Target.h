@@ -32,13 +32,6 @@ namespace bufr {
         size_t branch;
         Type type;
 
-//        TargetComponent(std::shared_ptr<QueryComponent> queryComponent) :
-//            queryComponent(queryComponent),
-//            branch(0),
-//            type(Type::Unkown)
-//        {
-//        }
-
         bool addsDimension() const
         {
             return type != Type::Binary;
@@ -99,7 +92,8 @@ namespace bufr {
                     numDimensions++;
                 }
 
-                if (component.type == TargetComponent::Type::Repeat || component.type == TargetComponent::Type::Binary)
+                if (component.type == TargetComponent::Type::Repeat ||
+                    component.type == TargetComponent::Type::Binary)
                 {
                     seqPath.push_back(component.branch);
                 }

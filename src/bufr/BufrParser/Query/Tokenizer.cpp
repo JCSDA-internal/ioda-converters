@@ -24,13 +24,16 @@ namespace bufr {
         std::string::const_iterator end = cleanedStr.end();
 
         std::shared_ptr<Token> token = nullptr;
-        if ((token = MultiQueryToken::parse(iter, end))) {}
-        else if ((token = QueryToken::parse(iter, end))) {}
-        else { std::cout << "Tokenizer::tokenize: no match for " << query << std::endl; }
+        if ((token = MultiQueryToken::parse(iter, end)))
+        {}
+        else if ((token = QueryToken::parse(iter, end)))
+        {}
+        else
+        { std::cout << "Tokenizer::tokenize: no match for " << query << std::endl; }
 
         tokens.push_back(token);
 
         return tokens;
     }
-}  // bufr
-}  // Ingester
+}  // namespace bufr
+}  // namespace Ingester

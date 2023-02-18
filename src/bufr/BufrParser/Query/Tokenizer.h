@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <regex>
+#include <regex>  // NOLINT
 #include <typeinfo>
 #include <cstddef>
 #include <iostream>
@@ -27,13 +27,13 @@ namespace bufr {
     typedef std::vector<std::shared_ptr<Token>> Tokens;
 
     // Token abstract base class
-class Token {
+    class Token {
      public:
         Token() = default;
         virtual ~Token() = default;
 
-        std::string str() const  { return str_; };
-        Tokens tokens() const { return subTokens_; };
+        std::string str() const  { return str_; }
+        Tokens tokens() const { return subTokens_; }
         virtual std::string debugStr() const = 0;
         virtual std::vector<std::shared_ptr<QueryToken>> queryTokens() const
         {
@@ -41,7 +41,7 @@ class Token {
                                       + debugStr());
         }
 
-    protected:
+     protected:
         Tokens subTokens_;
         std::string str_;
 
@@ -51,7 +51,7 @@ class Token {
     // template base class for tokens
     template <class T>
     class TokenBase : public Token {
-    public:
+     public:
         TokenBase() = default;
 
         static std::shared_ptr<T> parse(std::string::const_iterator &start,
@@ -78,19 +78,19 @@ class Token {
     };
 
     class SeparatorToken : public TokenBase<SeparatorToken> {
-    public:
+     public:
         constexpr static const char* Pattern = "\\/";
         constexpr static const char* DebugStr = "<sep>";
     };
 
     class AnySubset : public TokenBase<AnySubset> {
-    public:
+     public:
         constexpr static const char* Pattern = "\\*";
         constexpr static const char* DebugStr = "<anySubset>";
     };
 
     class IndexToken : public TokenBase<IndexToken> {
-    public:
+     public:
         constexpr static const char* Pattern = "\\[[0-9]+\\]";
         constexpr static const char* DebugStr = "<index>";
 
@@ -108,7 +108,7 @@ class Token {
     };
 
     class MnemonicToken : public TokenBase<MnemonicToken> {
-    public:
+     public:
         constexpr static const char* Pattern = "([A-Z0-9_]+)";
         constexpr static const char* DebugStr = "<mnemonic>";
 
@@ -121,7 +121,7 @@ class Token {
     };
 
     class FilterToken : public TokenBase<FilterToken> {
-    public:
+     public:
         constexpr static const char* Pattern = "\\{[0-9\\-](\\,[0-9\\-]+)*\\}";
         constexpr static const char* DebugStr = "<filter>";
 
@@ -162,7 +162,7 @@ class Token {
             }
         }
 
-    private:
+     private:
         std::vector<size_t> indices_;
     };
 
