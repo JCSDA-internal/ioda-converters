@@ -979,6 +979,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gsidiag_rad
 
 # DH* 20230217 - comment out, has not been updated with naming conventions
 # see https://github.com/JCSDA-internal/ioda-converters/pull/1161
+#  FIX or REMOVE ME
 #ecbuild_add_test( TARGET  test_${PROJECT_NAME}_wrfdadiag_rad
 #                  TYPE    SCRIPT
 #                  COMMAND bash
