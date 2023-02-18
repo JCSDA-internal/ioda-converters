@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/2021080100/gdas.t00z.atms.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.atms.tm00.bufr_d"
 
       exports:
         variables:
@@ -86,12 +86,11 @@ observations:
               variable: satelliteIdentifier
               map:
                 _224: npp 
-                _225: n20 
-#               _226: n21 
+                _225: noaa-20 
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/2021080100/gdas.t00z.atms_remapped.{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.atms_remap.{splits/satId}.tm00.nc"
 
       dimensions:
         - name: Channel
