@@ -25,7 +25,7 @@ namespace bufr {
             Binary,
             Repeat,
             Value,
-            Unkown
+            Unknown
         };
 
         std::shared_ptr<QueryComponent> queryComponent;
