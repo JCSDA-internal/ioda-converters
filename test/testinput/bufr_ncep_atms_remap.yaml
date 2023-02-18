@@ -66,10 +66,20 @@ observations:
             query: "*/ATMSCH/CHNM"
 
           # ObsValue
-          # Brightness Temperature
-          brightnessTemperature:
-            query: "*/ATMSCH/TMBR"
-
+          # Remapped Brightness Temperature
+          remappedBT:
+            remappedBrightnessTemperature:
+              fieldOfViewNumber: "*/FOVN"
+              sensorChannelNumber: "*/ATMSCH/CHNM"
+              brightnessTemperature: "*/ATMSCH/TMBR"
+              obsTime:
+                year: "*/YEAR"
+                month: "*/MNTH"
+                day: "*/DAYS"
+                hour: "*/HOUR"
+                minute: "*/MINU"
+                second: "*/SECO"
+ 
         splits:
           satId:
             category:
@@ -77,10 +87,11 @@ observations:
               map:
                 _224: npp 
                 _225: n20 
+#               _226: n21 
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/2021080100/gdas.t00z.atms.{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/2021080100/gdas.t00z.atms_remapped.{splits/satId}.tm00.nc"
 
       dimensions:
         - name: Channel
@@ -165,9 +176,9 @@ observations:
           longName: "Sensor Channel Number"
 
         # ObsValue
-        # Brightness Temperature
+        # Remapped Brightness Temperature
         - name: "ObsValue/brightnessTemperature"
-          source: variables/brightnessTemperature
-          longName: "Brightness Temperature"
+          source: variables/remappedBT
+          longName: "Remapped Brightness Temperature"
           units: "K"
           chunks: [10000, 22]
