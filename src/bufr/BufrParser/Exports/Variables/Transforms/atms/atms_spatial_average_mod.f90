@@ -86,7 +86,7 @@ CONTAINS
 
     ! ------------------------------------------------------------------------------
 
-    do_interface_check = .true.
+    do_interface_check = .false.
     do_output_check = .false.
     if (do_output_check) do_interface_check = .true.
 
