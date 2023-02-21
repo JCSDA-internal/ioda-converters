@@ -91,16 +91,16 @@ phases:
         && export FC=mpifort
         && export CC=mpicc
         && export CXX=mpicxx
-        && export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
-        && export PYTHONPATH="/home/nonroot/lib/python3.10/pyioda:$PYTHONPATH"
+        && export PYTHONPATH=\"/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:/home/nonroot/lib/python3.10/pyioda:\$PYTHONPATH\"
+        && export | grep PYTHONPATH
+        && export | grep CC
         && ecbuild -Wno-dev -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=GNUContainer -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DUSE_ECCODES=ON /jcsda/ioda-bundle/"
 
       - su - nonroot -c "cd /home/nonroot/ioda
         && export FC=mpifort
         && export CC=mpicc
         && export CXX=mpicxx
-        && export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
-        && export PYTHONPATH="/home/nonroot/lib/python3.10/pyioda:$PYTHONPATH"
+        && export PYTHONPATH=\"/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:/home/nonroot/lib/python3.10/pyioda:\$PYTHONPATH\"
         && cp ../DartConfiguration.tcl .
         && sed -i 's/ioda-bundle/ioda-bundle\/ioda/' DartConfiguration.tcl
         && sed -i 's/nonroot/nonroot\/ioda/' DartConfiguration.tcl
@@ -115,8 +115,7 @@ phases:
         && export FC=mpifort
         && export CC=mpicc
         && export CXX=mpicxx
-        && export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
-        && export PYTHONPATH="/home/nonroot/lib/python3.10/pyioda:$PYTHONPATH"
+        && export PYTHONPATH=\"/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:/home/nonroot/lib/python3.10/pyioda:\$PYTHONPATH\"
         && cp ../DartConfiguration.tcl .
         && sed -i 's/ioda-bundle/ioda-bundle\/iodaconv/' DartConfiguration.tcl
         && sed -i 's/nonroot/nonroot\/iodaconv/' DartConfiguration.tcl
@@ -129,22 +128,30 @@ phases:
         fi
       - echo $BUILD_STATUS
 
+      - find / -iname '*_ioda_python*'
+
+      # run ctest Dom
+      - su - nonroot -c "cd /home/nonroot/iodaconv
+        && export FC=mpifort
+        && export CC=mpicc
+        && export CXX=mpicxx
+        && export PYTHONPATH=\"/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:/home/nonroot/lib/python3.10/pyioda:\$PYTHONPATH\"
+        && ctest -C RelWithDebInfo -D ExperimentalTest -R iodaconv_compo_coding_norms --verbose"
+
       # run ctest
       - su - nonroot -c "cd /home/nonroot/iodaconv
         && export FC=mpifort
         && export CC=mpicc
         && export CXX=mpicxx
-        && export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
-        && export PYTHONPATH="/home/nonroot/lib/python3.10/pyioda:$PYTHONPATH"
-        && ctest -C RelWithDebInfo -D ExperimentalTest"
+        && export PYTHONPATH=\"/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:/home/nonroot/lib/python3.10/pyioda:\$PYTHONPATH\"
+        && ctest -C RelWithDebInfo -D ExperimentalTest --verbose"
 
     finally:
       - su - nonroot -c "cd /home/nonroot/iodaconv
         && export FC=mpifort
         && export CC=mpicc
         && export CXX=mpicxx
-        && export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
-        && export PYTHONPATH="/home/nonroot/lib/python3.10/pyioda:$PYTHONPATH"
+        && export PYTHONPATH=\"/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:/home/nonroot/lib/python3.10/pyioda:\$PYTHONPATH\"
         && ctest -C RelWithDebInfo -D ExperimentalSubmit -M Continuous -- --track Continuous --group Continuous"
 
   post_build:
