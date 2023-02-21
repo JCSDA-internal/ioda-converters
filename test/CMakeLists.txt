@@ -1010,8 +1010,7 @@ if( iodaconv_gnssro_ENABLED )
                             -i testinput/gnssaro_N49T_20210120_00Z.nc
                             -o testrun/gnssaro_obs_2021012000.h5"
                             -d 2021012000
-                            gnssaro_obs_2021012000.h5 ${IODA_CONV_COMP_TOL_ZERO}
-                    DEPENDS gnssro_bufr2ioda)
+                            gnssaro_obs_2021012000.h5 ${IODA_CONV_COMP_TOL_ZERO})
 endif()
 
 #==============================================================================
