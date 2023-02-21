@@ -1008,8 +1008,8 @@ if( iodaconv_gnssro_ENABLED )
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/gnssaro_netcdf2ioda.py
                             -i testinput/gnssaro_N49T_20210120_00Z.nc
-                            -o testrun/gnssaro_obs_2021012000.h5"
-                            -d 2021012000
+                            -o testrun/gnssaro_obs_2021012000.h5
+                            -d 2021012000"
                             gnssaro_obs_2021012000.h5 ${IODA_CONV_COMP_TOL_ZERO})
 endif()
 
