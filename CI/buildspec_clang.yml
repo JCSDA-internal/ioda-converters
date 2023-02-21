@@ -128,8 +128,9 @@ phases:
       - ls -l /opt/view/lib/python3.10/site-packages
       - echo "4"
       - ls -l /jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda
-      - find /jcsda/ioda-bundle -name '*_ioda_python*'
-      - find /opt/view/lib/python3.10/site-packages -name '*_ioda_python*'
+      - find /jcsda/ioda-bundle -iname '*_ioda_python*'
+      - find /opt/view -iname '*_ioda_python*'
+      - find /build_container -iname '*_ioda_python*'
 
       #- exit 1
       # run ctest
