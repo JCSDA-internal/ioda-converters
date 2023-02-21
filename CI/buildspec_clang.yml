@@ -89,12 +89,9 @@ phases:
 
       - cd /build_container
       - source /etc/profile.d/z10_spack_environment.sh
-      # Set PYTHONPATH for pyioda
+      # Set PYTHONPATH for pyioda before calling cmake
       - export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
       - export PYTHONPATH="/build_container/lib/python3.10/pyioda:$PYTHONPATH"
-      # THIS DIDN'T WORK
-      #- export PYTHONPATH="/build_container/lib/python3.10/pyioda/ioda:$PYTHONPATH"
-      - export | grep PYTHONPATH
       - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=ClangContainer -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle
 
       # Build ioda
@@ -123,22 +120,8 @@ phases:
         fi
       - echo $BUILD_STATUS
 
-      - echo "1"
-      - ls -l /build_container/iodaconv
-      - echo "2"
-      - ls -l /build_container/iodaconv/*
-      - echo "3"
-      - ls -l /opt/view/lib/python3.10/site-packages
-      - echo "4"
-      - ls -l /jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda
-      - find /jcsda/ioda-bundle -iname '*_ioda_python*'
-      - find /opt/view -iname '*_ioda_python*'
-      - find /build_container -iname '*_ioda_python*'
-
-      #- exit 1
       # run ctest
       - cd /build_container/iodaconv
-      - ctest -C RelWithDebInfo -D ExperimentalTest -R test_iodaconv_generic_gnssro_bufr --verbose
       - ctest -C RelWithDebInfo -D ExperimentalTest
 
     finally:

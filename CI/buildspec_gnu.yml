@@ -39,7 +39,6 @@ phases:
   pre_build:
     on-failure: CONTINUE
     commands:
-      - exit 1
       - echo Executing pre_build phase
       - mkdir -p /jcsda/ioda-bundle
 
@@ -92,6 +91,8 @@ phases:
         && export FC=mpifort
         && export CC=mpicc
         && export CXX=mpicxx
+        && export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
+        && export PYTHONPATH="/build_container/lib/python3.10/pyioda:$PYTHONPATH"
         && ecbuild -Wno-dev -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=GNUContainer -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DENABLE_GPROF=ON -DUSE_ECCODES=ON /jcsda/ioda-bundle/"
 
       - su - nonroot -c "cd /home/nonroot/ioda

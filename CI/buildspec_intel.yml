@@ -25,7 +25,6 @@ phases:
 
   pre_build:
     commands:
-      - exit 1
       - echo Executing pre_build phase
       - git lfs install # creates .gitconfig
 
@@ -99,6 +98,10 @@ phases:
       - cat /etc/profile.d/z10_spack_environment.sh
       - source /opt/intel/oneapi/compiler/latest/env/vars.sh
       - source /opt/intel/oneapi/mpi/latest/env/vars.sh
+
+      # Set PYTHONPATH for pyioda before calling cmake
+      - export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
+      - export PYTHONPATH="/build_container/lib/python3.10/pyioda:$PYTHONPATH"
 
       # for debugging
       #- which icc || true
