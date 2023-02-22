@@ -409,9 +409,8 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:_ioda_python>/../"
 #        ...
 #        )
-#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 #  Dom's fix to get right path
-# DH 20230202 - need to add a bit more documentation here why to add ${CMAKE_CURRENT_SOURCE_DIR}/../src
+#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 set(IODACONV_PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/../src:$TARGET_FILE_DIR:_ioda_python/../:$ENV{PYTHONPATH}")
 
 #===============================================================================
