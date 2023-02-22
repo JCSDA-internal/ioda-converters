@@ -181,7 +181,7 @@ def get_obs_data(ifile):
     # metadata
     obs_data[('latitude', 'MetaData')] = ifile['Lat'][:]
     obs_data[('longitude', 'MetaData')] = ifile['Lon'][:]
-    obs_data[('dateTime', 'MetaData')] = np.full((nlocations), get_dateTime(ifile), dtype=object)
+    obs_data[('dateTime', 'MetaData')] = np.full((nlocations), get_dateTime(ifile))
     obs_data[('impactParameterRO', 'MetaData')] = ifile['Impact_parm'][:]*10e2
     obs_data[('impactHeightRO', 'MetaData')] = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
     obs_data[('height', 'MetaData')] = height
