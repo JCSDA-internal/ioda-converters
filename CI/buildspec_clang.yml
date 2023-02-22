@@ -39,8 +39,6 @@ phases:
 
   pre_build:
     commands:
-      # DH*
-      - exit 1
       - echo Executing pre_build phase
       - mkdir -p /jcsda/ioda-bundle
       - mkdir /build_container
