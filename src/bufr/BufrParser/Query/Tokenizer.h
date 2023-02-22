@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <iostream>
 #include <sstream>
+#include <set>
 
 #include "eckit/exception/Exceptions.h"
 
@@ -122,7 +123,7 @@ namespace bufr {
 
     class FilterToken : public TokenBase<FilterToken> {
      public:
-        constexpr static const char* Pattern = "\\{[0-9\\-](\\,[0-9\\-]+)*\\}";
+        constexpr static const char* Pattern = "\\{\\d+(\\-\\d+)?(\\,\\d+(\\-\\d+)?)*\\}";
         constexpr static const char* DebugStr = "<filter>";
 
         std::vector<size_t> indices() { return indices_; }
@@ -130,36 +131,62 @@ namespace bufr {
         void tokenize() final
         {
             static const auto filterRegex =
-                std::regex("\\{(\\d+\\-\\d+|\\d+)(\\,(\\d+\\-\\d+|\\d+))?\\}");
-            static const auto rangeRegex = std::regex("(\\d+)\\-(\\d+)");
-            static const auto indexRegex = std::regex("[^\\-](\\d+)[^\\-]");
+                std::regex("\\{(\\d+(\\-\\d+)?)(,\\d+(\\-\\d+)?)*\\}");
 
-            std::vector<size_t> indices;
+            std::set<size_t> indices;
 
             // match index
             std::smatch matches;
             if (std::regex_match(str_, matches, filterRegex))
             {
-                // match all ranges
-                std::smatch rangeMatches;
-                std::regex_search(str_, rangeMatches, rangeRegex);
-                for (auto rangeMatch : rangeMatches)
-                {
-                   std::cout << "rangeMatch: " << rangeMatch.str() << std::endl;
-                }
+                // regular expression pattern to match ranges and standalone numbers
+                static const std::regex pattern("(\\d+)-(\\d+)|(\\d+)");
 
-                // match all ranges
-                std::smatch idxMatches;
-                std::regex_search(str_, idxMatches, indexRegex);
-                for (auto rangeMatch : rangeMatches)
+                std::smatch match;
+
+                // iterate over all matches in the input string
+                for (auto it = std::sregex_iterator(str_.begin(), str_.end(), pattern);
+                     it != std::sregex_iterator();
+                     ++it)
                 {
-                    std::cout << "indexMatch: " << rangeMatch.str() << std::endl;
+                    // check which capture group matched
+                    if ((*it)[1].matched && (*it)[2].matched) // range match
+                    {
+                        int start = std::stoi((*it)[1].str());
+                        int end = std::stoi((*it)[2].str());
+                        for (int i = start; i <= end; i++)
+                        {
+                            indices.insert(i);
+                        }
+                    }
+                    else // standalone number match
+                    {
+                        int number = std::stoi((*it)[3].str());
+                        indices.insert(number);
+                    }
                 }
             }
             else
             {
                 throw eckit::BadParameter("FilterToken::indices: invalid filter: " + str_);
             }
+
+            indices_ = std::vector<size_t>(indices.begin(), indices.end());
+        }
+
+        std::string debugStr() const override
+        {
+            std::ostringstream debugStr;
+
+            debugStr << "<filter=";
+            for (const auto& index : indices_)
+            {
+                debugStr << index;
+                if (index != indices_.back()) debugStr << ",";
+            }
+            debugStr << ">";
+
+            return debugStr.str();
         }
 
      private:
@@ -316,7 +343,6 @@ namespace bufr {
         std::vector<std::shared_ptr<QueryToken>> queries_;
     };
 
-    // tokenizer to tokenize a query string in the format */ABCD/EFG/XYZ[1]
     class Tokenizer
     {
      public:
