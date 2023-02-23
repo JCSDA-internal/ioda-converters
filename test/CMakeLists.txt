@@ -411,7 +411,7 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        )
 #  Dom's fix to get right path
 #set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-set(IODACONV_PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/../src:$TARGET_FILE_DIR:_ioda_python/../:$ENV{PYTHONPATH}")
+set(IODACONV_PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/../src:$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 #===============================================================================
 # Marine converters
