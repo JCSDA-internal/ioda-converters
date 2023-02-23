@@ -1,0 +1,105 @@
+@startuml
+skinparam dpi 300
+scale 1024 width
+
+package Query <<Folder>> 
+{
+  class File
+  {
+    +execute(const QuerySet &querySet, size_t next) : ResultSet
+    +rewind()
+    +close()
+  }
+
+  class Query
+  {
+    +Query(querySet, resultSet, dataProvider)
+    +query()
+    -findTargets(targets, masks)
+    -collectData(targets, masks, resultSet)
+  }
+
+  struct Target
+  {
+    +string name
+    +string queryStr
+    +string unit
+    +vector<int> seqPath
+    +vector<int> nodeIds
+    +vector<string> dimPaths
+    +vector<int> exportDimIdxs
+  }
+
+  class DataFrame
+  {
+     -vector<DataField> fields_
+
+     +fieldAtIdx(idx) : DataField&
+     +fieldIdxForNodeNamed(name) : int
+  }
+
+  struct DataField
+  {
+    +string name
+    +string queryStr
+    +string unit
+    +bool missing = false
+    +vector<double> data
+    +vector<size_t> seqPath
+    +vector<vector<int>> seqCounts
+    +vector<string> dimPaths
+    +vector<int> exportDims
+  }
+
+  class ResultSet
+  {
+    +ResultSet(names)
+    +get(fieldName, groupByFieldName)
+    -getRawValues(fieldName, groupByField, data, dims, dimPaths)
+    -getRowsForField(targetField, dataRows, dims, groupbyIdx)
+  }
+
+  class QuerySet
+  {
+    +add(name, queryStr)
+    +nameAt(idx) : string
+    +queryAt(idx) : string
+    +size() : size_t
+    +names() : vector<string>
+  }
+
+  class DataProvider
+  {
+    +getIsc(fortranIdx)
+    +getItp(fortranIdx)
+    +getJmpb(fortranIdx)
+    +getTyp(fortranIdx)
+    +getTag(fortranIdx)
+    +getInode()
+    +getNVal()
+    +getInv(fortranIdx)
+    +getVal(fortranIdx)
+    +getUnit(fortranIdx)
+
+  }
+
+  class QueryParser
+  {
+    +splitMultiquery(query)
+    +splitQueryStr(query, subset, mnemonics, index)
+  }
+
+  File *--> DataProvider
+  
+  File *-> ResultSet
+  QuerySet <-o File
+  File *--> Query
+  Query --> Target
+  ResultSet *-> DataFrame
+  DataFrame *-> DataField
+
+
+  QueryParser <- Query
+
+@enduml
+

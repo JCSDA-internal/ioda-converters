@@ -1,0 +1,99 @@
+@startuml
+hide footbox
+skinparam dpi 300
+skinparam SequenceActorBorderThickness 2
+skinparam SequenceActorBorderColor #firebrick
+skinparam ActorBackgroundColor #lightyellow
+skinparam ParticipantBackgroundColor #lightyellow
+skinparam ParticipantBorderThickness 2
+skinparam ParticipantBorderColor #firebrick
+
+actor BufrParser
+participant QuerySet
+participant File
+participant DataProvider
+participant Query
+participant ResultSet #orange
+participant Target
+participant DataFrame
+participant DataField
+
+create QuerySet 
+BufrParser -> QuerySet : QuerySet()
+BufrParser -> QuerySet : add("*/CLON", "longitude")
+BufrParser -> QuerySet : add("*/CLAT", "latitude")
+
+
+create File
+BufrParser -> File : File(filepath)
+
+BufrParser -> File : execute(queryset)
+
+activate File
+create DataProvider
+File -> DataProvider : DataProvider()
+
+create ResultSet
+File -> ResultSet : ResultSet()
+
+create Query
+File -> Query : Query(queryset&, resultset&, dataprovider&)
+
+
+loop all BUFR subsets
+	File -> DataProvider : updateData()
+	File -> Query : query()
+
+	activate Query
+
+	Query -> Query : findTargets
+
+	activate Query
+	Query -> Query : check cache for targets
+	
+	loop if no targets
+		Query -> DataProvider : find target
+		activate DataProvider
+		create Target
+		DataProvider -> Target : Target()
+		deactivate DataProvider
+	end
+	deactivate Query
+
+	Query -> Query : collectData
+	activate Query
+	Query -> ResultSet : nextDataFrame()
+	activate ResultSet
+	
+	create DataFrame
+	ResultSet -> DataFrame : DataFrame(fieldCount)
+
+	create DataField
+	loop all data fields
+		DataFrame -> DataField : DataField()
+	end
+	ResultSet --> Query : dataframe
+
+
+	deactivate ResultSet
+
+	loop all target fields
+		Query -> DataProvider : find data for target
+		Query -> DataFrame : fieldAtIdx(idx)
+		activate DataFrame
+		DataFrame --> Query : datafield
+		deactivate DataFrame
+
+		Query -> DataField : fill in data
+	end
+
+	deactivate Query
+
+	deactivate Query
+end
+
+File --> BufrParser : resultSet
+
+deactivate File
+
+@enduml

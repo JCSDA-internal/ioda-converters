@@ -1,0 +1,58 @@
+@startuml
+skinparam dpi 300
+scale 1024 width
+
+class Tokenizer
+{
+   {static} Tokens tokenize(query)
+}
+
+class Token
+{
+}
+
+class TokenBase<T>
+{
+}
+
+class QueryToken
+{
+}
+
+class MultQueryToken
+{
+}
+
+class MnemonicToken
+{
+}
+class IndexToken
+{
+}
+
+class SeperatorToken
+{
+}
+
+class AnySubsetToken
+{
+}
+
+class FilterToken
+{
+}
+
+
+
+Tokenizer -> Token : <<creates>>
+Token <|--TokenBase
+Token o--> Token
+TokenBase <|-- MnemonicToken : <MnemonicToken> 
+TokenBase <|-- SeperatorToken : <SeperatorToken> 
+TokenBase <|-- IndexToken : <IndexToken> 
+TokenBase <|-- FilterToken : <FilterToken> 
+TokenBase <|-- AnySubsetToken : <AnySubsetToken> 
+TokenBase <|-- QueryToken : <QueryToken> 
+TokenBase <|-- MultiQueryToken : <MultiQueryToken> 
+
+@enduml
