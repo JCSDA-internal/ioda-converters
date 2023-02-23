@@ -1,0 +1,215 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC255001 | A55001 | MTYP 255-001  Mesonet from MADIS: Denver Urban Drainage  |
+| NC255002 | A55002 | MTYP 255-002  Mesonet from MADIS: RAWS (NIFC)            |
+| NC255003 | A55003 | MTYP 255-003  Mesonet from MADIS: MesoWest (many subpr)  |
+| NC255004 | A55004 | MTYP 255-004  Mesonet from MADIS: APRS WeatherNet        |
+| NC255005 | A55005 | MTYP 255-005  Mesonet from MADIS: Kansas DOT             |
+| NC255006 | A55006 | MTYP 255-006  Mesonet from MADIS: Florida                |
+| NC255007 | A55007 | MTYP 255-007  Mesonet from MADIS: Iowa DOT               |
+| NC255008 | A55008 | MTYP 255-008  Mesonet from MADIS: Minnesota DOT          |
+| NC255009 | A55009 | MTYP 255-009  Mesonet from MADIS: Anything Weather       |
+| NC255010 | A55010 | MTYP 255-010  Mesonet from MADIS: NOS PORTS              |
+| NC255011 | A55011 | MTYP 255-011  Mesonet from MADIS: Aberdeen Proving Grds  |
+| NC255012 | A55012 | MTYP 255-012  Mesonet from MADIS: Weather for You        |
+| NC255013 | A55013 | MTYP 255-013  Mesonet from MADIS: NWS Cooperative Obs    |
+| NC255014 | A55014 | MTYP 255-014  Mesonet from MADIS: NWS HADS               |
+| NC255015 | A55015 | MTYP 255-015  Mesonet from MADIS: AWS                    |
+| NC255016 | A55016 | MTYP 255-016  Mesonet from MADIS: Iowa Environmental     |
+| NC255017 | A55017 | MTYP 255-017  Mesonet from MADIS: Oklahoma               |
+| NC255018 | A55018 | MTYP 255-018  Mesonet from MADIS: Colorado DOT           |
+| NC255019 | A55019 | MTYP 255-019  Mesonet from MADIS: West Texas             |
+| NC255020 | A55020 | MTYP 255-020  Mesonet from MADIS: Wisconsin DOT          |
+| NC255021 | A55021 | MTYP 255-021  Mesonet from MADIS: LSU-JSU                |
+| NC255022 | A55022 | MTYP 255-022  Mesonet from MADIS: Colorado E-470         |
+| NC255023 | A55023 | MTYP 255-023  Mesonet from MADIS: DC Net                 |
+| NC255024 | A55024 | MTYP 255-024  Mesonet from MADIS: Indiana DOT            |
+| NC255025 | A55025 | MTYP 255-025  Mesonet from MADIS: Florida DOT            |
+| NC255026 | A55026 | MTYP 255-026  Mesonet from MADIS: Alaska DOT             |
+| NC255027 | A55027 | MTYP 255-027  Mesonet from MADIS: Georgia DOT            |
+| NC255028 | A55028 | MTYP 255-028  Mesonet from MADIS: Virginia DOT           |
+| NC255029 | A55029 | MTYP 255-029  Mesonet from MADIS: MO Comm Agric. Wx Net  |
+| NC255030 | A55030 | MTYP 255-030  Mesonet from MADIS: other than above       |
+| NC255031 | A55031 | MTYP 255-031  Urbanet from MADIS: UrbaNet                |
+| NC255032 | A55032 | MTYP 255-032  Urbanet from MADIS: USouthAL               |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| FILENAME | 352004 | FILE NAME SEQUENCE                                       |
+| PRVID    | 350001 | MESONET PROVIDER ID                                      |
+| SPRVID   | 350002 | MESONET SUB-PROVIDER ID                                  |
+| MNPRESSQ | 350003 | MESONET PRESSURE SEQUENCE                                |
+| MNALSESQ | 350004 | MESONET ALTIMETER SEQUENCE                               |
+| MNTMDBSQ | 350005 | MESONET TEMPERATURE SEQUENCE                             |
+| MNTMDPSQ | 350006 | MESONET DEWPOINT TEMPERATURE SEQUENCE                    |
+| MNWDIRSQ | 350007 | MESONET WIND DIRECTION SEQUENCE                          |
+| MNWSPDSQ | 350008 | MESONET WIND SPEED SEQUENCE                              |
+| MNGUSTSQ | 350009 | MESONET WIND GUST SEQUENCE                               |
+| MNSORDSQ | 350010 | MESONET SOLAR RADIATION SEQUENCE                         |
+| MNREQVSQ | 350011 | MESONET RATE OF PRECIPITATION SEQUENCE                   |
+| MNTOPCSQ | 350012 | MESONET TOTAL PRECIPITATION SEQUENCE                     |
+| MNSOILSQ | 350013 | MESONET SOIL SEQUENCE                                    |
+| MNRDWYSQ | 350151 | MESONET ROADWAY DATA SEQUENCE                            |
+| MNHOVISQ | 350155 | MESONET HORIZONTAL VISIBILITY SEQUENCE                   |
+|          |        |                                                          |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTES                                                  |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| FNSTG    | 050002 | FILE NAME STRING                                         |
+| PRVSTG   | 058009 | MESONET PROVIDER ID STRING                               |
+| SPRVSTG  | 058010 | MESONET SUBPROVIDER ID STRING                            |
+| PRES     | 010004 | PRESSURE                                                 |
+| QCD      | 033220 | FSL "QC DATA" FLAG                                       |
+| QCA      | 033221 | FSL "QC APPLIED" FLAG                                    |
+| QCR      | 033222 | FSL "QC RESULTS" FLAG                                    |
+| ALSE     | 010052 | ALTIMETER SETTING                                        |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| TMDP     | 012103 | DEW POINT TEMPERATURE                                    |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| MXGD     | 011043 | MAXIMUM WIND GUST DIRECTION                              |
+| MXGS     | 011041 | MAX WIND SPEED (GUSTS)                                   |
+| TPMI     | 004025 | TIME PERIOD OR DISPLACEMENT                              |
+| DFSORD   | 014029 | DIFFUSE SOLAR RADIATION, INTEGRATED OVER PERIOD SPEC     |
+| DRSORD   | 014030 | DIRECT  SOLAR RADIATION, INTEGRATED OVER PERIOD SPEC     |
+| REQV     | 013014 | RAINFALL/WATER EQUIVALENT OF SNOW (AVERAGED RATE)        |
+| TPHR     | 004024 | TIME PERIOD OR DISPLACEMENT                              |
+| TOPC     | 013011 | TOTAL PRECIPITATION/TOTAL WATER EQUIVALENT               |
+| SLMT     | 013221 | SOIL MOISTURE TENSION                                    |
+| STEM     | 012030 | SOIL TEMPERATURE                                         |
+| RDTM     | 012213 | ROAD TEMPERATURE                                         |
+| RLFT     | 012214 | ROAD LIQUID FREEZE TEMPERATURE                           |
+| RLIP     | 020220 | ROAD LIQUID ICE PERCENT                                  |
+| RDLD     | 020221 | ROAD LIQUID DEPTH                                        |
+| RDST     | 020222 | ROAD STATE                                               |
+| HOVI     | 020001 | HORIZONTAL VISIBILITY                                    |
+| RSRD     | 035200 | RESTRICTIONS ON REDISTRIBUTION                           |
+| EXPRSRD  | 035201 | EXPIRATION OF RESTRICTIONS ON REDISTRIBUTION             |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| SELV     | 007001 | HEIGHT OF STATION                                        |
+| QMAT     | 033193 | SDMEDIT QUALITY MARK FOR TEMPERATURE                     |
+| QMDD     | 033194 | SDMEDIT QUALITY MARK FOR MOISTURE                        |
+| QMWN     | 033195 | SDMEDIT QUALITY MARK FOR WIND                            |
+| QMPR     | 033207 | SDMEDIT QUALITY MARK FOR PRESSURE                        |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC255001 | YEAR  MNTH  DAYS  HOUR  MINU  {RCPTIM}  RSRD  EXPRSRD  RPID       |
+| NC255001 | {PRVID}  {SPRVID}  CLATH  CLONH  SELV  {FILENAME}  <MNPRESSQ>     |
+| NC255001 | QMPR  <MNALSESQ>  <MNTMDBSQ>  QMAT  <MNTMDPSQ>  QMDD  <MNWDIRSQ>  |
+| NC255001 | <MNWSPDSQ>  QMWN  <MNGUSTSQ>  <MNSOILSQ>  <MNREQVSQ>  <MNHOVISQ>  |
+| NC255001 | {MNTOPCSQ}  {MNSORDSQ}  {MNRDWYSQ}                                |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| FILENAME | FNSTG                                                             |
+|          |                                                                   |
+| PRVID    | PRVSTG                                                            |
+|          |                                                                   |
+| SPRVID   | SPRVSTG                                                           |
+|          |                                                                   |
+| MNPRESSQ | PRES  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNALSESQ | ALSE  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNTMDBSQ | TMDB  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNTMDPSQ | TMDP  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNWDIRSQ | WDIR  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNWSPDSQ | WSPD  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNGUSTSQ | MXGD  MXGS                                                        |
+|          |                                                                   |
+| MNSORDSQ | TPMI  DFSORD  DRSORD                                              |
+|          |                                                                   |
+| MNREQVSQ | REQV  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| MNTOPCSQ | TPHR  TOPC  QCD  QCA  QCR                                         |
+|          |                                                                   |
+| MNSOILSQ | SLMT  STEM                                                        |
+|          |                                                                   |
+| MNRDWYSQ | RDTM  RLFT  RLIP  RDLD  RDST                                      |
+|          |                                                                   |
+| MNHOVISQ | HOVI  QCD  QCA  QCR                                               |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| FNSTG    |    0 |           0 |  64 | CCITT IA5                |-------------|
+| PRVSTG   |    0 |           0 |  64 | CCITT IA5                |-------------|
+| SPRVSTG  |    0 |           0 |  64 | CCITT IA5                |-------------|
+| PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| QCD      |    0 |           0 |   8 | CCITT IA5                |-------------|
+| QCA      |    0 |           0 |  11 | FLAG TABLE               |-------------|
+| QCR      |    0 |           0 |  11 | FLAG TABLE               |-------------|
+| ALSE     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMDP     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| MXGD     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| MXGS     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| DFSORD   |   -2 |           0 |  16 | JOULE M**-2              |-------------|
+| DRSORD   |   -2 |           0 |  16 | JOULE M**-2              |-------------|
+| REQV     |    4 |           0 |  12 | KG M**-2 S**-1           |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| TOPC     |    1 |          -1 |  14 | KG/METER**2              |-------------|
+| SLMT     |   -2 |      -99990 |  18 | PASCALS                  |-------------|
+| STEM     |    1 |           0 |  12 | DEGREES KELVIN           |-------------|
+| RDTM     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| RLFT     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| RLIP     |    0 |           0 |   7 | %                        |-------------|
+| RDLD     |    2 |           0 |  12 | METERS                   |-------------|
+| RDST     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| HOVI     |   -1 |           0 |  13 | METERS                   |-------------|
+| RSRD     |    0 |           0 |   9 | FLAG TABLE               |-------------|
+| EXPRSRD  |    0 |           0 |   8 | HOURS                    |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREES                  |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREES                  |-------------|
+| SELV     |    0 |        -400 |  15 | METERS                   |-------------|
+| QMAT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMDD     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMWN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMPR     |    0 |           0 |   4 | CODE TABLE               |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
+| NOTE     | The mnemonic sequences are same across all the Mesonet subsets    |
+|          | from NC255001 to NC255032                                         |
+`------------------------------------------------------------------------------'
