@@ -1,0 +1,97 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC255161 | A55161 | MTYP 255-161  Snow data from MADIS: many different prov  |
+|          |        |                                                          |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| FILENAME | 352004 | FILE NAME SEQUENCE                                       |
+| SPRVID   | 350002 | MESONET SUB-PROVIDER ID                                  |
+| MNTOSDSQ | 350018 | MESONET TOTAL SNOW DEPTH SEQUENCE                        |
+| SNSWEMSQ | 350019 | SNOW DATA - SNOW WATER EQUIVALENT SEQUENCE               |
+| MNDOFSSQ | 350017 | MESONET DEPTH OF FRESH SNOW SEQUENCE                     |
+|          |        |                                                          |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTES                                                  |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| SPRVSTG  | 058010 | MESONET SUBPROVIDER ID STRING                            |
+| FNSTG    | 050002 | FILE NAME STRING                                         |
+| QCD      | 033220 | FSL "QC DATA" FLAG                                       |
+| QCA      | 033221 | FSL "QC APPLIED" FLAG                                    |
+| QCR      | 033222 | FSL "QC RESULTS" FLAG                                    |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| SELV     | 007001 | HEIGHT OF STATION                                        |
+| SRMK     | 013228 | SNOW REPORT REMARKS                                      |
+| TOSD     | 013013 | TOTAL SNOW DEPTH                                         |
+| TPHR     | 004024 | TIME PERIOD OR DISPLACEMENT                              |
+| SWEM     | 013210 | SNOW WATER EQUIVALENT                                    |
+| DOFS     | 013012 | DEPTH OF FRESH SNOW                                      |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC255161 | YEAR  MNTH  DAYS  HOUR  MINU  {RCPTIM}  RPID  {SPRVID}  CLATH     |
+| NC255161 | CLONH  SELV  SRMK  {FILENAME}  <MNTOSDSQ>  {SNSWEMSQ}  {MNDOFSSQ} |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| SPRVID   | SPRVSTG                                                           |
+|          |                                                                   |
+| FILENAME | FNSTG                                                             |
+|          |                                                                   |
+| MNTOSDSQ | TOSD  QCD  QCA  QCR                                               |
+|          |                                                                   |
+| SNSWEMSQ | TPHR  SWEM  QCD  QCA  QCR                                         |
+|          |                                                                   |
+| MNDOFSSQ | TPHR  DOFS  QCD  QCA  QCR                                         |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SPRVSTG  |    0 |           0 |  64 | CCITT IA5                |-------------|
+| FNSTG    |    0 |           0 |  64 | CCITT IA5                |-------------|
+| QCD      |    0 |           0 |   8 | CCITT IA5                |-------------|
+| QCA      |    0 |           0 |  11 | FLAG TABLE               |-------------|
+| QCR      |    0 |           0 |  11 | FLAG TABLE               |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREES                  |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREES                  |-------------|
+| SELV     |    0 |        -400 |  15 | METERS                   |-------------|
+| SRMK     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| TOSD     |    2 |          -2 |  16 | METERS                   |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| SWEM     |    2 |           0 |  18 | KG/(M**2)                |-------------|
+| DOFS     |    2 |          -2 |  12 | METERS                   |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
