@@ -162,7 +162,7 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     # NASA GES DISC keys
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
 
-    # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
+    # example: dimension ( 135, 96 ) == dimension( nscan, nbeam_pos )
     nscans = np.shape(g['lat'])[0]
     nbeam_pos = np.shape(g['lat'])[1]
     obs_data[('latitude', metaDataName)] = np.array(g['lat'][:, :].flatten(), dtype='float32')
@@ -178,7 +178,7 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
 
-    # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
+    # example: dimension ( 135, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(np.vstack(g['antenna_temp']), dtype='float32')
@@ -443,7 +443,7 @@ def remapBG(input_files):
 
     g = h5py.File(input_files[0], 'r')
     WMO_sat_ID = get_WMO_satellite_ID(input_files[0])
-    # example: dimension ( 180, 96 ) == dimension( nscan, nbeam_pos )
+    # example: dimension ( 135, 96 ) == dimension( nscan, nbeam_pos )
     nscans = lat.shape[0]
     print('nscans=', nscans)
     nbeam_pos = lat.shape[1]
@@ -461,7 +461,7 @@ def remapBG(input_files):
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
 
-    # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
+    # example: dimension ( 135, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     nlocs = len(obs_data[('latitude', metaDataName)])
 
