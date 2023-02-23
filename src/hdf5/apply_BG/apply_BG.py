@@ -55,8 +55,8 @@ class apply_BG_class:
             self.windowindx_all.append([])
             self.idx_src_all.append([])
 
-            #Read in coefficients form a single NetCDF file. Ch1 and Ch2 use the same coefficients.
-            f = h5py.File('/glade/scratch/jban/pandac/obs_220127/atms_nasa/tgt_ifr.nc','r')
+            # Read in coefficients form a single NetCDF file. Ch1 and Ch2 use the same coefficients.
+            f = h5py.File('/glade/scratch/jban/pandac/obs_220127/atms_nasa/tgt_ifr.nc', 'r')
             for ifv in range(self.nfov):
                 windowsize = np.array(f['windowSize'][ifv])
                 alpha_bst = np.array(f['alpha'][ifv, 0:windowsize])
