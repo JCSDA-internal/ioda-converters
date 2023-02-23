@@ -54,9 +54,14 @@ class apply_BG_class:
             self.windowsize_all.append([])
             self.windowindx_all.append([])
             self.idx_src_all.append([])
+
+            #Read in coefficients form a single NetCDF file. Ch1 and Ch2 use the same coefficients.
+            f = h5py.File('/glade/scratch/jban/pandac/obs_220127/atms_nasa/tgt_ifr.nc','r')
             for ifv in range(self.nfov):
-                with open(self.coef_dir+'/tgt_ifr'+str(ifv)+'.pickle', 'rb') as f:
-                    [windowsize, windowindx, idx_src, alpha_bst] = pickle.load(f)
+                windowsize = np.array(f['windowSize'][ifv])
+                alpha_bst = np.array(f['alpha'][ifv, 0:windowsize])
+                windowindx = np.array(f['windowIndex'][ifv, 0:windowsize, :])
+                idx_src = np.array(f['indexSrc'][ifv])
 
                 self.alpha_all[ich].append(alpha_bst)
                 self.windowsize_all[ich].append(windowsize)
@@ -91,7 +96,7 @@ class apply_BG_class:
                             flag = 1
                             break
                     if flag == 0:
-                        ta_rmp[isc, i fr] = temp
+                        ta_rmp[isc, ifr] = temp
             self.taAllCh[:, :, ich] = ta_rmp
 
         return [self.viewang, self.taAllCh, self.lat[ich, :, :], self.lon[ich, :, :], self.satzen, self.satazi, self.solzen, self.solazi, self.tim]
