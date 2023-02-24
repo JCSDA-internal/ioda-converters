@@ -101,12 +101,13 @@ namespace bufr {
             {
                 groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
 
-                // Validate that that the groupByField and the targetField share a common path
+                // Validate that the groupByField and the targetField share a common path
                 auto& groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
-                auto groupByPaths = groupByFieldElement.target->dimPaths;
-                auto targetdimPaths = dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths;
-                auto groupByPathComps = splitPath(groupByPaths.back());
-                auto targetPathComps = splitPath(targetdimPaths.back());
+                auto& groupByPath = groupByFieldElement.target->dimPaths.back();
+                auto& targetPath =
+                    dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
+                auto groupByPathComps = splitPath(groupByPath);
+                auto targetPathComps = splitPath(targetPath);
 
                 for (size_t i = 1;
                      i < std::min(groupByPathComps.size(), targetPathComps.size());
@@ -115,9 +116,9 @@ namespace bufr {
                     if (targetPathComps[i] != groupByPathComps[i])
                     {
                         std::ostringstream errStr;
-                        errStr << "GroupByField and targetField do not share a common path.\n";
-                        errStr << "GroupByField path: " << groupByPaths.back() << std::endl;
-                        errStr << "TargetField path: " << targetdimPaths.back() << std::endl;
+                        errStr << "The GroupBy and Target Fields do not share a common path.\n";
+                        errStr << "GroupByField path: " << groupByPath<< std::endl;
+                        errStr << "TargetField path: " << targetPath << std::endl;
                         throw eckit::BadParameter(errStr.str());
                     }
                 }
