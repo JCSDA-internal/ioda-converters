@@ -123,6 +123,11 @@ namespace bufr {
                     }
                 }
             }
+
+            auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
+            dimPaths = targetField.target->dimPaths;
+
+            exportDims = targetField.target->exportDimIdxs;
         }
 
         for (auto& dataFrame : dataFrames_)
