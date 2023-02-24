@@ -10,8 +10,8 @@ observations:
       obsdatain: "./gdas.t12z.adpupa_nc002103.tm00.bufr_d"
 
       exports:
-        #subsets:
-        #  - NC002101
+        subsets:
+          - NC002103
         group_by_variable: pressure
         variables:
           # MetaData
@@ -22,7 +22,7 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
-          reportIdentifier:
+          stationIdentification:
             query: "*/RPID"
           latitude:
             query: "*/CLATH"
@@ -30,10 +30,6 @@ observations:
             query: "*/CLONH"
           stationElevation:
             query: "*/HSMSL"
-          stationIdentification:
-            query: "[*/IDLSIPTM/SMID, NC002104/SMID]"
-          cloudType:
-            query: "[*/CLINRVSD/CLTP[1], */CLINRVSD/CLTP[2], */CLINRVSD/CLTP[3]]"
 
           # ObsValue
           pressure:
@@ -51,14 +47,6 @@ observations:
           waterTemperature:
             query: "*/SST1"
 
-          # ObsValue - cloud
-          cloudAmount:
-            query: "*/CLINRVSD/CLAM"
-          heightOfBaseOfCloud:
-            query: "*/CLINRVSD/HOCB"
-          verticalSignificanceSurfaceObservations:
-            query: "[*/CLINRVSD/VSSO[1], */CLINRVSD/VSSO[2]]"
-
           # QualityMarker
           stationElevationQM:
             query: "*/QCEVR"
@@ -66,9 +54,9 @@ observations:
             query: "*/UARLVB/QMPR"
           airTemperatureQM:
             query: "*/UARLVB/UATMP/QMAT"
-          moistureQM:
+          dewpointTemperatureQM:
             query: "*/UARLVB/UATMP/QMDD"
-          windQM:
+          windSpeedQM:
             query: "*/UARLVB/UAWND/QMWN"
 
 
@@ -79,10 +67,6 @@ observations:
       dimensions:
         - name: RadiosondeReportLevelData
           path: "*/UARLVB"
-        - name: CloudInformation
-          path: "*/CLINRVSD"
-        - name: IdentificationOfLaunchSite
-          path: "*/IDLSIPTM"
 
       variables:
         # MetaData
@@ -92,10 +76,10 @@ observations:
           longName: "Datetime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "MetaData/reportIdentifier"
+        - name: "MetaData/stationIdentification"
           coordinates: "longitude latitude"
-          source: variables/reportIdentifier
-          longName: "Report Identifier"
+          source: variables/stationIdentification
+          longName: "Station Identification"
 
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
@@ -117,15 +101,6 @@ observations:
           longName: "Elevation of Observing Location"
           units: "m"
 
-        #- name: "MetaData/stationIdentification"
-          #coordinates: "longitude latitude"
-          #source: variables/stationIdentification
-          #longName: "Station Identification"
-
-        #- name: "ObsValue/cloudType"
-          #coordinates: "longitude latitude"
-          #source: variables/cloudType
-          #longName: "Cloud Type"
 
         # ObsValue
         - name: "ObsValue/pressure"
@@ -165,23 +140,6 @@ observations:
           longName: "Water Temperature"
           units: "K"
 
-        # ObsValue - cloud, visibility, gust wind, min/max temperature, weather
-        #- name: "ObsValue/cloudAmount"
-          #coordinates: "longitude latitude"
-          #source: variables/cloudAmount
-          #longName: "Description of Cloud Amount"
-
-        #- name: "ObsValue/heightOfBaseOfCloud"
-          #coordinates: "longitude latitude"
-          #source: variables/heightOfBaseOfCloud
-          #longName: "Cloud Base Altitude"
-          #units: "m"
-
-        #- name: "ObsValue/verticalSignificanceSurfaceObservations"
-          #coordinates: "longitude latitude"
-          #source: variables/verticalSignificanceSurfaceObservations
-          #longName: "Description of Vertical Significance (Surface Observations)"
-
         # QualityMarker
         - name: "QualityMarker/stationElevation"
           coordinates: "longitude latitude"
@@ -198,12 +156,12 @@ observations:
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Temperature"
 
-        - name: "QualityMarker/moisture"
+        - name: "QualityMarker/dewpointTemperature"
           coordinates: "longitude latitude"
-          source: variables/moistureQM
+          source: variables/dewpointTemperatureQM
           longName: "Quality Indicator for Moisture"
 
-        - name: "QualityMarker/wind"
+        - name: "QualityMarker/windSpeed"
           coordinates: "longitude latitude"
-          source: variables/windQM
+          source: variables/windSpeedQM
           longName: "Quality Indicator for Wind"
