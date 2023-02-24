@@ -1003,6 +1003,7 @@ if( iodaconv_gnssro_ENABLED )
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssaro_netcdf_conv
                     TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
