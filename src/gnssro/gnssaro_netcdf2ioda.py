@@ -81,9 +81,7 @@ def main(args):
     # pass parameters to the IODA writer
     VarDims = {
         'bendingAngle': ['Location'],
-        'atmosphericRefractivity': ['Location'],
-        'partialBendingAngle': ['Location'],
-        'geopotentialHeight': ['Location']
+        'atmosphericRefractivity': ['Location']
     }
 
     # write them out
@@ -95,7 +93,6 @@ def main(args):
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'Radians'
-    VarAttrs[('partialBendingAngle', 'ObsValue')]['units'] = 'Radians'
     VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'Radians'
     VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N units'
     VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N units'
@@ -106,10 +103,10 @@ def main(args):
     VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
     VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
     VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
-    VarAttrs[('geopotentialHeight', 'ObsValue')]['units'] = 'gpm'
+    VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'gpm'
+    VarAttrs[('partialBendingAngle', 'MetaData')]['units'] = 'Radians'
 
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
-    VarAttrs[('partialBendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'PreQC')]['_FillValue'] = int_missing_value
     VarAttrs[('atmosphericRefractivity', 'ObsValue')]['_FillValue'] = float_missing_value
@@ -119,7 +116,8 @@ def main(args):
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('geopotentialHeight', 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[('geopotentialHeight', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('partialBendingAngle', 'MetaData')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -167,7 +165,6 @@ def get_obs_data(ifile):
     # Populate the obs_data dictionary
     # value, ob_error, qualityFlag
     obs_data[('bendingAngle', "ObsValue")] = ifile['Bend_ang'][:]
-    obs_data[('partialBendingAngle', 'ObsValue')] = ifile['Opt_bend_ang'][:]
     obs_data[('bendingAngle', "ObsError")] = ifile['Bend_ang_stdv'][:]
     obs_data[('bendingAngle', "PreQC")] = np.full((nlocations), int(str(ifile.attrs['bad'])[2:-1]), dtype=ioda_int_type)
 
@@ -175,8 +172,6 @@ def get_obs_data(ifile):
     obs_data[('atmosphericRefractivity', "ObsValue")] = ifile['Ref'][:]
     obs_data[('atmosphericRefractivity', "ObsError")] = ifile['Ref_stdv'][:]
     obs_data[('atmosphericRefractivity', "PreQC")] = np.full((nlocations), int(str(ifile.attrs['bad'])[2:-1]), dtype=ioda_int_type)
-
-    obs_data[('geopotentialHeight', 'ObsValue')] = geometric2geopotential(ifile.attrs['lat'][0], height)
 
     # metadata
     obs_data[('latitude', 'MetaData')] = ifile['Lat'][:]
@@ -197,6 +192,8 @@ def get_obs_data(ifile):
     obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), centerP, dtype=ioda_int_type)
     obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
     obs_data[('earthRadiusCurvature', 'MetaData')] = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
+    obs_data[('geopotentialHeight', 'MetaData')] = geometric2geopotential(ifile.attrs['lat'][0], height)
+    obs_data[('partialBendingAngle', 'MetaData')] = ifile['Opt_bend_ang'][:]
 
     return obs_data
 
@@ -242,6 +239,8 @@ def def_meta_data():
         "dataProviderOrigin": 'centre',
         "geoidUndulation": 'geoidUndulation',
         "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
+        "geopotentialHeight": 'geopotentialHeight',
+        "partialBendingAngle": 'partialBendingAngle',
     }
 
     return meta_data_keys
@@ -268,6 +267,8 @@ def def_meta_types():
         "dataProviderOrigin": 'integer',
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
+        "geopotentialHeight": 'float',
+        "partialBendingAngle": 'float',
         # "qualityFlags": 'integer',
     }
 
@@ -382,6 +383,7 @@ def cal_impactHeightRO(impactparam, rfict):
 
 def geometric2geopotential(dlat, height):
     # ABOUT: 28.12.2016: vectorized for speed
+    # Adapted from Pawel's geometric2geopotential matlab function
     # geom2geop converts geometric to geopotential height expressed in
     # geopotential meters
     #
