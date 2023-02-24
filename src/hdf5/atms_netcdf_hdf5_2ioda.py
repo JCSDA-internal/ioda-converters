@@ -417,7 +417,7 @@ def remapBG(input_files):
     ta_vmin, ta_vmax = 210, 275
     dif_vmin, dif_vmax = -5, 5
 
-    coef_dir = str(Path(__file__).parent/'apply_BG'/'Coeff_5.2to3.3')
+    coef_dir = './testinput/'
     apply_BG_obj = apply_BG_class(input_files,
                                   orb, orbit_num,
                                   src_ch,
@@ -445,9 +445,7 @@ def remapBG(input_files):
     WMO_sat_ID = get_WMO_satellite_ID(input_files[0])
     # example: dimension ( 135, 96 ) == dimension( nscan, nbeam_pos )
     nscans = lat.shape[0]
-    print('nscans=', nscans)
     nbeam_pos = lat.shape[1]
-    print('nbeam_pos=', nbeam_pos)
     obs_data[('latitude', metaDataName)] = np.array(lat.flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(lon.flatten(), dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')

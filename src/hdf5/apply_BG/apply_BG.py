@@ -56,7 +56,7 @@ class apply_BG_class:
             self.idx_src_all.append([])
 
             # Read in coefficients form a single NetCDF file. Ch1 and Ch2 use the same coefficients.
-            f = h5py.File('/glade/scratch/jban/pandac/obs_220127/atms_nasa/tgt_ifr.nc', 'r')
+            f = h5py.File(self.coef_dir+'atms_BGremap_coeffs_ch1ch2.nc', 'r')
             for ifv in range(self.nfov):
                 windowsize = np.array(f['windowSize'][ifv])
                 alpha_bst = np.array(f['alpha'][ifv, 0:windowsize])
@@ -164,7 +164,7 @@ class apply_BG_class:
         f = h5py.File(ffile, 'r')
         tem = np.array(f['antenna_temp'])
         temAllCh = np.array(f['antenna_temp'])
-        # nasa: antenna_temp(atrack, xtrack, channel) 136,96,22
+        # nasa: antenna_temp(atrack, xtrack, channel) 135,96,22
         # noaa: BrightnessTemperature(phony_dim_5, phony_dim_6, phony_dim_7) 180,96,22
         tim = np.array(f['obs_time_utc'], dtype='int64')
 
