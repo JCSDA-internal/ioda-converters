@@ -100,12 +100,28 @@ namespace bufr {
             if (groupByField != "")
             {
                 groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
+
+                // Validate that that the groupByField and the targetField share a common path
+                auto& groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
+                auto groupByPaths = groupByFieldElement.target->dimPaths;
+                auto targetdimPaths = dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths;
+                auto groupByPathComps = splitPath(groupByPaths.back());
+                auto targetPathComps = splitPath(targetdimPaths.back());
+
+                for (size_t i = 1;
+                     i < std::min(groupByPathComps.size(), targetPathComps.size());
+                     i++)
+                {
+                    if (targetPathComps[i] != groupByPathComps[i])
+                    {
+                        std::ostringstream errStr;
+                        errStr << "GroupByField and targetField do not share a common path.\n";
+                        errStr << "GroupByField path: " << groupByPaths.back() << std::endl;
+                        errStr << "TargetField path: " << targetdimPaths.back() << std::endl;
+                        throw eckit::BadParameter(errStr.str());
+                    }
+                }
             }
-
-            auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-            dimPaths = targetField.target->dimPaths;
-
-            exportDims = targetField.target->exportDimIdxs;
         }
 
         for (auto& dataFrame : dataFrames_)
@@ -507,5 +523,28 @@ namespace bufr {
         return object;
     }
 
+    std::vector<std::string> ResultSet::splitPath(const std::string& path)
+    {
+        std::vector<std::string> components;
+        std::string::size_type start = 0;
+        std::string::size_type end = 0;
+
+        while ((end = path.find('/', start)) != std::string::npos)
+        {
+            if (end != start)
+            {
+                components.push_back(path.substr(start, end - start));
+            }
+
+            start = end + 1;
+        }
+
+        if (start < path.size())
+        {
+            components.push_back(path.substr(start));
+        }
+
+        return components;
+    }
 }  // namespace bufr
 }  // namespace Ingester
