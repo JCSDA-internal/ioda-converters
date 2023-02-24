@@ -161,6 +161,8 @@ def get_obs_data(ifile):
     aircraftAn = get_aircraftAntenna(str(ifile.attrs['aircraftAROAntenna'])[2:-1])
     ascFlag = 0  # descending: from top to bottom
     centerP = get_centerId(str(ifile.attrs['center'])[2:-1])
+    impactH = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
+    geop = geometric2geopotential(ifile.attrs['lat'][0], height)
 
     # Populate the obs_data dictionary
     # value, ob_error, qualityFlag
@@ -178,7 +180,7 @@ def get_obs_data(ifile):
     obs_data[('longitude', 'MetaData')] = ifile['Lon'][:]
     obs_data[('dateTime', 'MetaData')] = np.full((nlocations), get_dateTime(ifile))
     obs_data[('impactParameterRO', 'MetaData')] = ifile['Impact_parm'][:]*10e2
-    obs_data[('impactHeightRO', 'MetaData')] = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
+    obs_data[('impactHeightRO', 'MetaData')] = np.array(impactH, dtype=ioda_float_type)
     obs_data[('height', 'MetaData')] = height
     obs_data[('sensorAzimuthAngle', 'MetaData')] = ifile['Azim'][:]
     obs_data[('sequenceNumber', 'MetaData')] = ifile['record_number'][:]
@@ -192,8 +194,8 @@ def get_obs_data(ifile):
     obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), centerP, dtype=ioda_int_type)
     obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
     obs_data[('earthRadiusCurvature', 'MetaData')] = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
-    obs_data[('geopotentialHeight', 'MetaData')] = geometric2geopotential(ifile.attrs['lat'][0], height)
-    obs_data[('partialBendingAngle', 'MetaData')] = ifile['Opt_bend_ang'][:]
+    obs_data[('geopotentialHeight', 'MetaData')] = np.array(geop, dtype=ioda_float_type)
+    obs_data[('partialBendingAngle', 'MetaData')] = np.array(ifile['Opt_bend_ang'][:], dtype=ioda_float_type)
 
     return obs_data
 
