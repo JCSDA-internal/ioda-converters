@@ -62,6 +62,8 @@ list( APPEND test_input
   testinput/imsscf_20191215_c48.nc
   testinput/bfrPrf_C2E6.2021.214.12.00.G16_0001.0001_bufr
   testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
+  testinput/SNDR.J1.ATMS.20180415T0000.nc4
+  testinput/atms_BGremap_coeffs_ch1ch2.nc
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
   testinput/owp_snow_obs.csv
