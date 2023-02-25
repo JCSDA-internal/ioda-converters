@@ -166,24 +166,24 @@ def get_obs_data(ifile):
 
     # Populate the obs_data dictionary
     # value, ob_error, qualityFlag
-    obs_data[('bendingAngle', "ObsValue")] = ifile['Bend_ang'][:]
-    obs_data[('bendingAngle', "ObsError")] = ifile['Bend_ang_stdv'][:]
+    obs_data[('bendingAngle', "ObsValue")] = np.array(ifile['Bend_ang'][:], dtype=ioda_float_type)
+    obs_data[('bendingAngle', "ObsError")] = np.array(ifile['Bend_ang_stdv'][:], dtype=ioda_float_type)
     obs_data[('bendingAngle', "PreQC")] = np.full((nlocations), int(str(ifile.attrs['bad'])[2:-1]), dtype=ioda_int_type)
 
     # value, ob_error, qc
-    obs_data[('atmosphericRefractivity', "ObsValue")] = ifile['Ref'][:]
-    obs_data[('atmosphericRefractivity', "ObsError")] = ifile['Ref_stdv'][:]
+    obs_data[('atmosphericRefractivity', "ObsValue")] = np.array(ifile['Ref'][:], dtype=ioda_float_type)
+    obs_data[('atmosphericRefractivity', "ObsError")] = np.array(ifile['Ref_stdv'][:], dtype=ioda_float_type)
     obs_data[('atmosphericRefractivity', "PreQC")] = np.full((nlocations), int(str(ifile.attrs['bad'])[2:-1]), dtype=ioda_int_type)
 
     # metadata
-    obs_data[('latitude', 'MetaData')] = ifile['Lat'][:]
-    obs_data[('longitude', 'MetaData')] = ifile['Lon'][:]
+    obs_data[('latitude', 'MetaData')] = np.array(ifile['Lat'][:], dtype=ioda_float_type)
+    obs_data[('longitude', 'MetaData')] = np.array(ifile['Lon'][:], dtype=ioda_float_type)
     obs_data[('dateTime', 'MetaData')] = np.full((nlocations), get_dateTime(ifile))
-    obs_data[('impactParameterRO', 'MetaData')] = ifile['Impact_parm'][:]*10e2
+    obs_data[('impactParameterRO', 'MetaData')] = np.array(ifile['Impact_parm'][:]*10e2, dtype=ioda_float_type)
     obs_data[('impactHeightRO', 'MetaData')] = np.array(impactH, dtype=ioda_float_type)
-    obs_data[('height', 'MetaData')] = height
-    obs_data[('sensorAzimuthAngle', 'MetaData')] = ifile['Azim'][:]
-    obs_data[('sequenceNumber', 'MetaData')] = ifile['record_number'][:]
+    obs_data[('height', 'MetaData')] = np.array(height, dtype=ioda_float_type)
+    obs_data[('sensorAzimuthAngle', 'MetaData')] = np.array(ifile['Azim'][:], dtype=ioda_float_type)
+    obs_data[('sequenceNumber', 'MetaData')] = np.array(ifile['record_number'][:], dtype=ioda_int_type)
     obs_data[('satelliteConstellationRO', 'MetaData')] = np.full((nlocations), satelliteC, dtype=ioda_int_type)
     obs_data[('satelliteTransmitterId', 'MetaData')] = np.full((nlocations), int(file_stamp[5][1:3]), dtype=ioda_int_type)
     obs_data[('aircraftIdentifier', 'MetaData')] = np.full((nlocations), aircraftId, dtype=ioda_int_type)
@@ -192,8 +192,8 @@ def get_obs_data(ifile):
     obs_data[('aircraftAROAntenna', 'MetaData')] = np.full((nlocations), aircraftAn, dtype=ioda_int_type)
     obs_data[('satelliteAscendingFlag', 'MetaData')] = np.full((nlocations), ascFlag, dtype=ioda_int_type)
     obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), centerP, dtype=ioda_int_type)
-    obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_int_type)
-    obs_data[('earthRadiusCurvature', 'MetaData')] = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_int_type)
+    obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_float_type)
+    obs_data[('earthRadiusCurvature', 'MetaData')] = np.full((nlocations), ifile.attrs['rfict']*10e2, dtype=ioda_float_type)
     obs_data[('geopotentialHeight', 'MetaData')] = np.array(geop, dtype=ioda_float_type)
     obs_data[('partialBendingAngle', 'MetaData')] = np.array(ifile['Opt_bend_ang'][:], dtype=ioda_float_type)
 
