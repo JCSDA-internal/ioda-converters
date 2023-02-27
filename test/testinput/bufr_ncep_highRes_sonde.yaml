@@ -44,7 +44,7 @@ observations:
             query: "*/UARLVB/UAWND/WSPD"
 
           # ObsValue - ocean
-          waterTemperature:
+          seaSurfaceTemperature:
             query: "*/SST1"
 
           # QualityMarker
@@ -98,7 +98,7 @@ observations:
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
           source: variables/stationElevation
-          longName: "Elevation of Observing Location"
+          longName: "Station Elevation"
           units: "m"
 
 
@@ -134,10 +134,10 @@ observations:
           units: "m s-1"
 
         # ObsValue - ocean
-        - name: "ObsValue/waterTemperature"
+        - name: "ObsValue/seaSurfaceTemperature"
           coordinates: "longitude latitude"
-          source: variables/waterTemperature
-          longName: "Water Temperature"
+          source: variables/seaSurfaceTemperature
+          longName: "Sea Surface Temperature"
           units: "K"
 
         # QualityMarker
