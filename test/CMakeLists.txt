@@ -201,6 +201,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_1bmhs.yaml
     testinput/bufr_ncep_esamua.yaml
     testinput/bufr_ncep_esmhs.yaml
+    testinput/bufr_ncep_highRes_sonde.yaml
     testinput/bufr_ncep_satwind_avhrr.yaml
     testinput/bufr_ncep_aircar.yaml
     testinput/bufr_ncep_aircft_AMDAR103.yaml
@@ -262,6 +263,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t12z.adpsfc.prepbufr.nc
     testoutput/gdas.t12z.adpsfc.tm00.nc
     testoutput/gdas.t06z.adpsfc_snow.tm00.nc
+    testoutput/gdas.t12z.adpupa_bufr_nc002103.tm00.nc
     testoutput/gdas.t12z.aircar.tm00.nc
     testoutput/gdas.t12z.aircft_AMDAR103.tm00.nc
     testoutput/gdas.t12z.aircft_noAMDAR103.tm00.nc
@@ -1392,6 +1394,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr.yaml"
                     adpupa_prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_highRes_sonde
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_highRes_sonde.yaml"
+                    gdas.t12z.adpupa_bufr_nc002103.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
