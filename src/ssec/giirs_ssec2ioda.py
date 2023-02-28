@@ -10,21 +10,12 @@
 import argparse
 import collections
 from datetime import datetime, timedelta
-import itertools
-import math
 from pathlib import Path
-import sys
 
-import dateutil.parser
 import numpy as np
 import netCDF4 as nc
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_ncio as iconv
+import lib_python.ioda_conv_ncio as iconio
 
 
 class Giirs2Ioda:
@@ -59,7 +50,7 @@ class Giirs2Ioda:
             center_datetime = datetime.strptime(center_datetime, '%Y%m%d%H')
         self.center_datetime = center_datetime
         self.outfile = Path(out_file)
-        self.writer = iconv.NcWriter(str(out_file), [], self.LOCATION_KEYS)
+        self.writer = iconio.NcWriter(str(out_file), [], self.LOCATION_KEYS)
 
         self.data = collections.defaultdict(dict)
         self.units_values = {}  # cannot use an ordered dict for this

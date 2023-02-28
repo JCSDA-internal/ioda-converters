@@ -5,10 +5,6 @@ cdraper, Nov, 2017"""
 from __future__ import print_function
 import ncepbufr
 import numpy as np
-import netCDF4
-import numbers
-import sys
-import re
 from netCDF4 import Dataset
 
 # INPUT ARGS 
