@@ -1,4 +1,5 @@
-# wrfda_ncdiag.py
+#!/usr/bin/env python3
+
 # a collection of classes, and supporting information
 # to read in WRFDA netCDF diagnostic files and rewrite them
 # into JEDI UFO GeoVaLs and IODA observation files
@@ -7,10 +8,10 @@
 from collections import defaultdict, OrderedDict
 import datetime as dt
 import errno
-import ioda_conv_ncio as iconv
+import lib_python.ioda_conv_ncio as iconio
 import netCDF4 as nc
 import numpy as np
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 import os
 import sys
 
@@ -303,7 +304,7 @@ class Radiances:
 
         # for now, record len is 1 and the list is empty?
         recKey = 0
-        writer = iconv.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
+        writer = iconio.NcWriter(outname, LocKeyList, TestKeyList=TestKeyList)
 
         if self.sensor in sensor_chanlist_dict:
             chanlist = sensor_chanlist_dict[self.sensor]
