@@ -5,26 +5,20 @@ Python code to ingest netCDF4 or HDF5 ATMS data
 """
 
 import argparse
-from datetime import datetime, timedelta
-import glob
-from concurrent.futures import ProcessPoolExecutor
-from pathlib import Path
+from datetime import datetime
 import os.path
-from os import getcwd
 import sys
 
 import h5py
 import numpy as np
 
+from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
+
 float_missing_value = 9.96921e+36
 int_missing_value = -2147483647
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 # globals
 TROPICS01_WMO_sat_ID = 691

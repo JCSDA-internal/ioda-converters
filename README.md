@@ -16,7 +16,7 @@ make -j4
 ctest
 ```
 
-## gsi-ncdiag
+## gsi_ncdiag
 These scripts use classes defined in the gsincdiag Python library to convert output from GSI netCDF diag files into
 IODA observation files and GeoVaLs for UFO. To run GSI and produce the necessary files, see the feature/files_for_jedi
 branch in the ProdGSI repository.
@@ -42,7 +42,7 @@ The following executable scripts are to be used by the user:
     * This is called by ctest but can also be used by a user rather than `proc_gsi_ncdiag.py`
 
 For developers, or for those who need to change the names of input/output variables in the scripts, see the README in
-src/gsi-ncdiag for details.
+src/gsi_ncdiag for details.
 
 
 
