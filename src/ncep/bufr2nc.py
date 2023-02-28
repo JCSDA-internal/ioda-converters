@@ -6,12 +6,6 @@ import sys
 import os
 import argparse
 from netCDF4 import Dataset
-from pathlib import Path
-
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import bufr2ncCommon as cm
 import bufr2ncObsTypes as ot
