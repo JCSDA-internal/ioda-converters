@@ -64,10 +64,6 @@ observations:
       backend: netcdf
       obsdataout: "../testoutput/gdas.t12z.adpupa_bufr_nc002103.tm00.nc"
 
-      dimensions:
-        - name: RadiosondeReportLevelData
-          path: "*/UARLVB"
-
       variables:
         # MetaData
         - name: "MetaData/dateTime"
@@ -100,7 +96,6 @@ observations:
           source: variables/stationElevation
           longName: "Station Elevation"
           units: "m"
-
 
         # ObsValue
         - name: "ObsValue/pressure"
