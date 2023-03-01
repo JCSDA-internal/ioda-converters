@@ -174,6 +174,11 @@ namespace bufr {
         /// \param overrideType The meta data for the element.
         /// \return A Result DataObject containing the data.
         std::shared_ptr<DataObjectBase> objectByType(const std::string& overrideType) const;
+
+        /// \brief Utility function that can be used to split a query string into its components.
+        /// \param query The query string.
+        /// \return A std::string vector to store the components in.
+        static std::vector<std::string> splitPath(const std::string& query);
     };
 }  // namespace bufr
 }  // namespace Ingester
