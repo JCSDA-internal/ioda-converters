@@ -85,10 +85,10 @@ def main(args):
         locationKeyList.append((k, v))
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'Radians'
-    VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'Radians'
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N units'
-    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N units'
+    VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'radians'
+    VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'radians'
+    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N'
+    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N'
     VarAttrs[('height', 'MetaData')]['units'] = 'm'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
@@ -97,7 +97,7 @@ def main(args):
     VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
     VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
     VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'gpm'
-    VarAttrs[('partialBendingAngle', 'MetaData')]['units'] = 'Radians'
+    VarAttrs[('partialBendingAngle', 'MetaData')]['units'] = 'radians'
 
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'ObsError')]['_FillValue'] = float_missing_value
@@ -180,9 +180,9 @@ def get_obs_data(ifile):
     obs_data[('satelliteConstellationRO', 'MetaData')] = np.full((nlocations), satelliteC, dtype=ioda_int_type)
     obs_data[('satelliteTransmitterId', 'MetaData')] = np.full((nlocations), int(file_stamp[5][1:3]), dtype=ioda_int_type)
     obs_data[('aircraftIdentifier', 'MetaData')] = np.full((nlocations), aircraftId, dtype=ioda_int_type)
-    obs_data[('aircraftAROInstrument', 'MetaData')] = np.full((nlocations), aircraftIs, dtype=ioda_int_type)
+    obs_data[('instrumentIdentifier', 'MetaData')] = np.full((nlocations), aircraftIs, dtype=ioda_int_type)
     obs_data[('aircraftTailNumber', 'MetaData')] = np.full((nlocations), aircraftTn, dtype=ioda_int_type)
-    obs_data[('aircraftAROAntenna', 'MetaData')] = np.full((nlocations), aircraftAn, dtype=ioda_int_type)
+    obs_data[('instrumentModelInfo', 'MetaData')] = np.full((nlocations), aircraftAn, dtype=ioda_int_type)
     obs_data[('satelliteAscendingFlag', 'MetaData')] = np.full((nlocations), ascFlag, dtype=ioda_int_type)
     obs_data[('dataProviderOrigin', 'MetaData')] = np.full((nlocations), centerP, dtype=ioda_int_type)
     obs_data[('geoidUndulation', 'MetaData')] = np.full((nlocations), ifile.attrs['rgeoid']*10e2, dtype=ioda_float_type)
@@ -227,9 +227,9 @@ def def_meta_data():
         "satelliteConstellationRO": 'satelliteClassification',
         "satelliteTransmitterId": 'platformTransmitterIdNumber',
         "aircraftIdentifier": 'aircraftIdentifier',
-        "aircraftAROInstrument": 'aircraftAROInstrument',
+        "instrumentIdentifier": 'aircraftAROInstrument',
         "aircraftTailNumber": 'aircraftAROTailNumber',
-        "aircraftAROAntenna": 'aircraftAROSAntenna',
+        "instrumentModelInfo": 'aircraftAROSAntenna',
         "satelliteAscendingFlag": 'originalOccultationAscendingDescendingFlag',
         "dataProviderOrigin": 'centre',
         "geoidUndulation": 'geoidUndulation',
@@ -255,9 +255,9 @@ def def_meta_types():
         "satelliteConstellationRO": 'integer',
         "satelliteTransmitterId": 'integer',
         "aircraftIdentifier": 'integer',
-        "aircraftAROInstrument": 'integer',
+        "instrumentIdentifier": 'integer',
         "aircraftTailNumber": 'integer',
-        "aircraftAROAntenna": 'integer',
+        "instrumentModelInfo": 'integer',
         "satelliteAscendingFlag": 'integer',
         "dataProviderOrigin": 'integer',
         "geoidUndulation": 'float',
