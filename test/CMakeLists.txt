@@ -159,7 +159,7 @@ if( iodaconv_gnssro_ENABLED )
 
   list( APPEND test_output
     testoutput/gnssro_kompsat5_2018041500.nc4
-    testoutput/gnssaro_obs_2021012000.h5
+    testoutput/gnssaro_obs_2021012000.nc
   )
 endif()
 
@@ -1018,9 +1018,9 @@ if( iodaconv_gnssro_ENABLED )
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/gnssaro_netcdf2ioda.py
                             -i testinput/gnssaro_N49T_20210120_00Z.nc
-                            -o testrun/gnssaro_obs_2021012000.h5
+                            -o testrun/gnssaro_obs_2021012000.nc
                             -d 2021012000"
-                            gnssaro_obs_2021012000.h5 ${IODA_CONV_COMP_TOL_ZERO})
+                            gnssaro_obs_2021012000.nc ${IODA_CONV_COMP_TOL_ZERO})
 endif()
 
 #==============================================================================
