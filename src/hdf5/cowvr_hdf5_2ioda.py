@@ -37,14 +37,6 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-GlobalAttrs = {
-    "platformCommonName": "COWVR",
-    "platformLongDescription": "COWVR Brightness Temperature Data",
-    "sensorCentralFrequency": [18.7,
-                               23.8,
-                               33.9,],
-}
-
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
@@ -88,6 +80,12 @@ def main(args):
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
 
+    if nlocs == 0:
+        print(f" no valid or unflagged data found")
+        print(f" ... exiting")
+        sys.exit()
+
+    GlobalAttrs = get_global_attributes(obs_data[('satelliteIdentifier', metaDataName)])
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs['datetimeRange'] = np.array([datetime.fromtimestamp(obs_data[('dateTime', metaDataName)][0], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -141,7 +139,80 @@ def get_data_from_files(zfiles):
 
     # for afile in zfiles:
     afile = zfiles
-    obs_data = get_cowvr_data(afile, obs_data)
+    if 'cowvr' in afile.lower():
+        obs_data = get_cowvr_data(afile, obs_data)
+    elif 'tempest' in afile.lower():
+        obs_data = get_tempest_data(afile, obs_data)
+
+    return obs_data
+
+
+def get_tempest_data(afile, obs_data, add_qc=True):
+
+    f = h5py.File(afile, 'r')
+
+    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
+
+    # "Geolocation and flags"
+    sensor_altitude = np.array(f['Geolocation']['sat_alt'], dtype='float32')
+    # sat_alt_flag = np.array(f['Geolocation']['sc_att_flag'], dtype='int32')
+    sat_alt_flag = np.array(f['CalibratedSceneTemperatures']['obs_qual_flag'], dtype='int32')
+    obs_data[('latitude', metaDataName)] = np.array(f['Geolocation']['obs_lat'], dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(f['Geolocation']['obs_lon'], dtype='float32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(5)+1, dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.array(f['Geolocation']['scan_pos'], dtype='float32')
+    obs_data[('solarZenithAngle', metaDataName)] =  np.array(f['Geolocation']['sat_solar_zen'], dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['sat_solar_az'], dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['Geolocation']['earth_inc_ang'], dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['earth_az_ang'], dtype='float32')
+    # instr_scan_angle = np.array(f['Geolocation']['instr_scan_ang'], dtype='float32')
+    obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
+        np.array(f['Geolocation']['instr_scan_ang'], dtype='float32'),
+        sensor_altitude, sat_alt_flag,
+        np.array(f['Geolocation']['earth_inc_ang'], dtype='float32'))
+
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['Geolocation']['time_string']), dtype='int64')
+    qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
+    solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
+
+    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+    obs_data[('brightnessTemperature', obsValName)] = np.array(
+        np.column_stack((f['CalibratedSceneTemperatures']['tb89'],
+            f['CalibratedSceneTemperatures']['tb165'],
+            f['CalibratedSceneTemperatures']['tb176'],
+            f['CalibratedSceneTemperatures']['tb180'],
+            f['CalibratedSceneTemperatures']['tb182'])), dtype='float32')
+    obs_data[('brightnessTemperature', obsErrName)] = np.full((nlocs, nchans), 5.0, dtype='float32')
+    obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    if add_qc:
+        obs_data = tempest_gross_quality_control(obs_data, qc_flag, solar_array_flag)
+
+    f.close()
+
+    return obs_data
+
+
+def tempest_gross_quality_control(obs_data, qc_flag, solar_array_flag):
+
+    # tempest-D coefficients do not extend beyond 80-degrees
+    tb_key = 'brightnessTemperature'
+    good = \
+        (obs_data[(tb_key,obsValName)][:,0] > 10) & (obs_data[(tb_key,obsValName)][:,0] < 400) & \
+        (obs_data[(tb_key,obsValName)][:,1] > 10) & (obs_data[(tb_key,obsValName)][:,1] < 400) & \
+        (obs_data[(tb_key,obsValName)][:,2] > 10) & (obs_data[(tb_key,obsValName)][:,2] < 400) & \
+        (obs_data[(tb_key,obsValName)][:,3] > 10) & (obs_data[(tb_key,obsValName)][:,3] < 400) & \
+        (obs_data[(tb_key,obsValName)][:,4] > 10) & (obs_data[(tb_key,obsValName)][:,4] < 400) & \
+        (obs_data[('latitude',metaDataName)] >= -90) & (obs_data[('latitude',metaDataName)] <= 90) & \
+        (qc_flag[:] == 0) & (solar_array_flag[:] == 0) & (obs_data[('sensorZenithAngle', metaDataName)] <= 80)
+
+    for k in obs_data:
+        if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
+            obs_data[k] = obs_data[k][good][::33]
+        elif tb_key in k[0]:
+            obs_data[k] = obs_data[k][good,:][::33]
 
     return obs_data
 
@@ -153,6 +224,7 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
     WMO_sat_ID = get_WMO_satellite_ID(f.filename)
 
     # "Geolocation and flags"
+    # fore: instr_scan_ang < 180 and aft: instr_scan_ang > 180
     # fore_aft = np.array(f['GeolocationAndFlags']['fore_aft_flag'], dtype='float32')
     sensor_altitude = np.array(f['GeolocationAndFlags']['sat_alt'], dtype='float32')
     sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
@@ -234,10 +306,38 @@ def compute_scan_angle(instr_scan_ang, sensor_altitude, sat_alt_flag, sensor_zen
 def get_WMO_satellite_ID(filename):
 
     afile = os.path.basename(filename)
-    WMO_sat_ID = ISS_COWVR_WMO_sat_ID
+    if 'cowvr' in afile.lower():
+        WMO_sat_ID = ISS_COWVR_WMO_sat_ID
+    elif 'tempest' in afile.lower():
+        WMO_sat_ID = ISS_TEMPEST_WMO_sat_ID
 
     return WMO_sat_ID
 
+
+def get_global_attributes(wmo_satellite_id):
+    if wmo_satellite_id[0] == ISS_COWVR_WMO_sat_ID:
+        GlobalAttrs = {
+            "platformCommonName": "COWVR",
+            "platformLongDescription": "COWVR Brightness Temperature Data",
+            "sensorCentralFrequency": [18.7,
+                                    23.8,
+                                    33.9,],
+        }
+    elif wmo_satellite_id[0] == ISS_TEMPEST_WMO_sat_ID:
+        GlobalAttrs = {
+            "platformCommonName": "TEMPEST",
+            "platformLongDescription": "TEMPEST Brightness Temperature Data",
+            "sensorCentralFrequency": [89.0,
+                                    164.0,
+                                    174.0,
+                                    178.0,
+                                    181.0,],
+        }
+    else:
+        print(f" could not determine satellite from satelliteIdentifier: {wmo_satellite_id[0]}")
+        sys.exit()
+
+    return GlobalAttrs
 
 def get_epoch_time(obs_time_iso):
 
