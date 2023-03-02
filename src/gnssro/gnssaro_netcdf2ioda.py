@@ -87,8 +87,8 @@ def main(args):
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('bendingAngle', 'ObsValue')]['units'] = 'radians'
     VarAttrs[('bendingAngle', 'ObsError')]['units'] = 'radians'
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N'
-    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N'
+    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N units'
+    VarAttrs[('atmosphericRefractivity', 'ObsError')]['units'] = 'N units'
     VarAttrs[('height', 'MetaData')]['units'] = 'm'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
