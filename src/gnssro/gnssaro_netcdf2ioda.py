@@ -96,7 +96,7 @@ def main(args):
     VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
     VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
     VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
-    VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'gpm'
+    VarAttrs[('geopotentialHeight', 'MetaData')]['units'] = 'm'
     VarAttrs[('partialBendingAngle', 'MetaData')]['units'] = 'radians'
 
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
