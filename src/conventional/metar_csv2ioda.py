@@ -11,26 +11,18 @@
 #   data-access.ucar.edu:/glade/campaign/ral/aap/gthompsn/METARs/2019/20191231/2019123118_metars.csv.gz
 #
 
-import sys
 import os
-import math
 import numpy as np
 from datetime import datetime
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from pathlib import Path
 import csv
 import netCDF4
 import logging
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
-import meteo_utils
+from lib_python.orddicts import DefaultOrderedDict
+import lib_python.meteo_utils as meteo_utils
 
 os.environ["TZ"] = "UTC"
 
