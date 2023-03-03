@@ -206,7 +206,8 @@ def tempest_gross_quality_control(obs_data, qc_flag, solar_array_flag):
         (obs_data[(tb_key,obsValName)][:,3] > 10) & (obs_data[(tb_key,obsValName)][:,3] < 400) & \
         (obs_data[(tb_key,obsValName)][:,4] > 10) & (obs_data[(tb_key,obsValName)][:,4] < 400) & \
         (obs_data[('latitude',metaDataName)] >= -90) & (obs_data[('latitude',metaDataName)] <= 90) & \
-        (qc_flag[:] == 0) & (solar_array_flag[:] == 0) & (obs_data[('sensorZenithAngle', metaDataName)] <= 80)
+        (obs_data[('sensorZenithAngle', metaDataName)] <= 80) & \
+        (qc_flag[:] == 0) & (solar_array_flag[:] == 0)
 
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
@@ -272,13 +273,14 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
         (obs_data[(tb_key,obsValName)][:,4] > 10) & (obs_data[(tb_key,obsValName)][:,4] < 400) & \
         (obs_data[(tb_key,obsValName)][:,8] > 10) & (obs_data[(tb_key,obsValName)][:,8] < 400) & \
         (obs_data[('latitude',metaDataName)] >= -90) & (obs_data[('latitude',metaDataName)] <= 90) & \
+        (obs_data[('sensorZenithAngle', metaDataName)] <= 56) & \
         (qc_flag[:] == 0) & (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
 
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good][::33]
+            obs_data[k] = obs_data[k][good]  # [::33] -- add as skip
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good,:][::33]
+            obs_data[k] = obs_data[k][good,:]  # [::33] -- add as skip
 
     return obs_data
 
