@@ -9,7 +9,8 @@ module atms_spatial_average_c_interface_mod
 
 contains
 
-  subroutine ATMS_Spatial_Average_c(num_loc, nchanl, time, fovn, channel, btobs, scanline, error_status) bind(C, name='ATMS_Spatial_Average_f')
+  subroutine ATMS_Spatial_Average_c(num_loc, nchanl, time, fovn, channel, btobs, scanline, error_status) &
+                                    bind(C, name='ATMS_Spatial_Average_f')
 
     use atms_spatial_average_mod, only: ATMS_Spatial_Average
 
