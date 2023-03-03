@@ -19,6 +19,8 @@ import numpy as np
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict
 from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
+from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
+from lib_python.def_jedi_utils import concat_obs_dict
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -234,16 +236,6 @@ def assign_values(data):
         return np.array(data, dtype=ioda_int_type)
 
 
-#  def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, the obs_data variable
-    # will be extended using fill values.
-    #
-    # Use the first key in the append_obs_data dictionary to determine how
-    # long to make the fill value vector.
-#   append_keys = list(append_obs_data.keys())
-
-
 def get_WMO_satellite_ID(filename):
 
     afile = os.path.basename(filename)
@@ -333,39 +325,6 @@ def init_obs_loc():
     }
 
     return obs
-
-
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, the obs_data variable
-    # will be extended using fill values.
-    #
-    # Use the first key in the append_obs_data dictionary to determine how
-    # long to make the fill value vector.
-    append_keys = list(append_obs_data.keys())
-    append_length = len(append_obs_data[append_keys[0]])
-    for gv_key in obs_data.keys():
-        if gv_key in append_keys:
-            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
-        else:
-            if obs_data[gv_key].dtype == float:
-                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
-            elif obs_data[gv_key].dtype == int:
-                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
-            elif obs_data[gv_key].dtype == object:
-                # string type, extend with empty strings
-                fill_data = np.repeat("", append_length, dtype=object)
-            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
-
-# def concat_obs_dict(obs_data, append_obs_data):
-#   # For now we are assuming that the obs_data dictionary has the "golden" list
-#   # of variables. If one is missing from append_obs_data, a warning will be issued.
-#   append_keys = list(append_obs_data.keys())
-#   for gv_key in obs_data.keys():
-#       if gv_key in append_keys:
-#           obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key], axis=0)
-#       else:
-#           print("WARNING: ", gv_key, " is missing from append_obs_data dictionary")
 
 
 if __name__ == "__main__":
