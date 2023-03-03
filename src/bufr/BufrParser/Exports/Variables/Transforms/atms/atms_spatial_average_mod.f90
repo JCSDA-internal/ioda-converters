@@ -86,6 +86,10 @@ CONTAINS
 
     ! ------------------------------------------------------------------------------
 
+    ! Reshape to 2D array for FFT processing
+    bt_obs = reshape(bt_inout, (/nchanl, num_loc/))
+    channel_number = reshape(channel, (/nchanl, num_loc/))
+
     do_interface_check = .false.
     do_output_check = .false.
     if (do_output_check) do_interface_check = .true.
@@ -116,7 +120,8 @@ CONTAINS
           iscan = int(iloc/96)
           scanline(iloc) = iscan + 1  
        enddo
-       write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
+       write(6,*) 'ATMS_Spatial_Average: minval/maxval scanline = ', &
+                   minval(scanline), maxval(scanline)
 
        ! Check passed variable: time
        write(6,*) 'ATMS_Spatial_Average: checking time ... '
@@ -128,12 +133,9 @@ CONTAINS
 
        ! Check passed variable: bt_inout
        write(6,*) 'ATMS_Spatial_Average: chechking bt_inout (original) ...'
-       write(6,*) 'ATMS_Spatial_Average: are we passing and getting bt inout here OK ? ... '
+       write(6,*) 'ATMS_Spatial_Average: are we passing and getting bt_inout here OK ? ... '
 
        ! Print out for checking and debugging
-       bt_obs = reshape(bt_inout, (/nchanl, num_loc/))
-       channel_number = reshape(channel, (/nchanl, num_loc/))
- 
        if (do_output_check) then
           write(6,102) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
           iobs = 1 
@@ -149,8 +151,7 @@ CONTAINS
        write(6,*) 'minval/maxval bt_obs = ', minval(bt_obs), maxval(bt_obs)
 
        if (do_output_check) then
-
-          write(6,202) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_obs'
+          write(6,202) 'iobs', 'iloc', 'time', 'fov', 'ichn', 'channel', 'bt_inout'
           do iobs = 0, num_loc*nchanl-1 
              iloc = int(iobs/nchanl)
              ichn = int(mod(iobs,nchanl)) 
@@ -162,6 +163,8 @@ CONTAINS
        write(6,*) 'minval/maxval bt_inout = ', minval(bt_inout), maxval(bt_inout)
 
     endif ! do_interface_check
+    write(6,*) 'ATMS_Spatial_Average: chechking bt_inout (original) ...'
+    write(6,*) 'minval/maxval bt_inout (original) = ', minval(bt_obs), maxval(bt_obs)
 
     ! ------------------------------------------------------------------------------
 
@@ -217,9 +220,9 @@ CONTAINS
              read(cline,*) channelnumber(ichan),beamwidth(ichan), &
                   newwidth(ichan),cutoff(ichan),nxaverage(ichan), &
                   nyaverage(ichan), qc_dist(ichan)
-             write(6,*) channelnumber(ichan),beamwidth(ichan), &
-                  newwidth(ichan),cutoff(ichan),nxaverage(ichan), &
-                  nyaverage(ichan), qc_dist(ichan)
+!            write(6,*) channelnumber(ichan),beamwidth(ichan), &
+!                 newwidth(ichan),cutoff(ichan),nxaverage(ichan), &
+!                 nyaverage(ichan), qc_dist(ichan)
           enddo 
        end if
        read(lninfile,'(a30)',iostat=ios) cline
@@ -235,7 +238,8 @@ CONTAINS
     mintime = minval(time)
     scanline(:)   = nint((time(1:num_loc)-mintime)/scan_interval)+1
     Max_Scan=maxval(scanline)
-    write(6,*) 'minval/maxval scanline = ', minval(scanline), maxval(scanline)
+    write(6,*) 'ATMS_Spatial_Average: minval/maxval scanline = ', &
+                minval(scanline), maxval(scanline)
 
     allocate(bt_image(max_fov, max_scan, nchanl))
     allocate(scanline_back(max_fov, max_scan))
@@ -245,7 +249,8 @@ CONTAINS
     do i = 1, num_loc
        bt_image(fov(i),scanline(i),:) = bt_obs(:,i)
        scanline_back(fov(i),scanline(i)) = i
-!      write(6, 301) fov(i), scanline(i), bt_image(fov(i), scanline(i), 1:nchanl) 
+       if (do_output_check) &
+          write(6, 301) fov(i), scanline(i), bt_image(fov(i), scanline(i), 1:nchanl) 
     end do 
 301 format(i6,2x,i6,2x,22(f8.3))
 
