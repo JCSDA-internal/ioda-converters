@@ -99,7 +99,7 @@ class apply_BG_class:
                         ta_rmp[isc, ifr] = temp
             self.taAllCh[:, :, ich] = ta_rmp
 
-        return [self.viewang, self.taAllCh, self.lat[ich, :, :], self.lon[ich, :, :], self.satzen, self.satazi, self.solzen, self.solazi, self.tim]
+        return [self.viewang, self.taAllCh, self.lat, self.lon, self.satzen, self.satazi, self.solzen, self.solazi, self.tim]
 
     def do_ingest(self):
 
@@ -115,18 +115,8 @@ class apply_BG_class:
         self.tim = []
         self.nscan = 0
         self.taAllCh = []
-        self.taAllCh.append([])
         for ele in self.select_chs:
             self.ta.append([])
-            self.lat.append([])
-            self.lon.append([])
-            self.satzen.append([])
-            self.satazi.append([])
-            self.satran.append([])
-            self.solzen.append([])
-            self.solazi.append([])
-            self.viewang.append([])
-            self.tim.append([])
 
         for ifile, filename in enumerate(self.input_files):
             [viewang, temAllCh, ta, lat, lon, satzen, satazi, satran, tim, vel, nscan, solzen, solazi] = self.read_granule(filename)
@@ -136,15 +126,15 @@ class apply_BG_class:
                 self.nscan += 1
                 for i, ich in enumerate(self.select_chs):
                     self.ta[i].append(ta[isc, :, int(ich)-1])
-                    self.lat[i].append(lat[isc, :])
-                    self.lon[i].append(lon[isc, :])
-                    self.satzen[i].append(satzen[isc, :])
-                    self.satazi[i].append(satazi[isc, :])
-                    self.satran[i].append(satran[isc, :])
-                    self.solzen[i].append(solzen[isc, :])
-                    self.solazi[i].append(solazi[isc, :])
-                    self.viewang[i].append(viewang[isc, :])
-                    self.tim[i].append(tim[isc, :])
+                self.lat.append(lat[isc, :])
+                self.lon.append(lon[isc, :])
+                self.satzen.append(satzen[isc, :])
+                self.satazi.append(satazi[isc, :])
+                self.satran.append(satran[isc, :])
+                self.solzen.append(solzen[isc, :])
+                self.solazi.append(solazi[isc, :])
+                self.viewang.append(viewang[isc, :])
+                self.tim.append(tim[isc, :])
                 self.taAllCh.append(temAllCh[isc, :, :])
         self.ta = np.array(self.ta)
         self.lat = np.array(self.lat)
@@ -157,7 +147,6 @@ class apply_BG_class:
         self.solazi = np.array(self.solazi)
         self.viewang = np.array(self.viewang)
         self.tim = np.array(self.tim)
-        del self.taAllCh[0]
         self.taAllCh = np.array(self.taAllCh, dtype=object)
 
     def read_granule(self, ffile):

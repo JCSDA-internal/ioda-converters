@@ -393,9 +393,9 @@ def set_obspace_attributes(VarAttrs):
     return VarAttrs
 
 
-def remapBG(input_files):
+def remapBG(input_files, add_qc=True):
 
-    print('Remap ATMS: Backus–Gilbert Inversion method')
+    print('Remap ATMS: Backus-Gilbert Inversion method')
 
     obs_data = init_obs_loc()
 
@@ -459,13 +459,10 @@ def remapBG(input_files):
     obs_data[('brightnessTemperature', obsValName)] = np.array(np.vstack(taAllCh), dtype='float32')
     obs_data[('brightnessTemperature', obsErrName)] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(tim), dtype='int64')
 
-    for timearray in tim:
-        timearray[:1] = timearray[0]
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(timearray), dtype='int64')
-
-    # if add_qc:
-    #    obs_data = atms_gross_quality_control(obs_data)
+    if add_qc:
+        obs_data = atms_gross_quality_control(obs_data)
 
     return obs_data
 
