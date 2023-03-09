@@ -187,6 +187,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_empty_fields.bufr_d
     testinput/bufr_sfcshp.bufr
     testinput/ADPUPA.prepbufr
+    testinput/gdas.t12z.adpupa_nc002103.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_filtering.yaml
