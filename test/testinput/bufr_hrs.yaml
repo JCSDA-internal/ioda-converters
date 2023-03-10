@@ -24,9 +24,9 @@ observations:
           latitude:
             query: "*/CLAT"
           channel:
-            query: "[*/BRITCSTC/CHNM, */BRIT{5}/CHNM]"
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
           brightnessTemp:
-            query: "[*/BRITCSTC/TMBR, */BRIT{5}/TMBR]"
+            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
 
     ioda:
       backend: netcdf
