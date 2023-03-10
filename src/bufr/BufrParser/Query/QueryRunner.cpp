@@ -331,38 +331,38 @@ namespace bufr
                 }
                 else
                 {
-                    dataField.data = computeDataFromFilter(dataTable[targ->nodeIdx].values,
-                                                           counts,
-                                                           filters);
+                    dataField.data = makeFilteredData(dataTable[targ->nodeIdx].values,
+                                                      counts,
+                                                      filters);
                 }
             }
         }
     }
 
-    std::vector<double> QueryRunner::computeDataFromFilter(
+    std::vector<double> QueryRunner::makeFilteredData(
                                             const std::vector<double>& srcData,
-                                            const SeqCounts& counts,
-                                            const std::vector<std::vector<size_t>>& filters) const
+                                            const SeqCounts& origCounts,
+                                            const std::vector<std::vector<size_t>>& filter) const
     {
         auto data = std::vector<double>();
-        data.reserve(sum(counts.back()));
+        data.reserve(sum(origCounts.back()));
 
         size_t offset = 0;  // -1 to compensate for 1 based indexing in the filter
-        _computeDataFromFilter(srcData, counts, filters, data, offset, 0);
+        _makeFilteredData(srcData, origCounts, filter, data, offset, 0);
 
         return data;
     }
 
-    void QueryRunner::_computeDataFromFilter(const std::vector<double>& srcData,
-                                             const SeqCounts& counts,
-                                             const std::vector<std::vector<size_t>> &filters,
-                                             std::vector<double>& data,
-                                             size_t& offset,
-                                             size_t depth,
-                                             bool skipResult) const
+    void QueryRunner::_makeFilteredData(const std::vector<double>& srcData,
+                                        const SeqCounts& origCounts,
+                                        const std::vector<std::vector<size_t>> &filters,
+                                        std::vector<double>& data,
+                                        size_t& offset,
+                                        size_t depth,
+                                        bool skipResult) const
     {
 
-        if (depth > counts.size() - 1)
+        if (depth > origCounts.size() - 1)
         {
             if (!skipResult) data.push_back(srcData[offset]);
             offset++;
@@ -370,22 +370,22 @@ namespace bufr
             return;
         }
 
-        auto& layerCounts = counts[depth];
+        auto& layerCounts = origCounts[depth];
         auto& layerFilter = filters[depth];
 
         if (layerFilter.empty())
         {
             for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
             {
-                _computeDataFromFilter(srcData, counts, filters, data,
-                                       offset, depth + 1, skipResult);
+                _makeFilteredData(srcData, origCounts, filters, data,
+                                  offset, depth + 1, skipResult);
             }
         }
         else
         {
             for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
             {
-                for (size_t count = 1; count <= layerCounts[countIdx]; count++)
+                for (size_t count = 1; count <= static_cast<size_t>(layerCounts[countIdx]); count++)
                 {
                     bool skip = skipResult;
 
@@ -396,7 +396,7 @@ namespace bufr
                                          count) == layerFilter.end();
                     }
 
-                    _computeDataFromFilter(srcData, counts, filters, data, offset, depth + 1, skip);
+                    _makeFilteredData(srcData, origCounts, filters, data, offset, depth + 1, skip);
                 }
             }
         }

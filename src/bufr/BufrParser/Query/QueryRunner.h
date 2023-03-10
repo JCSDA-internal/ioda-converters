@@ -102,17 +102,6 @@ namespace bufr {
         bool isQueryNode(int nodeIdx) const;
 
 
-        /// \brief Get the dimensional information for the query with the given branches.
-        /// \param[in] branches The branches to use.
-        /// \param[in] mnemonicCursor The current position in the subset tree.
-        /// \param[in, out] dimPaths The list of dimensioning query sub-paths
-        /// \param[in, out] dimIdxs The idxs of the dimensioning elements in the query.
-        void getDimInfo(const TargetComponents& components,
-                        int mnemonicCursor,
-                        std::vector<std::string>& dimPaths,
-                        std::vector<int>& dimIdxs) const;
-
-
         /// \brief Accumulate the data for the currently open BUFR message subset.
         /// \param[in] targets The list of targets to collect for this subset.
         /// \param[in] masks The processing masks to use.
@@ -122,18 +111,18 @@ namespace bufr {
                          ResultSet& resultSet) const;
 
 
-        std::vector<double> computeDataFromFilter(const std::vector<double>& srcData,
-                                                  const SeqCounts &origCounts,
-                                                  const std::vector<std::vector<size_t>> &filter)
+        std::vector<double> makeFilteredData(const std::vector<double>& srcData,
+                                             const SeqCounts &origCounts,
+                                             const std::vector<std::vector<size_t>> &filter)
                                                   const;
 
-        void _computeDataFromFilter(const std::vector<double>& srcData,
-                                    const SeqCounts& origCounts,
-                                    const std::vector<std::vector<size_t>>& filters,
-                                    std::vector<double>& data,
-                                    size_t& offset,
-                                    size_t depth,
-                                    bool skipResult = false) const;
+        void _makeFilteredData(const std::vector<double>& srcData,
+                               const SeqCounts& origCounts,
+                               const std::vector<std::vector<size_t>>& filters,
+                               std::vector<double>& data,
+                               size_t& offset,
+                               size_t depth,
+                               bool skipResult = false) const;
     };
 }  // namespace bufr
 }  // namespace Ingester
