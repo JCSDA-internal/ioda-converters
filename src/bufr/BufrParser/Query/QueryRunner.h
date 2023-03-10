@@ -120,6 +120,17 @@ namespace bufr {
         void collectData(Targets& targets,
                          std::shared_ptr<__details::ProcessingMasks> masks,
                          ResultSet& resultSet) const;
+
+
+        std::vector<size_t> computeDataIdxs(const SeqCounts &origCounts,
+                                            const std::vector<std::vector<size_t>> &filter) const;
+
+        void _computeDataIdxs(const SeqCounts& origCounts,
+                              const std::vector<std::vector<size_t>>& filters,
+                              std::vector<size_t>& idxs,
+                              size_t& offset,
+                              size_t depth,
+                              bool skipResult = false) const;
     };
 }  // namespace bufr
 }  // namespace Ingester

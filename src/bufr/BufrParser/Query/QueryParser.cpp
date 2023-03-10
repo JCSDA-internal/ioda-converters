@@ -32,7 +32,7 @@ namespace bufr {
         }
 
         std::vector<Query> queries;
-        for (const auto& queryToken : tokens[0]->queryTokens())
+        for (const auto& queryToken : token->queryTokens())
         {
             auto componentTokens = queryToken->split();
 

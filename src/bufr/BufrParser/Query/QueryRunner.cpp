@@ -15,6 +15,7 @@
 
 #include "Constants.h"
 #include "SubsetTable.h"
+#include "VectorMath.h"
 
 
 namespace Ingester {
@@ -286,19 +287,113 @@ namespace bufr
             if (targ->nodeIdx == 0)
             {
                 dataField.data = {MissingValue};
-                dataField.seqCounts = {{1}};
+                dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));
             }
             else
             {
                 dataField.seqCounts.resize(targ->seqPath.size() + 1);
                 dataField.seqCounts[0] = {1};
+                auto origCounts =
+                    SeqCounts(std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
+
+                bool hasFilter = false;
+                auto filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
                 for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
                 {
-                    dataField.seqCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] +
-                                                                 1].counts;
+                    auto& pathComponent = targ->path[pathIdx + 1];
+                    auto& filter = pathComponent.queryComponent->filter;
+                    if (filter.empty())
+                    {
+                        dataField.seqCounts[pathIdx + 1] =
+                            dataTable[targ->seqPath[pathIdx] + 1].counts;
+                    }
+                    else
+                    {
+                        filters[pathIdx + 1] = filter;
+                        hasFilter = true;
+
+                        auto filteredCounts =
+                            std::vector<int>(dataTable[targ->seqPath[pathIdx] + 1].counts.size(), 1);
+                        for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
+                        {
+                            filteredCounts[countIdx] =
+                                std::max(static_cast<int>(filter.size()), filteredCounts[countIdx]);
+                        }
+
+                        dataField.seqCounts[pathIdx + 1] = filteredCounts;
+                        origCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
+                    }
                 }
 
-                dataField.data = dataTable[targ->nodeIdx].values;
+                if (!hasFilter)
+                {
+                    dataField.data = dataTable[targ->nodeIdx].values;
+                }
+                else
+                {
+                    auto idxs = computeDataIdxs(origCounts, filters);
+                    dataField.data = slice(dataTable[targ->nodeIdx].values, idxs);
+                }
+            }
+        }
+    }
+
+    std::vector<size_t> QueryRunner::computeDataIdxs(const SeqCounts& counts,
+                                                     const std::vector<std::vector<size_t>>& filters
+                                                     ) const
+    {
+        auto idxs = std::vector<size_t>();
+        idxs.reserve(sum(counts.back()));
+
+        size_t offset = 0;  // -1 to compensate for 1 based indexing in the filter
+        _computeDataIdxs(counts, filters, idxs, offset, 0);
+
+        return idxs;
+    }
+
+    void QueryRunner::_computeDataIdxs(const SeqCounts& counts,
+                                       const std::vector<std::vector<size_t>> &filters,
+                                       std::vector<size_t>& idxs,
+                                       size_t& offset,
+                                       size_t depth,
+                                       bool skipResult) const
+    {
+
+        if (depth > counts.size() - 1)
+        {
+            if (!skipResult) idxs.push_back(offset);
+            offset++;
+
+            return;
+        }
+
+        auto& layerCounts = counts[depth];
+        auto& layerFilter = filters[depth];
+
+        if (layerFilter.empty())
+        {
+            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
+            {
+                _computeDataIdxs(counts, filters, idxs, offset, depth + 1, skipResult);
+            }
+        }
+        else
+        {
+            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
+            {
+                for (size_t count = 1; count <= layerCounts[countIdx]; count++)
+                {
+                    bool skip = skipResult;
+
+                    if (!skip)
+                    {
+                        skip = std::find(layerFilter.begin(),
+                                         layerFilter.end(),
+                                         count) == layerFilter.end();
+                    }
+
+                    _computeDataIdxs(counts, filters, idxs, offset, depth + 1, skip);
+                }
             }
         }
     }

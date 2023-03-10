@@ -196,7 +196,7 @@ namespace bufr {
     class QueryToken : public TokenBase<QueryToken> {
      public:
         constexpr static const char* Pattern =
-            "([A-Z0-9_\\*\\/]+(\\[\\d+\\])?)+(\\{[0-9\\-\\,]+\\})?";
+            "([A-Z0-9_\\*\\/]+(\\[\\d+\\])?+(\\{[0-9\\-\\,]+\\})?)+";
         constexpr static const char* DebugStr = "<query>";
         constexpr static const char* SubPattern = "[^,]+";
 

@@ -39,6 +39,28 @@ namespace bufr {
         return result;
     }
 
+    /// \breif Sum all the values in a vector.
+    /// \param vec The vector to sum.
+    /// \return Scalar value.
+    template<typename T>
+    T sum(const std::vector<T>& vec)
+    {
+        return std::accumulate(vec.begin(), vec.end(), 0);
+    }
+
+    template<typename T>
+    std::vector<T> linearSpace(T start, T end)
+    {
+        const auto num = end - start;
+        std::vector<T> result(num);
+        for (size_t i = 0; i < num; ++i)
+        {
+            result[i] = start + i;
+        }
+
+        return result;
+    }
+
     /// \brief Slice a vector into a range of values.
     /// \param begin The beginning of the range.
     /// \param end The end of the range.
