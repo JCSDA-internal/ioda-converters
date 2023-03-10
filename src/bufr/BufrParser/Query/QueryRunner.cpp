@@ -293,7 +293,7 @@ namespace bufr
             {
                 dataField.seqCounts.resize(targ->seqPath.size() + 1);
                 dataField.seqCounts[0] = {1};
-                auto origCounts =
+                auto counts =
                     SeqCounts(std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
 
                 bool hasFilter = false;
@@ -321,7 +321,7 @@ namespace bufr
                         }
 
                         dataField.seqCounts[pathIdx + 1] = filteredCounts;
-                        origCounts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
+                        counts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
                     }
                 }
 
@@ -331,7 +331,7 @@ namespace bufr
                 }
                 else
                 {
-                    auto idxs = computeDataIdxs(origCounts, filters);
+                    auto idxs = computeDataIdxs(counts, filters);
                     dataField.data = slice(dataTable[targ->nodeIdx].values, idxs);
                 }
             }
